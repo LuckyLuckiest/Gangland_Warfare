@@ -112,6 +112,10 @@ class TurfCreateCommand extends SubArgument {
 			return;
 		}
 		String displayName = joinFrom(args, 2);
+		if (plain(displayName).isEmpty()) {
+			sender.sendMessage(text.text("Turf.Name_Empty", "&cA turf name needs at least one letter or digit."));
+			return;
+		}
 
 		Selection selection = selections.get(player);
 		if (!selection.isComplete() || selection.getPos1() == null || selection.getPos2() == null) {

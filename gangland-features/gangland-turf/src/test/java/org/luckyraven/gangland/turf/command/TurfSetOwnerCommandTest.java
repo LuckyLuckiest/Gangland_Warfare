@@ -11,6 +11,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
@@ -69,7 +70,7 @@ class TurfSetOwnerCommandTest {
 		when(parent.getPermission()).thenReturn("gangland.command.turf");
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			command = new TurfSetOwnerCommand(plugin, tree, parent, turfs, gangs, selections, messages,
+			command = new TurfSetOwnerCommand(plugin, tree, parent, turfs, gangs, selections, messages, mock(TurfMessages.class),
 			                                  new TurfOwnership(turfs));
 		}
 

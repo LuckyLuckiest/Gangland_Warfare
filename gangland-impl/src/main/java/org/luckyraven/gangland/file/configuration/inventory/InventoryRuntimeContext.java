@@ -148,6 +148,9 @@ public class InventoryRuntimeContext {
 		}
 
 		String openPermission = open == null ? null : open.get("Permission").asString().orNull();
+		// T-226: a ConditionEvaluator expression that must hold for Open.Command to open the menu (else the command
+		// runs its own executor, e.g. gang onboarding). Absent = always open, as before.
+		String openCondition = open == null ? null : open.get("Condition").asString().orNull();
 
 		// Open.Type is an admin-facing hint for inventory event state; consumed via the legacy Bukkit path further
 		// below. Touching it here suppresses a spurious unknown_key sweep warning.
@@ -213,7 +216,8 @@ public class InventoryRuntimeContext {
 		}
 
 		for (Pair<State, String> state : states) {
-			inventoryData.addOpenInventory(new OpenInventory(state.first(), state.second(), openPermission));
+			inventoryData.addOpenInventory(new OpenInventory(state.first(), state.second(), openPermission,
+			                                                 openCondition));
 		}
 
 		if (!report.isEmpty()) report.log(log);

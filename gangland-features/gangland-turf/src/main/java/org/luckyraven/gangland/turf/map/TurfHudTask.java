@@ -56,6 +56,7 @@ public final class TurfHudTask implements BeanLifecycle {
 	private final LongSupplier                    clock;
 
 	private BukkitTask task;
+	private JavaPlugin plugin;
 
 	public TurfHudTask(TurfLocationTracker tracker,
 	                   TurfManager turfs,
@@ -86,8 +87,25 @@ public final class TurfHudTask implements BeanLifecycle {
 		if (task != null) {
 			return;
 		}
+		this.plugin = plugin;
 		long period = settings.getHudIntervalSeconds() * 20L;
 		task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, period, period);
+	}
+
+	/**
+	 * T-224: a reload re-reads turf_map.yml before this runs (FileManager is an upstream bean), so re-arm the task to
+	 * pick up a changed Hud.Interval_Seconds. The first load already started it in the @Bean method.
+	 */
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (firstLoad || plugin == null) {
+			return;
+		}
+		if (task != null) {
+			task.cancel();
+			task = null;
+		}
+		start(plugin);
 	}
 
 	@Override

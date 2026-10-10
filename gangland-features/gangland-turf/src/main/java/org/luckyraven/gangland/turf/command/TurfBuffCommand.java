@@ -8,6 +8,7 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
@@ -34,12 +35,13 @@ class TurfBuffCommand extends SubArgument {
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfMessages         text;
 	private final PowerupRegistry      registry;
 	private final ActiveBuffManager    buffs;
 
 	protected TurfBuffCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                          TurfManager turfs, WandSelectionManager selections,
-	                          TurfMessageContract messages,
+	                          TurfMessageContract messages, TurfMessages text,
 	                          PowerupRegistry registry, ActiveBuffManager buffs) {
 		super(plugin, "buff", tree, parent);
 
@@ -48,6 +50,7 @@ class TurfBuffCommand extends SubArgument {
 		this.turfs      = turfs;
 		this.selections = selections;
 		this.messages   = messages;
+		this.text       = text;
 		this.registry   = registry;
 		this.buffs      = buffs;
 
@@ -83,8 +86,7 @@ class TurfBuffCommand extends SubArgument {
 		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			// GI-35: nested SubArgument permissions only add onto the base "gangland.command.turf" node — they
 			// never require the stricter admin one on their own.
-			if (!TurfPermissions.isAdmin(sender)) {
-				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			if (!TurfPermissions.requireAdmin(sender, text)) {
 				return;
 			}
 			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);

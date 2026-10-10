@@ -243,7 +243,7 @@ class TurfMapRendererTest {
 		when(turfManager.getRuntimeState(7)).thenReturn(state);
 		gangs.register(gang(2, NOW, "Vipers"));
 
-		String reason = service.textReason(turf(7, 1), "Gamma", NOW);
+		String reason = service.textReason(turf(7, 1), "Gamma", 3, NOW);
 
 		assertTrue(reason.contains("under attack"), reason);
 		assertTrue(reason.contains("Vipers"), reason);
@@ -254,6 +254,6 @@ class TurfMapRendererTest {
 	void textReason_quietTurf_eligibilityReason() {
 		when(turfManager.getRuntimeState(7)).thenReturn(new TurfRuntimeState(7));
 
-		assertEquals("reason", service.textReason(turf(7, 1), "Gamma", NOW));
+		assertEquals("reason", service.textReason(turf(7, 1), "Gamma", 3, NOW));
 	}
 }

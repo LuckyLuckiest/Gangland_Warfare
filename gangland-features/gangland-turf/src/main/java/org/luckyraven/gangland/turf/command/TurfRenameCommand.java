@@ -71,6 +71,10 @@ class TurfRenameCommand extends SubArgument {
 					GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 			return;
 		}
+		if (TurfCreateCommand.plain(name).isEmpty()) {
+			sender.sendMessage(text.text("Turf.Name_Empty", "&cA turf name needs at least one letter or digit."));
+			return;
+		}
 		if (TurfCreateCommand.nameTaken(turfs, name, turf.getId())) {
 			sender.sendMessage(text.text("Turf.Name_Taken", "&cA turf named %turf% already exists.",
 			                             "turf", TurfCreateCommand.plain(name)));

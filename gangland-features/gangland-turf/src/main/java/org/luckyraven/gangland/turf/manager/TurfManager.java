@@ -69,8 +69,12 @@ public final class TurfManager {
 		}
 		// Persist the mark too: turfs that predate the sequence table have no stored mark yet, so deleting the
 		// newest one and restarting would otherwise hand its id out again (TF-05).
-		int mark = Math.max(highest, sequence.loadHighWaterMark());
-		sequence.saveHighWaterMark(mark);
+		// T-201: only ever raise the stored mark, so a load that came back empty cannot write a lower one over it.
+		int stored = sequence.loadHighWaterMark();
+		int mark   = Math.max(highest, stored);
+		if (mark > stored) {
+			sequence.saveHighWaterMark(mark);
+		}
 		nextId.set(mark + 1);
 
 		// Hand the repo a supplier so RepositoryRegistry.saveAll() (periodic autosave + shutdown)

@@ -11,6 +11,7 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
@@ -37,11 +38,12 @@ class TurfSetOwnerCommand extends SubArgument {
 	private final GangLookupContract   gangs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfMessages         text;
 	private final TurfOwnership        ownership;
 
 	protected TurfSetOwnerCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                              TurfManager turfs, GangLookupContract gangs, WandSelectionManager selections,
-	                              TurfMessageContract messages, TurfOwnership ownership) {
+	                              TurfMessageContract messages, TurfMessages text, TurfOwnership ownership) {
 		super(plugin, "setowner", tree, parent);
 
 		this.plugin     = plugin;
@@ -50,6 +52,7 @@ class TurfSetOwnerCommand extends SubArgument {
 		this.gangs      = gangs;
 		this.selections = selections;
 		this.messages   = messages;
+		this.text       = text;
 		this.ownership  = ownership;
 
 		this.addSubArgument(gangArgument());
@@ -65,8 +68,7 @@ class TurfSetOwnerCommand extends SubArgument {
 		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			// GI-35: nested SubArgument permissions only add onto the base "gangland.command.turf" node — they
 			// never require the stricter admin one on their own.
-			if (!TurfPermissions.isAdmin(sender)) {
-				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			if (!TurfPermissions.requireAdmin(sender, text)) {
 				return;
 			}
 			apply(sender, args[2]);

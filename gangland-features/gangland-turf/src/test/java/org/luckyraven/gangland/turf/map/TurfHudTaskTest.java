@@ -26,7 +26,9 @@ import org.luckyraven.gangland.turf.support.FakeUserLookup;
 import org.luckyraven.gangland.turf.support.InMemoryTurfRepository;
 import org.luckyraven.gangland.turf.support.YamlFixture;
 import org.luckyraven.gangland.turf.task.TurfLocationTracker;
+import org.bukkit.scheduler.BukkitTask;
 import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.MockedStatic;
 
 import java.io.IOException;
@@ -38,9 +40,12 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -181,6 +186,33 @@ class TurfHudTaskTest {
 		task("").tick();
 
 		assertEquals("Nearest turf: Docks 100m E", plain(sent.get(0).line()));
+	}
+
+	@Test
+	@DisplayName("T-224: a reload cancels the running HUD task and re-arms it with the new Hud.Interval_Seconds")
+	void reloadReArmsWithNewInterval() {
+		TurfMapSettings map = mock(TurfMapSettings.class);
+		when(map.getHudIntervalSeconds()).thenReturn(2);
+		JavaPlugin plugin = mock(JavaPlugin.class);
+		BukkitTask first = mock(BukkitTask.class);
+		BukkitTask second = mock(BukkitTask.class);
+		TurfHudTask task = new TurfHudTask(tracker, turfs, gangs, users, null, null, map, prefs,
+		                                   (player, line, priority) -> {
+		                                   }, () -> online, () -> NOW);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			when(bukkit.scheduler().runTaskTimer(eq(plugin), any(Runnable.class), eq(40L), eq(40L)))
+					.thenReturn(first);
+			task.start(plugin);
+
+			when(map.getHudIntervalSeconds()).thenReturn(5);
+			when(bukkit.scheduler().runTaskTimer(eq(plugin), any(Runnable.class), eq(100L), eq(100L)))
+					.thenReturn(second);
+			task.onInitialize(false);
+
+			verify(first).cancel();
+			verify(bukkit.scheduler()).runTaskTimer(eq(plugin), any(Runnable.class), eq(100L), eq(100L));
+		}
 	}
 
 	@Test

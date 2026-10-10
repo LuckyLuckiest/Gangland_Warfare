@@ -186,6 +186,8 @@ Turf:
    List_Next: "&7Next: /glw turf list %next%"
    # Clickable line under /glw turf help and the gang turf list.
    Map_Link: "&7[map] &8- open /glw map"
+   # Refusal when a turf create or rename name is empty once colour codes are stripped (T-243).
+   Name_Empty: "&cA turf name needs at least one letter or digit."
 # end Turf
 
 # ---------------- Capture: capture-rule lines (W2-R1) ----------------
