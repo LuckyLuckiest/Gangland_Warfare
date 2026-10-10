@@ -43,7 +43,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
@@ -272,7 +271,10 @@ class TurfCaptureNotifierTest {
 
 		assertEquals(List.of("Docks lost to Rats"), linesOf(loser));
 		assertEquals(List.of("You took Docks"), linesOf(winner));
-		verify(legacy).broadcast(eq("TURF_CAPTURED_BROADCAST"), any());
+		verify(legacy).broadcast(eq("TURF_CAPTURED_BROADCAST"),
+		                         eq("turf"), eq("Docks"),
+		                         eq("gang"), eq("Rats"),
+		                         eq("old_gang"), eq("Vipers"));
 	}
 
 	@Test
