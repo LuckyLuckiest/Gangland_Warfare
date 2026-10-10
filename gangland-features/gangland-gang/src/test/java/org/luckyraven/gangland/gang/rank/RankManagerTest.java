@@ -210,7 +210,7 @@ class RankManagerTest {
 	class TreeConstructionTest {
 
 		@Test
-		@DisplayName("wires the head rank as root and the tail as its child, reading the child id from RankParent.parentId() "
+		@DisplayName("wires the head rank as root and the tail as its child, reading the child id from RankParent.childId() "
 		             + "(Obs. #22, gangs-ranks-mail.md: the field named parentId actually stores the CHILD id)")
 		void initialize_wiresHeadAsRootAndTailAsChild() {
 			// Mirrors GanglandDatabase.insertInitialData: tail inserted first (id 1), head second (id 2),
@@ -268,7 +268,7 @@ class RankManagerTest {
 		 */
 		@Test
 		@DisplayName("GR-13 / D13 A: an empty rank table seeds the preset ladder member -> officer -> owner, then loads it")
-		void initialize_emptyTable_seedsPreset() {
+		void initialize_emptyTable_seedsPreset() throws Exception {
 			RepositoryRegistry   seedRegistry = mock(RepositoryRegistry.class);
 			RankRepository       realRankRepo = mock(RankRepository.class);
 			RankParentRepository realParentRepo = mock(RankParentRepository.class);
@@ -302,7 +302,7 @@ class RankManagerTest {
 
 		@Test
 		@DisplayName("GR-13 / D13 A: a non-empty rank table is never touched - no rank or link is inserted on boot")
-		void initialize_nonEmptyTable_seedsNothing() {
+		void initialize_nonEmptyTable_seedsNothing() throws Exception {
 			RepositoryRegistry   seedRegistry = mock(RepositoryRegistry.class);
 			RankRepository       realRankRepo = mock(RankRepository.class);
 			RankParentRepository realParentRepo = mock(RankParentRepository.class);

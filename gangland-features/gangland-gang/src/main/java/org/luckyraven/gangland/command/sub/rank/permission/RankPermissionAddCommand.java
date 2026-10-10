@@ -1,7 +1,14 @@
 package org.luckyraven.gangland.command.sub.rank.permission;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.gang.member.Member;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
+import org.luckyraven.gangland.gang.permission.RankPermissionApplier;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -14,19 +21,23 @@ import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 class RankPermissionAddCommand extends SubArgument {
 
 	private final JavaPlugin          gangland;
-	private final Tree<Argument>    tree;
-	private final RankManager       rankManager;
-	private final PermissionManager permissionManager;
-	private final MemberManager     memberManager;
+	private final Tree<Argument>      tree;
+	private final RankManager         rankManager;
+	private final PermissionManager   permissionManager;
+	private final MemberManager       memberManager;
+	private final UserManager<Player> userManager;
 
 	RankPermissionAddCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
-	                         PermissionManager permissionManager, MemberManager memberManager) {
+	                         PermissionManager permissionManager, MemberManager memberManager,
+	                         UserManager<Player> userManager) {
 		super(gangland, "add", tree, parent);
 
 		this.gangland          = gangland;
@@ -34,6 +45,7 @@ class RankPermissionAddCommand extends SubArgument {
 		this.rankManager       = rankManager;
 		this.permissionManager = permissionManager;
 		this.memberManager     = memberManager;
+		this.userManager       = userManager;
 
 		rankPermission();
 	}
@@ -68,6 +80,12 @@ class RankPermissionAddCommand extends SubArgument {
 
 			String permString = args[4];
 
+			// GR-37: only a node the module or the server knows; anything else is refused and never persisted
+			if (!rankManager.permissionExists(permString)) {
+				sender.sendMessage(Messages.INVALID_RANK_PERMISSION.toString());
+				return;
+			}
+
 			if (rank.contains(permString)) {
 				String string  = Messages.RANK_PERMISSION_EXISTS.toString();
 				String replace = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
@@ -78,20 +96,39 @@ class RankPermissionAddCommand extends SubArgument {
 
 			rankManager.addPermission(rank, permString);
 			memberManager.applyRankPermissionChange(rank, permString, true);
+			refreshOnlineMembers(rank);
 
 			String string  = Messages.RANK_PERMISSION_ADD.toString();
 			String replace = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
 
 			sender.sendMessage(replace);
-		}, sender -> {
-			Set<String> permissions = permissionManager.getPermissions();
-
-			if (permissions.isEmpty()) return List.of("<permission>");
-
-			return permissions.stream().toList();
-		});
+		}, sender -> suggestions(permissionManager));
 
 		rankArg.addSubArgument(permArg);
 		this.addSubArgument(rankArg);
+	}
+
+	/**
+	 * Re-applies the rank's nodes onto every ONLINE member of that rank, so a node added now works without a re-login
+	 * (the promote path does the same through {@link RankPermissionApplier#flush}).
+	 */
+	private void refreshOnlineMembers(Rank rank) {
+		for (Member member : memberManager.getMembersByRank(rank)) {
+			Player player = Bukkit.getPlayer(member.getUuid());
+			if (player == null) continue;
+
+			User<Player> user = userManager.getUser(player);
+			if (user != null) RankPermissionApplier.flush(user, rank);
+		}
+	}
+
+	/**
+	 * Tab completion: every {@code gangland.gang.*} node, then the permissions the server already knows.
+	 */
+	static List<String> suggestions(PermissionManager permissionManager) {
+		Set<String> nodes = new LinkedHashSet<>(GangPermissions.ALL);
+		nodes.addAll(permissionManager.getPermissions());
+
+		return new ArrayList<>(nodes);
 	}
 }

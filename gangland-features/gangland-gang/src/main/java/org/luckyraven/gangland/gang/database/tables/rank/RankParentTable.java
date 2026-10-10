@@ -27,13 +27,13 @@ public class RankParentTable extends Table<RankParent> {
 
 	@Override
 	public Object[] getData(RankParent data) {
-		return new Object[]{data.rankId(), data.parentId()};
+		return new Object[]{data.rankId(), data.childId()};
 	}
 
 	@Override
 	public Map<String, Object> searchCriteria(RankParent data) {
 		return createSearchCriteria("id = ? AND parent_id = ?",
-		                            new Object[]{data.rankId(), data.parentId()},
+		                            new Object[]{data.rankId(), data.childId()},
 		                            new int[]{Types.INTEGER, Types.INTEGER}, new int[]{0, 1});
 	}
 }

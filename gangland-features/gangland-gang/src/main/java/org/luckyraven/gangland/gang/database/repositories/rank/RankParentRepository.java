@@ -51,6 +51,9 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 
 	/**
 	 * Deletes every rank_parent row naming the given rank on either side. Used when a rank itself is being removed.
+	 * <p>
+	 * Two delete semantics on purpose: {@link #doDelete} removes the EXACT edge (the {@code rank parent remove} path),
+	 * while this removes every edge touching a rank (rank deletion, GR-22).
 	 */
 	public void deleteAllForRank(int rankId) throws SQLException {
 		tableBackend().delete("id = ? OR parent_id = ?", rankId, rankId);
@@ -117,6 +120,6 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 
 	@Override
 	protected void doDelete(RankParent data) throws SQLException {
-		tableBackend().delete("id = ? AND parent_id = ?", data.rankId(), data.parentId());
+		tableBackend().delete("id = ? AND parent_id = ?", data.rankId(), data.childId());
 	}
 }

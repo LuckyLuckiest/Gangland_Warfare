@@ -8,9 +8,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
@@ -19,9 +21,12 @@ import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.keystone.message.MessageProvider;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -48,7 +53,23 @@ class RankPermissionAddCommandTest {
 	private CommandSender       sender;
 
 	@BeforeEach
-	void setUp() {
+	void setUp() throws ReflectiveOperationException {
+		// Messages colour through Settings.getMoneySymbol(), which only a loaded settings.yml sets.
+		Field moneySymbol = Settings.class.getDeclaredField("moneySymbol");
+		moneySymbol.setAccessible(true);
+		moneySymbol.set(null, "$");
+		Messages.init(new MessageProvider() {
+			@Override
+			public String getString(String path) {
+				return path;
+			}
+
+			@Override
+			public List<String> getStringList(String path) {
+				return List.of();
+			}
+		});
+
 		bukkit            = BukkitStatics.install();
 		plugin            = mock(JavaPlugin.class);
 		rankManager       = mock(RankManager.class);
@@ -79,10 +100,14 @@ class RankPermissionAddCommandTest {
 	@Test
 	@DisplayName("a registered gang node is accepted, persisted, and flushed onto the online members of that rank")
 	void gangInvite_isAcceptedAndFlushesOnlineMembers() {
-		Rank officer = new Rank("officer", 2);
+		List<Permission> granted = new ArrayList<>();
+		Rank             officer = new Rank("officer", 2, granted);
 		when(rankManager.get("officer")).thenReturn(officer);
 		when(rankManager.permissionExists(GangPermissions.INVITE)).thenReturn(true);
-		when(rankManager.addPermission(officer, GangPermissions.INVITE)).thenReturn(true);
+		when(rankManager.addPermission(officer, GangPermissions.INVITE)).thenAnswer(call -> {
+			granted.add(new Permission(7, GangPermissions.INVITE));
+			return true;
+		});
 
 		UUID   uuid   = UUID.randomUUID();
 		Member member = new Member(uuid);

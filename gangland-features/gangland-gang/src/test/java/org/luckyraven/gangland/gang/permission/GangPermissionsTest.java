@@ -1,21 +1,19 @@
 package org.luckyraven.gangland.gang.permission;
 
+import java.util.List;
+import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.core.permission.Permission;
+import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;

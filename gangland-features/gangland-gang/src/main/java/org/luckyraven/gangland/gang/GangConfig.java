@@ -126,8 +126,8 @@ public final class GangConfig {
 
 	@Bean
 	public RankManager rankManager(RepositoryRegistry repositoryRegistry,
-	                               PermissionRegistryContract permissionRegistry) {
-		return new RankManager(repositoryRegistry, permissionRegistry);
+	                               PermissionRegistryContract permissionRegistry, GangRules rules) {
+		return new RankManager(repositoryRegistry, permissionRegistry, rules);
 	}
 
 	/**

@@ -53,13 +53,24 @@ public class RankRepository extends AbstractRepository<Rank> {
 			return existingId;
 		}
 
-		int id = totalRanks() + 1;
+		int id = nextRankId();
 		tableBackend().insert(new Rank(name, id));
 
 		return id;
 	}
 
-	private int totalRanks() throws SQLException {
+	/**
+	 * The next free rank id: {@code max(id) + 1}. {@code total + 1} collides with a surviving id after a delete leaves a
+	 * gap (GR-21).
+	 */
+	public int nextRankId() throws SQLException {
+		List<Integer> maxIds = getBackend().query("SELECT COALESCE(MAX(id), 0) AS max_id FROM " + rankTable.getName(),
+		                                          resultSet -> resultSet.getInt("max_id"));
+
+		return maxIds.isEmpty() ? 1 : maxIds.get(0) + 1;
+	}
+
+	public int totalRanks() throws SQLException {
 		List<Integer> counts = getBackend().query("SELECT COUNT(*) AS total FROM " + rankTable.getName(),
 		                                          resultSet -> resultSet.getInt("total"));
 
