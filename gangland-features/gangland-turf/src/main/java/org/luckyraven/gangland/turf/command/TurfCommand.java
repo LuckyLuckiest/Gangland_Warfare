@@ -48,7 +48,7 @@ import java.util.Set;
 public final class TurfCommand extends Command {
 
 	/** Verbs a player without {@code gangland.turf.admin} may run; every other turf verb is admin only (TF-30). */
-	private static final Set<String> PLAYER_VERBS = Set.of("info", "list");
+	private static final Set<String> PLAYER_VERBS = Set.of("info", "list", "rules");
 	private static final int         HELP_BREAKS  = 7;
 
 	private final TurfManager          turfs;
@@ -178,6 +178,8 @@ public final class TurfCommand extends Command {
 		                                              messages, text);
 		TurfInfoCommand info = new TurfInfoCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                           turfs, gangs, selections, messages, settings, eligibility, text);
+		TurfRulesCommand rulesSub = new TurfRulesCommand(getPlugin(), getArgumentTree(), getArgument(), rules,
+		                                                settings, text, messages);
 		TurfShowCommand show = new TurfShowCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, selections,
 		                                           messages, settings, text);
 		TurfStatusCommand status = new TurfStatusCommand(getPlugin(), getArgumentTree(), getArgument(),
@@ -207,6 +209,7 @@ public final class TurfCommand extends Command {
 		arguments.add(setOwner);
 		arguments.add(listSub);
 		arguments.add(info);
+		arguments.add(rulesSub);
 		arguments.add(show);
 		arguments.add(status);
 		arguments.add(select);

@@ -35,6 +35,10 @@
 		"usage": "/glw turf info [id|name]",
 		"description": "Show a turf card: owner, size, income, state and whether you can attack it. With no argument, the turf you stand in or your active selection."
 	},
+	"turf_rules": {
+		"usage": "/glw turf rules",
+		"description": "How turf wars work on this server, with its numbers."
+	},
 	"turf_show": {
 		"usage": "/glw turf show",
 		"description": "Spawn a particle outline along the edges of your active-selection turf, the turf you're in, or your wand selection."

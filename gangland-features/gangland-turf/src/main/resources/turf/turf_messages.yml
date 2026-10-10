@@ -187,3 +187,21 @@ Turf:
    # Clickable line under /glw turf help and the gang turf list.
    Map_Link: "&7[map] &8- open /glw map"
 # end Turf
+
+# ---------------- Capture: capture-rule lines (W2-R1) ----------------
+# end Capture
+
+# ---------------- Alerts: turf alerts that reach a gang anywhere (W2-N1) ----------------
+# end Alerts
+
+# ---------------- Income: the payout line and the turf cap line (W2-N2) ----------------
+# end Income
+
+# ---------------- Digest: what happened while you were away (W2-N2) ----------------
+# end Digest
+
+# ---------------- Quartermaster: the turf shop panels (W2-Q) ----------------
+# end Quartermaster
+
+# ---------------- Rules: /glw turf rules (W2-E1) ----------------
+# end Rules
