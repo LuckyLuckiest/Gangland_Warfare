@@ -111,7 +111,7 @@ class GangChatCommandTest {
 	@Test
 	@DisplayName("with a message the line goes to the gang's online members and the toggle is not changed")
 	void withMessage_deliversToGang() throws Exception {
-		chat().executeArgument(rex, new String[]{"gang", "chat", "hello", "there"});
+		messageArgument().executeArgument(rex, new String[]{"gang", "chat", "hello", "there"});
 
 		String line = channel.format(messages, "Rex", "hello there");
 		verify(rex).sendMessage(line);
@@ -146,7 +146,7 @@ class GangChatCommandTest {
 		when(rexUser.hasGang()).thenReturn(false);
 
 		chat().executeArgument(rex, new String[]{"gang", "chat"});
-		chat().executeArgument(rex, new String[]{"gang", "chat", "hi"});
+		messageArgument().executeArgument(rex, new String[]{"gang", "chat", "hi"});
 
 		verify(rex, times(2)).sendMessage(Messages.MUST_CREATE_GANG.toString());
 		assertFalse(channel.isOn(rexId));
@@ -155,6 +155,11 @@ class GangChatCommandTest {
 	private Argument chat() {
 		return new GangChatCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), userManager,
 		                           memberManager, gangManager, messages, channel);
+	}
+
+	/** The {@code <message>} child of {@code chat}; a message is sent through it, not the parent. */
+	private Argument messageArgument() {
+		return chat().getNode().getChildren().get(0).getData();
 	}
 
 	/** A player in gang {@code gangId}, known to the user manager and to the online list. */

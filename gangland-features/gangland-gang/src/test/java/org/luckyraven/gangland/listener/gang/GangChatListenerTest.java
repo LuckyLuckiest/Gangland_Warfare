@@ -131,7 +131,8 @@ class GangChatListenerTest {
 	@DisplayName("a toggled player who has left the gang gets Chat_Off on the main thread and the toggle is cleared")
 	void toggledButGangless_forgetsAndTellsChatOff() {
 		channel.toggle(rex.getUniqueId());
-		when(userManager.getUser(rex)).thenReturn(user(false, -1));
+		User<Player> left = user(false, -1);
+		when(userManager.getUser(rex)).thenReturn(left);
 		AsyncPlayerChatEvent event = chat(rex, "hi");
 
 		listener.onChat(event);
@@ -171,7 +172,8 @@ class GangChatListenerTest {
 		Player player = mock(Player.class);
 		when(player.getName()).thenReturn(name);
 		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
-		when(userManager.getUser(player)).thenReturn(user(true, gangId));
+		User<Player> member = user(true, gangId);
+		when(userManager.getUser(player)).thenReturn(member);
 		return player;
 	}
 

@@ -131,7 +131,7 @@ class GangJoinCommandTest {
 		gangs.add(vipers);
 		long before = System.currentTimeMillis();
 
-		join().executeArgument(player, new String[]{"gang", "join", "Vipers"});
+		nameArgument().executeArgument(player, new String[]{"gang", "join","Vipers"});
 
 		verify(vipers).addMember(user, member, head);
 		verify(member).setGangJoinDateLong(longThat(at -> at >= before && at <= System.currentTimeMillis()));
@@ -145,7 +145,7 @@ class GangJoinCommandTest {
 		Gang kings = gang("Kings", Gang.State.INVITE);
 		gangs.add(kings);
 
-		join().executeArgument(player, new String[]{"gang", "join", "Kings"});
+		nameArgument().executeArgument(player, new String[]{"gang", "join","Kings"});
 
 		verify(player).sendMessage(messages.text("Social.Invite_Only", "&c%gang% is invite only.", "gang", "Kings"));
 		verify(kings, never()).addMember(any(User.class), any(Member.class), any(Rank.class));
@@ -156,9 +156,10 @@ class GangJoinCommandTest {
 	void alreadyInGang_refused() throws Exception {
 		Gang vipers = gang("Vipers", Gang.State.OPEN);
 		gangs.add(vipers);
-		when(userManager.getUser(player)).thenReturn(user(true));
+		User<Player> inGang = user(true);
+		when(userManager.getUser(player)).thenReturn(inGang);
 
-		join().executeArgument(player, new String[]{"gang", "join", "Vipers"});
+		nameArgument().executeArgument(player, new String[]{"gang", "join","Vipers"});
 
 		verify(player).sendMessage(messages.text("Social.Already_In_Gang", "&cLeave your gang first."));
 		verify(vipers, never()).addMember(any(User.class), any(Member.class), any(Rank.class));
@@ -167,7 +168,7 @@ class GangJoinCommandTest {
 	@Test
 	@DisplayName("a name no gang has is refused")
 	void unknownName_refused() throws Exception {
-		join().executeArgument(player, new String[]{"gang", "join", "Nope"});
+		nameArgument().executeArgument(player, new String[]{"gang", "join","Nope"});
 
 		verify(player).sendMessage(messages.text("Social.Unknown", "&cNo gang named %gang%.", "gang", "Nope"));
 	}
@@ -179,7 +180,7 @@ class GangJoinCommandTest {
 		gangs.add(vipers);
 		when(rankManager.get(anyString())).thenReturn(null);
 
-		join().executeArgument(player, new String[]{"gang", "join", "Vipers"});
+		nameArgument().executeArgument(player, new String[]{"gang", "join","Vipers"});
 
 		verify(player).sendMessage(messages.text("Social.No_Rank", "&cThis gang has no starting rank; ask an admin."));
 		verify(vipers, never()).addMember(any(User.class), any(Member.class), any(Rank.class));

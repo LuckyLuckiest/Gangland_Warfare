@@ -125,7 +125,7 @@ class GangRecruitingCommandTest {
 	void leader_setsOpen() throws Exception {
 		setMember(leaderRank());
 
-		recruiting().executeArgument(player, new String[]{"gang", "recruiting", "open"});
+		stateArgument().executeArgument(player, new String[]{"gang", "recruiting","open"});
 
 		verify(vipers).setState(Gang.State.OPEN);
 		verify(mate).sendMessage(messages.text("Social.Recruiting_Open",
@@ -137,7 +137,7 @@ class GangRecruitingCommandTest {
 	void memberWithoutInviteNode_refused() throws Exception {
 		setMember(memberRank());
 
-		recruiting().executeArgument(player, new String[]{"gang", "recruiting", "open"});
+		stateArgument().executeArgument(player, new String[]{"gang", "recruiting","open"});
 
 		verify(player).sendMessage(Messages.COMMAND_NO_PERM.toString());
 		verify(vipers, never()).setState(any());
@@ -150,7 +150,7 @@ class GangRecruitingCommandTest {
 		setMember(memberRank());
 		when(vipers.getState()).thenReturn(Gang.State.OPEN);
 
-		recruiting().executeArgument(player, new String[]{"gang", "recruiting", "invite"});
+		stateArgument().executeArgument(player, new String[]{"gang", "recruiting","invite"});
 
 		verify(vipers).setState(Gang.State.INVITE);
 		verify(mate).sendMessage(messages.text("Social.Recruiting_Invite", "&7%gang% is invite only.", "gang", "Vipers"));
@@ -174,7 +174,7 @@ class GangRecruitingCommandTest {
 	void gangless_mustCreateGang() throws Exception {
 		when(user.hasGang()).thenReturn(false);
 
-		recruiting().executeArgument(player, new String[]{"gang", "recruiting", "open"});
+		stateArgument().executeArgument(player, new String[]{"gang", "recruiting","open"});
 
 		verify(player).sendMessage(Messages.MUST_CREATE_GANG.toString());
 		verify(vipers, never()).setState(any());
@@ -190,6 +190,11 @@ class GangRecruitingCommandTest {
 	private Argument recruiting() {
 		return new GangRecruitingCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), userManager,
 		                                 memberManager, gangManager, messages);
+	}
+
+	/** The {@code open|invite} child of {@code recruiting}; the state change runs through it, not the parent. */
+	private Argument stateArgument() {
+		return recruiting().getNode().getChildren().get(0).getData();
 	}
 
 	private void setMember(Rank rank) {
