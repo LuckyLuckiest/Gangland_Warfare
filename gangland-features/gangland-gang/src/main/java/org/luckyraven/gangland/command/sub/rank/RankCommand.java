@@ -1,8 +1,11 @@
 package org.luckyraven.gangland.command.sub.rank;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.data.CommandInformation;
 import org.luckyraven.gangland.command.sub.rank.parent.RankParentCommand;
@@ -24,15 +27,18 @@ public final class RankCommand extends Command {
 	private final RepositoryRegistry repositoryRegistry;
 	private final PermissionManager  permissionManager;
 	private final MemberManager      memberManager;
+	private final UserManager<Player> userManager;
 
 	public RankCommand(JavaPlugin gangland, RankManager rankManager, RepositoryRegistry repositoryRegistry,
-	                   PermissionManager permissionManager, MemberManager memberManager) {
+	                   PermissionManager permissionManager, MemberManager memberManager,
+	                   @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "rank", false);
 
 		this.rankManager        = rankManager;
 		this.repositoryRegistry = repositoryRegistry;
 		this.permissionManager  = permissionManager;
 		this.memberManager      = memberManager;
+		this.userManager        = userManager;
 
 		List<CommandInformation> list = getCommands().entrySet()
 				.stream()
@@ -55,7 +61,7 @@ public final class RankCommand extends Command {
 		                                        repositoryRegistry, memberManager);
 		Argument list = new RankListCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
 		Argument permission = new RankPermissionCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager,
-		                                                permissionManager, memberManager);
+		                                                permissionManager, memberManager, userManager);
 		Argument info         = new RankInfoCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
 		Argument parent       = new RankParentCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
 		Argument traverseTree = new RankTraverseCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);

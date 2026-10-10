@@ -5,6 +5,8 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.rank.Rank;
 
+import java.util.List;
+
 /**
  * Rank-permission nodes for the gang subcommands that change gang state, and the single gate that decides them.
  *
@@ -44,6 +46,12 @@ public final class GangPermissions {
 	public static final String INVITE = PREFIX + "invite";
 	/** Request, accept, reject or abandon an alliance. */
 	public static final String ALLY = PREFIX + "ally";
+
+	/**
+	 * Every {@code gangland.gang.*} node above. Rank permission add accepts exactly these (plus server nodes), and tab
+	 * completion offers them.
+	 */
+	public static final List<String> ALL = List.of(WITHDRAW, DEPOSIT, RENAME, DESCRIPTION, DISPLAY, COLOR, INVITE, ALLY);
 
 	/**
 	 * Staff override that skips the rank-hierarchy checks of promote, demote and {@code option gang rank}. Kept out of

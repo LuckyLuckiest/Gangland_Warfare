@@ -1,19 +1,19 @@
 package org.luckyraven.gangland.gang.permission;
 
+import java.util.List;
+import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.core.permission.Permission;
+import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
-import java.util.List;
-import java.util.UUID;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -31,6 +31,14 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("GangPermissions - rank gate on the mutating gang subcommands")
 class GangPermissionsTest {
+
+	@Test
+	@DisplayName("GR-03 / PLAN 15.4: ALL lists the eight gangland.gang.* nodes that the rank permission add command accepts")
+	void all_holdsTheEightGangNodes() {
+		assertEquals(List.of(GangPermissions.WITHDRAW, GangPermissions.DEPOSIT, GangPermissions.RENAME,
+		                     GangPermissions.DESCRIPTION, GangPermissions.DISPLAY, GangPermissions.COLOR,
+		                     GangPermissions.INVITE, GangPermissions.ALLY), GangPermissions.ALL);
+	}
 
 	@AfterEach
 	void resetVault() {

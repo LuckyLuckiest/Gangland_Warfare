@@ -1,7 +1,9 @@
 package org.luckyraven.gangland.command.sub.rank.permission;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -22,9 +24,11 @@ public class RankPermissionCommand extends SubArgument {
 	private final RankManager       rankManager;
 	private final PermissionManager permissionManager;
 	private final MemberManager     memberManager;
+	private final UserManager<Player> userManager;
 
 	public RankPermissionCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
-	                             PermissionManager permissionManager, MemberManager memberManager) {
+	                             PermissionManager permissionManager, MemberManager memberManager,
+	                             UserManager<Player> userManager) {
 		super(gangland, new String[]{"permission", "perm"}, tree, parent);
 
 		this.gangland          = gangland;
@@ -32,6 +36,7 @@ public class RankPermissionCommand extends SubArgument {
 		this.rankManager       = rankManager;
 		this.permissionManager = permissionManager;
 		this.memberManager     = memberManager;
+		this.userManager       = userManager;
 
 		initializeArguments();
 	}
@@ -45,7 +50,7 @@ public class RankPermissionCommand extends SubArgument {
 
 	private void initializeArguments() {
 		Argument addArg = new RankPermissionAddCommand(gangland, tree, this, rankManager, permissionManager,
-		                                               memberManager);
+		                                               memberManager, userManager);
 		Argument removeArg = new RankPermissionRemoveCommand(gangland, tree, this, rankManager, permissionManager,
 		                                                     memberManager);
 

@@ -27,6 +27,7 @@ import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.menu.GangMenuItemSourceContribution;
 import org.luckyraven.gangland.gang.placeholder.GangPlaceholderContribution;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.menu.filter.FilterApplier;
 import org.luckyraven.gangland.menu.filter.FilterStore;
@@ -35,6 +36,7 @@ import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.module.ModuleLoader;
+import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
@@ -124,10 +126,18 @@ public final class GangConfig {
 		return new GangManager(gangRepository, allianceRepository);
 	}
 
+	/**
+	 * Registers every {@code gangland.gang.*} node with Keystone's {@link PermissionManager} (default OP, never default
+	 * true), so {@code /glw permission} search, help and LuckPerms completion list them. {@link RankManager} itself only
+	 * knows the nodes through {@link GangPermissions#ALL}.
+	 */
 	@Bean
 	public RankManager rankManager(RepositoryRegistry repositoryRegistry,
-	                               PermissionRegistryContract permissionRegistry) {
-		return new RankManager(repositoryRegistry, permissionRegistry);
+	                               PermissionRegistryContract permissionRegistry, GangRules rules,
+	                               PermissionManager permissionManager) {
+		GangPermissions.ALL.forEach(permissionManager::addPermission);
+
+		return new RankManager(repositoryRegistry, permissionRegistry, rules);
 	}
 
 	/**

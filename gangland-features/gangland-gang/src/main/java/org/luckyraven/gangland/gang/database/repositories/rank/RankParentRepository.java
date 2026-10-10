@@ -33,24 +33,30 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 	}
 
 	/**
-	 * Inserts the initial head→tail parent relationship if no entry already exists for the given head rank id. Safe to
-	 * call on every startup.
+	 * Inserts the link placing {@code childId} directly below {@code rankId} if no entry already exists for that rank id.
+	 * Used by the preset seed ({@link org.luckyraven.gangland.gang.rank.RankSeed}).
+	 * <p>
+	 * Stored as {@code id = rankId} (the rank above) and {@code parent_id = childId} (the rank below), see
+	 * {@link RankParent}.
 	 *
-	 * @param headId the id of the head (leader) rank - stored as the parent row's {@code id}
-	 * @param tailId the id of the tail (lowest) rank - stored as the parent row's {@code parent_id}
+	 * @param rankId the id of the rank above - stored as the row's {@code id}
+	 * @param childId the id of the rank below - stored as the row's {@code parent_id}
 	 */
-	public void insertInitialRelation(int headId, int tailId) throws SQLException {
+	public void insertInitialRelation(int rankId, int childId) throws SQLException {
 		Integer existing = getBackend().queryBuilder(rankParentTable.getName())
-		                               .where("id", headId)
+		                               .where("id", rankId)
 		                               .one(resultSet -> resultSet.getInt("id"));
 
 		if (existing == null) {
-			tableBackend().insert(new RankParent(headId, tailId));
+			tableBackend().insert(new RankParent(rankId, childId));
 		}
 	}
 
 	/**
 	 * Deletes every rank_parent row naming the given rank on either side. Used when a rank itself is being removed.
+	 * <p>
+	 * Two delete semantics on purpose: {@link #doDelete} removes the EXACT edge (the {@code rank parent remove} path),
+	 * while this removes every edge touching a rank (rank deletion, GR-22).
 	 */
 	public void deleteAllForRank(int rankId) throws SQLException {
 		tableBackend().delete("id = ? OR parent_id = ?", rankId, rankId);
@@ -117,6 +123,6 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 
 	@Override
 	protected void doDelete(RankParent data) throws SQLException {
-		tableBackend().delete("id = ? AND parent_id = ?", data.rankId(), data.parentId());
+		tableBackend().delete("id = ? AND parent_id = ?", data.rankId(), data.childId());
 	}
 }

@@ -24,6 +24,7 @@ import org.luckyraven.keystone.bean.BeanFactory;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.module.ModuleLoader;
+import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
@@ -88,6 +89,8 @@ class GangConfigBeanGraphTest {
 		container.registerInstance(RepositoryRegistry.class, repositoryRegistry());
 		container.registerInstance(DatabaseHandler.class, mock(DatabaseHandler.class));
 		container.registerInstance(PermissionRegistryContract.class, mock(PermissionRegistryContract.class));
+		// rankManager registers the gangland.gang.* nodes with Keystone's PermissionManager (fix round 1)
+		container.registerInstance(PermissionManager.class, mock(PermissionManager.class));
 		// GangRules and GangMessages (0.17.0) read gang_rules / gang_messages through the FileManager at bean time.
 		FileManager fileManager = mock(FileManager.class);
 		FileHandler rulesFile = mock(FileHandler.class);

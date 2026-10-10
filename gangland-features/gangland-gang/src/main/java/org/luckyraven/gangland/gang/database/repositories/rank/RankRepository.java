@@ -27,39 +27,17 @@ public class RankRepository extends AbstractRepository<Rank> {
 	}
 
 	/**
-	 * Inserts the initial tail and head ranks if they do not already exist in the database.
-	 * <p>
-	 * The tail rank is inserted first (lower rank), followed by the head rank (leader). Each rank only gets created
-	 * when absent, making this method safe to call on every startup.
-	 *
-	 * @param headName the name of the head (leader) rank
-	 * @param tailName the name of the tail (lowest) rank
-	 *
-	 * @return {@code int[0]} = head rank id, {@code int[1]} = tail rank id
+	 * The next free rank id: {@code max(id) + 1}. {@code total + 1} collides with a surviving id after a delete leaves a
+	 * gap (GR-21).
 	 */
-	public int[] insertInitialRanks(String headName, String tailName) throws SQLException {
-		// Tail rank first (lower rank), then the head rank — same insertion order as before.
-		int tailId = resolveOrInsertRank(tailName);
-		int headId = resolveOrInsertRank(headName);
+	public int nextRankId() throws SQLException {
+		List<Integer> maxIds = getBackend().query("SELECT COALESCE(MAX(id), 0) AS max_id FROM " + rankTable.getName(),
+		                                          resultSet -> resultSet.getInt("max_id"));
 
-		return new int[]{headId, tailId};
+		return maxIds.isEmpty() ? 1 : maxIds.get(0) + 1;
 	}
 
-	private int resolveOrInsertRank(String name) throws SQLException {
-		Integer existingId = getBackend().queryBuilder(rankTable.getName())
-		                                 .where("name", name)
-		                                 .one(resultSet -> resultSet.getInt("id"));
-		if (existingId != null) {
-			return existingId;
-		}
-
-		int id = totalRanks() + 1;
-		tableBackend().insert(new Rank(name, id));
-
-		return id;
-	}
-
-	private int totalRanks() throws SQLException {
+	public int totalRanks() throws SQLException {
 		List<Integer> counts = getBackend().query("SELECT COUNT(*) AS total FROM " + rankTable.getName(),
 		                                          resultSet -> resultSet.getInt("total"));
 
