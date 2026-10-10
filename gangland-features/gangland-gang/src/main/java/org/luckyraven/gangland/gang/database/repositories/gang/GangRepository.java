@@ -95,7 +95,7 @@ public class GangRepository extends AbstractRepository<Gang> {
 		return raw instanceof Number number ? number : 0;
 	}
 
-	private Gang.State parseState(String raw) {
+	static Gang.State parseState(String raw) {
 		if (raw == null || raw.equals("null")) {
 			return Gang.State.OPEN;
 		}

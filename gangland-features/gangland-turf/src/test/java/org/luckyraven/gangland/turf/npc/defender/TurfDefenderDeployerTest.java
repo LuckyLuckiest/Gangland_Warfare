@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+import org.luckyraven.gangland.turf.events.TurfDefenderDownEvent;
+import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.ArgumentCaptor;
+import org.bukkit.event.Event;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -18,7 +22,9 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -63,6 +69,68 @@ class TurfDefenderDeployerTest {
 		assertEquals(-1, deployer.findOwningTurfId(null));
 	}
 
+	@Test
+	@DisplayName("aliveCount counts live guards per turf and drops one when a guard turns invalid")
+	void aliveCount_isPerTurf() throws Exception {
+		TurfDefenderDeployer deployer = newDeployer();
+		CivilianNpc a = liveNpc();
+		CivilianNpc b = liveNpc();
+		CivilianNpc c = liveNpc();
+		putDefender(deployer, 1, a);
+		putDefender(deployer, 1, b);
+		putDefender(deployer, 2, c);
+
+		assertEquals(2, deployer.aliveCount(1));
+		assertEquals(1, deployer.aliveCount(2));
+		assertEquals(0, deployer.aliveCount(3));
+
+		when(a.isValid()).thenReturn(false);
+
+		assertEquals(1, deployer.aliveCount(1));
+	}
+
+	@Test
+	@DisplayName("a guard that dies fires one TurfDefenderDownEvent per tick with the guards left")
+	void deadDefender_firesDefenderDownOncePerTick() throws Exception {
+		TurfDefenderDeployer deployer = newDeployer();
+		CivilianNpc alive = liveNpc();
+		CivilianNpc dying = liveNpc();
+		putDefender(deployer, 1, alive);
+		putDefender(deployer, 1, dying);
+		when(dying.isValid()).thenReturn(false);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			deployer.tick();
+
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager(), org.mockito.Mockito.times(1)).callEvent(captor.capture());
+			assertInstanceOf(TurfDefenderDownEvent.class, captor.getValue());
+			TurfDefenderDownEvent down = (TurfDefenderDownEvent) captor.getValue();
+			assertEquals(1, down.turfId());
+			assertEquals(1, down.remaining());
+		}
+	}
+
+	@Test
+	@DisplayName("a guard removed because its lifespan ran out fires no TurfDefenderDownEvent")
+	void expiredDefender_firesNothing() throws Exception {
+		TurfDefenderDeployer deployer = newDeployer();
+		CivilianNpc expired = liveNpc();
+		putDefender(deployer, 1, expired, System.currentTimeMillis() - 1_000L);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			deployer.tick();
+
+			verify(bukkit.pluginManager(), org.mockito.Mockito.never()).callEvent(org.mockito.ArgumentMatchers.any(Event.class));
+		}
+	}
+
+	private static CivilianNpc liveNpc() {
+		CivilianNpc npc = mock(CivilianNpc.class);
+		when(npc.isValid()).thenReturn(true);
+		return npc;
+	}
+
 	private static TurfDefenderDeployer newDeployer() {
 		return new TurfDefenderDeployer(mock(JavaPlugin.class), mock(CivilianService.class),
 				mock(CivilianSpawnManager.class));
@@ -76,6 +144,12 @@ class TurfDefenderDeployerTest {
 	 */
 	@SuppressWarnings("unchecked")
 	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc) throws Exception {
+		putDefender(deployer, turfId, npc, Long.MAX_VALUE);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc, long expiresAt)
+			throws Exception {
 		Class<?> groupClass           = Class.forName(TurfDefenderDeployer.class.getName() + "$Group");
 		Class<?> trackedDefenderClass = Class.forName(TurfDefenderDeployer.class.getName() + "$TrackedDefender");
 
@@ -86,7 +160,7 @@ class TurfDefenderDeployerTest {
 
 		Constructor<?> defenderCtor = trackedDefenderClass.getDeclaredConstructor(CivilianNpc.class, long.class);
 		defenderCtor.setAccessible(true);
-		Object trackedDefender = defenderCtor.newInstance(npc, Long.MAX_VALUE);
+		Object trackedDefender = defenderCtor.newInstance(npc, expiresAt);
 
 		Field defendersField = groupClass.getDeclaredField("defenders");
 		defendersField.setAccessible(true);

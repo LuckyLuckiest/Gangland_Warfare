@@ -159,7 +159,13 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		return civilianService;
 	}
 
-	private void tick() {
+	/** How many guards of {@code turfId} are alive (W2 shell: 0 until commit 3). */
+	public int aliveCount(int turfId) {
+		return 0;
+	}
+
+	/** Package-private for tests (W2-K). */
+	void tick() {
 		long now = System.currentTimeMillis();
 
 		for (Iterator<Map.Entry<Integer, Group>> entries = byTurfId.entrySet().iterator(); entries.hasNext(); ) {

@@ -33,11 +33,12 @@ import static org.mockito.Mockito.when;
 class GangPermissionsTest {
 
 	@Test
-	@DisplayName("GR-03 / PLAN 15.4: ALL lists the eight gangland.gang.* nodes that the rank permission add command accepts")
+	@DisplayName("GR-03 / PLAN 15.4: ALL lists the eight gangland.gang.* nodes plus gangland.turf.upgrade (W2-Q)")
 	void all_holdsTheEightGangNodes() {
 		assertEquals(List.of(GangPermissions.WITHDRAW, GangPermissions.DEPOSIT, GangPermissions.RENAME,
 		                     GangPermissions.DESCRIPTION, GangPermissions.DISPLAY, GangPermissions.COLOR,
-		                     GangPermissions.INVITE, GangPermissions.ALLY), GangPermissions.ALL);
+		                     GangPermissions.INVITE, GangPermissions.ALLY, GangPermissions.TURF_UPGRADE),
+		             GangPermissions.ALL);
 	}
 
 	@AfterEach

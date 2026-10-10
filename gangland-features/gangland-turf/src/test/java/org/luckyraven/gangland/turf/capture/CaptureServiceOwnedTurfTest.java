@@ -216,6 +216,30 @@ class CaptureServiceOwnedTurfTest {
 	}
 
 	@Test
+	@DisplayName("a DEFENDED cancel carries the challenger gang id on the failed event")
+	void defendedCancel_carriesChallenger() {
+		CaptureService service = service(1); // base = 100
+		contestAt(10.0);
+		Map<UUID, Turf> cache = new HashMap<>();
+		insidePlayerTracked(challenger.getId(), cache); // 1 challenger present
+		for (int i = 0; i < 5; i++) {
+			insidePlayerTracked(owner.getId(), cache); // 5 defenders
+		}
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			for (UUID id : cache.keySet()) {
+				Player player = playerFor(cache, id);
+				bukkit.statics().when(() -> Bukkit.getPlayer(id)).thenReturn(player);
+			}
+			service.tick(cache);
+
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager()).callEvent(captor.capture());
+			assertEquals(challenger.getId(), ((TurfCaptureFailedEvent) captor.getValue()).getChallengerGangId());
+		}
+	}
+
+	@Test
 	@DisplayName("defenders outnumbering a present challenger cancels DEFENDED")
 	void defended_whenChallengerPresentButOutnumbered() {
 		CaptureService service = service(1); // base = 100

@@ -52,10 +52,11 @@ class TurfIncomeDistributorTest {
 	}
 
 	@Test
-	@DisplayName("a turf whose owner gang is missing is released with cause ORPHANED and no income is deposited")
-	void distribute_missingGang_firesOrphanedAndDepositsNothing() {
+	@DisplayName("a turf whose owner gang is missing is released with cause ORPHANED when other gangs are loaded")
+	void missingGang_withOtherGangsLoaded_autoReleases() {
 		Turf turf = new Turf(1, "T", new CuboidRegion("world", 0, 0, 10, 10), 99, BigDecimal.TEN, 0L, 0L);
 		turfs.create(turf);
+		gangs.register(org.luckyraven.gangland.turf.support.CaptureFixtures.gang(1));
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			TurfIncomeDistributor distributor = distributor();
 			distributor.start();

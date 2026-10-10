@@ -17,7 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GangRulesKeyParityTest {
 
 	private static final List<String> KEYS = List.of(
-			"Name_Pattern", "Ranks.Preset", "Ranks.Preset_Permissions.member");
+			"Name_Pattern", "Ranks.Preset", "Ranks.Preset_Permissions.member", "Progression.Max_Level",
+			"Progression.Base_Experience", "Ranks.Preset_Permissions.officer");
 
 	@Test
 	@DisplayName("every key GangRules reads is set in gang/gang_rules.yml")

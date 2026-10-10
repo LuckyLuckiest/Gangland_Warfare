@@ -1,9 +1,12 @@
 package org.luckyraven.gangland.gang.file;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
+import org.luckyraven.gangland.gang.GangLevels;
+import org.luckyraven.gangland.core.user.Level;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.testkit.PluginMocks;
@@ -21,6 +24,34 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** {@link GangRules}: defaults, lower-casing, the preset floor, a bad regex and an unknown rank. */
 @DisplayName("GangRules - gang_rules.yml")
 class GangRulesTest {
+
+	@AfterEach
+	void restoreLevelDefaults() {
+		GangLevels.bind(20, 200);
+	}
+
+	@Test
+	@DisplayName("the shipped Progression section gives max level 20 and base experience 200")
+	void progressionDefaults() throws IOException {
+		String shipped = new String(GangRulesTest.class.getResourceAsStream("/gang/gang_rules.yml").readAllBytes(),
+		                            StandardCharsets.UTF_8);
+		GangRules rules = load(shipped);
+
+		assertEquals(20, rules.getMaxLevel());
+		assertEquals(200.0, rules.getBaseExperience());
+	}
+
+	@Test
+	@DisplayName("the Progression section binds the level curve that new gangs are built with")
+	void progressionBindsGangLevels() throws IOException {
+		load("Progression:\n   Max_Level: 5\n   Base_Experience: 50\n");
+
+		Level level = GangLevels.newLevel();
+
+		assertEquals(5, level.getMaxLevel());
+		assertEquals(50.0, level.getBaseAmount());
+		assertEquals(GangLevels.FORMULA, level.getFormula());
+	}
 
 	@TempDir(cleanup = CleanupMode.NEVER)
 	Path tempDir;

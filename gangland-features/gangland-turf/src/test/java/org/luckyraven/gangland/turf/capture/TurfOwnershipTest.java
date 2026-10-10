@@ -117,6 +117,21 @@ class TurfOwnershipTest {
 	}
 
 	@Test
+	@DisplayName("cancelContest carries the challenger gang id on the failed event (W2-N1 tells both sides)")
+	void cancelContest_carriesChallenger() {
+		Turf             turf  = turf(1);
+		TurfRuntimeState state = turfs.getRuntimeState(turf.getId());
+		state.setState(TurfState.CONTESTING);
+		state.setChallengerGangId(5);
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			assertTrue(ownership.cancelContest(turf, TurfCaptureFailedEvent.Reason.CANCELLED));
+
+			TurfCaptureFailedEvent failed = (TurfCaptureFailedEvent) firedEvents(bukkit, 1).get(0);
+			assertEquals(5, failed.getChallengerGangId());
+		}
+	}
+
+	@Test
 	@DisplayName("cancelContest on an idle turf returns false and fires nothing")
 	void cancelContest_idle_returnsFalseAndFiresNothing() {
 		Turf turf = turf(1);

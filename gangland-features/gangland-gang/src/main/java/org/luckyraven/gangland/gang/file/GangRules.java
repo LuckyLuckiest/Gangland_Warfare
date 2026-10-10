@@ -42,6 +42,16 @@ public class GangRules implements FileInitializer {
 		initialize();
 	}
 
+	/** Highest gang level (W2 shell: 0 until commit 5 reads Progression). */
+	public int getMaxLevel() {
+		return 0;
+	}
+
+	/** XP level 1 needs (W2 shell: 0 until commit 5 reads Progression). */
+	public double getBaseExperience() {
+		return 0;
+	}
+
 	@Override
 	public void initialize() {
 		var config = fileHandler.getFileConfiguration();

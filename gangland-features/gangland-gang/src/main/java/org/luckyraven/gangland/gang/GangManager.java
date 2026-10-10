@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
@@ -16,10 +17,22 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 	private final GangAllianceRepositoryContract allianceRepository;
 	private final Map<Integer, Gang>             gangs;
 
+	/** D7 (0.17.0): one-shot migration id that makes every stored gang invite-only. */
+	public static final String STATE_MIGRATION = "0.17.0-gang-state-invite";
+
+	private final GangMigrationsContract migrations;
+
 	public GangManager(IRepository<Gang> gangRepository,
 	                   GangAllianceRepositoryContract allianceRepository) {
+		this(gangRepository, allianceRepository, GangMigrationsContract.NONE);
+	}
+
+	public GangManager(IRepository<Gang> gangRepository,
+	                   GangAllianceRepositoryContract allianceRepository,
+	                   GangMigrationsContract migrations) {
 		this.gangRepository     = gangRepository;
 		this.allianceRepository = allianceRepository;
+		this.migrations         = migrations;
 		this.gangs              = new HashMap<>();
 	}
 

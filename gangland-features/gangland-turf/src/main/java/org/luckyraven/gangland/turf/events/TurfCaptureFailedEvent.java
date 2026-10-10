@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.turf.data.Turf;
 
 /**
@@ -20,10 +21,17 @@ public final class TurfCaptureFailedEvent extends Event {
 
 	private final Turf   turf;
 	private final Reason reason;
+	@Nullable
+	private final Integer challengerGangId;
 
 	public TurfCaptureFailedEvent(Turf turf, Reason reason) {
-		this.turf   = turf;
-		this.reason = reason;
+		this(turf, reason, null);
+	}
+
+	public TurfCaptureFailedEvent(Turf turf, Reason reason, @Nullable Integer challengerGangId) {
+		this.turf             = turf;
+		this.reason           = reason;
+		this.challengerGangId = challengerGangId;
 	}
 
 	public static HandlerList getHandlerList() {

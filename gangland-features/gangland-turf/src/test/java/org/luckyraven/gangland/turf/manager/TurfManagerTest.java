@@ -35,6 +35,24 @@ class TurfManagerTest {
 		manager    = new TurfManager(repository);
 	}
 
+	@Test
+	@DisplayName("countOwnedBy counts the turfs one gang owns and ignores unclaimed ones")
+	void countOwnedBy_countsPerGang() {
+		manager.create(ownedBy(1, 7));
+		manager.create(ownedBy(2, 7));
+		manager.create(ownedBy(3, 8));
+		manager.create(turf(4, "world", 200, 0, 210, 10));
+
+		assertEquals(2, manager.countOwnedBy(7));
+		assertEquals(1, manager.countOwnedBy(8));
+		assertEquals(0, manager.countOwnedBy(9));
+	}
+
+	private static Turf ownedBy(int id, int gangId) {
+		return new Turf(id, "Turf " + id, new CuboidRegion("world", id * 20, 0, id * 20 + 10, 10), gangId,
+		                BigDecimal.valueOf(100), System.currentTimeMillis(), 0L);
+	}
+
 	private static Turf turf(int id, String world, int x1, int z1, int x2, int z2) {
 		return new Turf(id, "Turf " + id, new CuboidRegion(world, x1, z1, x2, z2), null,
 		                BigDecimal.valueOf(100), System.currentTimeMillis(), 0L);

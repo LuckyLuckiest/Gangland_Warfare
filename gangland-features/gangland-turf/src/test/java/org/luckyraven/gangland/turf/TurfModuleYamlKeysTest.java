@@ -19,14 +19,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TurfModuleYamlKeysTest {
 
 	private static final List<String> RULES_KEYS = List.of(
-			"Create.Snap_To_Chunks", "Create.Min_Side_Blocks", "Create.Max_Side_Blocks");
+			"Create.Snap_To_Chunks", "Create.Min_Side_Blocks", "Create.Max_Side_Blocks",
+			"Capture.Window", "Capture.Wake_Up_Shield_Seconds", "Capture.Window_Min_Member_Age_Hours",
+			"Capture.Presence_Seconds", "Capture.Min_Capture_Seconds", "Capture.Max_Contest_Minutes",
+			"Capture.Guard_Weight_Cap", "Turf_Cap.Base", "Turf_Cap.Per_Level", "Turf_Cap.Ceiling",
+			"Income.Idle_Hours", "Income.Max_Multiplier", "Income.Gang_XP_Per_Payout", "Garrison.Max_Reserve");
 
 	private static final List<String> MAP_KEYS = List.of(
 			"Map.Width", "Map.Height", "Map.Cell_Blocks", "Map.Auto_Min_Interval_Seconds", "Map.Bedrock_Text_Form",
 			"Hud.Enabled", "Hud.Interval_Seconds", "Hud.Priority");
 
 	private static final List<String> MESSAGE_KEYS = List.of(
-			"Reason.Attackable", "Reason.Cooldown", "Reason.Owners_Active");
+			"Reason.Attackable", "Reason.Cooldown", "Reason.Owners_Active", "Reason.No_Owners_Online", "Reason.Waking_Up",
+			"Reason.Over_Cap", "Info.BossBar_Guards");
 
 	private static YamlConfiguration load(String resource) throws IOException {
 		return YamlConfiguration.loadConfiguration(new StringReader(YamlFixture.shipped(resource)));
@@ -53,7 +58,7 @@ class TurfModuleYamlKeysTest {
 	}
 
 	@Test
-	@DisplayName("turf_messages.yml has the three Reason lines the capture verdict reads")
+	@DisplayName("turf_messages.yml has the Reason and Info lines the capture verdict reads")
 	void messageKeysPresent() throws IOException {
 		YamlConfiguration yaml = load("/turf/turf_messages.yml");
 

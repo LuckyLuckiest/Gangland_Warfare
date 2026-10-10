@@ -68,7 +68,8 @@ public final class TurfIncomeDistributor implements BeanLifecycle {
 		stop();
 	}
 
-	private void distribute() {
+	/** Package-private for tests (W2-K). */
+	void distribute() {
 		for (Turf turf : new ArrayList<>(turfs.getAll())) {
 			if (turf.isUnclaimed()) {
 				continue;

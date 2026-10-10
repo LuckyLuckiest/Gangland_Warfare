@@ -65,7 +65,7 @@ class TurfSettingsTest {
 		TurfSettings s = load();
 
 		assertEquals(10, s.getIncomeIntervalMinutes());
-		assertEquals(0, new BigDecimal("100").compareTo(s.getDefaultIncomeAmount()));
+		assertEquals(0, new BigDecimal("250").compareTo(s.getDefaultIncomeAmount()));
 		assertEquals("CARROT_ON_A_STICK", s.getWandItemType());
 		assertEquals(30, s.getVisualizationDurationSeconds());
 		assertEquals("FLAME", s.getVisualizationParticle());
@@ -76,7 +76,7 @@ class TurfSettingsTest {
 		assertEquals(15, s.getCaptureCooldownMinutes());
 		assertEquals(15, s.getCaptureAbandonGraceSeconds());
 		assertEquals(10, s.getCapturePostLogoffProtectionMinutes());
-		assertEquals(10, s.getCaptureInactivityAutoReleaseDays());
+		assertEquals(4, s.getCaptureInactivityAutoReleaseDays());
 		assertEquals(true, s.isCaptureSoundEnabled());
 		assertEquals(true, s.isCaptureBroadcastGlobally());
 		assertEquals(List.of(25, 50, 75), s.getCaptureProgressMilestones());
@@ -85,10 +85,15 @@ class TurfSettingsTest {
 		assertEquals(new TurfSettings.Tone("ENTITY_VILLAGER_NO", 1.0f, 1.0f), s.getFailedSound());
 		assertEquals(new TurfSettings.Tone("BLOCK_NOTE_BLOCK_HAT", 0.3f, 1.8f), s.getTickSound());
 		assertEquals(new TurfSettings.Tone("ENTITY_ENDER_DRAGON_GROWL", 0.5f, 1.5f), s.getUnclaimedSound());
-		assertEquals(0.5, s.getContributionDefenderPresenceTick());
-		assertEquals(1.0, s.getContributionAttackerPresenceTick());
-		assertEquals(50.0, s.getContributionCaptureCompleteBonus());
-		assertEquals(25.0, s.getContributionDefenseSuccessBonus());
+	}
+
+	@Test
+	@DisplayName("the shipped turf_settings.yml has no Contribution section (TF-16, P4.4)")
+	void shippedFile_hasNoContributionSection() throws Exception {
+		YamlConfiguration yaml = YamlConfiguration.loadConfiguration(
+				new java.io.StringReader(org.luckyraven.gangland.turf.support.YamlFixture.shipped("/turf/turf_settings.yml")));
+
+		assertEquals(false, yaml.isSet("Contribution"));
 	}
 
 	@Test

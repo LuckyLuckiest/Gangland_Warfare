@@ -150,6 +150,11 @@ public final class TurfManager {
 	 * Called whenever ownership or the persisted capture timestamp changes. Bypasses the autosave cadence — capture is
 	 * an important enough state change that it should hit disk immediately.
 	 */
+	/** How many turfs gang {@code gangId} owns right now (W2 shell: 0 until commit 3). */
+	public int countOwnedBy(int gangId) {
+		return 0;
+	}
+
 	public void persist(Turf turf) {
 		repository.save(turf);
 	}

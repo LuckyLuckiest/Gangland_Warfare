@@ -4,6 +4,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
 import org.luckyraven.gangland.gang.rank.Rank;
@@ -22,12 +23,26 @@ public class MemberManager implements BeanLifecycle {
 	private final GangLookupContract       gangLookup;
 	private final RankLookupContract       rankLookup;
 	private final Map<UUID, Member>        members;
+	private final GangMigrationsContract   migrations;
+
+	/** D15 (0.17.0): one-shot migration id that resets every stored contribution to 0 (TF-44). */
+	public static final String CONTRIBUTION_MIGRATION = "0.17.0-contribution-reset";
 
 	public MemberManager(JavaPlugin plugin,
 	                     DatabaseHandler databaseHandler,
 	                     MemberRepositoryContract memberRepository,
 	                     GangLookupContract gangLookup,
 	                     RankLookupContract rankLookup) {
+		this(plugin, databaseHandler, memberRepository, gangLookup, rankLookup, GangMigrationsContract.NONE);
+	}
+
+	public MemberManager(JavaPlugin plugin,
+	                     DatabaseHandler databaseHandler,
+	                     MemberRepositoryContract memberRepository,
+	                     GangLookupContract gangLookup,
+	                     RankLookupContract rankLookup,
+	                     GangMigrationsContract migrations) {
+		this.migrations       = migrations;
 		this.plugin           = plugin;
 		this.databaseHandler  = databaseHandler;
 		this.memberRepository = memberRepository;

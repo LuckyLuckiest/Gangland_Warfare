@@ -37,6 +37,7 @@ class PluginYmlPermissionsTest {
 			"gangland.command.turf",
 			"gangland.command.turf.info",
 			"gangland.command.turf.list",
+			"gangland.command.turf.rules",
 			"gangland.command.gang",
 			"gangland.command.gang.create",
 			"gangland.command.gang.leave",
@@ -53,6 +54,10 @@ class PluginYmlPermissionsTest {
 			"gangland.command.gang.kick",
 			"gangland.command.gang.promote",
 			"gangland.command.gang.demote",
+			"gangland.command.gang.chat",
+			"gangland.command.gang.join",
+			"gangland.command.gang.recruiting",
+			"gangland.command.gang.bounty",
 			"gangland.inventory.gang_stat",
 			"gangland.inventory.alliance_stat");
 

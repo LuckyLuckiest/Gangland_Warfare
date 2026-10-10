@@ -51,6 +51,9 @@ public final class GangPermissions {
 	 * Every {@code gangland.gang.*} node above. Rank permission add accepts exactly these (plus server nodes), and tab
 	 * completion offers them.
 	 */
+	/** Buy guards and boosts at the Quartermaster (W2-Q). Not in ALL until W2-K commit 5. */
+	public static final String TURF_UPGRADE = "gangland.turf.upgrade";
+
 	public static final List<String> ALL = List.of(WITHDRAW, DEPOSIT, RENAME, DESCRIPTION, DISPLAY, COLOR, INVITE, ALLY);
 
 	/**

@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.turf.config;
 
 import lombok.Getter;
+import org.luckyraven.gangland.turf.capture.CaptureRules;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileInitializer;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -45,6 +46,44 @@ public class TurfRules implements FileInitializer {
 	@Override
 	public FileHandler getFileHandler() {
 		return fileHandler;
+	}
+
+	/** The Capture: rules in force (W2 shell: LEGACY until W2-K commit 3 reads turf_rules.yml). */
+	public CaptureRules capture() {
+		return CaptureRules.LEGACY;
+	}
+
+	public int getTurfCapBase() {
+		return 0;
+	}
+
+	public int getTurfCapPerLevel() {
+		return 0;
+	}
+
+	public int getTurfCapCeiling() {
+		return 0;
+	}
+
+	public int getIncomeIdleHours() {
+		return 0;
+	}
+
+	public double getMaxIncomeMultiplier() {
+		return 0.0;
+	}
+
+	public double getGangXpPerPayout() {
+		return 0.0;
+	}
+
+	public int getMaxReserve() {
+		return 0;
+	}
+
+	/** Turfs a gang of this level may hold (W2 shell: always 0 until commit 3). */
+	public int cap(int gangLevel) {
+		return 0;
 	}
 
 }
