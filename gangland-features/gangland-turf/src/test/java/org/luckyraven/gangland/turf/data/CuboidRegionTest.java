@@ -4,8 +4,14 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.turf.manager.TurfManager;
+import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
+import org.luckyraven.gangland.turf.data.Turf;
+import java.math.BigDecimal;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -118,5 +124,57 @@ class CuboidRegionTest {
 		CuboidRegion normal = new CuboidRegion("world", 0, 0, 10, 10);
 
 		assertFalse(nether.overlaps(normal));
+	}
+
+	@Test
+	@DisplayName("snappedToChunks widens positive corners outward to whole chunks")
+	void snappedToChunks_positive() {
+		CuboidRegion snapped = new CuboidRegion("world", 3, 5, 20, 40).snappedToChunks();
+
+		assertEquals(0, snapped.getMinX());
+		assertEquals(0, snapped.getMinZ());
+		assertEquals(31, snapped.getMaxX());
+		assertEquals(47, snapped.getMaxZ());
+	}
+
+	@Test
+	@DisplayName("snappedToChunks handles negative coordinates in two's complement")
+	void snappedToChunks_negative() {
+		CuboidRegion snapped = new CuboidRegion("world", -1, -17, -1, -17).snappedToChunks();
+
+		assertEquals(-16, snapped.getMinX());
+		assertEquals(-32, snapped.getMinZ());
+		assertEquals(-1, snapped.getMaxX());
+		assertEquals(-17, snapped.getMaxZ());
+	}
+
+	@Test
+	@DisplayName("snappedToChunks leaves a region already on chunk edges unchanged")
+	void snappedToChunks_alignedUnchanged() {
+		CuboidRegion aligned = new CuboidRegion("world", 16, 32, 31, 47);
+
+		CuboidRegion snapped = aligned.snappedToChunks();
+
+		assertEquals(16, snapped.getMinX());
+		assertEquals(32, snapped.getMinZ());
+		assertEquals(31, snapped.getMaxX());
+		assertEquals(47, snapped.getMaxZ());
+	}
+
+	@Test
+	@DisplayName("two raw regions 2 blocks apart overlap once snapped, and findConflict reports the first")
+	void snappedRegion_overlapsWhereRawDidNot() {
+		CuboidRegion existingRaw = new CuboidRegion("world", 0, 0, 5, 5);
+		CuboidRegion newRaw      = new CuboidRegion("world", 8, 0, 12, 5);
+		assertFalse(existingRaw.overlaps(newRaw));
+
+		Turf existing = new Turf(1, "Old", existingRaw.snappedToChunks(), null, BigDecimal.ONE, 0L, 0L);
+		TurfManager turfs = new TurfManager(org.mockito.Mockito.mock(TurfRepositoryContract.class));
+		turfs.create(existing);
+
+		Turf conflict = turfs.findConflict(newRaw.snappedToChunks());
+
+		assertNotNull(conflict);
+		assertEquals(1, conflict.getId());
 	}
 }
