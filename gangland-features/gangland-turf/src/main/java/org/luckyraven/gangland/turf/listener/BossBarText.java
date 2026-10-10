@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  * Pure text for the capture boss bar: the time left at the current pace and the title line. Bukkit-free so the pace
- * rule can be tested on its own. W2 replaces the pace rule (guards, plurality); keep this small.
+ * rule can be tested on its own. One rule for every turf since 0.17.0: attackers against defenders plus guards.
  */
 public final class BossBarText {
 
@@ -14,37 +14,54 @@ public final class BossBarText {
 	}
 
 	/**
-	 * Seconds until the capture reaches 100 at the current pace, rounded up. For an unclaimed turf this is the time
-	 * left in the current phase (CLAIM or CONSOLIDATE), not the whole capture.
+	 * Seconds until the capture reaches 100 at the current pace, rounded up. The rate is {@code net * 100 / duration}
+	 * per second, never above {@code 100 / minCaptureSeconds} when that is positive (a capture cannot finish sooner
+	 * than its minimum time).
 	 *
-	 * @param progress        percent within the current phase, 0..100
-	 * @param net             attackers minus defenders
-	 * @param durationSeconds base time for one attacker to fill 0..100 with no defenders
+	 * @param progress          percent within the capture, 0..100
+	 * @param net               attackers minus defenders minus guards (see {@link #pace})
+	 * @param durationSeconds   base time for one attacker to fill 0..100 with no defenders
+	 * @param minCaptureSeconds the shortest a capture can take, or 0 for no clamp
 	 * @return seconds left, or -1 when the capture is stalled (net &lt;= 0)
 	 */
-	public static long secondsLeft(double progress, int net, int durationSeconds) {
+	public static long secondsLeft(double progress, int net, int durationSeconds, int minCaptureSeconds) {
 		if (net <= 0) {
 			return -1L;
 		}
-		double remaining = Math.max(0.0, 100.0 - progress) * durationSeconds / (net * 100.0);
+		double rate = net * 100.0 / Math.max(1, durationSeconds);
+		if (minCaptureSeconds > 0) {
+			rate = Math.min(rate, 100.0 / minCaptureSeconds);
+		}
+		double remaining = Math.max(0.0, 100.0 - progress) / rate;
 		return (long) Math.ceil(remaining);
 	}
 
 	/**
-	 * The net rate the seconds-left formula runs on. The unclaimed CLAIM phase is global (anyone inside fills it at one
-	 * attacker's rate), so its pace is 1 whenever anyone is inside and 0 otherwise. Every other phase is attackers minus
-	 * defenders.
+	 * The net rate the seconds-left formula runs on: attackers minus defenders minus the guards holding the bar. A
+	 * plain tug of war, for owned and unclaimed turfs alike.
 	 *
-	 * @param globalClaimPhase true for an unclaimed turf in the CLAIM phase
-	 * @param attackers        the challenger's count inside
-	 * @param defenders        the defending count inside
+	 * @param attackers the challenger's count inside
+	 * @param defenders the defending count inside
+	 * @param guards    the guards counted on the turf
 	 * @return the pace to pass to {@link #secondsLeft}
 	 */
-	public static int pace(boolean globalClaimPhase, int attackers, int defenders) {
-		if (globalClaimPhase) {
-			return attackers + defenders > 0 ? 1 : 0;
+	public static int pace(int attackers, int defenders, int guards) {
+		return attackers - defenders - guards;
+	}
+
+	/**
+	 * The defenders number on the boss bar title: the count, with the guards appended when any hold the bar.
+	 *
+	 * @param text      the turf messages, for the guards suffix
+	 * @param defenders the defending count inside
+	 * @param guards    the guards counted on the turf
+	 * @return e.g. {@code 1}, or {@code 1 +2 guards} (colour codes included)
+	 */
+	public static String defendersLabel(TurfMessages text, int defenders, int guards) {
+		if (guards == 0) {
+			return String.valueOf(defenders);
 		}
-		return attackers - defenders;
+		return defenders + text.text("Info.BossBar_Guards", " &7+%guards% guards", "guards", guards);
 	}
 
 	/**
@@ -65,7 +82,8 @@ public final class BossBarText {
 	/**
 	 * The boss bar title with its five placeholders filled. time is already rendered (a duration or the stalled word).
 	 */
-	public static String title(TurfMessages text, String gang, String turf, int attackers, int defenders, String time) {
+	public static String title(TurfMessages text, String gang, String turf, int attackers, String defenders,
+	                           String time) {
 		return text.text("Info.BossBar_Title",
 		                 "&c%gang% &fis capturing &e%turf% &7- &f%attackers% &7vs &f%defenders% &7- &f%time%",
 		                 "gang", gang,
