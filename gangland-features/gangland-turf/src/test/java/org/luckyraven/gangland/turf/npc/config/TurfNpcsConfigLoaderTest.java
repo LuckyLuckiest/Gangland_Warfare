@@ -57,6 +57,17 @@ class TurfNpcsConfigLoaderTest {
 		verify(handler, never()).getParsedDocument();
 	}
 
+	@Test
+	@DisplayName("W2-Q: Powerup_Npc.Display_Name is read and defaults to Quartermaster (TF-38)")
+	void powerupNpc_displayName_defaultAndOverride() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Powerup_Npc:\n   Display_Name: Boss\n"));
+		assertEquals("Boss", loader(handler).getPowerupSettings().displayName());
+
+		when(handler.getParsedDocument()).thenReturn(document(COP_ENABLED));
+		assertEquals("Quartermaster", loader(handler).getPowerupSettings().displayName());
+	}
+
 	private static TurfNpcsConfigLoader loader(FileHandler handler) {
 		FileManager fileManager = mock(FileManager.class);
 		when(fileManager.getFile("turf_npcs")).thenReturn(handler);

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 import org.luckyraven.keystone.persistence.repository.IRepository;
+import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -96,6 +97,23 @@ class TurfPowerupManagerTest {
 
 		verify(repository, never()).loadAll();
 		verify(repository).delete(argThat(data -> data.getTurfId() == 4));
+	}
+
+	@Test
+	@DisplayName("W2-Q: place with no name stores the configured Quartermaster name (TF-38)")
+	void place_nullName_usesConfiguredName() {
+		JavaPlugin plugin = mock(JavaPlugin.class);
+		@SuppressWarnings("unchecked")
+		IRepository<TurfPowerupData> repository = mock(IRepository.class);
+		TurfPowerupSettings          settings   = new TurfPowerupSettings("quartermaster", 32.0, "Boss");
+		CivilianSpawnManager         spawnManager = mock(CivilianSpawnManager.class);
+		TurfPowerupManager manager = new TurfPowerupManager(plugin, repository, () -> settings, spawnManager);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			manager.place(5, new Location(mock(World.class), 0, 64, 0), null);
+		}
+
+		verify(repository).save(argThat(data -> "Boss".equals(data.getDisplayName())));
 	}
 
 	@SuppressWarnings("unchecked")
