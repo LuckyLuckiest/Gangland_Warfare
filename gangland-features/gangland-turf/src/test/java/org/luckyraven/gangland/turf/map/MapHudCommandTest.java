@@ -88,7 +88,7 @@ class MapHudCommandTest {
 		                        CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
 		prefs = new MapPrefsService();
 
-		MapCommand map = new MapCommand(plugin, prefs, text);
+		MapCommand map = new MapCommand(plugin, prefs, text, mock(TurfMapService.class));
 		map.initializeArguments();
 		hud = new MapHudCommand(plugin, map.getArgumentTree(), map.getArgument(), prefs, text);
 
