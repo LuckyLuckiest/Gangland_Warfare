@@ -55,15 +55,15 @@ class MapAutoTaskTest {
 	}
 
 	@Test
-	@DisplayName("the first tick seeds a viewer without resending: the command already sent the map")
-	void firstTick_seedsWithoutResending_commandAlreadySent() {
+	@DisplayName("the first tick sends the map (the command does not), so a move before it cannot be lost")
+	void firstTick_sendsTheMap() {
 		prefs.setAuto(id, true);
 		MapAutoTask task = task();
 
 		clock.set(seconds(0));
 		task.tick();
 
-		assertEquals(0, sent.size());
+		assertEquals(1, sent.size());
 		assertEquals(1, rasters);
 	}
 
@@ -74,6 +74,7 @@ class MapAutoTaskTest {
 		MapAutoTask task = task();
 		clock.set(seconds(0));
 		task.tick();
+		sent.clear();
 
 		clock.set(seconds(INTERVAL_SECONDS));
 		task.tick();
@@ -90,6 +91,7 @@ class MapAutoTaskTest {
 		MapAutoTask task = task();
 		clock.set(seconds(0));
 		task.tick();
+		sent.clear();
 
 		glyph = 'B';
 		clock.set(seconds(2));
@@ -108,6 +110,7 @@ class MapAutoTaskTest {
 		MapAutoTask task = task();
 		clock.set(seconds(0));
 		task.tick();
+		sent.clear();
 		int computed = rasters;
 
 		glyph = 'B';
@@ -130,6 +133,7 @@ class MapAutoTaskTest {
 		MapAutoTask task = task();
 		clock.set(seconds(0));
 		task.tick();
+		sent.clear();
 		int computed = rasters;
 
 		at = new Location(null, 40, 64, 8);
@@ -148,6 +152,7 @@ class MapAutoTaskTest {
 		MapAutoTask task = task();
 		clock.set(seconds(0));
 		task.tick();
+		sent.clear();
 
 		prefs.setAuto(id, false);
 		clock.set(seconds(1));
@@ -159,6 +164,6 @@ class MapAutoTaskTest {
 		task.tick();
 
 		assertEquals(computed + 1, rasters);
-		assertEquals(0, sent.size());
+		assertEquals(1, sent.size(), "turning auto back on sends the map again on the next tick");
 	}
 }

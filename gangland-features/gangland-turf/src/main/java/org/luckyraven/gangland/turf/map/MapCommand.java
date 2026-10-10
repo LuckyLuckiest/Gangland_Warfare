@@ -46,7 +46,7 @@ public final class MapCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		MapAutoCommand   auto   = new MapAutoCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text, map);
+		MapAutoCommand   auto   = new MapAutoCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
 		MapHudCommand    hud    = new MapHudCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
 		MapTextCommand   txt    = new MapTextCommand(getPlugin(), getArgumentTree(), getArgument(), map);
 		MapLegendCommand legend = new MapLegendCommand(getPlugin(), getArgumentTree(), getArgument(), map);

@@ -95,18 +95,9 @@ public final class MapAutoTask implements BeanLifecycle {
 			if (player == null) {
 				continue;
 			}
-			Viewer state = viewers.get(id);
-			if (state == null) {
-				// First sight: MapAutoCommand already sent the map when auto went on, so seed the hash, do not resend.
-				state = new Viewer();
-				viewers.put(id, state);
-				state.raster     = rasters.apply(player);
-				state.key        = cellKey(player);
-				state.computedAt = now;
-				state.sentHash   = state.raster.contentHash();
-				state.sentAt     = now;
-				continue;
-			}
+			// A new viewer has no key and no sent hash, so this tick computes and sends its first map. MapAutoCommand does
+			// not send: a move between the command and this tick would otherwise be seeded as already sent (T-197).
+			Viewer state = viewers.computeIfAbsent(id, unused -> new Viewer());
 			String key = cellKey(player);
 			boolean moved = !key.equals(state.key);
 			if (moved || now - state.computedAt >= intervalMillis) {

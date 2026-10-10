@@ -10,21 +10,20 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.util.TriConsumer;
 
 /**
- * {@code /glw map auto}: toggles the auto map. Turning it on sends the map at once; {@link MapAutoTask} then re-sends
- * it while what it shows changes, at most every {@code Map.Auto_Min_Interval_Seconds}.
+ * {@code /glw map auto}: toggles the auto map. Turning it on sends the map on the next {@link MapAutoTask} tick
+ * (within a second); the task then re-sends it while what it shows changes, at most every
+ * {@code Map.Auto_Min_Interval_Seconds}.
  */
 public final class MapAutoCommand extends SubArgument {
 
 	private final MapPrefsService prefs;
 	private final TurfMessages    text;
-	private final TurfMapService  map;
 
 	public MapAutoCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, MapPrefsService prefs,
-	                      TurfMessages text, TurfMapService map) {
+	                      TurfMessages text) {
 		super(plugin, "auto", tree, parent);
 		this.prefs = prefs;
 		this.text  = text;
-		this.map   = map;
 	}
 
 	@Override
@@ -37,7 +36,6 @@ public final class MapAutoCommand extends SubArgument {
 			prefs.setAuto(player.getUniqueId(), on);
 			if (on) {
 				sender.sendMessage(text.text("Map.Auto_On", "&7Auto map &aon&7: the map is sent again when what it shows changes."));
-				map.send(player);
 			} else {
 				sender.sendMessage(text.text("Map.Auto_Off", "&7Auto map &coff&7."));
 			}
