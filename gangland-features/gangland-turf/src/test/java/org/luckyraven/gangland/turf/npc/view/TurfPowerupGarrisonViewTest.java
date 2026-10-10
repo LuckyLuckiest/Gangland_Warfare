@@ -17,7 +17,9 @@ import org.luckyraven.keystone.inventory.flow.MenuFlow;
 
 import java.math.BigDecimal;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -45,6 +47,7 @@ class TurfPowerupGarrisonViewTest {
 	private Player                    viewer;
 	private TurfPowerupFlowSession    session;
 	private TurfPowerupGarrisonView   view;
+	private TurfMessages              messages;
 
 	@BeforeEach
 	void setUp() {
@@ -57,8 +60,8 @@ class TurfPowerupGarrisonViewTest {
 		when(buffs.effectiveMultiplier(TURF_ID, EffectType.GARRISON_DISCOUNT)).thenReturn(1.0);
 		when(rules.getMaxReserve()).thenReturn(12);
 
-		bank = mock(EconomyHandler.class);
-		when(bank.getAmount()).thenReturn(BigDecimal.valueOf(50_000));
+		bank = new EconomyHandler(null);
+		bank.setAmount(BigDecimal.valueOf(50_000));
 		Gang gang = mock(Gang.class);
 		when(gang.getEconomy()).thenReturn(bank);
 
@@ -69,8 +72,10 @@ class TurfPowerupGarrisonViewTest {
 		flow   = mock(MenuFlow.class);
 		viewer = mock(Player.class);
 
+		messages = mock(TurfMessages.class);
+		when(messages.text(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
 		view = new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules,
-		                                   mock(TurfMessages.class), "STONE", "&7");
+		                                   messages, "STONE", "&7");
 	}
 
 	@Test
@@ -80,7 +85,7 @@ class TurfPowerupGarrisonViewTest {
 
 		view.attemptBuy(flow, viewer, session);
 
-		verify(bank).withdrawAmount(new BigDecimal("1234"));
+		assertPaid("1234");
 		verify(garrisons).add(TURF_ID, 1);
 	}
 
@@ -91,7 +96,7 @@ class TurfPowerupGarrisonViewTest {
 
 		view.attemptBuy(flow, viewer, session);
 
-		verify(bank).withdrawAmount(new BigDecimal("800"));
+		assertPaid("800");
 		verify(garrisons).add(TURF_ID, 1);
 	}
 
@@ -102,7 +107,7 @@ class TurfPowerupGarrisonViewTest {
 
 		view.attemptBuy(flow, viewer, session);
 
-		verify(bank, never()).withdrawAmount(any());
+		assertUnpaid();
 		verify(garrisons, never()).add(anyInt(), anyInt());
 	}
 
@@ -113,7 +118,7 @@ class TurfPowerupGarrisonViewTest {
 
 		view.attemptBuy(flow, viewer, session);
 
-		verify(bank, never()).withdrawAmount(any());
+		assertUnpaid();
 		verify(garrisons, never()).add(anyInt(), anyInt());
 	}
 
@@ -125,6 +130,29 @@ class TurfPowerupGarrisonViewTest {
 		view.attemptBuy(flow, viewer, session);
 
 		verify(flow).end();
-		verify(bank, never()).withdrawAmount(any());
+		assertUnpaid();
+	}
+
+	@Test
+	@DisplayName("an ally sees the look-only line on the buy item, not the buy action")
+	void allyLore_isLookOnly() {
+		Gang owner = mock(Gang.class);
+		when(owner.getId()).thenReturn(1);
+		Gang ally = mock(Gang.class);
+		when(ally.getId()).thenReturn(2);
+		TurfPowerupFlowSession allySession =
+				new TurfPowerupFlowSession(session.getTurf(), owner, ally, "Quartermaster");
+
+		assertEquals(QuartermasterAccess.ALLIES_LOOK, view.clickLine(allySession, true));
+		assertEquals("Quartermaster.Garrison_Buy_Click", view.clickLine(session, true));
+	}
+
+	/** The real EconomyHandler keeps the balance, so the bank paid exactly {@code price} when it dropped by that much. */
+	private void assertPaid(String price) {
+		assertEquals(0, new BigDecimal("50000").subtract(new BigDecimal(price)).compareTo(bank.getAmount()));
+	}
+
+	private void assertUnpaid() {
+		assertEquals(0, new BigDecimal("50000").compareTo(bank.getAmount()));
 	}
 }

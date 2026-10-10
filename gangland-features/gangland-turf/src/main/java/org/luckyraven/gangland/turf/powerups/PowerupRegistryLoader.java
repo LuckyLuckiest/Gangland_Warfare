@@ -29,6 +29,7 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 
 	private static final String FILE_NAME    = "turf_powerups";
 	private static final String POWERUPS_KEY = "Powerups";
+	private static final BigDecimal DEFAULT_GUARD_COST = BigDecimal.valueOf(1000);
 
 	private final FileHandler     fileHandler;
 	private final PowerupRegistry registry;
@@ -57,6 +58,8 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 	public void load() {
 		ConfigReport report = new ConfigReport();
 		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
+
+		readGarrisonCost(root, report);
 
 		MappingNode powerupsNode = root.get(POWERUPS_KEY).asMapping().required().orNull();
 		if (powerupsNode == null) {
@@ -89,6 +92,22 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 		log.debug("Loaded {} turf powerup(s): {}", parsed.size(), parsed.keySet());
 	}
 
+	/** The guard price from {@code Garrison.Cost_Per_Guard}; absent or unparseable means 1000 (W2-Q, TF-17). */
+	private void readGarrisonCost(NodeReader root, ConfigReport report) {
+		MappingNode garrisonNode = root.get("Garrison").asMapping().orNull();
+		if (garrisonNode == null) {
+			registry.setGarrisonCost(DEFAULT_GUARD_COST);
+			return;
+		}
+		String raw = NodeReader.of(garrisonNode, report).get("Cost_Per_Guard").asString().orDefault("1000");
+		try {
+			registry.setGarrisonCost(new BigDecimal(raw.replace("_", "").trim()));
+		} catch (NumberFormatException exception) {
+			log.warn("turf_powerups.yml Garrison.Cost_Per_Guard '{}' is not a number; using 1000", raw);
+			registry.setGarrisonCost(DEFAULT_GUARD_COST);
+		}
+	}
+
 	private PowerupDefinition parseDefinition(String id, NodeReader r) {
 		String displayName     = r.get("Display_Name").asString().orDefault(id);
 		String effectTypeRaw   = r.get("Effect_Type").asString().required().orDefault("");
@@ -101,6 +120,11 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 			effectType = EffectType.valueOf(effectTypeRaw.trim().toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException exception) {
 			log.warn("Powerup '{}' has unknown Effect_Type '{}' — skipping", id, effectTypeRaw);
+			return null;
+		}
+
+		if (effectType == EffectType.CAPTURE_DEFENSE_BONUS) {
+			log.warn("{} has no effect since 0.17.0 - guards on the capture bar replaced it; entry skipped", id);
 			return null;
 		}
 

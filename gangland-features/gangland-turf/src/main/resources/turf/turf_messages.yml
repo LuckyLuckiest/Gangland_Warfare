@@ -201,6 +201,103 @@ Turf:
 # end Digest
 
 # ---------------- Quartermaster: the turf shop panels (W2-Q) ----------------
+Quartermaster:
+   # Panel titles. %npc% = the Quartermaster's name (turf_npcs.yml Powerup_Npc.Display_Name).
+   Title_Menu: "&8&l[&6&l%npc%&8&l]"
+   # Buff catalogue title. %npc% = the Quartermaster's name.
+   Title_Buffs: "&8&l[&b&lBuffs &8— &6%npc%&8&l]"
+   # Garrison title. %npc% = the Quartermaster's name.
+   Title_Garrison: "&8&l[&c&lGarrison &8— &6%npc%&8&l]"
+   # Back button on the buff catalogue and garrison panels.
+   Back: "&7← Back"
+   # Close button on every panel.
+   Close: "&cClose"
+   # Catalogue arrow to the next page (shown only when a next page exists).
+   Page_Next: "&7Next page →"
+   # Catalogue arrow to the previous page (shown only after page one).
+   Page_Previous: "&7← Previous page"
+   # Catalogue page counter. %page%, %pages% = this page and the page count.
+   Page_Info: "&7Page %page% of %pages%"
+   # Menu item name. %turf% = the turf display name (its own colour codes are kept).
+   Menu_Turf: "&6&l%turf%"
+   # Menu line: the owning gang. %gang% = owner gang name.
+   Menu_Owner: "&7Owning gang: &e%gang%"
+   # Menu line for an allied viewer. %gang% = the viewer's own gang name.
+   Menu_Allied: "&7You: &b%gang% &8(allied)"
+   # Menu line: guards in reserve. %count% = guard count.
+   Menu_Stock: "&7Garrison stock: &f%count%"
+   # Menu line: active buffs. %count% = buff count.
+   Menu_Active: "&7Active buffs: &f%count%"
+   # Menu line: the viewer's gang bank. %money% = the balance.
+   Menu_Bank: "&7Your gang bank: &a%money%"
+   # Timed Buffs button name.
+   Menu_Buffs_Name: "&b&lTimed Buffs"
+   # Timed Buffs button lore, line 1.
+   Menu_Buffs_Lore_1: "&7Browse the powerup catalogue and"
+   # Timed Buffs button lore, line 2.
+   Menu_Buffs_Lore_2: "&7buy timed boosts on this turf."
+   # Timed Buffs button lore, line 3. %count% = active buffs on the turf.
+   Menu_Buffs_Active: "&7Currently active: &f%count%"
+   # Garrison button name.
+   Menu_Garrison_Name: "&c&lGarrison"
+   # Garrison button lore, line 1.
+   Menu_Garrison_Lore_1: "&7View / buy defender stock."
+   # Garrison button lore, line 2.
+   Menu_Garrison_Lore_2: "&7Guards hold the capture bar"
+   # Garrison button lore, line 3.
+   Menu_Garrison_Lore_3: "&7and fight attackers on this turf."
+   # Garrison button lore, line 4. %count% = guards in reserve.
+   Menu_Garrison_Stock: "&7Current stock: &f%count%"
+   # Catalogue item lore: the effect. %effect% = Effect_Type, %magnitude% = Magnitude.
+   Buffs_Effect: "&7Effect: &f%effect% &7x&f%magnitude%"
+   # Catalogue item lore: the duration. %seconds% = Duration_Seconds.
+   Buffs_Duration: "&7Duration: &b%seconds%s"
+   # Catalogue item lore: the cost. %money% = the price.
+   Buffs_Cost: "&7Cost: &6%money%"
+   # Catalogue item lore when the gang can pay.
+   Buffs_Click: "&aClick to activate."
+   # Catalogue item lore when the gang cannot pay.
+   Buffs_Insufficient: "&cInsufficient gang funds."
+   # Garrison item name.
+   Garrison_Name: "&c&lGarrison"
+   # Garrison info lore. %turf% = turf name, %count% = guards in reserve.
+   Garrison_Stock: "&7Stock on &f%turf%&7: &f%count%"
+   # Garrison info lore: the price of one guard after any discount. %money% = the price.
+   Garrison_Per_Guard: "&7Per defender: &6%money%"
+   # Garrison info lore: the viewer's gang bank. %money% = the balance.
+   Garrison_Bank: "&7Gang bank: &a%money%"
+   # Garrison buy button name.
+   Garrison_Buy_Name: "&aBuy &f1 &aDefender"
+   # Garrison buy button lore: the price. %money% = the price.
+   Garrison_Buy_Cost: "&7Cost: &6%money%"
+   # Garrison buy button lore when the gang can pay.
+   Garrison_Buy_Click: "&aClick to add &f1 &ato the garrison."
+   # Garrison buy button lore when the gang cannot pay.
+   Garrison_Buy_Insufficient: "&cInsufficient gang funds."
+   # Chat after a guard is bought. %turf% = turf name.
+   Bought_Guard: "&aBought &f1 &adefender for &f%turf%&a."
+   # Chat after a boost is bought. %boost% = the boost id, %turf% = turf name.
+   Bought_Boost: "&aActivated &f%boost% &aon &f%turf%&a."
+   # Chat when the gang bank cannot cover a purchase. %money% = the price.
+   Cannot_Afford: "&cYour gang bank can't cover &f%money%&c."
+   # Chat when the turf already holds Garrison.Max_Reserve guards. %max% = the cap.
+   Reserve_Full: "&cThis turf already holds %max% guards."
+   # Chat when the viewer's rank may not spend (needs gangland.turf.upgrade).
+   No_Rank: "&cYour rank may not spend gang money here."
+   # Chat for an allied viewer who tries to buy: they may only look.
+   Allies_Look: "&eAllied gangs can look, but only the owning gang can buy."
+   # Chat when the turf no longer exists. Also the open-contract refusal.
+   Turf_Gone: "&cThis turf no longer exists."
+   # Chat when the turf changed hands while the panel was open; the panel closes.
+   Owner_Changed: "&cThis turf changed hands. The panel is closed."
+   # Chat when the viewer is no longer in the owning gang; the panel closes.
+   Not_Member: "&cYou are no longer in the owning gang."
+   # Chat when the turf has no owner yet (open contract).
+   No_Owner: "&cThis turf has no owner — nothing to manage here yet."
+   # Chat for a player who is in no gang that owns or allies the turf (open contract).
+   Only_Owner_Or_Allies: "&cOnly members of the owning gang or its allies can use this NPC."
+   # Chat when a gang record is missing (open contract).
+   Gang_Missing: "&cGang record missing — contact an admin."
 # end Quartermaster
 
 # ---------------- Rules: /glw turf rules (W2-E1) ----------------

@@ -84,7 +84,8 @@ class QuartermasterAccessTest {
 	}
 
 	private TurfPowerupFlowSession session(Gang owner, Gang viewerGang) {
-		Turf turf = turfs.get(TURF_ID);
+		Turf turf = mock(Turf.class);
+		when(turf.getId()).thenReturn(TURF_ID);
 		return new TurfPowerupFlowSession(turf, owner, viewerGang, "Quartermaster");
 	}
 

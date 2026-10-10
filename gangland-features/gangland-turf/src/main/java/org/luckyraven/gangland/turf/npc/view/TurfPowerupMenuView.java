@@ -3,25 +3,28 @@ package org.luckyraven.gangland.turf.npc.view;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
+import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
+import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
 import org.luckyraven.keystone.inventory.component.FillComponent;
 import org.luckyraven.keystone.inventory.component.ItemComponent;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.turf.data.Turf;
-import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
-import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
+
 /**
  * Root panel of the Quartermaster flow. Shows turf-state at a glance (owner, garrison stock, active buffs, gang bank
  * balance) and offers two navigation buttons that switch to the buff catalogue or garrison sub-panels. Empty slots are
- * padded with the configured global inventory-fill item (matches BankerMenuView style).
+ * padded with the configured global inventory-fill item (matches BankerMenuView style). Every line comes from the
+ * turf module's {@code Quartermaster:} section (W2-Q).
  */
 @RequiredArgsConstructor
 public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> {
@@ -34,6 +37,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 
 	private final GarrisonManager   garrisons;
 	private final ActiveBuffManager buffs;
+	private final TurfMessages      messages;
 	private final String            fillItem;
 	private final String            fillName;
 
@@ -44,7 +48,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 
 	@Override
 	public String title(TurfPowerupFlowSession session) {
-		return "&8&l[&6&l" + session.getNpcDisplayName() + "&8&l]";
+		return messages.text("Quartermaster.Title_Menu", "&8&l[&6&l%npc%&8&l]", "npc", session.getNpcDisplayName());
 	}
 
 	@Override
@@ -59,7 +63,8 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 		builder.slot(SLOT_GARRISON, ItemComponent.of(garrisonButton(turf))
 		                                        .onAnyClick(ctx -> flow.switchTo(TurfPowerupFlowSession.PANEL_GARRISON)));
 
-		ItemBuilder close = new ItemBuilder(Material.BARRIER).setDisplayName("&cClose");
+		ItemBuilder close = new ItemBuilder(Material.BARRIER)
+				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
 		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
@@ -67,34 +72,40 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 
 	private ItemBuilder infoItem(Turf turf, Gang ownerGang, Gang viewerGang) {
 		List<String> lore = new ArrayList<>();
-		lore.add("&7Owning gang: &e" + ownerGang.getName());
+		lore.add(messages.text("Quartermaster.Menu_Owner", "&7Owning gang: &e%gang%", "gang", ownerGang.getName()));
 		if (!ownerGang.equals(viewerGang)) {
-			lore.add("&7You: &b" + viewerGang.getName() + " &8(allied)");
+			lore.add(messages.text("Quartermaster.Menu_Allied", "&7You: &b%gang% &8(allied)",
+			                       "gang", viewerGang.getName()));
 		}
-		lore.add("&7Garrison stock: &f" + garrisons.count(turf.getId()));
-		lore.add("&7Active buffs: &f" + buffs.active(turf.getId()).size());
+		lore.add(messages.text("Quartermaster.Menu_Stock", "&7Garrison stock: &f%count%",
+		                       "count", garrisons.count(turf.getId())));
+		lore.add(messages.text("Quartermaster.Menu_Active", "&7Active buffs: &f%count%",
+		                       "count", buffs.active(turf.getId()).size()));
 		lore.add(" ");
-		lore.add("&7Your gang bank: &a$" + NumberUtil.valueFormat(viewerGang.getEconomy().getAmount()));
+		lore.add(messages.text("Quartermaster.Menu_Bank", "&7Your gang bank: &a%money%",
+		                       "money", money(viewerGang.getEconomy().getAmount())));
 		return new ItemBuilder(Material.PAPER)
-				.setDisplayName("&6&l" + turf.getDisplayName())
+				.setDisplayName(messages.text("Quartermaster.Menu_Turf", "&6&l%turf%", "turf", turf.getDisplayName()))
 				.setLore(lore);
 	}
 
 	private ItemBuilder buffsButton(Turf turf) {
 		return new ItemBuilder(Material.POTION)
-				.setDisplayName("&b&lTimed Buffs")
-				.setLore("&7Browse the powerup catalogue and",
-				         "&7activate income / defense / garrison buffs.",
-				         "&7Currently active: &f" + buffs.active(turf.getId()).size());
+				.setDisplayName(messages.text("Quartermaster.Menu_Buffs_Name", "&b&lTimed Buffs"))
+				.setLore(messages.text("Quartermaster.Menu_Buffs_Lore_1", "&7Browse the powerup catalogue and"),
+				         messages.text("Quartermaster.Menu_Buffs_Lore_2", "&7activate income / defense / garrison buffs."),
+				         messages.text("Quartermaster.Menu_Buffs_Active", "&7Currently active: &f%count%",
+				                       "count", buffs.active(turf.getId()).size()));
 	}
 
 	private ItemBuilder garrisonButton(Turf turf) {
 		return new ItemBuilder(Material.IRON_SWORD)
-				.setDisplayName("&c&lGarrison")
-				.setLore("&7View / buy defender stock.",
-				         "&7These civilian defenders auto-spawn",
-				         "&7when an enemy attacks the turf.",
-				         "&7Current stock: &f" + garrisons.count(turf.getId()));
+				.setDisplayName(messages.text("Quartermaster.Menu_Garrison_Name", "&c&lGarrison"))
+				.setLore(messages.text("Quartermaster.Menu_Garrison_Lore_1", "&7View / buy defender stock."),
+				         messages.text("Quartermaster.Menu_Garrison_Lore_2", "&7These civilian defenders auto-spawn"),
+				         messages.text("Quartermaster.Menu_Garrison_Lore_3", "&7when an enemy attacks the turf."),
+				         messages.text("Quartermaster.Menu_Garrison_Stock", "&7Current stock: &f%count%",
+				                       "count", garrisons.count(turf.getId())));
 	}
 
 	private static Material materialOf(String name) {

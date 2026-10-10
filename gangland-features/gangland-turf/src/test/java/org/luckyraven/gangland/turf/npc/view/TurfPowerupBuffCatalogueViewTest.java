@@ -77,7 +77,8 @@ class TurfPowerupBuffCatalogueViewTest {
 		PowerupRegistry registry = new PowerupRegistry();
 		ActiveBuffManager buffs  = mock(ActiveBuffManager.class);
 		QuartermasterAccess access = mock(QuartermasterAccess.class);
-		EconomyHandler bank = mock(EconomyHandler.class);
+		EconomyHandler bank = new EconomyHandler(null);
+		bank.setAmount(BigDecimal.valueOf(50_000));
 		Gang gang = mock(Gang.class);
 		when(gang.getEconomy()).thenReturn(bank);
 		Turf turf = mock(Turf.class);
@@ -92,7 +93,7 @@ class TurfPowerupBuffCatalogueViewTest {
 		view.attemptBuy(flow, viewer, session, twelve().get(0));
 
 		verify(flow).end();
-		verify(bank, never()).withdrawAmount(any());
+		assertEquals(0, new BigDecimal("50000").compareTo(bank.getAmount()));
 		verify(buffs, never()).activate(org.mockito.ArgumentMatchers.anyInt(), any());
 	}
 }
