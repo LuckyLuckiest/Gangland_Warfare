@@ -189,6 +189,12 @@ Turf:
 # end Turf
 
 # ---------------- Capture: capture-rule lines (W2-R1) ----------------
+Capture:
+   # To the member whose login woke the gang, once per owned turf with rivals inside. %gang% = the rival gang,
+   # %turf%, %time% = when the wake-up shield ends.
+   Camping: "&c%gang% are camping %turf% &7- shield ends in %time%"
+   # Entering an attackable rival or unclaimed turf while Presence_Seconds is on. %turf%, %seconds%.
+   Count_In: "&e%turf% &7- attackable - you count after %seconds% s inside"
 # end Capture
 
 # ---------------- Alerts: turf alerts that reach a gang anywhere (W2-N1) ----------------

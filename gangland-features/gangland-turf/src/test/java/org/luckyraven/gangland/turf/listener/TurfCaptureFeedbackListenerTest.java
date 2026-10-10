@@ -11,6 +11,7 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.turf.capture.CaptureEligibility;
+import org.luckyraven.gangland.turf.capture.CaptureRules;
 import org.luckyraven.gangland.turf.capture.CaptureSettings;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
@@ -180,5 +181,60 @@ class TurfCaptureFeedbackListenerTest {
 		listener.onEnter(new TurfEnterEvent(player, turf(5, "Docks", 7, recentCapture())));
 
 		verify(player, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("an attackable rival turf with Presence_Seconds 15 sends one count-in line with the 15 seconds (W2-R1)")
+	void attackableRival_presenceOn_sendsCountInLine() throws IOException {
+		CaptureRules rules = new CaptureRules(CaptureRules.Window.OWNERS_ONLINE, 120, 24, 15, 60, 10, 4);
+		when(ownerGang.getLastMemberOnlineAt()).thenReturn(System.currentTimeMillis());
+		CaptureEligibility eligibility = new CaptureEligibility(gangs, CaptureFixtures.settings(180, 15, 15, 10,
+		                                                                                        new int[]{25}, 90, 90),
+		                                                        () -> rules, id -> 0L, id -> 99, id -> 0);
+		TurfCaptureFeedbackListener counting = new TurfCaptureFeedbackListener(turfs, gangs, users, eligibility,
+		                                                                       text());
+
+		counting.onEnter(new TurfEnterEvent(player, turf(5, "Docks", 7, 0L)));
+
+		ArgumentCaptor<String> line = ArgumentCaptor.forClass(String.class);
+		verify(player, times(1)).sendMessage(line.capture());
+		assertTrue(line.getValue().contains("Docks") && line.getValue().contains("15"), line.getValue());
+	}
+
+	@Test
+	@DisplayName("an attackable rival turf with Presence_Seconds 0 stays silent (W2-R1)")
+	void attackableRival_presenceOff_silent() throws IOException {
+		TurfCaptureFeedbackListener silent = new TurfCaptureFeedbackListener(turfs, gangs, users,
+		                                                                     new CaptureEligibility(gangs,
+		                                                                                            CaptureFixtures.settings(180, 15, 15, 10, new int[]{25}, 90, 90)),
+		                                                                     text());
+
+		silent.onEnter(new TurfEnterEvent(player, turf(5, "Docks", 7, 0L)));
+
+		verify(player, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("an attacker gang at its turf cap gets the OVER_CAP reason line instead of nothing (W2-R1)")
+	void attackerAtCap_sendsOverCapLine() throws IOException {
+		CaptureEligibility capped = new CaptureEligibility(gangs,
+		                                                   CaptureFixtures.settings(180, 15, 15, 10, new int[]{25}, 90, 90),
+		                                                   () -> CaptureRules.LEGACY, id -> 0L, id -> 1, id -> 1);
+		TurfCaptureFeedbackListener listenerAtCap = new TurfCaptureFeedbackListener(turfs, gangs, users, capped,
+		                                                                            text());
+
+		listenerAtCap.onEnter(new TurfEnterEvent(player, turf(5, "Docks", 7, 0L)));
+
+		ArgumentCaptor<String> line = ArgumentCaptor.forClass(String.class);
+		verify(player, times(1)).sendMessage(line.capture());
+		assertTrue(line.getValue().contains("turf cap"), line.getValue());
+	}
+
+	private TurfMessages text() throws IOException {
+		TurfMessageContract legacy = mock(TurfMessageContract.class);
+		when(legacy.formatDuration(anyLong())).thenReturn("14m");
+		return new TurfMessages(
+				YamlFixture.fileManager(tempDir, "turf_messages", YamlFixture.shipped("/turf/turf_messages.yml")),
+				legacy, CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
 	}
 }

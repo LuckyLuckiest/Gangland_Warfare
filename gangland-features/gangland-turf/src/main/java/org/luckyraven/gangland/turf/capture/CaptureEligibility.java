@@ -41,6 +41,9 @@ public final class CaptureEligibility {
 
 	private static final Verdict ATTACKABLE_NOW = new Verdict(Reason.ATTACKABLE, 0L);
 
+	/** Shortest OWNERS_ONLINE logout window, in ms (see {@link #onlineWindowMs}). */
+	public static final long MIN_ONLINE_WINDOW_MS = 120_000L;
+
 	private final GangLookupContract gangs;
 	private final CaptureSettings    settings;
 	private final Supplier<CaptureRules> rules;
@@ -94,6 +97,16 @@ public final class CaptureEligibility {
 		return ownedTurfs.applyAsInt(gangId) >= turfCap.applyAsInt(gangId);
 	}
 
+	/**
+	 * Two window modes, picked by {@link CaptureRules#window()}:
+	 * <ul>
+	 *   <li>OWNERS_OFFLINE (the pre-0.17.0 rule): OWNERS_ACTIVE while an owner was online within the logout window,
+	 *       attackable after; the wake-up record is ignored.</li>
+	 *   <li>OWNERS_ONLINE (default): attackable while a qualifying owner is online or was within the logout window
+	 *       ({@link #onlineWindowMs}); NO_OWNERS_ONLINE after that; WAKING_UP while a wake-up shield set by
+	 *       {@code wokeAt} runs.</li>
+	 * </ul>
+	 */
 	public Verdict evaluate(Turf turf, long now) {
 		long cooldownEnd = turf.getLastCaptureTimestamp() + settings.getCooldownMinutes() * 60_000L;
 		if (now < cooldownEnd) {
@@ -106,11 +119,34 @@ public final class CaptureEligibility {
 		if (owner == null) {
 			return ATTACKABLE_NOW;
 		}
-		// Post-logoff grace: protected if any member online OR last-online within the grace window.
-		long graceMs = settings.getPostLogoffProtectionMinutes() * 60_000L;
-		if (now - owner.getLastMemberOnlineAt() > graceMs) {
-			return ATTACKABLE_NOW;
+		CaptureRules current = rules.get();
+		long last = owner.getLastMemberOnlineAt();
+		if (current.window() == CaptureRules.Window.OWNERS_OFFLINE) {
+			// Post-logoff grace: protected if any member online OR last-online within the grace window.
+			long graceMs = settings.getPostLogoffProtectionMinutes() * 60_000L;
+			if (now - last > graceMs) {
+				return ATTACKABLE_NOW;
+			}
+			return new Verdict(Reason.OWNERS_ACTIVE, last + graceMs);
 		}
-		return new Verdict(Reason.OWNERS_ACTIVE, owner.getLastMemberOnlineAt() + graceMs);
+		long windowMs = onlineWindowMs(settings);
+		if (last <= 0 || now - last > windowMs) {
+			return new Verdict(Reason.NO_OWNERS_ONLINE, 0L);
+		}
+		long woke = wokeAt.applyAsLong(owner.getId());
+		long shieldMs = current.wakeUpShieldSeconds() * 1000L;
+		if (shieldMs > 0 && woke > 0 && now < woke + shieldMs) {
+			return new Verdict(Reason.WAKING_UP, woke + shieldMs);
+		}
+		return ATTACKABLE_NOW;
+	}
+
+	/**
+	 * The logout window the OWNERS_ONLINE rule uses: Post_Logoff_Protection_Minutes, but never under two minutes,
+	 * because the heartbeat stamps once a minute and a shorter window would flicker while an owner stays online.
+	 */
+	public static long onlineWindowMs(CaptureSettings settings) {
+		// ponytail: heartbeat is 1/min, so the floor is 2 min; a live stamp per login would allow 0.
+		return Math.max(settings.getPostLogoffProtectionMinutes() * 60_000L, MIN_ONLINE_WINDOW_MS);
 	}
 }
