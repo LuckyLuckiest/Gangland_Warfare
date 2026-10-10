@@ -18,6 +18,11 @@ import java.util.function.Consumer;
 @Repository(PluginData.class)
 public class PluginDataRepository extends AbstractRepository<PluginData> {
 
+	/** A SQL NULL reads as 0; any other value is read through Number (MySQL may return Long/BigDecimal). */
+	private static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
+	}
+
 	private final PluginDataTable pluginDataTable;
 
 	public PluginDataRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
@@ -33,10 +38,10 @@ public class PluginDataRepository extends AbstractRepository<PluginData> {
 
 		for (Object[] result : data) {
 			int  v              = 0;
-			int  id             = (int) result[v++];
-			long dateActivation = (long) result[v++];
-			long scanDate       = (long) result[v++];
-			long scheduledDate  = (long) result[v];
+			int  id             = num(result[v++]).intValue();
+			long dateActivation = num(result[v++]).longValue();
+			long scanDate       = num(result[v++]).longValue();
+			long scheduledDate  = num(result[v]).longValue();
 
 			pluginDataList.add(new PluginData(id, dateActivation, scanDate, scheduledDate));
 		}

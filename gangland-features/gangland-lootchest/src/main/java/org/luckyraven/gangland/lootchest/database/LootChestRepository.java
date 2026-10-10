@@ -21,6 +21,11 @@ import java.util.function.Consumer;
 @Repository(LootChestData.class)
 public class LootChestRepository extends AbstractRepository<LootChestData> {
 
+	/** A SQL NULL reads as 0; any other value is read through Number (MySQL may return Long/BigDecimal). */
+	private static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
+	}
+
 	private final LootChestTable lootChestTable;
 
 	@Setter
@@ -42,18 +47,18 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 
 			UUID    id            = UUID.fromString(String.valueOf(result[v++]));
 			String  worldName     = String.valueOf(result[v++]);
-			double  x             = (double) result[v++];
-			double  y             = (double) result[v++];
-			double  z             = (double) result[v++];
+			double  x             = num(result[v++]).doubleValue();
+			double  y             = num(result[v++]).doubleValue();
+			double  z             = num(result[v++]).doubleValue();
 			String  lootTableId   = String.valueOf(result[v++]);
 			Object  tierRaw       = result[v++];
 			String  tierId        = tierRaw != null ? String.valueOf(tierRaw) : null;
-			long    respawnTime   = ((Number) result[v++]).longValue();
-			int     inventorySize = (int) result[v++];
+			long    respawnTime   = num(result[v++]).longValue();
+			int     inventorySize = num(result[v++]).intValue();
 			String  displayName   = String.valueOf(result[v++]);
-			long    lastOpened    = ((Number) result[v++]).longValue();
-			boolean isLooted      = result[v] instanceof Boolean ? (boolean) result[v++] : (int) result[v++] == 1;
-			long    cooldownEnd   = ((Number) result[v]).longValue();
+			long    lastOpened    = num(result[v++]).longValue();
+			boolean isLooted      = result[v] instanceof Boolean ? (boolean) result[v++] : num(result[v++]).intValue() == 1;
+			long    cooldownEnd   = num(result[v]).longValue();
 
 			World    world    = Bukkit.getWorld(worldName);
 			Location location = new Location(world, x, y, z);

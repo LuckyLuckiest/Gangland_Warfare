@@ -19,6 +19,11 @@ import java.util.function.Consumer;
 @Repository(ParkedCar.class)
 public class ParkedCarRepository extends AbstractRepository<ParkedCar> {
 
+	/** A SQL NULL reads as 0; any other value is read through Number (MySQL may return Long/BigDecimal). */
+	private static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
+	}
+
 	private final ParkedCarTable parkedCarTable;
 
 	public ParkedCarRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
@@ -36,13 +41,13 @@ public class ParkedCarRepository extends AbstractRepository<ParkedCar> {
 			String dbId           = String.valueOf(result[v++]);
 			String carId          = String.valueOf(result[v++]);
 			String world          = String.valueOf(result[v++]);
-			double x              = (double) result[v++];
-			double y              = (double) result[v++];
-			double z              = (double) result[v++];
-			float  yaw            = (float) (double) result[v++];
-			int    fuel           = (int) result[v++];
-			int    maxFuel        = (int) result[v++];
-			int    durability     = (int) result[v++];
+			double x              = num(result[v++]).doubleValue();
+			double y              = num(result[v++]).doubleValue();
+			double z              = num(result[v++]).doubleValue();
+			float  yaw            = (float) num(result[v++]).doubleValue();
+			int    fuel           = num(result[v++]).intValue();
+			int    maxFuel        = num(result[v++]).intValue();
+			int    durability     = num(result[v++]).intValue();
 			Object placerRaw      = result[v++];
 			Object exhaustSideRaw = result[v];
 

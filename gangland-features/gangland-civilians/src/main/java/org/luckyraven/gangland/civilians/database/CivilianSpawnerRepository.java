@@ -20,6 +20,11 @@ import java.util.function.Consumer;
 @Repository(CivilianSpawner.class)
 public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawner> {
 
+	/** A SQL NULL reads as 0; any other value is read through Number (MySQL may return Long/BigDecimal). */
+	private static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
+	}
+
 	private final CivilianSpawnerTable copSpawnerTable;
 	private       int                  highestStoredId;
 
@@ -44,7 +49,7 @@ public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawne
 		for (Object[] result : data) {
 			int v = 0;
 
-			int    id     = (int) result[v++];
+			int    id     = num(result[v++]).intValue();
 			// before the unloaded-world skip: the next created spawner must never reuse that row's id
 			highestStoredId = Math.max(highestStoredId, id);
 			String typeId = result[v] != null ? String.valueOf(result[v]) : null;
@@ -52,11 +57,11 @@ public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawne
 			String groupId = result[v] != null ? String.valueOf(result[v]) : null;
 			v++;
 			String worldName = String.valueOf(result[v++]);
-			double x         = (double) result[v++];
-			double y         = (double) result[v++];
-			double z         = (double) result[v++];
-			double yaw       = (double) result[v++];
-			double pitch     = (double) result[v];
+			double x         = num(result[v++]).doubleValue();
+			double y         = num(result[v++]).doubleValue();
+			double z         = num(result[v++]).doubleValue();
+			double yaw       = num(result[v++]).doubleValue();
+			double pitch     = num(result[v]).doubleValue();
 
 			World world = Bukkit.getWorld(worldName);
 
