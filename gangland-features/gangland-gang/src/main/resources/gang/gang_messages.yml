@@ -59,6 +59,23 @@ Names:
 # end Names
 
 # ---------------- Social: gang chat, gang join, gang recruiting (W2-P2) ----------------
+Social:
+   # Gang chat line. %player% = sender, %message%.
+   Chat_Format: "&a[Gang] &f%player%&7: &f%message%"
+   # Gang chat mode switched on / off with /glw gang chat.
+   Chat_On: "&aGang chat on: what you type goes to your gang only. &7/glw gang chat again to switch it off."
+   Chat_Off: "&7Gang chat off."
+   # /glw gang recruiting. %gang% = your gang.
+   Recruiting_Open: "&a%gang% is open: anyone can /glw gang join it."
+   Recruiting_Invite: "&7%gang% is invite only."
+   # /glw gang recruiting without an argument. %state% = open or invite only.
+   Recruiting_Now: "&7%gang% is %state%. &7Use /glw gang recruiting open|invite to change it."
+   # /glw gang join. %gang%.
+   Joined: "&aYou joined %gang%."
+   Invite_Only: "&c%gang% is invite only."
+   Unknown: "&cNo gang named %gang%."
+   Already_In_Gang: "&cLeave your gang first."
+   No_Rank: "&cThis gang has no starting rank; ask an admin."
 # end Social
 
 # ---------------- Bounty: gang bounties (W2-P1) ----------------
