@@ -1,6 +1,6 @@
 # Turf - Test Checklist
 
-[Back to Test Index](./README.md) | [Feature Doc](../../features/turf.md)
+[Back to Test Index](../README.md) | [Feature Doc](../../features/turf.md)
 
 ---
 
@@ -126,7 +126,7 @@ placeholders).
 
 - [ ] Enter an own turf (Vipers member in `Docks`): title subtitle reads `Your turf`.
 - [ ] Enter an allied turf (an ally's turf, with an alliance active): subtitle reads `<gang> turf - allied`; no chat line.
-- [ ] Enter a rival turf in cooldown as a Vipers member (set `Harbor` unclaimed with `/glw turf setowner none`, let Rats
+- [ ] Enter a rival turf in cooldown as a Vipers member (select `Harbor`, set it unclaimed with `/glw turf setowner none`, let Rats
   capture it, then a Vipers member enters): subtitle reads `<gang> turf - shielded:
   just captured, attackable in ...`; exactly one chat line `<turf> - shielded: just captured ...`.
 - [ ] Enter a rival turf that is attackable as a Vipers member: subtitle reads `<gang> turf - attackable`; no chat line.
@@ -207,4 +207,4 @@ placeholders).
 
 ---
 
-[Back to Test Index](./README.md)
+[Back to Test Index](../README.md)

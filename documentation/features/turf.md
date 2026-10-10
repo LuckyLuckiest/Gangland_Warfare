@@ -86,7 +86,7 @@ the colour of the letter says how it relates to you.
 ### Sample
 
 Viewer in Vipers (3 of 4 turfs), Kings allied, Rats rival, all offline for longer than the protection window
-(attackable); Saints rival with a member online (shielded, underlined). Kings' Docks East is under attack by Rats and
+(attackable); Saints rival with a member online (shielded, underlined). Kings' Docks East is under attack by Saints and
 renders *italic*.
 
 ```
@@ -172,9 +172,9 @@ While you stand inside a turf, the action bar shows one line about it. The line 
 (2) seconds.
 
 ```
-Docks - Rats turf - attackable
+Harbor - Rats turf - attackable
 Docks - your turf - quiet
-Docks - Rats turf - join a gang to capture
+Harbor - Rats turf - join a gang to capture
 Docks - your turf - under attack by Rats, 62%
 ```
 
@@ -220,11 +220,11 @@ turf in your world for the two `nearest` tokens. Values are plain words without 
 
 | Token | Example inside a rival turf | Example outside every turf |
 |---|---|---|
-| `%gangland_turf-name%` | `Docks` | `-` |
+| `%gangland_turf-name%` | `Harbor` | `-` |
 | `%gangland_turf-owner%` | `Rats` | `-` |
 | `%gangland_turf-state%` | `attackable` | `-` |
 | `%gangland_turf-relation%` | `rival` | `-` |
-| `%gangland_turf-nearest-name%` | `Docks` | `Docks` |
+| `%gangland_turf-nearest-name%` | `Harbor` | `Docks` |
 | `%gangland_turf-nearest-distance%` | `0` | `320` |
 
 - `turf-owner` says `unclaimed` for an unclaimed turf.
