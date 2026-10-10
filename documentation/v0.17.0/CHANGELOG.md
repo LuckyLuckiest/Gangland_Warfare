@@ -7,7 +7,7 @@
 ## 📦 Requires
 
 - **Keystone 1.15.1** (unchanged from 0.16.1). Gangland refuses to start on an older Keystone.
-- **Bartizan 0.6.0** is the version Gangland builds against. The civilians, cops-n-crooks and gadget modules need Bartizan installed; without it they are skipped, and turf is skipped with them.
+- **Bartizan 0.6.0** is the version Gangland builds against. Only cops-n-crooks needs Bartizan (`Plugins: [Bartizan]`); without it cops-n-crooks is skipped. Civilians, gadget and turf load without it, and weapon item references resolve to nothing.
 - **Menus refresh on the first boot.** Shipped `inventory/*.yml` menus with no `Config_Version` are replaced from the jar. Your old copy is kept as `inventory/<name>-old.yml`; copy your changes back by hand. Your own menus are not touched.
 - **Read [the 0.17.0 migration notes](../migration-0.17.0.md) before you start the server.** Every existing gang becomes invite-only, and a few one-time migrations run on the first boot.
 
@@ -36,7 +36,7 @@
 - **Contribution reset (D15)** — Stored gang contributions reset to 0 once, on the first 0.17.0 boot. Contributions used to mix bank share and turf points.
 - **Turf contribution removed** — The old turf contribution feature is gone.
 - **Capture window (D1)** — Turfs can be attacked while their owners are online. Set `Capture.Window: OWNERS_OFFLINE` in `turf/turf_rules.yml` for the old rule.
-- **Income defaults (D9)** — A turf pays `Default_Income_Amount` (250) every `Income_Interval_Minutes` (10), in `turf/turf_settings.yml`. The multiplier is capped at 2.0 (`Income.Max_Multiplier`, `turf/turf_rules.yml`), and the gang's turf cap applies.
+- **Income defaults (D9)** — New turfs pay `Default_Income_Amount` (250) every `Income_Interval_Minutes` (10). Existing turfs keep their own amount; change one with `/glw turf income <amount>`. The multiplier is capped at 2.0 (`Income.Max_Multiplier`, `turf/turf_rules.yml`), and the gang's turf cap applies.
 - **Inactivity release (D1)** — Turfs of gangs with no activity for `Capture.Inactivity_Auto_Release_Days` (default 4) are released. Server downtime counts.
 - **Menus follow the plugin version** — From 0.17.0 on, shipped menus are refreshed on every version change, like `settings.yml`.
 - **Level-up timing for developers** — `LevelUpEvent` fires after the level is raised. A cancel undoes that level and stops. Listeners read the level reached with `getLevel().getLevelValue()`. No XP is collected at the max level.
@@ -50,7 +50,7 @@
 - **Migrations** — A failed database read no longer marks the one-time migrations as done. `gang_migration.done_at` is the real run time.
 - **Turf-upgrade grant** — The first 0.17.0 boot grants `gangland.turf.upgrade` once to every rank holding `gangland.gang.withdraw`. Removing it later sticks.
 - **Level-ups** — Level-up lines name the level reached. Cancelled level-ups no longer eat XP.
-- **Gang bounty** — Refused for your own gang even on a stale lookup. A claim that would push the capturing gang's bank over `Maximum_Balance` does not happen; the bounty stays and the gang gets a `Bounty.Bank_Full` line.
+- **Gang bounty** — Refused for your own gang even on a stale lookup. A claim that would push the capturing gang's bank over `Account.Maximum_Balance` does not happen; the bounty stays and the gang gets a `Bounty.Bank_Full` line.
 - **Gang join** — `/glw gang join` cancels the joiner's other pending invites, like `/glw gang accept`.
 - **Gang chat** — A player who left his gang while in gang chat mode has his next line sent to public chat.
 - **Captures** — Stepping out of a contested turf and back keeps the contest. It ends abandoned only after the attacking gang has had nobody inside for `Capture.Abandon_Grace_Seconds` (default 15).

@@ -183,8 +183,8 @@ new jar.
   `Capture.Max_Contest_Minutes` (10). STALLED sets no cooldown, so a contest can restart at 0% on the next tick if the
   attackers still dominate.
 - Sides are frozen at the start: a gang that joins the fight later is a bystander until the next contest.
-- Entering a contested turf shows "`%gang%` capturing". The server's `message_en.yml` keeps its old "Phase 2" wording
-  until you edit it. `Commands.Turf.Enter.Contesting_Claim` and `Subtitle_Contesting_Claim` are no longer read.
+- Entering a contested turf shows "`%gang%` capturing". `message/message_en.yml` and `message/message_es.yml` are rewritten on the
+  first 0.17.0 boot (their `Config_Version` changes); the old copies are kept as `*-old.yml`, so copy your edits back by hand. `Commands.Turf.Enter.Contesting_Claim` and `Subtitle_Contesting_Claim` are no longer read.
 - `turf_messages.yml` drops `Turf.Status_Phase_Claim` and `Turf.Status_Phase_Consolidate`; `/glw turf status` shows no
   phase any more.
 
@@ -207,7 +207,8 @@ new jar.
 
 - **Dormant gangs stop earning.** A turf pays only while its owning gang had a member online within `Income.Idle_Hours`
   (default 24).
-- **Faucet.** 250 per 10 minutes, 36,000 per active turf per day (D9 = B), capped by `Income.Max_Multiplier` (2.0) and
+- **Faucet.** New turfs pay 250 per 10 minutes (`Default_Income_Amount`, stamped on new turfs only; existing turfs keep their amount),
+  36,000 per day at that amount (D9 = B), capped by `Income.Max_Multiplier` (2.0) and
   the gang's turf cap.
 - **Turf cap** (`Turf_Cap`) grows with the gang level. A gang over its cap is paid only for its oldest turfs (ties by turf
   id).
@@ -232,7 +233,7 @@ new jar.
 - **Disband split.** A disband with zero contributions splits the gang bank equally among members (the owner takes the
   rounding remainder). The disband fee refund has its own line (`Progression.Fee_Refund`).
 - **Gangless players** get the onboarding screen from `/glw gang` (`gang_info` now has `Open.Condition:
-  "%gangland_user_has-gang%"`). A server that edited `gang_info.yml` adds that line under `Open:` itself.
+  "%gangland_user_has-gang%"`). An unversioned `gang_info.yml` is replaced on the first boot (Part 4, item 12); copy your own edits back from `gang_info-old.yml`.
 - **Officer preset** includes `gangland.turf.upgrade` (buy at the Quartermaster) on a fresh install. Existing rank trees
   get it once: the first 0.17.0 boot grants `gangland.turf.upgrade` to every rank that holds `gangland.gang.withdraw`
   and logs one line. Removing the node later sticks; the grant does not come back on later boots (Part 4, item 2).
@@ -310,7 +311,7 @@ These fixes went into 0.17.0 after the three parts above. Each item names the fi
 
 ### 6. Gang chat after leaving
 
-- A player who left his gang while in gang chat mode now has his next line sent to public chat, after the `Chat_Off` line
+- A player who left his gang while in gang chat mode now has his next line sent to public chat, after the `Social.Chat_Off` line
   from `gang/gang_messages.yml`. Before 0.17.0 the line was dropped.
 
 ### 7. Captures: stepping out keeps the contest
@@ -355,7 +356,7 @@ These fixes went into 0.17.0 after the three parts above. Each item names the fi
 
 ### 12. Menus refresh by version
 
-- Every shipped `inventory/*.yml` now carries `Config_Version: '${project.version}'`. On the first 0.17.0 boot, a shipped menu
+- Every shipped `inventory/*.yml` now carries `Config_Version: '0.17.0'` (the plugin version, filtered at build). On the first 0.17.0 boot, a shipped menu
   that has no `Config_Version` is replaced from the jar. The old file is kept as `inventory/<name>-old.yml`. Copy your
   customisations back by hand.
 - Menus you added yourself (no copy in the jar) are not touched.

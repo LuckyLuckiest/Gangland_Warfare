@@ -6,7 +6,7 @@
 
 [LIST]
 [*][B]Keystone 1.15.1[/B] (unchanged from 0.16.1). Gangland refuses to start on an older Keystone.
-[*][B]Bartizan 0.6.0[/B] is the version Gangland builds against. The civilians, cops-n-crooks and gadget modules need Bartizan installed; without it they are skipped, and turf is skipped with them.
+[*][B]Bartizan 0.6.0[/B] is the version Gangland builds against. Only cops-n-crooks needs Bartizan (`Plugins: [Bartizan]`); without it cops-n-crooks is skipped. Civilians, gadget and turf load without it, and weapon item references resolve to nothing.
 [*][B]Menus refresh on the first boot.[/B] Shipped [ICODE]inventory/*.yml[/ICODE] menus with no [ICODE]Config_Version[/ICODE] are replaced from the jar. Your old copy is kept as [ICODE]inventory/<name>-old.yml[/ICODE]; copy your changes back by hand. Your own menus are not touched.
 [*][B]Read the 0.17.0 migration notes before you start the server.[/B] Every existing gang becomes invite-only, and a few one-time migrations run on the first boot. See [ICODE]documentation/migration-0.17.0.md[/ICODE].
 [/LIST]
@@ -22,7 +22,7 @@
 [*][B]Owners-online capture window[/B] — A turf can be attacked while one of its owners is online, and for ten minutes after the last one leaves. After an owner logs in, the turf is shielded for a two-minute wake-up. Only members who joined their gang 24 hours ago keep its turfs open.
 [*][B]One capture bar[/B] — Every capture uses one bar. The bigger crew inside starts it, attackers count after 15 seconds inside, and guards hold the bar. A capture that stops moving ends as stalled after 10 minutes. The bar shows attackers, defenders and time left.
 [*][B]Alerts anywhere[/B] — Owners hear when a turf is attacked (with the attacker count and side), when half their guards are down, at the 75% last stand, and when a capture is held, lost, taken or stalled. Allies hear the start.
-[*][B]Income and gang levels[/B] — A turf pays only while its gang had a member online in the last 24 hours. [ICODE]Default_Income_Amount[/ICODE] (250) is paid every [ICODE]Income_Interval_Minutes[/ICODE] (10). Payouts give an action-bar line. Turf income grants gang XP, and gang levels raise the turf cap. [ICODE]/glw turf[/ICODE] shows your cap, how many turfs pay, and the last three events.
+[*][B]Income and gang levels[/B] — A turf pays only while its gang had a member online in the last 24 hours. Payouts give an action-bar line. Turf income grants gang XP, and gang levels raise the turf cap. [ICODE]/glw turf[/ICODE] shows your cap, how many turfs pay, and the last three events.
 [*][B]Quartermaster prices[/B] — Guards cost [ICODE]Garrison.Cost_Per_Guard[/ICODE] (1000), times any [ICODE]garrison_discount[/ICODE] boost. A turf holds up to 12 guards in reserve. Every purchase re-checks membership, rank and ownership. Allies can look but only the owning gang buys.
 [*][B]Gang bounty[/B] — [ICODE]/glw gang bounty <gang> <amount>[/ICODE] puts money from your balance on another gang. The gang that captures one of its turfs collects the bounty.
 [*][B]Gang chat, join and recruiting[/B] — [ICODE]/glw gang chat <message>[/ICODE] (or [ICODE]/glw gang chat[/ICODE] to toggle) talks to your gang. [ICODE]/glw gang join <gang>[/ICODE] joins an open gang. [ICODE]/glw gang recruiting open|invite[/ICODE] sets who may join.
@@ -34,7 +34,7 @@
 [*][B]Fresh-install ranks[/B] — A new server gets the [ICODE]member[/ICODE], [ICODE]officer[/ICODE] and [ICODE]owner[/ICODE] ranks with preset permissions. Existing rank trees are not changed.
 [/LIST]
 
-━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [SIZE=6][B]🔧 Changed[/B][/SIZE]
 
@@ -43,7 +43,7 @@
 [*][B]Contribution reset (D15)[/B] — Stored gang contributions reset to 0 once, on the first 0.17.0 boot. Contributions used to mix bank share and turf points.
 [*][B]Turf contribution removed[/B] — The old turf contribution feature is gone.
 [*][B]Capture window (D1)[/B] — Turfs can be attacked while their owners are online. Set [ICODE]Capture.Window: OWNERS_OFFLINE[/ICODE] in [ICODE]turf/turf_rules.yml[/ICODE] for the old rule.
-[*][B]Income defaults (D9)[/B] — [ICODE]Default_Income_Amount[/ICODE] (250) per [ICODE]Income_Interval_Minutes[/ICODE] (10) in [ICODE]turf/turf_settings.yml[/ICODE]. The multiplier is capped at 2.0 ([ICODE]Income.Max_Multiplier[/ICODE], [ICODE]turf/turf_rules.yml[/ICODE]), and the gang's turf cap applies.
+[*][B]Income defaults (D9)[/B] — New turfs pay [ICODE]Default_Income_Amount[/ICODE] (250) every [ICODE]Income_Interval_Minutes[/ICODE] (10). Existing turfs keep their own amount; change one with [ICODE]/glw turf income <amount>[/ICODE]. The multiplier is capped at 2.0 ([ICODE]Income.Max_Multiplier[/ICODE], [ICODE]turf/turf_rules.yml[/ICODE]), and the gang's turf cap applies.
 [*][B]Inactivity release (D1)[/B] — Turfs of gangs with no activity for [ICODE]Capture.Inactivity_Auto_Release_Days[/ICODE] (default 4) are released. Server downtime counts.
 [*][B]Menus follow the plugin version[/B] — From 0.17.0 on, shipped menus are refreshed on every version change, like [ICODE]settings.yml[/ICODE].
 [*][B]Level-up timing for developers[/B] — [ICODE]LevelUpEvent[/ICODE] fires after the level is raised. A cancel undoes that level and stops. Listeners read the level reached with [ICODE]getLevel().getLevelValue()[/ICODE]. No XP is collected at the max level.
@@ -53,7 +53,7 @@
 [*][B]Quartermaster wording[/B] — [ICODE]Quartermaster.Reserve_Full[/ICODE] now reads "already has %max% guards (stock and on duty)". Old files keep the old text until edited.
 [/LIST]
 
-━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [SIZE=6][B]🐛 Fixed[/B][/SIZE]
 
@@ -61,7 +61,7 @@
 [*][B]Migrations[/B] — A failed database read no longer marks the one-time migrations as done. [ICODE]gang_migration.done_at[/ICODE] is the real run time.
 [*][B]Turf-upgrade grant[/B] — The first 0.17.0 boot grants [ICODE]gangland.turf.upgrade[/ICODE] once to every rank holding [ICODE]gangland.gang.withdraw[/ICODE]. Removing it later sticks.
 [*][B]Level-ups[/B] — Level-up lines name the level reached. Cancelled level-ups no longer eat XP.
-[*][B]Gang bounty[/B] — Refused for your own gang even on a stale lookup. A claim that would push the capturing gang's bank over [ICODE]Maximum_Balance[/ICODE] does not happen; the bounty stays and the gang gets a [ICODE]Bounty.Bank_Full[/ICODE] line.
+[*][B]Gang bounty[/B] — Refused for your own gang even on a stale lookup. A claim that would push the capturing gang's bank over [ICODE]Account.Maximum_Balance[/ICODE] does not happen; the bounty stays and the gang gets a [ICODE]Bounty.Bank_Full[/ICODE] line.
 [*][B]Gang join[/B] — [ICODE]/glw gang join[/ICODE] cancels the joiner's other pending invites, like [ICODE]/glw gang accept[/ICODE].
 [*][B]Gang chat[/B] — A player who left his gang while in gang chat mode has his next line sent to public chat.
 [*][B]Captures[/B] — Stepping out of a contested turf and back keeps the contest. It ends abandoned only after the attacking gang has had nobody inside for [ICODE]Capture.Abandon_Grace_Seconds[/ICODE] (default 15).
