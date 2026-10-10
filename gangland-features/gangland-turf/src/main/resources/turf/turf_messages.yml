@@ -292,6 +292,8 @@ Quartermaster:
    Owner_Changed: "&cThis turf changed hands. The panel is closed."
    # Chat when the viewer is no longer in the owning gang; the panel closes.
    Not_Member: "&cYou are no longer in the owning gang."
+   # Chat when an allied gang's alliance with the owner ended while the panel was open; the panel closes.
+   Not_Allied: "&cYour gang is no longer allied with the owning gang."
    # Chat when the turf has no owner yet (open contract).
    No_Owner: "&cThis turf has no owner — nothing to manage here yet."
    # Chat for a player who is in no gang that owns or allies the turf (open contract).

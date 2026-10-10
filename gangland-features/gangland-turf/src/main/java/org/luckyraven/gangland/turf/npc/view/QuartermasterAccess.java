@@ -29,6 +29,7 @@ public final class QuartermasterAccess {
 	public static final String TURF_GONE      = "Quartermaster.Turf_Gone";
 	public static final String OWNER_CHANGED  = "Quartermaster.Owner_Changed";
 	public static final String NOT_MEMBER     = "Quartermaster.Not_Member";
+	public static final String NOT_ALLIED     = "Quartermaster.Not_Allied";
 	public static final String ALLIES_LOOK    = "Quartermaster.Allies_Look";
 	public static final String NO_RANK        = "Quartermaster.No_Rank";
 
@@ -68,10 +69,12 @@ public final class QuartermasterAccess {
 		}
 
 		if (user.getGangId() != ownerId) {
-			Gang    viewerGang = session.getViewerGang();
-			boolean allied     = viewerGang != null && viewerGang.getId() == user.getGangId()
-			                     && viewerGang.isAlly(owner);
-			return allied ? ALLIES_LOOK : NOT_MEMBER;
+			// The viewer's gang opened the panel as an ally: if the alliance ended since, say so rather than "left".
+			Gang viewerGang = session.getViewerGang();
+			if (viewerGang != null && viewerGang.getId() == user.getGangId()) {
+				return viewerGang.isAlly(owner) ? ALLIES_LOOK : NOT_ALLIED;
+			}
+			return NOT_MEMBER;
 		}
 
 		Member member = memberOf(owner, viewer);
@@ -87,11 +90,10 @@ public final class QuartermasterAccess {
 		return messages.text(key, fallback(key));
 	}
 
-	/** Whether a refusal ends the panel (the turf is gone, changed hands, or the viewer left the gang). */
+	/** Whether a refusal ends the panel (the turf is gone, changed hands, or the viewer left or lost the alliance). */
 	public static boolean closesPanel(String key) {
-		return TURF_GONE.equals(key) || OWNER_CHANGED.equals(key) || NOT_MEMBER.equals(key);
+		return TURF_GONE.equals(key) || OWNER_CHANGED.equals(key) || NOT_MEMBER.equals(key) || NOT_ALLIED.equals(key);
 	}
-
 
 	/** Whether the panel was opened for an ally: buy lines show {@link #ALLIES_LOOK} instead of a buy action. */
 	public static boolean isAllyView(TurfPowerupFlowSession session) {
@@ -117,6 +119,7 @@ public final class QuartermasterAccess {
 			case TURF_GONE -> "&cThis turf no longer exists.";
 			case OWNER_CHANGED -> "&cThis turf changed hands. The panel is closed.";
 			case NOT_MEMBER -> "&cYou are no longer in the owning gang.";
+			case NOT_ALLIED -> "&cYour gang is no longer allied with the owning gang.";
 			case ALLIES_LOOK -> "&eAllied gangs can look, but only the owning gang can buy.";
 			default -> "&cYour rank may not spend gang money here.";
 		};

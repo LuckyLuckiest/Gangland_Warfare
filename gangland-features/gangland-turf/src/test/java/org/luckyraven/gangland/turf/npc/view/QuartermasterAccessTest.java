@@ -173,4 +173,21 @@ class QuartermasterAccessTest {
 			assertEquals("Quartermaster.Not_Member", access.denyKey(viewer, session(gang[0], gang[0])));
 		}
 	}
+
+	@Test
+	@DisplayName("an allied gang whose alliance ended while the panel was open gets Not_Allied, not Not_Member")
+	void allianceEnded_notAllied() {
+		Gang[] gang = world(rankTree()[2]);
+		Gang   ally = mock(Gang.class);
+		when(ally.getId()).thenReturn(ALLY_ID);
+		when(ally.isAlly(gang[0])).thenReturn(false);
+		User<Player> user = mock(User.class);
+		when(user.hasGang()).thenReturn(true);
+		when(user.getGangId()).thenReturn(ALLY_ID);
+		when(users.findByPlayer(viewer)).thenReturn(user);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			assertEquals("Quartermaster.Not_Allied", access.denyKey(viewer, session(gang[0], ally)));
+		}
+	}
 }

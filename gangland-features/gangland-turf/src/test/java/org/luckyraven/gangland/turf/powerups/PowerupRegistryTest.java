@@ -141,6 +141,36 @@ class PowerupRegistryTest {
 		assertEquals(0, new BigDecimal("1000").compareTo(registry.garrisonCost()));
 	}
 
+	@Test
+	@DisplayName("W2-Q: a zero or negative Garrison.Cost_Per_Guard falls back to 1000 (review minor)")
+	void garrisonCost_nonPositive_defaultsTo1000() throws Exception {
+		PowerupRegistry zero     = load("Garrison:\n   Cost_Per_Guard: 0\n");
+		PowerupRegistry negative = load("Garrison:\n   Cost_Per_Guard: -5\n");
+
+		assertEquals(0, new BigDecimal("1000").compareTo(zero.garrisonCost()));
+		assertEquals(0, new BigDecimal("1000").compareTo(negative.garrisonCost()));
+	}
+
+	@Test
+	@DisplayName("W2-Q: a fractional Garrison.Cost_Per_Guard is rounded to whole units when read (review minor)")
+	void garrisonCost_fractional_roundsToWholeUnits() throws Exception {
+		PowerupRegistry registry = load("Garrison:\n   Cost_Per_Guard: 1234.6\n");
+
+		assertEquals(0, new BigDecimal("1235").compareTo(registry.garrisonCost()));
+	}
+
+	@Test
+	@DisplayName("W2-Q: a boost with a negative Cost is skipped, so buying it can never pay the gang (review minor)")
+	void boost_negativeCost_skipped() throws Exception {
+		PowerupRegistry registry = load("Powerups:\n"
+		                                + "   bad_boost:\n      Cost: -100\n      Effect_Type: INCOME_MULTIPLIER\n"
+		                                + "      Magnitude: 1.1\n      Duration_Seconds: 60\n"
+		                                + "   good_boost:\n      Cost: 300\n      Effect_Type: INCOME_MULTIPLIER\n"
+		                                + "      Magnitude: 1.1\n      Duration_Seconds: 60\n");
+
+		assertEquals(Set_of("good_boost"), registry.ids());
+	}
+
 	private static PowerupRegistry load(String yaml) throws Exception {
 		FileHandler handler = mock(FileHandler.class);
 		when(handler.getParsedDocument()).thenReturn(

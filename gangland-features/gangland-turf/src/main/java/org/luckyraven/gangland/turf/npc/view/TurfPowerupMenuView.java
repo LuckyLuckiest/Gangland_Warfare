@@ -93,7 +93,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 		return new ItemBuilder(Material.POTION)
 				.setDisplayName(messages.text("Quartermaster.Menu_Buffs_Name", "&b&lTimed Buffs"))
 				.setLore(messages.text("Quartermaster.Menu_Buffs_Lore_1", "&7Browse the powerup catalogue and"),
-				         messages.text("Quartermaster.Menu_Buffs_Lore_2", "&7activate income / defense / garrison buffs."),
+				         messages.text("Quartermaster.Menu_Buffs_Lore_2", "&7buy timed boosts on this turf."),
 				         messages.text("Quartermaster.Menu_Buffs_Active", "&7Currently active: &f%count%",
 				                       "count", buffs.active(turf.getId()).size()));
 	}
@@ -102,8 +102,8 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 		return new ItemBuilder(Material.IRON_SWORD)
 				.setDisplayName(messages.text("Quartermaster.Menu_Garrison_Name", "&c&lGarrison"))
 				.setLore(messages.text("Quartermaster.Menu_Garrison_Lore_1", "&7View / buy defender stock."),
-				         messages.text("Quartermaster.Menu_Garrison_Lore_2", "&7These civilian defenders auto-spawn"),
-				         messages.text("Quartermaster.Menu_Garrison_Lore_3", "&7when an enemy attacks the turf."),
+				         messages.text("Quartermaster.Menu_Garrison_Lore_2", "&7Guards hold the capture bar"),
+				         messages.text("Quartermaster.Menu_Garrison_Lore_3", "&7and fight attackers on this turf."),
 				         messages.text("Quartermaster.Menu_Garrison_Stock", "&7Current stock: &f%count%",
 				                       "count", garrisons.count(turf.getId())));
 	}

@@ -12,6 +12,7 @@ import org.luckyraven.keystone.persistence.config.NodeReader;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 /**
@@ -101,7 +102,16 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 		}
 		String raw = NodeReader.of(garrisonNode, report).get("Cost_Per_Guard").asString().orDefault("1000");
 		try {
-			registry.setGarrisonCost(new BigDecimal(raw.replace("_", "").trim()));
+			BigDecimal cost = new BigDecimal(raw.replace("_", "").trim());
+			if (cost.signum() <= 0) {
+				log.warn("turf_powerups.yml Garrison.Cost_Per_Guard '{}' must be above zero; using 1000", raw);
+				registry.setGarrisonCost(DEFAULT_GUARD_COST);
+				return;
+			}
+			if (cost.stripTrailingZeros().scale() > 0) {
+				log.warn("turf_powerups.yml Garrison.Cost_Per_Guard '{}' is fractional; rounded to whole units", raw);
+			}
+			registry.setGarrisonCost(cost.setScale(0, RoundingMode.HALF_UP));
 		} catch (NumberFormatException exception) {
 			log.warn("turf_powerups.yml Garrison.Cost_Per_Guard '{}' is not a number; using 1000", raw);
 			registry.setGarrisonCost(DEFAULT_GUARD_COST);
@@ -134,6 +144,14 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 		} catch (NumberFormatException exception) {
 			log.warn("Powerup '{}' has unparseable Cost '{}' — skipping", id, costRaw);
 			return null;
+		}
+
+		if (cost.signum() < 0) {
+			log.warn("Powerup '{}' has a negative Cost '{}' - skipping", id, costRaw);
+			return null;
+		}
+		if (cost.signum() == 0) {
+			log.warn("Powerup '{}' has Cost 0 - it activates for free", id);
 		}
 
 		return new PowerupDefinition(id, displayName, cost, effectType, magnitude, durationSeconds);

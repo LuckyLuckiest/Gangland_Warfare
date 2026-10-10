@@ -7,8 +7,15 @@ import org.luckyraven.gangland.turf.support.YamlFixture;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -35,7 +42,7 @@ class QuartermasterYamlTest {
 			"Quartermaster.Garrison_Buy_Click", "Quartermaster.Garrison_Buy_Insufficient",
 			"Quartermaster.Bought_Guard", "Quartermaster.Bought_Boost", "Quartermaster.Cannot_Afford",
 			"Quartermaster.Reserve_Full", "Quartermaster.No_Rank", "Quartermaster.Allies_Look",
-			"Quartermaster.Turf_Gone", "Quartermaster.Owner_Changed", "Quartermaster.Not_Member",
+			"Quartermaster.Turf_Gone", "Quartermaster.Owner_Changed", "Quartermaster.Not_Member", "Quartermaster.Not_Allied",
 			"Quartermaster.No_Owner", "Quartermaster.Only_Owner_Or_Allies", "Quartermaster.Gang_Missing");
 
 	private static YamlConfiguration load(String resource) throws IOException {
@@ -49,6 +56,42 @@ class QuartermasterYamlTest {
 
 		for (String key : MESSAGE_KEYS) {
 			assertTrue(yaml.isSet(key), "missing " + key);
+		}
+	}
+
+	@Test
+	@DisplayName("every in-code Quartermaster fallback equals the shipped turf_messages.yml line (review blocker)")
+	void fallbacksMatchShippedYaml() throws IOException {
+		YamlConfiguration yaml = load("/turf/turf_messages.yml");
+		Path              view = Path.of("src/main/java/org/luckyraven/gangland/turf/npc/view");
+		Map<String, String> fallbacks = new HashMap<>();
+		Map<String, String> constants = new HashMap<>();
+		Pattern text     = Pattern.compile("\"(Quartermaster\\.[A-Za-z_]+)\",\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+		Pattern refusal  = Pattern.compile("case (\\w+) -> \"((?:[^\"\\\\]|\\\\.)*)\"");
+		Pattern constant = Pattern.compile("String (\\w+)\\s*= \"(Quartermaster\\.[A-Za-z_]+)\"");
+
+		try (var files = Files.list(view)) {
+			for (Path file : files.filter(f -> f.toString().endsWith(".java")).toList()) {
+				String source = Files.readString(file);
+				Matcher m = text.matcher(source);
+				while (m.find()) {
+					fallbacks.put(m.group(1), m.group(2));
+				}
+				Matcher c = constant.matcher(source);
+				while (c.find()) {
+					constants.put(c.group(1), c.group(2));
+				}
+				Matcher r = refusal.matcher(source);
+				while (r.find()) {
+					fallbacks.put(constants.getOrDefault(r.group(1), r.group(1)), r.group(2));
+				}
+			}
+		}
+
+		assertTrue(fallbacks.size() > 30, "the scan must find the panel fallbacks, found " + fallbacks.size());
+		for (Map.Entry<String, String> entry : fallbacks.entrySet()) {
+			assertTrue(yaml.isSet(entry.getKey()), "missing " + entry.getKey());
+			assertEquals(yaml.getString(entry.getKey()), entry.getValue(), entry.getKey());
 		}
 	}
 
