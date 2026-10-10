@@ -38,7 +38,7 @@ the money is deducted.
 - `gang info` accepts a name (any case) or a numeric id. It never shows the bank balance.
 - Gang names must match `Name_Pattern` in `gang/gang_rules.yml` (default 3 to 16 letters, digits or underscores).
   Names are always unique: `Name_Duplicates` in `gang/gang_settings.yml` is ignored.
-- Known gap: `gang list` and `gang info` refuse console senders (see [migration 0.14.0](../migration-0.14.0.md)).
+- Known gap: `gang list` and `gang info` refuse console senders (see [migration 0.17.0](../migration-0.17.0.md)).
 
 ---
 
@@ -73,7 +73,7 @@ and never the Tail rank: ownership moves with `/glw gang transfer`. Staff holdin
 | `/glw gang join <gang>`      | Joins an open gang at the starting rank. Needs the gang's recruiting set to `open`. |
 | `/glw gang recruiting open\|invite` | Sets whether anyone may join (`open`) or only invited players (`invite`, the default; every existing gang starts there). Leader or a rank with `gangland.gang.invite`. |
 | `/glw gang chat <message>`   | Sends a message to your online gang. `/glw gang chat` alone toggles gang chat mode; leaving the gang or quitting clears it. |
-| `/glw gang bounty <gang> <amount>` | Puts money from your own balance on another gang (not your own or an ally). The gang that captures one of its turfs collects the whole bounty. Needs `gangland.command.gang.bounty` (default true). |
+| `/glw gang bounty <gang> <amount>` | Puts money from your own balance on another gang (not your own or an ally). The gang that captures one of its turfs collects the whole bounty, unless that would take the capturing gang's bank over `Account.Maximum_Balance`; then the bounty stays on the target. Needs `gangland.command.gang.bounty` (default true). |
 | `/glw gang leave`            | Leaves the gang. The owner cannot leave — they must delete the gang instead. |
 | `/glw gang promote <player>` | Moves a member up one rank in the hierarchy.                                 |
 | `/glw gang demote <player>`  | Moves a member down one rank in the hierarchy.                               |
