@@ -52,7 +52,7 @@ class TurfSetOwnerCommand extends SubArgument {
 		this.gangs      = gangs;
 		this.selections = selections;
 		this.messages   = messages;
-		this.text = text;
+		this.text       = text;
 		this.ownership  = ownership;
 
 		this.addSubArgument(gangArgument());

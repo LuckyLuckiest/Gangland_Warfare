@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.listener.inventory;
 
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,8 +18,13 @@ import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.chest.ChestMenu;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -111,5 +117,18 @@ class InventoryOpenConditionTest {
 
 		verify(event).setCancelled(true);
 		verify(menu).open(player);
+	}
+
+	@Test
+	@DisplayName("the shipped gang_info.yml gates its Open.Command on membership")
+	void shippedGangInfo_hasMembershipCondition() throws Exception {
+		try (InputStream in = InventoryOpenConditionTest.class.getResourceAsStream("/inventory/gang_info.yml")) {
+			assertNotNull(in);
+			YamlConfiguration yaml = YamlConfiguration.loadConfiguration(
+					new InputStreamReader(in, StandardCharsets.UTF_8));
+
+			assertEquals(CONDITION, yaml.getString("Information.Open.Condition"));
+			assertEquals("/glw gang", yaml.getString("Information.Open.Command"));
+		}
 	}
 }

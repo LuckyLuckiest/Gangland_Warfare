@@ -37,8 +37,8 @@ class TurfIncomeCommand extends SubArgument {
 	private final TurfSettings         settings;
 
 	protected TurfIncomeCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages, TurfMessages text,
-	                            TurfSettings settings) {
+	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
+	                            TurfMessages text, TurfSettings settings) {
 		super(plugin, "income", tree, parent);
 
 		this.plugin   = plugin;
@@ -46,7 +46,7 @@ class TurfIncomeCommand extends SubArgument {
 		this.turfs      = turfs;
 		this.selections = selections;
 		this.messages   = messages;
-		this.text = text;
+		this.text       = text;
 		this.settings   = settings;
 
 		this.addSubArgument(amountArgument());

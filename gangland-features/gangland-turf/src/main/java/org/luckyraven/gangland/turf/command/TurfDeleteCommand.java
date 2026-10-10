@@ -7,7 +7,6 @@ import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
@@ -40,15 +39,15 @@ class TurfDeleteCommand extends SubArgument {
 	private final TurfOwnership        ownership;
 
 	protected TurfDeleteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages, TurfMessages text,
-	                            GarrisonManager garrisons, ActiveBuffManager buffs, TurfPowerupManager powerupNpcs,
-	                            TurfOwnership ownership) {
+	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
+	                            TurfMessages text, GarrisonManager garrisons, ActiveBuffManager buffs,
+	                            TurfPowerupManager powerupNpcs, TurfOwnership ownership) {
 		super(plugin, "delete", tree, parent);
 
 		this.turfs       = turfs;
 		this.selections  = selections;
 		this.messages    = messages;
-		this.text = text;
+		this.text        = text;
 		this.garrisons   = garrisons;
 		this.buffs       = buffs;
 		this.powerupNpcs = powerupNpcs;

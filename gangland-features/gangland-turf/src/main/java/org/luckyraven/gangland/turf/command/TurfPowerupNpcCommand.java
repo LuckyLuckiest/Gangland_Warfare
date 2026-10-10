@@ -47,7 +47,7 @@ public class TurfPowerupNpcCommand extends SubArgument {
 		this.turfs       = turfs;
 		this.selections  = selections;
 		this.messages    = messages;
-		this.text = text;
+		this.text        = text;
 		this.powerupNpcs = powerupNpcs;
 
 		this.addSubArgument(actionArgument());
