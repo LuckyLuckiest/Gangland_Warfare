@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.chat.GangChatChannel;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -147,7 +148,8 @@ class GangCommandTest {
 
 	private GangCommand command(UserManager<Player> userManager) {
 		return new GangCommand(mock(JavaPlugin.class), userManager, mock(UserManager.class), null, null, null, null,
-		                       null, mock(DependencyContainer.class), null, mock(GangRules.class), messages);
+		                       null, mock(DependencyContainer.class), null, mock(GangRules.class), messages,
+		                       new GangChatChannel());
 	}
 
 	private static boolean hasClick(BaseComponent[] components, ClickEvent.Action action, String value) {

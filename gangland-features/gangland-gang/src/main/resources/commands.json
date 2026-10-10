@@ -51,6 +51,22 @@
 		"usage": "/glw gang info [gang]",
 		"description": "Show a gang's public card: members, owner, allies."
 	},
+	"gang_chat": {
+		"usage": "/glw gang chat [message]",
+		"description": "Talk to your gang only. Without a message, switch gang chat on or off."
+	},
+	"gang_join": {
+		"usage": "/glw gang join <gang>",
+		"description": "Join a gang that is open for recruits."
+	},
+	"gang_recruiting": {
+		"usage": "/glw gang recruiting <open|invite>",
+		"description": "Let anyone join your gang (open) or invited players only (invite)."
+	},
+	"gang_bounty": {
+		"usage": "/glw gang bounty <gang> <amount>",
+		"description": "Put money on a gang; the gang that takes one of its turfs collects it."
+	},
 	"gang_change_name": {
 		"usage": "/glw gang rename <name>",
 		"description": "Changes the current gang name."

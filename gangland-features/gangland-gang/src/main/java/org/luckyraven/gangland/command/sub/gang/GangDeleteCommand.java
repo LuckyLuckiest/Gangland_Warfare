@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -53,6 +54,7 @@ class GangDeleteCommand extends SubArgument {
 	private final GangManager                gangManager;
 	private final RankManager                rankManager;
 	private final RepositoryRegistry         repositoryRegistry;
+	private final GangMessages messages;
 
 	private final HashMap<User<Player>, AtomicReference<String>> deleteGangName;
 	private final HashMap<CommandSender, CountdownTimer>         deleteGangTimer;
@@ -62,7 +64,8 @@ class GangDeleteCommand extends SubArgument {
 	protected GangDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                            MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager, RepositoryRegistry repositoryRegistry) {
+	                            RankManager rankManager, RepositoryRegistry repositoryRegistry,
+	                            GangMessages messages) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
 		this.gangland           = gangland;
@@ -73,6 +76,7 @@ class GangDeleteCommand extends SubArgument {
 		this.gangManager        = gangManager;
 		this.rankManager        = rankManager;
 		this.repositoryRegistry = repositoryRegistry;
+		this.messages           = messages;
 
 		this.deleteGangName  = new HashMap<>();
 		this.deleteGangTimer = new HashMap<>();

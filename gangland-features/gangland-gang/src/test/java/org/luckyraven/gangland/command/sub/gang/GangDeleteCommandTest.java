@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.file.GangMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
@@ -148,7 +149,8 @@ class GangDeleteCommandTest {
 		when(parent.getPermission()).thenReturn("glw.gang");
 
 		command = new GangDeleteCommand(plugin, new Tree<>(), parent, userManager, offlineUserManager, memberManager,
-		                                gangManager, rankManager, repositoryRegistry);
+		                                gangManager, rankManager, repositoryRegistry,
+		                                mock(GangMessages.class));
 	}
 
 	@AfterEach

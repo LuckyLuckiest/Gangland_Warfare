@@ -4,6 +4,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.chat.GangChatChannel;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.database.repositories.meta.GangMigration;
 import org.luckyraven.gangland.gang.contract.GangMessageContract;
@@ -119,6 +120,12 @@ public final class GangConfig {
 	@Bean
 	public MemberRepositoryContract memberRepositoryContract(RepositoryRegistry registry) {
 		return (MemberRepositoryContract) registry.getRepository(Member.class);
+	}
+
+	/** Who has gang chat switched on (W2-P2 adds the delivery). */
+	@Bean
+	public GangChatChannel gangChatChannel() {
+		return new GangChatChannel();
 	}
 
 	@Bean

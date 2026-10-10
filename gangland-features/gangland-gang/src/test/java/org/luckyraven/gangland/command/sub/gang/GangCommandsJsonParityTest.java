@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.chat.GangChatChannel;
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
 import org.bukkit.Bukkit;
@@ -151,7 +152,8 @@ class GangCommandsJsonParityTest {
 		                                      mock(GangManager.class), mock(MemberManager.class),
 		                                      mock(RankManager.class), mock(RepositoryRegistry.class),
 		                                      mock(PermissionManager.class), mock(DependencyContainer.class), null,
-		                                      mock(GangRules.class), mock(GangMessages.class));
+		                                      mock(GangRules.class), mock(GangMessages.class),
+		                                      new GangChatChannel());
 		command.initializeArguments();
 		return command;
 	}

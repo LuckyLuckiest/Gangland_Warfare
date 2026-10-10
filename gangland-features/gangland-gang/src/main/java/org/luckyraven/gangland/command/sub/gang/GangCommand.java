@@ -11,6 +11,7 @@ import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.chat.GangChatChannel;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.extension.CommandContributions;
@@ -51,6 +52,7 @@ public final class GangCommand extends Command {
 	private final InventoryService           inventoryService;
 	private final GangRules                  gangRules;
 	private final GangMessages               gangMessages;
+	private final GangChatChannel           chatChannel;
 
 	private final JavaPlugin gangland;
 
@@ -65,7 +67,8 @@ public final class GangCommand extends Command {
 	                   DependencyContainer container,
 	                   InventoryService inventoryService,
 	                   GangRules gangRules,
-	                   GangMessages gangMessages
+	                   GangMessages gangMessages,
+	                   GangChatChannel chatChannel
 	) {
 		super(gangland, "gang", true);
 
@@ -81,6 +84,7 @@ public final class GangCommand extends Command {
 		this.inventoryService   = inventoryService;
 		this.gangRules          = gangRules;
 		this.gangMessages       = gangMessages;
+		this.chatChannel        = chatChannel;
 		this.contributions      = CommandContributions.from(container);
 
 		var list = getCommands().entrySet()
@@ -140,7 +144,7 @@ public final class GangCommand extends Command {
 		                                    gangMessages);
 		Argument delete = new GangDeleteCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        offlineUserManager, memberManager, gangManager, rankManager,
-		                                        repositoryRegistry);
+		                                        repositoryRegistry, gangMessages);
 		Argument removeUser = new GangKickCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          offlineUserManager, memberManager, gangManager, rankManager);
 		Argument leave = new GangLeaveCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
@@ -179,6 +183,14 @@ public final class GangCommand extends Command {
 		arguments.add(create);
 		arguments.add(list);
 		arguments.add(info);
+		arguments.add(new GangChatCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,
+		                                  gangManager, gangMessages, chatChannel));
+		arguments.add(new GangJoinCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,
+		                                  gangManager, rankManager, gangMessages));
+		arguments.add(new GangRecruitingCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
+		                                        memberManager, gangManager, gangMessages));
+		arguments.add(new GangBountyCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,
+		                                    gangManager, gangMessages));
 		arguments.add(delete);
 
 		// invite / accept (and anything else a module hangs under /glw gang) come from installed modules
