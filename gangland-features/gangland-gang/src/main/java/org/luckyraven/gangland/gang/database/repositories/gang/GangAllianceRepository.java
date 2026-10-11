@@ -51,7 +51,9 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 	@Override
 	public void deleteAllForGang(Gang gang) {
 		DatabaseHelper helper = new DatabaseHelper(getPlugin(), getDatabaseHandler());
-		helper.runQueriesAsync(database -> {
+		// Synchronous on purpose (T-703): the caller deletes the gang row right after this, and an async delete
+		// could land after it, which MySQL refuses on the gang_ally foreign keys.
+		helper.runQueries(database -> {
 			tableBackend().delete("gang_id = ?", gang.getId());
 			tableBackend().delete("ally_id = ?", gang.getId());
 		});
