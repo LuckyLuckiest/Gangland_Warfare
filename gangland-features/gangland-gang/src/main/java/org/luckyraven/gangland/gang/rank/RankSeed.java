@@ -49,7 +49,8 @@ public final class RankSeed {
 		// A pending seed is rewritten whole: the rank upsert and the link insert are both idempotent.
 		if (ranks.totalRanks() != 0 && !isPending(migrations)) return false;
 
-		migrations.markDone(STARTED);
+		// T-235: the marker must be on disk before the (synchronous) rank rows, or a crash leaves ranks no boot heals.
+		migrations.markDoneNow(STARTED);
 
 		List<String> ladder = new ArrayList<>(rules.getRankPreset());
 		int          last   = ladder.size() - 1;

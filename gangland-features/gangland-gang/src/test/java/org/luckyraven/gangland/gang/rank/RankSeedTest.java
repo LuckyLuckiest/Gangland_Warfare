@@ -132,4 +132,19 @@ class RankSeedTest {
 		assertFalse(RankSeed.isPending(migrations));
 	}
 
+	@Test
+	@DisplayName("T-235: the STARTED marker is written synchronously before the first rank row")
+	void startedMarker_writtenSynchronouslyBeforeFirstRank() throws Exception {
+		GangMigrationsContract mock = mock(GangMigrationsContract.class);
+		when(ranks.totalRanks()).thenReturn(0);
+		when(rules.getRankPreset()).thenReturn(List.of("member", "officer", "owner"));
+
+		RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner", mock);
+
+		var order = inOrder(mock, ranks);
+		order.verify(mock).markDoneNow(RankSeed.STARTED);
+		order.verify(ranks, atLeastOnce()).insertNow(any(Rank.class));
+		verify(mock, never()).markDone(RankSeed.STARTED);
+	}
+
 }
