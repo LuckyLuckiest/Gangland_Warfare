@@ -289,4 +289,27 @@ Titles:
 # end Titles
 
 # ---------------- Staff ----------------
+# /glw option gang <verb>: staff only, and every verb also runs from the console.
+Staff:
+   # %usage% is the verb with its arguments.
+   Usage: "&cUsage: /glw option gang %usage%"
+   Unknown_Gang: "&cNo gang named %gang%."
+   Disband_Confirm: "&eThis disbands %gang%. Run &f/glw option gang disband %gang% confirm &eto do it."
+   Disbanded: "&aGang %gang% disbanded."
+   Not_Member: "&c%player% is not in %gang%."
+   Leader_Set: "&a%player% now leads %gang%."
+   Bank_Balance: "&7%gang% holds &e%amount%&7."
+   # %before% and %after% are the bank before and after the change.
+   Bank_Changed: "&aBank of %gang%: %before% -> %after%."
+   Bank_Short: "&c%gang% holds only %amount%."
+   Bad_Amount: "&c%value% is not an amount."
+   Safehouse_Header: "&6Safehouses of %gang% &7(%count%)"
+   Safehouse_Row: "&7- &f%name% &7(%world% %x% %y% %z%)"
+   Safehouse_Missing: "&c%gang% has no safehouse %name%."
+   Safehouse_Removed: "&7Safehouse %name% removed."
+   World_Missing: "&cWorld %world% is not loaded."
+   Stats_Reset: "&aKills, deaths and assists of %player% reset."
+   Player_Not_Found: "&c%player% is in no gang."
+   Spy_On: "&aYou now read gang and ally chat."
+   Spy_Off: "&7You stopped reading gang and ally chat."
 # end Staff

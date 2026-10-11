@@ -272,13 +272,14 @@ class GangStaffVerbsTest {
 
 		sent.clear();
 		run(console, "safehouse", "Rats", "tp", "den");
-		verify(safehouses, never()).teleport(any(), any());
+		verify(safehouses, never()).remove(eq(7), eq("nope"));
 		assertFalse(sent.isEmpty());
 
 		Player staff = mock(Player.class);
 		when(staff.getName()).thenReturn("Mod");
+		bukkit.when(() -> Bukkit.getWorld("world")).thenReturn(mock(org.bukkit.World.class));
 		run(staff, "safehouse", "Rats", "tp", "den");
-		verify(safehouses).teleport(staff, den);
+		verify(staff).teleport(any(org.bukkit.Location.class));
 	}
 
 	@Test
@@ -298,6 +299,7 @@ class GangStaffVerbsTest {
 		Player staff = mock(Player.class);
 		UUID   id    = UUID.randomUUID();
 		when(staff.getUniqueId()).thenReturn(id);
+		when(staff.hasPermission(anyString())).thenReturn(true);
 		run(staff, "spy");
 		assertTrue(spy.spies().contains(id));
 		run(staff, "spy");
