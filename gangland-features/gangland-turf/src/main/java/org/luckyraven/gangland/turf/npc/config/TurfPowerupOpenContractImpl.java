@@ -59,8 +59,7 @@ public final class TurfPowerupOpenContractImpl implements TurfPowerupOpenContrac
 		User<Player> user = users.findByPlayer(viewer);
 		if (user == null || !user.hasGang()) {
 			viewer.sendMessage(messages.text("Quartermaster.Refuse_No_Gang",
-			                                 "&cThis %npc% serves &e%owner%&c. Join a gang, then ally with them: "
-			                                 + "&f/glw gang ally request %owner_id%",
+			                                 "&cThis %npc% serves &e%owner%&c. Join a gang, then ally with them: &f/glw gang ally request %owner_id%",
 			                                 "npc", name, "owner", owner, "owner_id", ownerId));
 			return;
 		}
@@ -76,8 +75,7 @@ public final class TurfPowerupOpenContractImpl implements TurfPowerupOpenContrac
 		boolean isAlly  = !isOwner && viewerGang.isAlly(ownerGang);
 		if (!isOwner && !isAlly) {
 			viewer.sendMessage(messages.text("Quartermaster.Refuse_Stranger",
-			                                 "&cThis %npc% serves &e%owner%&c. Ally with them to use it: "
-			                                 + "&f/glw gang ally request %owner_id%",
+			                                 "&cThis %npc% serves &e%owner%&c. Ally with them to use it: &f/glw gang ally request %owner_id%",
 			                                 "npc", name, "owner", owner, "owner_id", ownerId));
 			return;
 		}
