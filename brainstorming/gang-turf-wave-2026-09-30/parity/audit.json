@@ -10,6 +10,7 @@
     "AUTOMATED_GREEN": 30,
     "NEEDS_OWNER_STEP": 5
   },
+  "redSummary": "The 7 RED rows (GP-01, GP-03, GP-05, GP-07, GP-08, GP-11, GP-26) are not product regressions. The four classes behind them (GangMembershipServiceTest, GangLeadershipTest, GangPermissionsTest, TurfTeleportGuardListenerTest) pass in their full module suites: gangland-gang 541 run, 0 failures, 0 errors; gangland-turf 679 run, 0 failures, 0 errors. Run alone they error (NPE in GanglandChatUtil.color or IllegalStateException from IdentitySettings) because they depend on run order. Verdict stays RED as the brief requires; see T-700.",
   "rowCount": 45,
   "rows": [
     {
@@ -23,7 +24,15 @@
           "testsRun": 5,
           "failures": 0,
           "errors": 5,
-          "skipped": 0
+          "skipped": 0,
+          "moduleSuiteResult": "PASS",
+          "moduleSuiteCounts": {
+            "module": "gangland-features/gangland-gang",
+            "testsRun": 541,
+            "failures": 0,
+            "errors": 0,
+            "basis": "head ca7ab965 module suite (judge re-run; re-run at 00e5b768 on the fix round)"
+          }
         },
         {
           "class": "GangStaffVerbsTest",
@@ -48,7 +57,9 @@
       ],
       "nonTestItems": [],
       "ownerStep": null,
-      "verdict": "RED"
+      "verdict": "RED",
+      "redCause": "TEST_ISOLATION",
+      "redNote": "The class fails when run alone because it never binds the static Settings money symbol or IdentitySettings itself; other test classes set them in the module suite, where the behaviour is green."
     },
     {
       "id": "GP-02",
@@ -81,7 +92,15 @@
           "testsRun": 3,
           "failures": 0,
           "errors": 2,
-          "skipped": 0
+          "skipped": 0,
+          "moduleSuiteResult": "PASS",
+          "moduleSuiteCounts": {
+            "module": "gangland-features/gangland-gang",
+            "testsRun": 541,
+            "failures": 0,
+            "errors": 0,
+            "basis": "head ca7ab965 module suite (judge re-run; re-run at 00e5b768 on the fix round)"
+          }
         },
         {
           "class": "GangStaffVerbsTest",
@@ -96,7 +115,9 @@
       ],
       "nonTestItems": [],
       "ownerStep": null,
-      "verdict": "RED"
+      "verdict": "RED",
+      "redCause": "TEST_ISOLATION",
+      "redNote": "The class fails when run alone because it never binds the static Settings money symbol or IdentitySettings itself; other test classes set them in the module suite, where the behaviour is green."
     },
     {
       "id": "GP-04",
@@ -157,12 +178,22 @@
           "testsRun": 5,
           "failures": 0,
           "errors": 5,
-          "skipped": 0
+          "skipped": 0,
+          "moduleSuiteResult": "PASS",
+          "moduleSuiteCounts": {
+            "module": "gangland-features/gangland-gang",
+            "testsRun": 541,
+            "failures": 0,
+            "errors": 0,
+            "basis": "head ca7ab965 module suite (judge re-run; re-run at 00e5b768 on the fix round)"
+          }
         }
       ],
       "nonTestItems": [],
       "ownerStep": null,
-      "verdict": "RED"
+      "verdict": "RED",
+      "redCause": "TEST_ISOLATION",
+      "redNote": "The class fails when run alone because it never binds the static Settings money symbol or IdentitySettings itself; other test classes set them in the module suite, where the behaviour is green."
     },
     {
       "id": "GP-06",
@@ -203,12 +234,22 @@
           "testsRun": 16,
           "failures": 0,
           "errors": 1,
-          "skipped": 0
+          "skipped": 0,
+          "moduleSuiteResult": "PASS",
+          "moduleSuiteCounts": {
+            "module": "gangland-features/gangland-gang",
+            "testsRun": 541,
+            "failures": 0,
+            "errors": 0,
+            "basis": "head ca7ab965 module suite (judge re-run; re-run at 00e5b768 on the fix round)"
+          }
         }
       ],
       "nonTestItems": [],
       "ownerStep": null,
-      "verdict": "RED"
+      "verdict": "RED",
+      "redCause": "TEST_ISOLATION",
+      "redNote": "The class fails when run alone because it never binds the static Settings money symbol or IdentitySettings itself; other test classes set them in the module suite, where the behaviour is green."
     },
     {
       "id": "GP-08",
@@ -221,12 +262,22 @@
           "testsRun": 16,
           "failures": 0,
           "errors": 1,
-          "skipped": 0
+          "skipped": 0,
+          "moduleSuiteResult": "PASS",
+          "moduleSuiteCounts": {
+            "module": "gangland-features/gangland-gang",
+            "testsRun": 541,
+            "failures": 0,
+            "errors": 0,
+            "basis": "head ca7ab965 module suite (judge re-run; re-run at 00e5b768 on the fix round)"
+          }
         }
       ],
       "nonTestItems": [],
       "ownerStep": null,
-      "verdict": "RED"
+      "verdict": "RED",
+      "redCause": "TEST_ISOLATION",
+      "redNote": "The class fails when run alone because it never binds the static Settings money symbol or IdentitySettings itself; other test classes set them in the module suite, where the behaviour is green."
     },
     {
       "id": "GP-09",
@@ -285,7 +336,15 @@
           "testsRun": 5,
           "failures": 0,
           "errors": 5,
-          "skipped": 0
+          "skipped": 0,
+          "moduleSuiteResult": "PASS",
+          "moduleSuiteCounts": {
+            "module": "gangland-features/gangland-gang",
+            "testsRun": 541,
+            "failures": 0,
+            "errors": 0,
+            "basis": "head ca7ab965 module suite (judge re-run; re-run at 00e5b768 on the fix round)"
+          }
         },
         {
           "class": "GangSafehouseCommandTest",
@@ -310,7 +369,9 @@
       ],
       "nonTestItems": [],
       "ownerStep": null,
-      "verdict": "RED"
+      "verdict": "RED",
+      "redCause": "TEST_ISOLATION",
+      "redNote": "The class fails when run alone because it never binds the static Settings money symbol or IdentitySettings itself; other test classes set them in the module suite, where the behaviour is green."
     },
     {
       "id": "GP-12",
@@ -735,12 +796,22 @@
           "testsRun": 8,
           "failures": 0,
           "errors": 5,
-          "skipped": 0
+          "skipped": 0,
+          "moduleSuiteResult": "PASS",
+          "moduleSuiteCounts": {
+            "module": "gangland-features/gangland-turf",
+            "testsRun": 679,
+            "failures": 0,
+            "errors": 0,
+            "basis": "head ca7ab965 module suite (judge re-run; re-run at 00e5b768 on the fix round)"
+          }
         }
       ],
       "nonTestItems": [],
       "ownerStep": null,
-      "verdict": "RED"
+      "verdict": "RED",
+      "redCause": "TEST_ISOLATION",
+      "redNote": "The class fails when run alone because it never binds the static Settings money symbol or IdentitySettings itself; other test classes set them in the module suite, where the behaviour is green."
     },
     {
       "id": "GP-27",
@@ -1305,5 +1376,15 @@
       "result": "25 run, 0 failures, 0 errors"
     }
   ],
-  "flipped": []
+  "flipped": [],
+  "proposedDocketRows": [
+    {
+      "id": "T-700",
+      "severity": "P3",
+      "system": "gang / turf tests",
+      "summary": "The 4 test classes GangMembershipServiceTest, GangLeadershipTest, GangPermissionsTest and TurfTeleportGuardListenerTest depend on run order: they are red alone (NPE in GanglandChatUtil.color or IllegalStateException from IdentitySettings) and green in the module suite. Affects GP-01, GP-03, GP-05, GP-07, GP-08, GP-11, GP-26.",
+      "fixDirection": "Bind both statics (the Settings money symbol and IdentitySettings) in each class own @BeforeEach and reset them in @AfterEach.",
+      "status": "proposed, not written to the docket"
+    }
+  ]
 }
