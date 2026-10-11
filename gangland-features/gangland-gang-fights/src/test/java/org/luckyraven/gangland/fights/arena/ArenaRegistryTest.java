@@ -83,6 +83,11 @@ class ArenaRegistryTest {
 		registry.reload();
 
 		assertEquals(1, registry.all().size());
+
+		registry.add(arena("Docks", 100));
+		Path broken = dir.resolve("c.yml.broken");
+		assertTrue(Files.exists(broken));
+		assertTrue(Files.readString(broken).contains("unclosed"));
 	}
 
 	@Test

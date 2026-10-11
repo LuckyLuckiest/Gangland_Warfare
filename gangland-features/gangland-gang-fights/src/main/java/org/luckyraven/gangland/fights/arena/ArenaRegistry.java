@@ -99,21 +99,26 @@ public class ArenaRegistry {
 			config.loadFromString(Files.readString(file, StandardCharsets.UTF_8));
 		} catch (IOException | InvalidConfigurationException exception) {
 			log.warn("arenas.yml could not be read, keeping the arenas in memory: {}", exception.getMessage());
+			backupBroken();
 			return;
 		}
 		ArenaFile.Loaded loaded = ArenaFile.read(config);
 		loaded.skipped().forEach(line -> log.warn("{}", line));
 		if (!loaded.skipped().isEmpty()) {
-			Path backup = file.resolveSibling(file.getFileName() + ".broken");
-			try {
-				Files.copy(file, backup, StandardCopyOption.REPLACE_EXISTING);
-				log.warn("Skipped entries stay in {} until you fix them; the next save rewrites arenas.yml", backup);
-			} catch (IOException exception) {
-				log.warn("Could not back up arenas.yml to {}: {}", backup, exception.getMessage());
-			}
+			backupBroken();
 		}
 		arenas.clear();
 		loaded.arenas().forEach(a -> arenas.put(key(a.name()), a));
+	}
+
+	private void backupBroken() {
+		Path backup = file.resolveSibling(file.getFileName() + ".broken");
+		try {
+			Files.copy(file, backup, StandardCopyOption.REPLACE_EXISTING);
+			log.warn("The unreadable arenas.yml is kept in {}; the next save rewrites arenas.yml", backup);
+		} catch (IOException exception) {
+			log.warn("Could not back up arenas.yml to {}: {}", backup, exception.getMessage());
+		}
 	}
 
 	private boolean change(Runnable mutation) {
