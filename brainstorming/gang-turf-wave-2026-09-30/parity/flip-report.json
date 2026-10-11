@@ -1,0 +1,895 @@
+{
+  "laneId": "W6-Y",
+  "headAtFlip": "976bd087e9f1fb88112696acb7dd0a62a5f25e5f",
+  "auditRef": "parity/audit.json (W6-X, branchHead ca7ab965, fix round e0917c69)",
+  "acceptanceReport": null,
+  "acceptanceNote": "E:/Programming/java/wt/_programme/gt14/acceptance/gt2/ exists but is empty: no report.json, so no F1/F2/F3 row is PASS and every owner-step row stays DELIVERED",
+  "rule": "HAVE only when auditVerdict AUTOMATED_GREEN (GP-33 held back, see its reason) or when the row is already HAVE; NEEDS_OWNER_STEP needs every named acceptance row PASS; RED never flips",
+  "counts": {
+    "rows": 45,
+    "flipped": 29,
+    "alreadyHave": 3,
+    "unflipped": 13
+  },
+  "rows": [
+    {
+      "id": "GP-01",
+      "auditVerdict": "RED",
+      "auditRedCause": "TEST_ISOLATION",
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangMembershipServiceTest",
+          "result": "FAIL"
+        },
+        {
+          "class": "GangStaffVerbsTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangDeleteCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "audit RED (TEST_ISOLATION): classes pass in the module suite but fail alone; the fix is docket T-700 (proposed, not yet landed). Not flipped until the RED classes are green on their own."
+    },
+    {
+      "id": "GP-02",
+      "auditVerdict": "HAVE",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangJoinCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": false,
+      "reason": "already HAVE in the plan (audit verdict HAVE); not a W6-Y flip"
+    },
+    {
+      "id": "GP-03",
+      "auditVerdict": "RED",
+      "auditRedCause": "TEST_ISOLATION",
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangLeadershipTest",
+          "result": "FAIL"
+        },
+        {
+          "class": "GangStaffVerbsTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "audit RED (TEST_ISOLATION): classes pass in the module suite but fail alone; the fix is docket T-700 (proposed, not yet landed). Not flipped until the RED classes are green on their own."
+    },
+    {
+      "id": "GP-04",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangHelpFilterTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangInfoCommandTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangListCommandTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangConsoleVerbsTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-05",
+      "auditVerdict": "RED",
+      "auditRedCause": "TEST_ISOLATION",
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangMembershipServiceTest",
+          "result": "FAIL"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "audit RED (TEST_ISOLATION): classes pass in the module suite but fail alone; the fix is docket T-700 (proposed, not yet landed). Not flipped until the RED classes are green on their own."
+    },
+    {
+      "id": "GP-06",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangNameRulesTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-07",
+      "auditVerdict": "RED",
+      "auditRedCause": "TEST_ISOLATION",
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "RankSeedTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangPermissionsTest",
+          "result": "FAIL"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "audit RED (TEST_ISOLATION): classes pass in the module suite but fail alone; the fix is docket T-700 (proposed, not yet landed). Not flipped until the RED classes are green on their own."
+    },
+    {
+      "id": "GP-08",
+      "auditVerdict": "RED",
+      "auditRedCause": "TEST_ISOLATION",
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangPermissionsTest",
+          "result": "FAIL"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "audit RED (TEST_ISOLATION): classes pass in the module suite but fail alone; the fix is docket T-700 (proposed, not yet landed). Not flipped until the RED classes are green on their own."
+    },
+    {
+      "id": "GP-09",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "PluginYmlPermissionsTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-10",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangUpgradeCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-11",
+      "auditVerdict": "RED",
+      "auditRedCause": "TEST_ISOLATION",
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangLevelTableTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangMembershipServiceTest",
+          "result": "FAIL"
+        },
+        {
+          "class": "GangSafehouseCommandTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangChatRoutingTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "audit RED (TEST_ISOLATION): classes pass in the module suite but fail alone; the fix is docket T-700 (proposed, not yet landed). Not flipped until the RED classes are green on their own."
+    },
+    {
+      "id": "GP-12",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "LevelRewardRunnerTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangLevelMessageListenerTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-13",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangChatRoutingTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangChatCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-14",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangChatRoutingTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangStaffVerbsTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-15",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangPublicTagListenerTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangPlaceholderContributionTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-16",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangChatListenerTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-17",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "FriendlyFireRuleTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-18",
+      "auditVerdict": "NEEDS_OWNER_STEP",
+      "auditRedCause": null,
+      "auditOwnerStep": "WorldGuard region on a server with WorldGuard",
+      "auditTests": [
+        {
+          "class": "FriendlyFireRuleTest",
+          "result": "PASS"
+        },
+        {
+          "class": "WorldGuardFlagRegistrarTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangCombatConfigTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "owner step: WorldGuard region (no acceptance stand-in without WorldGuard)"
+    },
+    {
+      "id": "GP-19",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "PotionFriendlyFireListenerTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangMembersDamageListenerTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-20",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangStatsListenerTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightStatsRepositoryTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-21",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangStatsServiceTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangRankingCommandTest",
+          "result": "PASS"
+        },
+        {
+          "class": "TurfsHeldStatContributionTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightStatContributionTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-22",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangStatsListenerTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangStaffVerbsTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-23",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangInfoCommandTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangStatsServiceTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-24",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangStaffVerbsTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-25",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "AllyCapTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangAllyAbandonCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-26",
+      "auditVerdict": "RED",
+      "auditRedCause": "TEST_ISOLATION",
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangSafehouseCommandTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangSafehouseRepositoryTest",
+          "result": "PASS"
+        },
+        {
+          "class": "TurfTeleportGuardListenerTest",
+          "result": "FAIL"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "audit RED (TEST_ISOLATION): classes pass in the module suite but fail alone; the fix is docket T-700 (proposed, not yet landed). Not flipped until the RED classes are green on their own."
+    },
+    {
+      "id": "GP-27",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangRallyCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-28",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangStaffVerbsTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-29",
+      "auditVerdict": "NEEDS_OWNER_STEP",
+      "auditRedCause": null,
+      "auditOwnerStep": "1v1 with a bet (acceptance F1/F3)",
+      "auditTests": [
+        {
+          "class": "FightRulesTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightStateMachineTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightSettlementTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "owner step not proven: acceptance row F1/F3 has no PASS in the gt2 acceptance report (acceptance/gt2 is empty; no report.json)"
+    },
+    {
+      "id": "GP-30",
+      "auditVerdict": "NEEDS_OWNER_STEP",
+      "auditRedCause": null,
+      "auditOwnerStep": "arena built in game (acceptance F1)",
+      "auditTests": [
+        {
+          "class": "ArenaBoxTest",
+          "result": "PASS"
+        },
+        {
+          "class": "ArenaFileTest",
+          "result": "PASS"
+        },
+        {
+          "class": "ArenaSaveValidationTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightSessionListenerTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "owner step not proven: acceptance row F1 has no PASS in the gt2 acceptance report (acceptance/gt2 is empty; no report.json)"
+    },
+    {
+      "id": "GP-31",
+      "auditVerdict": "NEEDS_OWNER_STEP",
+      "auditRedCause": null,
+      "auditOwnerStep": "/tp blocked (acceptance F2)",
+      "auditTests": [
+        {
+          "class": "CommandFilterTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightRulesTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightSettlementTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "owner step not proven: acceptance row F2 has no PASS in the gt2 acceptance report (acceptance/gt2 is empty; no report.json)"
+    },
+    {
+      "id": "GP-32",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangWorldPolicyTest",
+          "result": "PASS"
+        },
+        {
+          "class": "TurfCreateCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-33",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "CombatTagTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightRulesTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "AUTOMATED_GREEN, but the row carries the recorded partial exclusion (third-party combat-tag adapters); HAVE would overstate, so it stays DELIVERED with that text"
+    },
+    {
+      "id": "GP-34",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangPlaceholderContributionTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GanglandPlaceholderGlobalTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-35",
+      "auditVerdict": "HAVE",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": false,
+      "reason": "already HAVE in the plan (audit verdict HAVE); not a W6-Y flip"
+    },
+    {
+      "id": "GP-36",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangNotifierTest",
+          "result": "PASS"
+        },
+        {
+          "class": "LocalizedModuleYamlLanguageTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-37",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangMembershipViewCompatTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-38",
+      "auditVerdict": "HAVE",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangRulesReloadTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightRulesReloadTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": false,
+      "reason": "already HAVE in the plan (audit verdict HAVE); not a W6-Y flip"
+    },
+    {
+      "id": "GP-39",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangStatsServiceTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-40",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangPurgeTaskTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-41",
+      "auditVerdict": "NEEDS_OWNER_STEP",
+      "auditRedCause": null,
+      "auditOwnerStep": "lethal hit by hand and by a Bartizan gun (acceptance F1 by hand)",
+      "auditTests": [
+        {
+          "class": "FightDamageListenerTest",
+          "result": "PASS"
+        },
+        {
+          "class": "FightSessionListenerTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "DELIVERED",
+      "flipped": false,
+      "reason": "owner step not proven: acceptance row F1 (by hand) has no PASS in the gt2 acceptance report (acceptance/gt2 is empty; no report.json)"
+    },
+    {
+      "id": "GP-42",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangRallyCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-43",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "GangStatsServiceTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangMembersCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-44",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "FriendlyFireRuleTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    },
+    {
+      "id": "GP-45",
+      "auditVerdict": "AUTOMATED_GREEN",
+      "auditRedCause": null,
+      "auditOwnerStep": null,
+      "auditTests": [
+        {
+          "class": "MemberJoinListenerTest",
+          "result": "PASS"
+        },
+        {
+          "class": "GangRecruitingCommandTest",
+          "result": "PASS"
+        }
+      ],
+      "acceptanceRows": [],
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN: every named test class passes in its module suite (see auditVerdict evidence); no owner step in the row"
+    }
+  ]
+}
