@@ -40,6 +40,7 @@ public class TurfRules implements FileInitializer {
 	private static final String MAX_MULTIPLIER_KEY = "Income.Max_Multiplier";
 	private static final String XP_PER_PAYOUT_KEY  = "Income.Gang_XP_Per_Payout";
 	private static final String MAX_RESERVE_KEY    = "Garrison.Max_Reserve";
+	private static final String TP_BUFFER_KEY      = "Teleport_Guard.Buffer_Blocks";
 
 	private final FileHandler fileHandler;
 
@@ -66,6 +67,9 @@ public class TurfRules implements FileInitializer {
 	private double gangXpPerPayout;
 	@Getter
 	private int    maxReserve;
+	/** Teleport_Guard.Buffer_Blocks: a gang teleport may not land this close to a turf under attack. */
+	@Getter
+	private int    teleportGuardBufferBlocks;
 
 	public TurfRules(FileManager fileManager) {
 		this.fileHandler = fileManager.getFile(FILE_NAME);
@@ -104,6 +108,7 @@ public class TurfRules implements FileInitializer {
 		maxIncomeMultiplier = Math.max(1.0, config.getDouble(MAX_MULTIPLIER_KEY, 2.0));
 		gangXpPerPayout     = Math.max(0.0, config.getDouble(XP_PER_PAYOUT_KEY, 1.0));
 		maxReserve          = Math.max(0, config.getInt(MAX_RESERVE_KEY, 12));
+		teleportGuardBufferBlocks = Math.max(0, config.getInt(TP_BUFFER_KEY, 48));
 	}
 
 	@Override

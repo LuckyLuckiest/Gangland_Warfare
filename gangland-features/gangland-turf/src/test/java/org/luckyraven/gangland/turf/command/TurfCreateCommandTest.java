@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.gang.GangWorldPolicy;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.config.TurfSettings;
@@ -58,6 +59,7 @@ class TurfCreateCommandTest {
 	private TurfMessages           text;
 	private TurfSettings           turfSettings;
 	private TurfCreateCommand      command;
+	private GangWorldPolicy        worldPolicy;
 
 	@BeforeEach
 	void setUp() throws IOException {
@@ -83,13 +85,15 @@ class TurfCreateCommandTest {
 
 	private void buildCommand(String rulesYaml, TurfMessages messages) throws IOException {
 		TurfRules rules = TurfTextFixture.rules(tempDir, rulesYaml);
+		worldPolicy = mock(GangWorldPolicy.class);
+		when(worldPolicy.enabledIn(any())).thenReturn(true);
 		JavaPlugin plugin = PluginMocks.plugin(tempDir);
 		Tree<Argument> tree  = new Tree<>();
 		Argument       parent = mock(Argument.class);
 		when(parent.getPermission()).thenReturn("gangland.command.turf");
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			command = new TurfCreateCommand(plugin, tree, parent, turfs, selections, legacy, turfSettings, rules,
-			                                messages);
+			                                messages, worldPolicy);
 		}
 	}
 
@@ -111,6 +115,19 @@ class TurfCreateCommandTest {
 
 	private static String[] create(String name) {
 		return new String[]{"turf", "create", name};
+	}
+
+	@Test
+	@DisplayName("gangDisabledWorld_refused: a turf cannot be created where gangs are off")
+	void gangDisabledWorld_refused() throws IOException {
+		buildCommand("Create:\n   Snap_To_Chunks: false\n   Min_Side_Blocks: 16\n   Max_Side_Blocks: 512\n");
+		when(worldPolicy.enabledIn(any())).thenReturn(false);
+		Player player = player(true, 0, 0, 31, 31);
+
+		command.create(player, create("Docks"));
+
+		verify(turfs, never()).create(any());
+		verify(player).sendMessage(text.text("Teleport_Guard.Create_Gang_World_Disabled", ""));
 	}
 
 	@Test
