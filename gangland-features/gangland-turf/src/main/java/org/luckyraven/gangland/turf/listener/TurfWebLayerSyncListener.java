@@ -10,8 +10,9 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**
  * Keeps the web-map layer in step with ownership. Every owner change (capture, admin set owner, gang disband,
- * inactivity release) fires {@link TurfOwnerChangedEvent}. A deleted turf is no longer in the manager when the event
- * arrives, so its marker is removed. Turf creation fires no event; the layer's periodic reconcile picks it up.
+ * inactivity release) fires {@link TurfOwnerChangedEvent}. Turf creation and deletion fire no event, so the layer's
+ * periodic reconcile adds new markers and drops deleted ones; the remove branch below only covers an owner change on
+ * a turf already gone from the manager.
  */
 @ListenerHandler
 @RequiredArgsConstructor

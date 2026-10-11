@@ -132,14 +132,14 @@ final class DynmapTurfLayer implements TurfWebLayer {
 			}
 		} else {
 			marker.setCornerLocations(x, z);
-			marker.setLabel(turf.getDisplayName(), false);
+			marker.setLabel(plain(turf.getDisplayName()), false);
 		}
 		Gang owner = turf.getOwnerGangId() == null ? null : gangs.findById(turf.getOwnerGangId());
 		int rgb = rgbOf(owner);
 		marker.setFillStyle(settings.getWebFillOpacity(), rgb);
 		marker.setLineStyle(settings.getWebLineWeight(), settings.getWebLineOpacity(), rgb);
-		marker.setDescription(escape(turf.getDisplayName()) + "<br>Owner: "
-				                      + (owner == null ? "Unclaimed" : escape(owner.getDisplayNameString())));
+		marker.setDescription(escape(plain(turf.getDisplayName())) + "<br>Owner: "
+				                      + (owner == null ? "Unclaimed" : escape(plain(owner.getDisplayNameString()))));
 	}
 
 	private int rgbOf(@Nullable Gang owner) {
@@ -151,6 +151,10 @@ final class DynmapTurfLayer implements TurfWebLayer {
 		} catch (RuntimeException exception) {
 			return settings.getWebUnclaimedRgb();
 		}
+	}
+
+	private static String plain(String text) {
+		return org.bukkit.ChatColor.stripColor(org.bukkit.ChatColor.translateAlternateColorCodes('&', text));
 	}
 
 	private static String escape(String text) {

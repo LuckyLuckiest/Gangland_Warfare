@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.turf.map.web;
 
 import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
@@ -30,24 +31,46 @@ public final class TurfWebMapConfig {
 		if (layer instanceof TurfWebLayers.NoOp) {
 			return layer;
 		}
-		return new Managed(plugin, layer);
+		return new Managed(plugin, Bukkit.getScheduler(), layer);
 	}
 
 	/**
 	 * Draws once the server finished enabling (turfs loaded, dynmap up), reconciles periodically, and removes the
 	 * marker set on shutdown/reload so nothing leaks.
 	 */
-	private static final class Managed implements TurfWebLayer, BeanLifecycle {
+	static final class Managed implements TurfWebLayer, BeanLifecycle {
 
-		private final TurfWebLayer delegate;
-		private final BukkitTask   first;
-		private final BukkitTask   reconcile;
+		private final JavaPlugin    plugin;
+		private final BukkitScheduler scheduler;
+		private final TurfWebLayer  delegate;
+		private BukkitTask          first;
+		private BukkitTask          reconcile;
 
-		Managed(JavaPlugin plugin, TurfWebLayer delegate) {
+		Managed(JavaPlugin plugin, BukkitScheduler scheduler, TurfWebLayer delegate) {
+			this.plugin    = plugin;
+			this.scheduler = scheduler;
 			this.delegate  = delegate;
-			this.first     = Bukkit.getScheduler().runTask(plugin, delegate::rebuild);
-			this.reconcile = Bukkit.getScheduler()
-			                       .runTaskTimer(plugin, delegate::rebuild, RECONCILE_TICKS, RECONCILE_TICKS);
+		}
+
+		/**
+		 * Keystone calls this right after registration (first boot) and again after onClear on /glw reload.
+		 */
+		@Override
+		public void onInitialize(boolean firstLoad) {
+			cancelTasks();
+			first     = scheduler.runTask(plugin, delegate::rebuild);
+			reconcile = scheduler.runTaskTimer(plugin, delegate::rebuild, RECONCILE_TICKS, RECONCILE_TICKS);
+		}
+
+		private void cancelTasks() {
+			if (first != null) {
+				first.cancel();
+				first = null;
+			}
+			if (reconcile != null) {
+				reconcile.cancel();
+				reconcile = null;
+			}
 		}
 
 		@Override
@@ -67,8 +90,7 @@ public final class TurfWebMapConfig {
 
 		@Override
 		public void shutdown() {
-			first.cancel();
-			reconcile.cancel();
+			cancelTasks();
 			delegate.shutdown();
 		}
 
