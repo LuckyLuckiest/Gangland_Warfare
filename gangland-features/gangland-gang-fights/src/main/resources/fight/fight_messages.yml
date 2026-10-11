@@ -68,6 +68,7 @@ Economy:
    Cannot_Afford_B: "&cThe challenged gang cannot afford the bet."
    Bet_Too_High: "&cThat bet is above the server maximum."
    Bet_Over_Percent: "&cA bet may not be more than a share of either gang bank."
+   Same_Address: "&cThe two gangs have fighters on the same connection, so this stake is refused."
    Pair_Cap: "&cThese two gangs have already moved the daily limit between them."
    Gang_Cap: "&cOne of the gangs has reached its daily bet winnings limit."
    Ranked_Opponent_Too_Young: "&cThe other gang is too new for a ranked fight."

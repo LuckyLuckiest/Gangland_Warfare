@@ -37,6 +37,11 @@ public interface FightWorld {
 
 	boolean online(UUID player);
 
+	/** The IP address the online player connects from, or null when offline or unknown. */
+	default String address(UUID player) {
+		return null;
+	}
+
 	boolean downed(UUID player);
 
 	boolean wanted(UUID player);

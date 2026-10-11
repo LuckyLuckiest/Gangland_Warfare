@@ -93,8 +93,14 @@ class FightStateMachineTest {
 		final Set<UUID>            teleported = new HashSet<>();
 		final Set<UUID>            restored   = new HashSet<>();
 		final List<String>         told       = new ArrayList<>();
+		final Map<UUID, String>    address    = new HashMap<>();
 		boolean allied;
 		boolean mayFight = true;
+
+		@Override
+		public String address(UUID p) {
+			return address.get(p);
+		}
 
 		@Override
 		public Optional<Integer> gangOf(UUID p) {
