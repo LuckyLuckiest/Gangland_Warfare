@@ -196,6 +196,37 @@ Combat:
 # end Combat
 
 # ---------------- Safehouse ----------------
+Safehouse:
+   # /glw gang safehouse set <name>. %name%, %count% = safehouses the gang has now, %max% = the level cap or "unlimited".
+   Set: "&aSafehouse %name% set (%count%/%max%)."
+   Removed: "&7Safehouse %name% removed."
+   # /glw gang safehouse list. %count%, %max% in the header; %name%, %world%, %x%, %y%, %z% per row.
+   List_Header: "&6Safehouses &7(%count%/%max%)"
+   List_Row: "&7- &f%name% &7(%world% %x% %y% %z%)"
+   # %name% is what the player typed.
+   Not_Found: "&cYour gang has no safehouse named %name%."
+   Name_Invalid: "&cA safehouse name is 1 to 16 letters, digits or underscores, and not set, remove, list or join."
+   # The gang level allows no more safehouses. %count% = safehouses now, %max% = the cap.
+   Cap: "&cYour gang level allows %max% safehouses; remove one or upgrade first."
+   # The spot has lava, fire, a cactus, a one block gap or no floor. %name% is the safehouse (or the caller for a rally).
+   Unsafe: "&c%name% is not safe to stand on."
+   # Another plugin or the turf rules cancelled the new safehouse.
+   Set_Refused: "&cYou cannot set a safehouse here."
+   Disabled_World: "&cGangs are disabled in this world."
+   Off: "&cSafehouses are turned off."
+   # Teleport lines. %seconds% = warm-up or cooldown left, %cost% = money, %name% = the safehouse.
+   Warm_Up: "&7Teleporting in %seconds%s. Do not move."
+   Arrived: "&aYou arrived at %name%."
+   Failed: "&cYou could not teleport to %name%."
+   Cooldown: "&cYou can teleport again in %seconds%s."
+   Too_Poor: "&cA safehouse teleport costs %cost%."
+   # Sent to each online member. %player% = caller, %where% = safehouse name or caller name, %seconds% = answer window.
+   Rally_Call: "&6%player% calls the gang to %where%. &7Answer with /glw gang rally join within %seconds%s."
+   # To the caller. %count% = members asked.
+   Rally_Sent: "&aRally called: %count% members asked."
+   # /glw gang rally join with no open call for this member, or after the window closed.
+   Rally_Expired: "&cThere is no rally call open for you."
+   Rally_None: "&7No other member of your gang is online."
 # end Safehouse
 
 # ---------------- Chat ----------------

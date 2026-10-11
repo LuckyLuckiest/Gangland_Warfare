@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.gang.safehouse.Safehouse;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.core.permission.Permission;
@@ -176,6 +177,9 @@ class GangConfigBeanGraphTest {
 
 		IRepository<RankPermission> rankPermissionRepo = mock(IRepository.class);
 		when(registry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
+
+		// GangSafehouseConfig: the safehouse repository (W5-H)
+		when(registry.getRepository(Safehouse.class)).thenReturn(mock(IRepository.class));
 
 		// GangConfig.gangMigrations casts this repository to GangMigrationsContract (W2-K).
 		when(registry.getRepository(GangMigration.class)).thenReturn(mock(GangMigrationRepository.class));
