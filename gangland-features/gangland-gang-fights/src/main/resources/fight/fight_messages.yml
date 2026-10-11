@@ -10,10 +10,26 @@
 
 # ---------------- Economy ----------------
 # Bet, escrow and payout texts.
+Economy:
+   Unavailable: "&cBets are unavailable right now."
+   Cannot_Afford_A: "&cThe challenging gang can no longer afford the bet."
+   Cannot_Afford_B: "&cThe challenged gang cannot afford the bet."
+   Bet_Too_High: "&cThat bet is above the server maximum."
+   Bet_Over_Percent: "&cA bet may not be more than a share of either gang bank."
+   Pair_Cap: "&cThese two gangs have already moved the daily limit between them."
+   Gang_Cap: "&cOne of the gangs has reached its daily bet winnings limit."
+   Ranked_Opponent_Too_Young: "&cThe other gang is too new for a ranked fight."
+   Ranked_Pair_Limit: "&cThese gangs have reached the daily ranked fight limit."
+   Ranked_Rematch_Cooldown: "&cThese gangs must wait before another ranked fight."
 # end Economy
 
 # ---------------- Stats ----------------
-# Fight stats and ranking texts.
+# Fight stats and ranking texts. %gang% %wins% %losses% %draws% %wlr%
+Stats:
+   Header: "&6Fight record of &e%gang%"
+   Line: "&7Wins &a%wins% &7Losses &c%losses% &7Draws &e%draws% &7W/L &f%wlr%"
+   No_Gang: "&cYou are not in a gang. Name a gang: /glw gang fight stats <gang>."
+   Unknown_Gang: "&cNo gang has that name."
 # end Stats
 
 # ---------------- Guards ----------------
