@@ -49,7 +49,8 @@ class PotionFriendlyFireListenerTest {
 		when(policy.pvpBlocked(any(), any(), any())).thenReturn(true);
 		when(rules.getFriendlyFirePotions()).thenReturn("NEGATIVE_ONLY");
 		Set<PotionEffectType> debuffs = Set.of(harmful);
-		listener = new PotionFriendlyFireListener(policy, rules, debuffs::contains);
+		listener = new PotionFriendlyFireListener(policy, rules);
+		listener.setDebuff(debuffs::contains);
 	}
 
 	private PotionSplashEvent splash(PotionEffectType type) {

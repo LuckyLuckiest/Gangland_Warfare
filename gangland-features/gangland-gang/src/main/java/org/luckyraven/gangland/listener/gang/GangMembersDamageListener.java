@@ -1,61 +1,46 @@
 package org.luckyraven.gangland.listener.gang;
 
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.gangland.gang.combat.AttackerResolver;
+import org.luckyraven.gangland.gang.combat.FriendlyFirePolicy;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.core.user.User;
-import org.luckyraven.gangland.core.user.UserManager;
 
+/**
+ * Cancels player-vs-player damage and fire between gangmates and allies when {@link FriendlyFirePolicy} says so (fists,
+ * arrows, pets, TNT, Flame and Fire Aspect). Runs at LOWEST so a blocked hit never reaches the damage ledger.
+ */
 @ListenerHandler
 public class GangMembersDamageListener implements Listener {
 
-	private final UserManager<Player> userManager;
-	private final GangManager         gangManager;
+	private final FriendlyFirePolicy policy;
 
-	public GangMembersDamageListener(@Qualifier("online") UserManager<Player> userManager, GangManager gangManager) {
-		this.userManager = userManager;
-		this.gangManager = gangManager;
+	public GangMembersDamageListener(FriendlyFirePolicy policy) {
+		this.policy = policy;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onGangMemberHitMembers(EntityDamageByEntityEvent event) {
-		// checks for player-to-player damage
-		Player damager;
-		if (event.getDamager() instanceof Player player) damager = player;
-		else if (event.getDamager() instanceof Projectile projectile) {
-			if (projectile.getShooter() instanceof Player player) damager = player;
-			else return;
-		} else return;
-		if (!(event.getEntity() instanceof Player damaged)) return;
-
-		User<Player> userDamager = userManager.getUser(damager);
-		User<Player> userDamaged = userManager.getUser(damaged);
-
-		// checks if they are in a gang
-		if (userDamager == null || userDamaged == null || !(userDamager.hasGang() && userDamaged.hasGang())) return;
-
-		// checks if they are alias or in the same gang
-		Gang gang1 = gangManager.getGang(userDamager.getGangId());
-		Gang gang2 = gangManager.getGang(userDamaged.getGangId());
-
-		// GR-15: a gang record can be missing (stale id); only the same-gang check applies then.
-		boolean sameGang = userDamager.getGangId() == userDamaged.getGangId();
-		boolean allied   = gang1 != null && gang2 != null && gang1.isAlly(gang2);
-
-		if (sameGang || allied) event.setCancelled(true);
+		if (blocked(event.getDamager(), event.getEntity())) event.setCancelled(true);
 	}
 
+	/** GR-41: the burn that follows Flame or Fire Aspect has no damager, so it is stopped at the source. */
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onCombust(EntityCombustByEntityEvent event) {
-		// RED stub (GR-41)
+		if (blocked(event.getCombuster(), event.getEntity())) event.setCancelled(true);
 	}
 
+	private boolean blocked(Entity damager, Entity victim) {
+		if (!(victim instanceof Player damaged)) return false;
+
+		Player attacker = AttackerResolver.resolve(damager);
+		if (attacker == null) return false;
+
+		return policy.pvpBlocked(attacker.getUniqueId(), damaged.getUniqueId(), damaged.getLocation());
+	}
 }

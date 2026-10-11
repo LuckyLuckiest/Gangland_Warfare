@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -96,7 +97,7 @@ class CombatTagTest {
 	@DisplayName("blocksGangWaypoint: a tagged player's gang teleport is cancelled and explained")
 	void blocksGangWaypoint() {
 		GangMessages messages = mock(GangMessages.class);
-		when(messages.text(anyString(), anyString(), org.mockito.ArgumentMatchers.<Object>any())).thenReturn("tagged");
+		when(messages.text(anyString(), anyString(), any(), any())).thenReturn("tagged");
 		CombatTeleportGuard guard = new CombatTeleportGuard(tag, messages);
 		tag.tag(a, b);
 
