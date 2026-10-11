@@ -246,7 +246,7 @@ public final class GangCommand extends Command {
 		Argument balance = new GangBalanceCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          gangManager);
 		Argument members = new GangMembersCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                          gangManager, statsService);
+		                                          gangManager, gangMessages, statsService);
 		Argument name = new GangRenameCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                      memberManager, gangManager, gangRules::getNamePattern, gangMessages);
 		Argument description = new GangDescriptionCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,

@@ -172,7 +172,7 @@ class GangListCommandTest {
 	@DisplayName("the list verb is its own verb, not an alias of members")
 	void listVerb_notAliasOfMembers() {
 		Argument members = new GangMembersCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class),
-		                                          mock(UserManager.class), gangManager, new GangStatsService());
+		                                          mock(UserManager.class), gangManager, messages, new GangStatsService());
 
 		assertEquals(List.of("members"), List.of(members.getArguments()));
 		assertEquals(List.of("list"), List.of(list().getArguments()));

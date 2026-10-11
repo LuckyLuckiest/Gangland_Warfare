@@ -14,6 +14,7 @@ import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.core.user.User;
@@ -25,18 +26,20 @@ class GangMembersCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
+	private final GangMessages        messages;
 
 	private final GangStatsService statsService;
 
 	protected GangMembersCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                             @Qualifier("online") UserManager<Player> userManager, GangManager gangManager,
-								GangStatsService statsService) {
+	                             GangMessages messages, GangStatsService statsService) {
 		super(gangland, new String[]{"members"}, tree, parent);
 
 		this.statsService = statsService;
 
 		this.userManager = userManager;
 		this.gangManager = gangManager;
+		this.messages    = messages;
 	}
 
 	@Override
