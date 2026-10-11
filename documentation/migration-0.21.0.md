@@ -73,3 +73,22 @@ The new config key is `Powerup_Npc.Placement_Cost` in `turf/turf_npcs.yml` (defa
 - The Quartermaster hub shows the guards on duty and which gang may spend there.
 - The Quartermaster shows the owning gang's short tag above its name.
 - A refused player is told which gang the Quartermaster serves, and how to ally with it.
+
+## Part T-808 - Players can use /glw gang ally
+
+### 1. The ally commands are open to every player
+
+- Seven nodes in `plugin.yml` now default to `true`: `gangland.command.gang.ally`, `.ally.request`, `.ally.accept`,
+  `.ally.reject`, `.ally.pending`, `.ally.pending.cancel` and `.ally.abandon`.
+- Before this, every `/glw gang ally` subcommand was effectively op-only. Non-op players now reach them.
+- The gang rank still gates each command (`GangPermissions.ALLY`). A player without that rank is refused as before.
+- `request`, `accept`, `reject` and `pending` need `gangland-mail` loaded. Without it they do nothing.
+
+### 2. Restoring the op-only behaviour
+
+- To keep the ally commands for operators only, negate the parent node in your permissions plugin or `permissions.yml`:
+  `gangland.command.gang.ally: false`. Set the same value on the six child nodes if you want them closed too.
+
+### For the changelog (Part T-808)
+
+- Players who are not server operators can use `/glw gang ally` again.

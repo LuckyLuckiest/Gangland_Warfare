@@ -69,7 +69,7 @@ permissions:
       default: true
    gangland.command.gang.invite.cancel:
       default: true
-   # Alliance subcommands (B4/C2): every player may reach the ally hub; rank gates (GangPermissions.ALLY) stay in each command.
+   # Alliance subcommands: every player may run them; the gang rank still gates each command (GangPermissions.ALLY).
    gangland.command.gang.ally:
       default: true
    gangland.command.gang.ally.request:

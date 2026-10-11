@@ -71,7 +71,7 @@ In-depth technical documentation for developers working on the codebase.
 
 Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in
 [`bartizan-integration.md`](./bartizan-integration.md); server-owner migration notes are in
-[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts), and [`migration-0.16.1.md`](./migration-0.16.1.md) (0.16.1 Keystone 1.15.1, moved text keys, new keys), and [`migration-0.17.0.md`](./migration-0.17.0.md) (0.16.1 to 0.17.0, Gang & Turf I). Recoil is documented in
+[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts), and [`migration-0.16.1.md`](./migration-0.16.1.md) (0.16.1 Keystone 1.15.1, moved text keys, new keys), and [`migration-0.17.0.md`](./migration-0.17.0.md) (0.16.1 to 0.17.0, Gang & Turf I), and [`migration-0.21.0.md`](./migration-0.21.0.md) (Gang & Turf III: owner Quartermaster placement, hub rows, gang tag, owner-naming refusal, ally permissions). Recoil is documented in
 [Version Compatibility](./developer/compatibility.md), now a Bartizan-side reflective packet call rather than an
 NMS adapter this repo ships.
 
