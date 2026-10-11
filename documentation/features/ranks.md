@@ -73,7 +73,7 @@ rank name logs one warning and turns that entry off. The node lists and the top 
 | `Chat`                        | member      | `/glw gang chat` (`gangland.gang.chat`); not checked yet: every member may chat |
 | `Deposit`                     | member      | `/glw gang deposit` |
 | `Safehouse`                   | member      | `/glw gang safehouse`; `rally join` is open to every invited member (not checked yet) |
-| `Fight`                       | officer     | `/glw gang fight` challenges, accepts and stakes (gang-fights module) |
+| `Fight`                       | officer     | `/glw gang fight` challenge, accept, decline (gang-fights module); a bet also needs `Withdraw` |
 | `Rally`                       | officer     | `/glw gang rally` |
 | `Invite`                      | officer     | `/glw gang invite` |
 | `Kick`                        | officer     | `/glw gang kick` |
@@ -121,7 +121,7 @@ Rank permission add accepts these nodes, and the server nodes that come with the
 | `gangland.gang.pvp` | `/glw gang pvp` |
 | `gangland.gang.ally.pvp` | `/glw gang ally pvp` |
 | `gangland.gang.upgrade` | `/glw gang upgrade confirm` |
-| `gangland.gang.fight` | gang fights (reserved) |
+| `gangland.gang.fight` | `/glw gang fight` challenge, accept, decline (gang-fights module) |
 | `gangland.gang.notice` | `/glw gang notice` |
 | `gangland.gang.recruiting` | `/glw gang recruiting` |
 

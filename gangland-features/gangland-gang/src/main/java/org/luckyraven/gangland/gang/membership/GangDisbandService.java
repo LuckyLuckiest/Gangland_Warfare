@@ -148,12 +148,13 @@ public class GangDisbandService {
 		IRepository<Gang>         gangRepository         = repositoryRegistry.getRepository(Gang.class);
 		IRepository<GangAlliance> gangAllianceRepository = repositoryRegistry.getRepository(GangAlliance.class);
 
-		// Delete the gang row and all related alliance rows (both directions). The gang's bounty is a column of the
-		// gang row, so it is destroyed here with it (W2-P1).
-		gangRepository.delete(gang);
+		// Alliance rows (both directions) go first: gang_ally has foreign keys to gang(id) with no ON DELETE, so
+		// MySQL refuses the gang DELETE while they exist (T-703). The gang's bounty is a column of the gang row, so it
+		// is destroyed with that row (W2-P1).
 		if (gangAllianceRepository instanceof GangAllianceRepository allianceRepo) {
 			allianceRepo.deleteAllForGang(gang);
 		}
+		gangRepository.delete(gang);
 
 		// Drop stale in-memory alliance refs on surviving allied gangs - without this,
 		// `ally.isAlly(deletedGang)` / `getAllyListString()` keep returning true until restart.

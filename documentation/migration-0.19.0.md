@@ -9,6 +9,8 @@ order you meet it. Read the whole page before you start the server on the new ja
 
 - **Update every jar together.** `gangland_warfare-0.19.0.jar` and every module jar in `plugins/Gangland_Warfare/modules/`
   come from the same build. Keep one revision on the server.
+- **Mail and gang together.** The 0.19.0 `mail` module calls `GangPermissions.refusal`. A pre-0.19 `gang` jar has no such
+  method, so the first refused ally or invite throws `NoSuchMethodError`. Replace the `gang` and `mail` jars in the same restart.
 - **Host_Api 2.6.** Five modules now declare `Host_Api: 2.6`: `gang`, `civilians`, `turf`, `copsncrooks` and `fights`.
   Each needs a 0.19.0 host. `gadget`, `npcshops`, `mail`, `lootchest` and `healthbars` keep their older Host_Api lines.
 - **Keystone 1.15.1** (the `keystone.version` in the root `pom.xml`). Nothing else needs a new dependency.
