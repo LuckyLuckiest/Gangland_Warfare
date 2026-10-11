@@ -133,4 +133,21 @@ class WantedKillTrackersTest {
 
 		verify(delegate).recordKill(killer, wanted, victim, 45);
 	}
+
+	@Test
+	@DisplayName("exemptsKill is false without a delegate and forwards to the installed delegate after install")
+	void exemptsKill_falseWithoutDelegate_forwardsAfterInstall() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		Player             killer   = mock(Player.class);
+		Entity             victim   = mock(Entity.class);
+
+		assertFalse(trackers.exemptsKill(killer, victim));
+
+		WantedKillTracker delegate = mock(WantedKillTracker.class);
+		when(delegate.exemptsKill(killer, victim)).thenReturn(true);
+		trackers.install(delegate);
+
+		assertTrue(trackers.exemptsKill(killer, victim));
+		verify(delegate).exemptsKill(killer, victim);
+	}
 }
