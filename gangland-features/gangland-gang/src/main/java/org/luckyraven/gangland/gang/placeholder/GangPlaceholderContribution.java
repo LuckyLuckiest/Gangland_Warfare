@@ -62,12 +62,6 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
 	private final GangRules            rules;
 
 	public GangPlaceholderContribution(@Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
-	                                   GangManager gangManager) {
-		this(userManager, memberManager, gangManager, new GangStatsService(), new GangSafehouseService(),
-		     new GangLimits(), null);
-	}
-
-	public GangPlaceholderContribution(@Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
 	                                   GangManager gangManager, GangStatsService statsService,
 	                                   GangSafehouseService safehouseService, GangLimits limits, GangRules rules) {
 		this.userManager      = userManager;
