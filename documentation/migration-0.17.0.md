@@ -77,7 +77,7 @@ new jar.
 - `ActiveBuffRepositoryContract` gained `deleteExpired(long)`. Any other implementation must add it.
 - `CaptureService`, `TurfIncomeDistributor`, `InactivityReleaseTask`, `TurfSetOwnerCommand`, `TurfDeleteCommand` and
   `TurfCommand` gained a `TurfOwnership` parameter. `TurfOwnerChangedEvent` has a 4-argument constructor.
-- `gangland-api` 2.4 adds `Messages.USER_DATA_LOAD_FAILED` (additive; modules built for 2.0-2.3 load unchanged), no `Host_Api` change, no config change beyond the keys above.
+- `gangland-api` 2.4 adds `Messages.USER_DATA_LOAD_FAILED` (additive; modules built for 2.0-2.3 load unchanged), gang and mail declare `Host_Api` 2.4 (see Part 4, item 14), no config change beyond the keys above.
 
 ### 10. By design
 
