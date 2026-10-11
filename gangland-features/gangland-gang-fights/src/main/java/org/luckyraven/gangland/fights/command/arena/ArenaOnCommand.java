@@ -26,7 +26,10 @@ public final class ArenaOnCommand extends SubArgument {
 			sender.sendMessage(deps.text().text("Arenas.Not_Found", "name", name));
 			return;
 		}
-		deps.registry().setEnabled(arena.name(), true);
+		if (!deps.registry().setEnabled(arena.name(), true)) {
+			sender.sendMessage(deps.text().text("Arenas.Save_Failed"));
+			return;
+		}
 		sender.sendMessage(deps.text().text("Arenas.Enabled", "name", arena.name()));
 	}
 

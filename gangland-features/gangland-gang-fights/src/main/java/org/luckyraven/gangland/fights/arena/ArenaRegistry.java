@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -102,6 +103,15 @@ public class ArenaRegistry {
 		}
 		ArenaFile.Loaded loaded = ArenaFile.read(config);
 		loaded.skipped().forEach(line -> log.warn("{}", line));
+		if (!loaded.skipped().isEmpty()) {
+			Path backup = file.resolveSibling(file.getFileName() + ".broken");
+			try {
+				Files.copy(file, backup, StandardCopyOption.REPLACE_EXISTING);
+				log.warn("Skipped entries stay in {} until you fix them; the next save rewrites arenas.yml", backup);
+			} catch (IOException exception) {
+				log.warn("Could not back up arenas.yml to {}: {}", backup, exception.getMessage());
+			}
+		}
 		arenas.clear();
 		loaded.arenas().forEach(a -> arenas.put(key(a.name()), a));
 	}

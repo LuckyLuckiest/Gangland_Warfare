@@ -18,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("ArenaRegistry - saved arenas survive a reload")
 class ArenaRegistryTest {
 
+	private static final String NL = "\n";
+
 	@TempDir(cleanup = CleanupMode.NEVER)
 	Path dir;
 
@@ -53,6 +55,21 @@ class ArenaRegistryTest {
 		registry.reload();
 
 		assertEquals(List.of("Pit", "Docks"), registry.all().stream().map(Arena::name).toList());
+	}
+
+	@Test
+	@DisplayName("a skipped hand-edited entry is backed up before the next save rewrites the file")
+	void brokenEntryBackedUp() throws IOException {
+		Path          file     = dir.resolve("d.yml");
+		ArenaRegistry registry = new ArenaRegistry(file);
+		registry.add(arena("Pit", 0));
+		Files.writeString(file, Files.readString(file) + "  Broken:" + NL + "    World: w" + NL);
+		registry.reload();
+		registry.add(arena("Docks", 100));
+
+		Path backup = file.resolveSibling("d.yml.broken");
+		assertTrue(Files.exists(backup));
+		assertTrue(Files.readString(backup).contains("Broken"));
 	}
 
 	@Test
