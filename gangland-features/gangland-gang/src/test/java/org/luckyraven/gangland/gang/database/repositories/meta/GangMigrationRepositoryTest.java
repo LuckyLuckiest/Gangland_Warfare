@@ -1,5 +1,14 @@
 package org.luckyraven.gangland.gang.database.repositories.meta;
 
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.function.Consumer;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
@@ -116,4 +125,71 @@ class GangMigrationRepositoryTest {
 		verify(backend).upsert(eq("gang_migration"), any(), any(), any());
 	}
 
+	private final List<Runnable> retries = new ArrayList<>();
+
+	private GangMigrationRepository migrating() {
+		return new GangMigrationRepository(mock(JavaPlugin.class), mock(DatabaseHandler.class), backend) {
+			@Override
+			protected void scheduleRetry(Runnable task, long delayTicks) {
+				retries.add(task);
+			}
+		};
+	}
+
+	/** Stub writer: the n-th saveAllChecked call reports the n-th outcome; the last one repeats. */
+	@SuppressWarnings("unchecked")
+	private AbstractRepository<String> writerReporting(boolean... outcomes) {
+		AbstractRepository<String> repo = mock(AbstractRepository.class);
+		AtomicInteger calls = new AtomicInteger();
+		doAnswer(call -> {
+			int index = Math.min(calls.getAndIncrement(), outcomes.length - 1);
+			((Consumer<Boolean>) call.getArgument(1)).accept(outcomes[index]);
+			return null;
+		}).when(repo).saveAllChecked(anyCollection(), any());
+		return repo;
+	}
+
+	@Test
+	@DisplayName("T-278 r1: a failed first write is retried; the migration is marked done once a retry commits")
+	void failedWrite_isRetried_andMarkedDoneOnceCommitted() throws SQLException {
+		GangMigrationRepository migrating = migrating();
+		AbstractRepository<String> writer = writerReporting(false, true);
+
+		migrating.migrate("m", writer, List.of("row"));
+		assertEquals(1, retries.size(), "the failed write schedules one retry");
+		verify(backend, never()).upsert(anyString(), any(), any(), any());
+
+		retries.remove(0).run();
+
+		verify(writer, times(2)).saveAllChecked(anyCollection(), any());
+		verify(backend).upsert(eq("gang_migration"), any(), any(), any());
+		assertTrue(retries.isEmpty(), "a committed retry schedules nothing more");
+	}
+
+	@Test
+	@DisplayName("T-278 r1: after a failed write the migration counts as done for the rest of the session")
+	void failedWrite_countsAsDoneForTheSession() {
+		GangMigrationRepository migrating = migrating();
+
+		migrating.migrate("m", writerReporting(false), List.of("row"));
+
+		assertTrue(migrating.isDone("m"));
+		assertTrue(migrating.isDone("m"), "a reload asks again and still gets done");
+	}
+
+	@Test
+	@DisplayName("T-278 r1: retries are bounded; after the last attempt nothing more is scheduled")
+	void failedWrite_retriesAreBounded() {
+		GangMigrationRepository migrating = migrating();
+		migrating.migrate("m", writerReporting(false), List.of("row"));
+
+		int runs = 0;
+		for (int i = 0; i < 100 && !retries.isEmpty(); i++) {
+			retries.remove(0).run();
+			runs++;
+		}
+
+		assertEquals(9, runs, "ten attempts in all: the first plus nine retries");
+		assertTrue(migrating.isDone("m"), "an exhausted migration stays done for this session");
+	}
 }

@@ -7,7 +7,6 @@ import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.contract.LoadOutcome;
-import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
 import org.luckyraven.gangland.gang.rank.Rank;
@@ -73,8 +72,7 @@ public class MemberManager implements BeanLifecycle {
 			for (Member member : members.values()) {
 				member.setContribution(0D);
 			}
-			GangMigrationRepository.saveThen(memberRepository, new ArrayList<>(members.values()),
-			                                 () -> migrations.markDone(CONTRIBUTION_MIGRATION));
+			migrations.migrate(CONTRIBUTION_MIGRATION, memberRepository, new ArrayList<>(members.values()));
 			log.info("Member contributions reset to 0 once (D15): disbanding now splits the bank by money deposited since");
 		}
 	}

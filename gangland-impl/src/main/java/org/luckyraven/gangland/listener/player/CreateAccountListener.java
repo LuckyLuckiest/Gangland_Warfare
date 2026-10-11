@@ -65,6 +65,8 @@ public final class CreateAccountListener implements Listener {
 		offlineUserManager.remove(player.getUniqueId());
 
 		// Add user to cache immediately so other systems can find them
+		// T-293: cached for lookups at once, but not saveable until the load below succeeds
+		user.setLoadPending(true);
 		userManager.add(user);
 
 		// Load data from DB asynchronously, then fire the init event.

@@ -211,4 +211,32 @@ class UserManagerTest {
 		assertTrue(supplied.contains(user));
 	}
 
+
+	@SuppressWarnings("unchecked")
+	@Test
+	@DisplayName("T-293: a user whose join load is pending is not supplied to autosave, and is once the load succeeded")
+	void pendingUser_isNotSaveable() {
+		RepositoryRegistry registry = mock(RepositoryRegistry.class);
+		IRepository<User<? extends OfflinePlayer>> userRepo = mock(IRepository.class);
+		IRepository<Bank> bankRepo = mock(IRepository.class);
+		when(registry.<User<? extends OfflinePlayer>>getGenericRepository(User.class)).thenReturn(userRepo);
+		when(registry.getRepository(Bank.class)).thenReturn(bankRepo);
+
+		UserManager<OfflinePlayer> manager = new UserManager<>(mock(JavaPlugin.class), registry, mock(UserFactory.class));
+		OfflinePlayer player = handle(UUID.randomUUID());
+		User<OfflinePlayer> user = newUser(player);
+		user.setLoadPending(true);
+		manager.add(user);
+		manager.initialize();
+
+		org.mockito.ArgumentCaptor<Supplier<Collection<User<? extends OfflinePlayer>>>> captor =
+				org.mockito.ArgumentCaptor.forClass(Supplier.class);
+		verify(userRepo).setDataSupplier(captor.capture());
+
+		assertTrue(captor.getValue().get().isEmpty(), "defaults must not reach the stored row");
+		assertSame(user, manager.getUser(player), "but the user is still cached for lookups");
+
+		user.setLoadPending(false);
+		assertEquals(1, captor.getValue().get().size());
+	}
 }

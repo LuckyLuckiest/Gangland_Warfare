@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -33,6 +34,8 @@ class GangManagerTest {
 
 		gangRepository = mock(IRepository.class);
 		migrations     = mock(GangMigrationsContract.class);
+		// the default migrate saves then marks done; the mock keeps that behaviour so the assertions below still hold
+		doCallRealMethod().when(migrations).migrate(anyString(), any(), anyCollection());
 		when(gangRepository.loadAll()).thenReturn(List.of(new Gang(1)));
 
 		manager = new GangManager(gangRepository, mock(GangAllianceRepositoryContract.class), migrations);

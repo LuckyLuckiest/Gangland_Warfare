@@ -74,17 +74,24 @@ public final class UserDataLoader {
 
 	/**
 	 * Hydrates the user, retrying a failed read up to {@link #LOAD_ATTEMPTS} times {@link #RETRY_DELAY_MILLIS} apart
-	 * (blocks the calling thread, so call it off the main thread). Keystone's {@code runQueries} swallows a
-	 * {@code SQLException}, so success is "the read ran to the end" (T-286).
+	 * (blocks the calling thread, so call it off the main thread). Success is Keystone's {@code tryRunQueries} result: the read ran to
+	 * the end (T-286). On the main thread there is a single attempt, no sleep (T-294). Success also clears the user's
+	 * {@link User#isLoadPending() load-pending} flag (T-293).
 	 *
 	 * @return {@code false} when every attempt failed; the user then still holds defaults and must not be saved
 	 */
 	public <T extends OfflinePlayer> boolean loadUserData(User<T> user, UserTable userTable, BankTable bankTable) {
-		for (int attempt = 1; attempt <= LOAD_ATTEMPTS; attempt++) {
-			if (tryLoad(user, userTable, bankTable)) return true;
+		// T-294: the retry sleeps, and the main thread (boot, reload) must never sleep, so it gets one attempt
+		int attempts = Bukkit.isPrimaryThread() ? 1 : LOAD_ATTEMPTS;
 
-			if (attempt == LOAD_ATTEMPTS) break;
-			log.warn("User data read failed for {} (attempt {}/{}); retrying", user.getUuid(), attempt, LOAD_ATTEMPTS);
+		for (int attempt = 1; attempt <= attempts; attempt++) {
+			if (tryLoad(user, userTable, bankTable)) {
+				user.setLoadPending(false);
+				return true;
+			}
+
+			if (attempt == attempts) break;
+			log.warn("User data read failed for {} (attempt {}/{}); retrying", user.getUuid(), attempt, attempts);
 			try {
 				Thread.sleep(RETRY_DELAY_MILLIS);
 			} catch (InterruptedException exception) {
@@ -92,15 +99,14 @@ public final class UserDataLoader {
 				return false;
 			}
 		}
-		log.error("User data for {} could not be read after {} attempts", user.getUuid(), LOAD_ATTEMPTS);
+		log.error("User data for {} could not be read after {} attempts", user.getUuid(), attempts);
 		return false;
 	}
 
 	private <T extends OfflinePlayer> boolean tryLoad(User<T> user, UserTable userTable, BankTable bankTable) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, database);
-		boolean[]      ran    = {false};
 
-		helper.runQueries(db -> {
+		return helper.tryRunQueries(db -> {
 			Map<String, Object> userSearch = userTable.searchCriteria(user);
 			Object[] userData = db.table(userTable.getName())
 			                      .select((String) userSearch.get("search"), (Object[]) userSearch.get("info"),
@@ -114,7 +120,6 @@ public final class UserDataLoader {
 				user.getEconomy().setAmount(Settings.getUserInitialBalance());
 
 				if (!Settings.isAutoSave()) userTable.insertTableQuery(db, user);
-				ran[0] = true;
 				return;
 			}
 
@@ -185,10 +190,7 @@ public final class UserDataLoader {
 			Runnable restoreBounty = () -> restoreBounty(user, bounty, posters);
 			if (Bukkit.isPrimaryThread()) restoreBounty.run();
 			else Bukkit.getScheduler().runTask(gangland, restoreBounty);
-			ran[0] = true;
 		});
-
-		return ran[0];
 	}
 
 	private void restoreBounty(User<? extends OfflinePlayer> user, double saved, @Nullable String posters) {

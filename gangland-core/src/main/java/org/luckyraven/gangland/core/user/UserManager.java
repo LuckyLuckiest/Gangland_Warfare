@@ -93,7 +93,9 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 		List<User<? extends OfflinePlayer>> grouped = new ArrayList<>();
 
 		for (UserManager<? extends OfflinePlayer> manager : cacheGroup) {
-			grouped.addAll(manager.users.values());
+			for (User<? extends OfflinePlayer> user : manager.users.values()) {
+				if (!user.isLoadPending()) grouped.add(user);
+			}
 		}
 
 		return grouped;
@@ -107,7 +109,7 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
 		for (UserManager<? extends OfflinePlayer> manager : cacheGroup) {
 			for (User<? extends OfflinePlayer> user : manager.users.values()) {
-				if (!user.hasBank()) continue;
+				if (user.isLoadPending() || !user.hasBank()) continue;
 
 				grouped.add(user.getBank());
 			}
