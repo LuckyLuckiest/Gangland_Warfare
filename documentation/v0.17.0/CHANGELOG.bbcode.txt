@@ -39,6 +39,7 @@
 [SIZE=6][B]🔧 Changed[/B][/SIZE]
 
 [LIST]
+[*][B]gangland-api 2.4[/B] — adds [ICODE]Messages.USER_DATA_LOAD_FAILED[/ICODE]; modules built for 2.0-2.3 load unchanged.
 [*][B]Invite-only by default (D7)[/B] — Every existing gang is invite-only after the upgrade. Run [ICODE]/glw gang recruiting open[/ICODE] to let players join with [ICODE]/glw gang join[/ICODE].
 [*][B]Contribution reset (D15)[/B] — Stored gang contributions reset to 0 once, on the first 0.17.0 boot. Contributions used to mix bank share and turf points.
 [*][B]Turf contribution removed[/B] — The old turf contribution feature is gone.

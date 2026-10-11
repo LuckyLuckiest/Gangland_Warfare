@@ -95,6 +95,12 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
   civilians' 1 event and gangland-item's `PlayerItemInitEvent` all stay module/infra-owned — no named consumer
   outside their own module, so none were promoted (WS3's explicit decline for the loot-chest 9 still stands).
 
+## Api 2.4 (0.17.0)
+
+`GanglandApi.VERSION` is `"2.4"`. It adds `Messages.USER_DATA_LOAD_FAILED` (`Errors.User.Data_Load_Failed`, the kick text
+when a player's data cannot load). Nothing was removed or changed. No module's `Host_Api` moves: modules built for 2.0 to
+2.3 load unchanged.
+
 ## Api 2.3 (0.16.0)
 
 `GanglandApi.VERSION` is `"2.3"`. `cops-n-crooks` and `gangland-turf` declare `Host_Api: 2.3` because they publish places
