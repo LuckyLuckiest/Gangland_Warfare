@@ -1,0 +1,25 @@
+# +----------------------------+ #
+# | Gang fight module messages | #
+# +----------------------------+ #
+# Every value may use & colour codes and the %name% placeholders listed above it.
+# Each section is filled in by the feature that owns it.
+
+# ---------------- Challenge ----------------
+# Challenge, lobby and countdown texts.
+# end Challenge
+
+# ---------------- Economy ----------------
+# Bet, escrow and payout texts.
+# end Economy
+
+# ---------------- Stats ----------------
+# Fight stats and ranking texts.
+# end Stats
+
+# ---------------- Guards ----------------
+# Arena rule and warning texts.
+# end Guards
+
+# ---------------- Arenas ----------------
+# /glw arena texts.
+# end Arenas
