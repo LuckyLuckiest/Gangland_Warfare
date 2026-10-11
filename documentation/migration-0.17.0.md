@@ -5,7 +5,7 @@
 This guide covers the upgrade from 0.16.1 to 0.17.0. Parts 1, 2 and 3 are the Gang & Turf I waves (W0, W1 and W2); all three
 ship together in 0.17.0. Part 4 lists the release fixes made after the waves.
 
-Gangland 0.17.0 needs Keystone 1.15.1 (the `keystone.version` in the root `pom.xml`). Nothing needs a new dependency.
+Gangland 0.17.0 needs Keystone 1.15.2 (the `keystone.version` in the root `pom.xml`). Nothing needs a new dependency.
 `gangland-api` stays at `2.3` with no `Host_Api` change in any module. The new files are created on first boot, and the
 first boot also refreshes the shipped menus (see Part 4, item 12). Read the notes below before you start the server on the
 new jar.
