@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.turf.command.TurfCommand;
 import org.luckyraven.gangland.turf.map.MapCommand;
 import org.luckyraven.gangland.turf.map.TurfMapConfig;
+import org.luckyraven.gangland.turf.map.web.TurfWebMapConfig;
+import org.luckyraven.gangland.turf.stat.TurfGangLinkConfig;
 import org.luckyraven.gangland.turf.placeholder.TurfHudConfig;
 import org.luckyraven.gangland.turf.database.TurfRepository;
 import org.luckyraven.gangland.turf.listener.TurfBossBarListener;
@@ -32,7 +34,8 @@ class TurfModuleTest {
 
 		new TurfModule().configure(registrations);
 
-		assertEquals(List.of(TurfModuleFileConfig.class, TurfModuleConfig.class, TurfMapConfig.class, TurfHudConfig.class),
+		assertEquals(List.of(TurfModuleFileConfig.class, TurfModuleConfig.class, TurfMapConfig.class, TurfHudConfig.class,
+		             TurfWebMapConfig.class, TurfGangLinkConfig.class),
 		             registrations.configurations());
 		assertEquals(List.of(TurfModule.LISTENER_PACKAGE, TurfModule.TASK_PACKAGE), registrations.listenerPackages());
 		assertEquals(List.of(TurfModule.COMMAND_PACKAGE, TurfModule.MAP_PACKAGE), registrations.commandPackages());

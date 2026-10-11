@@ -7,6 +7,8 @@ import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.config.TurfSettings;
+import org.luckyraven.gangland.turf.manager.TurfManager;
 
 import java.util.List;
 import java.util.Map;
@@ -21,12 +23,17 @@ public final class MapCommand extends Command {
 	private final MapPrefsService prefs;
 	private final TurfMessages    text;
 	private final TurfMapService  map;
+	private final TurfManager     turfs;
+	private final TurfSettings    settings;
 
-	public MapCommand(JavaPlugin plugin, MapPrefsService prefs, TurfMessages text, TurfMapService map) {
+	public MapCommand(JavaPlugin plugin, MapPrefsService prefs, TurfMessages text, TurfMapService map,
+	                  TurfManager turfs, TurfSettings settings) {
 		super(plugin, "map", true);
 		this.prefs = prefs;
 		this.text  = text;
 		this.map   = map;
+		this.turfs    = turfs;
+		this.settings = settings;
 
 		var list = getCommands().entrySet()
 				.stream()

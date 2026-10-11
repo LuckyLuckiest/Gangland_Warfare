@@ -16,6 +16,8 @@ import org.luckyraven.gangland.command.data.InformationManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.config.TurfSettings;
+import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.map.MapPrefsService.HudMode;
 import org.luckyraven.gangland.turf.support.CaptureFixtures;
@@ -88,7 +90,7 @@ class MapHudCommandTest {
 		                        CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
 		prefs = new MapPrefsService();
 
-		MapCommand map = new MapCommand(plugin, prefs, text, mock(TurfMapService.class));
+		MapCommand map = new MapCommand(plugin, prefs, text, mock(TurfMapService.class), mock(TurfManager.class), mock(TurfSettings.class));
 		map.initializeArguments();
 		hud = new MapHudCommand(plugin, map.getArgumentTree(), map.getArgument(), prefs, text);
 
