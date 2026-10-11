@@ -133,7 +133,8 @@ class GangStubCommandsTest {
 	@Test
 	@DisplayName("ranking chains stat then page")
 	void ranking() {
-		Argument ranking = new GangRankingCommand(plugin, tree, parent, new GangStatsService());
+		Argument ranking = new GangRankingCommand(plugin, tree, parent, new GangStatsService(), mock(GangMessages.class),
+		                                         mock(org.luckyraven.gangland.gang.file.GangRules.class));
 
 		assertEquals(List.of("ranking"), List.of(ranking.getArguments()));
 		Argument stat = ranking.getNode().getChildren().get(0).getData();
@@ -143,7 +144,8 @@ class GangStubCommandsTest {
 	@Test
 	@DisplayName("profile takes one player position")
 	void profile() {
-		Argument profile = new GangProfileCommand(plugin, tree, parent, new GangStatsService());
+		Argument profile = new GangProfileCommand(plugin, tree, parent, new GangStatsService(), mock(MemberManager.class),
+		                                       mock(GangManager.class), mock(GangMessages.class));
 
 		assertEquals(List.of("profile"), List.of(profile.getArguments()));
 		assertEquals(1, profile.getNode().getChildren().size());

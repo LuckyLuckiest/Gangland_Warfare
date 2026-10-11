@@ -24,6 +24,9 @@ import org.luckyraven.gangland.gang.command.debug.GangDebugContribution;
 import org.luckyraven.gangland.gang.command.option.GangOptionContribution;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.file.GangRules;
+import org.luckyraven.gangland.gang.level.GangLimits;
+import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.gang.file.GanglandGangMessages;
 import org.luckyraven.gangland.gang.file.GanglandGangPermissionBridge;
 import org.luckyraven.gangland.gang.file.GanglandGangSettings;
@@ -37,6 +40,7 @@ import org.luckyraven.gangland.gang.placeholder.GangPlaceholderContribution;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.menu.filter.FilterApplier;
+import org.luckyraven.gangland.menu.filter.FilterRegistry;
 import org.luckyraven.gangland.menu.filter.FilterStore;
 import org.bukkit.entity.Player;
 import org.luckyraven.keystone.bean.Bean;
@@ -186,8 +190,12 @@ public final class GangConfig {
 	 */
 	@Bean
 	public PlaceholderContribution gangPlaceholderContribution(@Qualifier("online") UserManager<Player> userManager,
-	                                                           MemberManager memberManager, GangManager gangManager) {
-		return new GangPlaceholderContribution(userManager, memberManager, gangManager);
+	                                                           MemberManager memberManager, GangManager gangManager,
+	                                                           GangStatsService statsService,
+	                                                           GangSafehouseService safehouseService, GangLimits limits,
+	                                                           GangRules rules) {
+		return new GangPlaceholderContribution(userManager, memberManager, gangManager, statsService,
+		                                       safehouseService, limits, rules);
 	}
 
 	/**
@@ -220,8 +228,8 @@ public final class GangConfig {
 	 * once {@code FilterAdapter}/{@code FilterField}/{@code StandardFilterField} became api-hosted (W54 F1).
 	 */
 	@Bean
-	public GangFilterAdapter gangFilterAdapter() {
-		return new GangFilterAdapter();
+	public GangFilterAdapter gangFilterAdapter(GangStatsService statsService, FilterRegistry filterRegistry) {
+		return new GangFilterAdapter(statsService, filterRegistry);
 	}
 
 	@Bean
@@ -240,9 +248,10 @@ public final class GangConfig {
 	                                                              GangManager gangManager, FilterStore filterStore,
 	                                                              FilterApplier filterApplier,
 	                                                              GangFilterAdapter gangFilterAdapter,
-	                                                              MemberFilterAdapter memberFilterAdapter) {
+	                                                              MemberFilterAdapter memberFilterAdapter,
+	                                                              GangStatsService statsService) {
 		return new GangMenuItemSourceContribution(userManager, gangManager, filterStore, filterApplier,
-		                                          gangFilterAdapter, memberFilterAdapter);
+		                                          gangFilterAdapter, memberFilterAdapter, statsService);
 	}
 
 	/**

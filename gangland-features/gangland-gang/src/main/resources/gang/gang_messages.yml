@@ -233,6 +233,20 @@ Safehouse:
 # end Chat
 
 # ---------------- Stats ----------------
+Stats:
+   # %stat%, %page%, %pages% in the header; %rank%, %name%, %value%, %level% in a row.
+   Ranking_Header: "&6Gang ranking &7- &e%stat% &7- page %page%/%pages%"
+   Ranking_Row: "&e#%rank% &f%name% &7- &a%value%"
+   Ranking_Next: "&7[Next page &e%page%&7]"
+   Ranking_Empty: "&7No gang is ranked for &f%stat%&7 yet."
+   # %stats% lists the stats the asker may use.
+   Unknown_Stat: "&cUnknown stat. Choose one of: &f%stats%"
+   Profile_Needs_Player: "&cName a player: /glw gang profile <player>"
+   Profile_No_Gang: "&f%player% &7is not in a gang."
+   Profile_Card_Title: "&6%player% &7- %gang%"
+   Profile_Card_Rank: "&7Rank: &f%rank% &7- joined &f%joined%"
+   Profile_Card_Stats: "&7Kills &a%kills% &7- deaths &c%deaths% &7- kdr &e%kdr% &7- assists &b%assists%"
+   Profile_Card_Gang: "&7Gang ranking by kills: &e#%position%"
 # end Stats
 
 # ---------------- Help ----------------
