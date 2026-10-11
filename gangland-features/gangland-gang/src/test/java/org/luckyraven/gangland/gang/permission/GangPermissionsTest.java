@@ -183,6 +183,31 @@ class GangPermissionsTest {
 		}
 	}
 
+	@Test
+	@DisplayName("GP8: a member refused /glw gang withdraw is told the lowest rank allowed, not the generic line")
+	void refusal_namesTheMinimumRank() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			Tree<Rank> tree = ladder("member", "officer", "owner");
+			minimum(tree, "Withdraw", "officer");
+
+			assertFalse(GangPermissions.allows(holding(tree, "member"), null, GangPermissions.WITHDRAW));
+			String line = org.bukkit.ChatColor.stripColor(GangPermissions.refusal(GangPermissions.WITHDRAW));
+			assertEquals("Withdraw needs officer or higher.", line);
+		}
+	}
+
+	@Test
+	@DisplayName("a node with no Ranks.Minimum keeps the generic no-permission line")
+	void refusal_fallsBackWithoutMinimum() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			Tree<Rank> tree = ladder("member", "officer", "owner");
+			minimum(tree, "Withdraw", "officer");
+
+			assertEquals(org.luckyraven.gangland.file.configuration.Messages.COMMAND_NO_PERM.toString(),
+			             GangPermissions.refusal(GangPermissions.TURF_UPGRADE));
+		}
+	}
+
 	/**
 	 * Head-rooted tree: recruit (root) → officer → boss (leaf, the gang leader).
 	 */

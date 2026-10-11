@@ -195,7 +195,7 @@ public class GangSafehouseService implements BeanLifecycle {
 		} else if (!rules.isSafehouseEnabled()) {
 			player.sendMessage(text("Safehouse.Off", "&cSafehouses are turned off."));
 		} else if (!allows(player, node)) {
-			player.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			player.sendMessage(GangPermissions.refusal(node));
 		} else {
 			return gangId;
 		}

@@ -27,6 +27,9 @@ final class GangNoticeCommand extends SubArgument {
 	/** Longest notice, in visible characters. */
 	static final int MAX_LENGTH = 200;
 
+	/** Longest stored notice, raw characters with colour codes. Matches the VARCHAR(255) column of GangTable.notice. */
+	static final int MAX_STORED_LENGTH = 255;
+
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
@@ -57,9 +60,10 @@ final class GangNoticeCommand extends SubArgument {
 			return true;
 		}
 
-		if (GangNameRules.plain(text).length() > MAX_LENGTH) return false;
+		String stored = text.trim();
+		if (GangNameRules.plain(stored).length() > MAX_LENGTH || stored.length() > MAX_STORED_LENGTH) return false;
 
-		gang.setNotice(text.trim());
+		gang.setNotice(stored);
 		return true;
 	}
 
@@ -78,7 +82,7 @@ final class GangNoticeCommand extends SubArgument {
 		}
 
 		if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player, GangPermissions.NOTICE)) {
-			user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			user.sendMessage(GangPermissions.refusal(GangPermissions.NOTICE));
 			return;
 		}
 

@@ -84,7 +84,7 @@ final class GangAllyPvpCommand extends SubArgument {
 		}
 
 		if (!GangPermissions.allows(member, player, GangPermissions.ALLY_PVP)) {
-			sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			sender.sendMessage(GangPermissions.refusal(GangPermissions.ALLY_PVP));
 			return;
 		}
 

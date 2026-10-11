@@ -147,7 +147,7 @@ public class GangInviteCommand extends SubArgument {
 			// GR-03: recruiting was open to every member, including the newest recruit.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.INVITE)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.INVITE));
 				return;
 			}
 

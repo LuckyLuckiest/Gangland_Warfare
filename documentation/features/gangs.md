@@ -226,8 +226,10 @@ Bartizan plugin). The steps below run in order; the first one that matches decid
    (or any world when `Gang.Enable` is off), is never blocked.
 2. **Hitting yourself.** Blocked only when `Friendly_Fire.Allow_Self_Damage` is `false`. The default is `true`, so your
    own arrows and splash potions hit you (bow boosting works).
-3. **Region flag.** Reserved for a region plugin (WorldGuard). No region plugin is wired in this release, so this step
-   has no effect yet.
+3. **Region flag.** With WorldGuard installed (and one full restart so the flag registers), the region flag
+   `glw-gang-pvp` set to `ALLOW` or `DENY` decides for gangmates and allies in that region. A `DENY` never starts
+   protecting rivals. Without WorldGuard this step is skipped. See
+   [Gang Fights](./fights.md#worldguard-flag-glw-gang-pvp).
 4. **Per-world override.** `Friendly_Fire.Worlds` (`ALLOW` or `DENY` per world name) decides, for gangmates and allies
    only. A `DENY` never starts protecting rivals. The key ships commented out, so no world is overridden by default.
 5. **Gangmates.** Blocked unless `Friendly_Fire.Global` is `GANG_CHOICE` (the default) and your gang turned on

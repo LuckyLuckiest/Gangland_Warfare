@@ -82,7 +82,7 @@ class GangDisplayCommand extends SubArgument {
 			// GR-03: the gang display name was writable by every member.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.DISPLAY)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.DISPLAY));
 				return;
 			}
 
@@ -128,7 +128,7 @@ class GangDisplayCommand extends SubArgument {
 			// GR-03: same gate on the remove form.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.DISPLAY)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.DISPLAY));
 				return;
 			}
 

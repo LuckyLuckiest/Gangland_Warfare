@@ -104,7 +104,7 @@ class GangAllyAbandonCommand extends SubArgument {
 			// GR-03: any member could break an alliance the gang leadership had negotiated.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.ALLY)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.ALLY));
 				return;
 			}
 

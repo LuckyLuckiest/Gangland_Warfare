@@ -70,7 +70,7 @@ final class GangPvpCommand extends SubArgument {
 		Player player = (Player) sender;
 		Member member = friendlyFire.memberOf(player.getUniqueId());
 		if (!GangPermissions.allows(member, player, GangPermissions.PVP)) {
-			sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			sender.sendMessage(GangPermissions.refusal(GangPermissions.PVP));
 			return;
 		}
 

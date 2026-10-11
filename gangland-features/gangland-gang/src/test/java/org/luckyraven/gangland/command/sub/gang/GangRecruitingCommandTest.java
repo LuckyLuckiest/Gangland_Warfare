@@ -144,9 +144,9 @@ class GangRecruitingCommandTest {
 	}
 
 	@Test
-	@DisplayName("a member with the invite node may change the state")
-	void memberWithInviteNode_setsInvite() throws Exception {
-		when(player.hasPermission(GangPermissions.INVITE)).thenReturn(true);
+	@DisplayName("a member with the recruiting node may change the state (INVITE alone no longer opens the gate)")
+	void memberWithRecruitingNode_setsInvite() throws Exception {
+		when(player.hasPermission(GangPermissions.RECRUITING)).thenReturn(true);
 		setMember(memberRank());
 		when(vipers.getState()).thenReturn(Gang.State.OPEN);
 

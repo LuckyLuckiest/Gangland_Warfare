@@ -127,7 +127,7 @@ public class GangAllyRequestCommand extends SubArgument {
 			// GR-03: proposing an alliance bound the whole gang and was open to every member.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.ALLY)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.ALLY));
 				return;
 			}
 

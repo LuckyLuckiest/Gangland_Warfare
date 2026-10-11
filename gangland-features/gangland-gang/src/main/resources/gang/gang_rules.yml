@@ -281,7 +281,7 @@ Safehouse:
    Enabled: true
    Warm_Up_Seconds: 5
    Cooldown_Seconds: 60
-   # Money taken from the player for setting a safehouse.
+   # Money taken from the player after each successful safehouse teleport (0 = free). Setting a safehouse and joining a rally never cost anything.
    Cost: 0
    # Refuse a safehouse spot that is not safe to stand on.
    Safe_Check: true

@@ -2,6 +2,7 @@ package org.luckyraven.gangland.gang.permission;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.rank.Rank;
 
@@ -183,6 +184,15 @@ public final class GangPermissions {
 		if (messages != null) return messages.text("Ranks.Needs_Rank", DENIAL_FALLBACK, "feature", feature, "rank", rank);
 
 		return GanglandChatUtil.color(DENIAL_FALLBACK.replace("%feature%", feature).replace("%rank%", rank));
+	}
+
+	/**
+	 * The line a refused caller sees for {@code node}: {@link #denial(String)} when the node has a minimum, otherwise the
+	 * generic no-permission line.
+	 */
+	public static String refusal(String node) {
+		String denial = denial(node);
+		return denial != null ? denial : Messages.COMMAND_NO_PERM.toString();
 	}
 
 	private static @Nullable Tree.Node<Rank> minimumNode(String name) {
