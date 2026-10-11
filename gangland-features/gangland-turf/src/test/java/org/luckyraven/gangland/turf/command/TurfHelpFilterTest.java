@@ -21,16 +21,18 @@ class TurfHelpFilterTest {
 			new CommandInformation("/glw turf info [id|name]", "info"),
 			new CommandInformation("/glw turf list [page]", "list"),
 			new CommandInformation("/glw turf rules", "rules"),
+			new CommandInformation("/glw turf quartermaster", "quartermaster"),
 			new CommandInformation("/glw turf tp [id]", "tp"));
 
 	@Test
-	@DisplayName("a non-admin sees turf, turf info, turf list and turf rules only")
+	@DisplayName("a non-admin sees turf, turf info, turf list, turf rules and turf quartermaster only")
 	void visibleEntries_nonAdmin_playerVerbsOnly() {
 		List<String> usages = TurfCommand.visibleEntries(ALL, false).stream()
 				.map(CommandInformation::usage)
 				.toList();
 
-		assertEquals(List.of("/glw turf", "/glw turf info [id|name]", "/glw turf list [page]", "/glw turf rules"),
+		assertEquals(List.of("/glw turf", "/glw turf info [id|name]", "/glw turf list [page]", "/glw turf rules",
+		                    "/glw turf quartermaster"),
 		             usages);
 	}
 

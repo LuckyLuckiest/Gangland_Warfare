@@ -45,6 +45,8 @@ permissions:
       default: true
    gangland.command.turf.rules:
       default: true
+   gangland.command.turf.quartermaster:
+      default: true
    gangland.command.gang:
       default: true
    gangland.command.gang.create:
