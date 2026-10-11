@@ -142,6 +142,7 @@ class GangChatRoutingTest {
 	@DisplayName("spy: staff outside both gangs gets one copy of the gang line and of the ally line")
 	void spy_getsCopy() {
 		spy.toggle(staff.getUniqueId());
+		when(staff.hasPermission(org.luckyraven.gangland.gang.permission.GangPermissions.SPY)).thenReturn(true);
 
 		toggles.deliver(messages, rex, 1, "Vipers", GangChatChannel.GANG, "hi", context);
 		toggles.deliver(messages, rex, 1, "Vipers", GangChatChannel.ALLIES, "yo", context);
@@ -173,6 +174,7 @@ class GangChatRoutingTest {
 	@DisplayName("a handler cancelling GangChatEvent stops every send, spies included")
 	void cancelledEvent_deliversNothing() {
 		spy.toggle(staff.getUniqueId());
+		when(staff.hasPermission(org.luckyraven.gangland.gang.permission.GangPermissions.SPY)).thenReturn(true);
 		doAnswer(invocation -> {
 			((GangChatEvent) invocation.getArgument(0)).setCancelled(true);
 			return null;

@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +48,8 @@ class GangPublicTagListenerTest {
 	private GangPublicTagListener  listener;
 	private Player                 rex;
 	private Player                 loner;
+	private UserManager<Player>    userManager;
+	private GangManager            gangManager;
 
 	@BeforeEach
 	@SuppressWarnings("unchecked")
@@ -67,10 +70,10 @@ class GangPublicTagListenerTest {
 		settings.when(Settings::getLanguagePicked).thenReturn("en");
 		bukkit = mockStatic(Bukkit.class);
 		bukkit.when(Bukkit::isPrimaryThread).thenReturn(true);
+		bukkit.when(Bukkit::getScheduler).thenReturn(mock(BukkitScheduler.class));
 
-		UserManager<Player> userManager = mock(UserManager.class);
-		GangManager         gangManager = mock(GangManager.class);
-		GangMessages        messages    = W2P2Messages.shipped(tempDir);
+		userManager = mock(UserManager.class);
+		gangManager = mock(GangManager.class);
 		GangLimits limits = new GangLimits() {
 			@Override
 			public String chatPrefix(int gangId) {
@@ -92,8 +95,12 @@ class GangPublicTagListenerTest {
 		when(userManager.getUser(loner)).thenReturn(none);
 
 		chatSettings = new ChatSettings();
-		listener     = new GangPublicTagListener(mock(JavaPlugin.class), userManager, gangManager, limits, messages,
+		listener     = new GangPublicTagListener(mock(JavaPlugin.class), userManager, gangManager, limits,
 		                                         chatSettings);
+		java.util.UUID rexId = java.util.UUID.randomUUID();
+		when(rex.getUniqueId()).thenReturn(rexId);
+		when(loner.getUniqueId()).thenReturn(java.util.UUID.randomUUID());
+		bukkit.when(Bukkit::getOnlinePlayers).thenReturn(List.of(rex, loner));
 	}
 
 	@AfterEach
@@ -116,6 +123,7 @@ class GangPublicTagListenerTest {
 	@DisplayName("percentInDisplayName_escaped: a % in the gang name is doubled so String.format on the format still works")
 	void percentInDisplayName_escaped() {
 		chatSettings.set(false, true, "");
+		listener.refresh();
 		AsyncPlayerChatEvent event = chat(rex);
 
 		listener.onChat(event);
@@ -130,11 +138,26 @@ class GangPublicTagListenerTest {
 	@DisplayName("a gangless sender gets Chat.No_Gang_Tag, escaped too")
 	void gangless_noGangTag() {
 		chatSettings.set(false, true, "50%");
+		listener.refresh();
 		AsyncPlayerChatEvent event = chat(loner);
 
 		listener.onChat(event);
 
 		assertEquals("<Rex> 50% hi", String.format(event.getFormat(), "Rex", "hi"));
+	}
+
+	@Test
+	@DisplayName("noManagerReadOffMainThread: an async chat event splices the cached tag and never touches the managers")
+	void noManagerReadOffMainThread() {
+		chatSettings.set(false, true, "");
+		listener.refresh();
+		clearInvocations(userManager, gangManager);
+		AsyncPlayerChatEvent event = chat(rex);
+
+		listener.onChat(event);
+
+		verifyNoInteractions(userManager, gangManager);
+		assertTrue(event.getFormat().contains("100%%Vipers"), event.getFormat());
 	}
 
 	private AsyncPlayerChatEvent chat(Player who) {

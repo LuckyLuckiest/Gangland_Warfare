@@ -110,6 +110,9 @@ public final class GangChatToggles {
 			                  .replace("%message%", message);
 		}
 		for (Player watcher : delivery.spies()) {
+			if (!watcher.hasPermission(org.luckyraven.gangland.gang.permission.GangPermissions.SPY)) {
+				continue;
+			}
 			watcher.sendMessage(spyLine);
 		}
 		if (settings.logToConsole()) {
