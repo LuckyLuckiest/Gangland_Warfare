@@ -96,6 +96,13 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		                             : gr.get("Leash_Margin").asInt().min(0)
 		                                 .orDefault(TurfDefenderConfig.DEFAULT_LEASH_MARGIN);
 
+		double bountyShare = gr == null ? TurfDefenderConfig.DEFAULT_BOUNTY_SHARE
+		                                : Math.max(0.0, Math.min(1.0, gr.get("Bounty_Share").asDouble()
+		                                                                .orDefault(TurfDefenderConfig.DEFAULT_BOUNTY_SHARE)));
+		int recycleSeconds = gr == null ? TurfDefenderConfig.DEFAULT_RECYCLE_SECONDS
+		                                : gr.get("Recycle_Seconds").asInt().min(0)
+		                                    .orDefault(TurfDefenderConfig.DEFAULT_RECYCLE_SECONDS);
+
 		// absent = the shipped composition; present (even empty) = exactly what the file says
 		GarrisonComposition composition = gr != null && gr.has("Composition")
 		                                  ? GarrisonComposition.parse(gr.get("Composition").asList().ofStrings().orEmpty(),
@@ -109,10 +116,12 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 					dr.get("Type_Id").asString().orDefault("turf_defender"),
 					dr.get("Targeting_Radius").asDouble().min(1.0).orDefault(32.0),
 					dr.get("Lifespan_Seconds").asInt().min(1).orDefault(600),
-					waveSize, maxAlive, waveCooldown, standDown, leashMargin, composition);
+					waveSize, maxAlive, waveCooldown, standDown, leashMargin, composition, bountyShare,
+					recycleSeconds);
 		} else {
 			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, 600, waveSize, maxAlive, waveCooldown,
-			                                        standDown, leashMargin, composition);
+			                                        standDown, leashMargin, composition, bountyShare,
+			                                        recycleSeconds);
 		}
 
 		MappingNode copNode = root.get("Cop_Response").asMapping().orNull();
