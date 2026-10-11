@@ -79,8 +79,10 @@ public final class CreateAccountListener implements Listener {
 
 			if (!userDataLoader.loadUserData(user, userTable, bankTable)) {
 				// T-286: defaults must never reach the autosave, which would overwrite the stored row
-				userManager.remove(user);
+				// main thread only (the cache is a HashMap), and only while this session's User is still the cached
+				// one: after quit+rejoin the uuid holds a newer session's User that must survive
 				Bukkit.getScheduler().runTask(gangland, () -> {
+					if (userManager.getUser(player) == user) userManager.remove(user);
 					if (player.isOnline()) player.kickPlayer(Messages.USER_DATA_LOAD_FAILED.toString());
 				});
 				return;

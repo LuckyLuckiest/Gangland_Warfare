@@ -71,7 +71,7 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	 * All queried data is sent and handled in the database.
 	 * <p>
 	 * Everything — users and banks included — is persisted through each manager's data supplier via
-	 * {@link RepositoryRegistry#saveAll()}. The offline user cache is cleared afterwards, once {@code saveAll} has
+	 * {@link RepositoryRegistry#saveAll()}. Idle offline cache entries are pruned afterwards, once {@code saveAll} has
 	 * taken its snapshot.
 	 */
 	public void updatingDatabase() {
@@ -100,9 +100,9 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 		// cleared after it returns.
 		repositoryRegistry.saveAll(onComplete);
 
-		// the offline cache is a write-through buffer for players who already left: once its snapshot is on its way
-		// to the database there is nothing left to keep
-		offlineUserManager.clear();
+		// US-11: the offline cache is NOT cleared (nothing refills it, so offline members became uncached after the
+		// first autosave); only entries nobody touched for Offline_Cache_Minutes go, never a load-pending one
+		offlineUserManager.pruneIdle(Settings.getOfflineCacheMinutes() * 60_000L);
 	}
 
 	/**

@@ -124,6 +124,10 @@ Database:
       Enable: true
       # Time to auto save in minutes.
       Time: 10
+      # Offline players stay cached in memory after the auto save so gang commands can pay them out and edit them.
+      # An entry nobody has looked at for this many minutes is dropped after a save (it is reloaded from the
+      # database when needed). Minimum 1.
+      Offline_Cache_Minutes: 30
       # Enable if you want to print periodical updates in the console.
       Debug: true
    Clean_Up:

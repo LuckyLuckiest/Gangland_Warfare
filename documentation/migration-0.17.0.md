@@ -6,7 +6,7 @@ This guide covers the upgrade from 0.16.1 to 0.17.0. Parts 1, 2 and 3 are the Ga
 ship together in 0.17.0. Part 4 lists the release fixes made after the waves.
 
 Gangland 0.17.0 needs Keystone 1.15.3 (the `keystone.version` in the root `pom.xml`). 1.15.3 also flushes the database journal on a clean stop, so a stopped server's .db file is complete. Nothing needs a new dependency.
-`gangland-api` is `2.4` (adds `Messages.USER_DATA_LOAD_FAILED`) and no module's `Host_Api` changes. The new files are created on first boot, and the
+`gangland-api` is `2.4` (adds `Messages.USER_DATA_LOAD_FAILED`) and the gang and mail modules declare `Host_Api` 2.4, so they need a 2.4 host. The API adds `UserManager.loadStored`, `setStoredLoader`, `pruneIdle` and `Settings.getOfflineCacheMinutes`. The new files are created on first boot, and the
 first boot also refreshes the shipped menus (see Part 4, item 12). Read the notes below before you start the server on the
 new jar.
 
@@ -77,7 +77,7 @@ new jar.
 - `ActiveBuffRepositoryContract` gained `deleteExpired(long)`. Any other implementation must add it.
 - `CaptureService`, `TurfIncomeDistributor`, `InactivityReleaseTask`, `TurfSetOwnerCommand`, `TurfDeleteCommand` and
   `TurfCommand` gained a `TurfOwnership` parameter. `TurfOwnerChangedEvent` has a 4-argument constructor.
-- `gangland-api` 2.4 adds `Messages.USER_DATA_LOAD_FAILED` (additive; modules built for 2.0-2.3 load unchanged), no `Host_Api` change, no config change beyond the keys above.
+- `gangland-api` 2.4 adds `Messages.USER_DATA_LOAD_FAILED` (additive; modules built for 2.0-2.3 load unchanged), gang and mail declare `Host_Api` 2.4 (see Part 4, item 14), no config change beyond the keys above.
 
 ### 10. By design
 
@@ -264,7 +264,7 @@ new jar.
   runs can miss committed rows still in the `-wal` file. WAL needs a local filesystem; do not put the database on SMB or
   NFS. Downgrading to 1.15.1 still reads the file and keeps it in WAL mode.
 - **Update the core jar and the gang, turf and mail module jars together.** The 0.17.0 mail module uses gang's new
-  `GangJoinEvent` and declares `Host_Api` 2.0, so the module loader does not catch a mismatched gang jar. Mixing 0.16.1 and
+  `GangJoinEvent` and gang and mail both declare `Host_Api` 2.4, so a 0.16.x host refuses either jar at load. The loader still does not catch a mixed gang/mail pair on the same host. Mixing 0.16.1 and
   0.17.0 jars is not supported.
 - Repository loads now read numeric columns through `Number` (NULL reads as 0), so a MySQL server returning a wider
   numeric type or NULL no longer fails the load.
@@ -376,6 +376,14 @@ These fixes went into 0.17.0 after the three parts above. Each item names the fi
   members, loot chests, bankers, traders, seized inventory and detainments. Fix or delete those rows.
 - Waypoint renumbering reads ids as numbers, so MySQL `BIGINT` ids work. A waypoint row with a null id is skipped with one
   warning.
+
+### 14. Offline players stay cached
+
+- A gang disband pays an offline member only from that member's own stored row, and saves the payout. An offline member
+  with no cached entry is loaded first, so a payout is never kept in memory only.
+- The autosave keeps offline players in memory. An entry nobody has touched for `Database.Auto_Save.Offline_Cache_Minutes`
+  (default `30`, minimum `1`) is dropped after a save and reloaded from the database when needed.
+- Gang and mail declare `Host_Api` 2.4 (see Part 1, item 9 and Part 3, item 8).
 
 ---
 

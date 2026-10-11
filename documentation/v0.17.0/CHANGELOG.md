@@ -31,6 +31,7 @@
 - **Gang decline and offline invites** — `/glw gang decline [gang]` declines an invite. Invites to offline players expire after 72 hours (`Invite_Offline_Expiry_Hours`).
 - **Turf admin** — One permission, `gangland.turf.admin`, covers every turf admin verb. `/glw turf rename <name>` is new, and `/glw turf list` is sorted by distance and paged. New turfs snap to whole chunks, and each side must be 16 to 512 blocks.
 - **Fresh-install ranks** — A new server gets the `member`, `officer` and `owner` ranks with preset permissions. Existing rank trees are not changed.
+- **Offline cache kept after autosave** — Offline players stay in memory after an autosave, so a gang disband pays them and saves their share. An entry nobody has touched for `Database.Auto_Save.Offline_Cache_Minutes` (default 30, minimum 1) is dropped after a save.
 
 ## 🔧 Changed
 

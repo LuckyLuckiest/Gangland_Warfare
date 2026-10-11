@@ -239,4 +239,34 @@ class UserManagerTest {
 		user.setLoadPending(false);
 		assertEquals(1, captor.getValue().get().size());
 	}
+
+	@Test
+	@DisplayName("US-11: pruneIdle drops idle entries, keeps recently used ones and never a load-pending one")
+	void pruneIdle_dropsOnlyIdleSavedEntries() {
+		UserManager<OfflinePlayer> manager = newManager();
+		User<OfflinePlayer> idle    = newUser(handle(UUID.randomUUID()));
+		User<OfflinePlayer> pending = newUser(handle(UUID.randomUUID()));
+		pending.setLoadPending(true);
+		manager.add(idle);
+		manager.add(pending);
+
+		assertEquals(0, manager.pruneIdle(60_000L), "just added: nothing is idle yet");
+		assertEquals(2, manager.size());
+
+		assertEquals(1, manager.pruneIdle(-1L), "everything counts as idle");
+		assertNull(manager.getUser(idle.getUuid()));
+		assertSame(pending, manager.getUser(pending.getUuid()), "load-pending entry is never pruned");
+	}
+
+	@Test
+	@DisplayName("T-300: loadStored delegates to the host loader, and is false without one")
+	void loadStored_delegatesToLoader() {
+		UserManager<OfflinePlayer> manager = newManager();
+		User<OfflinePlayer>        user    = newUser(handle(UUID.randomUUID()));
+
+		assertEquals(false, manager.loadStored(user));
+
+		manager.setStoredLoader(u -> u == user);
+		assertEquals(true, manager.loadStored(user));
+	}
 }

@@ -46,7 +46,7 @@ public class Settings implements FileInitializer {
 	private static @Getter String  mysqlHost, mysqlUsername, mysqlPassword;
 	private static @Getter int     mysqlPort;
 	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave, autoSaveDebug;
-	private static @Getter int    autoSaveTime;
+	private static @Getter int    autoSaveTime, offlineCacheMinutes;
 	private static @Getter double cleanUpTime;
 	// inventory configuration
 	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName, nextPage,
@@ -555,6 +555,7 @@ public class Settings implements FileInitializer {
 		autoSave          = bool(autoSaveSection, "Enable", true);
 		autoSaveDebug     = bool(autoSaveSection, "Debug", true);
 		autoSaveTime      = intVal(autoSaveSection, "Time", 10);
+		offlineCacheMinutes = Math.max(1, intVal(autoSaveSection, "Offline_Cache_Minutes", 30));
 		cleanUpTime       = dbl(cleanUp, "Time", 30);
 
 		// inventory

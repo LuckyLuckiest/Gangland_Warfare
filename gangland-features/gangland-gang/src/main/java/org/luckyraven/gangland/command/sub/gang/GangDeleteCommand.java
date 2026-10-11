@@ -254,12 +254,14 @@ class GangDeleteCommand extends SubArgument {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(mem.getUuid());
 
 				User<OfflinePlayer> offlineUser = offlineUserManager.getUser(offlinePlayer);
-				if (offlineUser == null) {
-					// Fallback only: the row failed to load, so this User holds defaults. Load-pending keeps autosave
-					// and shutdown off it, and the save below is skipped for it.
-					offlineUser = offlineUserManager.create(offlinePlayer);
-					offlineUser.setLoadPending(true);
-					offlineUserManager.add(offlineUser);
+				// Not cached, or cached as a load-pending default (T-300, B3): load just this member's row, the path
+				// boot uses. Never loadAll, which rebuilds every player's User (Vault balance writes, wanted events).
+				if (offlineUser == null || offlineUser.isLoadPending()) {
+					boolean cached = offlineUser != null;
+					if (!cached) offlineUser = offlineUserManager.create(offlinePlayer);
+					// A failed read leaves defaults: load-pending keeps autosave and the save below off it.
+					if (!offlineUserManager.loadStored(offlineUser)) offlineUser.setLoadPending(true);
+					if (!cached) offlineUserManager.add(offlineUser);
 				}
 
 				BigDecimal amount = payouts.getOrDefault(mem.getUuid(), Currency.ZERO);
@@ -267,7 +269,7 @@ class GangDeleteCommand extends SubArgument {
 				gang.getEconomy().withdrawAmount(amount);
 				offlineUser.getEconomy().depositAmount(amount);
 				if (offlineUser.isLoadPending()) {
-					log.warn("Disband payout of {} for {} was not saved: their stored data could not be read",
+					log.warn("Disband payout of {} for {} was not saved: no stored row could be read",
 					         amount, mem.getUuid());
 				} else {
 					userRepository.save(offlineUser);

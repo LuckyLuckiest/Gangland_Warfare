@@ -38,4 +38,27 @@ class NameLookupTest {
 		}
 	}
 
+	@Test
+	@DisplayName("B3: a name whose stored row reads fine is cached hydrated, not load-pending")
+	@SuppressWarnings("unchecked")
+	void offlineNameWithReadableRow_isNotLoadPending() {
+		try (MockedStatic<Bukkit> bukkit = mockStatic(Bukkit.class)) {
+			OfflinePlayer steve = mock(OfflinePlayer.class);
+			when(steve.getName()).thenReturn("Steve");
+			bukkit.when(Bukkit::getOfflinePlayers).thenReturn(new OfflinePlayer[]{steve});
+
+			UserManager<Player>        online  = mock(UserManager.class);
+			UserManager<OfflinePlayer> offline = mock(UserManager.class);
+			User<OfflinePlayer>        created = mock(User.class);
+			when(offline.getUser(any(OfflinePlayer.class))).thenReturn(null);
+			doReturn(created).when(offline).create(any(OfflinePlayer.class));
+			when(offline.loadStored(created)).thenReturn(true);
+
+			NameLookup.findByName("steve", online, offline);
+
+			verify(created, never()).setLoadPending(true);
+			verify(offline).add(created);
+		}
+	}
+
 }
