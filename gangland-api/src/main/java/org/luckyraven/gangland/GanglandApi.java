@@ -32,8 +32,9 @@ public interface GanglandApi {
 	 * <p>2.3 adds {@code RegionProvider}, {@code PlaceRegion}, {@code RegionShape}, {@code PlaceNames},
 	 * {@code Waypoint.WaypointType.HOSPITAL}, {@code WantedCause.CONTACT} and the self-defence, contacts and hospital
 	 * settings (the hospital respawn shield included).
+	 * <p>2.4 adds {@code Messages.USER_DATA_LOAD_FAILED} (the "your data could not be loaded, please rejoin" kick text).
 	 */
-	String VERSION = "2.3";
+	String VERSION = "2.4";
 
 	/**
 	 * The permission namespace and long command alias ({@code /gangland}).
