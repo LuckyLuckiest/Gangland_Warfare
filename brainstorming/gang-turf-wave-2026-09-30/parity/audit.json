@@ -1,0 +1,1309 @@
+{
+  "laneId": "W6-X",
+  "auditedAgainst": "gt2-w6-x worktree at 0.19.0 head ca7ab965 (no code changed by this lane)",
+  "branchHead": "ca7ab965b4506d0b02766e25578a6abf3b5a56c9",
+  "method": "Named test classes found by filename under gangland-*/**/src/test; run per module with slot.js mvn -q -o test -pl <module> -am -Dtest=<list> -Dsurefire.failIfNoSpecifiedTests=false; counts from target/surefire-reports TEST-*.xml (not from -q output).",
+  "noBrowser": "No browser tool is available to this lane. The competitor comparison uses only competitors/gangsplus.md (token comparison); no live competitor page was read.",
+  "verdictCounts": {
+    "RED": 7,
+    "HAVE": 3,
+    "AUTOMATED_GREEN": 30,
+    "NEEDS_OWNER_STEP": 5
+  },
+  "rowCount": 45,
+  "rows": [
+    {
+      "id": "GP-01",
+      "tests": [
+        {
+          "class": "GangMembershipServiceTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "FAIL",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 5,
+          "skipped": 0
+        },
+        {
+          "class": "GangStaffVerbsTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangDeleteCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "RED"
+    },
+    {
+      "id": "GP-02",
+      "tests": [
+        {
+          "class": "GangJoinCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [
+        "HAVE: mail invite/accept tests"
+      ],
+      "ownerStep": null,
+      "verdict": "HAVE"
+    },
+    {
+      "id": "GP-03",
+      "tests": [
+        {
+          "class": "GangLeadershipTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "FAIL",
+          "testsRun": 3,
+          "failures": 0,
+          "errors": 2,
+          "skipped": 0
+        },
+        {
+          "class": "GangStaffVerbsTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "RED"
+    },
+    {
+      "id": "GP-04",
+      "tests": [
+        {
+          "class": "GangHelpFilterTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangInfoCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangListCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangConsoleVerbsTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-05",
+      "tests": [
+        {
+          "class": "GangMembershipServiceTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "FAIL",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 5,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "RED"
+    },
+    {
+      "id": "GP-06",
+      "tests": [
+        {
+          "class": "GangNameRulesTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 17,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-07",
+      "tests": [
+        {
+          "class": "RankSeedTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangPermissionsTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "FAIL",
+          "testsRun": 16,
+          "failures": 0,
+          "errors": 1,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "RED"
+    },
+    {
+      "id": "GP-08",
+      "tests": [
+        {
+          "class": "GangPermissionsTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "FAIL",
+          "testsRun": 16,
+          "failures": 0,
+          "errors": 1,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "RED"
+    },
+    {
+      "id": "GP-09",
+      "tests": [
+        {
+          "class": "PluginYmlPermissionsTest",
+          "found": true,
+          "module": "gangland-impl",
+          "result": "PASS",
+          "testsRun": 82,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-10",
+      "tests": [
+        {
+          "class": "GangUpgradeCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-11",
+      "tests": [
+        {
+          "class": "GangLevelTableTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangMembershipServiceTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "FAIL",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 5,
+          "skipped": 0
+        },
+        {
+          "class": "GangSafehouseCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangChatRoutingTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "RED"
+    },
+    {
+      "id": "GP-12",
+      "tests": [
+        {
+          "class": "LevelRewardRunnerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangLevelMessageListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-13",
+      "tests": [
+        {
+          "class": "GangChatRoutingTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangChatCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-14",
+      "tests": [
+        {
+          "class": "GangChatRoutingTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangStaffVerbsTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-15",
+      "tests": [
+        {
+          "class": "GangPublicTagListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangPlaceholderContributionTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-16",
+      "tests": [
+        {
+          "class": "GangChatListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-17",
+      "tests": [
+        {
+          "class": "FriendlyFireRuleTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-18",
+      "tests": [
+        {
+          "class": "FriendlyFireRuleTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "WorldGuardFlagRegistrarTest",
+          "found": true,
+          "module": "gangland-impl",
+          "result": "PASS",
+          "testsRun": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangCombatConfigTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": "WorldGuard region on a server with WorldGuard",
+      "verdict": "NEEDS_OWNER_STEP"
+    },
+    {
+      "id": "GP-19",
+      "tests": [
+        {
+          "class": "PotionFriendlyFireListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangMembersDamageListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-20",
+      "tests": [
+        {
+          "class": "GangStatsListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 12,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightStatsRepositoryTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-21",
+      "tests": [
+        {
+          "class": "GangStatsServiceTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangRankingCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "TurfsHeldStatContributionTest",
+          "found": true,
+          "module": "gangland-features/gangland-turf",
+          "result": "PASS",
+          "testsRun": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightStatContributionTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-22",
+      "tests": [
+        {
+          "class": "GangStatsListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 12,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangStaffVerbsTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-23",
+      "tests": [
+        {
+          "class": "GangInfoCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangStatsServiceTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-24",
+      "tests": [
+        {
+          "class": "GangStaffVerbsTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-25",
+      "tests": [
+        {
+          "class": "AllyCapTest",
+          "found": true,
+          "module": "gangland-features/gangland-mail",
+          "result": "PASS",
+          "testsRun": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangAllyAbandonCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-26",
+      "tests": [
+        {
+          "class": "GangSafehouseCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangSafehouseRepositoryTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "TurfTeleportGuardListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-turf",
+          "result": "FAIL",
+          "testsRun": 8,
+          "failures": 0,
+          "errors": 5,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "RED"
+    },
+    {
+      "id": "GP-27",
+      "tests": [
+        {
+          "class": "GangRallyCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-28",
+      "tests": [
+        {
+          "class": "GangStaffVerbsTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-29",
+      "tests": [
+        {
+          "class": "FightRulesTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 10,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightStateMachineTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 13,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightSettlementTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 10,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": "1v1 with a bet (acceptance F1/F3)",
+      "verdict": "NEEDS_OWNER_STEP"
+    },
+    {
+      "id": "GP-30",
+      "tests": [
+        {
+          "class": "ArenaBoxTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "ArenaFileTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "ArenaSaveValidationTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightSessionListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": "arena built in game (acceptance F1)",
+      "verdict": "NEEDS_OWNER_STEP"
+    },
+    {
+      "id": "GP-31",
+      "tests": [
+        {
+          "class": "CommandFilterTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightRulesTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 10,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightSettlementTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 10,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": "/tp blocked (acceptance F2)",
+      "verdict": "NEEDS_OWNER_STEP"
+    },
+    {
+      "id": "GP-32",
+      "tests": [
+        {
+          "class": "GangWorldPolicyTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "TurfCreateCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-turf",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-33",
+      "tests": [
+        {
+          "class": "CombatTagTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightRulesTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 10,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [
+        "partial exclusion: third-party combat-tag adapters"
+      ],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-34",
+      "tests": [
+        {
+          "class": "GangPlaceholderContributionTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GanglandPlaceholderGlobalTest",
+          "found": true,
+          "module": "gangland-impl",
+          "result": "PASS",
+          "testsRun": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-35",
+      "tests": [],
+      "nonTestItems": [
+        "HAVE: Keystone persistence"
+      ],
+      "ownerStep": null,
+      "verdict": "HAVE"
+    },
+    {
+      "id": "GP-36",
+      "tests": [
+        {
+          "class": "GangNotifierTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "LocalizedModuleYamlLanguageTest",
+          "found": true,
+          "module": "gangland-api",
+          "result": "PASS",
+          "testsRun": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-37",
+      "tests": [
+        {
+          "class": "GangMembershipViewCompatTest",
+          "found": true,
+          "module": "gangland-api",
+          "result": "PASS",
+          "testsRun": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [
+        {
+          "check": "events.gangs classes exist",
+          "result": "PASS"
+        }
+      ],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-38",
+      "tests": [
+        {
+          "class": "GangRulesReloadTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightRulesReloadTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [
+        "HAVE: ReloadCommand"
+      ],
+      "ownerStep": null,
+      "verdict": "HAVE"
+    },
+    {
+      "id": "GP-39",
+      "tests": [
+        {
+          "class": "GangStatsServiceTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [
+        {
+          "check": "W5-SM menus (player_profile.yml, gang_ranking.yml) present",
+          "result": "PASS"
+        }
+      ],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-40",
+      "tests": [
+        {
+          "class": "GangPurgeTaskTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-41",
+      "tests": [
+        {
+          "class": "FightDamageListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "FightSessionListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang-fights",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": "lethal hit by hand and by a Bartizan gun (acceptance F1 by hand)",
+      "verdict": "NEEDS_OWNER_STEP"
+    },
+    {
+      "id": "GP-42",
+      "tests": [
+        {
+          "class": "GangRallyCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-43",
+      "tests": [
+        {
+          "class": "GangStatsServiceTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangMembersCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-44",
+      "tests": [
+        {
+          "class": "FriendlyFireRuleTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    },
+    {
+      "id": "GP-45",
+      "tests": [
+        {
+          "class": "MemberJoinListenerTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "class": "GangRecruitingCommandTest",
+          "found": true,
+          "module": "gangland-features/gangland-gang",
+          "result": "PASS",
+          "testsRun": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "nonTestItems": [],
+      "ownerStep": null,
+      "verdict": "AUTOMATED_GREEN"
+    }
+  ],
+  "tokenCollisions": [
+    {
+      "token": "confirm",
+      "ourSurface": "/glw option gang disband <gang> confirm; gang transfer confirm branch (GangOptionContribution, GangTransferCommand)",
+      "competitorSurface": "`confirm` (gangsplus.md)",
+      "identical": true,
+      "note": "Generic English word, used as a confirm literal by both; no change planned."
+    },
+    {
+      "token": "player",
+      "ourSurface": "argument name in /glw option gang leader <gang> <player> and stats reset <player>; permission leaf gangland.command.player",
+      "competitorSurface": "`/g player` verb (gangsplus.md)",
+      "identical": false,
+      "note": "Competitor verb is not ours (ours is profile); the shared word is an argument name and a permission leaf, not a verb."
+    },
+    {
+      "token": "top",
+      "ourSurface": "none (ours is ranking)",
+      "competitorSurface": "`/g top`",
+      "identical": false,
+      "note": "Not identical."
+    },
+    {
+      "token": "levelup",
+      "ourSurface": "none (ours is upgrade)",
+      "competitorSurface": "`/g levelup`",
+      "identical": false,
+      "note": "Not identical."
+    },
+    {
+      "token": "regroup",
+      "ourSurface": "none (ours is rally)",
+      "competitorSurface": "`/g regroup <home>`",
+      "identical": false,
+      "note": "Not identical."
+    },
+    {
+      "token": "gangs-friendly-fire",
+      "ourSurface": "gangland.gang.pvp node, gang.friendly_fire column, Friendly_Fire YAML block",
+      "competitorSurface": "`gangs-friendly-fire`",
+      "identical": false,
+      "note": "Not identical."
+    },
+    {
+      "token": "{GANG}",
+      "ourSurface": "{glw_gang} chat token (gang_rules.yml Chat section); %gang% in messages",
+      "competitorSurface": "`{GANG}`",
+      "identical": false,
+      "note": "Not identical."
+    },
+    {
+      "token": "top_<stat>_<position>_<property>",
+      "ourSurface": "gang_* placeholders from GangPlaceholderContribution (gang_kdr, gang_kills, ...)",
+      "competitorSurface": "leaderboard placeholder pattern",
+      "identical": false,
+      "note": "Not identical."
+    }
+  ],
+  "docketChecks": [
+    {
+      "id": "CM-38",
+      "check": "ModuleInstallsTest on the merged head",
+      "result": "25 run, 0 failures, 0 errors"
+    }
+  ],
+  "flipped": []
+}
