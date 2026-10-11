@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,38 +64,48 @@ class QuartermasterYamlTest {
 	}
 
 	@Test
-	@DisplayName("every in-code Quartermaster fallback equals the shipped turf_messages.yml line (review blocker)")
+	@DisplayName("every in-code Quartermaster fallback in the turf module equals the shipped turf_messages.yml line (T-801)")
 	void fallbacksMatchShippedYaml() throws IOException {
-		YamlConfiguration yaml = load("/turf/turf_messages.yml");
-		Path              view = Path.of("src/main/java/org/luckyraven/gangland/turf/npc/view");
-		Map<String, String> fallbacks = new HashMap<>();
+		YamlConfiguration   yaml      = load("/turf/turf_messages.yml");
+		Path                root      = Path.of("src/main/java/org/luckyraven/gangland/turf");
+		Map<String, Set<String>> fallbacks = new HashMap<>();
 		Map<String, String> constants = new HashMap<>();
-		Pattern text     = Pattern.compile("\"(Quartermaster\\.[A-Za-z_]+)\",\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+		Pattern text     = Pattern.compile("\"(Quartermaster\\.[A-Za-z0-9_]+)\",\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
 		Pattern refusal  = Pattern.compile("case (\\w+) -> \"((?:[^\"\\\\]|\\\\.)*)\"");
-		Pattern constant = Pattern.compile("String (\\w+)\\s*= \"(Quartermaster\\.[A-Za-z_]+)\"");
+		Pattern constant = Pattern.compile("String (\\w+)\\s*= \"(Quartermaster\\.[A-Za-z0-9_]+)\"");
 
-		try (var files = Files.list(view)) {
+		List<String> sources = new ArrayList<>();
+		try (Stream<Path> files = Files.walk(root)) {
 			for (Path file : files.filter(f -> f.toString().endsWith(".java")).toList()) {
-				String source = Files.readString(file);
-				Matcher m = text.matcher(source);
-				while (m.find()) {
-					fallbacks.put(m.group(1), m.group(2));
-				}
-				Matcher c = constant.matcher(source);
-				while (c.find()) {
-					constants.put(c.group(1), c.group(2));
-				}
-				Matcher r = refusal.matcher(source);
-				while (r.find()) {
-					fallbacks.put(constants.getOrDefault(r.group(1), r.group(1)), r.group(2));
+				sources.add(Files.readString(file));
+			}
+		}
+		for (String source : sources) {
+			Matcher c = constant.matcher(source);
+			while (c.find()) {
+				constants.put(c.group(1), c.group(2));
+			}
+		}
+		for (String source : sources) {
+			Matcher m = text.matcher(source);
+			while (m.find()) {
+				fallbacks.computeIfAbsent(m.group(1), k -> new TreeSet<>()).add(m.group(2));
+			}
+			Matcher r = refusal.matcher(source);
+			while (r.find()) {
+				String key = constants.get(r.group(1));
+				if (key != null) {
+					fallbacks.computeIfAbsent(key, k -> new TreeSet<>()).add(r.group(2));
 				}
 			}
 		}
 
-		assertTrue(fallbacks.size() > 30, "the scan must find the panel fallbacks, found " + fallbacks.size());
-		for (Map.Entry<String, String> entry : fallbacks.entrySet()) {
+		assertTrue(fallbacks.size() > 40, "the scan must find the Quartermaster fallbacks, found " + fallbacks.size());
+		for (Map.Entry<String, Set<String>> entry : fallbacks.entrySet()) {
 			assertTrue(yaml.isSet(entry.getKey()), "missing " + entry.getKey());
-			assertEquals(yaml.getString(entry.getKey()), entry.getValue(), entry.getKey());
+			for (String line : entry.getValue()) {
+				assertEquals(yaml.getString(entry.getKey()), line, entry.getKey());
+			}
 		}
 	}
 
