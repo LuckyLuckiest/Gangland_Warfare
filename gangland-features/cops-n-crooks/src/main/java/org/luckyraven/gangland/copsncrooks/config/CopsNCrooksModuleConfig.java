@@ -47,6 +47,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawner;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.WantedTargetingManager;
 import org.luckyraven.gangland.copsncrooks.seam.CopsMoneyDropSource;
+import org.luckyraven.gangland.copsncrooks.seam.DefendingOwnTurf;
 import org.luckyraven.gangland.copsncrooks.seam.HeatWantedTracker;
 import org.luckyraven.gangland.copsncrooks.station.StationRegistry;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
@@ -54,7 +55,6 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.gang.GangMembership;
-import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
@@ -419,11 +419,7 @@ public class CopsNCrooksModuleConfig {
 		                                      container.getInstance(HeatLedger.class),
 		                                      container.getInstance(CrimeService.class),
 		                                      container.getInstance(KillCombo.class),
-		                                      container.getInstance(NpcMarkManager.class), (killer, at) -> {
-			                                      Turf turf = HeatLedger.contestedTurfAt(turfs, at);
-			                                      int  gang = gangs.gangIdOf(killer.getUniqueId());
-			                                      return turf != null && turf.getOwnerGangId() != null && gang != -1
-			                                             && turf.getOwnerGangId() == gang;
-		                                      }, victim -> civilians.getNpc(victim.getUniqueId()) != null));
+			                                      container.getInstance(NpcMarkManager.class), new DefendingOwnTurf(turfs, gangs),
+			                                      victim -> civilians.getNpc(victim.getUniqueId()) != null));
 	}
 }
