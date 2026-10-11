@@ -234,7 +234,7 @@ placeholders).
 - [ ] Callsign and bar layout at GUI scale 2: `[TAG] Guard n` sits above each guard, the health bar directly under it, and nothing overlaps.
 - [ ] Commander down: kill the commander guard; the rest of the squad holds for about 5 seconds and then resumes.
 - [ ] Shield guard blocks frontal hits: take hits from the front and from the side; the front hits do about half the damage.
-- [ ] Killing guards pays the attacker, never the owner: a rival kill drops cash worth half the guard price; an owner or ally kill drops nothing.
+- [ ] Killing guards pays the attacker, never the owner: a rival kill and a gangless player's kill each drop cash worth half the guard price; an owner or ally kill drops nothing.
 - [ ] Cop response: a cop hitting a protected player brings the nearby defenders onto the cop; defenders do not start a fight with a cop on their own.
 - [ ] Map zoom in/out limits: from 16, `zoom in` twice shows `Closest zoom already` at 8; from 16, `zoom out` three times shows `Widest zoom already` at 64.
 - [ ] Map border near a 512-block turf: the outline appears only within about 40 blocks of you, for about 10 seconds, and the server stays responsive.

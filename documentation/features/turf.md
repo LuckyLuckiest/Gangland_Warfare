@@ -161,7 +161,7 @@ nothing is spent.
   they do not pick the posts either.
 - **Leash.** A guard that is past the leash drops its target and walks back to the nearest post.
 - **Stand-down.** When a capture ends, survivors stop fighting and walk to the nearest post. When the contest fails, they
-  shout `Turf_Held` ("Turf's ours. Back to your posts."). When the turf is captured, they shout `Turf_Lost`, but the
+  shout `Shouts.Turf_Held` ("Turf's ours. Back to your posts."). When the turf is captured, they shout `Shouts.Turf_Lost`, but the
   owner change recalls the guards in the same tick, so that line is often cut short. After
   `Garrison.Stand_Down_Seconds` (8) the survivors leave.
 - **Return.** A failed contest sends the survivors back to the reserve, up to `Max_Reserve`, and the owners are told
@@ -197,7 +197,7 @@ The role names are the `AI.Combat.Roles` of the `turf_defender` type in `civilia
 |---|---|---|
 | Commander | 1 | When it falls, its squad holds for 5 seconds: the others stop moving and stop attacking, and the squad shouts once. |
 | Shield | 2 and 3 | Takes half of every hit that comes from inside the 90-degree cone in front of it. |
-| Marksman | 4 and 5 | Fires from its own band (12 to 24 blocks in `civilians.yml`), clamped under its gun's reach. With the shipped rifle that is 8 to 10 blocks. |
+| Marksman | 4 and 5 | Fires from its own band (12 to 24 blocks in `civilians.yml`), clamped under its gun's reach. With Bartizan's shipped rifle that is 8 to 10 blocks. |
 
 - Guards 6 and up are plain guards. A replacement past guard 5 is plain, and a fallen commander is not replaced by another
   commander.
@@ -205,12 +205,13 @@ The role names are the `AI.Combat.Roles` of the `turf_defender` type in `civilia
 
 ### Guard bounty
 
-A guard drops no civilian cash. A rival gang member, one who is neither in the owning gang nor allied to it, who kills a
-guard finds cash at its feet worth `Garrison.Bounty_Share` (0.5) of the guard's price, rounded down. The price is the
+A guard drops no civilian cash. Any player who is neither in the owning gang nor in a gang allied to it (a player with no
+gang included) who kills a guard finds cash at its feet worth `Garrison.Bounty_Share` (0.5) of the guard's price, rounded down. The price is the
 guard price in force when the capture starts, discount included. It is the price the owner pays for a guard now, not a
 stored record of what it paid. Nothing is minted: the owner has paid for the guard already. The owning gang and its allies
 get nothing. Set `Bounty_Share` to `0` to turn the bounty off. If a server enables an NPC drop in `money.yml`, that drop
-is paid on top of the bounty.
+is paid on top of the bounty. The bounty needs `money.yml` to have a default variation; without one the bounty is not paid
+and only a warning is logged.
 
 ### Cop response
 
