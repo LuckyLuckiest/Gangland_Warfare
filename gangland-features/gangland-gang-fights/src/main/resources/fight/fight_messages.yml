@@ -21,5 +21,42 @@
 # end Guards
 
 # ---------------- Arenas ----------------
-# /glw arena texts.
+# /glw arena texts. Placeholders: %name% %a% %b% %volume% %min% %side% %other% %world% %x% %y% %z% %n% %count% %seconds%.
+Arenas:
+   Players_Only: "&cOnly a player can build arenas."
+   Name_Invalid: "&cAn arena name is one word of letters, digits, - or _ (up to 24)."
+   Create_Exists: "&cThere is already an arena called %name%."
+   Created: "&aStarted arena %name%. Stand at a corner and run /glw arena corner twice, then spawn a, spawn b, exit and finish."
+   No_Draft: "&cStart one first with /glw arena create <name>."
+   Corner_Set: "&aCorner %n% set at %x% %y% %z%."
+   Size: "&aThe box is %x% x %y% x %z% blocks (%volume% in all)."
+   Size_Incomplete: "&cSet both corners first with /glw arena corner."
+   Spawn_Side_Invalid: "&cThe side is a or b."
+   Spawn_Added: "&aSpawn added for side %side% (%count% so far)."
+   Exit_Set: "&aExit set where you stand."
+   Finish_No_Corners: "&cSet both corners first with /glw arena corner."
+   Finish_World_Missing: "&cThe world %world% is not loaded."
+   Finish_Too_Small: "&cThe box has %volume% blocks, an arena needs at least %min%."
+   Finish_No_Spawn: "&cSide %side% has no spawn yet; stand inside the box and run /glw arena spawn."
+   Finish_Spawn_Outside: "&cA spawn of side %side% is outside the box."
+   Finish_No_Exit: "&cSet the exit first with /glw arena exit."
+   Finish_Exit_World: "&cThe world %world% of the exit is not loaded."
+   Finish_Overlap: "&cThe box overlaps the arena %other%."
+   Finish_Name_Taken: "&cThere is already an arena called %name%."
+   Saved: "&aArena %name% saved (%a% v %b% spawns). Place arenas outside turfs."
+   Save_Failed: "&cThe arena could not be written to arenas.yml; see the console."
+   Not_Found: "&cThere is no arena called %name%."
+   List_Header: "&6Arenas:"
+   List_Entry: "&e%name% &7(%state%, %world%, %a% v %b% spawns)"
+   List_Empty: "&7There are no arenas yet."
+   State_On: "&aon"
+   State_Off: "&coff"
+   Tp: "&aTeleported to the exit of %name%."
+   Tp_World_Missing: "&cThe world %world% is not loaded."
+   Enabled: "&aArena %name% is open for fights."
+   Disabled: "&aArena %name% is closed."
+   Deleted: "&aArena %name% deleted."
+   Reloaded: "&aArenas reloaded (%count% loaded)."
+   Show_Started: "&aOutlining the box for %seconds% seconds."
+   Show_Nothing: "&cName an arena, or finish both corners of your draft first."
 # end Arenas

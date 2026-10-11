@@ -25,6 +25,9 @@ public record ArenaBox(String world, RegionShape.Cuboid cuboid) {
 
 	/** true when both boxes are in one world and share at least one block. */
 	public boolean overlaps(ArenaBox other) {
-		return false;
+		var a = cuboid;
+		var b = other.cuboid;
+		return world.equals(other.world) && a.minX() <= b.maxX() && b.minX() <= a.maxX() && a.minY() <= b.maxY()
+		       && b.minY() <= a.maxY() && a.minZ() <= b.maxZ() && b.minZ() <= a.maxZ();
 	}
 }

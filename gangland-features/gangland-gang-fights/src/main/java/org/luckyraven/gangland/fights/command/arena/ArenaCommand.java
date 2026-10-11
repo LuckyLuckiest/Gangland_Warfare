@@ -3,6 +3,10 @@ package org.luckyraven.gangland.fights.command.arena;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.fights.FightRules;
+import org.luckyraven.gangland.fights.arena.ArenaDrafts;
+import org.luckyraven.gangland.fights.arena.ArenaMessages;
+import org.luckyraven.gangland.fights.arena.ArenaRegistry;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.keystone.command.argument.Argument;
 
@@ -16,8 +20,12 @@ import java.util.Map;
 @CommandHandler
 public final class ArenaCommand extends Command {
 
-	public ArenaCommand(JavaPlugin plugin) {
+	private final ArenaDeps deps;
+
+	public ArenaCommand(JavaPlugin plugin, ArenaRegistry registry, ArenaDrafts drafts, ArenaMessages text,
+	                    FightRules rules) {
 		super(plugin, "arena", false);
+		this.deps = new ArenaDeps(registry, drafts, text, rules);
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -39,19 +47,19 @@ public final class ArenaCommand extends Command {
 		var tree   = getArgumentTree();
 		var root   = getArgument();
 
-		root.addAllSubArguments(List.of(new ArenaCreateCommand(plugin, tree, root),
-		                                new ArenaCornerCommand(plugin, tree, root),
-		                                new ArenaSpawnCommand(plugin, tree, root),
-		                                new ArenaExitCommand(plugin, tree, root),
-		                                new ArenaSizeCommand(plugin, tree, root),
-		                                new ArenaFinishCommand(plugin, tree, root),
-		                                new ArenaShowCommand(plugin, tree, root),
-		                                new ArenaListCommand(plugin, tree, root),
-		                                new ArenaTpCommand(plugin, tree, root),
-		                                new ArenaOnCommand(plugin, tree, root),
-		                                new ArenaOffCommand(plugin, tree, root),
-		                                new ArenaDeleteCommand(plugin, tree, root),
-		                                new ArenaReloadCommand(plugin, tree, root)));
+		root.addAllSubArguments(List.of(new ArenaCreateCommand(plugin, tree, root, deps),
+		                                new ArenaCornerCommand(plugin, tree, root, deps),
+		                                new ArenaSpawnCommand(plugin, tree, root, deps),
+		                                new ArenaExitCommand(plugin, tree, root, deps),
+		                                new ArenaSizeCommand(plugin, tree, root, deps),
+		                                new ArenaFinishCommand(plugin, tree, root, deps),
+		                                new ArenaShowCommand(plugin, tree, root, deps),
+		                                new ArenaListCommand(plugin, tree, root, deps),
+		                                new ArenaTpCommand(plugin, tree, root, deps),
+		                                new ArenaOnCommand(plugin, tree, root, deps),
+		                                new ArenaOffCommand(plugin, tree, root, deps),
+		                                new ArenaDeleteCommand(plugin, tree, root, deps),
+		                                new ArenaReloadCommand(plugin, tree, root, deps)));
 	}
 
 	@Override
