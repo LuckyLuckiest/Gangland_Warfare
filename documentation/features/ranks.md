@@ -73,7 +73,7 @@ rank name logs one warning and turns that entry off. The node lists and the top 
 | `Chat`                        | member      | `/glw gang chat` (`gangland.gang.chat`); not checked yet: every member may chat |
 | `Deposit`                     | member      | `/glw gang deposit` |
 | `Safehouse`                   | member      | `/glw gang safehouse`; `rally join` is open to every invited member (not checked yet) |
-| `Fight`                       | officer     | gang fights (reserved; not a command in this release) |
+| `Fight`                       | officer     | `/glw gang fight` challenges, accepts and stakes (gang-fights module) |
 | `Rally`                       | officer     | `/glw gang rally` |
 | `Invite`                      | officer     | `/glw gang invite` |
 | `Kick`                        | officer     | `/glw gang kick` |
@@ -81,7 +81,7 @@ rank name logs one warning and turns that entry off. The node lists and the top 
 | `Demote`                      | officer     | `/glw gang demote` |
 | `Withdraw`                    | officer     | `/glw gang withdraw` |
 | `Safehouse_Manage`            | officer     | `/glw gang safehouse set`, `remove` |
-| `Recruiting`                  | officer     | `/glw gang recruiting`; checked as `gangland.gang.invite` (Invite minimum) in this release |
+| `Recruiting`                  | officer     | `/glw gang recruiting` (`gangland.gang.recruiting`) |
 | `Description`                 | officer     | `/glw gang desc` |
 | `Ally`                        | owner       | `/glw gang ally ...` |
 | `Rename`                      | owner       | `/glw gang rename` |

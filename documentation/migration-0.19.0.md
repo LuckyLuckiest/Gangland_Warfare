@@ -83,6 +83,10 @@ These columns and tables are added on the first boot. Existing rows keep today's
   into rival turf, and while your gang is in any turf fight (`turf_rules.yml` `Teleport_Guard.Buffer_Blocks`).
 - `/glw turf create` refuses worlds where gangs are disabled.
 
+**Gang recruiting**
+
+- `/glw gang recruiting` now checks `gangland.gang.recruiting` (`Ranks.Minimum.Recruiting`, officer) instead of the invite node. A custom rank below officer holding only `gangland.gang.invite` needs `/glw rank permission add <rank> gangland.gang.recruiting`.
+
 **Gang levels and caps**
 
 - A level now needs held-turf XP and a bank fee. `/glw gang upgrade` shows what is missing; `/glw gang upgrade confirm` pays.
