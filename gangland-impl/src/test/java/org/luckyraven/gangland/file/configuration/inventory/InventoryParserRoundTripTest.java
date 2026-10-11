@@ -414,6 +414,15 @@ class InventoryParserRoundTripTest {
 	}
 
 	@Test
+	@DisplayName("player_profile.yml - 3 rows, stat slots render their placeholders' materials")
+	void playerProfile() throws IOException {
+		ChestMenu menu = registerAndBuild("player_profile");
+
+		assertEquals(27, menu.bukkitInventory().getSize());
+		assertEquals(Material.DIAMOND_SWORD, menu.bukkitInventory().getItem(12).getType());
+	}
+
+	@Test
 	@DisplayName("phone_banking.yml — 3 rows, Condition-driven bank slot renders the True branch")
 	void phoneBanking() throws IOException {
 		registerNavigationTarget("phone");
