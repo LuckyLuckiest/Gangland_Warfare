@@ -120,6 +120,14 @@ class GangConfigBeanGraphTest {
 
 		factory.registerConfiguration(FixtureGangMembershipProducer.class);
 		factory.registerConfiguration(GangConfig.class);
+		// the seven lane configurations of the gang parity wave (0.19.0) produce the beans GangConfig consumes
+		factory.registerConfiguration(GangMembershipConfig.class);
+		factory.registerConfiguration(GangLevelConfig.class);
+		factory.registerConfiguration(GangCombatConfig.class);
+		factory.registerConfiguration(GangSafehouseConfig.class);
+		factory.registerConfiguration(GangChatConfig.class);
+		factory.registerConfiguration(GangStatsConfig.class);
+		factory.registerConfiguration(GangUxConfig.class);
 		// Harmless no-op once GangMembershipInstaller isn't @Configuration-annotated any more
 		// (BeanFactory.registerConfiguration silently rejects a non-annotated class) — kept so this same test
 		// reproduces the pre-fix crash unchanged when the fix is temporarily reverted for the red-first check.

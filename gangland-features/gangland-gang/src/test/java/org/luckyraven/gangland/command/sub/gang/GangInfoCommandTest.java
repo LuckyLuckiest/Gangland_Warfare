@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -205,7 +206,7 @@ class GangInfoCommandTest {
 
 	private Argument info() {
 		return new GangInfoCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), gangManager,
-		                           userManager, messages);
+		                           userManager, messages, new GangStatsService());
 	}
 
 	/** Plain text of every line sent to the player through {@code sendMessage}, in order. */

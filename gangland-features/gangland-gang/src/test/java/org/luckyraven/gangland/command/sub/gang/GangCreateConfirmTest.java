@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -138,7 +139,7 @@ class GangCreateConfirmTest {
 
 		command = new GangCreateCommand(plugin, new Tree<>(), parent, userManager, memberManager, gangManager,
 		                                rankManager, repositoryRegistry, () -> Pattern.compile("[A-Za-z0-9_]{3,16}"),
-		                                messages);
+		                                messages, new GangMembershipService());
 	}
 
 	@AfterEach

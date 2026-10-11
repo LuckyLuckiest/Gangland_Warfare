@@ -102,6 +102,7 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 			int         gangId  = row.gangId();
 			int         allieId = row.allyId();
 			long        since   = row.since();
+			boolean     friendlyFire = row.friendlyFire();
 
 			Gang gang = gangLookup.findById(gangId);
 			Gang ally = gangLookup.findById(allieId);
@@ -113,7 +114,7 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 				continue;
 			}
 
-			alliances.add(new GangAlliance(gang, ally, since));
+			alliances.add(new GangAlliance(gang, ally, since, friendlyFire));
 		}
 
 		return alliances;
@@ -121,12 +122,14 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 
 	/** One alliance row, ids and timestamp read through {@link Number}; a SQL NULL reads as 0 (T-199). */
 	public static AllianceRow fromRow(Object[] result) {
+		// friendly_fire was added in 0.19.0: an older or shorter row reads as false
 		return new AllianceRow(GangRepository.num(result[0]).intValue(), GangRepository.num(result[1]).intValue(),
-		                       GangRepository.num(result[2]).longValue());
+		                       GangRepository.num(result[2]).longValue(),
+		                       result.length > 3 && GangRepository.flag(result[3]));
 	}
 
-	/** The three columns of a {@code gang_alliance} row. */
-	public record AllianceRow(int gangId, int allyId, long since) { }
+	/** The columns of a {@code gang_alliance} row. */
+	public record AllianceRow(int gangId, int allyId, long since, boolean friendlyFire) { }
 
 	@Override
 	protected <E> Consumer<E> processSave() {

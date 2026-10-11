@@ -40,16 +40,16 @@
 		"description": "Shows gang balance."
 	},
 	"gang_members": {
-		"usage": "/glw gang members",
-		"description": "Lists every gang member and their current rank."
+		"usage": "/glw gang members [page]",
+		"description": "Your gang's members grouped by rank."
 	},
 	"gang_list": {
 		"usage": "/glw gang list [page]",
 		"description": "List every gang, most members first."
 	},
 	"gang_info": {
-		"usage": "/glw gang info [gang]",
-		"description": "Show a gang's public card: members, owner, allies."
+		"usage": "/glw gang info <gang|player>",
+		"description": "A gang card by gang name or by a player's name."
 	},
 	"gang_chat": {
 		"usage": "/glw gang chat [message]",
@@ -96,8 +96,96 @@
 		"description": "Transfers gang ownership to another member."
 	},
 	"gang_ally_remove": {
-		"usage": "/glw gang ally abandon <id>",
-		"description": "Abandon alliances to that gang."
+		"usage": "/glw gang ally abandon <gang>",
+		"description": "End an alliance with a gang (by name)."
+	},
+	"gang_upgrade": {
+		"usage": "/glw gang upgrade",
+		"description": "See what the next gang level costs: the XP and the money still missing."
+	},
+	"gang_upgrade_confirm": {
+		"usage": "/glw gang upgrade confirm",
+		"description": "Claim the next gang level when the XP bar is full; the fee is paid from the gang bank."
+	},
+	"gang_safehouse": {
+		"usage": "/glw gang safehouse [name]",
+		"description": "Teleport to one of your gang's safehouses, after a short warm-up. Without a name, list them."
+	},
+	"gang_safehouse_set": {
+		"usage": "/glw gang safehouse set <name>",
+		"description": "Set a safehouse where you stand (the number grows with the gang level)."
+	},
+	"gang_safehouse_remove": {
+		"usage": "/glw gang safehouse remove <name>",
+		"description": "Remove a safehouse."
+	},
+	"gang_safehouse_list": {
+		"usage": "/glw gang safehouse list",
+		"description": "List your gang's safehouses."
+	},
+	"gang_rally": {
+		"usage": "/glw gang rally [safehouse]",
+		"description": "Ask your online gang to join you, or to meet at a safehouse."
+	},
+	"gang_rally_join": {
+		"usage": "/glw gang rally join",
+		"description": "Answer your gang's rally call (a normal gang teleport with a warm-up)."
+	},
+	"gang_pvp": {
+		"usage": "/glw gang pvp <on|off>",
+		"description": "Let members of your gang hurt each other, or stop it."
+	},
+	"gang_ally_pvp": {
+		"usage": "/glw gang ally pvp <gang> <on|off>",
+		"description": "Let your gang and an ally hurt each other; it works only when both gangs turned it on."
+	},
+	"gang_notice": {
+		"usage": "/glw gang notice <text|clear>",
+		"description": "Set the notice members see when they log in, or clear it."
+	},
+	"gang_chat_allies": {
+		"usage": "/glw gang chat allies [message]",
+		"description": "Talk to your gang and its allies. Without a message, switch ally chat on or off."
+	},
+	"gang_ranking": {
+		"usage": "/glw gang ranking [stat] [page]",
+		"description": "The gang ranking by kills, kdr, assists, level, members, online, turfs or fight wins."
+	},
+	"gang_profile": {
+		"usage": "/glw gang profile [player]",
+		"description": "A player's gang card: gang, rank, kills, deaths, assists."
+	},
+	"option_gang_rank": {
+		"usage": "/glw option gang rank <target> <rank>",
+		"description": "Staff: set the rank of a member of your gang."
+	},
+	"option_gang_disband": {
+		"usage": "/glw option gang disband <gang> [confirm]",
+		"description": "Staff: disband a gang (members are paid out as in a normal disband)."
+	},
+	"option_gang_leader": {
+		"usage": "/glw option gang leader <gang> <player>",
+		"description": "Staff: make a member the gang's leader."
+	},
+	"option_gang_bank": {
+		"usage": "/glw option gang bank <gang> <balance|give|take|reset> [amount]",
+		"description": "Staff: read or change a gang bank; every change is logged."
+	},
+	"option_gang_safehouse": {
+		"usage": "/glw option gang safehouse <gang> <list|tp|remove> [name]",
+		"description": "Staff: list, visit or remove a gang's safehouses."
+	},
+	"option_gang_stats": {
+		"usage": "/glw option gang stats reset <player>",
+		"description": "Staff: reset a player's gang kills, deaths and assists."
+	},
+	"option_gang_spy": {
+		"usage": "/glw option gang spy",
+		"description": "Staff: read gang and ally chat."
+	},
+	"option_gang_purge": {
+		"usage": "/glw option gang purge <preview|run>",
+		"description": "Staff: list or disband gangs inactive for Purge.Inactive_Days."
 	},
 	"rank": {
 		"usage": "/glw rank",

@@ -20,11 +20,17 @@ public class MemberTable extends Table<Member> {
 		Attribute<Double>  contribution = new Attribute<>("contribution", false, Double.class);
 		Attribute<Integer> rankId       = new Attribute<>("rank_id", false, Integer.class);
 		Attribute<Long>    joinDate     = new Attribute<>("join_date", false, Long.class);
+		Attribute<Integer> kills        = new Attribute<>("kills", false, Integer.class);
+		Attribute<Integer> deaths       = new Attribute<>("deaths", false, Integer.class);
+		Attribute<Integer> assists      = new Attribute<>("assists", false, Integer.class);
 
 		gangId.setDefaultValue(-1);
 		contribution.setDefaultValue(0D);
 		joinDate.setDefaultValue(-1L);
 		rankId.setDefaultValue(-1);
+		kills.setDefaultValue(0);
+		deaths.setDefaultValue(0);
+		assists.setDefaultValue(0);
 
 		uuid.setForeignKey(userTable.get("uuid"), userTable);
 		rankId.setForeignKey(rankTable.get("id"), rankTable);
@@ -34,12 +40,16 @@ public class MemberTable extends Table<Member> {
 		this.addAttribute(contribution);
 		this.addAttribute(rankId);
 		this.addAttribute(joinDate);
+		this.addAttribute(kills);
+		this.addAttribute(deaths);
+		this.addAttribute(assists);
 	}
 
 	@Override
 	public Object[] getData(Member data) {
 		return new Object[]{data.getUuid().toString(), data.getGangId(), data.getContribution(),
-		                    data.getRank() == null ? -1 : data.getRank().getUsedId(), data.getGangJoinDateLong()};
+		                    data.getRank() == null ? -1 : data.getRank().getUsedId(), data.getGangJoinDateLong(), data.getKills(),
+		                    data.getDeaths(), data.getAssists()};
 	}
 
 	@Override

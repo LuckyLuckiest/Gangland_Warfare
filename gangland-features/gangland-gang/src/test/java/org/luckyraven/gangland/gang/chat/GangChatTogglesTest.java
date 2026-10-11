@@ -26,15 +26,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /** Gang chat: the per-player toggle, who receives a gang line, and the line itself (W2-P2). */
-@DisplayName("GangChatChannel - gang chat toggle, recipients and line format")
-class GangChatChannelTest {
+@DisplayName("GangChatToggles - gang chat toggle, recipients and line format")
+class GangChatTogglesTest {
 
 	@TempDir(cleanup = CleanupMode.NEVER)
 	Path tempDir;
 
 	private MockedStatic<Bukkit>   bukkit;
 	private MockedStatic<Settings> settings;
-	private GangChatChannel        channel;
+	private GangChatToggles        channel;
 	private GangMessages           messages;
 
 	@BeforeEach
@@ -55,7 +55,7 @@ class GangChatChannelTest {
 		settings.when(Settings::getLanguagePicked).thenReturn("en");
 		bukkit = mockStatic(Bukkit.class);
 
-		channel  = new GangChatChannel();
+		channel  = new GangChatToggles();
 		messages = W2P2Messages.shipped(tempDir);
 	}
 

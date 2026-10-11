@@ -1,6 +1,12 @@
 package org.luckyraven.gangland.data.gang;
 
+import org.bukkit.Location;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -26,4 +32,62 @@ public interface GangMembershipView {
 	 * @return the gang's display name, or empty when {@code gangId} names no real gang.
 	 */
 	Optional<String> nameOf(int gangId);
+
+	/**
+	 * Whether {@code attacker} may not hurt {@code victim} at {@code at}. The default is the pre-2.6 rule: same gang or
+	 * allied.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	default boolean pvpBlocked(UUID attacker, UUID victim, @Nullable Location at) {
+		int idA = gangIdOf(attacker);
+		int idB = gangIdOf(victim);
+
+		return (idA == idB && idA != -1) || gangsAllied(idA, idB);
+	}
+
+	/**
+	 * @return every real gang id; empty by default.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	default Set<Integer> gangIds() {
+		return Collections.emptySet();
+	}
+
+	/**
+	 * @return the id of the gang with this name, or {@code -1}.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	default int gangIdByName(String name) {
+		return -1;
+	}
+
+	/**
+	 * @return the members of the gang; empty by default.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	default List<UUID> membersOf(int gangId) {
+		return Collections.emptyList();
+	}
+
+	/**
+	 * @return the gang's owner, or empty.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	default Optional<UUID> ownerOf(int gangId) {
+		return Optional.empty();
+	}
+
+	/**
+	 * @return the channel the player's chat goes to; {@link GangChatChannel#PUBLIC} by default.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	default GangChatChannel chatChannelOf(UUID player) {
+		return GangChatChannel.PUBLIC;
+	}
 }

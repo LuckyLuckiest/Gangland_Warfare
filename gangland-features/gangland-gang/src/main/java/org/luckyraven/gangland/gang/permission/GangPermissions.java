@@ -54,7 +54,46 @@ public final class GangPermissions {
 	/** Buy guards and boosts at the Quartermaster (W2-Q). Not in ALL until W2-K commit 5. */
 	public static final String TURF_UPGRADE = "gangland.turf.upgrade";
 
-	public static final List<String> ALL = List.of(WITHDRAW, DEPOSIT, RENAME, DESCRIPTION, DISPLAY, COLOR, INVITE, ALLY, TURF_UPGRADE);
+	/** Remove a member from the gang. */
+	public static final String KICK = PREFIX + "kick";
+	/** Promote a member. */
+	public static final String PROMOTE = PREFIX + "promote";
+	/** Demote a member. */
+	public static final String DEMOTE = PREFIX + "demote";
+	/** Use gang and ally chat. */
+	public static final String CHAT = PREFIX + "chat";
+	/** Teleport to a gang safehouse. */
+	public static final String SAFEHOUSE = PREFIX + "safehouse";
+	/** Set and remove gang safehouses. */
+	public static final String SAFEHOUSE_MANAGE = PREFIX + "safehouse.manage";
+	/** Call a rally. */
+	public static final String RALLY = PREFIX + "rally";
+	/** Switch friendly fire inside the gang. */
+	public static final String PVP = PREFIX + "pvp";
+	/** Switch friendly fire with an ally. */
+	public static final String ALLY_PVP = PREFIX + "ally.pvp";
+	/** Claim the next gang level. */
+	public static final String UPGRADE = PREFIX + "upgrade";
+	/** Start gang fights. */
+	public static final String FIGHT = PREFIX + "fight";
+	/** Set the gang notice. */
+	public static final String NOTICE = PREFIX + "notice";
+	/** Open and close recruiting. */
+	public static final String RECRUITING = PREFIX + "recruiting";
+
+	/**
+	 * Server-permission nodes that ranks do not carry (not in {@link #ALL}): read another gang's balance, see the wealth
+	 * ranking, read gang chat as staff, and run commands during a gang fight.
+	 */
+	public static final String BALANCE_OTHERS = PREFIX + "balance.others";
+	public static final String RANKING_WEALTH = PREFIX + "ranking.wealth";
+	public static final String SPY = "gangland.admin.gang.spy";
+	public static final String FIGHT_BYPASS_COMMANDS = PREFIX + "fight.bypass_commands";
+
+	public static final List<String> ALL = List.of(WITHDRAW, DEPOSIT, RENAME, DESCRIPTION, DISPLAY, COLOR, INVITE, ALLY,
+	                                               TURF_UPGRADE, KICK, PROMOTE, DEMOTE, CHAT, SAFEHOUSE,
+	                                               SAFEHOUSE_MANAGE, RALLY, PVP, ALLY_PVP, UPGRADE, FIGHT, NOTICE,
+	                                               RECRUITING);
 
 	/**
 	 * Staff override that skips the rank-hierarchy checks of promote, demote and {@code option gang rank}. Kept out of

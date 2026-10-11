@@ -4,7 +4,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.chat.ChatChannels;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
+import org.luckyraven.gangland.gang.combat.FriendlyFirePolicy;
+import org.luckyraven.gangland.gang.membership.MembershipQueries;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.database.repositories.meta.GangMigration;
 import org.luckyraven.gangland.gang.contract.GangMessageContract;
@@ -84,6 +87,12 @@ public final class GangConfig {
 		return rules;
 	}
 
+	/** Where gangs exist (GR-40): {@code Gang.Enable} plus {@code gang_rules.yml} {@code Worlds.Disabled}. */
+	@Bean
+	public GangWorldPolicy gangWorldPolicy(GangRules rules) {
+		return new GangWorldPolicy(rules);
+	}
+
 	@Bean
 	public GangMessages gangMessages(GangModuleFiles files, FileManager fileManager) {
 		GangMessages messages = new GangMessages(fileManager);
@@ -124,8 +133,8 @@ public final class GangConfig {
 
 	/** Who has gang chat switched on (W2-P2 adds the delivery). */
 	@Bean
-	public GangChatChannel gangChatChannel() {
-		return new GangChatChannel();
+	public GangChatToggles gangChatChannel() {
+		return new GangChatToggles();
 	}
 
 	@Bean
@@ -242,7 +251,9 @@ public final class GangConfig {
 	 */
 	@Bean
 	public GangMembershipInstaller gangMembershipInstaller(GangMembership gangMembership, MemberManager memberManager,
-	                                                        GangManager gangManager) {
-		return new GangMembershipInstaller(gangMembership, memberManager, gangManager);
+	                                                        GangManager gangManager, MembershipQueries queries,
+	                                                        FriendlyFirePolicy friendlyFire, ChatChannels chatChannels) {
+		return new GangMembershipInstaller(gangMembership, memberManager, gangManager, queries, friendlyFire,
+		                                   chatChannels);
 	}
 }

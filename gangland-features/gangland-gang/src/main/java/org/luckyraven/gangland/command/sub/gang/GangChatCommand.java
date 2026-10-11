@@ -9,7 +9,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -33,11 +33,11 @@ final class GangChatCommand extends SubArgument {
 	private final MemberManager         memberManager;
 	private final GangManager           gangManager;
 	private final GangMessages          messages;
-	private final GangChatChannel       channel;
+	private final GangChatToggles       channel;
 
 	GangChatCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                GangMessages messages, GangChatChannel channel) {
+	                GangMessages messages, GangChatToggles channel) {
 		super(gangland, "chat", tree, parent);
 		this.gangland      = gangland;
 		this.userManager   = userManager;
@@ -46,6 +46,7 @@ final class GangChatCommand extends SubArgument {
 		this.messages      = messages;
 		this.channel       = channel;
 
+		this.addSubArgument(new AlliesStub(gangland, tree, this));
 		this.addSubArgument(messageArgument(gangland, tree));
 	}
 
@@ -102,6 +103,24 @@ final class GangChatCommand extends SubArgument {
 	private int gangIdOf(Player player) {
 		User<Player> user = userManager.getUser(player);
 		return user != null && user.hasGang() ? user.getGangId() : -1;
+	}
+
+	/** {@code /glw gang chat allies [message]}: gang and ally chat. Stub: lane W5-C fills the body. */
+	private static final class AlliesStub extends SubArgument {
+
+		AlliesStub(JavaPlugin gangland, Tree<Argument> tree, Argument parent) {
+			super(gangland, "allies", tree, parent);
+
+			OptionalArgument message = new OptionalArgument(gangland, tree);
+			message.setDisplayName("message");
+			message.setGreedy(true);
+			this.addSubArgument(message);
+		}
+
+		@Override
+		protected TriConsumer<Argument, CommandSender, String[]> action() {
+			return null;
+		}
 	}
 
 }

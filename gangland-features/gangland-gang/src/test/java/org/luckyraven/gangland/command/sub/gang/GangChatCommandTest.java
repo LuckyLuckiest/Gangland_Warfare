@@ -19,7 +19,7 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.support.W2P2Messages;
@@ -50,7 +50,7 @@ class GangChatCommandTest {
 	private GangManager            gangManager;
 	private UserManager<Player>    userManager;
 	private MemberManager          memberManager;
-	private GangChatChannel        channel;
+	private GangChatToggles        channel;
 	private Player                 rex;
 	private Player                 mate;
 	private Player                 foe;
@@ -88,7 +88,7 @@ class GangChatCommandTest {
 		gangManager   = mock(GangManager.class);
 		userManager   = mock(UserManager.class);
 		memberManager = mock(MemberManager.class);
-		channel       = new GangChatChannel();
+		channel       = new GangChatToggles();
 
 		Gang vipers = mock(Gang.class);
 		when(vipers.getId()).thenReturn(1);
@@ -180,7 +180,8 @@ class GangChatCommandTest {
 
 	/** The {@code <message>} child of {@code chat}; a message is sent through it, not the parent. */
 	private Argument messageArgument() {
-		return chat().getNode().getChildren().get(0).getData();
+		// children: the literal "allies" stub first, the optional <message> last
+		return chat().getNode().getChildren().get(1).getData();
 	}
 
 	/** A player in gang {@code gangId}, known to the user manager and to the online list. */

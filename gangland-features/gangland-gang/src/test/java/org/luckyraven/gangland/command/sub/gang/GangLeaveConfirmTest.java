@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.combat.CombatTag;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -102,7 +104,8 @@ class GangLeaveConfirmTest {
 		when(rankManager.get(anyString())).thenReturn(mock(Rank.class));
 
 		leave = new GangLeaveCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), userManager,
-		                             memberManager, gangManager, rankManager);
+		                             memberManager, gangManager, rankManager, new GangMembershipService(),
+		                             new CombatTag());
 	}
 
 	@AfterEach

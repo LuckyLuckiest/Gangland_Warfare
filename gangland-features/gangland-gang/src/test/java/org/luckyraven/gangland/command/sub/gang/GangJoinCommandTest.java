@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -234,7 +235,7 @@ class GangJoinCommandTest {
 
 	private Argument join() {
 		return new GangJoinCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), userManager,
-		                           memberManager, gangManager, rankManager, messages);
+		                           memberManager, gangManager, rankManager, messages, new GangMembershipService());
 	}
 
 	private Argument nameArgument() {

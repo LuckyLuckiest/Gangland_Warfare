@@ -15,7 +15,7 @@ import java.util.function.ToIntFunction;
  * Who has gang chat switched on (in memory; forgotten on quit), and the gang line itself. Callers pass the online
  * list and the gang lookup, so this class holds no Bukkit statics.
  */
-public final class GangChatChannel {
+public final class GangChatToggles {
 
 	private final Set<UUID> on = ConcurrentHashMap.newKeySet();
 

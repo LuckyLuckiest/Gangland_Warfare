@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangDisbandService;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
@@ -62,12 +63,17 @@ class GangDeleteCommand extends SubArgument {
 
 	private final ConfirmArgument confirmDelete;
 
+	private final GangDisbandService disbandService;
+
 	protected GangDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                            MemberManager memberManager, GangManager gangManager,
 	                            RankManager rankManager, RepositoryRegistry repositoryRegistry,
-	                            GangMessages messages) {
+	                            GangMessages messages,
+								GangDisbandService disbandService) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
+
+		this.disbandService = disbandService;
 
 		this.gangland           = gangland;
 		this.tree               = tree;

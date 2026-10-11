@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -35,9 +36,14 @@ class GangInfoCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final GangMessages        messages;
 
+	private final GangStatsService statsService;
+
 	protected GangInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, GangManager gangManager,
-	                          @Qualifier("online") UserManager<Player> userManager, GangMessages messages) {
+	                          @Qualifier("online") UserManager<Player> userManager, GangMessages messages,
+								GangStatsService statsService) {
 		super(gangland, "info", tree, parent);
+
+		this.statsService = statsService;
 
 		this.gangManager = gangManager;
 		this.userManager = userManager;

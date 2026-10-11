@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -42,10 +43,15 @@ final class GangJoinCommand extends SubArgument {
 	private final GangMessages        messages;
 	private final RankManager         rankManager;
 
+	private final GangMembershipService membershipService;
+
 	GangJoinCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                RankManager rankManager, GangMessages messages) {
+	                RankManager rankManager, GangMessages messages,
+								GangMembershipService membershipService) {
 		super(gangland, "join", tree, parent);
+
+		this.membershipService = membershipService;
 		this.gangland      = gangland;
 		this.userManager   = userManager;
 		this.memberManager = memberManager;

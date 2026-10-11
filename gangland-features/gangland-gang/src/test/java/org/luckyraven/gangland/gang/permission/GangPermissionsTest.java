@@ -33,11 +33,17 @@ import static org.mockito.Mockito.when;
 class GangPermissionsTest {
 
 	@Test
-	@DisplayName("GR-03 / PLAN 15.4: ALL lists the eight gangland.gang.* nodes plus gangland.turf.upgrade (W2-Q)")
+	@DisplayName("GR-03 / PLAN 15.4: ALL lists the eight gangland.gang.* nodes, gangland.turf.upgrade (W2-Q) and the "
+	             + "rank-carried nodes of the gang parity wave (0.19.0)")
 	void all_holdsTheEightGangNodes() {
 		assertEquals(List.of(GangPermissions.WITHDRAW, GangPermissions.DEPOSIT, GangPermissions.RENAME,
 		                     GangPermissions.DESCRIPTION, GangPermissions.DISPLAY, GangPermissions.COLOR,
-		                     GangPermissions.INVITE, GangPermissions.ALLY, GangPermissions.TURF_UPGRADE),
+		                     GangPermissions.INVITE, GangPermissions.ALLY, GangPermissions.TURF_UPGRADE,
+		                     GangPermissions.KICK, GangPermissions.PROMOTE, GangPermissions.DEMOTE,
+		                     GangPermissions.CHAT, GangPermissions.SAFEHOUSE, GangPermissions.SAFEHOUSE_MANAGE,
+		                     GangPermissions.RALLY, GangPermissions.PVP, GangPermissions.ALLY_PVP,
+		                     GangPermissions.UPGRADE, GangPermissions.FIGHT, GangPermissions.NOTICE,
+		                     GangPermissions.RECRUITING),
 		             GangPermissions.ALL);
 	}
 
