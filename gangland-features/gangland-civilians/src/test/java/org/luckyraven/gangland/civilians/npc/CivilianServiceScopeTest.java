@@ -267,6 +267,8 @@ class CivilianServiceScopeTest {
 		service.shout(guard, "Turf_Held", Map.of());
 		verify(fresh).sendMessage(text.capture());
 		assertTrue(text.getValue().contains("Held for VIP"), text.getValue());
+		assertFalse(text.getValue().contains("%faction%"), text.getValue());
+		assertTrue(text.getValue().contains("turf_defender"), text.getValue());
 
 		// default provider: nothing extra, and an unresolved %gang% never leaks into the chat line
 		Player last = mock(Player.class);

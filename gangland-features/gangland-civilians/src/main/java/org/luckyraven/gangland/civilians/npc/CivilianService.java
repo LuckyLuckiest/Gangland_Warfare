@@ -260,6 +260,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 
 		NpcSquad squad = speaker.getSquad() != null ? speaker.getSquad() : new NpcSquad();
 		Map<String, String> merged = new HashMap<>(shoutVoice.extras(squad));
+		merged.putIfAbsent("faction", speaker.getTypeConfig().faction());
 		FactionSquads provider = providerOf.getOrDefault(squad, customProviderOf(speaker));
 		if (provider != null) merged.putAll(provider.extras(squad));
 		merged.putAll(extras);

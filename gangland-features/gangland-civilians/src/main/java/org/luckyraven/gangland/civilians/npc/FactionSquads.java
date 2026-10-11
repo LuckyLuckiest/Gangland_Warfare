@@ -22,6 +22,8 @@ public interface FactionSquads {
 	/**
 	 * The scope this provider's squads live in (for example one turf). {@link CivilianService} recruits only NPCs of
 	 * the same provider, and keeps squads of different scopes apart.
+	 * A provider that keeps the default {@code ""} shares the street squad key, so a custom provider must return a
+	 * non-empty scope.
 	 */
 	default String scope() {
 		return "";
