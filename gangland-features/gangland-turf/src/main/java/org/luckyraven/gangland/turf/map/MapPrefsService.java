@@ -41,6 +41,16 @@ public final class MapPrefsService {
 		}
 	}
 
+	public void setDefaultCellBlocks(int blocks) {
+	}
+
+	public int cellBlocks(UUID player) {
+		return 16;
+	}
+
+	public void setCellBlocks(UUID player, int blocks) {
+	}
+
 	/** Snapshot of the players with auto map on. */
 	public Set<UUID> autoViewers() {
 		return Set.copyOf(autoPlayers);

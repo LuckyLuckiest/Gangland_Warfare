@@ -28,6 +28,17 @@ public final class MapZoomCommand extends SubArgument {
 		this.text   = text;
 	}
 
+	static int zoomIn(int blocks) {
+		return blocks;
+	}
+
+	static int zoomOut(int blocks) {
+		return blocks;
+	}
+
+	void apply(org.bukkit.entity.Player player, String word) {
+	}
+
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {

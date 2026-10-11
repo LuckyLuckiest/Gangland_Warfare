@@ -57,10 +57,13 @@ public final class TurfMapService {
 	private final TurfMessageContract   legacy;
 	private final GarrisonManager       garrisons;
 	private final TurfMapRenderer       renderer = new TurfMapRenderer();
+	private final MapPrefsService       prefs;
 
 	public TurfMapService(TurfManager turfs, GangLookupContract gangs, UserLookupContract users,
 	                      CaptureEligibility eligibility, TurfMapSettings mapSettings, TurfSettings turfSettings,
-	                      TurfMessages text, TurfMessageContract legacy, GarrisonManager garrisons) {
+	                      TurfMessages text, TurfMessageContract legacy, GarrisonManager garrisons,
+	                      MapPrefsService prefs) {
+		this.prefs        = prefs;
 		this.turfs        = turfs;
 		this.gangs        = gangs;
 		this.users        = users;
