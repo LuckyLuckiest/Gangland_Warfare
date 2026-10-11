@@ -10,7 +10,6 @@ import org.luckyraven.gangland.fights.fight.Outcome;
 import org.luckyraven.gangland.gang.Gang;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -26,7 +25,7 @@ class FightGangDeleteListenerTest {
 	@BeforeEach
 	void setUp() {
 		rig      = new FightRig();
-		listener = new FightGangDeleteListener(rig.manager);
+		listener = new FightGangDeleteListener(rig.manager, rig.settlement);
 	}
 
 	private GangDeleteEvent deleted(int gangId) {
@@ -68,14 +67,28 @@ class FightGangDeleteListenerTest {
 	}
 
 	@Test
-	@DisplayName("in the countdown the fight is cancelled and the stakes refunded")
-	void disband_inCountdown_refunds() {
+	@DisplayName("in the countdown the survivor is paid the escrow and the fight ends")
+	void disband_inCountdown_paysSurvivor() {
 		Fight fight = rig.countdown(50);
 
 		listener.onGangDelete(deleted(FightRig.RATS));
 
-		assertEquals(FightState.CANCELLED, fight.state());
-		verify(rig.settlement).refund(fight);
-		assertTrue(rig.manager.active().isEmpty());
+		assertEquals(FightState.RESULT, fight.state());
+		verify(rig.settlement).settle(fight, Outcome.WIN_A);
+		verify(rig.settlement, never()).refund(any());
+	}
+
+	@Test
+	@DisplayName("in the lobby the survivor is paid the escrow before the roster collapses")
+	void disband_inLobby_paysSurvivor() {
+		rig.manager.propose(rig.a.getUniqueId(), "Rats", 1, 50);
+		rig.manager.accept(rig.b.getUniqueId(), "Vipers");
+		Fight fight = rig.manager.active().iterator().next();
+		rig.manager.enlist(rig.a.getUniqueId());
+		assertEquals(FightState.LOBBY, fight.state());
+
+		listener.onGangDelete(deleted(FightRig.RATS));
+
+		verify(rig.settlement).settle(fight, Outcome.WIN_A);
 	}
 }

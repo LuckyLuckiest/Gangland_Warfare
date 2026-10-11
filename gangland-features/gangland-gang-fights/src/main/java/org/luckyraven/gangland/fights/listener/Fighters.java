@@ -57,6 +57,10 @@ final class Fighters {
 		return ExpectedTeleports.run(player.getUniqueId(), () -> player.teleport(target));
 	}
 
+	static void forget(UUID player) {
+		LAST_MESSAGE.remove(player);
+	}
+
 	static void tell(Player player, FightMessages messages, String key, Object... pairs) {
 		player.sendMessage(messages.text(key, pairs));
 	}

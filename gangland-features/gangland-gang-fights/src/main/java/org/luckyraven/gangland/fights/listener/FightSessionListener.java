@@ -58,6 +58,7 @@ public final class FightSessionListener implements Listener {
 	public void onQuit(PlayerQuitEvent event) {
 		UUID id = event.getPlayer().getUniqueId();
 		fallen.remove(id);
+		Fighters.forget(id);
 		manager.forfeit(id, "quit");
 	}
 

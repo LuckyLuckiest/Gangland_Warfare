@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.fights.fight.Fight;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,6 +46,15 @@ class FightWantedGuardTest {
 		assertTrue(change(rig.a, 0, 2).isCancelled());
 		assertFalse(change(rig.a, 3, 1).isCancelled());
 		assertFalse(change(rig.player(), 0, 1).isCancelled());
+	}
+
+	@Test
+	@DisplayName("an eliminated fighter is a normal player again: no crime immunity while the fight runs on")
+	void eliminated_notCovered() {
+		Fight fight = rig.running(0);
+		fight.eliminate(rig.a.getUniqueId());
+
+		assertFalse(change(rig.a, 0, 1).isCancelled());
 	}
 
 	@Test

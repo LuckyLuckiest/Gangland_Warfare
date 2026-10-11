@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.fights.listener;
 
+import com.cryptomorin.xseries.XPotion;
+import org.bukkit.EntityEffect;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -9,7 +11,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.fights.FightRules;
 import org.luckyraven.gangland.fights.arena.ArenaRegistry;
@@ -69,10 +73,11 @@ public final class FightDamageListener implements Listener {
 			event.setCancelled(true);
 			return;
 		}
-		if (rules.isRespectTotems() && holdsTotem(victim)) return;
 		if (victim.getHealth() - event.getFinalDamage() > 0) return;
 
 		event.setCancelled(true);
+		// the impl kill-credit listener must never see the lethal hit, so the totem is popped here, not by vanilla
+		if (rules.isRespectTotems() && popTotem(victim)) return;
 		victim.setFireTicks(0);
 		victim.setFallDistance(0F);
 		for (PotionEffect effect : new ArrayList<>(victim.getActivePotionEffects())) {
@@ -91,10 +96,33 @@ public final class FightDamageListener implements Listener {
 		return null;
 	}
 
-	private static boolean holdsTotem(Player player) {
-		ItemStack main = player.getInventory().getItemInMainHand();
-		ItemStack off  = player.getInventory().getItemInOffHand();
-		return (main != null && main.getType() == Material.TOTEM_OF_UNDYING)
-		       || (off != null && off.getType() == Material.TOTEM_OF_UNDYING);
+	/** Vanilla totem save done by hand: consumes one totem, 1 health, fire out, fresh effects. False when none held. */
+	private static boolean popTotem(Player player) {
+		PlayerInventory inventory = player.getInventory();
+		ItemStack       main      = inventory.getItemInMainHand();
+		boolean         inMain    = main != null && main.getType() == Material.TOTEM_OF_UNDYING;
+		ItemStack       held      = inMain ? main : inventory.getItemInOffHand();
+		if (held == null || held.getType() != Material.TOTEM_OF_UNDYING) return false;
+
+		ItemStack left = held.getAmount() > 1 ? held.clone() : null;
+		if (left != null) left.setAmount(held.getAmount() - 1);
+		if (inMain) inventory.setItemInMainHand(left);
+		else inventory.setItemInOffHand(left);
+
+		player.setHealth(1.0D);
+		player.setFireTicks(0);
+		for (PotionEffect effect : new ArrayList<>(player.getActivePotionEffects())) {
+			player.removePotionEffect(effect.getType());
+		}
+		addEffect(player, XPotion.REGENERATION, 900, 1);
+		addEffect(player, XPotion.ABSORPTION, 100, 1);
+		addEffect(player, XPotion.FIRE_RESISTANCE, 800, 0);
+		player.playEffect(EntityEffect.TOTEM_RESURRECT);
+		return true;
+	}
+
+	private static void addEffect(Player player, XPotion potion, int ticks, int amplifier) {
+		PotionEffectType type = potion.getPotionEffectType();
+		if (type != null) player.addPotionEffect(new PotionEffect(type, ticks, amplifier));
 	}
 }

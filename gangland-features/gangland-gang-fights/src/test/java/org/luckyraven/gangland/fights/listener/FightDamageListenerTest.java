@@ -102,10 +102,11 @@ class FightDamageListenerTest {
 		assertFalse(fight.eliminated(rig.a.getUniqueId()));
 	}
 
-	private void holdTotem() {
+	private PlayerInventory holdTotem() {
 		PlayerInventory inventory = mock(PlayerInventory.class);
 		when(rig.a.getInventory()).thenReturn(inventory);
 		when(inventory.getItemInMainHand()).thenReturn(new ItemStack(Material.TOTEM_OF_UNDYING));
+		return inventory;
 	}
 
 	@Test
@@ -121,16 +122,20 @@ class FightDamageListenerTest {
 	}
 
 	@Test
-	@DisplayName("with Respect_Totems on the totem is left to vanilla")
+	@DisplayName("with Respect_Totems on the totem is consumed and saves him: cancelled, not eliminated")
 	void totem_honouredWhenEnabled() {
-		rig.running(0);
-		holdTotem();
+		Fight fight = rig.running(0);
+		PlayerInventory inventory = holdTotem();
 		when(rig.rules.isRespectTotems()).thenReturn(true);
 
 		EntityDamageEvent event = environment(rig, DamageCause.FALL);
 		listener.onDamage(event);
 
-		assertFalse(event.isCancelled());
+		assertTrue(event.isCancelled());
+		assertFalse(fight.eliminated(rig.a.getUniqueId()));
+		assertEquals(FightState.RUNNING, fight.state());
+		verify(inventory).setItemInMainHand(null);
+		verify(rig.a).setHealth(1.0D);
 	}
 
 	@Test
