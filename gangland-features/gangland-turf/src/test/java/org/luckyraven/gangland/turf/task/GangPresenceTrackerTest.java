@@ -218,6 +218,24 @@ class GangPresenceTrackerTest {
 	}
 
 	@Test
+	@DisplayName("heartbeat: a brand-new gang's first heartbeat is not a wake-up (T-248)")
+	void heartbeat_brandNewGang_noWakeUp() {
+		setUpWorld();
+		UUID uuid = UUID.randomUUID();
+		Gang gang = gang(30_000L, 0L, member(uuid, 0L));
+		Player player = onlineMember(uuid);
+		GangPresenceTracker tracker = tracker(AGE_24H);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(Bukkit::getOnlinePlayers).thenAnswer(i -> List.of(player));
+			tracker.heartbeat(NOW);
+		}
+
+		assertEquals(0L, tracker.wokeAt(GANG_ID));
+		verify(gang).setLastMemberOnlineAt(NOW);
+	}
+
+	@Test
 	@DisplayName("heartbeat: a member during an open window does not start a new wake-up")
 	void heartbeat_noWakeWhenWindowOpen() {
 		setUpWorld();

@@ -112,9 +112,12 @@ public final class GangPresenceTracker implements BeanLifecycle {
 		return rules.get();
 	}
 
-	/** True when the gang's logout window has closed: never stamped, or the last stamp is older than the window. */
+	/**
+	 * True when the gang's logout window has closed: the last stamp is older than the window. A gang never stamped
+	 * counts from its founding (T-248): its founder was online when it was created, so it has not been offline yet.
+	 */
 	boolean windowClosed(Gang gang, long now) {
-		long last = gang.getLastMemberOnlineAt();
+		long last = Math.max(gang.getLastMemberOnlineAt(), gang.getCreated());
 		return last <= 0 || now - last > CaptureEligibility.onlineWindowMs(settings);
 	}
 
