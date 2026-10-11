@@ -1,9 +1,11 @@
 package org.luckyraven.gangland.gang.database.repositories.meta;
 
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Consumer;
 import org.luckyraven.keystone.persistence.repository.AbstractRepository;
@@ -123,35 +125,71 @@ class GangMigrationRepositoryTest {
 		verify(backend).upsert(eq("gang_migration"), any(), any(), any());
 	}
 
+	private final List<Runnable> retries = new ArrayList<>();
 
+	private GangMigrationRepository migrating() {
+		return new GangMigrationRepository(mock(JavaPlugin.class), mock(DatabaseHandler.class), backend) {
+			@Override
+			protected void scheduleRetry(Runnable task, long delayTicks) {
+				retries.add(task);
+			}
+		};
+	}
+
+	/** Stub writer: the n-th saveAllChecked call reports the n-th outcome; the last one repeats. */
 	@SuppressWarnings("unchecked")
-	private AbstractRepository<String> repositoryWriting(boolean committed) {
+	private AbstractRepository<String> writerReporting(boolean... outcomes) {
 		AbstractRepository<String> repo = mock(AbstractRepository.class);
-		// Keystone 1.15.2: saveAllChecked reports the outcome; the plain saveAll callback fires either way
+		AtomicInteger calls = new AtomicInteger();
 		doAnswer(call -> {
-			((Consumer<Boolean>) call.getArgument(1)).accept(committed);
+			int index = Math.min(calls.getAndIncrement(), outcomes.length - 1);
+			((Consumer<Boolean>) call.getArgument(1)).accept(outcomes[index]);
 			return null;
 		}).when(repo).saveAllChecked(anyCollection(), any());
-		doAnswer(call -> {
-			((Runnable) call.getArgument(1)).run();
-			return null;
-		}).when(repo).saveAll(anyCollection(), any(Runnable.class));
 		return repo;
 	}
 
 	@Test
-	@DisplayName("T-278: a migration is marked done only after the write committed")
-	void saveThen_runsAfterACommittedWrite() {
-		AtomicBoolean done = new AtomicBoolean();
-		GangMigrationRepository.saveThen(repositoryWriting(true), java.util.List.of("row"), () -> done.set(true));
-		assertTrue(done.get());
+	@DisplayName("T-278 r1: a failed first write is retried; the migration is marked done once a retry commits")
+	void failedWrite_isRetried_andMarkedDoneOnceCommitted() throws SQLException {
+		GangMigrationRepository migrating = migrating();
+		AbstractRepository<String> writer = writerReporting(false, true);
+
+		migrating.migrate("m", writer, List.of("row"));
+		assertEquals(1, retries.size(), "the failed write schedules one retry");
+		verify(backend, never()).upsert(anyString(), any(), any(), any());
+
+		retries.remove(0).run();
+
+		verify(writer, times(2)).saveAllChecked(anyCollection(), any());
+		verify(backend).upsert(eq("gang_migration"), any(), any(), any());
+		assertTrue(retries.isEmpty(), "a committed retry schedules nothing more");
 	}
 
 	@Test
-	@DisplayName("T-278: a failed write leaves the migration not done")
-	void saveThen_doesNotRunAfterAFailedWrite() {
-		AtomicBoolean done = new AtomicBoolean();
-		GangMigrationRepository.saveThen(repositoryWriting(false), java.util.List.of("row"), () -> done.set(true));
-		assertFalse(done.get());
+	@DisplayName("T-278 r1: after a failed write the migration counts as done for the rest of the session")
+	void failedWrite_countsAsDoneForTheSession() {
+		GangMigrationRepository migrating = migrating();
+
+		migrating.migrate("m", writerReporting(false), List.of("row"));
+
+		assertTrue(migrating.isDone("m"));
+		assertTrue(migrating.isDone("m"), "a reload asks again and still gets done");
+	}
+
+	@Test
+	@DisplayName("T-278 r1: retries are bounded; after the last attempt nothing more is scheduled")
+	void failedWrite_retriesAreBounded() {
+		GangMigrationRepository migrating = migrating();
+		migrating.migrate("m", writerReporting(false), List.of("row"));
+
+		int runs = 0;
+		for (int i = 0; i < 100 && !retries.isEmpty(); i++) {
+			retries.remove(0).run();
+			runs++;
+		}
+
+		assertEquals(9, runs, "ten attempts in all: the first plus nine retries");
+		assertTrue(migrating.isDone("m"), "an exhausted migration stays done for this session");
 	}
 }
