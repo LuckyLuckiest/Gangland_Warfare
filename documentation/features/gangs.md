@@ -79,6 +79,7 @@ example "Withdraw needs officer or higher." The minimums are listed in the [Rank
 | Command                      | Description                                                                  |
 |------------------------------|------------------------------------------------------------------------------|
 | `/glw gang invite <player>`  | Sends a join invitation. An online player has **60 seconds** to accept; an offline player has **72 hours** (`Invite_Offline_Expiry_Hours` in `mail/mail_rules.yml`, `0` = until they next log in). Minimum rank: officer. |
+| `/glw gang invite` (no arguments) | Lists your gang's outgoing pending invites. `/glw gang invite cancel <name>` cancels one. |
 | `/glw gang accept [gang]`    | Accepts a pending gang invitation. Name the gang when you have more than one invite. Accepting one cancels the player's other gang invites. A full gang refuses. |
 | `/glw gang decline [gang]`   | Declines a pending gang invitation. Name the gang when you have more than one invite. |
 | `/glw gang kick <player>`    | Removes a member. You can only kick members who hold a lower rank than you. Minimum rank: officer. |
@@ -105,7 +106,7 @@ The gang has a shared bank account separate from all personal balances. Deposits
 
 > **On deletion**: When the gang is deleted, the bank is distributed to members based on how much they contributed. A
 > disband with zero contributions splits the bank equally among members; the owner takes the rounding remainder. The
-> owner also receives a refund of a quarter of the creation fee (`Progression.Fee_Refund`). A bounty on a gang is
+> owner also receives a refund of a quarter of the creation fee (fixed in code; the notice line is `Fee_Refund` in `gang/gang_messages.yml`). A bounty on a gang is
 > destroyed with the gang; posters are not refunded.
 
 ---
@@ -181,14 +182,15 @@ A safehouse is a named spot the gang can teleport to. A rally calls the gang to 
 - `Safehouse.Safe_Check` (on) refuses a spot that has lava, fire, a cactus, a one-block gap or no floor. It is checked
   when a safehouse is set, when a rally is sent and again on each arrival.
 - A rally call stays open for `Safehouse.Rally_Consent_Seconds` (60). Members answer with `rally join`.
-- **Turf fights refuse.** A gang teleport may not start, land or stand near a turf under attack: nothing works into,
-  out of or within `Teleport_Guard.Buffer_Blocks` (48) blocks of a turf under attack, and a safehouse cannot be set
-  inside one. Your own turf counts too.
+- **Turf fights refuse.** With the turf module installed, a gang teleport (safehouse or rally join) is refused when it
+  starts inside a turf under attack, lands inside or within Teleport_Guard.Buffer_Blocks (48, `turf/turf_rules.yml`) of
+  a turf under attack, lands inside a turf a rival gang holds, or while your gang is the owner or challenger of any
+  running turf fight. A safehouse cannot be set inside a rival turf or a turf under attack.
 - A member tagged by a rival gang (see Friendly Fire) cannot use any gang teleport until the tag runs out.
 - Safehouses and rallies are off in a world listed in `Worlds.Disabled`, and everywhere when `Safehouse.Enabled` is
   `false`.
-- Minimum ranks: `Safehouse` member (teleport and rally join), `Safehouse_Manage` officer (set and remove), `Rally`
-  officer (call a rally).
+- Minimum ranks: `Safehouse` member (teleport; rally join is open to every invited member, not checked yet),
+  `Safehouse_Manage` officer (set and remove), `Rally` officer (call a rally).
 
 ---
 
@@ -209,7 +211,7 @@ A safehouse is a named spot the gang can teleport to. A rally calls the gang to 
   `Chat.Spy_Format`.
 - `Chat.Public_Tag.Enabled` (off) lets `{glw_gang}` in the public chat format show the sender's gang, with
   `Chat.No_Gang_Tag` shown for a gangless player.
-- Minimum rank: `Chat` member.
+- Minimum rank: `Chat` member. Not checked yet: every member may chat, whatever `Ranks.Minimum.Chat` says.
 
 ---
 
@@ -226,7 +228,7 @@ Bartizan plugin). The steps below run in order; the first one that matches decid
 3. **Region flag.** Reserved for a region plugin (WorldGuard). No region plugin is wired in this release, so this step
    has no effect yet.
 4. **Per-world override.** `Friendly_Fire.Worlds` (`ALLOW` or `DENY` per world name) decides, for gangmates and allies
-   only. A `DENY` never starts protecting rivals.
+   only. A `DENY` never starts protecting rivals. The key ships commented out, so no world is overridden by default.
 5. **Gangmates.** Blocked unless `Friendly_Fire.Global` is `GANG_CHOICE` (the default) and your gang turned on
    `/glw gang pvp on`, or `Global` is `ON`. `Global: OFF` always blocks.
 6. **Allies.** Blocked unless both alliance rows are on (`/glw gang ally pvp <gang> on`, each side sets its own row),
@@ -280,7 +282,8 @@ Minimum rank: `Friendly_Fire` owner for `/glw gang pvp` and `/glw gang ally pvp`
 /glw gang notice clear    Remove the notice
 ```
 
-- Every member sees the notice once per login while it is set. A notice that is too long is refused with the maximum.
+- Every member sees the notice once per login while it is set. A notice longer than 200 plain characters (colour codes
+  do not count) is refused.
 - Minimum rank: `Notice` owner.
 - Titles: a gang's members see a title on level-up; a member sees one on join and on disband.
 
@@ -309,8 +312,10 @@ Two gangs can form an alliance. Alliances are **bidirectional** — both sides m
 | Command                               | Description                                                                          |
 |---------------------------------------|--------------------------------------------------------------------------------------|
 | `/glw gang ally request <gang_id>`    | Sends an alliance request to another gang. The request expires after **60 seconds**. |
-| `/glw gang ally accept`               | Accepts a pending alliance request.                                                  |
-| `/glw gang ally reject`               | Rejects a pending alliance request.                                                  |
+| `/glw gang ally accept [gang]`        | Accepts a pending alliance request. Name the gang when more than one is pending.     |
+| `/glw gang ally reject [gang]`        | Rejects a pending alliance request. Name the gang when more than one is pending.     |
+| `/glw gang ally pending`              | Lists your gang's outgoing pending alliance requests.                                |
+| `/glw gang ally pending cancel <gang>` | Cancels one of your outgoing pending alliance requests.                             |
 | `/glw gang ally abandon <gang>`       | Breaks an existing alliance with one of your own allies (by name, `name:id` or id).  |
 | `/glw gang ally pvp <gang> <on\|off>` | Turns ally friendly fire on or off for your side. See Friendly Fire.                 |
 
@@ -429,13 +434,13 @@ One top-level section per feature (`# ---- Name ----` blocks):
 | `Placeholders`   | `Default_Value` |
 | `Display_Name`   | `Allow_Hex`, `Parse_Colours`, `Max_Length`, `Blocked_Words` |
 
----
-
-[← Back to Index](../README.md) | [Next: Economy →](./economy.md)
-
 ## Turf income and the bounty claim (0.17.0)
 
 - **Gang XP from turf.** Gang XP comes only from held turf while a member is online (see Levels above).
 - **Gangless players** running `/glw gang` get the onboarding screen; members get the gang menu.
 - **Bounty claim.** A bounty on a gang with no turf cannot be claimed until it holds one. Disbanding a bountied gang
   destroys the bounty; posters are not refunded.
+
+---
+
+[← Back to Index](../README.md) | [Next: Economy →](./economy.md)

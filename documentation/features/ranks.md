@@ -17,7 +17,7 @@ the nodes of its parent. List the nodes on each rank that needs them.
 
 ## How Ranks Are Ordered
 
-The tree is rooted at the Head rank (default `member`). Each rank sits below at most one parent. The parent link decides
+The tree is rooted at the Head rank (default `member`). Each rank sits directly above at most one rank; a rank may have several ranks directly above it (a promoter then picks one). The parent link decides
 the order that `/glw gang promote` and `/glw gang demote` walk, and the Tail rank (default `owner`) is the deepest leaf.
 
 ```
@@ -70,9 +70,9 @@ rank name logs one warning and turns that entry off. The node lists and the top 
 
 | Feature (`Ranks.Minimum` key) | Lowest rank | Gang command or node |
 |-------------------------------|-------------|----------------------|
-| `Chat`                        | member      | `/glw gang chat` (`gangland.gang.chat`) |
+| `Chat`                        | member      | `/glw gang chat` (`gangland.gang.chat`); not checked yet: every member may chat |
 | `Deposit`                     | member      | `/glw gang deposit` |
-| `Safehouse`                   | member      | `/glw gang safehouse`, `rally join` |
+| `Safehouse`                   | member      | `/glw gang safehouse`; `rally join` is open to every invited member (not checked yet) |
 | `Fight`                       | officer     | gang fights (reserved; not a command in this release) |
 | `Rally`                       | officer     | `/glw gang rally` |
 | `Invite`                      | officer     | `/glw gang invite` |
@@ -81,7 +81,7 @@ rank name logs one warning and turns that entry off. The node lists and the top 
 | `Demote`                      | officer     | `/glw gang demote` |
 | `Withdraw`                    | officer     | `/glw gang withdraw` |
 | `Safehouse_Manage`            | officer     | `/glw gang safehouse set`, `remove` |
-| `Recruiting`                  | officer     | `/glw gang recruiting` |
+| `Recruiting`                  | officer     | `/glw gang recruiting`; checked as `gangland.gang.invite` (Invite minimum) in this release |
 | `Description`                 | officer     | `/glw gang desc` |
 | `Ally`                        | owner       | `/glw gang ally ...` |
 | `Rename`                      | owner       | `/glw gang rename` |
@@ -153,7 +153,7 @@ All rank commands require appropriate admin permissions.
 
 | Command                                   | Description                                          |
 |-------------------------------------------|------------------------------------------------------|
-| `/glw rank parent add <rank> <parent>`    | Sets a parent rank, which orders promotion and demotion. A rank sits above one rank only, and a rank already below `<rank>` is refused. |
+| `/glw rank parent add <rank> <parent>`    | Places `<parent>` directly above `<rank>`, which orders promotion and demotion. Refused when `<parent>` already sits above another rank, or sits below `<rank>`. |
 | `/glw rank parent remove <rank> <parent>` | Removes the parent relationship.                     |
 | `/glw rank traverse`                      | Displays a visual tree of the entire rank hierarchy. |
 
@@ -181,9 +181,12 @@ This adds an extra rank between `member` and `owner` and gives it the officer-st
 **3. Link the hierarchy:**
 
 ```
-/glw rank parent add captain officer
-/glw rank parent add owner captain
+/glw rank parent remove officer owner
+/glw rank parent add officer captain
+/glw rank parent add captain owner
 ```
+
+The chain is now member > officer > captain > owner, so `owner` stays the Tail at the top.
 
 **4. Verify:**
 
@@ -206,11 +209,11 @@ Rank owner = rankManager.get("owner");
 // Grant a permission to a rank (returns false if the rank already holds it)
 rankManager.addPermission(owner, "gangland.gang.kick");
 
-// Set a parent (returns false when refused)
-rankManager.addParent(owner, captain);
+// Place a parent directly above a rank (returns false when refused)
+rankManager.addParent(captain, owner); // owner directly above captain
 
-// Remove a parent
-rankManager.removeParent(owner, captain);
+// Remove a parent link
+rankManager.removeParent(officer, owner);
 ```
 
 ---
