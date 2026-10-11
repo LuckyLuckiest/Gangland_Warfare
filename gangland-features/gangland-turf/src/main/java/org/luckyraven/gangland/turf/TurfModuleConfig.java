@@ -44,6 +44,8 @@ import org.luckyraven.gangland.turf.npc.config.TurfPowerupOpenContractImpl;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
 import org.luckyraven.gangland.turf.npc.view.QuartermasterAccess;
+import org.luckyraven.gangland.turf.npc.view.QuartermasterPlacement;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupBuffCatalogueView;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupFlow;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupGarrisonView;
@@ -337,9 +339,21 @@ public final class TurfModuleConfig {
 	@Bean
 	public TurfPowerupMenuView turfPowerupMenuView(@SuppressWarnings("unused") Settings settings,
 	                                               GarrisonManager garrisons, ActiveBuffManager buffs,
-	                                               TurfMessages messages) {
-		return new TurfPowerupMenuView(garrisons, buffs, messages,
+	                                               TurfDefenderDeployer defenders, TurfMessages messages) {
+		return new TurfPowerupMenuView(garrisons, buffs, defenders::aliveCount, messages,
 		                               Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+	}
+
+	@Bean
+	public QuartermasterPlacement quartermasterPlacement(@SuppressWarnings("unused") Settings settings,
+	                                                     JavaPlugin plugin, InventoryService inventoryService,
+	                                                     TurfManager turfs, GangLookupContract gangs,
+	                                                     UserLookupContract users, QuartermasterAccess access,
+	                                                     TurfPowerupManager npcs, TurfMessages messages,
+	                                                     TurfNpcsConfigLoader loader) {
+		return new QuartermasterPlacement(plugin, inventoryService, turfs, gangs, users, access, npcs, messages,
+		                                  loader::getPowerupSettings, NpcSupport::available,
+		                                  Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
 	@Bean

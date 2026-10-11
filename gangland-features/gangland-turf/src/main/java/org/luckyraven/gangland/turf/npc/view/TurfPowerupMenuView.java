@@ -17,6 +17,7 @@ import org.luckyraven.keystone.item.ItemBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntUnaryOperator;
 
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 
@@ -37,6 +38,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 
 	private final GarrisonManager   garrisons;
 	private final ActiveBuffManager buffs;
+	private final IntUnaryOperator  aliveGuards;
 	private final TurfMessages      messages;
 	private final String            fillItem;
 	private final String            fillName;
@@ -71,6 +73,12 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 	}
 
 	private ItemBuilder infoItem(Turf turf, Gang ownerGang, Gang viewerGang) {
+		return new ItemBuilder(Material.PAPER)
+				.setDisplayName(messages.text("Quartermaster.Menu_Turf", "&6&l%turf%", "turf", turf.getDisplayName()))
+				.setLore(infoLore(turf, ownerGang, viewerGang));
+	}
+
+	List<String> infoLore(Turf turf, Gang ownerGang, Gang viewerGang) {
 		List<String> lore = new ArrayList<>();
 		lore.add(messages.text("Quartermaster.Menu_Owner", "&7Owning gang: &e%gang%", "gang", ownerGang.getName()));
 		if (!ownerGang.equals(viewerGang)) {
@@ -79,14 +87,20 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 		}
 		lore.add(messages.text("Quartermaster.Menu_Stock", "&7Garrison stock: &f%count%",
 		                       "count", garrisons.count(turf.getId())));
+		lore.add(messages.text("Quartermaster.Menu_On_Duty", "&7Guards on duty: &f%count%",
+		                       "count", aliveGuards.applyAsInt(turf.getId())));
 		lore.add(messages.text("Quartermaster.Menu_Active", "&7Active buffs: &f%count%",
 		                       "count", buffs.active(turf.getId()).size()));
 		lore.add(" ");
 		lore.add(messages.text("Quartermaster.Menu_Bank", "&7Your gang bank: &a%money%",
 		                       "money", money(viewerGang.getEconomy().getAmount())));
-		return new ItemBuilder(Material.PAPER)
-				.setDisplayName(messages.text("Quartermaster.Menu_Turf", "&6&l%turf%", "turf", turf.getDisplayName()))
-				.setLore(lore);
+		if (ownerGang.equals(viewerGang)) {
+			lore.add(messages.text("Quartermaster.Menu_Spend_Owner", "&aYour gang buys here."));
+		} else {
+			lore.add(messages.text("Quartermaster.Menu_Spend_Ally", "&7Only &e%gang% &7buys here; allies can look.",
+			                       "gang", ownerGang.getName()));
+		}
+		return lore;
 	}
 
 	private ItemBuilder buffsButton(Turf turf) {

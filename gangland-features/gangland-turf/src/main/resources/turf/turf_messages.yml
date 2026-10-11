@@ -295,6 +295,32 @@ Quartermaster:
    Menu_Garrison_Lore_3: "&7and fight attackers on this turf."
    # Garrison button lore, line 4. %count% = guards in reserve.
    Menu_Garrison_Stock: "&7Current stock: &f%count%"
+   # Menu line: this turf's guards alive in the field right now. %count% = guard count.
+   Menu_On_Duty: "&7Guards on duty: &f%count%"
+   # Menu line for the owning gang's members (allies see Menu_Spend_Ally).
+   Menu_Spend_Owner: "&aYour gang buys here."
+   # Menu line for an allied viewer. %gang% = owner gang name.
+   Menu_Spend_Ally: "&7Only &e%gang% &7buys here; allies can look."
+   # Placement menu title (/glw turf quartermaster). %npc% = turf_npcs.yml Powerup_Npc.Display_Name.
+   Place_Title: "&8&l[&6&lPlace %npc%&8&l]"
+   # Placement button name when the turf has no Quartermaster yet. %npc% = the Quartermaster's name.
+   Place_Name: "&a&lPlace the %npc% here"
+   # Placement button name when the turf already has one (it moves). %npc% = the Quartermaster's name.
+   Place_Move_Name: "&a&lMove the %npc% here"
+   # Placement button lore: the turf. %turf% = turf name.
+   Place_Lore_Turf: "&7Turf: &f%turf%"
+   # Placement button lore: the price (turf_npcs.yml Powerup_Npc.Placement_Cost). %money% = the price.
+   Place_Lore_Cost: "&7Cost: &6%money% &7from the gang bank"
+   # Placement button lore, last line.
+   Place_Lore_Click: "&aClick to place it where you stand."
+   # Chat after a placement. %npc%, %turf%, %money% = name, turf, price paid.
+   Placed: "&aThe %npc% now stands here on &f%turf%&a. Paid &6%money%&a."
+   # Chat when the player's gang does not own the turf (allies included). %turf%, %npc%.
+   Place_Not_Owner: "&cOnly the gang that owns %turf% can place its %npc%."
+   # Chat when Citizens is missing; nothing is charged. %npc% = the Quartermaster's name.
+   Place_No_Citizens: "&cThe %npc% needs the Citizens plugin, which this server does not have."
+   # Chat when the player left the turf before clicking. %turf%, %npc%.
+   Place_Outside: "&cStand inside %turf% to place its %npc%."
    # Catalogue item lore: the effect. %effect% = Effect_Type, %magnitude% = Magnitude.
    Buffs_Effect: "&7Effect: &f%effect% &7x&f%magnitude%"
    # Catalogue item lore: the duration. %seconds% = Duration_Seconds.

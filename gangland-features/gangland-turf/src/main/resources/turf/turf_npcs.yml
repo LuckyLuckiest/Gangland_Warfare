@@ -16,7 +16,7 @@
 # | Turf NPC Settings | #
 # +-------------------+ #
 # Per-NPC-type knobs for the turf system's Citizens-backed NPCs:
-#   - Powerup_Npc — the per-turf Quartermaster admins place via /glw turf powerupnpc set <turf>
+#   - Powerup_Npc — the per-turf Quartermaster: staff place it with /glw turf powerupnpc set, the owning gang with /glw turf quartermaster
 #   - Defender    — deploy-side knobs only. Defender NPCs ARE civilian NPCs (defined in civilians.yml under
 #                   the type id below). Their model, health, equipment, damage, AI tuning, etc. all live there.
 #                   This section only controls how the deployer routes them: which type to spawn, how far they
@@ -34,6 +34,9 @@ Powerup_Npc:
    Display_Name: "Quartermaster"
    # Blocks from the Quartermaster within which a contest target (an attacker) is picked up. Minimum 1.0.
    Targeting_Radius: 32.0
+   # Price the owning gang pays from its gang bank to place (or move) its Quartermaster with /glw turf quartermaster.
+   # Staff placing it with /glw turf powerupnpc set pay nothing. 0 = free. Minimum 0.
+   Placement_Cost: 5000.0
 # Cop response (T-189): while a cop NPC hits a player standing on a turf their gang protects, the turf's
 # Quartermaster and garrison defenders within range of the cop turn on it. They never start a fight with a cop on
 # their own, and they stop again when the cop dies, the victim leaves or stops being protected, or the cop moves
