@@ -125,6 +125,15 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		if (!citizens.getAsBoolean()) return;
 
 		Group previous = byTurfId.get(garrison.turfId);
+		if (previous != null && previous.garrison != null) {
+			// T-751: a rival who stayed on the turf restarts the contest; the standing guards keep fighting
+			// instead of being finished and respawned, so the contest holds rather than flapping.
+			previous.garrison.standingDown = false;
+			previous.garrison.onReturn     = null;
+			previous.challengerMembers     = challengers;
+			previous.lifespan              = lifespanSeconds;
+			return;
+		}
 		if (previous != null) {
 			finish(garrison.turfId, previous);
 		}
@@ -151,6 +160,8 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			return;
 		}
 		if (garrison.standingDown) return;
+		// T-751: while a rival is still on the turf the garrison holds its ground; the contest restarts and re-arms it
+		if (hostileOnTurf(group, garrison)) return;
 
 		garrison.standingDown = true;
 		garrison.onReturn     = onReturn;
@@ -161,6 +172,19 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			standDownOne(d.npc, garrison);
 			civilianService.shout(d.npc, line, Map.of());
 		}
+	}
+
+	/** Whether any challenger is online, alive and inside the turf region right now. */
+	private boolean hostileOnTurf(Group group, TurfGarrison garrison) {
+		Set<UUID> ids = group.challengerMembers.get();
+		if (ids == null) return false;
+		for (UUID id : ids) {
+			Player player = Bukkit.getPlayer(id);
+			if (player == null || !player.isOnline() || player.isDead()) continue;
+			Location at = player.getLocation();
+			if (GarrisonPosts.withinLeash(at.getX(), at.getZ(), garrison.region, 0)) return true;
+		}
+		return false;
 	}
 
 	/**
