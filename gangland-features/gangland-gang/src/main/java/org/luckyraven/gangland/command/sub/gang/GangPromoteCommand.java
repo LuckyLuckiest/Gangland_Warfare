@@ -92,6 +92,13 @@ class GangPromoteCommand extends SubArgument {
 				return;
 			}
 
+			// PLAN 15.4: the rank gate (node, Ranks.Minimum or leader) comes before the rank-position checks below.
+			if (!force && !GangPermissions.allows(userMember, player, GangPermissions.PROMOTE)) {
+				String denial = GangPermissions.denial(GangPermissions.PROMOTE);
+				user.sendMessage(denial != null ? denial : Messages.COMMAND_NO_PERM.toString());
+				return;
+			}
+
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			String targetStr    = args[2];

@@ -97,6 +97,7 @@ public final class GangConfig {
 	public GangMessages gangMessages(GangModuleFiles files, FileManager fileManager) {
 		GangMessages messages = new GangMessages(fileManager);
 		fileManager.registerInitializer(messages);
+		GangPermissions.bindMessages(messages);   // Ranks.Needs_Rank for GangPermissions.denial
 		return messages;
 	}
 
@@ -161,7 +162,9 @@ public final class GangConfig {
 	                               PermissionManager permissionManager, GangMigrationsContract migrations) {
 		GangPermissions.ALL.forEach(permissionManager::addPermission);
 
-		return new RankManager(repositoryRegistry, permissionRegistry, rules, migrations);
+		RankManager manager = new RankManager(repositoryRegistry, permissionRegistry, rules, migrations);
+		GangPermissions.bind(rules::getMinimumRanks, manager::getRankTree);
+		return manager;
 	}
 
 	/**
