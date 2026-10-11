@@ -123,7 +123,7 @@ class GangStubCommandsTest {
 	@Test
 	@DisplayName("notice takes one greedy text position")
 	void notice() {
-		Argument notice = new GangNoticeCommand(plugin, tree, parent);
+		Argument notice = new GangNoticeCommand(plugin, tree, parent, null, null, null, null);
 
 		assertEquals(List.of("notice"), List.of(notice.getArguments()));
 		assertEquals(1, notice.getNode().getChildren().size());

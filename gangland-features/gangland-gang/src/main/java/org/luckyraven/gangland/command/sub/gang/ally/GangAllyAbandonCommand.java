@@ -10,6 +10,7 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.command.sub.gang.GangNameRules;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangAlliance;
 import org.luckyraven.gangland.gang.GangManager;
@@ -23,6 +24,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -62,15 +64,12 @@ class GangAllyAbandonCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<gang>"));
 		};
 	}
 
-	/**
-	 * Builds the disambiguated display-name → id map of the sender's gang's current allies. Duplicate names are
-	 * suffixed with {@code :id} so each option has a unique tab-completion key.
-	 */
-	private Map<String, String> buildCurrentAllyMap(CommandSender sender) {
+	/** The sender's gang's current allies by typed name (see {@link #allyMap}); empty for a non-player or gangless. */
+	private Map<String, Gang> currentAllies(CommandSender sender) {
 		if (!(sender instanceof Player player)) return new HashMap<>();
 		User<Player> user = userManager.getUser(player);
 		if (user == null || !user.hasGang()) return new HashMap<>();
@@ -78,20 +77,13 @@ class GangAllyAbandonCommand extends SubArgument {
 		Gang gang = gangManager.getGang(user.getGangId());
 		if (gang == null) return new HashMap<>();
 
-		List<Gang> allies = gang.getAllies()
-				.stream().map(GangAlliance::ally).toList();
+		return allyMap(gang.getAllies().stream().map(GangAlliance::ally).toList());
+	}
 
-		Map<String, Integer> nameCount = new HashMap<>();
-		for (Gang ally : allies) {
-			nameCount.merge(ally.getName(), 1, Integer::sum);
-		}
-
-		Map<String, String> map = new HashMap<>();
-		for (Gang ally : allies) {
-			String name        = ally.getName();
-			String displayName = nameCount.get(name) > 1 ? name + ":" + ally.getId() : name;
-			map.put(displayName, String.valueOf(ally.getId()));
-		}
+	/** Tab-completion map: typed name to the ally id (the form Keystone hands the action). */
+	private Map<String, String> buildCurrentAllyMap(CommandSender sender) {
+		Map<String, String> map = new LinkedHashMap<>();
+		currentAllies(sender).forEach((name, ally) -> map.put(name, String.valueOf(ally.getId())));
 		return map;
 	}
 
@@ -118,22 +110,16 @@ class GangAllyAbandonCommand extends SubArgument {
 
 			String value = optionalArgument.getActualValue(args[3], sender);
 
-			int id;
-
-			try {
-				id = Integer.parseInt(value);
-			} catch (NumberFormatException exception) {
-				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", value));
-				return;
-			}
-
-			Gang sending   = gangManager.getGang(user.getGangId());
-			Gang receiving = gangManager.getGang(id);
+			Gang sending = gangManager.getGang(user.getGangId());
 
 			if (sending == null) {
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
+
+			// by name, name:id or id; only one of the gang's own allies can be abandoned
+			Gang receiving = resolveAlly(currentAllies(sender), args[3]);
+			if (receiving == null) receiving = resolveAlly(currentAllies(sender), value);
 
 			if (receiving == null) {
 				user.sendMessage(Messages.GANG_DOESNT_EXIST.toString());
@@ -154,6 +140,39 @@ class GangAllyAbandonCommand extends SubArgument {
 			// so a memory-only removeAlly resurrects the alliance on the next restart (GR-06).
 			gangManager.breakAlliance(sending, receiving);
 		}, sender -> new ArrayList<>(buildCurrentAllyMap(sender).keySet()), this::buildCurrentAllyMap);
+	}
+
+	/**
+	 * The allies by the name a player types: the plain name (colour codes removed), or {@code name:id} when two allies
+	 * share it.
+	 */
+	static Map<String, Gang> allyMap(Collection<Gang> allies) {
+		Map<String, Integer> count = new HashMap<>();
+		for (Gang ally : allies) {
+			count.merge(GangNameRules.plain(ally.getName()), 1, Integer::sum);
+		}
+
+		Map<String, Gang> map = new LinkedHashMap<>();
+		for (Gang ally : allies) {
+			String plain = GangNameRules.plain(ally.getName());
+			map.put(count.get(plain) > 1 ? plain + ":" + ally.getId() : plain, ally);
+		}
+		return map;
+	}
+
+	/** The ally typed as a name (any case), {@code name:id}, or id; {@code null} when it is none of the allies. */
+	static Gang resolveAlly(Map<String, Gang> map, String typed) {
+		Gang exact = map.get(typed);
+		if (exact != null) return exact;
+
+		for (Map.Entry<String, Gang> entry : map.entrySet()) {
+			if (entry.getKey().equalsIgnoreCase(typed)) return entry.getValue();
+		}
+
+		for (Gang ally : map.values()) {
+			if (String.valueOf(ally.getId()).equals(typed)) return ally;
+		}
+		return null;
 	}
 
 	/**

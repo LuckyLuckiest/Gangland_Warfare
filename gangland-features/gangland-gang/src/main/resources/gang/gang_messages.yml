@@ -54,6 +54,12 @@ Names:
    Invalid: "&cGang names are 3 to 16 letters, digits or underscores."
    # Another gang already has this name, ignoring case. Names are always unique.
    Taken: "&cA gang named %gang% already exists."
+   # Display name refusals (gang_rules.yml Display_Name). %max% = Max_Length.
+   Display_Hex: "&cHex colours are not allowed in a gang display name."
+   Display_Too_Long: "&cA display name is at most %max% visible characters."
+   Display_Blocked: "&cThat display name contains a blocked word."
+   # Another gang's name or display name looks the same, ignoring colour, case and look-alike letters.
+   Display_Taken: "&cThat display name looks the same as another gang's."
    # The rank named by Rank.Tail does not exist, so a new gang has no owner seat. Refused before any fee is taken.
    No_Owner_Rank: "&cGangs cannot be created right now: the owner rank is missing. Tell an admin."
 # end Names
@@ -134,9 +140,29 @@ Worlds:
 # end Help
 
 # ---------------- Notice ----------------
+Notice:
+   # To a member once per login while the gang has a notice. %gang%, %notice%.
+   Login: "&6[%gang%&6] &eNotice: &f%notice%"
+   Set: "&aThe gang notice is set. Members see it when they log in."
+   Cleared: "&7The gang notice was removed."
+   Too_Long: "&cA notice is at most %max% characters."
 # end Notice
 
 # ---------------- Titles ----------------
+# Shown on screen. An empty Title and Subtitle shows nothing. %gang% = the gang's display name.
+Titles:
+   # To every online member when the gang reaches a level. %level%.
+   Level_Up:
+      Title: "&6Level %level%"
+      Subtitle: "&7%gang% &7grew stronger"
+   # To the player who joined.
+   Joined:
+      Title: "&aWelcome"
+      Subtitle: "&7You joined %gang%"
+   # To each member of a gang that was disbanded.
+   Disbanded:
+      Title: "&cGang disbanded"
+      Subtitle: "&7%gang% &7is no more"
 # end Titles
 
 # ---------------- Staff ----------------

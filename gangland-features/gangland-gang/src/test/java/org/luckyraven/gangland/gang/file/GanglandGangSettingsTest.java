@@ -75,6 +75,15 @@ class GanglandGangSettingsTest {
 	}
 
 	@Test
+	@DisplayName("an empty Display_Name_Char falls back to '*' (GR-27)")
+	void emptyDisplayNameCharFallsBack() {
+		module.set("Display_Name_Char", "");
+		legacy.set("Gang.Display_Name_Char", "");
+
+		assertEquals("*", load().getGangDisplayNameChar());
+	}
+
+	@Test
 	@DisplayName("a customised settings.yml value wins while gang_settings.yml still holds the default")
 	void legacyValueWins() {
 		legacy.set("Gang.Rank.Tail", "boss");

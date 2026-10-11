@@ -10,6 +10,8 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
@@ -18,6 +20,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -28,10 +31,12 @@ class GangDisplayCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
+	private final GangRules           rules;
+	private final GangMessages        gangMessages;
 
 	protected GangDisplayCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                             @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
-	                             GangManager gangManager) {
+	                             GangManager gangManager, GangRules rules, GangMessages gangMessages) {
 		super(gangland, "display", tree, parent);
 
 		this.gangland      = gangland;
@@ -39,6 +44,8 @@ class GangDisplayCommand extends SubArgument {
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
 		this.gangManager   = gangManager;
+		this.rules         = rules;
+		this.gangMessages  = gangMessages;
 
 		gangDisplay();
 	}
@@ -79,8 +86,17 @@ class GangDisplayCommand extends SubArgument {
 				return;
 			}
 
-			String displayNameStr = args[2];
-			Gang   gang           = gangManager.getGang(user.getGangId());
+			Gang gang = gangManager.getGang(user.getGangId());
+
+			Optional<String> refusal = GangNameRules.checkDisplay(args[2], rules, gangManager.getGangs().values(),
+			                                                      gang.getId());
+			if (refusal.isPresent()) {
+				user.sendMessage(GangNameRules.refusal(gangMessages, refusal.get(),
+				                                       String.valueOf(rules.getDisplayNameMaxLength())));
+				return;
+			}
+
+			String displayNameStr = GangNameRules.storedDisplay(args[2], rules);
 
 			gang.setDisplayName(displayNameStr);
 			user.sendMessage(Messages.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
