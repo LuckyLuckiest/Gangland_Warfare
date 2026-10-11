@@ -63,6 +63,20 @@ class GarrisonDeployListenerTest {
 	}
 
 	@Test
+	@DisplayName("F-GARRISON r1: a fully deployed reserve (count 0) with guards still alive re-arms the garrison on a restarted contest")
+	void emptyReserveWithLiveGuards_stillRearms() {
+		when(npcConfig.getDefenderConfig()).thenReturn(new TurfDefenderConfig("turf_defender", 16.0, 600));
+		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 1, BigDecimal.TEN, 0L, 0L);
+		when(defenders.aliveCount(1)).thenReturn(2);
+		Gang challenger = mock(Gang.class);
+		when(challenger.getId()).thenReturn(2);
+
+		listener.onCaptureStart(new TurfCaptureStartEvent(turf, challenger));
+
+		verify(defenders).startGarrison(any(TurfGarrison.class), any(), any());
+	}
+
+	@Test
 	@DisplayName("a failed contest returns the surviving guards to the owner's garrison stock")
 	void failedContest_givesSurvivingGuardsBackToStock() {
 		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 1, BigDecimal.TEN, 0L, 0L);

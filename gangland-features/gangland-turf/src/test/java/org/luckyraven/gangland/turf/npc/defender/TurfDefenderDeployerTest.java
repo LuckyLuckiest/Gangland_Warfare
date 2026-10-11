@@ -162,8 +162,8 @@ class TurfDefenderDeployerTest {
 	}
 
 	@Test
-	@DisplayName("T-751: standDown while a rival is still on the turf keeps the guards, and the next contest re-arms the same group")
-	void standDown_rivalStillOnTurf_keepsGuards() {
+	@DisplayName("F-GARRISON r1: standDown while a rival is still on the turf, then a restart re-arms the same guards: no return, no removal")
+	void standDown_rivalStillOnTurf_restartRearms() {
 		TurfDefenderDeployer deployer = newDeployer();
 		deployer.setCitizensAvailable(() -> true);
 		UUID id = UUID.randomUUID();
@@ -182,14 +182,42 @@ class TurfDefenderDeployerTest {
 			deployer.track(1, guard, System.currentTimeMillis(), () -> 600);
 
 			deployer.standDown(1, true, returned::set);
-			assertEquals(false, garrison.standingDown, "a rival is on the turf: no stand-down");
-			assertEquals(-1, returned.get());
+			assertEquals(true, garrison.standingDown, "standDown runs even with a rival on the turf");
 
 			deployer.startGarrison(new TurfGarrison(1, new CuboidRegion("world", 0, 0, 20, 20),
 					new TurfDefenderConfig("turf_defender", 32.0, 600), "VIP", () -> 0, n -> n, n -> {
 			}), () -> Set.of(id), () -> 600);
+			assertEquals(false, garrison.standingDown, "the restart re-arms the garrison");
+			deployer.tick();
+			assertEquals(-1, returned.get(), "onReturn is never called once the restart re-armed the guards");
 			assertEquals(1, deployer.aliveCount(1), "the restarted contest keeps the standing guard");
 			verify(guard, org.mockito.Mockito.never()).markForRemoval();
+		}
+	}
+
+	@Test
+	@DisplayName("F-GARRISON r1: standDown while a rival is still on the turf, with no restart, releases the group on the next tick past the window")
+	void standDown_rivalStillOnTurf_noRestart_releasesOnTick() {
+		TurfDefenderDeployer deployer = newDeployer();
+		deployer.setCitizensAvailable(() -> true);
+		UUID id = UUID.randomUUID();
+		org.bukkit.entity.Player rival = mock(org.bukkit.entity.Player.class);
+		when(rival.isOnline()).thenReturn(true);
+		when(rival.getLocation()).thenReturn(new org.bukkit.Location(null, 5, 70, 5));
+		CivilianNpc guard = liveNpc();
+		AtomicInteger returned = new AtomicInteger(-1);
+		TurfGarrison garrison = new TurfGarrison(1, new CuboidRegion("world", 0, 0, 20, 20),
+				new TurfDefenderConfig("turf_defender", 32.0, 600, 3, 6, 20, 0, 16), "VIP", () -> 0, n -> n, n -> {
+		});
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(() -> Bukkit.getPlayer(id)).thenReturn(rival);
+			deployer.startGarrison(garrison, () -> Set.of(id), () -> 600);
+			deployer.track(1, guard, System.currentTimeMillis(), () -> 600);
+
+			deployer.standDown(1, true, returned::set);
+			deployer.tick();
+			assertEquals(1, returned.get(), "the survivor is handed back once the stand-down window passes");
 		}
 	}
 

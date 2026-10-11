@@ -71,7 +71,8 @@ public final class GarrisonDeployListener implements Listener {
 		powerupNpcs.engage(turf.getId(), () -> challengerMemberIds(challengerGangId));
 
 		int turfId = turf.getId();
-		if (garrisons.count(turfId) <= 0) return;
+		// F-GARRISON r1: a fully deployed reserve (count 0) with guards still out must re-arm, or a restarted contest leaves them idle
+		if (garrisons.count(turfId) <= 0 && defenders.aliveCount(turfId) <= 0) return;
 
 		// TF-36: read the live config at deploy time, so a /glw reload of turf_npcs.yml applies to the next contest.
 		TurfDefenderConfig defenderConfig = npcConfig.getDefenderConfig();

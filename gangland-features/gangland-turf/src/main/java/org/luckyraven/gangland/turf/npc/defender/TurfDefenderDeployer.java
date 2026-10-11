@@ -160,8 +160,6 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			return;
 		}
 		if (garrison.standingDown) return;
-		// T-751: while a rival is still on the turf the garrison holds its ground; the contest restarts and re-arms it
-		if (hostileOnTurf(group, garrison)) return;
 
 		garrison.standingDown = true;
 		garrison.onReturn     = onReturn;
@@ -172,19 +170,6 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			standDownOne(d.npc, garrison);
 			civilianService.shout(d.npc, line, Map.of());
 		}
-	}
-
-	/** Whether any challenger is online, alive and inside the turf region right now. */
-	private boolean hostileOnTurf(Group group, TurfGarrison garrison) {
-		Set<UUID> ids = group.challengerMembers.get();
-		if (ids == null) return false;
-		for (UUID id : ids) {
-			Player player = Bukkit.getPlayer(id);
-			if (player == null || !player.isOnline() || player.isDead()) continue;
-			Location at = player.getLocation();
-			if (GarrisonPosts.withinLeash(at.getX(), at.getZ(), garrison.region, 0)) return true;
-		}
-		return false;
 	}
 
 	/**
