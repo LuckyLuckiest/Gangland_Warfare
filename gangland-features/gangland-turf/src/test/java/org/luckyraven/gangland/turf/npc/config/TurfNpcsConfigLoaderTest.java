@@ -68,6 +68,20 @@ class TurfNpcsConfigLoaderTest {
 		assertEquals("Quartermaster", loader(handler).getPowerupSettings().displayName());
 	}
 
+	@Test
+	@DisplayName("W7-B: Powerup_Npc.Placement_Cost is read, defaults to 5000 and is clamped at 0 (D29=B)")
+	void placementCost_readAndDefault() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Powerup_Npc:\n   Placement_Cost: 2500\n"));
+		assertEquals(2500.0, loader(handler).getPowerupSettings().placementCost());
+
+		when(handler.getParsedDocument()).thenReturn(document("Powerup_Npc:\n   Display_Name: Boss\n"));
+		assertEquals(5000.0, loader(handler).getPowerupSettings().placementCost());
+
+		when(handler.getParsedDocument()).thenReturn(document("Powerup_Npc:\n   Placement_Cost: -5\n"));
+		assertEquals(0.0, loader(handler).getPowerupSettings().placementCost());
+	}
+
 	private static TurfNpcsConfigLoader loader(FileHandler handler) {
 		FileManager fileManager = mock(FileManager.class);
 		when(fileManager.getFile("turf_npcs")).thenReturn(handler);
