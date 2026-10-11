@@ -37,6 +37,7 @@ import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
 import org.luckyraven.gangland.turf.manager.TurfManager;
+import org.luckyraven.gangland.turf.npc.QuartermasterNameplate;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
@@ -326,6 +327,12 @@ public final class TurfModuleConfig {
 	public TurfPowerupManager turfPowerupManager(JavaPlugin plugin, TurfPowerupNpcRepository repository,
 	                                             TurfNpcsConfigLoader loader, CivilianSpawnManager spawnManager) {
 		return new TurfPowerupManager(plugin, repository, loader::getPowerupSettings, spawnManager);
+	}
+
+	@Bean
+	public QuartermasterNameplate quartermasterNameplate(TurfManager turfs, GangLookupContract gangs,
+	                                                     TurfPowerupManager npcs, TurfMessages messages) {
+		return new QuartermasterNameplate(turfs, gangs, npcs, messages);
 	}
 
 	@Bean

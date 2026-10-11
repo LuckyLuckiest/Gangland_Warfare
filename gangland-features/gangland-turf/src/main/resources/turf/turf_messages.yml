@@ -343,8 +343,14 @@ Quartermaster:
    Not_Allied: "&cYour gang is no longer allied with the owning gang."
    # Chat when the turf has no owner yet (open contract).
    No_Owner: "&cThis turf has no owner — nothing to manage here yet."
-   # Chat for a player who is in no gang that owns or allies the turf (open contract).
-   Only_Owner_Or_Allies: "&cOnly members of the owning gang or its allies can use this NPC."
+   # Chat for a player in no gang who right-clicks the Quartermaster (open contract). %npc% = its name,
+   # %owner% = the owning gang's full name, %owner_id% = that gang's id (what /glw gang ally request takes).
+   Refuse_No_Gang: "&cThis %npc% serves &e%owner%&c. Join a gang, then ally with them: &f/glw gang ally request %owner_id%"
+   # Chat for a player whose gang neither owns nor allies the turf (open contract). Same placeholders.
+   Refuse_Stranger: "&cThis %npc% serves &e%owner%&c. Ally with them to use it: &f/glw gang ally request %owner_id%"
+   # Line drawn above the Quartermaster's nameplate naming the owning gang (D27). %tag% = the gang's 1-4
+   # character short code. Over 16 characters without colours it falls back to [%tag%]; unowned turfs show no line.
+   Nameplate_Tag: "&8[&e%tag%&8]"
    # Chat when a gang record is missing (open contract).
    Gang_Missing: "&cGang record missing — contact an admin."
 # end Quartermaster

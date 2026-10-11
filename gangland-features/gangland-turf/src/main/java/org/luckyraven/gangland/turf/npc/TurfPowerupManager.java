@@ -17,6 +17,7 @@ import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -32,6 +33,10 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	private final IRepository<TurfPowerupData> repository;
 	private final Supplier<TurfPowerupSettings> settings;
 	private final CivilianSpawnManager         civilianSpawnManager;
+
+	/** Runs after every successful spawn (W7-C nameplate line). */
+	private Consumer<TurfPowerupNpc> spawnHook = npc -> {
+	};
 
 	private final Map<Integer, TurfPowerupNpc>    byTurfId = new HashMap<>();
 	/**
@@ -74,6 +79,19 @@ public final class TurfPowerupManager implements BeanLifecycle {
 		despawnAll();
 		byTurfId.clear();
 		pending.clear();
+	}
+
+	public void setSpawnHook(Consumer<TurfPowerupNpc> spawnHook) {
+		this.spawnHook = spawnHook;
+	}
+
+	private void afterSpawn(TurfPowerupNpc npc) {
+		try {
+			spawnHook.accept(npc);
+		} catch (RuntimeException exception) {
+			log.warn("Quartermaster spawn hook failed for turf {}: {}", npc.getData().getTurfId(),
+			         exception.getMessage());
+		}
 	}
 
 	public Collection<TurfPowerupData> snapshotData() {
@@ -160,7 +178,10 @@ public final class TurfPowerupManager implements BeanLifecycle {
 			if (loc.getBlockX() >> 4 != chunkX || loc.getBlockZ() >> 4 != chunkZ) continue;
 			it.remove();
 			TurfPowerupNpc npc = TurfPowerupNpc.spawn(plugin, data, settings.get(), civilianSpawnManager);
-			if (npc != null) byTurfId.put(data.getTurfId(), npc);
+			if (npc != null) {
+				byTurfId.put(data.getTurfId(), npc);
+				afterSpawn(npc);
+			}
 		}
 	}
 
@@ -184,6 +205,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 		TurfPowerupNpc npc = TurfPowerupNpc.spawn(plugin, data, settings.get(), civilianSpawnManager);
 		if (npc == null) return null;
 		byTurfId.put(data.getTurfId(), npc);
+		afterSpawn(npc);
 		return npc;
 	}
 
