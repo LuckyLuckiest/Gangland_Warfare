@@ -1,9 +1,12 @@
 package org.luckyraven.gangland.gang;
 
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.PluginManager;
 import org.luckyraven.gangland.gang.combat.CombatTag;
 import org.luckyraven.gangland.gang.combat.DamageLedger;
 import org.luckyraven.gangland.gang.combat.FriendlyFirePolicy;
 import org.luckyraven.gangland.gang.combat.region.FriendlyFireRegionSource;
+import org.luckyraven.gangland.gang.combat.region.WorldGuardRegions;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.member.Member;
@@ -37,6 +40,11 @@ public final class GangCombatConfig {
 
 	@Bean
 	public FriendlyFireRegionSource friendlyFireRegionSource() {
-		return FriendlyFireRegionSource.NONE;
+		PluginManager pluginManager = Bukkit.getPluginManager();
+		if (pluginManager == null || pluginManager.getPlugin("WorldGuard") == null)
+		{
+			return FriendlyFireRegionSource.NONE;
+		}
+		return WorldGuardRegions.create();
 	}
 }
