@@ -3,7 +3,6 @@ package org.luckyraven.gangland.gang;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.data.gang.GangChatChannel;
-import org.luckyraven.gangland.events.gangs.GangMemberLeftEvent;
 import org.luckyraven.gangland.gang.chat.ChatChannels;
 import org.luckyraven.gangland.gang.chat.ChatSpyService;
 import org.luckyraven.gangland.gang.chat.GangChatToggles;
@@ -15,9 +14,7 @@ import org.luckyraven.gangland.gang.level.GangLevelTable;
 import org.luckyraven.gangland.gang.level.GangLimits;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.luckyraven.gangland.gang.membership.MembershipQueries;
-import org.luckyraven.gangland.gang.purge.GangPurgeTask;
 import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
 import org.luckyraven.gangland.gang.stats.GangStatContribution;
 import org.luckyraven.gangland.gang.stats.GangStatContributions;
@@ -25,7 +22,6 @@ import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,19 +60,6 @@ class GangSeamStubsTest {
 		assertEquals(3, row.level());
 		assertEquals(0D, row.cost());
 		assertTrue(row.commands().isEmpty());
-	}
-
-	@Test
-	@DisplayName("GangMembershipService: every call fails with not_yet; success() is ok")
-	void membershipService() {
-		GangMembershipService service = new GangMembershipService();
-
-		assertFalse(service.join(1, a, GangMembershipService.JoinSource.JOIN).ok());
-		assertEquals("not_yet", service.leave(a, GangMemberLeftEvent.Reason.LEFT).messageKey());
-		assertFalse(service.kick(1, a, b).ok());
-		assertFalse(service.disband(1, null, true).ok());
-		assertFalse(service.setLeader(1, null, b, true).ok());
-		assertTrue(GangMembershipService.Result.success().ok());
 	}
 
 	@Test
@@ -205,12 +188,4 @@ class GangSeamStubsTest {
 		assertEquals(GangChatChannel.GANG, channels.chatChannelOf(a));
 	}
 
-	@Test
-	@DisplayName("GangPurgeTask: nothing to purge")
-	void purge() {
-		GangPurgeTask task = new GangPurgeTask();
-
-		assertTrue(task.preview(Instant.EPOCH).isEmpty());
-		assertEquals(0, task.run(Instant.EPOCH));
-	}
 }

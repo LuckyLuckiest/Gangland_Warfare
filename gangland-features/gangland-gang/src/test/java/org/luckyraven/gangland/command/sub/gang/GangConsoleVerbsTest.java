@@ -138,8 +138,8 @@ class GangConsoleVerbsTest {
 		                                      mock(RankManager.class), mock(RepositoryRegistry.class),
 		                                      mock(PermissionManager.class), mock(DependencyContainer.class), null,
 		                                      rules, messages, new GangChatToggles(), new GangWorldPolicy(rules),
-		                                      new GangMembershipService(), new GangDisbandService(),
-		                                      new GangLeadership(), new CombatTag(), new GangStatsService(),
+		                                      mock(GangMembershipService.class), mock(GangDisbandService.class),
+		                                      mock(GangLeadership.class), new CombatTag(), new GangStatsService(),
 		                                      new GangLimits(), new GangLevelTable(), new GangSafehouseService(),
 		                                      mock(FriendlyFirePolicy.class));
 		command.initializeArguments();

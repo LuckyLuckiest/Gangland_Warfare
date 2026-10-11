@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.support.MembershipKit;
 import org.luckyraven.gangland.gang.membership.GangDisbandService;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.bukkit.Bukkit;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 import net.md_5.bungee.api.ChatColor;
 import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.events.gang.GangDeleteEvent;
+import org.luckyraven.gangland.events.gangs.GangMemberLeftEvent;
 import org.luckyraven.gangland.core.support.FakeIdentitySettingsContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -93,6 +95,7 @@ class GangDeleteCommandTest {
 	private       RankManager             rankManager;
 	private       Argument                parent;
 	private       GangDeleteCommand       command;
+	private       MembershipKit           kit;
 
 	@BeforeEach
 	@SuppressWarnings("unchecked")
@@ -173,8 +176,10 @@ class GangDeleteCommandTest {
 	}
 
 	private GangDeleteCommand commandWith(GangMessages messages) {
-		return new GangDeleteCommand(plugin, new Tree<>(), parent, userManager, offlineUserManager, memberManager,
-		                             gangManager, rankManager, repositoryRegistry, messages, new GangDisbandService());
+		kit = new MembershipKit(gangManager, memberManager, rankManager, userManager, offlineUserManager,
+		                                      repositoryRegistry, messages);
+		return new GangDeleteCommand(plugin, new Tree<>(), parent, userManager, memberManager, gangManager,
+		                             rankManager, kit.service);
 	}
 
 	@AfterEach
@@ -292,7 +297,7 @@ class GangDeleteCommandTest {
 		UUID cy    = UUID.randomUUID();
 		List<Member> members = List.of(zeroMember(owner), zeroMember(bob), zeroMember(cy));
 
-		Map<UUID, BigDecimal> shares = GangDeleteCommand.payouts(new BigDecimal("100.00"), members, owner);
+		Map<UUID, BigDecimal> shares = GangDisbandService.payouts(new BigDecimal("100.00"), members, owner);
 
 		assertEquals(0, new BigDecimal("33.33").compareTo(shares.get(bob)), "bob " + shares.get(bob));
 		assertEquals(0, new BigDecimal("33.33").compareTo(shares.get(cy)), "cy " + shares.get(cy));
@@ -321,6 +326,31 @@ class GangDeleteCommandTest {
 		assertEquals(1, plain.stream().filter(line -> line.startsWith("DEPOSITED")).count(), plain.toString());
 		assertEquals(1, plain.stream().filter(line -> line.startsWith("Refunded a quarter")).count(), plain.toString());
 		assertMoney("1100", alice.getEconomy());   // 1000 share + 100 fee refund, paid once
+	}
+
+	@Test
+	@DisplayName("every member leaves with the DISBANDED reason, once each, online or offline")
+	void disband_firesLeftEventPerMember() {
+		onlineMember(1.0);
+		offlineMember(1.0);
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("300"));
+
+		disband(alice);
+
+		verify(pluginManager, times(3)).callEvent(argThat(
+				event -> event instanceof GangMemberLeftEvent left && left.gangId() == GANG_ID
+				         && left.reason() == GangMemberLeftEvent.Reason.DISBANDED));
+	}
+
+	@Test
+	@DisplayName("a staff or purge disband gives no creation-fee refund (refundFee false)")
+	void staffDisband_noRefund() {
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("100"));
+		kit.service.disband(GANG_ID, alice.getUser().getUniqueId(), true);
+
+		assertMoney("100", alice.getEconomy());   // the vault only, no fee refund
 	}
 
 	private Member zeroMember(UUID uuid) {

@@ -16,6 +16,7 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
@@ -119,7 +120,8 @@ class GangInviteAcceptCommandTest {
 		when(parent.getPermission()).thenReturn("glw.gang");
 
 		accept = new GangInviteAcceptCommand(plugin, tree, parent, userManager, mock(MemberManager.class),
-		                                     gangManager, mock(RankManager.class), mailManager, messages);
+		                                     gangManager, mock(RankManager.class), mailManager, messages,
+		                                     mock(GangMembershipService.class));
 	}
 
 	@AfterEach

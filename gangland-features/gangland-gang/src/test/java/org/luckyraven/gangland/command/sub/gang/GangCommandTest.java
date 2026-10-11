@@ -159,8 +159,8 @@ class GangCommandTest {
 	private GangCommand command(UserManager<Player> userManager) {
 		return new GangCommand(mock(JavaPlugin.class), userManager, mock(UserManager.class), null, null, null, null,
 		                       null, mock(DependencyContainer.class), null, mock(GangRules.class), messages,
-		                       new GangChatToggles(), new GangWorldPolicy(mock(GangRules.class)), new GangMembershipService(),
-		                       new GangDisbandService(), new GangLeadership(), new CombatTag(),
+		                       new GangChatToggles(), new GangWorldPolicy(mock(GangRules.class)), mock(GangMembershipService.class),
+		                       mock(GangDisbandService.class), mock(GangLeadership.class), new CombatTag(),
 		                       new GangStatsService(), new GangLimits(), new GangLevelTable(),
 		                       new GangSafehouseService(), mock(FriendlyFirePolicy.class));
 	}

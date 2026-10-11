@@ -15,6 +15,7 @@ import org.luckyraven.gangland.mail.command.invite.GangInviteCommand;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 
 import java.util.List;
 
@@ -36,11 +37,13 @@ public final class GangMailContribution implements CommandContribution {
 	private final MailManager                mailManager;
 	private final MailRules                  mailRules;
 	private final MailMessages               mailMessages;
+	private final GangMembershipService      membershipService;
 
 	public GangMailContribution(JavaPlugin plugin, @Qualifier("online") UserManager<Player> userManager,
 	                            @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                            MemberManager memberManager, GangManager gangManager, RankManager rankManager,
-	                            MailManager mailManager, MailRules mailRules, MailMessages mailMessages) {
+	                            MailManager mailManager, MailRules mailRules, MailMessages mailMessages,
+	                            GangMembershipService membershipService) {
 		this.plugin             = plugin;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
@@ -50,6 +53,7 @@ public final class GangMailContribution implements CommandContribution {
 		this.mailManager        = mailManager;
 		this.mailRules          = mailRules;
 		this.mailMessages       = mailMessages;
+		this.membershipService  = membershipService;
 	}
 
 	@Override
@@ -61,7 +65,7 @@ public final class GangMailContribution implements CommandContribution {
 	public List<Argument> create(Tree<Argument> tree, Argument parent) {
 		GangInviteCommand invite = new GangInviteCommand(plugin, tree, parent, userManager, offlineUserManager,
 		                                                 memberManager, gangManager, rankManager, mailManager,
-		                                                 mailRules, mailMessages);
+		                                                 mailRules, mailMessages, membershipService);
 		return List.of(invite, invite.gangAccept(), invite.gangDecline());
 	}
 }

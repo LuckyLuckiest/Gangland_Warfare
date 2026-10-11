@@ -1,6 +1,10 @@
 package org.luckyraven.gangland.gang;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.scheduler.BukkitScheduler;
+import org.junit.jupiter.api.AfterEach;
+import org.mockito.MockedStatic;
 import org.luckyraven.gangland.gang.database.repositories.meta.GangMigration;
 import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
 import org.bukkit.entity.Player;
@@ -37,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 /**
@@ -76,9 +81,13 @@ class GangConfigBeanGraphTest {
 
 	private DependencyContainer container;
 	private BeanFactory         factory;
+	// GangPurgeTask schedules its hourly check when it initializes
+	private MockedStatic<Bukkit> bukkit;
 
 	@BeforeEach
 	void setUp() {
+		bukkit = mockStatic(Bukkit.class);
+		bukkit.when(Bukkit::getScheduler).thenReturn(mock(BukkitScheduler.class));
 		container = new DependencyContainer();
 		JavaPlugin plugin = mock(JavaPlugin.class);
 		// FileHandler (gang_settings.yml, built inside gangSettingsContract) reads the plugin version.
@@ -132,6 +141,11 @@ class GangConfigBeanGraphTest {
 		// (BeanFactory.registerConfiguration silently rejects a non-annotated class) — kept so this same test
 		// reproduces the pre-fix crash unchanged when the fix is temporarily reverted for the red-first check.
 		factory.registerConfiguration(GangMembershipInstaller.class);
+	}
+
+	@AfterEach
+	void tearDown() {
+		bukkit.close();
 	}
 
 	@SuppressWarnings("unchecked")

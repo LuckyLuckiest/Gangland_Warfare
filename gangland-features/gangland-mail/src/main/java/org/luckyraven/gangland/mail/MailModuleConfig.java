@@ -11,6 +11,7 @@ import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.command.GangAllyMailContribution;
@@ -80,9 +81,10 @@ public class MailModuleConfig {
 	                                                 RankManager rankManager,
 	                                                 MailManager mailManager,
 	                                                 MailRules mailRules,
-	                                                 MailMessages mailMessages) {
+	                                                 MailMessages mailMessages,
+	                                                 GangMembershipService membershipService) {
 		return new GangMailContribution(plugin, userManager, offlineUserManager, memberManager, gangManager,
-		                                rankManager, mailManager, mailRules, mailMessages);
+		                                rankManager, mailManager, mailRules, mailMessages, membershipService);
 	}
 
 	@Bean
