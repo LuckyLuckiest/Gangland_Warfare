@@ -32,8 +32,12 @@ public final class SafeSpot {
 		int x = location.getBlockX();
 		int y = location.getBlockY();
 		int z = location.getBlockZ();
-		// 1.16 has no negative heights; anything under the floor is void
-		if (y < 1) return false;
+		// standing on the top face of a partial block (slab, carpet, path): that block's cell is the floor, not the feet
+		Block cell = world.getBlockAt(x, y, z);
+		if (!cell.isPassable() && location.getY() > y)
+		{
+			y++;
+		}
 
 		Block feet  = world.getBlockAt(x, y, z);
 		Block head  = world.getBlockAt(x, y + 1, z);

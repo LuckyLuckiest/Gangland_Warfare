@@ -56,10 +56,32 @@ class SafeSpotTest {
 	}
 
 	private boolean at(int y, Block floor, Block feet, Block head) {
+		return at(y, y, floor, feet, head);
+	}
+
+	private boolean at(int y, double exactY, Block floor, Block feet, Block head) {
 		when(world.getBlockAt(5, y - 1, 5)).thenReturn(floor);
 		when(world.getBlockAt(5, y, 5)).thenReturn(feet);
 		when(world.getBlockAt(5, y + 1, 5)).thenReturn(head);
-		return SafeSpot.isSafe(new Location(world, 5.5, y, 5.5));
+		return SafeSpot.isSafe(new Location(world, 5.5, exactY, 5.5));
+	}
+
+	@Test
+	@DisplayName("standing on a bottom slab (y 64.5) or a carpet (y 64.0625): safe")
+	void partialBlockFloors() {
+		Block slab = block(Material.STONE_SLAB, false, false);
+		Block carpet = block(Material.WHITE_CARPET, false, false);
+		Block air1 = air();
+		Block air2 = air();
+		Block ground = stone();
+		when(world.getBlockAt(5, 63, 5)).thenReturn(ground);
+		// slab cell at 64, air at 65 and 66: feet 65, head 66, floor = the slab
+		when(world.getBlockAt(5, 64, 5)).thenReturn(slab);
+		when(world.getBlockAt(5, 65, 5)).thenReturn(air1);
+		when(world.getBlockAt(5, 66, 5)).thenReturn(air2);
+		assertTrue(SafeSpot.isSafe(new Location(world, 5.5, 64.5, 5.5)));
+		when(world.getBlockAt(5, 64, 5)).thenReturn(carpet);
+		assertTrue(SafeSpot.isSafe(new Location(world, 5.5, 64.0625, 5.5)));
 	}
 
 	@Test
@@ -87,7 +109,7 @@ class SafeSpotTest {
 	@Test
 	@DisplayName("void: no floor below the world, or air under the feet: refused")
 	void voidBelow() {
-		assertFalse(at(0, stone(), air(), air()), "y = 0 has nothing under it");
+		assertFalse(at(0, air(), air(), air()), "nothing under the world floor");
 		assertFalse(at(64, air(), air(), air()), "air under the feet is a drop");
 	}
 

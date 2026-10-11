@@ -131,7 +131,7 @@ Safehouse:
    List_Row: "&7- &f%name% &7(%world% %x% %y% %z%)"
    # %name% is what the player typed.
    Not_Found: "&cYour gang has no safehouse named %name%."
-   Name_Invalid: "&cA safehouse name is 1 to 16 letters, digits or underscores, and not set, remove or list."
+   Name_Invalid: "&cA safehouse name is 1 to 16 letters, digits or underscores, and not set, remove, list or join."
    # The gang level allows no more safehouses. %count% = safehouses now, %max% = the cap.
    Cap: "&cYour gang level allows %max% safehouses; remove one or upgrade first."
    # The spot has lava, fire, a cactus, a one block gap or no floor. %name% is the safehouse (or the caller for a rally).

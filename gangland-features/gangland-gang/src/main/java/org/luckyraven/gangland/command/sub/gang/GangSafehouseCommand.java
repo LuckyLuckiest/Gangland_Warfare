@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 final class GangSafehouseCommand extends SubArgument {
 
 	private static final Pattern     NAME     = Pattern.compile("[A-Za-z0-9_]{1,16}");
-	private static final Set<String> RESERVED = Set.of("set", "remove", "list");
+	private static final Set<String> RESERVED = Set.of("set", "remove", "list", "join");
 
 	private final GangSafehouseService service;
 	private final GangLimits           limits;
