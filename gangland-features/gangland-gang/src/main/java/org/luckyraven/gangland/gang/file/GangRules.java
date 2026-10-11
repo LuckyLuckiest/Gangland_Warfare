@@ -18,6 +18,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
@@ -102,6 +103,8 @@ public class GangRules implements FileInitializer {
 	private boolean friendlyFireAllowSelfDamage = true;
 	@Getter
 	private String  friendlyFirePotions         = "NEGATIVE_ONLY";
+	/** {@code Friendly_Fire.Worlds}: world name (lower case) to ALLOW (true) or DENY (false). */
+	private Map<String, Boolean> friendlyFireWorlds = Map.of();
 
 	// Combat (W5-F)
 	@Getter
@@ -249,6 +252,17 @@ public class GangRules implements FileInitializer {
 		friendlyFireAllowSelfDamage = config.getBoolean("Friendly_Fire.Allow_Self_Damage", true);
 		friendlyFirePotions         = config.getString("Friendly_Fire.Potions", "NEGATIVE_ONLY");
 
+		Map<String, Boolean> fireWorlds = new LinkedHashMap<>();
+		ConfigurationSection fireSection = config.getConfigurationSection("Friendly_Fire.Worlds");
+		if (fireSection != null) {
+			for (String world : fireSection.getKeys(false)) {
+				String value = fireSection.getString(world, "");
+				if ("ALLOW".equalsIgnoreCase(value)) fireWorlds.put(world.toLowerCase(Locale.ROOT), true);
+				else if ("DENY".equalsIgnoreCase(value)) fireWorlds.put(world.toLowerCase(Locale.ROOT), false);
+			}
+		}
+		friendlyFireWorlds = Collections.unmodifiableMap(fireWorlds);
+
 		combatTagSeconds = Math.max(0, config.getInt("Combat.Tag_Seconds", 15));
 
 		safehouseEnabled             = config.getBoolean("Safehouse.Enabled", true);
@@ -325,6 +339,11 @@ public class GangRules implements FileInitializer {
 			map.put(key, "owner");
 		}
 		return Collections.unmodifiableMap(map);
+	}
+
+	/** The per-world friendly-fire override: {@code true} = ALLOW, {@code false} = DENY, empty = none. */
+	public Optional<Boolean> friendlyFireWorld(String world) {
+		return Optional.ofNullable(friendlyFireWorlds.get(world.toLowerCase(Locale.ROOT)));
 	}
 
 	/** Permission nodes a preset rank gets on a fresh install, trimmed; empty when the rank has none listed. */
