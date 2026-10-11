@@ -51,9 +51,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -255,6 +257,32 @@ class GangDeleteCommandTest {
 
 		assertEquals(1, savedBalance.size(), "the offline User row must be saved once");
 		assertEquals(0, new BigDecimal("500").compareTo(savedBalance.get(0)), "saved balance " + savedBalance);
+	}
+
+	@Test
+	@DisplayName("a payout to an offline member with no loaded row is load-pending and never saved over the stored row")
+	void fallbackOfflineUser_isLoadPendingAndNotSaved() {
+		UUID                uuid = UUID.randomUUID();
+		User<OfflinePlayer> dave = mock(User.class);
+		AtomicBoolean       pending = new AtomicBoolean();
+		when(dave.getEconomy()).thenReturn(new EconomyHandler(null));
+		doAnswer(i -> {
+			pending.set(i.getArgument(0));
+			return null;
+		}).when(dave).setLoadPending(anyBoolean());
+		when(dave.isLoadPending()).thenAnswer(i -> pending.get());
+		// no cached row: the command falls back to create(), as it does when the boot read failed
+		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(null);
+		doReturn(dave).when(offlineUserManager).create(any(OfflinePlayer.class));
+		member(uuid, 1.0, memberRank);
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("1000"));
+
+		disband(alice);
+
+		verify(offlineUserManager).add(dave);
+		assertEquals(true, dave.isLoadPending(), "the fallback user must be load-pending");
+		verify(userRepository, never()).save(dave);
 	}
 
 	@Test

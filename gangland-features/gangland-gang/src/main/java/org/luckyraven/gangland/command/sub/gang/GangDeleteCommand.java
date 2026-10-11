@@ -44,7 +44,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.luckyraven.keystone.bean.Qualifier;
+import lombok.CustomLog;
 
+@CustomLog
 class GangDeleteCommand extends SubArgument {
 
 	private final JavaPlugin                   gangland;
@@ -253,7 +255,10 @@ class GangDeleteCommand extends SubArgument {
 
 				User<OfflinePlayer> offlineUser = offlineUserManager.getUser(offlinePlayer);
 				if (offlineUser == null) {
+					// Fallback only: the row failed to load, so this User holds defaults. Load-pending keeps autosave
+					// and shutdown off it, and the save below is skipped for it.
 					offlineUser = offlineUserManager.create(offlinePlayer);
+					offlineUser.setLoadPending(true);
 					offlineUserManager.add(offlineUser);
 				}
 
@@ -261,7 +266,12 @@ class GangDeleteCommand extends SubArgument {
 
 				gang.getEconomy().withdrawAmount(amount);
 				offlineUser.getEconomy().depositAmount(amount);
-				userRepository.save(offlineUser);
+				if (offlineUser.isLoadPending()) {
+					log.warn("Disband payout of {} for {} was not saved: their stored data could not be read",
+					         amount, mem.getUuid());
+				} else {
+					userRepository.save(offlineUser);
+				}
 
 				gang.removeMember(offlineUser, mem);
 

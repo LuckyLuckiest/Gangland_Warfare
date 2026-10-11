@@ -6,6 +6,8 @@
 
 [LIST]
 [*][B]Keystone 1.15.2[/B] (0.16.1 shipped on 1.15.1; 1.15.2 adds WAL and busy timeouts to Keystone's SQLite pools, which fixes SQLITE_BUSY on boot; a player whose data still cannot load is kicked to rejoin instead of being saved over). Gangland refuses to start on an older Keystone.
+[*][B]Back up the database before the first boot.[/B] 1.15.2 converts the SQLite database to WAL. Stop the server, back up [ICODE].db[/ICODE], [ICODE].db-wal[/ICODE] and [ICODE].db-shm[/ICODE] together (expect the two extra files while the server runs). WAL needs a local filesystem, not SMB or NFS. See [ICODE]documentation/migration-0.17.0.md[/ICODE].
+[*][B]Update the core jar and the gang, turf and mail module jars together.[/B] Mixing versions is not supported; mail uses gang's new [ICODE]GangJoinEvent[/ICODE].
 [*][B]Bartizan 0.6.0[/B] is the version Gangland builds against. Only cops-n-crooks needs Bartizan (`Plugins: [Bartizan]`); without it cops-n-crooks is skipped. Civilians, gadget and turf load without it, and weapon item references resolve to nothing.
 [*][B]Menus refresh on the first boot.[/B] Shipped [ICODE]inventory/*.yml[/ICODE] menus with no [ICODE]Config_Version[/ICODE] are replaced from the jar. Your old copy is kept as [ICODE]inventory/<name>-old.yml[/ICODE]; copy your changes back by hand. Your own menus are not touched.
 [*][B]Read the 0.17.0 migration notes before you start the server.[/B] Every existing gang becomes invite-only, and a few one-time migrations run on the first boot. See [ICODE]documentation/migration-0.17.0.md[/ICODE].

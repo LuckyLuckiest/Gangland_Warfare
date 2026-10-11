@@ -45,7 +45,9 @@ final class NameLookup {
 			User<OfflinePlayer> existing = offline.getUser(offlinePlayer);
 			if (existing != null) return existing;
 
+			// Defaults-only User for a player with no loaded row: load-pending keeps autosave and shutdown from saving it.
 			User<OfflinePlayer> created = offline.create(offlinePlayer);
+			created.setLoadPending(true);
 			offline.add(created);
 			return created;
 		}

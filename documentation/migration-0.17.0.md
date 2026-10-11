@@ -258,6 +258,14 @@ new jar.
 ### 8. Database and jars
 
 - New table `gang_migration` (created automatically).
+- **WAL on the first boot (Keystone 1.15.2).** The first boot on 1.15.2 converts an existing delete-mode SQLite database to
+  WAL. While the server runs, expect two extra files next to the database: `<schema>.db-wal` and `<schema>.db-shm`.
+  Back up `.db`, `.db-wal` and `.db-shm` together, with the server stopped. A copy of `.db` alone taken while the server
+  runs can miss committed rows still in the `-wal` file. WAL needs a local filesystem; do not put the database on SMB or
+  NFS. Downgrading to 1.15.1 still reads the file and keeps it in WAL mode.
+- **Update the core jar and the gang, turf and mail module jars together.** The 0.17.0 mail module uses gang's new
+  `GangJoinEvent` and declares `Host_Api` 2.0, so the module loader does not catch a mismatched gang jar. Mixing 0.16.1 and
+  0.17.0 jars is not supported.
 - Repository loads now read numeric columns through `Number` (NULL reads as 0), so a MySQL server returning a wider
   numeric type or NULL no longer fails the load.
 - The core jar and the gang/turf/mail module jars must be updated together.
