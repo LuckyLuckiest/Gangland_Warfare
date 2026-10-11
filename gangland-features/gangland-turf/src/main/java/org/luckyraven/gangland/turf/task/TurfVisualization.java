@@ -10,6 +10,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Spawns a particle outline along every edge of a {@link CuboidRegion} so an admin can see the region they are about to
  * create or the turf they are inside. Renders the full wire-frame (4 vertical pillars plus the top/bottom rectangles)
@@ -27,6 +30,11 @@ public final class TurfVisualization {
 	private static final long   REFRESH_TICKS = 20L;
 
 	private TurfVisualization() {
+	}
+
+	static List<double[]> edgePoints(double minX, double minY, double minZ, double maxX, double maxY, double maxZ,
+	                                 double viewerX, double viewerY, double viewerZ, double radius, int budget) {
+		return new ArrayList<>();
 	}
 
 	public static void show(JavaPlugin plugin, Player viewer, String worldName, CuboidRegion region,
