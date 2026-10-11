@@ -5,6 +5,11 @@ Information:
    Display_Name: "&6&lPlayer Profile"
    Size: 27
    Type: inventory
+   Open:
+      Command: "/glw gang profile"
+      Permission: "gangland.command.gang.profile"
+      # A player with no gang falls through to the chat 'not in a gang' line (the menu is gang-only).
+      Condition: "%gangland_user_has-gang%"
    Configuration:
       Fill: true
       Border: false
@@ -16,6 +21,11 @@ Slots:
       Name: "&bGang"
       Lore:
          - "&e%gangland_gang_name%"
+   11:
+      Item: COMPASS
+      Name: "&bKDR"
+      Lore:
+         - "&e%gangland_user_kd%"
    12:
       Item: DIAMOND_SWORD
       Name: "&bKills"
@@ -36,3 +46,4 @@ Slots:
       Name: "&bRank position"
       Lore:
          - "&e#%gangland_user_rank-position%"
+         - "&7%gangland_user_rank%"

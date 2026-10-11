@@ -10,6 +10,8 @@ Information:
       Border: true
    Permission: "gangland.inventory.gang_ranking"
    Multi:
+      # Ranks by kills. Other stats: Item_Source gang_ranking_<stat> with <stat> one of kdr, assists, level, members,
+      # online, turfs, wins, balance (balance needs gangland.gang.ranking.wealth).
       Item_Source: "gang_ranking"
    Item_Template:
       Item: PAPER
