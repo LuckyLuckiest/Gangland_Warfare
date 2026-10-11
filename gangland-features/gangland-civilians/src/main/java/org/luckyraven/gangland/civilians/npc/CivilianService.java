@@ -55,6 +55,8 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	private final SquadRadio           shouts;
 	/** Package-private (not {@code private}) so tests can inspect what it resolves for a given squad. */
 	final RadioVoice voice = new FactionVoice();
+	/** What the radio speaks with: {@link #voice} plus the provider's extras, and an empty {@code %gang%} default. */
+	private final RadioVoice shoutVoice = new ShoutVoice();
 
 	/**
 	 * Combat squads, one per faction and target (player or entity uuid): created on the first hit, dropped when empty
@@ -63,6 +65,8 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	private final Map<SquadKey, NpcSquad> squads = new HashMap<>();
 	/** Reverse index so a squad's listener (only handed the {@link NpcSquad}) can resolve its faction and target. */
 	private final Map<NpcSquad, SquadKey> keyOf  = new HashMap<>();
+	/** The custom provider that made a squad, for its shout extras; absent for the default faction squads. */
+	private final Map<NpcSquad, FactionSquads> providerOf = new HashMap<>();
 	/**
 	 * A CONTACT edge queues its spotter here rather than recruiting re-entrantly from inside the squad's listener
 	 * (which must never mutate the squad it was called from); drained by {@link #tickAll} after the NPC loop.
@@ -100,7 +104,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		                                       (task, delayTicks) -> plugin.getServer().getScheduler()
 		                                               .runTaskLater(plugin, task, delayTicks));
 		this.squadListener    = (squad, signal, member, where) -> {
-			shouts.listener(voice).onSignal(squad, signal, member, where);
+			shouts.listener(shoutVoice).onSignal(squad, signal, member, where);
 			if (signal == NpcSquadSignal.CONTACT && member instanceof CivilianNpc caller) {
 				pendingRecruits.add(new Recruit(caller, squad));
 			}
@@ -194,7 +198,9 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	public void alertFaction(CivilianNpc victim, LivingEntity attacker, boolean playerAttacker) {
 		UUID     attackerId = attacker.getUniqueId();
 		String   faction    = victim.getTypeConfig().faction();
-		NpcSquad squad = squads.computeIfAbsent(new SquadKey(faction, attackerId),
+		FactionSquads provider = customProviderOf(victim);
+		NpcSquad squad = provider != null ? provider.squadFor(victim, attacker) :
+		                 squads.computeIfAbsent(new SquadKey(faction, "", attackerId),
 		                                        key -> newSquad(key, victim.getTypeConfig()));
 
 		victim.joinSquad(squad, attackerId);
@@ -219,11 +225,46 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	 */
 	@Override
 	public NpcSquad squadFor(CivilianNpc npc, LivingEntity target) {
-		SquadKey key   = new SquadKey(npc.getTypeConfig().faction(), target.getUniqueId());
+		return squadFor(npc, target, "");
+	}
+
+	/**
+	 * Same, in {@code scope}: a custom {@link FactionSquads} provider passes its own scope so its squads never merge
+	 * with another scope's. The provider is remembered per squad for its shout {@link FactionSquads#extras extras}.
+	 */
+	public NpcSquad squadFor(CivilianNpc npc, LivingEntity target, String scope) {
+		SquadKey key   = new SquadKey(npc.getTypeConfig().faction(), scope, target.getUniqueId());
 		NpcSquad squad = squads.computeIfAbsent(key, k -> newSquad(k, npc.getTypeConfig()));
+		FactionSquads provider = customProviderOf(npc);
+		if (provider != null) providerOf.put(squad, provider);
 		if (squad.lastKnownLocation() == null) squad.reportSighting(target.getLocation());
 		npc.joinSquad(squad, target.getUniqueId());
 		return squad;
+	}
+
+	/** {@code npc}'s provider when it is not this service (a turf provider, say); {@code null} for a street civilian. */
+	@Nullable
+	private FactionSquads customProviderOf(CivilianNpc npc) {
+		FactionSquads provider = npc.getFactionSquads();
+		return provider == this ? null : provider;
+	}
+
+	/**
+	 * Speaks {@code Shouts.<lineKey>} as {@code speaker} through the same radio as squad shouts (range, format,
+	 * cooldowns), with the speaker's provider extras merged under {@code extras}. For a custom provider's stand-down
+	 * lines ({@code Turf_Held}, {@code Turf_Lost}).
+	 */
+	public void shout(CivilianNpc speaker, String lineKey, Map<String, String> extras) {
+		LivingEntity entity = speaker.getEntity();
+		if (entity == null) return;
+
+		NpcSquad squad = speaker.getSquad() != null ? speaker.getSquad() : new NpcSquad();
+		Map<String, String> merged = new HashMap<>(shoutVoice.extras(squad));
+		FactionSquads provider = providerOf.getOrDefault(squad, customProviderOf(speaker));
+		if (provider != null) merged.putAll(provider.extras(squad));
+		merged.putAll(extras);
+		shouts.say(squad, shoutVoice, entity, voice.callsign(speaker), lineKey, "Format", entity.getLocation(), null,
+		           merged);
 	}
 
 	/**
@@ -232,9 +273,14 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	public void dropSquads(UUID targetId) {
 		squads.entrySet().removeIf(entry -> {
 			boolean match = entry.getKey().targetId().equals(targetId);
-			if (match) keyOf.remove(entry.getValue());
+			if (match) forget(entry.getValue());
 			return match;
 		});
+	}
+
+	private void forget(NpcSquad squad) {
+		keyOf.remove(squad);
+		providerOf.remove(squad);
 	}
 
 	/**
@@ -265,6 +311,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		UUID   attackerId = attacker.getUniqueId();
 		String faction    = caller.getTypeConfig().faction();
 		int    recruited  = 0;
+		FactionSquads provider = customProviderOf(caller);
 
 		// ponytail: scans every active civilian per call; add a spatial index if active civilians reach the hundreds
 		for (CivilianNpc ally : registry.getActiveNpcs()) {
@@ -272,6 +319,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 			if (ally.getEntity() != null && attackerId.equals(ally.getEntity().getUniqueId())) continue;
 			if (!ally.isHostile() || !ally.getTypeConfig().ai().combatEnabled()) continue;
 			if (!faction.equals(ally.getTypeConfig().faction())) continue;
+			if (!sameProvider(provider, customProviderOf(ally))) continue;
 			double range = Math.max(ally.getTypeConfig().ai().alertRange(), minRange);
 			if (ally.distanceTo(callerEntity) > range) continue;
 			if (isFightingAnother(ally, attackerId)) continue;
@@ -290,6 +338,11 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		}
 
 		return recruited;
+	}
+
+	/** Same provider instance and scope (both {@code null}: the default faction squads). */
+	private static boolean sameProvider(@Nullable FactionSquads a, @Nullable FactionSquads b) {
+		return a == b && (a == null || a.scope().equals(b.scope()));
 	}
 
 	/**
@@ -321,7 +374,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 
 			LivingEntity callerEntity = pending.caller().getEntity();
 			if (callerEntity == null) continue;
-			shouts.say(squad, voice, callerEntity, voice.callsign(pending.caller()), "Rally", "Format",
+			shouts.say(squad, shoutVoice, callerEntity, voice.callsign(pending.caller()), "Rally", "Format",
 			          callerEntity.getLocation(), null, Map.of("count", String.valueOf(n)));
 		}
 	}
@@ -348,7 +401,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	/**
 	 * One faction's hunt for one target.
 	 */
-	private record SquadKey(String faction, UUID targetId) {
+	private record SquadKey(String faction, String scope, UUID targetId) {
 	}
 
 	/** A queued {@link NpcSquadSignal#CONTACT}: the spotter and the squad it spotted for. */
@@ -380,6 +433,31 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		public Map<String, String> extras(NpcSquad squad) {
 			SquadKey key = keyOf.get(squad);
 			return key == null ? Map.of() : Map.of("faction", key.faction());
+		}
+	}
+
+	/** {@link FactionVoice} plus the provider's extras for its squads, over an empty {@code %gang%}. */
+	private final class ShoutVoice implements RadioVoice {
+
+		@Override
+		public String callsign(AbstractNpc npc) {
+			return voice.callsign(npc);
+		}
+
+		@Override
+		@Nullable
+		public LivingEntity hunted(NpcSquad squad) {
+			return voice.hunted(squad);
+		}
+
+		@Override
+		public Map<String, String> extras(NpcSquad squad) {
+			Map<String, String> merged = new HashMap<>();
+			merged.put("gang", "");
+			merged.putAll(voice.extras(squad));
+			FactionSquads provider = providerOf.get(squad);
+			if (provider != null) merged.putAll(provider.extras(squad));
+			return merged;
 		}
 	}
 
@@ -450,6 +528,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		}
 		registry.clear();
 		squads.clear();
+		providerOf.clear();
 		keyOf.clear();           // survives reloads otherwise: nothing prunes an entry whose squad left squads
 		pendingRecruits.clear();
 	}
@@ -617,7 +696,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	void pruneEmptySquads() {
 		squads.entrySet().removeIf(entry -> {
 			boolean empty = entry.getValue().isEmpty();
-			if (empty) keyOf.remove(entry.getValue());
+			if (empty) forget(entry.getValue());
 			return empty;
 		});
 	}

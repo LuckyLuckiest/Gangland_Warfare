@@ -4,6 +4,8 @@ import org.bukkit.entity.LivingEntity;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
 
+import java.util.Map;
+
 /**
  * Resolves the shared faction squad a civilian should hunt {@code target} with (phase H12). Implemented by
  * {@link CivilianService} and injected into every {@link CivilianNpc} via setter, so combat behaviour that entered
@@ -16,4 +18,20 @@ import org.luckyraven.keystone.npc.NpcSquad;
 public interface FactionSquads {
 
 	NpcSquad squadFor(CivilianNpc npc, LivingEntity target);
+
+	/**
+	 * The scope this provider's squads live in (for example one turf). {@link CivilianService} recruits only NPCs of
+	 * the same provider, and keeps squads of different scopes apart.
+	 */
+	default String scope() {
+		return "";
+	}
+
+	/**
+	 * Extra shout placeholders for a squad this provider created, merged after {@code %faction%} (the provider wins on
+	 * a clash). A turf provider supplies {@code gang} for {@code %gang%}.
+	 */
+	default Map<String, String> extras(NpcSquad squad) {
+		return Map.of();
+	}
 }
