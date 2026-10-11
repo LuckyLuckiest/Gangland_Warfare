@@ -6,7 +6,7 @@
 
 ## 📦 Requires
 
-- **Keystone 1.15.2** (0.16.1 shipped on 1.15.1; 1.15.2 adds WAL and busy timeouts to Keystone's SQLite pools, which fixes SQLITE_BUSY on boot). Gangland refuses to start on an older Keystone.
+- **Keystone 1.15.2** (0.16.1 shipped on 1.15.1; 1.15.2 adds WAL and busy timeouts to Keystone's SQLite pools, which fixes SQLITE_BUSY on boot; a player whose data still cannot load is kicked to rejoin instead of being saved over). Gangland refuses to start on an older Keystone.
 - **Bartizan 0.6.0** is the version Gangland builds against. Only cops-n-crooks needs Bartizan (`Plugins: [Bartizan]`); without it cops-n-crooks is skipped. Civilians, gadget and turf load without it, and weapon item references resolve to nothing.
 - **Menus refresh on the first boot.** Shipped `inventory/*.yml` menus with no `Config_Version` are replaced from the jar. Your old copy is kept as `inventory/<name>-old.yml`; copy your changes back by hand. Your own menus are not touched.
 - **Read [the 0.17.0 migration notes](../migration-0.17.0.md) before you start the server.** Every existing gang becomes invite-only, and a few one-time migrations run on the first boot.
