@@ -192,4 +192,22 @@ class GangMigrationRepositoryTest {
 		assertEquals(9, runs, "ten attempts in all: the first plus nine retries");
 		assertTrue(migrating.isDone("m"), "an exhausted migration stays done for this session");
 	}
+
+	@Test
+	@DisplayName("T-303: a retry writes the live rows, so a row removed after the failed first write is not resurrected")
+	void retry_writesLiveRows() {
+		GangMigrationRepository migrating = migrating();
+		AbstractRepository<String> writer = writerReporting(false, true);
+		List<String> live = new ArrayList<>(List.of("kept", "kicked"));
+
+		migrating.migrate("m", writer, () -> new ArrayList<>(live));
+		live.remove("kicked");
+		retries.remove(0).run();
+
+		@SuppressWarnings("unchecked")
+		org.mockito.ArgumentCaptor<Collection<String>> rows = org.mockito.ArgumentCaptor.forClass(Collection.class);
+		verify(writer, times(2)).saveAllChecked(rows.capture(), any());
+		assertEquals(List.of("kept", "kicked"), List.copyOf(rows.getAllValues().get(0)));
+		assertEquals(List.of("kept"), List.copyOf(rows.getAllValues().get(1)));
+	}
 }

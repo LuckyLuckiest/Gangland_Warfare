@@ -358,6 +358,8 @@ Commands:
 
 Errors:
    Prefix: "&4Error&7: "
+   User:
+      Data_Load_Failed: "&cNo se pudieron cargar tus datos, vuelve a entrar."
    Help:
       No_Entries: "&cNo hay información de ayuda disponible para este comando."
    Permissions:

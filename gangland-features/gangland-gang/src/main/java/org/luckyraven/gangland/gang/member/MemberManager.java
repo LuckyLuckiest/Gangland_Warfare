@@ -72,7 +72,7 @@ public class MemberManager implements BeanLifecycle {
 			for (Member member : members.values()) {
 				member.setContribution(0D);
 			}
-			migrations.migrate(CONTRIBUTION_MIGRATION, memberRepository, new ArrayList<>(members.values()));
+			migrations.migrate(CONTRIBUTION_MIGRATION, memberRepository, () -> new ArrayList<>(members.values()));
 			log.info("Member contributions reset to 0 once (D15): disbanding now splits the bank by money deposited since");
 		}
 	}

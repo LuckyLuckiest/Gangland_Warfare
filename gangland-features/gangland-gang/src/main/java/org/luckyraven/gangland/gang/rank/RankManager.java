@@ -20,6 +20,7 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 
 @CustomLog
 public class RankManager implements BeanLifecycle {
@@ -151,13 +152,14 @@ public class RankManager implements BeanLifecycle {
 		           && !migrations.isDone(TURF_UPGRADE_MIGRATION)) {
 			// T-266: ranks that may withdraw from the bank may also spend it at the Quartermaster, once (0.17.0).
 			// An empty read (failed or truly empty) skips without marking, so the next boot retries it.
+			// T-302: the grants are written by the checked migration, which marks it done only once they committed
 			int granted = 0;
 			for (Rank rank : ranks.values()) {
-				if (rank.contains(GangPermissions.WITHDRAW) && addPermission(rank, GangPermissions.TURF_UPGRADE)) {
+				if (rank.contains(GangPermissions.WITHDRAW) && grant(rank, GangPermissions.TURF_UPGRADE, false)) {
 					granted++;
 				}
 			}
-			migrations.markDone(TURF_UPGRADE_MIGRATION);
+			persistTurfUpgradeGrants();
 			log.info("Rank permissions migrated once (0.17.0): {} rank(s) holding {} now also hold {}", granted,
 			         GangPermissions.WITHDRAW, GangPermissions.TURF_UPGRADE);
 		}
@@ -291,6 +293,10 @@ public class RankManager implements BeanLifecycle {
 	 * @return true if the permission was added, false if it already existed on the rank
 	 */
 	public boolean addPermission(Rank rank, String permissionString) {
+		return grant(rank, permissionString, true);
+	}
+
+	private boolean grant(Rank rank, String permissionString, boolean persist) {
 		// Check if the rank already has this permission
 		if (rank.contains(permissionString)) {
 			return false;
@@ -314,10 +320,38 @@ public class RankManager implements BeanLifecycle {
 		rank.addPermission(permission);
 
 		// Persist immediately so a server restart before autosave doesn't lose the change
-		if (freshPerm && permissionRepo != null) permissionRepo.save(permission);
-		if (rankPermissionRepo != null) rankPermissionRepo.save(link);
+		if (persist) {
+			if (freshPerm && permissionRepo != null) permissionRepo.save(permission);
+			if (rankPermissionRepo != null) rankPermissionRepo.save(link);
+		}
 
 		return true;
+	}
+
+	/**
+	 * Writes the permission rows (the link rows reference them), then hands the link rows to the checked migration, so
+	 * the marker is written only after both committed. If the permission write fails nothing is marked and the next
+	 * boot grants again.
+	 */
+	private void persistTurfUpgradeGrants() {
+		if (rankPermissionRepo == null) {
+			migrations.markDone(TURF_UPGRADE_MIGRATION);
+			return;
+		}
+		Runnable linkRows = () -> migrations.migrate(TURF_UPGRADE_MIGRATION, rankPermissionRepo,
+		                                             () -> new ArrayList<>(ranksPermissions));
+		if (permissionRepo instanceof AbstractRepository<Permission> checked) {
+			checked.saveAllChecked(new ArrayList<>(permissions.values()), committed -> {
+				if (Boolean.TRUE.equals(committed)) {
+					linkRows.run();
+				} else {
+					log.warn("Permission rows could not be written; the turf-upgrade grant is retried on the next boot");
+				}
+			});
+			return;
+		}
+		if (permissionRepo != null) permissionRepo.saveAll(permissions.values());
+		linkRows.run();
 	}
 
 	public void removePermission(Rank rank, String permission) {
