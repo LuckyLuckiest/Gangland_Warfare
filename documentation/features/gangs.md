@@ -12,7 +12,8 @@ owner at the top and a rank hierarchy that decides what each member may do.
 
 The gang module ships as the runtime module `gangland-gang`. Its rules live in `gang/gang_rules.yml`, its settings in
 `gang/gang_settings.yml`, and its player-facing text in `gang/gang_messages.yml`. The rank nodes are listed in the
-[Ranks guide](./ranks.md).
+[Ranks guide](./ranks.md). Gang fights (challenges, bets and ranked rules) are in [Gang Fights](./fights.md), and the
+arenas they run in are built as described in [Arenas](./arenas.md).
 
 ---
 
@@ -244,7 +245,8 @@ Out of the rule, by design: guards and the Quartermaster (player-against-guard p
 A member hit by a member of a rival gang is **tagged** for `Combat.Tag_Seconds` (15): they cannot leave the gang or take
 a gang teleport for that long. Only hits between members of two different gangs tag.
 
-Minimum rank: `Friendly_Fire` owner for `/glw gang pvp` and `/glw gang ally pvp`.
+Minimum rank: `Friendly_Fire` owner for `/glw gang pvp` and `/glw gang ally pvp`. The WorldGuard region flag
+`glw-gang-pvp` that step 3 reads is described in [Gang Fights](./fights.md#worldguard-flag-glw-gang-pvp).
 
 ```
 /glw gang pvp <on|off>                Let members of your gang hurt each other, or stop it
