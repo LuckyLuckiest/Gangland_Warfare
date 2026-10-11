@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gang;
 
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.menu.filter.FilterAdapter;
 import org.luckyraven.gangland.menu.filter.FilterField;
 import org.luckyraven.gangland.menu.filter.StandardFilterField;
@@ -19,9 +20,22 @@ import java.util.Locale;
  */
 public final class GangFilterAdapter implements FilterAdapter<Gang> {
 
+	private final GangStatsService statsService;
+
+	public GangFilterAdapter() {
+		this(new GangStatsService());
+	}
+
+	public GangFilterAdapter(GangStatsService statsService) {
+		this.statsService = statsService;
+	}
+
 	@Override
 	public Object project(Gang gang, FilterField field) {
 		if (gang == null || field == null) return null;
+		if (field instanceof GangStatFilterField stat) {
+			return statsService.snapshot().row(gang.getId()).map(row -> row.value(stat.stat())).orElse(0D);
+		}
 		if (field instanceof StandardFilterField std) {
 			return switch (std) {
 				case NAME -> gang.getDisplayNameString() == null

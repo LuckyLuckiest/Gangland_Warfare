@@ -18,6 +18,7 @@ import org.luckyraven.gangland.gang.membership.GangDisbandService;
 import org.luckyraven.gangland.gang.membership.GangLeadership;
 import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
+import org.luckyraven.gangland.gang.stats.GangStatContributions;
 import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.GangSettings;
@@ -130,6 +131,7 @@ public final class GangCommand extends Command {
 		this.safehouseService   = safehouseService;
 		this.friendlyFire       = friendlyFire;
 		this.contributions      = CommandContributions.from(container);
+		statsService.useContributions(() -> GangStatContributions.from(container));
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -304,8 +306,10 @@ public final class GangCommand extends Command {
 		arguments.add(new GangRallyCommand(getPlugin(), getArgumentTree(), getArgument(), safehouseService));
 		arguments.add(new GangPvpCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, friendlyFire));
 		arguments.add(new GangNoticeCommand(getPlugin(), getArgumentTree(), getArgument()));
-		arguments.add(new GangRankingCommand(getPlugin(), getArgumentTree(), getArgument(), statsService));
-		arguments.add(new GangProfileCommand(getPlugin(), getArgumentTree(), getArgument(), statsService));
+		arguments.add(new GangRankingCommand(getPlugin(), getArgumentTree(), getArgument(), statsService,
+		                                      gangMessages, gangRules));
+		arguments.add(new GangProfileCommand(getPlugin(), getArgumentTree(), getArgument(), statsService,
+		                                     memberManager, gangManager, gangMessages));
 
 		arguments.add(display);
 		arguments.add(color);
