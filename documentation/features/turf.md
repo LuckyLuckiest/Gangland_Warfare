@@ -83,7 +83,8 @@ capture fills one bar at `Capture.Duration_Seconds`. They stay so older files lo
   or the gang is younger than that. Guards count up to 4 and never block a start.
 - **Alerts.** When a capture starts, the owning gang is told wherever it is, in any world, with the attacker count and
   side; allies get the start line. Half the guards down, the last stand at 75%, and the outcome (held, lost, taken or
-  stalled) are announced the same way.
+  stalled) are announced the same way. A gang that starts again on the same turf within 15 minutes of its last start is
+  not announced again; the half-guards, last-stand and outcome lines still are.
 - **While you were away.** On login you get up to five lines: the income earned since you left, then the turf events
   (captured, lost, held, stalled, released).
 - **Start.** The side with the most people inside wins the start. Sides are frozen at the start: a player who joins

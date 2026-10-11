@@ -14,6 +14,7 @@ import org.luckyraven.gangland.fights.stat.FightHistory;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -125,6 +126,17 @@ class FightLimitsTest {
 		world.address.put(r2, "5.6.7.8");
 		manager.propose(v1, "Rats", 2, 1000);
 		assertEquals(1, manager.active().size());
+	}
+
+	@Test
+	@DisplayName("sameAddress: a no-bet fight is never refused, even when enabled and the sides share an IP")
+	void sameAddressNoBetNotChecked() {
+		when(rules.isBlockSameAddress()).thenReturn(true);
+		world.address.put(v1, "1.2.3.4");
+		world.address.put(r2, "1.2.3.4");
+		manager.propose(v1, "Rats", 2, 0);
+		assertEquals(1, manager.active().size());
+		assertFalse(world.told(v1, "Economy.Same_Address"));
 	}
 
 	@Test

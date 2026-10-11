@@ -85,7 +85,7 @@ Guards:
       - tell
    # Commands a fighter may not use in BLOCKLIST mode.
    Blocked_Commands: []
-   # true: two players on the same IP address may not fight on opposite sides (stops boosting).
+   # true: a fight with a bet is refused while online members of the two gangs share an IP address (stops bet boosting). Fights with no bet are not checked.
    Block_Same_Address: false
 # end Guards
 
