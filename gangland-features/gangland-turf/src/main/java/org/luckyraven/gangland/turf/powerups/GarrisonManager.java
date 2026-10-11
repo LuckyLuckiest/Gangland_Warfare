@@ -63,6 +63,17 @@ public final class GarrisonManager {
 	}
 
 	/**
+	 * Puts surviving guards back in the reserve, never past {@code maxReserve}. Returns how many were added (0 when the
+	 * reserve is full or {@code survivors} is not positive).
+	 */
+	public int refund(int turfId, int survivors, int maxReserve) {
+		int added = Math.min(survivors, Math.max(0, maxReserve - count(turfId)));
+		if (added <= 0) return 0;
+		add(turfId, added);
+		return added;
+	}
+
+	/**
 	 * GI-34 (TF-03): drops this turf's garrison row entirely, in-memory and persisted. Called from the turf-delete
 	 * cascade so a fresh turf that later reuses the freed id (TF-05) does not inherit orphaned stock.
 	 */
