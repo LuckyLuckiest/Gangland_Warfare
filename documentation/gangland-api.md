@@ -95,6 +95,38 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
   civilians' 1 event and gangland-item's `PlayerItemInitEvent` all stay module/infra-owned — no named consumer
   outside their own module, so none were promoted (WS3's explicit decline for the loot-chest 9 still stands).
 
+## Api 2.6 (0.19.0)
+
+`GanglandApi.VERSION` is `"2.6"`. Within the major, the contract is unchanged: only additions. Versions `2.4` and `2.5` are
+reserved for other releases and are not used on the Gang & Turf II branch. A module built against `2.6` needs a host at
+`2.6` or newer.
+
+Added in 2.6, all additive:
+
+| Type | Package | Purpose |
+|---|---|---|
+| `NpcRole` (record) | `org.luckyraven.gangland.npc` | A squad job for an NPC: 15 fields, `NONE`, `MIN_BAND_WIDTH`, `rangedBand(Double)`, `blocks(double)`. Turf guards take their roles from `Garrison.Composition`; civilian types opt in with `AI.Combat.Roles`. |
+| `GangMembershipView` defaults | `org.luckyraven.gangland.data.gang` | Default methods, so an implementer overrides only what it needs. |
+| `GangMembership.pvpBlocked(UUID, UUID, Location)` | `org.luckyraven.gangland.data.gang` | Friendly-fire query at a location. Answered by the real friendly-fire policy once the gang module is installed. |
+| `GangChatChannel` | `org.luckyraven.gangland.data.gang` | Chat channel identifier for the gang chat API. |
+| `events.gangs` | `org.luckyraven.gangland.events.gangs` | Gang events (for example `GangChatEvent`, `GangFightEndedEvent`) that a listener may observe. |
+| `PlaceholderContribution.resolveGlobal` | `org.luckyraven.gangland.data.placeholder.extension` | A placeholder answered without a player. |
+| `GanglandMoneyDropClassifier.installFirst(NpcMoneyDropSource)` | `org.luckyraven.gangland.data.economy` | Installs an NPC money-drop source that is consulted before the `install()` slot. The first non-null result wins. Only `gangland-turf` uses it today. |
+
+### Module Host_Api at 2.6
+
+| Module | Id | Host_Api |
+|---|---|---|
+| `gangland-gang` | `gang` | `2.6` |
+| `gangland-gang-fights` | `fights` | `2.6` (`Depends: [gang]`) |
+| `gangland-turf` | `turf` | `2.6` |
+| `gangland-civilians` | `civilians` | `2.6` |
+| `cops-n-crooks` | `copsncrooks` | `2.6` |
+
+The other modules keep their lines: `gangland-gadget` and `gangland-npc-shops` `2.2`; `gangland-mail`,
+`gangland-lootchest` and `gangland-healthbars` `2.0`. A module is accepted when its `Host_Api` has the host's major and a
+minor not above the host's minor.
+
 ## Api 2.3 (0.16.0)
 
 `GanglandApi.VERSION` is `"2.3"`. `cops-n-crooks` and `gangland-turf` declare `Host_Api: 2.3` because they publish places
