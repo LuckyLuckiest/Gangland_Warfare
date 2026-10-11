@@ -41,30 +41,32 @@ public final class GangNotifier implements Listener {
 		if (gang == null) return;
 
 		for (Member member : gang.getMembers()) {
-			title(member.getUuid(), "Level_Up", gang, event.level());
+			title(member.getUuid(), "Level_Up", gang, event.level(), "&6Level %level%", "&7%gang% &7grew stronger");
 		}
 	}
 
 	@EventHandler
 	public void onJoined(GangMemberJoinedEvent event) {
-		title(event.player(), "Joined", gangManager.getGang(event.gangId()), 0);
+		title(event.player(), "Joined", gangManager.getGang(event.gangId()), 0, "&aWelcome", "&7You joined %gang%");
 	}
 
 	@EventHandler
 	public void onLeft(GangMemberLeftEvent event) {
 		if (event.reason() != GangMemberLeftEvent.Reason.DISBANDED) return;
 
-		title(event.player(), "Disbanded", gangManager.getGang(event.gangId()), 0);
+		title(event.player(), "Disbanded", gangManager.getGang(event.gangId()), 0, "&cGang disbanded",
+		      "&7%gang% &7is no more");
 	}
 
-	private void title(UUID uuid, String key, @Nullable Gang gang, int level) {
+	private void title(UUID uuid, String key, @Nullable Gang gang, int level, String defTitle,
+	                   String defSubtitle) {
 		Player player = Bukkit.getPlayer(uuid);
 		if (player == null) return;
 
 		String name = gang == null ? "" : gang.getDisplayNameString();
 
-		player.sendTitle(messages.text("Titles." + key + ".Title", "", "gang", name, "level", level),
-		                 messages.text("Titles." + key + ".Subtitle", "", "gang", name, "level", level),
+		player.sendTitle(messages.text("Titles." + key + ".Title", defTitle, "gang", name, "level", level),
+		                 messages.text("Titles." + key + ".Subtitle", defSubtitle, "gang", name, "level", level),
 		                 FADE_IN, STAY, FADE_OUT);
 	}
 
