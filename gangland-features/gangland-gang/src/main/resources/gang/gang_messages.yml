@@ -153,6 +153,10 @@ Levels:
 # end Levels
 
 # ---------------- Ranks ----------------
+Ranks:
+   # Shown when a rank is below the Ranks.Minimum of a gang_rules.yml feature. %feature% = the feature word,
+   # %rank% = the lowest rank allowed.
+   Needs_Rank: "&c%feature% needs &f%rank% &cor higher."
 # end Ranks
 
 # ---------------- Combat ----------------
