@@ -88,6 +88,20 @@ class GangNotifierTest {
 	}
 
 	@Test
+	@DisplayName("levelUp_title_defaultsWhenKeysMissing: an upgraded gang_messages.yml without Titles still shows one")
+	void levelUp_title_defaultsWhenKeysMissing() throws IOException {
+		notifier = new GangNotifier(GangUxTestMessages.empty(tempDir.resolve("old")), gangManager);
+		UUID   a  = UUID.randomUUID();
+		Player pa = online(a);
+		Gang   gang = rats();
+		when(gang.getMembers()).thenReturn(List.of(new Member(a)));
+
+		notifier.onLevel(new GangLevelReachedEvent(7, 3));
+
+		verify(pa).sendTitle(contains("3"), contains("Rats"), anyInt(), anyInt(), anyInt());
+	}
+
+	@Test
 	@DisplayName("joined_title: the joining player gets the gang name")
 	void joined_title() {
 		UUID   a  = UUID.randomUUID();

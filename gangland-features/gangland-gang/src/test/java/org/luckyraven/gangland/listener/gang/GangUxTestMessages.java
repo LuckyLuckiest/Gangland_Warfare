@@ -18,10 +18,20 @@ final class GangUxTestMessages {
 	}
 
 	static GangMessages shipped(Path dir) throws IOException {
-		Path file = dir.resolve("gang_messages.yml");
 		try (InputStream in = GangUxTestMessages.class.getResourceAsStream("/gang/gang_messages.yml")) {
-			Files.write(file, in.readAllBytes());
+			return over(dir, in.readAllBytes());
 		}
+	}
+
+	/** An upgraded server's gang_messages.yml: present, but without the keys a later release added. */
+	static GangMessages empty(Path dir) throws IOException {
+		return over(dir, new byte[0]);
+	}
+
+	private static GangMessages over(Path dir, byte[] content) throws IOException {
+		Files.createDirectories(dir);
+		Path file = dir.resolve("gang_messages.yml");
+		Files.write(file, content);
 		JavaPlugin  plugin      = PluginMocks.plugin(dir);
 		FileManager fileManager = new FileManager(plugin);
 		fileManager.addFile(new FileHandler(plugin, file.toFile()), false);
