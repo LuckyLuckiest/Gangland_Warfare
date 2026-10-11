@@ -105,7 +105,7 @@ class GangHelpFilterTest {
 		                                      new GangWorldPolicy(mock(GangRules.class)), mock(GangMembershipService.class),
 		                                      mock(GangDisbandService.class), mock(GangLeadership.class), new CombatTag(),
 		                                      new GangStatsService(), new GangLimits(), new GangLevelTable(),
-		                                      new GangSafehouseService(), mock(FriendlyFirePolicy.class));
+		                                      mock(GangSafehouseService.class), mock(FriendlyFirePolicy.class));
 
 		command.initializeArguments();
 
