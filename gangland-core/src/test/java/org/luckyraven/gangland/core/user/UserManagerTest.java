@@ -257,4 +257,16 @@ class UserManagerTest {
 		assertNull(manager.getUser(idle.getUuid()));
 		assertSame(pending, manager.getUser(pending.getUuid()), "load-pending entry is never pruned");
 	}
+
+	@Test
+	@DisplayName("T-300: loadStored delegates to the host loader, and is false without one")
+	void loadStored_delegatesToLoader() {
+		UserManager<OfflinePlayer> manager = newManager();
+		User<OfflinePlayer>        user    = newUser(handle(UUID.randomUUID()));
+
+		assertEquals(false, manager.loadStored(user));
+
+		manager.setStoredLoader(u -> u == user);
+		assertEquals(true, manager.loadStored(user));
+	}
 }

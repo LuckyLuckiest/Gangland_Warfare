@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
@@ -33,6 +34,8 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	private final Map<UUID, User<T>>  users;
 	/** Last add/lookup time per uuid, for {@link #pruneIdle(long)}. */
 	private final Map<UUID, Long>     touched = new HashMap<>();
+	/** Hydrates one fresh user from its stored row; set by the host (impl owns the tables). */
+	private Predicate<User<T>>        storedLoader;
 
 	/**
 	 * Every manager whose cache must be persisted together with this one — always contains {@code this}, and grows
@@ -118,6 +121,20 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 		}
 
 		return grouped;
+	}
+
+	public void setStoredLoader(Predicate<User<T>> storedLoader) {
+		this.storedLoader = storedLoader;
+	}
+
+	/**
+	 * Loads only {@code user}'s own stored row (balance, stats, bank, gang id) into it, without touching any other
+	 * player or Vault account. The user is not cached; the caller adds it on success.
+	 *
+	 * @return {@code false} when no loader is set or the read failed; the user then holds defaults
+	 */
+	public boolean loadStored(User<T> user) {
+		return storedLoader != null && storedLoader.test(user);
 	}
 
 	public void add(User<T> user) {

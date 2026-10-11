@@ -286,34 +286,37 @@ class GangDeleteCommandTest {
 	}
 
 	@Test
-	@DisplayName("T-300: an uncached offline member is read from the stored row; stored balance + payout is saved")
+	@DisplayName("T-300: an uncached offline member is loaded by its own row only; stored balance + payout is saved")
 	void uncachedOfflineMember_usesStoredRowBalancePlusPayout() throws Exception {
-		UUID uuid = UUID.randomUUID();
+		UUID                uuid   = UUID.randomUUID();
 		member(uuid, 1.0, memberRank);
-		User<OfflinePlayer> stored = mock(User.class);
-		when(stored.getUuid()).thenReturn(uuid);
-		EconomyHandler storedEconomy = new EconomyHandler(null);
-		storedEconomy.setAmount(new BigDecimal("250"));
-		when(stored.getEconomy()).thenReturn(storedEconomy);
-		doReturn(List.of(stored)).when(userRepository).loadAll();
+		User<OfflinePlayer> loaded = mock(User.class);
+		EconomyHandler      loadedEconomy = new EconomyHandler(null);
+		when(loaded.getEconomy()).thenReturn(loadedEconomy);
 		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(null);
+		doReturn(loaded).when(offlineUserManager).create(any(OfflinePlayer.class));
+		// the per-row loader stamps the stored balance on the fresh user
+		doAnswer(i -> {
+			loadedEconomy.setAmount(new BigDecimal("250"));
+			return true;
+		}).when(offlineUserManager).loadStored(loaded);
 		User<Player> alice = owner(1.0);
 		gang.getEconomy().setAmount(new BigDecimal("1000"));
 
 		List<BigDecimal> savedBalance = new ArrayList<>();
-		doAnswer(i -> savedBalance.add(storedEconomy.getAmount())).when(userRepository).save(stored);
+		doAnswer(i -> savedBalance.add(loadedEconomy.getAmount())).when(userRepository).save(loaded);
 
 		disband(alice);
 
-		verify(offlineUserManager).add(stored);
-		verify(offlineUserManager, never()).create(any(OfflinePlayer.class));
+		verify(offlineUserManager).add(loaded);
 		assertEquals(1, savedBalance.size(), "the stored row must be saved once");
 		assertEquals(0, new BigDecimal("750").compareTo(savedBalance.get(0)), "saved balance " + savedBalance);
-		verify(userRepository, times(1)).loadAll();
+		// loadAll would rebuild every player's User (Vault balance writes, wanted events for online players)
+		verify(userRepository, never()).loadAll();
 	}
 
 	@Test
-	@DisplayName("T-300: when no stored row can be read the payout is load-pending and not saved")
+	@DisplayName("T-300: when the member's stored row cannot be read the payout is load-pending and not saved")
 	void uncachedOfflineMember_withNoStoredRow_isNotSaved() throws Exception {
 		UUID                uuid = UUID.randomUUID();
 		User<OfflinePlayer> dave = mock(User.class);
@@ -324,7 +327,7 @@ class GangDeleteCommandTest {
 			return null;
 		}).when(dave).setLoadPending(anyBoolean());
 		when(dave.isLoadPending()).thenAnswer(i -> pending.get());
-		doReturn(List.of()).when(userRepository).loadAll();
+		when(offlineUserManager.loadStored(dave)).thenReturn(false);
 		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(null);
 		doReturn(dave).when(offlineUserManager).create(any(OfflinePlayer.class));
 		member(uuid, 1.0, memberRank);
@@ -335,6 +338,7 @@ class GangDeleteCommandTest {
 
 		assertEquals(true, dave.isLoadPending());
 		verify(userRepository, never()).save(dave);
+		verify(userRepository, never()).loadAll();
 	}
 
 	@Test
