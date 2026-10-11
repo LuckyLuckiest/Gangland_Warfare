@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.civilians.npc.npc;
 
+import com.cryptomorin.xseries.XAttribute;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.Setter;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -122,6 +124,24 @@ public class CivilianNpc extends AbstractNpc {
 	 * Gives this civilian a squad job once, right after it spawned.
 	 */
 	public void applyRole(NpcRole role) {
+		this.role = role;
+		setFanPlacement(role.placement());
+		setLeaderPriority(role.leaderPriority());
+
+		// The firing band needs a gun: an unarmed guard keeps the default band rather than stand 12-24 blocks off
+		if (isRangedAttacker()) {
+			double[] band = role.rangedBand(null);
+			if (band != null) setRangedBand(band[0], band[1]);
+		}
+
+		LivingEntity living = getEntity();
+		if (role.healthMultiplier() != 1.0 && living != null) {
+			AttributeInstance maxHealth = living.getAttribute(XAttribute.MAX_HEALTH.get());
+			if (maxHealth != null) {
+				maxHealth.setBaseValue(maxHealth.getBaseValue() * role.healthMultiplier());
+				living.setHealth(maxHealth.getBaseValue());
+			}
+		}
 	}
 
 	// ── AbstractGanglandNpc contract ─────────────────────────────────────────

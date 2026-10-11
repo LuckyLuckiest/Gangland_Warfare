@@ -108,11 +108,30 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		                                       (task, delayTicks) -> plugin.getServer().getScheduler()
 		                                               .runTaskLater(plugin, task, delayTicks));
 		this.squadListener    = (squad, signal, member, where) -> {
+			if ((signal == NpcSquadSignal.LEADER_DOWN || signal == NpcSquadSignal.MAN_DOWN)
+			    && member instanceof CivilianNpc fallen && fallen.getRole().commander()) {
+				commanderDown(squad);
+				return;
+			}
 			shouts.listener(shoutVoice).onSignal(squad, signal, member, where);
 			if (signal == NpcSquadSignal.CONTACT && member instanceof CivilianNpc caller) {
 				pendingRecruits.add(new Recruit(caller, squad));
 			}
 		};
+	}
+
+	/**
+	 * The squad's commander fell: the squad holds for {@link SquadHold#COMMANDER_DOWN_MS} and one surviving member
+	 * shouts {@code Commander_Down} (instead of the plain Man_Down / Leader_Down line).
+	 */
+	private void commanderDown(NpcSquad squad) {
+		squadHold.start(squad, SquadHold.COMMANDER_DOWN_MS);
+		for (AbstractNpc other : squad.members()) {
+			if (other instanceof CivilianNpc speaker && speaker.getEntity() != null) {
+				shout(speaker, "Commander_Down", Map.of());
+				return;
+			}
+		}
 	}
 
 	// ── Lifecycle ─────────────────────────────────────────────────────────────

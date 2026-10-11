@@ -9,6 +9,7 @@ import org.luckyraven.keystone.npc.NpcCoverStatus;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.FactionSquads;
+import org.luckyraven.gangland.civilians.npc.SquadHold;
 import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehavior;
@@ -61,6 +62,13 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 
 		CivilianAIBehaviorConfig ai    = npc.getTypeConfig().ai();
 		NpcSquad                 squad = squadFor(npc, target);
+
+		// Commander down: the squad stops advancing (and firing) for SquadHold.COMMANDER_DOWN_MS, then carries on
+		SquadHold squadHold = npc.getSquadHold();
+		if (squadHold != null && squadHold.holds(squad)) {
+			npc.stopNavigation();
+			return;
+		}
 
 		// Badly hurt: break off and take cover instead of pursuing/attacking (radioed as Fall_Back/In_Cover through the
 		// squad listener once Keystone picks a spot) - "when" is this class's call, per takeCover's contract. No cover

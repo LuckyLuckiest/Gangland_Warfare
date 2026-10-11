@@ -24,10 +24,12 @@ public final class SquadHold {
 
 	/** Makes {@code squad} hold for {@code millis} from now (a longer hold already running is kept). */
 	public void start(NpcSquad squad, long millis) {
+		until.merge(squad, clock.getAsLong() + millis, Math::max);
 	}
 
 	/** Whether {@code squad} is still holding. */
 	public boolean holds(NpcSquad squad) {
-		return false;
+		Long end = until.get(squad);
+		return end != null && clock.getAsLong() < end;
 	}
 }

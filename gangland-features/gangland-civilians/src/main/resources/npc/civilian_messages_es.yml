@@ -63,6 +63,8 @@ Shouts:
          - "¡Le dieron a %member%!"
       Leader_Down:
          - "¡El jefe cayó! %unit%, tú lideras!"
+      Commander_Down:
+         - "¡Cayó el jefe! ¡A cubierto!"
       Fall_Back:
          - "¡Me dieron! ¡Cúbranme!"
          - "¡Me echo para atrás!"
