@@ -122,6 +122,6 @@ public final class MapAutoTask implements BeanLifecycle {
 		World    world = at.getWorld();
 		int      cell  = Math.max(1, cellBlocks.applyAsInt(player));
 		String   name  = world == null ? "" : world.getName();
-		return name + ":" + Math.floorDiv(at.getBlockX(), cell) + ":" + Math.floorDiv(at.getBlockZ(), cell);
+		return name + ":" + cell + ":" + Math.floorDiv(at.getBlockX(), cell) + ":" + Math.floorDiv(at.getBlockZ(), cell);
 	}
 }

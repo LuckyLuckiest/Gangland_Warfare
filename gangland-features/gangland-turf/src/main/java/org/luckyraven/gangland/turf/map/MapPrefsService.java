@@ -16,6 +16,8 @@ public final class MapPrefsService {
 
 	private final Set<UUID>             autoPlayers = ConcurrentHashMap.newKeySet();
 	private final Map<UUID, HudMode>    hudModes    = new ConcurrentHashMap<>();
+	private final Map<UUID, Integer>    cellBlocks  = new ConcurrentHashMap<>();
+	private volatile int                defaultCellBlocks = 16;
 
 	public boolean isAuto(UUID player) {
 		return autoPlayers.contains(player);
@@ -41,14 +43,17 @@ public final class MapPrefsService {
 		}
 	}
 
+	/** The cell size every player starts from (Map.Cell_Blocks); a player's own size overrides it. */
 	public void setDefaultCellBlocks(int blocks) {
+		defaultCellBlocks = blocks;
 	}
 
 	public int cellBlocks(UUID player) {
-		return 16;
+		return cellBlocks.getOrDefault(player, defaultCellBlocks);
 	}
 
 	public void setCellBlocks(UUID player, int blocks) {
+		cellBlocks.put(player, blocks);
 	}
 
 	/** Snapshot of the players with auto map on. */
@@ -59,5 +64,6 @@ public final class MapPrefsService {
 	public void clear(UUID player) {
 		autoPlayers.remove(player);
 		hudModes.remove(player);
+		cellBlocks.remove(player);
 	}
 }

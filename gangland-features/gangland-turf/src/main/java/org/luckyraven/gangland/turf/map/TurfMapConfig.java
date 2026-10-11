@@ -25,6 +25,7 @@ public final class TurfMapConfig {
 	                                     CaptureEligibility eligibility, TurfMapSettings mapSettings,
 	                                     TurfSettings turfSettings, TurfMessages text, TurfMessageContract legacy,
 	                                     GarrisonManager garrisons, MapPrefsService prefs) {
+		prefs.setDefaultCellBlocks(mapSettings.getCellBlocks());
 		return new TurfMapService(turfs, gangs, users, eligibility, mapSettings, turfSettings, text, legacy, garrisons,
 		                          prefs);
 	}
