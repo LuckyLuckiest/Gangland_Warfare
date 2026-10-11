@@ -44,6 +44,7 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-module</artifactId>
         </dependency>
+        <!-- keystone.economy (EconomyHandler, EconomyOwner): the gang bank and User signatures name them. -->
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-hooks</artifactId>
