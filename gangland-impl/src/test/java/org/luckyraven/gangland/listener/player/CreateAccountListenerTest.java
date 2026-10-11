@@ -179,6 +179,7 @@ class CreateAccountListenerTest {
 				.withString("Errors.User.Data_Load_Failed", "reload please"));
 		when(userDataLoader.loadUserData(any(), any(), any())).thenReturn(false);
 		when(player.isOnline()).thenReturn(true);
+		when(userManager.getUser(player)).thenReturn(user);
 		var pluginManager = bukkit.pluginManager();
 
 		listener.onPlayerJoin(joinEvent());
@@ -198,6 +199,23 @@ class CreateAccountListenerTest {
 		var order = org.mockito.Mockito.inOrder(user, userManager);
 		order.verify(user).setLoadPending(true);
 		order.verify(userManager).add(user);
+	}
+
+	@Test
+	@DisplayName("T-301: a failed read leaves a newer session's cached User alone (quit + rejoin)")
+	void onPlayerJoin_failedLoad_doesNotEvictANewerSession() {
+		economyWith(5_000D);
+		org.luckyraven.gangland.file.configuration.Messages.init(new org.luckyraven.gangland.support.FakeMessageProvider()
+				.withString("Errors.User.Data_Load_Failed", "reload please"));
+		when(userDataLoader.loadUserData(any(), any(), any())).thenReturn(false);
+		when(player.isOnline()).thenReturn(true);
+		@SuppressWarnings("unchecked")
+		User<Player> newer = mock(User.class);
+		when(userManager.getUser(player)).thenReturn(newer);
+
+		listener.onPlayerJoin(joinEvent());
+
+		verify(userManager, never()).remove(any(User.class));
 	}
 
 }

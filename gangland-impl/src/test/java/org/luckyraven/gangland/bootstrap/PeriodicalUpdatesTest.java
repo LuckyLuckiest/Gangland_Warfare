@@ -95,8 +95,8 @@ class PeriodicalUpdatesTest {
 	}
 
 	@Test
-	@DisplayName("CL-02/CL-23: the offline cache is only cleared AFTER saveAll has taken its snapshot")
-	void updatingDatabase_clearsTheOfflineCacheAfterTheRepositorySnapshot() {
+	@DisplayName("US-11: the autosave keeps the offline cache; it only prunes idle entries, after the snapshot")
+	void updatingDatabase_keepsTheOfflineCacheAndPrunesIdleEntriesAfterTheSnapshot() {
 		PeriodicalUpdates updates = new PeriodicalUpdates(gangland, database, pluginManager, userManager,
 		                                                  offlineUserManager, container);
 
@@ -105,9 +105,10 @@ class PeriodicalUpdatesTest {
 		InOrder inOrder = inOrder(repositoryRegistry, offlineUserManager);
 
 		// AbstractRepository.saveAll copies each supplier's collection on the calling thread before its async hop,
-		// so the snapshot exists by the time saveAll returns — clearing any earlier would drop every offline user.
+		// so the snapshot exists by the time saveAll returns - pruning any earlier could drop unsaved changes.
 		inOrder.verify(repositoryRegistry).saveAll((Runnable) null);
-		inOrder.verify(offlineUserManager).clear();
+		inOrder.verify(offlineUserManager).pruneIdle(anyLong());
+		verify(offlineUserManager, never()).clear();
 	}
 
 }

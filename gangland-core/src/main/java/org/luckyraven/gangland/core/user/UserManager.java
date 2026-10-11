@@ -31,6 +31,8 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	 * snapshot survived the join eviction, overwriting the live row on the next autosave.
 	 */
 	private final Map<UUID, User<T>>  users;
+	/** Last add/lookup time per uuid, for {@link #pruneIdle(long)}. */
+	private final Map<UUID, Long>     touched = new HashMap<>();
 
 	/**
 	 * Every manager whose cache must be persisted together with this one — always contains {@code this}, and grows
@@ -120,12 +122,14 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
 	public void add(User<T> user) {
 		users.put(user.getUuid(), user);
+		touched.put(user.getUuid(), System.currentTimeMillis());
 	}
 
 	public void remove(@NotNull User<T> user) {
 		Preconditions.checkArgument(user != null, "User can't be null!");
 
 		users.remove(user.getUuid());
+		touched.remove(user.getUuid());
 	}
 
 	/**
@@ -137,11 +141,37 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	public User<T> remove(UUID uuid) {
 		if (uuid == null) return null;
 
+		touched.remove(uuid);
 		return users.remove(uuid);
 	}
 
 	public void clear() {
 		users.clear();
+		touched.clear();
+	}
+
+	/**
+	 * Evicts every entry not added or looked up for {@code maxIdleMillis}, except a load-pending one (its defaults
+	 * are not saved, so evicting it would also drop whatever the caller changed on it). Call it right after a save
+	 * snapshot: an idle entry has had no lookup, hence no change, since the last save.
+	 *
+	 * @return how many entries were evicted.
+	 */
+	public int pruneIdle(long maxIdleMillis) {
+		long cutoff = System.currentTimeMillis() - maxIdleMillis;
+		int  pruned = 0;
+
+		for (var iterator = users.entrySet().iterator(); iterator.hasNext(); ) {
+			var entry = iterator.next();
+			if (entry.getValue().isLoadPending()) continue;
+			if (touched.getOrDefault(entry.getKey(), 0L) > cutoff) continue;
+
+			iterator.remove();
+			touched.remove(entry.getKey());
+			pruned++;
+		}
+
+		return pruned;
 	}
 
 	@Override
@@ -171,7 +201,7 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	public User<T> getUser(T userPred) {
 		if (userPred == null) return null;
 
-		return users.get(userPred.getUniqueId());
+		return getUser(userPred.getUniqueId());
 	}
 
 	/**
@@ -181,7 +211,9 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	public User<T> getUser(UUID uuid) {
 		if (uuid == null) return null;
 
-		return users.get(uuid);
+		User<T> user = users.get(uuid);
+		if (user != null) touched.put(uuid, System.currentTimeMillis());
+		return user;
 	}
 
 	public int size() {

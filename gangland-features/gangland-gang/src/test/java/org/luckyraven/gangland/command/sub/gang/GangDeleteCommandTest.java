@@ -286,6 +286,58 @@ class GangDeleteCommandTest {
 	}
 
 	@Test
+	@DisplayName("T-300: an uncached offline member is read from the stored row; stored balance + payout is saved")
+	void uncachedOfflineMember_usesStoredRowBalancePlusPayout() throws Exception {
+		UUID uuid = UUID.randomUUID();
+		member(uuid, 1.0, memberRank);
+		User<OfflinePlayer> stored = mock(User.class);
+		when(stored.getUuid()).thenReturn(uuid);
+		EconomyHandler storedEconomy = new EconomyHandler(null);
+		storedEconomy.setAmount(new BigDecimal("250"));
+		when(stored.getEconomy()).thenReturn(storedEconomy);
+		doReturn(List.of(stored)).when(userRepository).loadAll();
+		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(null);
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("1000"));
+
+		List<BigDecimal> savedBalance = new ArrayList<>();
+		doAnswer(i -> savedBalance.add(storedEconomy.getAmount())).when(userRepository).save(stored);
+
+		disband(alice);
+
+		verify(offlineUserManager).add(stored);
+		verify(offlineUserManager, never()).create(any(OfflinePlayer.class));
+		assertEquals(1, savedBalance.size(), "the stored row must be saved once");
+		assertEquals(0, new BigDecimal("750").compareTo(savedBalance.get(0)), "saved balance " + savedBalance);
+		verify(userRepository, times(1)).loadAll();
+	}
+
+	@Test
+	@DisplayName("T-300: when no stored row can be read the payout is load-pending and not saved")
+	void uncachedOfflineMember_withNoStoredRow_isNotSaved() throws Exception {
+		UUID                uuid = UUID.randomUUID();
+		User<OfflinePlayer> dave = mock(User.class);
+		AtomicBoolean       pending = new AtomicBoolean();
+		when(dave.getEconomy()).thenReturn(new EconomyHandler(null));
+		doAnswer(i -> {
+			pending.set(i.getArgument(0));
+			return null;
+		}).when(dave).setLoadPending(anyBoolean());
+		when(dave.isLoadPending()).thenAnswer(i -> pending.get());
+		doReturn(List.of()).when(userRepository).loadAll();
+		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(null);
+		doReturn(dave).when(offlineUserManager).create(any(OfflinePlayer.class));
+		member(uuid, 1.0, memberRank);
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("1000"));
+
+		disband(alice);
+
+		assertEquals(true, dave.isLoadPending());
+		verify(userRepository, never()).save(dave);
+	}
+
+	@Test
 	@DisplayName("disband announces the deleted gang so other modules (mail) can drop what points at it")
 	void disband_firesGangDeleteEvent() {
 		disband(owner(1.0));

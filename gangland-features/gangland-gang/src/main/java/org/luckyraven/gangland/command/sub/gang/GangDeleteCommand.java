@@ -248,6 +248,7 @@ class GangDeleteCommand extends SubArgument {
 			// confirm-gated command, so a short main-thread loop is the right trade for a deterministic payout.
 			// Each offline User row is saved on the spot: a rejoin evicts the cached offline User before the next
 			// autosave, which would otherwise discard the payout.
+			Map<UUID, User<? extends OfflinePlayer>> storedRows = null;
 			for (Member mem : gang.getMembers()) {
 				if (onlineUuids.contains(mem.getUuid())) continue;
 
@@ -255,10 +256,20 @@ class GangDeleteCommand extends SubArgument {
 
 				User<OfflinePlayer> offlineUser = offlineUserManager.getUser(offlinePlayer);
 				if (offlineUser == null) {
-					// Fallback only: the row failed to load, so this User holds defaults. Load-pending keeps autosave
-					// and shutdown off it, and the save below is skipped for it.
-					offlineUser = offlineUserManager.create(offlinePlayer);
-					offlineUser.setLoadPending(true);
+					// Not cached (T-300): read the stored row so the payout lands on the real balance. One read per
+					// disband, indexed by uuid.
+					if (storedRows == null) storedRows = readStoredRows(userRepository);
+
+					@SuppressWarnings("unchecked")
+					User<OfflinePlayer> stored = (User<OfflinePlayer>) storedRows.get(mem.getUuid());
+					if (stored != null) {
+						offlineUser = stored;
+					} else {
+						// No stored row could be read: this User holds defaults. Load-pending keeps autosave and
+						// shutdown off it, and the save below is skipped for it.
+						offlineUser = offlineUserManager.create(offlinePlayer);
+						offlineUser.setLoadPending(true);
+					}
 					offlineUserManager.add(offlineUser);
 				}
 
@@ -267,7 +278,7 @@ class GangDeleteCommand extends SubArgument {
 				gang.getEconomy().withdrawAmount(amount);
 				offlineUser.getEconomy().depositAmount(amount);
 				if (offlineUser.isLoadPending()) {
-					log.warn("Disband payout of {} for {} was not saved: their stored data could not be read",
+					log.warn("Disband payout of {} for {} was not saved: no stored row could be read",
 					         amount, mem.getUuid());
 				} else {
 					userRepository.save(offlineUser);
@@ -314,6 +325,23 @@ class GangDeleteCommand extends SubArgument {
 				deleteGangTimer.remove(sender);
 			}
 		});
+	}
+
+	/**
+	 * @return every stored user row by uuid; empty when the read fails, so the caller falls back to load-pending.
+	 */
+	private static Map<UUID, User<? extends OfflinePlayer>> readStoredRows(IRepository<User<? extends OfflinePlayer>> repository) {
+		Map<UUID, User<? extends OfflinePlayer>> rows = new HashMap<>();
+
+		try {
+			for (User<? extends OfflinePlayer> row : repository.loadAll()) {
+				rows.put(row.getUuid(), row);
+			}
+		} catch (Exception exception) {
+			log.warn("Could not read the stored user rows for a gang disband", exception);
+		}
+
+		return rows;
 	}
 
 	/**
