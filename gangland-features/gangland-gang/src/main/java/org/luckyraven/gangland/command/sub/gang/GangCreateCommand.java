@@ -176,12 +176,21 @@ class GangCreateCommand extends SubArgument {
 
 			Gang gang = new Gang(id);
 
-			member.setGangJoinDateLong(Instant.now().toEpochMilli());
-			gang.addMember(user, member, tail);
 			gang.setName(createGangName.get(user).get());
 			gang.getEconomy().setAmount(GangSettings.getGangInitialBalance());
 
 			gangManager.add(gang);
+
+			// the creator takes the tail rank through the one membership path (fires GangCreatedEvent)
+			GangMembershipService.Result joined = membershipService.join(id, player.getUniqueId(),
+			                                                             GangMembershipService.JoinSource.CREATE);
+			if (!joined.ok()) {
+				gangManager.remove(gang);
+				user.getEconomy().depositAmount(GangSettings.getGangCreateFee());
+				user.sendMessage(membershipService.text(joined));
+				createGangName.remove(user);
+				return;
+			}
 
 			// Persist immediately so a reload before the next auto-save doesn't desync gang/member rows
 			IRepository<Gang>   gangRepository   = repositoryRegistry.getRepository(Gang.class);

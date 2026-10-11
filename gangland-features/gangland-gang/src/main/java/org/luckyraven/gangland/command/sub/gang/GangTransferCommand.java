@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.command.sub.gang;
 
-import org.luckyraven.gangland.gang.membership.GangLeadership;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.membership.GangMembershipService.Result;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -19,7 +20,6 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.permission.RankPermissionApplier;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.core.user.User;
@@ -57,15 +57,15 @@ class GangTransferCommand extends SubArgument {
 	private final HashMap<CommandSender, BukkitTask>           autoUnlock     = new HashMap<>();
 	private final ConfirmArgument                              confirmTransfer;
 
-	private final GangLeadership leadership;
+	private final GangMembershipService membershipService;
 
 	protected GangTransferCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                              @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                              RankManager rankManager,
-								GangLeadership leadership) {
+								GangMembershipService membershipService) {
 		super(gangland, "transfer", tree, parent);
 
-		this.leadership = leadership;
+		this.membershipService = membershipService;
 
 		this.gangland      = gangland;
 		this.tree          = tree;
@@ -180,58 +180,16 @@ class GangTransferCommand extends SubArgument {
 				return;
 			}
 
-			Rank tail = rankManager.get(GangSettings.getGangRankTail());
-			if (tail == null) return;
-
-			// Re-verify ownership — the player may have been demoted (or had their rank edited) between the request
-			// and the confirm.
-			if (userMember.getRank() == null || !userMember.getRank().match(tail.getUsedId())) {
-				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", GangSettings.getGangRankTail()));
+			// The service re-verifies ownership, the rank below the owner and the target's membership: the player may
+			// have been demoted (or had their rank edited) between the request and the confirm.
+			Result result = membershipService.setLeader(user.getGangId(), player.getUniqueId(), targetUuid, false);
+			if (!result.ok()) {
+				user.sendMessage(membershipService.text(result));
 				return;
 			}
 
-			Tree.Node<Rank> tailParentNode = tail.getNode().getParent();
-			if (tailParentNode == null) {
-				user.sendMessage(Messages.GANG_TRANSFER_NO_PARENT.toString());
-				return;
-			}
-
-			Rank tailParent = tailParentNode.getData();
-
-			Gang gang = gangManager.getGang(user.getGangId());
-			if (gang == null) return;
-
-			Member targetMember = memberManager.getMember(targetUuid);
-			if (targetMember == null || targetMember.getGangId() != gang.getId()) {
-				user.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", "?"));
-				return;
-			}
-
-			memberManager.assignRank(userMember, tailParent);
-			memberManager.assignRank(targetMember, tail);
-
-			// Refresh runtime permission attachments for online users so the rank swap takes effect immediately.
-			if (user.getPermissionAttachment() != null) {
-				RankPermissionApplier.flush(user, tailParent);
-			}
-
-			OfflinePlayer offlineTarget = Bukkit.getOfflinePlayer(targetUuid);
-			String        targetName    = offlineTarget.getName() != null ? offlineTarget.getName() : "?";
-
-			if (offlineTarget.isOnline()) {
-				Player       onlineTarget = offlineTarget.getPlayer();
-				User<Player> targetUser   = onlineTarget == null ? null : userManager.getUser(onlineTarget);
-
-				if (targetUser != null) {
-					RankPermissionApplier.flush(targetUser, tail);
-				}
-
-				if (onlineTarget != null) {
-					onlineTarget.sendMessage(Messages.GANG_TRANSFER_TARGET_SUCCESS.toString()
-					                                                              .replace("%player%",
-					                                                                       player.getName()));
-				}
-			}
+			String targetName = Bukkit.getOfflinePlayer(targetUuid).getName();
+			if (targetName == null) targetName = "?";
 
 			user.sendMessage(Messages.GANG_TRANSFER_PLAYER_SUCCESS.toString().replace("%player%", targetName));
 		});

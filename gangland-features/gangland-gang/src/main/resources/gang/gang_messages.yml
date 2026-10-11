@@ -136,6 +136,22 @@ Worlds:
 # end Worlds
 
 # ---------------- Membership ----------------
+Membership:
+   # %gang% is the gang name, %count% its members now, %max% its level cap.
+   Full: "&c%gang% is full (%count%/%max%)."
+   # %seconds% is what is left of the combat tag.
+   Tagged: "&cYou are in a fight: wait %seconds% s."
+   Kick_Denied: "&cYour rank may not kick members."
+   Already_In_Gang: "&cLeave your gang first."
+   Unknown_Gang: "&cThat gang does not exist."
+   Not_In_Gang: "&cYou are not in a gang."
+   No_Rank: "&cThis gang has no starting rank; ask an admin."
+   No_Owner_Rank: "&cThe owner rank is missing. Tell an admin."
+   # Staff purge preview: one row per gang that would be disbanded. %gang%, %days% (days since the last member played).
+   Purge_Preview_Row: "&7%gang% &8- &7last seen %days% days ago"
+   Purge_Preview_Empty: "&7No gang is inactive enough to be purged."
+   # %count% gangs disbanded by a staff run.
+   Purge_Done: "&aPurged %count% gang(s)."
 # end Membership
 
 # ---------------- Levels ----------------

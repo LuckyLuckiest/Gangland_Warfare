@@ -229,8 +229,7 @@ public final class GangCommand extends Command {
 		Argument info = new GangInfoCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, userManager,
 		                                    gangMessages, statsService);
 		Argument delete = new GangDeleteCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                        offlineUserManager, memberManager, gangManager, rankManager,
-		                                        repositoryRegistry, gangMessages, disbandService);
+		                                        memberManager, gangManager, rankManager, membershipService);
 		Argument removeUser = new GangKickCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          offlineUserManager, memberManager, gangManager, rankManager,
 		                                          membershipService);
@@ -241,7 +240,7 @@ public final class GangCommand extends Command {
 		Argument demoteUser = new GangDemoteCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                            memberManager, gangManager, rankManager);
 		Argument transferOwner = new GangTransferCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                                 memberManager, gangManager, rankManager, leadership);
+		                                                 memberManager, gangManager, rankManager, membershipService);
 
 		Argument deposit = new GangDepositCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          memberManager, gangManager);

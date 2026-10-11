@@ -6,6 +6,7 @@ import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -135,7 +136,7 @@ class GangMailCommandGuardTest {
 
 		invite = new GangMailContribution(plugin, userManager, offlineUserManager, memberManager, gangManager,
 		                                  mock(RankManager.class), mailManager, mock(MailRules.class),
-		                                                  mock(MailMessages.class)).create(tree, parent).get(0);
+		                                                  mock(MailMessages.class), mock(GangMembershipService.class)).create(tree, parent).get(0);
 		ally   = new Argument(plugin, "ally", tree);
 		ally.addAllSubArguments(new GangAllyMailContribution(plugin, userManager, memberManager, gangManager,
 		                                                     mailManager, new org.luckyraven.gangland.gang.level.GangLimits(),
