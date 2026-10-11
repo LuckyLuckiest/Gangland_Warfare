@@ -700,7 +700,7 @@ task()
 updatingDatabase(onComplete)
   │
   ├──> Save user + bank data directly via table queries
-  │    (handles online + offline user cache, then clears offline cache)
+  │    (handles online + offline user cache, then prunes idle offline entries (Offline_Cache_Minutes))
   │
   ╰──> repositoryRegistry.saveAll(onComplete)
          │

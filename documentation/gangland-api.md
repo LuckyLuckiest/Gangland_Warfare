@@ -97,9 +97,19 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
 
 ## Api 2.4 (0.17.0)
 
-`GanglandApi.VERSION` is `"2.4"`. It adds `Messages.USER_DATA_LOAD_FAILED` (`Errors.User.Data_Load_Failed`, the kick text
-when a player's data cannot load). Nothing was removed or changed. No module's `Host_Api` moves: modules built for 2.0 to
-2.3 load unchanged.
+`GanglandApi.VERSION` is `"2.4"`. Nothing was removed or changed; every row is an addition.
+
+| Addition | Package | Kind |
+|---|---|---|
+| `Messages.USER_DATA_LOAD_FAILED` | `org.luckyraven.gangland.file.configuration` | Message constant (`Errors.User.Data_Load_Failed`, the kick text when a player's data cannot load) |
+| `UserManager.loadStored(User)` | `org.luckyraven.gangland.core.user` | Returns `boolean`: asks the host loader to load a saved user into the offline cache; `false` when no loader is set or the user is not stored |
+| `UserManager.setStoredLoader(Predicate<User>)` | same | Installs the host loader that `loadStored` delegates to |
+| `UserManager.pruneIdle(long maxIdleMillis)` | same | Returns `int`: drops offline entries idle longer than the limit, keeping load-pending ones; the autosave calls it |
+| `Settings.getOfflineCacheMinutes()` | `org.luckyraven.gangland.file.configuration` | `Database.Auto_Save.Offline_Cache_Minutes` (default 30, minimum 1): the idle window `pruneIdle` uses |
+
+`gang` and `mail` declare `Host_Api: 2.4` because they call `loadStored`. The other modules keep their `2.0`, `2.2` or
+`2.3` line and still load unchanged (same major, module minor `<=` host minor). A `2.4` module does not load on a 0.16.x
+core (`module.host.incompatible`).
 
 ## Api 2.3 (0.16.0)
 
