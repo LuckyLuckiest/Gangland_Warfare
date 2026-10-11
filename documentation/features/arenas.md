@@ -11,8 +11,7 @@ held inside one arena. Staff build arenas in game with `/glw arena`, and every a
 
 Arenas are staff-only: every `/glw arena` verb is under the `gangland.arena.admin` node, which is op by default.
 
-> **Place arenas outside turfs.** Arenas are per server and cannot see turfs. A fight inside a turf does not know about
-> the turf, so keep every arena outside every turf. `/glw arena finish` prints this reminder when it saves an arena.
+> **Place arenas outside turfs.** Arenas are per server and cannot see turfs. Fighters standing in an arena inside a turf count on that turf's capture bar like any other gang member there (attackers after `Presence_Seconds`, owners and allies at once), so a fight could start or hold a capture. Keep every arena outside every turf. `/glw arena finish` prints this reminder when it saves an arena.
 > The module does not check it for you.
 
 ---
@@ -24,7 +23,7 @@ point at the spot you ran the command from.
 
 | Step | Command | What it does |
 |------|---------|--------------|
-| 1 | `/glw arena create <name>` | Start a new draft. Names are case-insensitive and must be unused. |
+| 1 | `/glw arena create <name>` | Start a new draft. Names are case-insensitive and must be unused. A name is one word of letters, digits, `-` or `_`, up to 24 characters (`Arenas.Name_Invalid`). |
 | 2 | `/glw arena corner` | Set one corner of the box where you stand. Run it **twice**, once for each opposite corner. |
 | 3 | `/glw arena spawn a` | Add a spawn for side A where you stand. Stand **inside** the box. Repeat for each spawn. |
 | 4 | `/glw arena spawn b` | Add a spawn for side B the same way. |

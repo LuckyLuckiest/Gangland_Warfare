@@ -54,14 +54,14 @@ arguments, so tab completion offers them in order.
 The fight is a state machine: **proposed, lobby, countdown, running, result, ended**. A cancel from any step before the
 result refunds any stake that was already paid.
 
-1. **Propose.** The proposer's gang sends the challenge. The other gang sees it in chat and has
+1. **Propose.** The proposer's gang sends the challenge. The target gang's officers see it in chat and have
    `Challenge.Challenge_Expiry_Seconds` (60) to answer. A lapsed challenge counts as a decline.
 2. **Accept or decline.** Accepting pays the bet from both banks. Declining, or letting it lapse, starts the proposer's
    `Challenge.Decline_Cooldown_Seconds` (60) before that pair can challenge again.
 3. **Lobby.** Members enlist with `/glw gang fight enlist` during `Challenge.Join_Window_Seconds` (60). Each side needs at
    least `Min_Team_Size` fighters. With `Require_Equal_Teams: true`, both sides must reach exactly `<size>` or the fight
    is cancelled and refunded.
-4. **Countdown.** `Challenge.Countdown_Seconds` (10). Fighters stand in the arena and cannot attack yet.
+4. **Countdown.** `Challenge.Countdown_Seconds` (10). Enlistees who went offline, were tagged or were downed when the countdown begins are dropped from their team. Fighters stand in the arena and cannot attack yet.
 5. **Running.** Fighters fight. A fighter who dies is eliminated for the fight (see [What Happens to a Fighter](#what-happens-to-a-fighter)).
    A fight still running after `Challenge.Max_Duration_Minutes` (10) ends by `Challenge.Timeout_Result`:
    `MOST_ALIVE` gives the win to the side with more fighters left (equal is a draw), `DRAW` makes it a draw.
@@ -95,10 +95,8 @@ first stake back.
 | `Bets.Max_Bet`                              | 100000   | Most money one gang may stake on one fight. |
 | `Bets.Max_Bet_Percent_Of_Bank`              | 50       | A stake may not be more than this percent of the staking gang's bank. The other bank must be able to match it. |
 | `Bets.House_Cut_Percent`                    | 0        | Percent of the pot the server keeps on settlement. |
-| `Bets.Max_Net_Transfer_Per_Pair_Per_Day`    | 200000   | Most money that may move between one pair of gangs through bets per day. |
-| `Bets.Max_Bet_Transfer_Per_Gang_Per_Day`    | 300000   | Most money one gang may win from bets per day. |
-
-When a daily cap is reached, the fight is refused with a message (`Economy.Pair_Cap` or `Economy.Gang_Cap`).
+| `Bets.Max_Net_Transfer_Per_Pair_Per_Day` (no effect yet) | 200000   | Most money that may move between one pair of gangs through bets per day. |
+| `Bets.Max_Bet_Transfer_Per_Gang_Per_Day` (no effect yet) | 300000   | Most money one gang may win from bets per day. |
 
 ---
 
@@ -110,8 +108,8 @@ A fight is **ranked** when its bet is at least `Ranked.Ranked_Min_Bet` (1000). A
 |-------------------------------------------------|---------|---------|
 | `Ranked.Ranked_Min_Member_Age_Hours`            | 24      | Ranked fighters must have been in their gang this many hours. |
 | `Ranked.Ranked_Min_Opponent_Gang_Age_Days`      | 7       | The other gang must be at least this many days old. |
-| `Ranked.Ranked_Per_Pair_Per_Day`                | 3       | Most ranked fights between the same two gangs per day. |
-| `Ranked.Rematch_Cooldown_Minutes`               | 30      | After a ranked fight the same two gangs wait this long before another ranked fight. |
+| `Ranked.Ranked_Per_Pair_Per_Day` (no effect yet) | 3       | Most ranked fights between the same two gangs per day. |
+| `Ranked.Rematch_Cooldown_Minutes` (no effect yet) | 30      | After a ranked fight the same two gangs wait this long before another ranked fight. |
 | `Ranked.Ranked_Board_Wins_Per_Opponent_Per_Day` | 1       | Wins against the same opponent that count on the board per day. |
 
 Ranked wins feed the `wins` stat of the gang ranking (`/glw gang ranking wins`). Extra wins over the same opponent in one
@@ -127,7 +125,7 @@ Sparring fights (no bet, unranked) use `Challenge.Min_Member_Age_Hours` (0) inst
 |--------------------------------|--------|
 | **Dies** in the arena          | Eliminated for this fight. The lethal hit is cancelled, so nothing really dies: no death, no drops, no kill credit, no money drop, no downed state, no hospital respawn and no wanted level. |
 | **Quits** the server           | Forfeits the fight and is restored while still online. A crash or kick mid-fight strands nobody: a fighter who joins inside an arena lands at its exit. |
-| **Leaves the gang** or the gang is **disbanded** | Counts as a forfeit. A disband to escape a fight means the other side wins the settlement (or the fight is cancelled and refunded during the countdown). |
+| **Gang is disbanded** | After the challenge is accepted (lobby, countdown or running) the other gang wins and takes the pot. A challenge not yet accepted is dropped. Leaving the gang during a fight does not forfeit (known gap). |
 | **Steps out of the arena box** | Warned up to `Guards.Max_Leave_Warnings` (3) times. The next leave forfeits. Fighters found outside are put back at their side's spawn. |
 | **Drops out of the lobby**     | Allowed with `/glw gang fight drop` before the countdown. |
 
@@ -140,7 +138,7 @@ inventory and level.
 
 While a fight uses an arena, these rules apply to fighters and to everyone else:
 
-- **Command limit.** Controlled by `Guards.Command_Block_Mode`:
+- **Command limit.** Enlisted members are under it from the lobby onward, not only once they are in the arena. Controlled by `Guards.Command_Block_Mode`:
   - `ALLOWLIST` (default): a fighter may only run commands that start with an entry in `Guards.Allowed_Commands`.
     The defaults are `glw gang fight`, `gangland gang fight`, `msg`, `r` and `tell`.
   - `BLOCKLIST`: a fighter may run anything except the entries in `Guards.Blocked_Commands`.
@@ -148,6 +146,7 @@ While a fight uses an arena, these rules apply to fighters and to everyone else:
   
   Aliases and namespaces are resolved first, so `/minecraft:tp` counts as `tp`. A blocked line is cancelled with the
   message `Guards.Command_Blocked`.
+- **Outsiders.** While a fight is busy, outsiders are moved back out of the box, teleports into it are refused, and anyone inside is sent to the exit. Fighters' teleports out and portals are refused, and bystanders inside cannot be hurt.
 - **Bypass.** `gangland.gang.fight.bypass_commands` (op by default, through `gangland.admin.gang`) skips the command limit.
 - **Blocks.** With `Guards.Protect_Blocks: true` (default), nobody may break or place blocks inside a busy arena.
 - **Vehicles.** `Guards.Allow_Vehicles: false` (default) stops fighters from riding vehicles or mounts.
@@ -160,7 +159,7 @@ While a fight uses an arena, these rules apply to fighters and to everyone else:
 
 ## Forfeit Rules Summary
 
-- Quitting, disbanding and leaving the box past the warning limit forfeit the fighter.
+- Quitting and leaving the box past the warning limit forfeit the fighter. A disband settles the fight for the other gang (see [What Happens to a Fighter](#what-happens-to-a-fighter)).
 - **Running fight:** a forfeit eliminates the fighter and the fight goes on. When one side has no fighters left, the other
   side wins and the stakes settle.
 - **Countdown:** a forfeit that empties either side cancels the fight and refunds both stakes.
@@ -170,7 +169,7 @@ While a fight uses an arena, these rules apply to fighters and to everyone else:
 ## Fight Statistics
 
 `/glw gang fight stats [gang]` shows a gang's fight wins, losses and draws. Ranked wins also appear in the gang ranking
-under `wins` (see [Ranked Fights](#ranked-fights)).
+under `wins` (see [Ranked Fights](#ranked-fights)). Only ranked fights update these stats: a sparring fight (no bet) does not count.
 
 ---
 
@@ -197,13 +196,15 @@ does nothing:
 
 - `Challenge.Arena_Cooldown_Seconds`: the arena is not held closed after a fight.
 - `Guards.Block_Same_Address`: two players on the same IP may still fight on opposite sides.
+- `Bets.Max_Net_Transfer_Per_Pair_Per_Day` and `Bets.Max_Bet_Transfer_Per_Gang_Per_Day`: the daily bet caps are not enforced, so a stake is never refused for a cap.
+- `Ranked.Ranked_Per_Pair_Per_Day` and `Ranked.Rematch_Cooldown_Minutes`: the daily ranked limit and the rematch cooldown are not enforced.
 
 ---
 
 ## fight_rules.yml
 
 `fight/fight_rules.yml` is read on boot and by `/glw reload`. Every key is block style with `Capitalized_Underscore`
-names. All 34 keys:
+names. All 33 keys:
 
 | Section      | Key                                         | Default |
 |--------------|---------------------------------------------|---------|
@@ -222,13 +223,13 @@ names. All 34 keys:
 | `Bets`       | `Max_Bet`                                   | 100000 |
 | `Bets`       | `Max_Bet_Percent_Of_Bank`                   | 50 |
 | `Bets`       | `House_Cut_Percent`                         | 0 |
-| `Bets`       | `Max_Net_Transfer_Per_Pair_Per_Day`         | 200000 |
-| `Bets`       | `Max_Bet_Transfer_Per_Gang_Per_Day`         | 300000 |
+| `Bets`       | `Max_Net_Transfer_Per_Pair_Per_Day` (no effect yet) | 200000 |
+| `Bets`       | `Max_Bet_Transfer_Per_Gang_Per_Day` (no effect yet) | 300000 |
 | `Ranked`     | `Ranked_Min_Bet`                            | 1000 |
 | `Ranked`     | `Ranked_Min_Member_Age_Hours`               | 24 |
 | `Ranked`     | `Ranked_Min_Opponent_Gang_Age_Days`         | 7 |
-| `Ranked`     | `Ranked_Per_Pair_Per_Day`                   | 3 |
-| `Ranked`     | `Rematch_Cooldown_Minutes`                  | 30 |
+| `Ranked`     | `Ranked_Per_Pair_Per_Day` (no effect yet)   | 3 |
+| `Ranked`     | `Rematch_Cooldown_Minutes` (no effect yet)  | 30 |
 | `Ranked`     | `Ranked_Board_Wins_Per_Opponent_Per_Day`    | 1 |
 | `Guards`     | `Max_Leave_Warnings`                        | 3 |
 | `Guards`     | `Protect_Blocks`                            | true |
@@ -241,8 +242,9 @@ names. All 34 keys:
 | `Arenas`     | `Min_Arena_Volume`                          | 64 |
 | `Arenas`     | `Outline_Seconds`                           | 10 |
 
-Note that `Challenge.Arena_Cooldown_Seconds` and `Guards.Block_Same_Address` are the two keys listed under
-[Keys with no effect yet](#keys-with-no-effect-yet).
+Six keys have no effect yet: `Challenge.Arena_Cooldown_Seconds`, `Guards.Block_Same_Address`,
+`Bets.Max_Net_Transfer_Per_Pair_Per_Day`, `Bets.Max_Bet_Transfer_Per_Gang_Per_Day`, `Ranked.Ranked_Per_Pair_Per_Day` and
+`Ranked.Rematch_Cooldown_Minutes`. They are listed under [Keys with no effect yet](#keys-with-no-effect-yet).
 
 ---
 
