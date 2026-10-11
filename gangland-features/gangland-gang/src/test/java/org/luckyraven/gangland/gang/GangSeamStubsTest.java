@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -86,7 +87,9 @@ class GangSeamStubsTest {
 		when(memberManager.getMember(a)).thenReturn(ma);
 		when(memberManager.getMember(b)).thenReturn(mb);
 
-		FriendlyFirePolicy policy = new FriendlyFirePolicy(memberManager, gangManager);
+		org.luckyraven.gangland.gang.GangWorldPolicy worldPolicy = mock(org.luckyraven.gangland.gang.GangWorldPolicy.class);
+		when(worldPolicy.enabledIn(any())).thenReturn(true);
+		FriendlyFirePolicy policy = new FriendlyFirePolicy(memberManager, gangManager, mock(org.luckyraven.gangland.gang.file.GangRules.class), worldPolicy, FriendlyFireRegionSource.NONE, null);
 		assertTrue(policy.pvpBlocked(a, b, null), "same gang");
 
 		mb.setGangId(2);

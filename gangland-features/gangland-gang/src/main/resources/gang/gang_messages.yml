@@ -176,6 +176,23 @@ Ranks:
 # end Ranks
 
 # ---------------- Combat ----------------
+Combat:
+   # /glw gang pvp with no argument. %gang% and %state% (on or off) are filled in.
+   Pvp_Now: "&7Gang pvp is &e%state% &7for %gang%."
+   # /glw gang pvp on: gangmates can hurt each other.
+   Pvp_On: "&e%gang% members can now hurt each other."
+   # /glw gang pvp off.
+   Pvp_Off: "&a%gang% members can no longer hurt each other."
+   # /glw gang ally pvp <gang> on, when the ally has already agreed. %gang% is the ally.
+   Ally_Pvp_On: "&e%gang% and your gang can now hurt each other."
+   # /glw gang ally pvp <gang> off.
+   Ally_Pvp_Off: "&a%gang% can no longer be hurt by your gang."
+   # /glw gang ally pvp <gang> on, while the ally has not agreed yet.
+   Ally_Pvp_Waiting: "&7Your side is on; %gang% must turn it on too."
+   # The gang named in /glw gang ally pvp is not an ally.
+   Ally_Not_Allied: "&c%gang% is not allied with your gang."
+   # A gang waypoint (safehouse, rally) used while tagged by a rival gang. %seconds% is the time left.
+   Tagged_Teleport: "&cYou are in combat: wait %seconds% s before using a gang teleport."
 # end Combat
 
 # ---------------- Safehouse ----------------
