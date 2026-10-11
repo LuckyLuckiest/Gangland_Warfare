@@ -26,8 +26,6 @@ public class GangSafehouseTable extends Table<Safehouse> {
 		Attribute<Float>   yaw    = new Attribute<>("yaw", false, Float.class);
 		Attribute<Float>   pitch  = new Attribute<>("pitch", false, Float.class);
 
-		gangId.setForeignKey(gangTable.get("id"), gangTable);
-
 		this.addAttribute(gangId);
 		this.addAttribute(name);
 		this.addAttribute(world);

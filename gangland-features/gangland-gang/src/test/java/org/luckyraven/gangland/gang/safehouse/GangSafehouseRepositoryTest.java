@@ -147,4 +147,10 @@ class GangSafehouseRepositoryTest {
 		assertEquals(1, service.count(1));
 		assertEquals(2D, service.find(2, "BASE").orElseThrow().x(), "names are looked up ignoring case");
 	}
+
+	@Test
+	@DisplayName("no FOREIGN KEY to gang: MySQL would refuse the gang DELETE before the disband listener cleans up")
+	void noForeignKeyToGang() {
+		assertTrue(TableSchemas.fromTable(new GangSafehouseTable(new GangTable())).foreignKeys().isEmpty());
+	}
 }
