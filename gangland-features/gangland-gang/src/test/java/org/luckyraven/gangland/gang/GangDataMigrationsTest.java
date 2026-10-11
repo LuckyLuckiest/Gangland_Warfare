@@ -57,6 +57,39 @@ class GangDataMigrationsTest {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	@Test
+	@DisplayName("T-303: the state migration hands the retry a live view, so a disbanded gang is not written back")
+	void stateMigration_retryRowsAreLive() {
+		Gang kept = new Gang(1);
+		Gang disbanded = new Gang(2);
+		IRepository<Gang> repository = mock(IRepository.class);
+		when(repository.loadAll()).thenReturn(List.of(kept, disbanded));
+		java.util.concurrent.atomic.AtomicReference<java.util.function.Supplier<java.util.Collection<Gang>>> captured =
+				new java.util.concurrent.atomic.AtomicReference<>();
+		GangMigrationsContract migrations = new GangMigrationsContract() {
+			@Override
+			public boolean isDone(String id) {
+				return false;
+			}
+
+			@Override
+			public void markDone(String id) {
+			}
+
+			@Override
+			public <T> void migrate(String id, IRepository<T> repo, java.util.function.Supplier<java.util.Collection<T>> rows) {
+				captured.set((java.util.function.Supplier) rows);
+			}
+		};
+		GangManager manager = new GangManager(repository, mock(GangAllianceRepositoryContract.class), migrations);
+		manager.initialize();
+
+		manager.remove(disbanded);
+
+		assertEquals(List.of(kept), List.copyOf(captured.get().get()));
+	}
+
 	@BeforeEach
 	void bindIdentitySettings() {
 		// new Gang(id) reads IdentitySettings (bounty defaults); bound here because no bootstrap runs in this test.

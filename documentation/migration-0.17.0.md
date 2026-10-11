@@ -268,7 +268,6 @@ new jar.
   0.17.0 jars is not supported.
 - Repository loads now read numeric columns through `Number` (NULL reads as 0), so a MySQL server returning a wider
   numeric type or NULL no longer fails the load.
-- The core jar and the gang/turf/mail module jars must be updated together.
 
 ## Part 4 - Release fixes
 

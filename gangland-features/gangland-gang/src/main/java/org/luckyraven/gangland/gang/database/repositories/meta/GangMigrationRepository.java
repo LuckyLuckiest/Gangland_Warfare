@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Records which one-shot gang data migrations ran ({@code gang_migration}, W2-K). A migration is looked up once from
@@ -54,25 +55,30 @@ public class GangMigrationRepository extends AbstractRepository<GangMigration> i
 
 	/**
 	 * Saves {@code rows} of migration {@code id} and marks it done once the write committed (T-278, Keystone 1.15.2
-	 * {@code saveAllChecked}). A failed write is retried on a delay with the same rows, which are live references, so a
-	 * retry writes the current state. Until a write commits the migration counts as done for this session, so a reload
+	 * {@code saveAllChecked}). A failed write is retried on a delay and re-reads {@code rows}, so a retry writes the
+	 * current state (T-303). Until a write commits the migration counts as done for this session, so a reload
 	 * cannot run it again; if no retry commits before the server stops, the next boot runs it again.
 	 */
 	@Override
-	public <T> void migrate(String id, IRepository<T> repository, Collection<T> rows) {
+	public <T> void migrate(String id, IRepository<T> repository, Supplier<Collection<T>> rows) {
 		synchronized (this) {
 			inFlight.add(id);
 		}
 		attempt(id, repository, rows, 1);
 	}
 
-	private <T> void attempt(String id, IRepository<T> repository, Collection<T> rows, int attempt) {
+	private <T> void attempt(String id, IRepository<T> repository, Supplier<Collection<T>> rows, int attempt) {
+		// rows.get() must run on the main thread: a caller on an async worker would iterate live state off-thread (T-302).
+		if (plugin.isEnabled() && !Bukkit.isPrimaryThread()) {
+			scheduleRetry(() -> attempt(id, repository, rows, attempt), 0L);
+			return;
+		}
 		if (!(repository instanceof AbstractRepository<T> abstractRepository)) {
-			repository.saveAll(rows);
+			repository.saveAll(rows.get());
 			markDone(id);
 			return;
 		}
-		abstractRepository.saveAllChecked(rows, committed -> {
+		abstractRepository.saveAllChecked(rows.get(), committed -> {
 			if (Boolean.TRUE.equals(committed)) {
 				markDone(id);
 			} else if (attempt < MAX_ATTEMPTS) {

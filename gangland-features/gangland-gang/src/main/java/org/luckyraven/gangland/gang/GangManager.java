@@ -68,7 +68,7 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 			for (Gang gang : gangs.values()) {
 				gang.setState(Gang.State.INVITE);
 			}
-			migrations.migrate(STATE_MIGRATION, gangRepository, new ArrayList<>(gangs.values()));
+			migrations.migrate(STATE_MIGRATION, gangRepository, () -> new ArrayList<>(gangs.values()));
 			log.info("Gang states migrated: every gang is invite-only (D7); /glw gang recruiting open opens one");
 		}
 	}

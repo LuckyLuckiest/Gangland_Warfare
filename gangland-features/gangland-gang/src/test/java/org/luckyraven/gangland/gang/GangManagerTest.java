@@ -36,6 +36,7 @@ class GangManagerTest {
 		migrations     = mock(GangMigrationsContract.class);
 		// the default migrate saves then marks done; the mock keeps that behaviour so the assertions below still hold
 		doCallRealMethod().when(migrations).migrate(anyString(), any(), anyCollection());
+		doCallRealMethod().when(migrations).migrate(anyString(), any(), any(java.util.function.Supplier.class));
 		when(gangRepository.loadAll()).thenReturn(List.of(new Gang(1)));
 
 		manager = new GangManager(gangRepository, mock(GangAllianceRepositoryContract.class), migrations);
