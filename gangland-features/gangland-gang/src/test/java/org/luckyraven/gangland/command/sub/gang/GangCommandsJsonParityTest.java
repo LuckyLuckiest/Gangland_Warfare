@@ -167,7 +167,8 @@ class GangCommandsJsonParityTest {
 		                                                                 mock(UserManager.class),
 		                                                                 mock(MemberManager.class),
 		                                                                 mock(GangManager.class),
-		                                                                 mock(RankManager.class));
+		                                                                 mock(RankManager.class),
+		                                                                 mock(org.luckyraven.gangland.gang.command.option.GangStaffVerbs.class));
 		List<Argument> created = contribution.create(tree, mock(Argument.class));
 		assertTrue(created.size() == 1, "the contribution attaches one gang argument under option");
 		List<Argument> verbs = children(created.get(0));
