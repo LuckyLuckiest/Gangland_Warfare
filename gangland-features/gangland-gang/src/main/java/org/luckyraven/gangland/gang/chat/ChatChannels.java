@@ -5,8 +5,7 @@ import org.luckyraven.gangland.data.gang.GangChatChannel;
 import java.util.UUID;
 
 /**
- * Which channel a player's chat goes to. Seam: lane W5-C adds the ally channel; until then it is gang chat when the
- * player switched it on, public otherwise.
+ * Which channel a player's chat goes to: public, gang or gang plus allies, as the player toggled it.
  */
 public class ChatChannels {
 
@@ -17,6 +16,6 @@ public class ChatChannels {
 	}
 
 	public GangChatChannel chatChannelOf(UUID player) {
-		return toggles.isOn(player) ? GangChatChannel.GANG : GangChatChannel.PUBLIC;
+		return toggles.channelOf(player);
 	}
 }

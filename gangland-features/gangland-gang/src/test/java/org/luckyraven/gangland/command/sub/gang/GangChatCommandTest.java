@@ -93,6 +93,10 @@ class GangChatCommandTest {
 		Gang vipers = mock(Gang.class);
 		when(vipers.getId()).thenReturn(1);
 		when(gangManager.getGang(1)).thenReturn(vipers);
+		Gang rats = mock(Gang.class);
+		when(rats.getId()).thenReturn(2);
+		when(gangManager.getGang(2)).thenReturn(rats);
+		when(vipers.isAlly(rats)).thenReturn(true);
 
 		rexId = UUID.randomUUID();
 		rex   = member("Rex", rexId, 1);
@@ -167,6 +171,41 @@ class GangChatCommandTest {
 
 		verify(rex, times(2)).sendMessage(Messages.MUST_CREATE_GANG.toString());
 		assertFalse(channel.isOn(rexId));
+	}
+
+	@Test
+	@DisplayName("alliesLiteral_notSwallowedByMessage: 'chat allies hi' through the real tree is an ally line 'hi', not a gang line 'allies hi'")
+	void alliesLiteral_notSwallowedByMessage() throws Exception {
+		when(rex.hasPermission(anyString())).thenReturn(true);
+		Tree<Argument> tree = new Tree<>();
+		Argument       gang = new Argument(mock(JavaPlugin.class), "gang", tree, null, "gang");
+		tree.add(gang.getNode());
+		gang.addSubArgument(chat(tree, gang));
+
+		gang.execute("glw", rex, new String[]{"gang", "chat", "allies", "hi", "there"});
+
+		verify(mate).sendMessage(argThat((String line) -> org.bukkit.ChatColor.stripColor(line).contains("hi there")
+		                                                  && !line.contains("allies")));
+		verify(foe).sendMessage(argThat((String line) -> line.contains("hi there")));
+		assertEquals(org.luckyraven.gangland.data.gang.GangChatChannel.PUBLIC, channel.channelOf(rexId));
+	}
+
+	@Test
+	@DisplayName("'chat allies' with no message toggles ally chat on, then off")
+	void alliesNoMessage_toggles() throws Exception {
+		when(rex.hasPermission(anyString())).thenReturn(true);
+		Tree<Argument> tree = new Tree<>();
+		Argument       gang = new Argument(mock(JavaPlugin.class), "gang", tree, null, "gang");
+		tree.add(gang.getNode());
+		gang.addSubArgument(chat(tree, gang));
+
+		gang.execute("glw", rex, new String[]{"gang", "chat", "allies"});
+		assertEquals(org.luckyraven.gangland.data.gang.GangChatChannel.ALLIES, channel.channelOf(rexId));
+		verify(rex).sendMessage(messages.text("Chat.Allies_On", "&aAlly chat on."));
+
+		gang.execute("glw", rex, new String[]{"gang", "chat", "allies"});
+		assertEquals(org.luckyraven.gangland.data.gang.GangChatChannel.PUBLIC, channel.channelOf(rexId));
+		verify(rex).sendMessage(messages.text("Chat.Allies_Off", "&7Ally chat off."));
 	}
 
 	private Argument chat() {

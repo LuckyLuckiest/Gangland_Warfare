@@ -5,6 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.data.gang.GangChatChannel;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
@@ -24,7 +25,8 @@ import java.util.List;
 
 /**
  * {@code /glw gang chat [message]}: with a message, sends it to the gang now; without one, toggles gang chat mode, in
- * which everything the player types goes to his gang only. Allies are not included.
+ * which everything the player types goes to his gang only. {@code /glw gang chat allies [message]} does the same for
+ * gang plus allies.
  */
 final class GangChatCommand extends SubArgument {
 
@@ -46,7 +48,7 @@ final class GangChatCommand extends SubArgument {
 		this.messages      = messages;
 		this.channel       = channel;
 
-		this.addSubArgument(new AlliesStub(gangland, tree, this));
+		this.addSubArgument(new AlliesCommand(gangland, tree, this));
 		this.addSubArgument(messageArgument(gangland, tree));
 	}
 
@@ -76,9 +78,8 @@ final class GangChatCommand extends SubArgument {
 				return;
 			}
 
-			String text = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-			channel.broadcast(messages, gang.getId(), ((Player) sender).getName(), text, Bukkit.getOnlinePlayers(),
-			                  this::gangIdOf);
+			send(gang, (Player) sender, GangChatChannel.GANG,
+			     String.join(" ", Arrays.copyOfRange(args, 2, args.length)));
 		}, sender -> List.of("<message>"));
 		// Greedy, so the words after "chat" all reach the action (Keystone stops early on a non-greedy optional).
 		message.setGreedy(true);
@@ -100,26 +101,49 @@ final class GangChatCommand extends SubArgument {
 		return gang;
 	}
 
+	/** One line to the gang (or gang plus allies) now; the toggle is not touched. */
+	private void send(Gang gang, Player sender, GangChatChannel mode, String text) {
+		channel.deliver(messages, sender, gang.getId(), gang.getDisplayNameString(), mode, text,
+		                GangChatToggles.Context.of(Bukkit.getOnlinePlayers(), this::gangIdOf, gang, gangManager));
+	}
+
 	private int gangIdOf(Player player) {
 		User<Player> user = userManager.getUser(player);
 		return user != null && user.hasGang() ? user.getGangId() : -1;
 	}
 
-	/** {@code /glw gang chat allies [message]}: gang and ally chat. Stub: lane W5-C fills the body. */
-	private static final class AlliesStub extends SubArgument {
+	/** {@code /glw gang chat allies [message]}: gang and ally chat, one line or a toggle. */
+	private final class AlliesCommand extends SubArgument {
 
-		AlliesStub(JavaPlugin gangland, Tree<Argument> tree, Argument parent) {
+		AlliesCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent) {
 			super(gangland, "allies", tree, parent);
 
-			OptionalArgument message = new OptionalArgument(gangland, tree);
-			message.setDisplayName("message");
+			OptionalArgument message = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+				Gang gang = senderGang(sender);
+				if (gang == null) {
+					return;
+				}
+
+				send(gang, (Player) sender, GangChatChannel.ALLIES,
+				     String.join(" ", Arrays.copyOfRange(args, 3, args.length)));
+			}, sender -> List.of("<message>"));
 			message.setGreedy(true);
 			this.addSubArgument(message);
 		}
 
 		@Override
 		protected TriConsumer<Argument, CommandSender, String[]> action() {
-			return null;
+			return (argument, sender, args) -> {
+				if (senderGang(sender) == null) {
+					return;
+				}
+
+				if (channel.toggleAllies(((Player) sender).getUniqueId())) {
+					sender.sendMessage(messages.text("Chat.Allies_On", "&aAlly chat on."));
+				} else {
+					sender.sendMessage(messages.text("Chat.Allies_Off", "&7Ally chat off."));
+				}
+			};
 		}
 	}
 
