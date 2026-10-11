@@ -172,6 +172,7 @@ class QuartermasterPlacementTest {
 		assertEquals(0, BigDecimal.valueOf(10_000).compareTo(bank.getAmount()));
 		verify(player).sendMessage("Quartermaster.Place_Failed");
 		verify(player, never()).sendMessage("Quartermaster.Placed");
+		verify(npcs).remove(TURF_ID);
 		verify(flow).end();
 	}
 

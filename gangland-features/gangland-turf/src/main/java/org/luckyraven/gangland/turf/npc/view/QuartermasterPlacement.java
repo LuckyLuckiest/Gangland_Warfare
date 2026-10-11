@@ -200,6 +200,9 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 		TurfPowerupNpc placed = npcs.place(turf.getId(), player.getLocation(), null);
 		if (placed == null) {
 			// place() returns null when the spawn fails (bad Type_Id, Citizens spawn cancelled); refund, never announce.
+			// T-804: place() saved the anchor before the failed spawn; drop it so a later chunk load or restart cannot
+			// spawn a Quartermaster the gang was refunded for.
+			npcs.remove(turf.getId());
 			if (price.signum() > 0) {
 				gang.getEconomy().depositAmount(price);
 			}
