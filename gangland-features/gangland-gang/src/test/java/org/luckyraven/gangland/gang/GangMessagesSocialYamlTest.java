@@ -18,6 +18,7 @@ class GangMessagesSocialYamlTest {
 	/** Keys read by GangChatListener, GangChatCommand, GangJoinCommand and GangRecruitingCommand. */
 	private static final List<String> SOCIAL_KEYS = List.of(
 			"Social.Chat_Format", "Social.Chat_On", "Social.Chat_Off",
+			"Chat.Ally_Format", "Chat.Spy_Format", "Chat.Allies_On", "Chat.Allies_Off", "Chat.Spy_On", "Chat.Spy_Off",
 			"Social.Recruiting_Open", "Social.Recruiting_Invite", "Social.Recruiting_Now",
 			"Social.Joined", "Social.Invite_Only", "Social.Unknown", "Social.Already_In_Gang", "Social.No_Rank");
 

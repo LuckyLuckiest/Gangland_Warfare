@@ -86,8 +86,8 @@ Names:
 
 # ---------------- Social: gang chat, gang join, gang recruiting (W2-P2) ----------------
 Social:
-   # Gang chat line. %player% = sender, %message%.
-   Chat_Format: "&a[Gang] &f%player%&7: &f%message%"
+   # Gang chat line. %prefix% = the gang's level prefix (empty or ending in a space), %player% = sender, %message%.
+   Chat_Format: "&a[Gang] %prefix%&f%player%&7: &f%message%"
    # Gang chat mode switched on / off with /glw gang chat.
    Chat_On: "&aGang chat on: what you type goes to your gang only. &7/glw gang chat again to switch it off."
    Chat_Off: "&7Gang chat off."
@@ -230,6 +230,16 @@ Safehouse:
 # end Safehouse
 
 # ---------------- Chat ----------------
+Chat:
+   # Ally chat line (gang plus allies). %prefix% = level prefix of the sender's gang, %gang% = its name, %player%,
+   # %message%.
+   Ally_Format: "&d[Ally] %prefix%&e%gang% &f%player%&7: &f%message%"
+   # The copy a staff member with /glw option gang spy on gets of every gang and ally line. Same tokens.
+   Spy_Format: "&8[Spy] %prefix%&7%gang% &f%player%&7: &f%message%"
+   Allies_On: "&aAlly chat on: what you type goes to your gang and its allies. &7/glw gang chat allies again to switch it off."
+   Allies_Off: "&7Ally chat off."
+   Spy_On: "&aGang chat spy on."
+   Spy_Off: "&7Gang chat spy off."
 # end Chat
 
 # ---------------- Stats ----------------

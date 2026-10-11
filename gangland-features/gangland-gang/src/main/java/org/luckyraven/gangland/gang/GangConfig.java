@@ -5,6 +5,8 @@ import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.chat.ChatChannels;
+import org.luckyraven.gangland.gang.chat.ChatSettings;
+import org.luckyraven.gangland.gang.chat.ChatSpyService;
 import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import org.luckyraven.gangland.gang.combat.FriendlyFirePolicy;
 import org.luckyraven.gangland.gang.membership.MembershipQueries;
@@ -137,10 +139,10 @@ public final class GangConfig {
 		return (MemberRepositoryContract) registry.getRepository(Member.class);
 	}
 
-	/** Who has gang chat switched on (W2-P2 adds the delivery). */
+	/** Who has gang or ally chat switched on, and the delivery of both. */
 	@Bean
-	public GangChatToggles gangChatChannel() {
-		return new GangChatToggles();
+	public GangChatToggles gangChatChannel(ChatSpyService spy, GangLimits limits, ChatSettings settings) {
+		return new GangChatToggles(spy, limits, settings);
 	}
 
 	@Bean

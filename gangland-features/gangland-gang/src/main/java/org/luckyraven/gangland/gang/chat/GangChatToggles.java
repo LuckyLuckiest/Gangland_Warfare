@@ -1,14 +1,21 @@
 package org.luckyraven.gangland.gang.chat;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.luckyraven.gangland.events.gangs.GangChatEvent;
+import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.data.gang.GangChatChannel;
 import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.level.GangLimits;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.IntPredicate;
 import java.util.function.ToIntFunction;
 
 /**
@@ -17,23 +24,114 @@ import java.util.function.ToIntFunction;
  */
 public final class GangChatToggles {
 
-	private final Set<UUID> on = ConcurrentHashMap.newKeySet();
+	private final Map<UUID, GangChatChannel> modes = new ConcurrentHashMap<>();
+
+	private final ChatSpyService spy;
+	private final GangLimits     limits;
+	private final ChatSettings   settings;
+
+	public GangChatToggles() {
+		this(new ChatSpyService(), new GangLimits(), new ChatSettings());
+	}
+
+	public GangChatToggles(ChatSpyService spy, GangLimits limits, ChatSettings settings) {
+		this.spy      = spy;
+		this.limits   = limits;
+		this.settings = settings;
+	}
 
 	/** Switches gang chat for {@code player}; returns the new state. */
 	public boolean toggle(UUID player) {
-		if (on.add(player)) {
-			return true;
+		if (modes.put(player, GangChatChannel.GANG) == GangChatChannel.GANG) {
+			modes.remove(player);
+			return false;
 		}
-		on.remove(player);
-		return false;
+		return true;
+	}
+
+	/** Switches ally chat (gang plus allies) for {@code player}; returns the new state. */
+	public boolean toggleAllies(UUID player) {
+		if (modes.put(player, GangChatChannel.ALLIES) == GangChatChannel.ALLIES) {
+			modes.remove(player);
+			return false;
+		}
+		return true;
+	}
+
+	public GangChatChannel channelOf(UUID player) {
+		return modes.getOrDefault(player, GangChatChannel.PUBLIC);
+	}
+
+	/** Context of one delivery: the online list, the gang lookup and the ally test (main thread). */
+	public record Context(Collection<? extends Player> online, ToIntFunction<Player> gangOf, IntPredicate allied) {
+
+		/** Allied test of gang ids against {@code gang}, read live from {@code gangManager}. */
+		public static Context of(Collection<? extends Player> online, ToIntFunction<Player> gangOf, Gang gang,
+		                         GangManager gangManager) {
+			return new Context(online, gangOf, id -> {
+				Gang other = gangManager.getGang(id);
+				return other != null && gang.isAlly(other);
+			});
+		}
+	}
+
+	/**
+	 * Fires {@link GangChatEvent} then delivers the gang or ally line, the staff-spy copies and the console log;
+	 * returns false when a handler cancelled it (or the sender has no gang). Main thread only.
+	 */
+	public boolean deliver(GangMessages messages, Player sender, int gangId, String gangName, GangChatChannel channel,
+	                       String message, Context context) {
+		if (gangId < 0 || channel == GangChatChannel.PUBLIC) {
+			return false;
+		}
+
+		GangChatEvent event = new GangChatEvent(sender, gangId, channel, message);
+		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			return false;
+		}
+
+		String prefix = prefix(gangId);
+		String line = channel == GangChatChannel.ALLIES
+		              ? messages.text("Chat.Ally_Format", "&d[Ally] %prefix%&e%gang% &f%player%&7: &f%message%",
+		                              "prefix", prefix, "gang", gangName, "player", sender.getName())
+		                        .replace("%message%", message)
+		              : format(messages, prefix, sender.getName(), message);
+		ChatRouting.Delivery delivery = ChatRouting.route(channel, gangId, context.online(), context.gangOf(),
+		                                                  context.allied(), spy.spies());
+		for (Player recipient : delivery.members()) {
+			recipient.sendMessage(line);
+		}
+
+		String spyLine = null;
+		if (!delivery.spies().isEmpty() || settings.logToConsole()) {
+			spyLine = messages.text("Chat.Spy_Format", "&8[Spy] %prefix%&7%gang% &f%player%&7: &f%message%",
+			                        "prefix", prefix, "gang", gangName, "player", sender.getName())
+			                  .replace("%message%", message);
+		}
+		for (Player watcher : delivery.spies()) {
+			if (!watcher.hasPermission(org.luckyraven.gangland.gang.permission.GangPermissions.SPY)) {
+				continue;
+			}
+			watcher.sendMessage(spyLine);
+		}
+		if (settings.logToConsole()) {
+			Bukkit.getConsoleSender().sendMessage(spyLine);
+		}
+		return true;
+	}
+
+	private String prefix(int gangId) {
+		String prefix = limits.chatPrefix(gangId);
+		return prefix == null || prefix.isEmpty() ? "" : prefix + " ";
 	}
 
 	public boolean isOn(UUID player) {
-		return on.contains(player);
+		return modes.containsKey(player);
 	}
 
 	public void forget(UUID player) {
-		on.remove(player);
+		modes.remove(player);
 	}
 
 	/**
@@ -58,17 +156,13 @@ public final class GangChatToggles {
 	 * a player's own {@code &} codes stay literal text.
 	 */
 	public String format(GangMessages messages, String senderName, String message) {
-		return messages.text("Social.Chat_Format", "&a[Gang] &f%player%&7: &f%message%", "player", senderName)
-		               .replace("%message%", message);
+		return format(messages, "", senderName, message);
 	}
 
-	/** Sends one gang line to every online member of {@code gangId}. */
-	public void broadcast(GangMessages messages, int gangId, String senderName, String message,
-	                      Collection<? extends Player> online, ToIntFunction<Player> gangOf) {
-		String line = format(messages, senderName, message);
-		for (Player recipient : recipients(gangId, online, gangOf)) {
-			recipient.sendMessage(line);
-		}
+	private String format(GangMessages messages, String prefix, String senderName, String message) {
+		return messages.text("Social.Chat_Format", "&a[Gang] %prefix%&f%player%&7: &f%message%", "prefix", prefix,
+		                     "player", senderName)
+		               .replace("%message%", message);
 	}
 
 }

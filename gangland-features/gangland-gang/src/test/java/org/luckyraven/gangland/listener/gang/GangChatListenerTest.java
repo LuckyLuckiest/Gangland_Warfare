@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.AfterEach;
@@ -16,6 +17,10 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.data.gang.GangChatChannel;
+import org.luckyraven.gangland.events.gangs.GangChatEvent;
+import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.support.W2P2Messages;
@@ -50,6 +55,10 @@ class GangChatListenerTest {
 	private GangChatToggles        channel;
 	private UserManager<Player>    userManager;
 	private GangMessages           messages;
+	private GangManager            gangManager;
+	private PluginManager          pluginManager;
+	private Gang                   vipers;
+	private Gang                   rats;
 	private GangChatListener       listener;
 	private List<Player>           online;
 
@@ -77,13 +86,18 @@ class GangChatListenerTest {
 		scheduler = mock(BukkitScheduler.class);
 		bukkit    = mockStatic(Bukkit.class);
 		bukkit.when(Bukkit::getScheduler).thenReturn(scheduler);
+		pluginManager = mock(PluginManager.class);
+		bukkit.when(Bukkit::getPluginManager).thenReturn(pluginManager);
 		bukkit.when(Bukkit::getOnlinePlayers).thenAnswer(invocation -> List.copyOf(online));
 
 		plugin      = mock(JavaPlugin.class);
 		channel     = new GangChatToggles();
 		userManager = mock(UserManager.class);
 		messages    = W2P2Messages.shipped(tempDir);
-		listener    = new GangChatListener(plugin, channel, userManager, messages);
+		gangManager = mock(GangManager.class);
+		vipers      = gang(1, "Vipers");
+		rats        = gang(2, "Rats");
+		listener    = new GangChatListener(plugin, channel, userManager, messages, gangManager);
 
 		rex  = player("Rex", 1);
 		mate = player("Mate", 1);
@@ -171,6 +185,77 @@ class GangChatListenerTest {
 		assertFalse(channel.isOn(rex.getUniqueId()));
 	}
 
+	@Test
+	@DisplayName("noManagerReadOffMainThread: the async handler reads no manager; the gang is looked up in the task")
+	void noManagerReadOffMainThread() {
+		channel.toggleAllies(rex.getUniqueId());
+
+		listener.onChat(chat(rex, "hi"));
+
+		verifyNoInteractions(userManager, gangManager);
+		verify(scheduler).runTask(eq(plugin), any(Runnable.class));
+	}
+
+	@Test
+	@DisplayName("eventFiresOnMainThread: GangChatEvent is fired only when the scheduled task runs, never from the async handler")
+	void eventFiresOnMainThread() {
+		channel.toggle(rex.getUniqueId());
+
+		listener.onChat(chat(rex, "hi"));
+		verify(pluginManager, never()).callEvent(any(GangChatEvent.class));
+
+		capturedTask().run();
+		ArgumentCaptor<GangChatEvent> fired = ArgumentCaptor.forClass(GangChatEvent.class);
+		verify(pluginManager).callEvent(fired.capture());
+		assertEquals(GangChatChannel.GANG, fired.getValue().channel());
+		assertEquals(1, fired.getValue().gangId());
+		assertEquals("hi", fired.getValue().message());
+		assertSame(rex, fired.getValue().sender());
+	}
+
+	@Test
+	@DisplayName("a cancelled GangChatEvent delivers nothing, and the public line stays cancelled")
+	void cancelledEvent_deliversNothing() {
+		channel.toggle(rex.getUniqueId());
+		doAnswer(invocation -> {
+			((GangChatEvent) invocation.getArgument(0)).setCancelled(true);
+			return null;
+		}).when(pluginManager).callEvent(any(GangChatEvent.class));
+		AsyncPlayerChatEvent event = chat(rex, "hi");
+
+		listener.onChat(event);
+		capturedTask().run();
+
+		assertTrue(event.isCancelled());
+		verify(rex, never()).sendMessage(anyString());
+		verify(mate, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("snapshotRefreshedOnAllyChange: an alliance made between two messages is seen by the second")
+	void snapshotRefreshedOnAllyChange() {
+		channel.toggleAllies(rex.getUniqueId());
+		when(vipers.isAlly(rats)).thenReturn(false);
+		online = List.of(rex, mate, foe);
+		Player rat = player("Rat", 2);
+		online = List.of(rex, mate, rat);
+
+		listener.onChat(chat(rex, "one"));
+		ArgumentCaptor<Runnable> first = ArgumentCaptor.forClass(Runnable.class);
+		verify(scheduler).runTask(eq(plugin), first.capture());
+		first.getValue().run();
+		verify(rat, never()).sendMessage(anyString());
+
+		when(vipers.isAlly(rats)).thenReturn(true);
+		listener.onChat(chat(rex, "two"));
+		ArgumentCaptor<Runnable> both = ArgumentCaptor.forClass(Runnable.class);
+		verify(scheduler, times(2)).runTask(eq(plugin), both.capture());
+		both.getAllValues().get(1).run();
+
+		verify(rat).sendMessage(anyString());
+		verify(mate, times(2)).sendMessage(anyString());
+	}
+
 	/** The one task the listener scheduled; the main-thread delivery. */
 	private Runnable capturedTask() {
 		ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
@@ -191,6 +276,14 @@ class GangChatListenerTest {
 		User<Player> member = user(true, gangId);
 		when(userManager.getUser(player)).thenReturn(member);
 		return player;
+	}
+
+	private Gang gang(int id, String name) {
+		Gang gang = mock(Gang.class);
+		when(gang.getId()).thenReturn(id);
+		when(gang.getDisplayNameString()).thenReturn(name);
+		when(gangManager.getGang(id)).thenReturn(gang);
+		return gang;
 	}
 
 	@SuppressWarnings("unchecked")
