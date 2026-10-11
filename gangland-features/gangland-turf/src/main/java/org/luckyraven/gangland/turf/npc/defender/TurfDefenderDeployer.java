@@ -21,6 +21,7 @@ import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.events.TurfDefenderDownEvent;
 import org.luckyraven.gangland.turf.npc.defender.GarrisonPosts.Choice;
 import org.luckyraven.gangland.turf.npc.defender.GarrisonPosts.Post;
+import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.util.ChatUtil;
@@ -65,6 +66,8 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	private final Map<CivilianNpc, Integer> turfByNpc = new IdentityHashMap<>();
 	/** Guards whose death was reported by {@link #markKilled}; only these count as "down" (T-251). */
 	private final Set<CivilianNpc> killed = Collections.newSetFromMap(new IdentityHashMap<>());
+	/** Composition role names already reported as unknown, so a bad name warns once per boot, not per guard. */
+	private final Set<String>        unknownRoles = new HashSet<>();
 	private       BukkitTask          tickTask;
 	private       BooleanSupplier     citizens = NpcSupport::available;
 
@@ -355,7 +358,19 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	private void dress(CivilianNpc npc, TurfGarrison garrison) {
 		int number = garrison.nextNumber++;
 		npc.setFactionSquads(garrison.squads);
+		applyComposition(npc, number, garrison);
 		CitizensBridge.callsign(npc, "&6" + GuardCallsign.format(garrison.tag, number));
+	}
+
+	/**
+	 * The role guard {@code number} takes from {@code Garrison.Composition}, out of the guard type's own
+	 * {@code AI.Combat.Roles}; a guard past the list, or naming an unknown role, stays plain.
+	 */
+	private void applyComposition(CivilianNpc npc, int number, TurfGarrison garrison) {
+		TurfDefenderConfig config = garrison.config;
+		if (config.composition().slots().isEmpty()) return;
+		NpcRole role = config.composition().assign(number, npc.getTypeConfig().ai().roles(), unknownRoles, log::warn);
+		if (role != null) npc.applyRole(role);
 	}
 
 	/** Eye positions {x, y, z} of the live attackers in {@code world}. */

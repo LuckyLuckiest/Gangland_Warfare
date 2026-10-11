@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.civilians.npc.npc;
 
+import com.cryptomorin.xseries.XAttribute;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.Setter;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -14,6 +16,8 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.civilians.npc.SquadHold;
+import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.keystone.npc.AbstractNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.gangland.civilians.npc.CivilianGroup;
@@ -53,6 +57,12 @@ public class CivilianNpc extends AbstractNpc {
 	 */
 	@Getter
 	private                 boolean                              wantedByPolice;
+	/**
+	 * Reach of the held gun in blocks, or null when unknown; clamps the role's firing band.
+	 */
+	@Getter
+	@Setter
+	private @Nullable       Double                               weaponReach;
 
 	/**
 	 * Location of the last entity that damaged this NPC — used by flee behavior.
@@ -93,6 +103,19 @@ public class CivilianNpc extends AbstractNpc {
 	@Setter
 	private @Nullable FactionSquads factionSquads;
 
+	/**
+	 * The job this civilian was given at spawn ({@link #applyRole}); {@link NpcRole#NONE} for a plain one.
+	 */
+	@Getter
+	private NpcRole role = NpcRole.NONE;
+
+	/**
+	 * Squads told to hold (commander down); injected by the registry like {@link #factionSquads}.
+	 */
+	@Getter
+	@Setter
+	private @Nullable SquadHold squadHold;
+
 	public CivilianNpc(JavaPlugin plugin, NPC npc, CivilianTypeConfig typeConfig, @Nullable String groupId,
 	                   Map<CivilianState, CivilianBehavior> behaviors, Location spawnLocation,
 	                   CivilianNavigationConfig navConfig, @Nullable ItemParser itemParser) {
@@ -101,6 +124,30 @@ public class CivilianNpc extends AbstractNpc {
 		this.groupId    = groupId;
 		this.behaviors  = behaviors;
 		this.itemParser = itemParser;
+	}
+
+	/**
+	 * Gives this civilian a squad job once, right after it spawned.
+	 */
+	public void applyRole(NpcRole role) {
+		this.role = role;
+		setFanPlacement(role.placement());
+		setLeaderPriority(role.leaderPriority());
+
+		// The firing band needs a gun: an unarmed guard keeps the default band rather than stand 12-24 blocks off
+		if (isRangedAttacker()) {
+			double[] band = role.rangedBand(getWeaponReach());
+			if (band != null) setRangedBand(band[0], band[1]);
+		}
+
+		LivingEntity living = getEntity();
+		if (role.healthMultiplier() != 1.0 && living != null) {
+			AttributeInstance maxHealth = living.getAttribute(XAttribute.MAX_HEALTH.get());
+			if (maxHealth != null) {
+				maxHealth.setBaseValue(maxHealth.getBaseValue() * role.healthMultiplier());
+				living.setHealth(maxHealth.getBaseValue());
+			}
+		}
 	}
 
 	// ── AbstractGanglandNpc contract ─────────────────────────────────────────

@@ -69,4 +69,12 @@ Garrison:
    Stand_Down_Seconds: 8
    # Blocks past the turf edge a guard may chase before walking back to a post.
    Leash_Margin: 16
+   # Roles the guards of a turf take in spawn order (guard 1, 2, ...); the rest are plain guards. Names are the
+   # AI.Combat.Roles of the Defender type in civilians.yml (Shield blocks half of a frontal hit, Marksman keeps its
+   # distance, Commander: when it falls the others take cover for 5 s). "Name@2" gives two guards that role; an
+   # unknown name is reported once and that guard is plain. An empty list means no roles.
+   Composition:
+      - "Commander@1"
+      - "Shield@2"
+      - "Marksman@2"
 # end Garrison

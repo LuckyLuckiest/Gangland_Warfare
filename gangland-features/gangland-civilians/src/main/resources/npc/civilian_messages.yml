@@ -68,6 +68,9 @@ Shouts:
          - "They got %member%!"
       Leader_Down:
          - "Boss is down! %unit%, you lead!"
+      # A squad's commander (AI.Combat.Roles with Commander: true) fell: shouted once while the squad takes cover for 5 s.
+      Commander_Down:
+         - "The boss is down! Take cover!"
       # A badly hurt member breaks off to cover (AI.Combat.Retreat in civilians.yml).
       Fall_Back:
          - "I'm hit! Cover me!"
