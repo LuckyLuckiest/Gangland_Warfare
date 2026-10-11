@@ -5,6 +5,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -50,6 +51,11 @@ public class GangMembersDamageListener implements Listener {
 		boolean allied   = gang1 != null && gang2 != null && gang1.isAlly(gang2);
 
 		if (sameGang || allied) event.setCancelled(true);
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onCombust(EntityCombustByEntityEvent event) {
+		// RED stub (GR-41)
 	}
 
 }

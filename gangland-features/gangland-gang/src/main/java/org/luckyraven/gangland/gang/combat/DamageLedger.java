@@ -11,6 +11,12 @@ import java.util.UUID;
  */
 public class DamageLedger {
 
+	public DamageLedger() {
+	}
+
+	public DamageLedger(java.util.function.LongSupplier clock) {
+	}
+
 	public void record(UUID attacker, UUID victim, double damage, long atMillis) {
 		// W5-F
 	}
