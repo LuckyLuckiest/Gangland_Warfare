@@ -34,3 +34,16 @@ Hud:
    Interval_Seconds: 2
    # Action-bar priority of the turf line. Cars, jetpacks and guns use 10 and replace it; keep it below 10.
    Priority: 9
+Web:
+   # Draw every turf on the dynmap web map when the dynmap plugin is installed. Without dynmap nothing happens.
+   Enabled: true
+   # Name of the dynmap layer the turfs are drawn on.
+   Layer_Label: "Turfs"
+   # Fill opacity of a turf rectangle, 0.0 to 1.0.
+   Fill_Opacity: 0.25
+   # Border opacity, 0.0 to 1.0.
+   Line_Opacity: 0.8
+   # Border width in pixels.
+   Line_Weight: 2
+   # Colour (#RRGGBB) of unclaimed turfs and of gangs whose colour cannot be read.
+   Unclaimed_Color: "#AAAAAA"
