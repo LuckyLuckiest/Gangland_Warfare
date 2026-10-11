@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.turf.npc.defender;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -8,24 +10,21 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.events.TurfDefenderDownEvent;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.ArgumentCaptor;
 import org.bukkit.event.Event;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,18 +35,113 @@ import static org.mockito.Mockito.when;
  * {@code TrackedDefender} types have no public seam, so the fixture is assembled through reflection — same house
  * pattern as {@code TurfPowerupManagerTest} (this module) and {@code CaptureServiceHelpersTest}.
  */
-@DisplayName("TurfDefenderDeployer.findOwningTurfId")
+@DisplayName("TurfDefenderDeployer")
 class TurfDefenderDeployerTest {
 
 	@Test
+	@DisplayName("findOwningTurfId_isAnIndexLookup: the lookup goes by entity UUID, so a second entity object with the same UUID resolves")
+	void findOwningTurfId_isAnIndexLookup() {
+		TurfDefenderDeployer deployer = newDeployer();
+		UUID id = UUID.randomUUID();
+		LivingEntity entity = mock(LivingEntity.class);
+		when(entity.getUniqueId()).thenReturn(id);
+		CivilianNpc npc = liveNpc();
+		when(npc.getEntity()).thenReturn(entity);
+		putDefender(deployer, 4, npc);
+
+		LivingEntity sameUuid = mock(LivingEntity.class);
+		when(sameUuid.getUniqueId()).thenReturn(id);
+
+		assertEquals(4, deployer.findOwningTurfId(sameUuid));
+	}
+
+	@Test
+	@DisplayName("markKilled_byUuid: a guard tracked by entity UUID counts as down once it is gone, an untracked NPC does not")
+	void markKilled_byUuid() {
+		TurfDefenderDeployer deployer = newDeployer();
+		CivilianNpc dying = liveNpc();
+		CivilianNpc stranger = liveNpc();
+		putDefender(deployer, 1, dying);
+		putDefender(deployer, 1, liveNpc());
+		when(dying.isValid()).thenReturn(false);
+		deployer.markKilled(dying);
+		deployer.markKilled(stranger);
+		when(stranger.isValid()).thenReturn(false);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			deployer.tick();
+
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager(), org.mockito.Mockito.times(1)).callEvent(captor.capture());
+			assertEquals(1, ((TurfDefenderDownEvent) captor.getValue()).remaining());
+		}
+	}
+
+	@Test
+	@DisplayName("noCitizens_consumesNothing: TF-46, a garrison start without Citizens spawns and spends nothing")
+	void noCitizens_consumesNothing() {
+		CivilianSpawnManager spawnManager = mock(CivilianSpawnManager.class);
+		TurfDefenderDeployer deployer = new TurfDefenderDeployer(mock(JavaPlugin.class), mock(CivilianService.class),
+				spawnManager);
+		deployer.setCitizensAvailable(() -> false);
+		AtomicInteger consumed = new AtomicInteger();
+		TurfGarrison garrison = new TurfGarrison(1, new CuboidRegion("world", 0, 0, 20, 20),
+				new TurfDefenderConfig("turf_defender", 32.0, 600), "VIP", () -> 5, n -> {
+			consumed.addAndGet(n);
+			return n;
+		}, n -> {
+		});
+
+		deployer.startGarrison(garrison, Set::of, () -> 600);
+		deployer.tick();
+
+		assertEquals(0, consumed.get());
+		assertEquals(0, deployer.aliveCount(1));
+		verifyNoInteractions(spawnManager);
+	}
+
+	@Test
+	@DisplayName("consume after spawn: the reserve pays one per guard that spawned, a failed spawn costs nothing")
+	void wave_consumesOnlyAfterSpawn() {
+		CivilianSpawnManager spawnManager = mock(CivilianSpawnManager.class);
+		CivilianNpc first  = liveNpc();
+		CivilianNpc second = liveNpc();
+		when(spawnManager.spawnCivilian(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq("turf_defender")))
+				.thenReturn(first, second, null);
+		TurfDefenderDeployer deployer = new TurfDefenderDeployer(mock(JavaPlugin.class), mock(CivilianService.class),
+				spawnManager);
+		deployer.setCitizensAvailable(() -> true);
+		AtomicInteger stock  = new AtomicInteger(10);
+		AtomicInteger notice = new AtomicInteger();
+		TurfGarrison garrison = new TurfGarrison(1, new CuboidRegion("world", 0, 0, 20, 20),
+				new TurfDefenderConfig("turf_defender", 32.0, 600), "VIP", stock::get,
+				n -> stock.addAndGet(-n) + n, notice::addAndGet);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			World world = mock(World.class);
+			bukkit.statics().when(() -> Bukkit.getWorld("world")).thenReturn(world);
+
+			deployer.startGarrison(garrison, Set::of, () -> 600);
+			assertEquals(10, stock.get(), "arming the garrison spends nothing");
+			deployer.tick();
+		}
+
+		// the wave asked for 3: two spawned, the third came back null
+		assertEquals(8, stock.get());
+		assertEquals(2, notice.get());
+		assertEquals(2, deployer.aliveCount(1));
+	}
+
+	@Test
 	@DisplayName("resolves the turf id owning a tracked, valid defender's entity")
-	void findOwningTurfId_matchesTrackedDefender() throws Exception {
+	void findOwningTurfId_matchesTrackedDefender() {
 		TurfDefenderDeployer deployer = newDeployer();
 
 		LivingEntity entity = mock(LivingEntity.class);
 		CivilianNpc  npc    = mock(CivilianNpc.class);
 		when(npc.isValid()).thenReturn(true);
 		when(npc.getEntity()).thenReturn(entity);
+		when(entity.getUniqueId()).thenReturn(UUID.randomUUID());
 
 		putDefender(deployer, 7, npc);
 
@@ -56,7 +150,7 @@ class TurfDefenderDeployerTest {
 
 	@Test
 	@DisplayName("returns -1 for an entity that belongs to no tracked defender, and for null")
-	void findOwningTurfId_untrackedEntityOrNull_returnsMinusOne() throws Exception {
+	void findOwningTurfId_untrackedEntityOrNull_returnsMinusOne() {
 		TurfDefenderDeployer deployer = newDeployer();
 
 		LivingEntity tracked   = mock(LivingEntity.class);
@@ -64,6 +158,8 @@ class TurfDefenderDeployerTest {
 		CivilianNpc  npc       = mock(CivilianNpc.class);
 		when(npc.isValid()).thenReturn(true);
 		when(npc.getEntity()).thenReturn(tracked);
+		when(tracked.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(untracked.getUniqueId()).thenReturn(UUID.randomUUID());
 
 		putDefender(deployer, 3, npc);
 
@@ -73,7 +169,7 @@ class TurfDefenderDeployerTest {
 
 	@Test
 	@DisplayName("aliveCount counts live guards per turf and drops one when a guard turns invalid")
-	void aliveCount_isPerTurf() throws Exception {
+	void aliveCount_isPerTurf() {
 		TurfDefenderDeployer deployer = newDeployer();
 		CivilianNpc a = liveNpc();
 		CivilianNpc b = liveNpc();
@@ -93,7 +189,7 @@ class TurfDefenderDeployerTest {
 
 	@Test
 	@DisplayName("a guard that dies fires one TurfDefenderDownEvent per tick with the guards left")
-	void deadDefender_firesDefenderDownOncePerTick() throws Exception {
+	void deadDefender_firesDefenderDownOncePerTick() {
 		TurfDefenderDeployer deployer = newDeployer();
 		CivilianNpc alive = liveNpc();
 		CivilianNpc dying = liveNpc();
@@ -116,7 +212,7 @@ class TurfDefenderDeployerTest {
 
 	@Test
 	@DisplayName("T-251: a guard that vanished without dying (despawned or unloaded) fires no TurfDefenderDownEvent")
-	void despawnedDefender_firesNoDefenderDown() throws Exception {
+	void despawnedDefender_firesNoDefenderDown() {
 		TurfDefenderDeployer deployer = newDeployer();
 		CivilianNpc alive     = liveNpc();
 		CivilianNpc despawned = liveNpc();
@@ -134,7 +230,7 @@ class TurfDefenderDeployerTest {
 
 	@Test
 	@DisplayName("T-269: the lifespan is read on every tick, so a reload extends guards already in the field")
-	void lifespanSupplier_isReadEachTick() throws Exception {
+	void lifespanSupplier_isReadEachTick() {
 		TurfDefenderDeployer deployer = newDeployer();
 		CivilianNpc guard = liveNpc();
 		AtomicInteger seconds = new AtomicInteger(0);
@@ -148,7 +244,7 @@ class TurfDefenderDeployerTest {
 
 	@Test
 	@DisplayName("a guard removed because its lifespan ran out fires no TurfDefenderDownEvent")
-	void expiredDefender_firesNothing() throws Exception {
+	void expiredDefender_firesNothing() {
 		TurfDefenderDeployer deployer = newDeployer();
 		CivilianNpc expired = liveNpc();
 		putDefender(deployer, 1, expired, System.currentTimeMillis() - 1_000L, () -> 0);
@@ -171,53 +267,12 @@ class TurfDefenderDeployerTest {
 				mock(CivilianSpawnManager.class));
 	}
 
-	/**
-	 * Builds one {@code Group} holding one {@code TrackedDefender} that expires at {@code Long.MAX_VALUE}, and installs it
-	 * into the deployer's private {@code byTurfId} map under {@code turfId} - both nested types are private with no
-	 * public constructor, so this goes through reflection rather than the {@link TurfDefenderDeployer#deploy} seam
-	 * (which needs a live Citizens registry via {@code NpcSupport.available()}).
-	 */
-	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc) throws Exception {
-		putDefender(deployer, turfId, npc, Long.MAX_VALUE);
+	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc) {
+		deployer.track(turfId, npc, System.currentTimeMillis(), () -> 1_000_000);
 	}
 
-	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc, long expiresAt)
-			throws Exception {
-		putDefender(deployer, turfId, npc, expiresAt, () -> 0);
-	}
-
-	/** A guard deployed at {@code deployedAt} whose lifespan (seconds) is read from {@code lifespanSeconds}. */
-	@SuppressWarnings("unchecked")
 	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc, long deployedAt,
-	                                IntSupplier lifespanSeconds) throws Exception {
-		Class<?> groupClass           = Class.forName(TurfDefenderDeployer.class.getName() + "$Group");
-		Class<?> trackedDefenderClass = Class.forName(TurfDefenderDeployer.class.getName() + "$TrackedDefender");
-
-		Constructor<?> groupCtor = groupClass.getDeclaredConstructor(Supplier.class, double.class);
-		groupCtor.setAccessible(true);
-		Supplier<Set<UUID>> noChallengers = Set::of;
-		Map<Integer, Object> byTurfId = fieldMap(deployer);
-		Object group = byTurfId.get(turfId);
-		if (group == null) {
-			group = groupCtor.newInstance(noChallengers, 32.0);
-			byTurfId.put(turfId, group);
-		}
-
-		Constructor<?> defenderCtor = trackedDefenderClass.getDeclaredConstructor(CivilianNpc.class, long.class,
-		                                                                          IntSupplier.class);
-		defenderCtor.setAccessible(true);
-		Object trackedDefender = defenderCtor.newInstance(npc, deployedAt, lifespanSeconds);
-
-		Field defendersField = groupClass.getDeclaredField("defenders");
-		defendersField.setAccessible(true);
-		((List<Object>) defendersField.get(group)).add(trackedDefender);
-
-	}
-
-	@SuppressWarnings("unchecked")
-	private static Map<Integer, Object> fieldMap(TurfDefenderDeployer deployer) throws Exception {
-		Field byTurfIdField = TurfDefenderDeployer.class.getDeclaredField("byTurfId");
-		byTurfIdField.setAccessible(true);
-		return (Map<Integer, Object>) byTurfIdField.get(deployer);
+	                                IntSupplier lifespanSeconds) {
+		deployer.track(turfId, npc, deployedAt, lifespanSeconds);
 	}
 }

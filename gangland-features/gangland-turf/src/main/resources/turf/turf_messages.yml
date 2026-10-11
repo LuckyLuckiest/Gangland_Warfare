@@ -232,6 +232,14 @@ Alerts:
    Taken: "&aYou took %turf%"
 # end Alerts
 
+# ---------------- Garrison: lines to the owners while their guards defend (W3-B) ----------------
+Garrison:
+   # To the owning gang's online members when a wave of guards takes its posts. %turf%, %count%.
+   Wave: "&7%count% guards took their posts at &f%turf%&7."
+   # To the owning gang's online members when guards go back to the reserve after the fight. %turf%, %count%.
+   Returned: "&7%count% guards back in the reserve at &f%turf%&7."
+# end Garrison
+
 # ---------------- Income: the payout line and the turf cap line (W2-N2) ----------------
 Income:
    # Action bar to online members at each payout. %money_symbol%, %amount% = paid this payout, %count% = turfs that

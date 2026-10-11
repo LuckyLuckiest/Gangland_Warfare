@@ -2,16 +2,16 @@ package org.luckyraven.gangland.turf.listener.powerups;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.config.TurfRules;
-import org.luckyraven.gangland.turf.data.CuboidRegion;
+import org.luckyraven.gangland.turf.listener.GangDisplayNameResolver;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
 import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
@@ -20,7 +20,9 @@ import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
+import org.luckyraven.gangland.turf.npc.defender.GuardCallsign;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
+import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 
 import java.util.HashSet;
@@ -29,19 +31,12 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Auto-deploys the owning gang's pre-purchased defender garrison the moment an enemy starts capturing the turf, and
- * pivots the per-turf Quartermaster NPC into hostile mode for the duration of the contest. The garrison is consumed (so
- * a turf with stock=3 spawns 3 defenders and then holds stock=0. Guards that survive a failed contest return to the
- * stock, capped at Garrison.Max_Reserve; the owner re-buys from the Quartermaster for the rest.
- * Defenders are recalled and the Quartermaster is pacified on capture-complete or capture-failed regardless of who won,
- * so a finished contest never leaves stragglers behind.
- *
- * <p>Spawn anchor is the turf's region centre at the highest non-air block — same convention {@code /glw turf
- * tp} uses, so defenders end up standing on the surface rather than buried in stone or floating in midair.
- *
- * <p>Talks to {@link TurfDefenderDeployer} and {@link TurfPowerupManager} directly (group I, T-I4) — both now live in
- * this module alongside this listener, so the {@code TurfNpcContract}/{@code TurfNpcContracts} cross-module bridge
- * this class used to go through (cops-n-crooks was the only implementor) has no remote side left to bridge to.
+ * Arms the owning gang's pre-purchased defender garrison the moment an enemy starts capturing the turf, and pivots the
+ * per-turf Quartermaster NPC into hostile mode for the duration of the contest. The garrison is a reserve: the
+ * deployer spawns it in waves at hidden posts and takes each guard out of the reserve only after it spawned, so
+ * nothing is spent at contest start. When a held contest ends the survivors stand down and return to the reserve,
+ * capped at Garrison.Max_Reserve; the guards that never spawned were never taken. A completed capture stands the
+ * guards down as lost, and the owner change that follows recalls them and resets the old owner's stock (T-270).
  */
 @ListenerHandler
 @RequiredArgsConstructor
@@ -53,6 +48,7 @@ public final class GarrisonDeployListener implements Listener {
 	private final TurfPowerupManager   powerupNpcs;
 	private final GangLookupContract   gangs;
 	private final TurfRules            rules;
+	private final TurfMessages        text;
 
 	@EventHandler
 	public void onCaptureStart(TurfCaptureStartEvent event) {
@@ -67,29 +63,33 @@ public final class GarrisonDeployListener implements Listener {
 		// fights back so an attacker can never just walk in and stand on a defenceless turf.
 		powerupNpcs.engage(turf.getId(), () -> challengerMemberIds(challengerGangId));
 
-		int stock = garrisons.count(turf.getId());
-		if (stock <= 0) return;
-
-		Location spawn = regionCentreSurface(turf.getRegion());
-		if (spawn == null) return;
-
-		int consumed = garrisons.consume(turf.getId(), stock);
-		if (consumed <= 0) return;
+		int turfId = turf.getId();
+		if (garrisons.count(turfId) <= 0) return;
 
 		// TF-36: read the live config at deploy time, so a /glw reload of turf_npcs.yml applies to the next contest.
 		TurfDefenderConfig defenderConfig = npcConfig.getDefenderConfig();
+		Gang owner = gangs.findById(turf.getOwnerGangId());
+		String tag = owner == null ? GuardCallsign.tag("", "")
+		                           : GuardCallsign.tag(GangDisplayNameResolver.resolve(owner), owner.getName());
+		// TF-20/TF-46: the deployer spawns the guards in waves and takes each one out of the reserve only after it
+		// spawned, so nothing is spent here.
+		TurfGarrison garrison = new TurfGarrison(turfId, turf.getRegion(), defenderConfig, tag,
+		                                         () -> garrisons.count(turfId), n -> garrisons.consume(turfId, n),
+		                                         n -> tellOwners(turf, "Garrison.Wave",
+		                                                         "&7%count% guards took their posts at &f%turf%&7.", n));
 		// r2: guards must outlive the longest contest (a stall runs to Max_Contest_Minutes), or they expire first and the
-		// failed-contest give-back finds nothing alive. T-269: the supplier is read on every deployer tick, so a /glw reload
-		// of turf_npcs.yml or turf_rules.yml reaches guards already in the field.
+		// survivors that return to the reserve are already gone. T-269: the supplier is read on every deployer tick, so a
+		// /glw reload of turf_npcs.yml or turf_rules.yml reaches guards already in the field.
 		IntSupplier lifespan = () -> Math.max(npcConfig.getDefenderConfig().lifespanSeconds(),
 		                                      rules.capture().maxContestMinutes() * 60 + 60);
-		defenders.deploy(turf.getId(), spawn, defenderConfig.typeId(), () -> challengerMemberIds(challengerGangId),
-		                 consumed, defenderConfig.targetingRadius(), lifespan);
+		defenders.startGarrison(garrison, () -> challengerMemberIds(challengerGangId), lifespan);
 	}
 
 	@EventHandler
 	public void onCaptured(TurfCapturedEvent event) {
-		defenders.recall(event.getTurf().getId());
+		// the old owner's stock is reset by the owner change that follows, so nothing returns to it
+		defenders.standDown(event.getTurf().getId(), false, survivors -> {
+		});
 		powerupNpcs.disengage(event.getTurf().getId());
 	}
 
@@ -105,20 +105,38 @@ public final class GarrisonDeployListener implements Listener {
 	}
 
 	/**
-	 * A failed contest recalls the guards. On a turf the owner still holds, the guards that survived go back to the
-	 * garrison stock, so they deploy again on the next contest instead of being lost with the stock already at 0.
+	 * A failed contest ends the fight. On a turf the owner still holds, the guards that survive stand down and go back to
+	 * the reserve (capped at Garrison.Max_Reserve); the guards that never spawned were never taken out of it.
 	 */
 	@EventHandler
 	public void onFailed(TurfCaptureFailedEvent event) {
 		Turf turf = event.getTurf();
-		int  alive = defenders.aliveCount(turf.getId());
-		defenders.recall(turf.getId());
-		if (!turf.isUnclaimed()) {
-			// r2: survivors return to stock only up to Max_Reserve, so the give-back never mints guards past the cap.
-			int room = Math.max(0, rules.getMaxReserve() - garrisons.count(turf.getId()));
-			garrisons.add(turf.getId(), Math.min(alive, room));
-		}
+		defenders.standDown(turf.getId(), true, survivors -> returnToReserve(turf, survivors));
 		powerupNpcs.disengage(turf.getId());
+	}
+
+	/** r2: survivors return to the reserve only up to Max_Reserve, so the give-back never mints guards past the cap. */
+	private void returnToReserve(Turf turf, int survivors) {
+		if (turf.isUnclaimed()) return;
+		int added = garrisons.refund(turf.getId(), survivors, rules.getMaxReserve());
+		if (added > 0) {
+			tellOwners(turf, "Garrison.Returned", "&7%count% guards back in the reserve at &f%turf%&7.", added);
+		}
+	}
+
+	/** One of the owner's garrison lines to its online members. */
+	private void tellOwners(Turf turf, String key, String fallback, int count) {
+		Integer ownerId = turf.getOwnerGangId();
+		Gang    owner   = ownerId == null ? null : gangs.findById(ownerId);
+		if (owner == null) return;
+		String line = text.text(key, fallback, "turf", turf.getDisplayName(), "count", count);
+		if (line == null || line.isEmpty()) return;
+		for (Member member : owner.getMembers()) {
+			Player player = Bukkit.getPlayer(member.getUuid());
+			if (player != null) {
+				player.sendMessage(line);
+			}
+		}
 	}
 
 	/**
@@ -134,14 +152,5 @@ public final class GarrisonDeployListener implements Listener {
 			ids.add(member.getUuid());
 		}
 		return ids;
-	}
-
-	private Location regionCentreSurface(CuboidRegion region) {
-		World world = Bukkit.getWorld(region.getWorld());
-		if (world == null) return null;
-		double centreX = (region.getMinX() + region.getMaxX()) / 2.0 + 0.5;
-		double centreZ = (region.getMinZ() + region.getMaxZ()) / 2.0 + 0.5;
-		int    y       = world.getHighestBlockYAt((int) centreX, (int) centreZ);
-		return new Location(world, centreX, y + 1.0, centreZ);
 	}
 }

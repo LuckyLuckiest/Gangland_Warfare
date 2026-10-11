@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.turf.capture.CaptureRules;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -19,12 +20,14 @@ import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
+import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.support.InMemoryGarrisonRepository;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
+import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,32 +55,31 @@ class GarrisonDeployListenerTest {
 		when(rules.getMaxReserve()).thenReturn(12);
 		when(rules.capture()).thenReturn(CaptureRules.DEFAULTS);
 		listener = new GarrisonDeployListener(garrisons, defenders, npcConfig,
-		                                      mock(TurfPowerupManager.class), mock(GangLookupContract.class), rules);
+		                                      mock(TurfPowerupManager.class), mock(GangLookupContract.class), rules,
+		                                      mock(TurfMessages.class));
 	}
 
 	@Test
 	@DisplayName("a failed contest returns the surviving guards to the owner's garrison stock")
 	void failedContest_givesSurvivingGuardsBackToStock() {
 		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 1, BigDecimal.TEN, 0L, 0L);
-		garrisons.add(1, 0); // stock already consumed at contest start
-		when(defenders.aliveCount(1)).thenReturn(2);
+		garrisons.add(1, 0); // the unspent guards are all spawned
 
 		listener.onFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+		survivorsReturn(1, true, 2);
 
 		assertEquals(2, garrisons.count(1));
-		verify(defenders).recall(1);
 	}
 
 	@Test
 	@DisplayName("a failed contest on an unclaimed turf gives no guards back (no owner to hold stock)")
 	void failedContest_unclaimedTurf_addsNothing() {
 		Turf turf = new Turf(2, "Turf", new CuboidRegion("world", 0, 0, 10, 10), null, BigDecimal.TEN, 0L, 0L);
-		when(defenders.aliveCount(2)).thenReturn(2);
 
 		listener.onFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.ABANDONED, 3));
+		survivorsReturn(2, true, 2);
 
 		assertEquals(0, garrisons.count(2));
-		verify(defenders).recall(2);
 	}
 
 	@Test
@@ -85,11 +87,49 @@ class GarrisonDeployListenerTest {
 	void failedContest_giveBackCappedAtMaxReserve() {
 		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 1, BigDecimal.TEN, 0L, 0L);
 		garrisons.add(1, 11);
-		when(defenders.aliveCount(1)).thenReturn(2);
 
 		listener.onFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+		survivorsReturn(1, true, 2);
 
 		assertEquals(12, garrisons.count(1));
+	}
+
+	@Test
+	@DisplayName("contestEnd_survivorsAndUnspentReturn: stock 5, 3 spawned, 1 killed - the reserve ends at 4, never spent at start")
+	void contestEnd_survivorsAndUnspentReturn() {
+		when(npcConfig.getDefenderConfig()).thenReturn(new TurfDefenderConfig("turf_defender", 16.0, 600));
+		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 1, BigDecimal.TEN, 0L, 0L);
+		garrisons.add(1, 5);
+		Gang challenger = mock(Gang.class);
+		when(challenger.getId()).thenReturn(2);
+
+		listener.onCaptureStart(new TurfCaptureStartEvent(turf, challenger));
+		ArgumentCaptor<TurfGarrison> garrison = ArgumentCaptor.forClass(TurfGarrison.class);
+		verify(defenders).startGarrison(garrison.capture(), any(), any());
+		assertEquals(5, garrisons.count(1), "contest start spends nothing");
+		assertEquals(5, garrison.getValue().reserve());
+
+		garrison.getValue().spend(1);
+		garrison.getValue().spend(1);
+		garrison.getValue().spend(1);
+		assertEquals(2, garrisons.count(1));
+
+		listener.onFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+		survivorsReturn(1, true, 2);
+
+		assertEquals(4, garrisons.count(1));
+	}
+
+	@Test
+	@DisplayName("a completed capture starts the stand-down as lost and never refunds the old owner's stock")
+	void captured_standsDownAsLost() {
+		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 2, BigDecimal.TEN, 0L, 0L);
+		garrisons.add(1, 1);
+
+		listener.onCaptured(new org.luckyraven.gangland.turf.events.TurfCapturedEvent(turf, mock(Gang.class), mock(Gang.class)));
+		survivorsReturn(1, false, 3);
+
+		assertEquals(1, garrisons.count(1));
 	}
 
 	@Test
@@ -142,8 +182,14 @@ class GarrisonDeployListenerTest {
 		}
 
 		ArgumentCaptor<IntSupplier> lifespan = ArgumentCaptor.forClass(IntSupplier.class);
-		verify(defenders).deploy(eq(1), any(Location.class), eq("turf_defender"), any(), eq(2), anyDouble(),
-		                         lifespan.capture());
+		verify(defenders).startGarrison(any(TurfGarrison.class), any(), lifespan.capture());
 		return lifespan.getValue();
+	}
+
+	/** Runs the stand-down callback the listener handed the deployer, as if {@code survivors} guards were left. */
+	private void survivorsReturn(int turfId, boolean held, int survivors) {
+		ArgumentCaptor<IntConsumer> onReturn = ArgumentCaptor.forClass(IntConsumer.class);
+		verify(defenders).standDown(eq(turfId), eq(held), onReturn.capture());
+		onReturn.getValue().accept(survivors);
 	}
 }
