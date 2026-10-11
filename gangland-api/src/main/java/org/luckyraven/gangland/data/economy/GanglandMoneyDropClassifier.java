@@ -19,6 +19,10 @@ public class GanglandMoneyDropClassifier implements MoneyDropClassifier {
 		this.npcSource = source;
 	}
 
+	/** STUB (red phase). */
+	public void installFirst(NpcMoneyDropSource source) {
+	}
+
 	/**
 	 * The module source goes first: a Citizens PLAYER-type NPC (every cop, some civilians) is a {@link Player}.
 	 * PLAYER is kept for real players, and an NPC nobody recognises is {@link MoneyDropContext#NPC}.

@@ -177,6 +177,16 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		}
 	}
 
+	/** What a guard's death pays a rival: the gang that paid for it and the cash. */
+	public record GuardBounty(int ownerGangId, int amount) {
+	}
+
+	/** STUB (red phase). */
+	@org.jetbrains.annotations.Nullable
+	public GuardBounty bountyOf(CivilianNpc npc) {
+		return null;
+	}
+
 	/**
 	 * Returns the turf id this entity is a defender for, or {@code -1} if the entity is not a tracked defender. Used by
 	 * the friendly-fire listener to short-circuit damage from the owning gang.
