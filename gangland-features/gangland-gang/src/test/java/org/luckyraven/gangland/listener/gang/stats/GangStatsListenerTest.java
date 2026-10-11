@@ -3,6 +3,7 @@ package org.luckyraven.gangland.listener.gang.stats;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -264,5 +265,22 @@ class GangStatsListenerTest {
 
 		assertEquals(0, killer.getKills());
 		assertEquals(0, victim.getDeaths());
+	}
+
+	@Test
+	@DisplayName("downedThenQuit_nextDeathCounts: a combat-log while downed does not swallow a later fair death")
+	void downedThenQuit_nextDeathCounts() {
+		listener.onDowned(new PlayerDownedEvent(victimPlayer));
+		assertEquals(1, killer.getKills());
+
+		PlayerQuitEvent quit = mock(PlayerQuitEvent.class);
+		when(quit.getPlayer()).thenReturn(victimPlayer);
+		listener.onQuit(quit);
+
+		now += 10 * 60_000L;
+		dies(victimPlayer);
+
+		assertEquals(2, killer.getKills());
+		assertEquals(2, victim.getDeaths());
 	}
 }

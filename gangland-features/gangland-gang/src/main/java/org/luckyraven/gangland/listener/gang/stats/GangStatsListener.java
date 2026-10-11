@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.gangland.core.downed.PlayerUndownedEvent;
@@ -37,6 +38,7 @@ import java.util.function.LongSupplier;
 public final class GangStatsListener implements Listener {
 
 	private static final long DEDUP_MS = 500L;
+	private static final long DOWNED_GUARD_MS = 5 * 60_000L;
 	private static final long DAY_MS   = 24L * 60 * 60 * 1000;
 
 	private final MemberManager   memberManager;
@@ -68,7 +70,8 @@ public final class GangStatsListener implements Listener {
 		long   now    = clock.getAsLong();
 
 		// a downed player who then really dies was counted at the down
-		if (downedCounted.remove(victim.getUniqueId()) != null) return;
+		Long downedAt = downedCounted.remove(victim.getUniqueId());
+		if (downedAt != null && now - downedAt < DOWNED_GUARD_MS) return;
 
 		count(victim, now);
 	}
@@ -83,6 +86,12 @@ public final class GangStatsListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onUndowned(PlayerUndownedEvent event) {
+		downedCounted.remove(event.getPlayer().getUniqueId());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onQuit(PlayerQuitEvent event) {
+		// the quit restore path fires no PlayerUndownedEvent
 		downedCounted.remove(event.getPlayer().getUniqueId());
 	}
 
