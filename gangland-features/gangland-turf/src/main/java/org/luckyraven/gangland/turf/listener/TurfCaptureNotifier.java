@@ -194,6 +194,9 @@ public final class TurfCaptureNotifier implements Listener {
 			return;
 		}
 		Integer attackerId = event.getChallengerGangId();
+		if (reason == TurfCaptureFailedEvent.Reason.ABANDONED) {
+			lastOutcome.remove(turf.getId() + "|" + attackerId + "|START");
+		}
 		if (repeatedOutcome(turf.getId(), attackerId, reason)) {
 			return;
 		}
