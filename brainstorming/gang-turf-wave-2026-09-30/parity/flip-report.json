@@ -4,12 +4,12 @@
   "auditRef": "parity/audit.json (W6-X, branchHead ca7ab965, fix round e0917c69)",
   "acceptanceReport": null,
   "acceptanceNote": "E:/Programming/java/wt/_programme/gt14/acceptance/gt2/ exists but is empty: no report.json, so no F1/F2/F3 row is PASS and every owner-step row stays DELIVERED",
-  "rule": "HAVE only when auditVerdict AUTOMATED_GREEN (GP-33 held back, see its reason) or when the row is already HAVE; NEEDS_OWNER_STEP needs every named acceptance row PASS; RED never flips",
+  "rule": "HAVE only when auditVerdict AUTOMATED_GREEN or when the row is already HAVE; NEEDS_OWNER_STEP needs every named acceptance row PASS; RED never flips",
   "counts": {
     "rows": 45,
-    "flipped": 29,
+    "flipped": 30,
     "alreadyHave": 3,
-    "unflipped": 13
+    "unflipped": 12
   },
   "rows": [
     {
@@ -676,9 +676,9 @@
         }
       ],
       "acceptanceRows": [],
-      "proposedStatus": "DELIVERED",
-      "flipped": false,
-      "reason": "AUTOMATED_GREEN, but the row carries the recorded partial exclusion (third-party combat-tag adapters); HAVE would overstate, so it stays DELIVERED with that text"
+      "proposedStatus": "HAVE",
+      "flipped": true,
+      "reason": "audit AUTOMATED_GREEN; recorded partial exclusion (third-party combat-tag adapters) kept in delivered_by"
     },
     {
       "id": "GP-34",

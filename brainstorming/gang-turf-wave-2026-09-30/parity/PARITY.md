@@ -5,7 +5,7 @@ Inputs: `parity/design-fold-in.md`, `parity/design-parity-wave.md`, `parity/matr
 `parity/fights.md`, `competitors/gangsplus.md`, `PLAN.md`, `roadmap.json`. Backbone `design-parity-wave` (waves W5 and
 W6), grafts from `design-fold-in` (own vocabulary, sides frozen at contest start, `GangSafehouseSetEvent`, one `rally`
 verb, the D16 fee table, the no-default-true `gangland.gang.*` guard). The scores, grafts and rejections are in
-`PLAN.md` sections 13 and 14; the full design is `PLAN.md` section 15. Graph freshness: re-checked at the 0.19.0 head 976bd087 for W6-Y (2026-10-11); the earlier pass read `graphify-out/graph.json` at 2026-09-29 23:08 > HEAD 23:05; code facts below were re-read after `graphify explain` orientation. **Third pass
+`PLAN.md` sections 13 and 14; the full design is `PLAN.md` section 15. Graph freshness at the 0.19.0 head 976bd087 (2026-10-11 19:03): STALE (`graphify-out/graph.json` 2026-10-08 15:19 is older); the W6-Y flip uses the W6-X test evidence only, not graph facts. The earlier pass read `graph.json` at 2026-09-29 23:08 > HEAD 23:05; code facts below were re-read after `graphify explain` orientation. **Third pass
 2026-09-30** (`PLAN.md` 14.2): the parity reviews renamed `friendlyfire` -> `pvp`, the WorldGuard flag -> `glw-gang-pvp`,
 `user_rank-number` -> `user_rank-position`, moved the `fight enlist` refusal to W6-S, split the audit (W6-X) from the flip
 (NEW lane W6-Y), and corrected GP-04's help clause (built in W5-U, not inherited from Keystone).
@@ -108,7 +108,7 @@ Beyond parity (what no gang plugin ships), in one place: `PLAN.md` section 15.8.
  {"id": "GP-30", "delivered_by": "3D ArenaBox, N spawns per side, Exit, fight/arenas.yml, /glw arena create|corner|spawn|exit|size|finish|show|list|tp|on|off|delete|reload, containment", "lane": "W6-A, W6-F", "status_after_plan": "DELIVERED"},
  {"id": "GP-31", "delivered_by": "FightCommandListener allowlist + bypass node, Require_Equal_Teams, escrow + FightSettlement, fight_stats tables", "lane": "W6-F, W6-S, W6-E", "status_after_plan": "DELIVERED"},
  {"id": "GP-32", "delivered_by": "Worlds.Disabled + GangWorldPolicy root gate in GangCommand (Gang.Enable global switch, GR-40); turf create refuses such a world", "lane": "W5-K, W5-T", "status_after_plan": "HAVE"},
- {"id": "GP-33", "delivered_by": "built-in CombatTag on the damage ledger blocks leave, safehouse, rally (W5-F); fights refuses a tagged enlist and re-checks at COUNTDOWN (W6-S); EXCLUDED: third-party combat-tag plugin adapters (no common API, one soft dependency each)", "lane": "W5-F, W6-S", "status_after_plan": "DELIVERED"},
+ {"id": "GP-33", "delivered_by": "built-in CombatTag on the damage ledger blocks leave, safehouse, rally (W5-F); fights refuses a tagged enlist and re-checks at COUNTDOWN (W6-S); EXCLUDED: third-party combat-tag plugin adapters (no common API, one soft dependency each)", "lane": "W5-F, W6-S", "status_after_plan": "HAVE"},
  {"id": "GP-34", "delivered_by": "GangPlaceholderContribution new tokens + gang_board_<stat>_<n>_<field> via api resolveGlobal + Placeholders.Default_Value", "lane": "W5-K, W5-S", "status_after_plan": "HAVE"},
  {"id": "GP-35", "delivered_by": "Keystone persistence + PeriodicalUpdates + diff engine", "lane": "-", "status_after_plan": "HAVE"},
  {"id": "GP-36", "delivered_by": "gang/gang_messages.yml (LocalizedModuleYaml, any language code) + GangNotifier titles", "lane": "W5-K, W5-U", "status_after_plan": "HAVE"},
