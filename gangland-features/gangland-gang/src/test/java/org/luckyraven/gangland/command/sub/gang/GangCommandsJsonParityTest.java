@@ -209,7 +209,7 @@ class GangCommandsJsonParityTest {
 		                                      new GangChatToggles(), new GangWorldPolicy(mock(GangRules.class)), new GangMembershipService(),
 		                       new GangDisbandService(), new GangLeadership(), new CombatTag(),
 		                       new GangStatsService(), new GangLimits(), new GangLevelTable(),
-		                       new GangSafehouseService(), mock(FriendlyFirePolicy.class));
+		                       mock(GangSafehouseService.class), mock(FriendlyFirePolicy.class));
 		command.initializeArguments();
 		return command;
 	}

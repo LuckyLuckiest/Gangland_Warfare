@@ -18,7 +18,6 @@ import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.luckyraven.gangland.gang.membership.MembershipQueries;
 import org.luckyraven.gangland.gang.purge.GangPurgeTask;
-import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
 import org.luckyraven.gangland.gang.stats.GangStatContribution;
 import org.luckyraven.gangland.gang.stats.GangStatContributions;
 import org.luckyraven.gangland.gang.stats.GangStatsService;
@@ -147,17 +146,6 @@ class GangSeamStubsTest {
 	@DisplayName("FriendlyFireRegionSource.NONE has no opinion")
 	void regionSource() {
 		assertTrue(FriendlyFireRegionSource.NONE.allowed(null).isEmpty());
-	}
-
-	@Test
-	@DisplayName("GangSafehouseService: none, teleport refused")
-	void safehouseService() {
-		GangSafehouseService service = new GangSafehouseService();
-
-		assertEquals(0, service.count(1));
-		assertTrue(service.find(1, "x").isEmpty());
-		assertTrue(service.list(1).isEmpty());
-		service.remove(1, "x");
 	}
 
 	@Test

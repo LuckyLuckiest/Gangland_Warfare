@@ -82,7 +82,7 @@ class GangStubCommandsTest {
 	@Test
 	@DisplayName("safehouse has set, remove and list besides the optional name")
 	void safehouse() {
-		Argument safehouse = new GangSafehouseCommand(plugin, tree, parent, new GangSafehouseService(),
+		Argument safehouse = new GangSafehouseCommand(plugin, tree, parent, mock(GangSafehouseService.class),
 		                                              new GangLimits(), mock(GangWorldPolicy.class));
 
 		assertEquals(List.of("safehouse"), List.of(safehouse.getArguments()));
@@ -93,7 +93,7 @@ class GangStubCommandsTest {
 	@Test
 	@DisplayName("rally has a join child")
 	void rally() {
-		Argument rally = new GangRallyCommand(plugin, tree, parent, new GangSafehouseService());
+		Argument rally = new GangRallyCommand(plugin, tree, parent, mock(GangSafehouseService.class));
 
 		assertEquals(List.of("rally"), List.of(rally.getArguments()));
 		assertTrue(childLabels(rally).contains("join"));

@@ -140,7 +140,7 @@ class GangConsoleVerbsTest {
 		                                      rules, messages, new GangChatToggles(), new GangWorldPolicy(rules),
 		                                      new GangMembershipService(), new GangDisbandService(),
 		                                      new GangLeadership(), new CombatTag(), new GangStatsService(),
-		                                      new GangLimits(), new GangLevelTable(), new GangSafehouseService(),
+		                                      new GangLimits(), new GangLevelTable(), mock(GangSafehouseService.class),
 		                                      mock(FriendlyFirePolicy.class));
 		command.initializeArguments();
 		return command;
