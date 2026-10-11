@@ -1,0 +1,5 @@
+# +--------------+ #
+# | Fight arenas | #
+# +--------------+ #
+# Arenas built with /glw arena are saved here. Edit by hand only while the server is stopped, or run
+# /glw arena reload afterwards. The format is defined by the arena feature.

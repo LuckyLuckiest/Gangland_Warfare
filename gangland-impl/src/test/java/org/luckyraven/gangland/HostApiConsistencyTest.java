@@ -26,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("module.yml Host_Api - at most GanglandApi.VERSION; the 2.6 readers carry 2.6")
 class HostApiConsistencyTest {
 
-	/** Module ids that read gangland-api members added in the current VERSION. W6-K adds "fights". */
-	static final Set<String> ON_CURRENT = Set.of("gang", "civilians", "turf", "copsncrooks");
+	/** Module ids that read gangland-api members added in the current VERSION. W6-K added "fights". */
+	static final Set<String> ON_CURRENT = Set.of("gang", "civilians", "turf", "copsncrooks", "fights");
 
 	private static List<Map<String, Object>> descriptors() throws IOException {
 		List<Map<String, Object>> out = new ArrayList<>();
@@ -67,11 +67,14 @@ class HostApiConsistencyTest {
 	@Test
 	@DisplayName("the modules that read the current api line declare it")
 	void currentApiReaders_declareTheCurrentLine() throws IOException {
+		Set<String> seen = new java.util.HashSet<>();
 		for (Map<String, Object> descriptor : descriptors()) {
 			String id = String.valueOf(descriptor.get("Id"));
 			if (ON_CURRENT.contains(id)) {
+				seen.add(id);
 				assertEquals(GanglandApi.VERSION, String.valueOf(descriptor.get("Host_Api")), id + " Host_Api");
 			}
 		}
+		assertEquals(ON_CURRENT, seen, "every current-line module ships a module.yml");
 	}
 }

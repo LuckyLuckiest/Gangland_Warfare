@@ -24,15 +24,20 @@ import java.util.stream.Stream;
 final class ModuleInstalls {
 
 	/**
-	 * The six official module ids and the coordinate that ships each one. A code constant rather than config: the
+	 * The ten official module ids and the coordinate that ships each one. A code constant rather than config: the
 	 * list only changes with a plugin release. A third-party module is installed by full {@code group:artifact}.
 	 */
-	static final Map<String, String> OFFICIAL = Map.of("mail", "org.luckyraven:gangland-mail",
-	                                                   "turf", "org.luckyraven:gangland-turf",
-	                                                   "civilians", "org.luckyraven:gangland-civilians",
-	                                                   "copsncrooks", "org.luckyraven:cops-n-crooks",
-	                                                   "gadget", "org.luckyraven:gangland-gadget",
-	                                                   "npcshops", "org.luckyraven:gangland-npc-shops");
+	static final Map<String, String> OFFICIAL = Map.ofEntries(
+			Map.entry("mail", "org.luckyraven:gangland-mail"),
+			Map.entry("turf", "org.luckyraven:gangland-turf"),
+			Map.entry("civilians", "org.luckyraven:gangland-civilians"),
+			Map.entry("copsncrooks", "org.luckyraven:cops-n-crooks"),
+			Map.entry("gadget", "org.luckyraven:gangland-gadget"),
+			Map.entry("npcshops", "org.luckyraven:gangland-npc-shops"),
+			Map.entry("gang", "org.luckyraven:gangland-gang"),
+			Map.entry("lootchest", "org.luckyraven:gangland-lootchest"),
+			Map.entry("fights", "org.luckyraven:gangland-gang-fights"),
+			Map.entry("healthbars", "org.luckyraven:gangland-healthbars"));
 
 	private ModuleInstalls() {
 	}
