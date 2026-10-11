@@ -32,8 +32,10 @@ public interface GanglandApi {
 	 * <p>2.3 adds {@code RegionProvider}, {@code PlaceRegion}, {@code RegionShape}, {@code PlaceNames},
 	 * {@code Waypoint.WaypointType.HOSPITAL}, {@code WantedCause.CONTACT} and the self-defence, contacts and hospital
 	 * settings (the hospital respawn shield included).
+	 * <p>2.4 and 2.5 are reserved for other release lines and never used on this branch. 2.6 (Gang & Turf II) adds the
+	 * members listed in documentation/gangland-api.md, section Api 2.6.
 	 */
-	String VERSION = "2.3";
+	String VERSION = "2.6";
 
 	/**
 	 * The permission namespace and long command alias ({@code /gangland}).

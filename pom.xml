@@ -150,6 +150,18 @@
             <id>mvn-wesjd-net</id>
             <url>https://mvn.wesjd.net/</url>
         </repository>
+
+        <!-- dynmap-api (W3-W) -->
+        <repository>
+            <id>dynmap-repo</id>
+            <url>https://repo.mikeprimm.com/</url>
+        </repository>
+
+        <!-- worldguard-bukkit, worldedit-bukkit (W6-W) -->
+        <repository>
+            <id>enginehub-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
     </repositories>
 
     <dependencyManagement>

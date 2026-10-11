@@ -15,7 +15,7 @@ import java.util.Map;
 
 /**
  * Root of the {@code /glw map} command tree (0.17.0). The root sends the chat map (W1-M); the sub-commands are
- * {@code auto}, {@code hud} (W1-H), {@code text} and {@code legend}.
+ * {@code auto}, {@code hud} (W1-H), {@code text}, {@code legend}, {@code zoom} (W3-Z) and {@code border} (W3-V).
  */
 @CommandHandler
 public final class MapCommand extends Command {
@@ -57,7 +57,10 @@ public final class MapCommand extends Command {
 		MapHudCommand    hud    = new MapHudCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
 		MapTextCommand   txt    = new MapTextCommand(getPlugin(), getArgumentTree(), getArgument(), map);
 		MapLegendCommand legend = new MapLegendCommand(getPlugin(), getArgumentTree(), getArgument(), map);
-		getArgument().addAllSubArguments(List.of(auto, hud, txt, legend));
+		MapZoomCommand   zoom   = new MapZoomCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
+		MapBorderCommand border = new MapBorderCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, settings,
+		                                               text);
+		getArgument().addAllSubArguments(List.of(auto, hud, txt, legend, zoom, border));
 	}
 
 	@Override
