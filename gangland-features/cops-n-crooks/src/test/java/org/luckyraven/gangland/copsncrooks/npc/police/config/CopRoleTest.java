@@ -237,6 +237,20 @@ class CopRoleTest {
 		}
 	}
 
+	@Test
+	@DisplayName("role: a CopRole converts to its NpcRole and back unchanged, cops-only parts included")
+	void role_roundTrips() {
+		CopRole.Kit kit = new CopRole.Kit(List.of("rifle"), List.of(), null, null, null, null, CopRole.Gear.NONE);
+		CopRole cop = new CopRole("Medic", "Medic", NpcFanPlacement.FLANK, 10.0, 30.0, 1.5, 2, 5.0, 0.5, 1,
+		                          new org.luckyraven.gangland.npc.RetreatSettings(true, 0.5, 8.0), 0.4, 90, true,
+		                          true, "&c", "+", kit, java.util.Map.of(3, kit));
+
+		org.luckyraven.gangland.npc.NpcRole shared = cop.role();
+		assertEquals("Medic", shared.name());
+		assertEquals(cop, CopRole.of(shared, cop.color(), cop.symbol(), cop.kit(), cop.tierKits()));
+		assertArrayEquals(shared.rangedBand(20.0), cop.rangedBand(20.0));
+	}
+
 	private static CopRole role(String name) {
 		return new CopRole(name, name, NpcFanPlacement.ANY, null, null, 1.0, null, 0, null, 1.0, 0, null, 0, 60, false,
 		                   false);
