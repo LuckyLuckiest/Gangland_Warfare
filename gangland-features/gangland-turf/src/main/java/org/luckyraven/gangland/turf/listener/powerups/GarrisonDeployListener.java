@@ -23,8 +23,13 @@ import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.defender.GuardCallsign;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
+import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
+import org.luckyraven.gangland.turf.powerups.EffectType;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
+import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashSet;
 import java.util.function.IntSupplier;
 import java.util.Set;
@@ -49,6 +54,8 @@ public final class GarrisonDeployListener implements Listener {
 	private final GangLookupContract   gangs;
 	private final TurfRules            rules;
 	private final TurfMessages        text;
+	private final PowerupRegistry     registry;
+	private final ActiveBuffManager   buffs;
 
 	@EventHandler
 	public void onCaptureStart(TurfCaptureStartEvent event) {
@@ -82,7 +89,18 @@ public final class GarrisonDeployListener implements Listener {
 		// /glw reload of turf_npcs.yml or turf_rules.yml reaches guards already in the field.
 		IntSupplier lifespan = () -> Math.max(npcConfig.getDefenderConfig().lifespanSeconds(),
 		                                      rules.capture().maxContestMinutes() * 60 + 60);
+		// T-700: the owner paid for these guards, so a rival's bounty is a share of that price - recorded here, at deploy
+		// time (ponytail: today's price, not the historical purchase price; the reserve is a bare count)
+		garrison.funded(turf.getOwnerGangId(), guardPrice(turfId));
 		defenders.startGarrison(garrison, () -> challengerMemberIds(challengerGangId), lifespan);
+	}
+
+	/** The price of one guard on {@code turfId} right now; the same clamp as the Quartermaster panel's (T-275). */
+	private int guardPrice(int turfId) {
+		double multiplier = buffs.effectiveMultiplier(turfId, EffectType.GARRISON_DISCOUNT);
+		multiplier = Double.isFinite(multiplier) ? Math.max(0.1, Math.min(1.0, multiplier)) : 1.0;
+		BigDecimal price = registry.garrisonCost().multiply(BigDecimal.valueOf(multiplier)).setScale(0, RoundingMode.HALF_UP);
+		return price.max(BigDecimal.ONE).intValue();
 	}
 
 	@EventHandler

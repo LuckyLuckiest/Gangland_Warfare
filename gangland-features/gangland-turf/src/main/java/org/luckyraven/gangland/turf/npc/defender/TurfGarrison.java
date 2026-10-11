@@ -35,6 +35,16 @@ public final class TurfGarrison {
 	boolean       standingDown;
 	long          standDownAt;
 	IntConsumer   onReturn;
+	/** Gang that owns the turf and bought the guards; -1 when none (a guard then pays no bounty). */
+	int           ownerGangId  = -1;
+	/** What one guard cost the owner at deploy time (ponytail: not the historical purchase price). */
+	int           guardPrice;
+
+	/** Records who paid for the guards and what one cost; the bounty is a share of it. */
+	public void funded(int ownerGangId, int guardPrice) {
+		this.ownerGangId = ownerGangId;
+		this.guardPrice  = guardPrice;
+	}
 
 	public TurfGarrison(int turfId, CuboidRegion region, TurfDefenderConfig config, String tag, IntSupplier stock,
 	                    IntUnaryOperator consume, IntConsumer waveNotice) {

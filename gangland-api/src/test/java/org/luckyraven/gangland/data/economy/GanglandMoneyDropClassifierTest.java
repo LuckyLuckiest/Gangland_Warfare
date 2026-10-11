@@ -91,4 +91,34 @@ class GanglandMoneyDropClassifierTest {
 	void vanillaMob_mob() {
 		assertEquals(MoneyDropContext.MOB, classifier.classify(mock(LivingEntity.class)));
 	}
+
+	@Test
+	@DisplayName("installFirst_runsBeforeTheSlot: a first source answering NPC wins over a slot answering CIVILIAN (2.6)")
+	void installFirst_runsBeforeTheSlot() {
+		Villager guard = mock(Villager.class);
+		npcs.when(() -> NpcSupport.isNpc(guard)).thenReturn(true);
+		classifier.install(entity -> MoneyDropContext.CIVILIAN);
+		classifier.installFirst(entity -> entity == guard ? MoneyDropContext.NPC : null);
+
+		assertEquals(MoneyDropContext.NPC, classifier.classify(guard));
+	}
+
+	@Test
+	@DisplayName("installFirst_nullFallsThrough: a null answer from the first sources reaches the slot")
+	void installFirst_nullFallsThrough() {
+		Villager civilian = mock(Villager.class);
+		classifier.install(entity -> MoneyDropContext.CIVILIAN);
+		classifier.installFirst(entity -> null);
+
+		assertEquals(MoneyDropContext.CIVILIAN, classifier.classify(civilian));
+	}
+
+	@Test
+	@DisplayName("installFirst keeps registration order: the earlier source wins")
+	void installFirst_inOrder() {
+		classifier.installFirst(entity -> MoneyDropContext.COP);
+		classifier.installFirst(entity -> MoneyDropContext.NPC);
+
+		assertEquals(MoneyDropContext.COP, classifier.classify(mock(LivingEntity.class)));
+	}
 }

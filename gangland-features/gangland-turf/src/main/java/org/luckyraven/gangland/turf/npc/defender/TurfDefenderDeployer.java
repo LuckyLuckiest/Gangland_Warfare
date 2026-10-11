@@ -14,6 +14,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
@@ -66,6 +67,10 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	private final Map<CivilianNpc, Integer> turfByNpc = new IdentityHashMap<>();
 	/** Guards whose death was reported by {@link #markKilled}; only these count as "down" (T-251). */
 	private final Set<CivilianNpc> killed = Collections.newSetFromMap(new IdentityHashMap<>());
+	/** Callsign number of each tracked guard, so a recycled guard keeps its number and its role. */
+	private final Map<CivilianNpc, Integer> numberByNpc = new IdentityHashMap<>();
+	/** When each tracked guard was last recycled (or its predecessor was), for the once-per-window rule. */
+	private final Map<CivilianNpc, Long>    recycledAt  = new IdentityHashMap<>();
 	/** Composition role names already reported as unknown, so a bad name warns once per boot, not per guard. */
 	private final Set<String>        unknownRoles = new HashSet<>();
 	private       BukkitTask          tickTask;
@@ -99,6 +104,8 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		turfByEntity.clear();
 		turfByNpc.clear();
 		killed.clear();
+		numberByNpc.clear();
+		recycledAt.clear();
 	}
 
 	/** Test seam: whether Citizens counts as available. */
@@ -177,6 +184,24 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		}
 	}
 
+	/** What a guard's death pays a rival: the gang that paid for it and the cash. */
+	public record GuardBounty(int ownerGangId, int amount) {
+	}
+
+	/**
+	 * What killing this guard pays a rival: {@code floor(price x Bounty_Share)} of what the owner paid for it, or
+	 * {@code null} for an NPC that is not a tracked guard. The owner funded it already, so nothing is minted.
+	 */
+	@Nullable
+	public GuardBounty bountyOf(CivilianNpc npc) {
+		Integer turfId = turfByNpc.get(npc);
+		Group   group  = turfId == null ? null : byTurfId.get(turfId);
+		if (group == null || group.garrison == null) return null;
+		TurfGarrison garrison = group.garrison;
+		int amount = (int) Math.floor(garrison.guardPrice * Math.max(0.0, garrison.config.bountyShare()));
+		return new GuardBounty(garrison.ownerGangId, amount);
+	}
+
 	/**
 	 * Returns the turf id this entity is a defender for, or {@code -1} if the entity is not a tracked defender. Used by
 	 * the friendly-fire listener to short-circuit damage from the owning gang.
@@ -230,6 +255,8 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 
 	private void untrack(TrackedDefender d) {
 		killed.remove(d.npc);
+		numberByNpc.remove(d.npc);
+		recycledAt.remove(d.npc);
 		turfByNpc.remove(d.npc);
 		if (d.entityId != null) {
 			turfByEntity.remove(d.entityId);
@@ -281,6 +308,10 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 					}
 				}
 				continue;
+			}
+
+			if (garrison != null && citizens.getAsBoolean()) {
+				recycleStuck(entry.getKey(), group, garrison, now);
 			}
 
 			if (garrison != null) {
@@ -354,9 +385,67 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		}
 	}
 
+	/**
+	 * A guard that found no way to anyone for {@code Recycle_Seconds}, with no attacker looking at it, is replaced by a
+	 * fresh one at another post: same callsign number and role, same expiry, no stock spent. The replacement is spawned
+	 * first, so a failed spawn leaves the old guard where it is until the next window.
+	 */
+	private void recycleStuck(int turfId, Group group, TurfGarrison garrison, long now) {
+		int seconds = garrison.config.recycleSeconds();
+		if (seconds <= 0 || garrison.posts == null || garrison.posts.isEmpty()) return;
+
+		World          world = null;
+		List<double[]> eyes  = List.of();
+		for (TrackedDefender d : new ArrayList<>(group.defenders)) {
+			LivingEntity body = d.npc.getEntity();
+			if (body == null || !d.npc.isValid() || d.npc.isMarkedForRemoval()) continue;
+			long stuck = d.npc.millisUnreachable();
+			if (stuck <= seconds * 1000L) continue;
+
+			if (world == null) {
+				world = body.getWorld();
+				eyes  = attackerEyes(world, group, garrison);
+			}
+			World  guardWorld = world;
+			Location at       = body.getLocation();
+			boolean seen = false;
+			Location head = body.getEyeLocation();
+			for (double[] eye : eyes) {
+				if (clearLine(guardWorld, eye, head.getX(), head.getY(), head.getZ())) {
+					seen = true;
+					break;
+				}
+			}
+			long last = recycledAt.getOrDefault(d.npc, -1L);
+			if (!GuardRecycle.due(stuck, seconds, last, now, seen)) continue;
+
+			Post post = GuardRecycle.elsewhere(garrison.posts, at.getX(), at.getZ(), eyes,
+			                                   (p, eye) -> sees(guardWorld, p, eye));
+			CivilianNpc fresh = post == null ? null : spawnManager.spawnCivilian(
+					new Location(guardWorld, post.x(), post.y(), post.z()), garrison.config.typeId());
+			if (fresh == null) {
+				recycledAt.put(d.npc, now);
+				continue;
+			}
+			int number = numberByNpc.getOrDefault(d.npc, 0);
+			d.npc.markForRemoval();
+			untrack(d);
+			group.defenders.remove(d);
+			group.deployed--;
+			dressAs(fresh, garrison, number);
+			track(turfId, fresh, d.deployedAt(), d.lifespanSeconds());
+			recycledAt.put(fresh, now);
+			log.debug("Turf {}: stuck guard {} recycled at another post", turfId, number);
+		}
+	}
+
 	/** Gives a fresh guard its turf squad and its gang-tagged callsign. */
 	private void dress(CivilianNpc npc, TurfGarrison garrison) {
-		int number = garrison.nextNumber++;
+		dressAs(npc, garrison, garrison.nextNumber++);
+	}
+
+	private void dressAs(CivilianNpc npc, TurfGarrison garrison, int number) {
+		numberByNpc.put(npc, number);
 		npc.setFactionSquads(garrison.squads);
 		applyComposition(npc, number, garrison);
 		CitizensBridge.callsign(npc, "&6" + GuardCallsign.format(garrison.tag, number));
@@ -390,8 +479,13 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 
 	/** Whether an attacker's eye has a clear line to a post (no block in between). */
 	private static boolean sees(World world, Post post, double[] eye) {
+		return clearLine(world, eye, post.x(), post.y() + EYE_HEIGHT, post.z());
+	}
+
+	/** Whether no block stands between an eye {x, y, z} and a point. */
+	private static boolean clearLine(World world, double[] eye, double x, double y, double z) {
 		Vector from = new Vector(eye[0], eye[1], eye[2]);
-		Vector to   = new Vector(post.x(), post.y() + EYE_HEIGHT, post.z());
+		Vector to   = new Vector(x, y, z);
 		Vector way  = to.clone().subtract(from);
 		double distance = way.length();
 		if (distance < 1.0e-6) return true;

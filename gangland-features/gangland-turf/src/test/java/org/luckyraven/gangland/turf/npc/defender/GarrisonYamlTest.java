@@ -33,6 +33,8 @@ class GarrisonYamlTest {
 		assertEquals(20, config.waveCooldownSeconds());
 		assertEquals(8, config.standDownSeconds());
 		assertEquals(16, config.leashMargin());
+		assertEquals(0.5, config.bountyShare());
+		assertEquals(12, config.recycleSeconds());
 		assertEquals("turf_defender", config.typeId());
 	}
 

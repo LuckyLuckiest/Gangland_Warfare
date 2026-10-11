@@ -10,6 +10,8 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.turf.capture.CaptureRules;
 import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
+import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -56,7 +58,8 @@ class GarrisonDeployListenerTest {
 		when(rules.capture()).thenReturn(CaptureRules.DEFAULTS);
 		listener = new GarrisonDeployListener(garrisons, defenders, npcConfig,
 		                                      mock(TurfPowerupManager.class), mock(GangLookupContract.class), rules,
-		                                      mock(TurfMessages.class));
+		                                      mock(TurfMessages.class), new PowerupRegistry(),
+		                                      mock(ActiveBuffManager.class));
 	}
 
 	@Test

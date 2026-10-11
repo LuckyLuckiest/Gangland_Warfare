@@ -77,4 +77,11 @@ Garrison:
       - "Commander@1"
       - "Shield@2"
       - "Marksman@2"
+   # Share of a guard's price paid to a rival who kills it, as cash at its feet (0 turns the bounty off). Funded by the
+   # owner's purchase (turf_powerups.yml Garrison.Cost_Per_Guard, discount included); nothing is minted. The owning
+   # gang and its allies get nothing, and a guard drops no civilian cash.
+   Bounty_Share: 0.5
+   # A guard that cannot reach anyone for this many seconds, with no attacker looking at it, reappears at another post
+   # (0 turns it off). The garrison's stock is unchanged.
+   Recycle_Seconds: 12
 # end Garrison

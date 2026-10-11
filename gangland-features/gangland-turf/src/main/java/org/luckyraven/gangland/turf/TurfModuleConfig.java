@@ -41,7 +41,9 @@ import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupOpenContractImpl;
+import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
+import org.luckyraven.gangland.turf.npc.defender.TurfDefenderMoneyDropSource;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
 import org.luckyraven.gangland.turf.npc.view.QuartermasterAccess;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupBuffCatalogueView;
@@ -308,6 +310,16 @@ public final class TurfModuleConfig {
 		TurfDefenderDeployer deployer = new TurfDefenderDeployer(plugin, civilianService, spawnManager);
 		deployer.start();
 		return deployer;
+	}
+
+	// T-700: a turf guard is a civilian NPC, so cops' money source called it CIVILIAN and every kill minted cash. This
+	// source runs before cops' slot (api 2.6 installFirst) and answers NPC for a tracked guard.
+	@Bean
+	public TurfDefenderMoneyDropSource turfDefenderMoneyDropSource(TurfDefenderDeployer defenders,
+	                                                               GanglandMoneyDropClassifier classifier) {
+		TurfDefenderMoneyDropSource source = new TurfDefenderMoneyDropSource(defenders);
+		classifier.installFirst(source);
+		return source;
 	}
 
 	// T-189: turf defenders and the Quartermaster answer cops that hit a player standing on their gang's turf. The
