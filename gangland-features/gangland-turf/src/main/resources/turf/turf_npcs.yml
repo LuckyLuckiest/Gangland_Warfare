@@ -29,8 +29,8 @@ Powerup_Npc:
    # to it. While the turf is being contested, TurfPowerupNpc.engage() flips this NPC into COMBAT and points
    # its target at the closest attacker; on capture-end it pacifies back to IDLE.
    Type_Id: quartermaster
-   # Name shown over the Quartermaster and in its panel titles. Changing it renames Quartermasters placed after a
-   # restart; existing ones keep the name they were placed with.
+   # Quartermaster name used in its panel titles and chat lines (%npc%). The name over its head comes from civilians.yml
+   # (the type above); the owning gang's tag is drawn on a line above it (turf_messages.yml Quartermaster.Nameplate_Tag).
    Display_Name: "Quartermaster"
    # Blocks from the Quartermaster within which a contest target (an attacker) is picked up. Minimum 1.0.
    Targeting_Radius: 32.0
