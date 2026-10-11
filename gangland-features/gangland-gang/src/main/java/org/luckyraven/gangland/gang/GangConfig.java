@@ -30,6 +30,7 @@ import org.luckyraven.gangland.gang.file.GanglandGangSettings;
 import org.luckyraven.gangland.gang.file.GanglandRankLookup;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
+import org.luckyraven.gangland.gang.level.GangLevelTable;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.menu.GangMenuItemSourceContribution;
 import org.luckyraven.gangland.gang.placeholder.GangPlaceholderContribution;
@@ -145,9 +146,9 @@ public final class GangConfig {
 	@Bean
 	public GangManager gangManager(RepositoryRegistry repositoryRegistry,
 	                               GangAllianceRepositoryContract allianceRepository,
-	                               GangMigrationsContract migrations) {
+	                               GangMigrationsContract migrations, GangLevelTable levelTable) {
 		IRepository<Gang> gangRepository = repositoryRegistry.getRepository(Gang.class);
-		return new GangManager(gangRepository, allianceRepository, migrations);
+		return new GangManager(gangRepository, allianceRepository, migrations, levelTable);
 	}
 
 	/**

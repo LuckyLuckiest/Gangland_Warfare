@@ -298,7 +298,7 @@ public final class GangCommand extends Command {
 
 		// verbs of the gang parity wave: stubs until their lanes fill them (W5-L, W5-H, W5-F, W5-U2, W5-S)
 		arguments.add(new GangUpgradeCommand(getPlugin(), getArgumentTree(), getArgument(), limits, levelTable,
-		                                     gangManager));
+		                                     gangManager, userManager, memberManager, gangMessages));
 		arguments.add(new GangSafehouseCommand(getPlugin(), getArgumentTree(), getArgument(), safehouseService,
 		                                       limits, worldPolicy));
 		arguments.add(new GangRallyCommand(getPlugin(), getArgumentTree(), getArgument(), safehouseService));

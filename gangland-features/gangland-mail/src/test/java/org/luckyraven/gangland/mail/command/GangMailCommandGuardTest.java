@@ -138,7 +138,8 @@ class GangMailCommandGuardTest {
 		                                                  mock(MailMessages.class)).create(tree, parent).get(0);
 		ally   = new Argument(plugin, "ally", tree);
 		ally.addAllSubArguments(new GangAllyMailContribution(plugin, userManager, memberManager, gangManager,
-		                                                     mailManager).create(tree, ally));
+		                                                     mailManager, new org.luckyraven.gangland.gang.level.GangLimits(),
+		                                                     mock(org.luckyraven.gangland.gang.file.GangMessages.class)).create(tree, ally));
 	}
 
 	@AfterEach
