@@ -44,7 +44,7 @@ import java.util.function.LongSupplier;
  *   stalled for STALLED, lost/taken for a completed capture. CANCELLED (an admin action) tells nobody.</li>
  * </ul>
  *
- * <p>Kinds one to three are throttled to one line per turf per player per {@link #THROTTLE_MS} milliseconds. Per-contest
+ * <p>Kinds one to three are throttled to one line per turf per player per kind per {@link #THROTTLE_MS} milliseconds. Per-contest
  * flags reset on a new start and on every outcome. The server-wide capture broadcast stays gated by
  * {@code Capture.Broadcast_Globally}.
  */
@@ -110,9 +110,9 @@ public final class TurfCaptureNotifier implements Listener {
 				continue;
 			}
 			if (memberOf == owner.getId()) {
-				sendThrottled(online, turfId, ownerLine);
+				sendThrottled(online, turfId, "start", ownerLine);
 			} else if (isAllyOf(memberOf, owner)) {
-				sendThrottled(online, turfId, allyLine);
+				sendThrottled(online, turfId, "start", allyLine);
 			}
 		}
 	}
@@ -132,7 +132,7 @@ public final class TurfCaptureNotifier implements Listener {
 		}
 		String line = text.text("Alerts.Half_Guards", "&eHalf the guards at %turf% are down",
 		                        "turf", turf.getDisplayName());
-		sendToGang(turf.getOwnerGangId(), turf, line, true);
+		sendToGang(turf.getOwnerGangId(), turf, line, "half");
 	}
 
 	@EventHandler
@@ -150,7 +150,7 @@ public final class TurfCaptureNotifier implements Listener {
 		}
 		String line = text.text("Alerts.Last_Stand", "&cLast stand at %turf% &7- %progress%%",
 		                        "turf", turf.getDisplayName(), "progress", (int) event.getProgress());
-		sendToGang(ownerId, turf, line, true);
+		sendToGang(ownerId, turf, line, "laststand");
 	}
 
 	@EventHandler
@@ -162,10 +162,10 @@ public final class TurfCaptureNotifier implements Listener {
 		if (event.getOldOwner() != null) {
 			String lost = text.text("Alerts.Lost", "&c%turf% lost to %gang%",
 			                        "turf", turfName, "gang", GangDisplayNameResolver.resolve(event.getNewOwner()));
-			sendToGang(event.getOldOwner().getId(), turf, lost, false);
+			sendToGang(event.getOldOwner().getId(), turf, lost, null);
 		}
 		String taken = text.text("Alerts.Taken", "&aYou took %turf%", "turf", turfName);
-		sendToGang(event.getNewOwner().getId(), turf, taken, false);
+		sendToGang(event.getNewOwner().getId(), turf, taken, null);
 
 		if (!settings.isBroadcastCaptureGlobally()) {
 			return;
@@ -198,10 +198,10 @@ public final class TurfCaptureNotifier implements Listener {
 		if (reason == TurfCaptureFailedEvent.Reason.STALLED) {
 			String stalled = text.text("Alerts.Stalled", "&7%turf%: the attack stalled", "turf", turfName);
 			if (ownerId != null) {
-				sendToGang(ownerId, turf, stalled, false);
+				sendToGang(ownerId, turf, stalled, null);
 			}
 			if (attackerId != null) {
-				sendToGang(attackerId, turf, stalled, false);
+				sendToGang(attackerId, turf, stalled, null);
 			}
 			return;
 		}
@@ -210,11 +210,11 @@ public final class TurfCaptureNotifier implements Listener {
 		if (ownerId != null) {
 			String held = text.text("Alerts.Held", "&a%turf% held &7against %gang%",
 			                        "turf", turfName, "gang", gangName(attackerId));
-			sendToGang(ownerId, turf, held, false);
+			sendToGang(ownerId, turf, held, null);
 		}
 		if (attackerId != null) {
 			String failed = text.text("Alerts.Attack_Failed", "&7Your attack on %turf% failed", "turf", turfName);
-			sendToGang(attackerId, turf, failed, false);
+			sendToGang(attackerId, turf, failed, null);
 		}
 	}
 
@@ -280,22 +280,26 @@ public final class TurfCaptureNotifier implements Listener {
 	}
 
 	/** Sends the line to every online member of gangId, anywhere. */
-	private void sendToGang(int gangId, Turf turf, String line, boolean throttled) {
+	private void sendToGang(int gangId, Turf turf, String line, String throttleKind) {
 		for (Player online : Bukkit.getOnlinePlayers()) {
 			Integer memberOf = gangIdOf(online);
 			if (memberOf == null || memberOf != gangId) {
 				continue;
 			}
-			if (throttled) {
-				sendThrottled(online, turf.getId(), line);
+			if (throttleKind != null) {
+				sendThrottled(online, turf.getId(), throttleKind, line);
 			} else {
 				online.sendMessage(line);
 			}
 		}
 	}
 
-	private void sendThrottled(Player player, int turfId, String line) {
-		String key = player.getUniqueId() + ":" + turfId;
+	/**
+	 * One line per player per turf per kind per window. The kind is part of the key: half-guards and last-stand are
+	 * once per contest, so a start line sent seconds earlier must not swallow them (T-285).
+	 */
+	private void sendThrottled(Player player, int turfId, String kind, String line) {
+		String key = player.getUniqueId() + ":" + turfId + ":" + kind;
 		long now = clock.getAsLong();
 		Long last = lastSent.get(key);
 		if (last != null && now - last < THROTTLE_MS) {

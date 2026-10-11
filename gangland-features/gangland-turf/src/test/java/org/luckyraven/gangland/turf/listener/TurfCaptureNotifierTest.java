@@ -206,21 +206,29 @@ class TurfCaptureNotifierTest {
 	}
 
 	@Test
-	@DisplayName("throttle: ten seconds per turf per player for start, half guards and last stand")
-	void throttle_tenSecondsPerTurfPerPlayer() {
+	@DisplayName("throttle: ten seconds per turf per player per kind - a start line never swallows the one-shot half-guards line")
+	void throttle_tenSecondsPerTurfPerPlayerPerKind() {
 		Player ownerPlayer = member(1, overworld, 10, 10);
 		member(2, overworld, 80, 50);
 		runtime.setChallengersInside(Map.of(2, 1));
 
 		notifier.onCaptureStart(new TurfCaptureStartEvent(turf, challenger));
 		clock.addAndGet(3_000L);
+		// T-285: guards that fall within seconds of the start still get their alert; it is once per contest, so a
+		// throttled send would have lost it for good.
 		notifier.onDefenderDown(new TurfDefenderDownEvent(TURF_ID, 3, 6));
-		assertEquals(1, linesOf(ownerPlayer).size());
-
-		clock.addAndGet(8_000L);
-		notifier.onCaptureProgress(progress(75.0));
 		assertEquals(2, linesOf(ownerPlayer).size());
-		assertEquals("Last stand at Docks - 75%", linesOf(ownerPlayer).get(1));
+		assertEquals("Half the guards at Docks are down", linesOf(ownerPlayer).get(1));
+
+		// the same kind is still throttled: a second start within ten seconds adds nothing
+		clock.addAndGet(1_000L);
+		notifier.onCaptureStart(new TurfCaptureStartEvent(turf, challenger));
+		assertEquals(2, linesOf(ownerPlayer).size());
+
+		clock.addAndGet(7_000L);
+		notifier.onCaptureProgress(progress(75.0));
+		assertEquals(3, linesOf(ownerPlayer).size());
+		assertEquals("Last stand at Docks - 75%", linesOf(ownerPlayer).get(2));
 	}
 
 	@Test

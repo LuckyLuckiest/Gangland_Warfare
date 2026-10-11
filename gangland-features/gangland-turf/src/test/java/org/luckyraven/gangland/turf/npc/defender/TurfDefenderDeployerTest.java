@@ -2,10 +2,16 @@ package org.luckyraven.gangland.turf.npc.defender;
 
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.civilians.events.CivilianDeathEvent;
+import org.luckyraven.gangland.civilians.listener.civilian.CivilianDeathListener;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
+import org.luckyraven.gangland.civilians.npc.config.CivilianDropConfig;
+import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
+import org.luckyraven.gangland.turf.listener.powerups.TurfDefenderDeathListener;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.events.TurfDefenderDownEvent;
@@ -15,6 +21,8 @@ import org.bukkit.event.Event;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -157,6 +165,63 @@ class TurfDefenderDeployerTest {
 			deployer.tick();
 
 			verify(bukkit.pluginManager(), org.mockito.Mockito.never()).callEvent(org.mockito.ArgumentMatchers.any(Event.class));
+		}
+	}
+
+	@Test
+	@DisplayName("T-285: two guard deaths run CivilianDeathListener -> TurfDefenderDeathListener -> tick and fire one TurfDefenderDownEvent(remaining 2, deployed 4)")
+	void twoDeaths_throughTheRealListeners_fireOneDefenderDown() throws Exception {
+		TurfDefenderDeployer deployer = newDeployer();
+		Map<UUID, CivilianNpc> registry = new HashMap<>();
+		List<LivingEntity> entities = new ArrayList<>();
+		List<CivilianNpc> guards = new ArrayList<>();
+		CivilianTypeConfig type = mock(CivilianTypeConfig.class);
+		when(type.drops()).thenReturn(new CivilianDropConfig(List.of(), 0.0));
+		for (int i = 0; i < 4; i++) {
+			LivingEntity entity = mock(LivingEntity.class);
+			when(entity.getUniqueId()).thenReturn(UUID.randomUUID());
+			CivilianNpc npc = liveNpc();
+			when(npc.getEntity()).thenReturn(entity);
+			when(npc.getTypeConfig()).thenReturn(type);
+			registry.put(entity.getUniqueId(), npc);
+			entities.add(entity);
+			guards.add(npc);
+			putDefender(deployer, 1, npc);
+		}
+		Field deployed = Class.forName(TurfDefenderDeployer.class.getName() + "$Group").getDeclaredField("deployed");
+		deployed.setAccessible(true);
+		deployed.setInt(fieldMap(deployer).get(1), 4);
+
+		CivilianService service = mock(CivilianService.class);
+		when(service.getNpc(org.mockito.ArgumentMatchers.any(UUID.class)))
+				.thenAnswer(call -> registry.get(call.<UUID>getArgument(0)));
+		CivilianDeathListener civilianListener = new CivilianDeathListener(service, null);
+		TurfDefenderDeathListener turfListener = new TurfDefenderDeathListener(deployer);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			org.mockito.Mockito.doAnswer(call -> {
+				if (call.getArgument(0) instanceof CivilianDeathEvent death) {
+					turfListener.onCivilianDeath(death);
+				}
+				return null;
+			}).when(bukkit.pluginManager()).callEvent(org.mockito.ArgumentMatchers.any(CivilianDeathEvent.class));
+
+			for (int i = 0; i < 2; i++) {
+				EntityDeathEvent death = mock(EntityDeathEvent.class);
+				when(death.getEntity()).thenReturn(entities.get(i));
+				when(death.getDrops()).thenReturn(new ArrayList<>());
+				civilianListener.onCivilianDeath(death);
+				when(guards.get(i).isValid()).thenReturn(false);
+			}
+			deployer.tick();
+
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager(), org.mockito.Mockito.atLeastOnce()).callEvent(captor.capture());
+			List<TurfDefenderDownEvent> downs = captor.getAllValues().stream()
+					.filter(TurfDefenderDownEvent.class::isInstance).map(TurfDefenderDownEvent.class::cast).toList();
+			assertEquals(1, downs.size());
+			assertEquals(2, downs.get(0).remaining());
+			assertEquals(4, downs.get(0).deployed());
 		}
 	}
 
