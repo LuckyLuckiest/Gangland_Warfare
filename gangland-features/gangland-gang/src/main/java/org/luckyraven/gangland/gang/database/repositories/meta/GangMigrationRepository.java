@@ -68,6 +68,11 @@ public class GangMigrationRepository extends AbstractRepository<GangMigration> i
 	}
 
 	private <T> void attempt(String id, IRepository<T> repository, Supplier<Collection<T>> rows, int attempt) {
+		// rows.get() must run on the main thread: a caller on an async worker would iterate live state off-thread (T-302).
+		if (plugin.isEnabled() && !Bukkit.isPrimaryThread()) {
+			scheduleRetry(() -> attempt(id, repository, rows, attempt), 0L);
+			return;
+		}
 		if (!(repository instanceof AbstractRepository<T> abstractRepository)) {
 			repository.saveAll(rows.get());
 			markDone(id);

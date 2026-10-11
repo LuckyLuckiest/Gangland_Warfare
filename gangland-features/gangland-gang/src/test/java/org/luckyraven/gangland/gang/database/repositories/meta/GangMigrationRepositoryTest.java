@@ -21,6 +21,7 @@ import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -210,4 +211,34 @@ class GangMigrationRepositoryTest {
 		assertEquals(List.of("kept", "kicked"), List.copyOf(rows.getAllValues().get(0)));
 		assertEquals(List.of("kept"), List.copyOf(rows.getAllValues().get(1)));
 	}
+
+	@Test
+	@DisplayName("T-302: an attempt off the main thread is re-run on it, so rows.get() never reads a live collection off-thread")
+	void attemptOffMainThread_rowsAreReadOnTheMainThread() {
+		JavaPlugin enabled = mock(JavaPlugin.class);
+		when(enabled.isEnabled()).thenReturn(true);
+		GangMigrationRepository onEnabled = new GangMigrationRepository(enabled, mock(DatabaseHandler.class), backend);
+		IRepository<String> writer = mock(IRepository.class);
+		AtomicInteger reads = new AtomicInteger();
+		java.util.function.Supplier<Collection<String>> rows = () -> {
+			reads.incrementAndGet();
+			return List.of("a");
+		};
+
+		bukkit.statics().when(org.bukkit.Bukkit::isPrimaryThread).thenReturn(false);
+		onEnabled.migrate("m", writer, rows);
+
+		assertEquals(0, reads.get(), "rows must not be read on the async thread");
+		verify(writer, never()).saveAll(anyCollection());
+		org.mockito.ArgumentCaptor<Runnable> retry = org.mockito.ArgumentCaptor.forClass(Runnable.class);
+		verify(bukkit.scheduler()).runTaskLater(eq(enabled), retry.capture(), org.mockito.ArgumentMatchers.anyLong());
+
+		bukkit.statics().when(org.bukkit.Bukkit::isPrimaryThread).thenReturn(true);
+		retry.getValue().run();
+
+		assertEquals(1, reads.get());
+		verify(writer).saveAll(anyCollection());
+		assertTrue(onEnabled.isDone("m"));
+	}
+
 }

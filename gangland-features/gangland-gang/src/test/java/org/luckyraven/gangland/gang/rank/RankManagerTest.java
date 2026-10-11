@@ -16,6 +16,7 @@ import org.luckyraven.gangland.gang.database.repositories.rank.RankParentReposit
 import org.luckyraven.gangland.gang.database.repositories.rank.RankRepository;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
 import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
@@ -575,6 +576,69 @@ class RankManagerTest {
 			pending.forEach(Runnable::run);
 
 			assertTrue(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		@DisplayName("T-302: a committed permission write links the rows, and only then marks the migration done")
+		void checkedPermissionWrite_committed_linksThenMarks() {
+			AbstractRepository<Permission> checked = mock(AbstractRepository.class);
+			permissionRepo = checked;
+			when(registry.getRepository(Permission.class)).thenReturn(checked);
+			persistedTree();
+			List<IRepository<?>> linked = new java.util.ArrayList<>();
+			FakeMigrations migrations = new FakeMigrations() {
+				@Override
+				public <T> void migrate(String id, IRepository<T> repository,
+				                        java.util.function.Supplier<java.util.Collection<T>> rows) {
+					linked.add(repository);
+					markDone(id);
+				}
+			};
+
+			RankManager upgrading = new RankManager(registry, permissionRegistry, rules, migrations);
+			upgrading.initialize();
+
+			org.mockito.ArgumentCaptor<java.util.function.Consumer> onResult =
+					org.mockito.ArgumentCaptor.forClass(java.util.function.Consumer.class);
+			verify(checked).saveAllChecked(org.mockito.ArgumentMatchers.anyCollection(), onResult.capture());
+			assertTrue(linked.isEmpty(), "no link rows before the permission write commits");
+			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+
+			onResult.getValue().accept(true);
+
+			assertEquals(List.of(rankPermissionRepo), linked);
+			assertTrue(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		@DisplayName("T-302: a failed permission write links nothing and marks nothing")
+		void checkedPermissionWrite_failed_linksNothingAndMarksNothing() {
+			AbstractRepository<Permission> checked = mock(AbstractRepository.class);
+			permissionRepo = checked;
+			when(registry.getRepository(Permission.class)).thenReturn(checked);
+			persistedTree();
+			List<IRepository<?>> linked = new java.util.ArrayList<>();
+			FakeMigrations migrations = new FakeMigrations() {
+				@Override
+				public <T> void migrate(String id, IRepository<T> repository,
+				                        java.util.function.Supplier<java.util.Collection<T>> rows) {
+					linked.add(repository);
+					markDone(id);
+				}
+			};
+
+			RankManager upgrading = new RankManager(registry, permissionRegistry, rules, migrations);
+			upgrading.initialize();
+
+			org.mockito.ArgumentCaptor<java.util.function.Consumer> onResult =
+					org.mockito.ArgumentCaptor.forClass(java.util.function.Consumer.class);
+			verify(checked).saveAllChecked(org.mockito.ArgumentMatchers.anyCollection(), onResult.capture());
+			onResult.getValue().accept(false);
+
+			assertTrue(linked.isEmpty(), "migrate is never called when the permission rows did not commit");
+			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
 		}
 
 		@Test
