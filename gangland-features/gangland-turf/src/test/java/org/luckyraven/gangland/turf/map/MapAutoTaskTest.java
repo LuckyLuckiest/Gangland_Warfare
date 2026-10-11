@@ -32,6 +32,7 @@ class MapAutoTaskTest {
 	private final Player          viewer  = mock(Player.class);
 	private char                  glyph   = 'A';
 	private int                   rasters = 0;
+	private int                   cell    = 16;
 	private Location              at      = new Location(null, 8, 64, 8);
 
 	private MapAutoTask task() {
@@ -41,7 +42,31 @@ class MapAutoTaskTest {
 			                       rasters++;
 			                       return raster(glyph);
 		                       },
-		                       sent::add, clock::get, () -> 16, () -> INTERVAL_SECONDS);
+		                       sent::add, clock::get, player -> cell, () -> INTERVAL_SECONDS);
+	}
+
+	@Test
+	@DisplayName("a zoom change at the same position recomputes the map on the next tick, and sends once the interval passes")
+	void zoomChange_recomputesTheMap() {
+		prefs.setAuto(id, true);
+		at = new Location(null, 0, 64, 0);
+		MapAutoTask task = task();
+		clock.set(seconds(0));
+		task.tick();
+		assertEquals(1, sent.size());
+		sent.clear();
+
+		cell  = 8;
+		glyph = 'B';
+		int computed = rasters;
+		clock.set(seconds(1));
+		task.tick();
+		assertEquals(computed + 1, rasters);
+		assertEquals(0, sent.size());
+
+		clock.set(seconds(INTERVAL_SECONDS));
+		task.tick();
+		assertEquals(1, sent.size());
 	}
 
 	private static TerritoryRaster.Raster raster(char glyph) {

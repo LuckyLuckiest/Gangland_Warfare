@@ -99,7 +99,7 @@ class TurfMapServiceGanglessTest {
 		when(garrisons.count(anyInt())).thenReturn(0);
 
 		service = new TurfMapService(turfs, gangs, users, eligibility, mapSettings, mock(TurfSettings.class),
-		                             text, legacy, garrisons);
+		                             text, legacy, garrisons, new MapPrefsService());
 	}
 
 	@AfterEach

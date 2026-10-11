@@ -24,15 +24,17 @@ public final class TurfMapConfig {
 	public TurfMapService turfMapService(TurfManager turfs, GangLookupContract gangs, UserLookupContract users,
 	                                     CaptureEligibility eligibility, TurfMapSettings mapSettings,
 	                                     TurfSettings turfSettings, TurfMessages text, TurfMessageContract legacy,
-	                                     GarrisonManager garrisons) {
-		return new TurfMapService(turfs, gangs, users, eligibility, mapSettings, turfSettings, text, legacy, garrisons);
+	                                     GarrisonManager garrisons, MapPrefsService prefs) {
+		prefs.setDefaultCellBlocks(mapSettings.getCellBlocks());
+		return new TurfMapService(turfs, gangs, users, eligibility, mapSettings, turfSettings, text, legacy, garrisons,
+		                          prefs);
 	}
 
 	@Bean
 	public MapAutoTask mapAutoTask(JavaPlugin plugin, MapPrefsService prefs, TurfMapService map,
 	                               TurfMapSettings settings) {
 		MapAutoTask task = new MapAutoTask(plugin, prefs, uuid -> Bukkit.getPlayer(uuid), map::raster, map::send,
-		                                   System::currentTimeMillis, settings::getCellBlocks,
+		                                   System::currentTimeMillis, player -> prefs.cellBlocks(player.getUniqueId()),
 		                                   settings::getAutoMinIntervalSeconds);
 		task.start();
 		return task;

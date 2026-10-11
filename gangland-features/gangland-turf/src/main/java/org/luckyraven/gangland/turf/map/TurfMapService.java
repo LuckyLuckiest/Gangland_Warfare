@@ -57,10 +57,13 @@ public final class TurfMapService {
 	private final TurfMessageContract   legacy;
 	private final GarrisonManager       garrisons;
 	private final TurfMapRenderer       renderer = new TurfMapRenderer();
+	private final MapPrefsService       prefs;
 
 	public TurfMapService(TurfManager turfs, GangLookupContract gangs, UserLookupContract users,
 	                      CaptureEligibility eligibility, TurfMapSettings mapSettings, TurfSettings turfSettings,
-	                      TurfMessages text, TurfMessageContract legacy, GarrisonManager garrisons) {
+	                      TurfMessages text, TurfMessageContract legacy, GarrisonManager garrisons,
+	                      MapPrefsService prefs) {
+		this.prefs        = prefs;
 		this.turfs        = turfs;
 		this.gangs        = gangs;
 		this.users        = users;
@@ -99,8 +102,10 @@ public final class TurfMapService {
 				}
 			}
 		}
+		// The config value is the default every player starts from; a reload reaches here, so it is re-read each time.
+		prefs.setDefaultCellBlocks(mapSettings.getCellBlocks());
 		return TerritoryRaster.render(at.getBlockX(), at.getBlockZ(), mapSettings.getWidth(), mapSettings.getHeight(),
-		                              mapSettings.getCellBlocks(), inputs, names, viewerGang);
+		                              prefs.cellBlocks(viewer.getUniqueId()), inputs, names, viewerGang);
 	}
 
 	/** Chat grid, or the text form for a Bedrock player when Map.Bedrock_Text_Form is on. */
