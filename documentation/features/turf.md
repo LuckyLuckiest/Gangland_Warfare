@@ -65,7 +65,8 @@ what applies to it.
 | `Income.Gang_XP_Per_Payout` | `turf_rules.yml` | `1` | Gang XP per paying turf per payout. |
 | `Garrison.Max_Reserve` | `turf_rules.yml` | `12` | Most guards a turf can hold in reserve. |
 | `Garrison.Cost_Per_Guard` | `turf_powerups.yml` | `1000` | Price of one guard at the Quartermaster, from the gang bank. A `garrison_discount` boost multiplies it. |
-| `Powerup_Npc.Display_Name` | `turf_npcs.yml` | `Quartermaster` | Name of the per-turf Quartermaster NPC (the panel titles use it). |
+| `Powerup_Npc.Display_Name` | `turf_npcs.yml` | `Quartermaster` | The Quartermaster's name in panel titles and chat lines. The name over its head comes from `civilians.yml`. |
+| `Powerup_Npc.Placement_Cost` | `turf_npcs.yml` | `5000.0` | Price the owning gang pays to place or move its Quartermaster with `/glw turf quartermaster`. `0` = free. |
 | `Capture.Duration_Seconds` | `turf_settings.yml` | `180` | Seconds for one attacker with nobody against them to fill the bar from 0 to 100. Owned and unclaimed turfs alike. |
 | `Capture.Cooldown_Minutes` | `turf_settings.yml` | `15` | After a capture completes, the turf cannot be contested again for this long. |
 | `Capture.Abandon_Grace_Seconds` | `turf_settings.yml` | `15` | Grace after the challenger leaves the turf before the capture is cancelled as abandoned. |
@@ -125,6 +126,10 @@ are `small_income_boost` (300), `large_income_boost` (1000) and `garrison_discou
 - **Survivors.** Guards still alive when a contest fails return to the reserve, up to the `Garrison.Max_Reserve` cap.
   Guards on the field count against that cap too, so a buy is refused while stock plus live guards reach it.
 - **Boost catalogue** pages nine boosts at a time.
+- **Owner placement.** The owning gang places its Quartermaster with `/glw turf quartermaster`, standing inside the turf.
+  It costs `Powerup_Npc.Placement_Cost` from the gang bank (`0` is free). Staff use `/glw turf powerupnpc` instead, for free.
+- **Hub rows.** The hub shows the guards on duty and who may spend: the owning gang buys, allies only look.
+- **Gang tag.** A short tag of the owning gang is drawn on a line above the Quartermaster. It follows owner changes.
 
 ---
 
@@ -380,6 +385,7 @@ Player commands are open to everyone from 0.17.0. Admin verbs are marked **admin
 | `/glw turf garrison [count]` | Sets, or prints, the guard stock of your active-selection turf. | Admin |
 | `/glw turf buff [powerup_id]` | Activates a powerup on your active-selection turf; with no id, lists the active buffs. | Admin |
 | `/glw turf powerupnpc <set\|remove>` | Places or removes the Quartermaster NPC of your active-selection turf. | Admin |
+| `/glw turf quartermaster` | Places or moves your gang's Quartermaster where you stand, inside a turf your gang owns. Costs `Powerup_Npc.Placement_Cost` from the gang bank. | Player (gang rank with `gangland.turf.upgrade`) |
 
 Wand, status and turf-card texts come from `turf/turf_messages.yml`.
 
@@ -392,6 +398,7 @@ Wand, status and turf-card texts come from `turf/turf_messages.yml`.
 | `gangland.command.main` | `true` | `/glw` itself. |
 | `gangland.command.map` (and `.auto`, `.hud`, `.text`, `.legend`) | `true` | The map commands. |
 | `gangland.command.turf`, `.turf.info`, `.turf.list`, `.turf.rules` | `true` | The turf root, info, list and rules. |
+| `gangland.command.turf.quartermaster` | `true` | `/glw turf quartermaster`. Placing also needs `gangland.turf.upgrade` in the gang. |
 | `gangland.turf.admin` | `op` | Every turf admin verb (the `gangland.command.turf.<verb>` nodes for wand, pos1, pos2, create, delete, setowner, show, status, select, tp, income, garrison, buff, powerupnpc and rename are its children). |
 
 Turf admin rights come only from `gangland.turf.admin`. Its verbs are checked in code as well. A player without the command
