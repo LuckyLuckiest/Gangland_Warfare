@@ -321,6 +321,8 @@ Quartermaster:
    Place_No_Citizens: "&cThe %npc% needs the Citizens plugin, which this server does not have."
    # Chat when the player left the turf before clicking. %turf%, %npc%.
    Place_Outside: "&cStand inside %turf% to place its %npc%."
+   # Chat when place() could not spawn the Quartermaster (bad Type_Id, Citizens spawn cancelled). Nothing is charged. %npc% = its name.
+   Place_Failed: "&cThe %npc% could not be placed here. Your gang was not charged."
    # Catalogue item lore: the effect. %effect% = Effect_Type, %magnitude% = Magnitude.
    Buffs_Effect: "&7Effect: &f%effect% &7x&f%magnitude%"
    # Catalogue item lore: the duration. %seconds% = Duration_Seconds.

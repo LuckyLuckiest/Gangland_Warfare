@@ -57,6 +57,7 @@ out and the default is used.
 | `Quartermaster.Place_Not_Owner` | `&cOnly the gang that owns %turf% can place its %npc%.` | Chat when the player's gang does not own the turf. Allies get this too. |
 | `Quartermaster.Place_No_Citizens` | `&cThe %npc% needs the Citizens plugin, which this server does not have.` | Chat when Citizens is missing. Nothing is charged. |
 | `Quartermaster.Place_Outside` | `&cStand inside %turf% to place its %npc%.` | Chat when the player left the turf before clicking. |
+| `Quartermaster.Place_Failed` | `&cThe %npc% could not be placed here. Your gang was not charged.` | Chat when the Quartermaster could not spawn (bad `Type_Id`, Citizens spawn cancelled). The charge is refunded. |
 | `Quartermaster.Menu_On_Duty` | `&7Guards on duty: &f%count%` | Hub line: guards alive on the turf. |
 | `Quartermaster.Menu_Spend_Owner` | `&aYour gang buys here.` | Hub line for the owning gang. |
 | `Quartermaster.Menu_Spend_Ally` | `&7Only &e%gang% &7buys here; allies can look.` | Hub line for an allied viewer. |

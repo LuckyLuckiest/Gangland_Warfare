@@ -14,6 +14,7 @@ import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.keystone.inventory.InventoryService;
@@ -67,6 +68,7 @@ class QuartermasterPlacementTest {
 		users    = mock(UserLookupContract.class);
 		access   = mock(QuartermasterAccess.class);
 		npcs     = mock(TurfPowerupManager.class);
+		when(npcs.place(anyInt(), any(), any())).thenReturn(mock(TurfPowerupNpc.class));
 		messages = mock(TurfMessages.class);
 		when(messages.text(anyString(), anyString(), any(Object[].class)))
 				.thenAnswer(invocation -> invocation.getArgument(0));
@@ -157,6 +159,19 @@ class QuartermasterPlacementTest {
 
 		assertEquals(0, BigDecimal.valueOf(5000).compareTo(bank.getAmount()));
 		verify(npcs).place(TURF_ID, location, null);
+		verify(flow).end();
+	}
+
+	@Test
+	@DisplayName("confirm refunds and does not announce when place() cannot spawn the Quartermaster")
+	void confirm_placeReturnsNull_refundsAndFails() {
+		when(npcs.place(anyInt(), any(), any())).thenReturn(null);
+
+		placement.confirm(flow, player, session);
+
+		assertEquals(0, BigDecimal.valueOf(10_000).compareTo(bank.getAmount()));
+		verify(player).sendMessage("Quartermaster.Place_Failed");
+		verify(player, never()).sendMessage("Quartermaster.Placed");
 		verify(flow).end();
 	}
 

@@ -14,6 +14,7 @@ import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.keystone.inventory.InventoryService;
@@ -196,7 +197,20 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 			}
 		}
 
-		npcs.place(turf.getId(), player.getLocation(), null);
+		TurfPowerupNpc placed = npcs.place(turf.getId(), player.getLocation(), null);
+		if (placed == null) {
+			// place() returns null when the spawn fails (bad Type_Id, Citizens spawn cancelled); refund, never announce.
+			if (price.signum() > 0) {
+				gang.getEconomy().depositAmount(price);
+			}
+			log.warn("Quartermaster: could not place the Quartermaster of turf {} (type {}); {} was not charged",
+			         turf.getId(), settings.get().typeId(), gang.getName());
+			player.sendMessage(messages.text("Quartermaster.Place_Failed",
+			                                 "&cThe %npc% could not be placed here. Your gang was not charged.",
+			                                 "npc", npcName()));
+			flow.end();
+			return;
+		}
 		log.info("Quartermaster: {} ({}) placed the Quartermaster of turf {} ({}) for {}",
 		         player.getName(), gang.getName(), turf.getId(), turf.getDisplayName(), money(price));
 		player.sendMessage(messages.text("Quartermaster.Placed", "&aThe %npc% now stands here on &f%turf%&a. Paid &6%money%&a.",
