@@ -125,6 +125,15 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		if (!citizens.getAsBoolean()) return;
 
 		Group previous = byTurfId.get(garrison.turfId);
+		if (previous != null && previous.garrison != null) {
+			// T-751: a rival who stayed on the turf restarts the contest; the standing guards keep fighting
+			// instead of being finished and respawned, so the contest holds rather than flapping.
+			previous.garrison.standingDown = false;
+			previous.garrison.onReturn     = null;
+			previous.challengerMembers     = challengers;
+			previous.lifespan              = lifespanSeconds;
+			return;
+		}
 		if (previous != null) {
 			finish(garrison.turfId, previous);
 		}
