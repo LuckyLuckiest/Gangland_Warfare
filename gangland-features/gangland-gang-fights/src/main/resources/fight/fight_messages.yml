@@ -12,6 +12,7 @@ Challenge:
    Unknown_Gang: "&cNo gang named %gang%."
    Same_Gang: "&cYou cannot challenge your own gang."
    Allied: "&cYou cannot challenge an allied gang."
+   Gang_Gone: "&cOne of the two gangs no longer exists."
    Size_Range: "&cA fight needs %min% to %max% fighters per side."
    Rank_Needed: "&cYour rank is not allowed to start or accept fights."
    Bet_Invalid: "&cThat is not a valid bet."

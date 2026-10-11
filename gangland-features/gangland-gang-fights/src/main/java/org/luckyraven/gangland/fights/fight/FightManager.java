@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  * RESULT). Everything runs on the server thread: the {@link FightClock} schedules sync tasks, and the commands and
  * listeners call in from there. Every cancel path goes through {@link #cancel} and refunds a held stake.
  */
-public class FightManager {
+public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle {
 
 	private final @Nullable FightClock            clock;
 	private final @Nullable FightSettlement       settlement;
@@ -126,6 +126,14 @@ public class FightManager {
 			return;
 		}
 
+		if ("?".equals(world.gangName(fight.gangA())) || "?".equals(world.gangName(fight.gangB()))) {
+			cancel(fight, "Challenge.Gang_Gone");
+			return;
+		}
+		if (world.allied(fight.gangA(), fight.gangB())) {
+			cancel(fight, "Challenge.Allied");
+			return;
+		}
 		FightSettings s = settings.get();
 		String refusal = ChallengeRules.accept(s, new Party(world.mayFight(actor), world.mayWithdraw(actor),
 		                                                    world.bank(fight.gangB()), 0), fight.bet());
@@ -180,6 +188,10 @@ public class FightManager {
 		}
 		if (fight == null) {
 			world.tell(actor, "Challenge.No_Proposal");
+			return;
+		}
+		if (!world.mayFight(actor)) {
+			world.tell(actor, "Challenge.Rank_Needed");
 			return;
 		}
 		declineUntil.put(fight.gangA() + ":" + fight.gangB(),
@@ -304,6 +316,7 @@ public class FightManager {
 			case RUNNING -> {
 				fight.eliminate(player);
 				combatTag.setFighting(player, false);
+				restore(player);
 				checkWinner(fight);
 			}
 			default -> {
@@ -323,6 +336,16 @@ public class FightManager {
 			           world.gangName(fight.gangB()));
 		}
 		clock.schedule(() -> finish(fight), Duration.ofSeconds(settings.get().resultSeconds()));
+	}
+
+	@Override
+	public void onClear() {
+		abortAll("reload");
+	}
+
+	@Override
+	public void onShutdown() {
+		abortAll("disable");
 	}
 
 	/** Cancels every fight, refunds the stakes and sends fighters home. Called when the module disables. */

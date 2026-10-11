@@ -94,6 +94,7 @@ class FightStateMachineTest {
 		final Set<UUID>            restored   = new HashSet<>();
 		final List<String>         told       = new ArrayList<>();
 		boolean allied;
+		boolean mayFight = true;
 
 		@Override
 		public Optional<Integer> gangOf(UUID p) {
@@ -123,7 +124,7 @@ class FightStateMachineTest {
 
 		@Override
 		public boolean mayFight(UUID p) {
-			return true;
+			return mayFight;
 		}
 
 		@Override
@@ -446,5 +447,46 @@ class FightStateMachineTest {
 		manager.propose(v1, "Rats", 2, 0);
 		assertTrue(manager.active().isEmpty());
 		assertTrue(world.told(v1, "Challenge.Cooldown"));
+	}
+
+	@Test
+	@DisplayName("forfeitRunning_restoresQuitterWhileFightContinues")
+	void forfeitRunning_restoresQuitterWhileFightContinues() {
+		Fight f = running(0);
+		manager.forfeit(r1, "quit");
+		assertEquals(FightState.RUNNING, f.state());
+		assertTrue(world.restored.contains(r1));
+	}
+
+	@Test
+	@DisplayName("onClear_abortsLiveFightsRefundsAndRestores")
+	void onClear_abortsLiveFightsRefundsAndRestores() {
+		Fight f = running(1000);
+		manager.onClear();
+		assertEquals(FightState.CANCELLED, f.state());
+		assertEquals(1, settlement.refunds);
+		assertTrue(world.restored.contains(v1));
+	}
+
+	@Test
+	@DisplayName("decline_needsFightRank")
+	void decline_needsFightRank() {
+		manager.propose(v1, "Rats", 2, 0);
+		Fight f = manager.active().iterator().next();
+		world.mayFight = false;
+		manager.decline(r1, "Vipers");
+		assertEquals(FightState.PROPOSED, f.state());
+		assertTrue(world.told(r1, "Challenge.Rank_Needed"));
+	}
+
+	@Test
+	@DisplayName("accept_afterAllying_cancelsWithoutEscrow")
+	void accept_afterAllying_cancelsWithoutEscrow() {
+		manager.propose(v1, "Rats", 2, 1000);
+		Fight f = manager.active().iterator().next();
+		world.allied = true;
+		manager.accept(r1, "Vipers");
+		assertEquals(FightState.CANCELLED, f.state());
+		assertEquals(0, settlement.escrows);
 	}
 }
