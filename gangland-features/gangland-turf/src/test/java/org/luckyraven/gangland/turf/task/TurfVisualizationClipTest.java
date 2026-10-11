@@ -47,4 +47,11 @@ class TurfVisualizationClipTest {
 		assertTrue(points.stream().anyMatch(p -> p[0] == 16 && p[1] == 55 && p[2] == 16), "far corner reached");
 		assertTrue(points.stream().anyMatch(p -> p[0] == 0 && p[1] == 60 && p[2] == 0), "pillar drawn");
 	}
+
+	@Test
+	@DisplayName("a clipped outline over the budget at step 0.5 grows the step to stay within it")
+	void clippedOutlineOverBudget_stepGrows() {
+		List<double[]> p = TurfVisualization.edgePoints(0, 55, 0, 60, 75, 60, 30, 65, 30, RADIUS, BUDGET);
+		assertTrue(p.size() <= BUDGET && p.size() > BUDGET / 2, "points " + p.size());
+	}
 }
