@@ -18,6 +18,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.util.TriConsumer;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * {@code /glw gang profile [player]}: a player's gang card in chat (gang, rank, kills, deaths, kdr, assists and where
@@ -53,16 +54,38 @@ final class GangProfileCommand extends SubArgument {
 	}
 
 	private void send(CommandSender sender, String name) {
-		OfflinePlayer target;
-		if (name != null) target = Bukkit.getOfflinePlayer(name);
-		else if (sender instanceof Player self) target = self;
-		else {
+		UUID   id;
+		String shown;
+		if (name != null) {
+			id    = null;
+			shown = name;
+			Player online = Bukkit.getPlayerExact(name);
+			if (online != null) {
+				id    = online.getUniqueId();
+				shown = online.getName();
+			} else {
+				// names come from the members' own UUIDs: a by-name lookup can block on a Mojang request
+				for (Gang each : gangManager.getAll()) {
+					for (Member candidate : each.getMembers()) {
+						if (candidate.getUuid() == null) continue;
+
+						OfflinePlayer offline = Bukkit.getOfflinePlayer(candidate.getUuid());
+						if (offline != null && name.equalsIgnoreCase(offline.getName())) {
+							id    = candidate.getUuid();
+							shown = offline.getName();
+						}
+					}
+				}
+			}
+		} else if (sender instanceof Player self) {
+			id    = self.getUniqueId();
+			shown = self.getName();
+		} else {
 			sender.sendMessage(messages.text("Stats.Profile_Needs_Player", "&cName a player: /glw gang profile <player>"));
 			return;
 		}
 
-		Member member = memberManager.getMember(target.getUniqueId());
-		String shown  = target.getName() == null ? String.valueOf(name) : target.getName();
+		Member member = id == null ? null : memberManager.getMember(id);
 		Gang   gang   = member == null || !member.hasGang() ? null : gangManager.getGang(member.getGangId());
 		if (gang == null) {
 			sender.sendMessage(messages.text("Stats.Profile_No_Gang", "&f%player% &7is not in a gang.",

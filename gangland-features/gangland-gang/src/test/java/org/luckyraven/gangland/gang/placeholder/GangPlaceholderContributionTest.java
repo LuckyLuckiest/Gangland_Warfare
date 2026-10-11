@@ -167,4 +167,21 @@ class GangPlaceholderContributionTest {
 		}
 		assertTrue(!stats.statKeys().contains("bank"));
 	}
+
+	@Test
+	@DisplayName("boardToken_withPlayer: a player-context request answers board rows, wealth rows need the node")
+	void boardToken_withPlayer() {
+		assertEquals("Bravo", contribution.resolve(inGang, "gang_board_kills_1_name"));
+
+		org.bukkit.entity.Player denied = mock(org.bukkit.entity.Player.class);
+		when(denied.getPlayer()).thenReturn(denied);
+		when(denied.hasPermission(org.luckyraven.gangland.gang.permission.GangPermissions.RANKING_WEALTH)).thenReturn(false);
+		assertEquals("none", contribution.resolve(denied, "gang_board_balance_1_value"));
+		assertEquals("none", contribution.resolve(inGang, "gang_board_balance_1_value"));
+
+		org.bukkit.entity.Player allowed = mock(org.bukkit.entity.Player.class);
+		when(allowed.getPlayer()).thenReturn(allowed);
+		when(allowed.hasPermission(org.luckyraven.gangland.gang.permission.GangPermissions.RANKING_WEALTH)).thenReturn(true);
+		assertEquals("900", contribution.resolve(allowed, "gang_board_balance_1_value"));
+	}
 }

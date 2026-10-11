@@ -14,6 +14,7 @@ import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.level.GangLimits;
 import org.luckyraven.gangland.gang.member.Member;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
 import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.gang.member.MemberManager;
@@ -83,6 +84,14 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
 	public String resolve(OfflinePlayer player, String parameter) {
 		String setting = resolveSetting(parameter);
 		if (setting != null) return setting;
+		if (parameter.startsWith(GANG_PREFIX + "board_")) {
+			Matcher matcher = BOARD.matcher(parameter);
+			if (matcher.matches() && statsService.isWealth(matcher.group(1))) {
+				Player online = player.getPlayer();
+				if (online == null || !online.hasPermission(GangPermissions.RANKING_WEALTH)) return defaultValue();
+			}
+			return resolveGlobal(parameter);
+		}
 		if (PARITY_TOKENS.contains(parameter) || parameter.startsWith(STAT_PREFIX)) {
 			return resolveParity(player, parameter);
 		}

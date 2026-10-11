@@ -39,6 +39,7 @@ import org.luckyraven.gangland.gang.placeholder.GangPlaceholderContribution;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.menu.filter.FilterApplier;
+import org.luckyraven.gangland.menu.filter.FilterRegistry;
 import org.luckyraven.gangland.menu.filter.FilterStore;
 import org.bukkit.entity.Player;
 import org.luckyraven.keystone.bean.Bean;
@@ -223,8 +224,8 @@ public final class GangConfig {
 	 * once {@code FilterAdapter}/{@code FilterField}/{@code StandardFilterField} became api-hosted (W54 F1).
 	 */
 	@Bean
-	public GangFilterAdapter gangFilterAdapter(GangStatsService statsService) {
-		return new GangFilterAdapter(statsService);
+	public GangFilterAdapter gangFilterAdapter(GangStatsService statsService, FilterRegistry filterRegistry) {
+		return new GangFilterAdapter(statsService, filterRegistry);
 	}
 
 	@Bean

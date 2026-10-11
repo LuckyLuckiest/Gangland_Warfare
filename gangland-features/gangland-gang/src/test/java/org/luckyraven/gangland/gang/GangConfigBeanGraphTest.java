@@ -106,6 +106,8 @@ class GangConfigBeanGraphTest {
 		container.registerInstance(ModuleLoader.class, mock(ModuleLoader.class));
 		container.registerInstance(FilterStore.class, mock(FilterStore.class));
 		container.registerInstance(FilterApplier.class, mock(FilterApplier.class));
+		container.registerInstance(org.luckyraven.gangland.menu.filter.FilterRegistry.class,
+		                           new org.luckyraven.gangland.menu.filter.FilterRegistry());
 
 		@SuppressWarnings("unchecked")
 		UserManager<Player> userManager = mock(UserManager.class);

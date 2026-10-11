@@ -2,9 +2,15 @@ package org.luckyraven.gangland.gang;
 
 import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.menu.filter.FilterAdapter;
+import org.luckyraven.gangland.menu.filter.FilterBinding;
+import org.luckyraven.gangland.menu.filter.FilterRegistry;
+import org.luckyraven.gangland.menu.filter.SortDescriptor;
+import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.gangland.menu.filter.FilterField;
 import org.luckyraven.gangland.menu.filter.StandardFilterField;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -22,12 +28,34 @@ public final class GangFilterAdapter implements FilterAdapter<Gang> {
 
 	private final GangStatsService statsService;
 
+	private final FilterRegistry registry;
+
 	public GangFilterAdapter() {
-		this(new GangStatsService());
+		this(new GangStatsService(), null);
 	}
 
 	public GangFilterAdapter(GangStatsService statsService) {
+		this(statsService, null);
+	}
+
+	public GangFilterAdapter(GangStatsService statsService, FilterRegistry registry) {
 		this.statsService = statsService;
+		this.registry     = registry;
+	}
+
+	/** Adds the stat sort axes to the impl-registered {@code gangs} binding (the registry is filled before this runs). */
+	@PostConstruct
+	public void registerStatSorts() {
+		FilterBinding binding = registry == null ? null : registry.get("gangs");
+		if (binding == null) return;
+
+		List<SortDescriptor> cycle = new ArrayList<>(binding.sortCycle());
+		for (GangStatFilterField field : List.of(GangStatFilterField.KILLS, GangStatFilterField.KDR,
+		                                         GangStatFilterField.LEVEL, GangStatFilterField.ONLINE)) {
+			cycle.add(SortDescriptor.desc(field));
+		}
+		registry.register(new FilterBinding(binding.id(), binding.targetInventory(), binding.fields(),
+		                                    binding.defaultSort(), cycle));
 	}
 
 	@Override
