@@ -254,13 +254,14 @@ class GangDeleteCommand extends SubArgument {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(mem.getUuid());
 
 				User<OfflinePlayer> offlineUser = offlineUserManager.getUser(offlinePlayer);
-				if (offlineUser == null) {
-					// Not cached (T-300): load just this member's row, the path boot uses. Never loadAll, which
-					// rebuilds every player's User (Vault balance writes, wanted events for online players).
-					offlineUser = offlineUserManager.create(offlinePlayer);
+				// Not cached, or cached as a load-pending default (T-300, B3): load just this member's row, the path
+				// boot uses. Never loadAll, which rebuilds every player's User (Vault balance writes, wanted events).
+				if (offlineUser == null || offlineUser.isLoadPending()) {
+					boolean cached = offlineUser != null;
+					if (!cached) offlineUser = offlineUserManager.create(offlinePlayer);
 					// A failed read leaves defaults: load-pending keeps autosave and the save below off it.
 					if (!offlineUserManager.loadStored(offlineUser)) offlineUser.setLoadPending(true);
-					offlineUserManager.add(offlineUser);
+					if (!cached) offlineUserManager.add(offlineUser);
 				}
 
 				BigDecimal amount = payouts.getOrDefault(mem.getUuid(), Currency.ZERO);
