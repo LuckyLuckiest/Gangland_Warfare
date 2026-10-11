@@ -4,6 +4,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.extension.CommandContribution;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.level.GangLimits;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailManager;
@@ -31,14 +33,19 @@ public final class GangAllyMailContribution implements CommandContribution {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
+	private final GangLimits          limits;
+	private final GangMessages        messages;
 
 	public GangAllyMailContribution(JavaPlugin plugin, @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
-	                                GangManager gangManager, MailManager mailManager) {
+	                                GangManager gangManager, MailManager mailManager, GangLimits limits,
+	                                GangMessages messages) {
 		this.plugin      = plugin;
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
 		this.gangManager   = gangManager;
 		this.mailManager   = mailManager;
+		this.limits        = limits;
+		this.messages      = messages;
 	}
 
 	@Override
@@ -49,8 +56,10 @@ public final class GangAllyMailContribution implements CommandContribution {
 	@Override
 	public List<Argument> create(Tree<Argument> tree, Argument parent) {
 		return List.of(
-				new GangAllyRequestCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager),
-				new GangAllyAcceptCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager),
+				new GangAllyRequestCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager,
+						limits, messages),
+				new GangAllyAcceptCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager,
+						limits, messages),
 				new GangAllyRejectCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager),
 				new GangAllyPendingCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager));
 	}

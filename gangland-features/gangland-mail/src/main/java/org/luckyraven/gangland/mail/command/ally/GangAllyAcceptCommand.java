@@ -11,6 +11,8 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.level.GangLimits;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.core.user.User;
@@ -31,9 +33,12 @@ public class GangAllyAcceptCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
+	private final GangLimits          limits;
+	private final GangMessages        messages;
 
 	public GangAllyAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
-	                      MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
+	                      MemberManager memberManager, GangManager gangManager, MailManager mailManager,
+	                      GangLimits limits, GangMessages messages) {
 		super(plugin, "accept", tree, parent);
 
 		this.plugin      = plugin;
@@ -42,6 +47,8 @@ public class GangAllyAcceptCommand extends SubArgument {
 		this.memberManager = memberManager;
 		this.gangManager   = gangManager;
 		this.mailManager   = mailManager;
+		this.limits        = limits;
+		this.messages      = messages;
 
 		this.addSubArgument(senderGangArgument());
 	}
@@ -183,6 +190,13 @@ public class GangAllyAcceptCommand extends SubArgument {
 				userGangOnline.get(0).sendMessage(Messages.ALREADY_ALLIED_GANG.toString());
 			}
 			mailManager.accept(mail);
+			return;
+		}
+
+		Gang full = AllyCap.firstAtCap(limits, userGang, sending);
+		if (full != null) {
+			String line = AllyCap.refusal(limits, messages, full);
+			OnlineGangMembers.of(memberManager, userGang.getId()).forEach(pl -> pl.sendMessage(line));
 			return;
 		}
 

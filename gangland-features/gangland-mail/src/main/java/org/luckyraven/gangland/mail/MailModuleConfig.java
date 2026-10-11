@@ -10,6 +10,8 @@ import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.level.GangLimits;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -89,8 +91,10 @@ public class MailModuleConfig {
 	public GangAllyMailContribution gangAllyMailContribution(@Qualifier("online") UserManager<Player> userManager,
 	                                                         MemberManager memberManager,
 	                                                         GangManager gangManager,
-	                                                         MailManager mailManager) {
-		return new GangAllyMailContribution(plugin, userManager, memberManager, gangManager, mailManager);
+	                                                         MailManager mailManager,
+	                                                         GangLimits limits, GangMessages messages) {
+		return new GangAllyMailContribution(plugin, userManager, memberManager, gangManager, mailManager, limits,
+		                                    messages);
 	}
 
 }

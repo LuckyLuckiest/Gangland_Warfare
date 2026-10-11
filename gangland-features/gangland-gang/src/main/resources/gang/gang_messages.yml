@@ -113,6 +113,17 @@ Worlds:
 # end Membership
 
 # ---------------- Levels ----------------
+Levels:
+   # /glw gang upgrade. %level% is the level being claimed; %xp_missing% and %money_missing% are what is still short;
+   # %cost% is the fee; %money_symbol% the currency symbol; %cap% the ally limit of the gang's level.
+   Preview: "&7Level &e%level% &7needs &c%xp_missing% &7more XP and &c%money_symbol%%money_missing% &7more in the bank."
+   Ready: "&aReady: level &e%level% &acosts &e%money_symbol%%cost% &7- &e/glw gang upgrade confirm"
+   Max: "&7Your gang is already at the highest level."
+   Claimed: "&aYour gang reached level &e%level%&a for &e%money_symbol%%cost%&a from the gang bank."
+   Cancelled: "&cThe level-up was cancelled. Nothing was charged."
+   No_Permission: "&cYour rank may not upgrade the gang."
+   # Alliance requests and accepts when the gang (%gang%) already has the allies its level allows.
+   Ally_Cap: "&c%gang% is at its limit of &e%cap% &callies for its level."
 # end Levels
 
 # ---------------- Ranks ----------------
