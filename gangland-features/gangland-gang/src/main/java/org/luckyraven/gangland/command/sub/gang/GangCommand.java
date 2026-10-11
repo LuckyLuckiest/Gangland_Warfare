@@ -254,7 +254,7 @@ public final class GangCommand extends Command {
 		Argument ally = new GangAllyCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,
 		                                    gangManager, contributions, friendlyFire);
 		Argument display = new GangDisplayCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                          memberManager, gangManager);
+		                                          memberManager, gangManager, gangRules, gangMessages);
 		Argument color = new GangColorCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                      memberManager, gangManager, inventoryService);
 
@@ -303,7 +303,8 @@ public final class GangCommand extends Command {
 		                                       limits, worldPolicy));
 		arguments.add(new GangRallyCommand(getPlugin(), getArgumentTree(), getArgument(), safehouseService));
 		arguments.add(new GangPvpCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, friendlyFire));
-		arguments.add(new GangNoticeCommand(getPlugin(), getArgumentTree(), getArgument()));
+		arguments.add(new GangNoticeCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
+		                                    memberManager, gangManager, gangMessages));
 		arguments.add(new GangRankingCommand(getPlugin(), getArgumentTree(), getArgument(), statsService));
 		arguments.add(new GangProfileCommand(getPlugin(), getArgumentTree(), getArgument(), statsService));
 
