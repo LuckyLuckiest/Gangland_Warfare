@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
@@ -570,6 +571,25 @@ class RankManagerTest {
 			new RankManager(registry, permissionRegistry, rules, migrations).initialize();
 
 			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
+		@DisplayName("T-283: a repository that reports a failed load skips the grant without marking it done")
+		void reportedFailedLoad_isNotMarkedDone() {
+			persistedTree();
+			@SuppressWarnings("unchecked")
+			IRepository<RankParent> failing = mock(IRepository.class,
+			                                       org.mockito.Mockito.withSettings().extraInterfaces(LoadOutcome.class));
+			when(failing.loadAll()).thenReturn(Set.of());
+			when(((LoadOutcome) failing).lastLoadFailed()).thenReturn(true);
+			when(registry.getRepository(RankParent.class)).thenReturn(failing);
+			FakeMigrations migrations = new FakeMigrations();
+
+			RankManager manager = new RankManager(registry, permissionRegistry, rules, migrations);
+			manager.initialize();
+
+			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+			assertFalse(manager.get("officer").contains(TURF_UPGRADE));
 		}
 
 		@Test

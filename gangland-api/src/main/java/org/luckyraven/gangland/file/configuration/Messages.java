@@ -632,6 +632,7 @@ public enum Messages {
 	TURF_GANG_NOT_FOUND("Errors.Turf.Gang_Not_Found", Type.ERROR),
 	TURF_NO_GANG("Errors.Turf.No_Gang", Type.ERROR),
 	TURF_NO_ACTIVE("Errors.Turf.No_Active", Type.ERROR),
+	USER_DATA_LOAD_FAILED("Errors.User.Data_Load_Failed", Type.OTHER),
 	;
 
 	private static MessageProvider provider;

@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gang.database.repositories.meta;
 
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,9 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * gang_migration rows: a stored done_at survives autosave (T-250), and a failed read counts as done this boot so a
@@ -97,6 +101,19 @@ class GangMigrationRepositoryTest {
 		}
 		assertEquals(1000L, aStamp);
 		assertTrue(bStamp >= before, "b is stamped at or after the call");
+	}
+
+	@Test
+	@DisplayName("T-284: markDone writes on the calling thread, never through the async save queue")
+	void markDone_writesSynchronously() throws SQLException {
+		// an async save would be queued behind the boot's other writers; here the scheduler swallows it
+		when(bukkit.scheduler().runTaskAsynchronously(any(Plugin.class), any(Runnable.class))).thenReturn(null);
+		JavaPlugin enabled = mock(JavaPlugin.class);
+		when(enabled.isEnabled()).thenReturn(true);
+
+		new GangMigrationRepository(enabled, mock(DatabaseHandler.class), backend).markDone("b");
+
+		verify(backend).upsert(eq("gang_migration"), any(), any(), any());
 	}
 
 }

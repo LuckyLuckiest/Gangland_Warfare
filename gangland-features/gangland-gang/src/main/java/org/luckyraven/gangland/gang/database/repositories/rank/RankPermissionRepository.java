@@ -2,6 +2,7 @@ package org.luckyraven.gangland.gang.database.repositories.rank;
 
 import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.database.repositories.gang.GangRepository;
 import org.luckyraven.gangland.gang.database.fk.ForeignPermissionTable;
 import org.luckyraven.gangland.gang.database.tables.rank.RankPermissionTable;
@@ -24,7 +25,9 @@ import java.util.function.Consumer;
 
 @CustomLog
 @Repository(RankPermission.class)
-public class RankPermissionRepository extends AbstractRepository<RankPermission> {
+public class RankPermissionRepository extends AbstractRepository<RankPermission> implements LoadOutcome {
+
+	private volatile boolean lastLoadFailed;
 
 	private final RankPermissionTable rankPermissionTable;
 
@@ -75,6 +78,7 @@ public class RankPermissionRepository extends AbstractRepository<RankPermission>
 
 	@Override
 	protected Collection<RankPermission> doLoadAll() throws SQLException {
+		lastLoadFailed = true;   // stays true when selectAll throws; Keystone reports it and returns an empty list (T-283)
 		List<RankPermission> rankPermissions = new ArrayList<>();
 		List<Object[]>       data            = tableBackend().selectAll();
 
@@ -82,7 +86,13 @@ public class RankPermissionRepository extends AbstractRepository<RankPermission>
 			rankPermissions.add(fromRow(result));
 		}
 
+		lastLoadFailed = false;
 		return rankPermissions;
+	}
+
+	@Override
+	public boolean lastLoadFailed() {
+		return lastLoadFailed;
 	}
 
 	/** One rank-permission row; both ids read through {@link Number}, a SQL NULL as 0 (T-199). */
