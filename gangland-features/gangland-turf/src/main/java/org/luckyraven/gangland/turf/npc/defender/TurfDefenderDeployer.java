@@ -104,48 +104,6 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	}
 
 	/**
-	 * Deploy {@code count} civilian defenders of the given type at {@code spawnLocation}, hostile to whichever players
-	 * the supplier names (re-evaluated on every targeting tick so a fresh log-in by an attacker is picked up). Stacks
-	 * onto the existing group if one is already deployed for this turf. Not used by the garrison, which deploys in waves
-	 * through {@link #startGarrison}.
-	 *
-	 * @param turfId turf-scoped key for grouping + recall
-	 * @param spawnLocation where the defenders appear
-	 * @param civilianTypeId the {@code civilians.yml} type id to spawn (e.g. {@code "turf_defender"})
-	 * @param challengerMembersSupplier resolves the set of player UUIDs the defenders should attack
-	 * @param count how many defenders to spawn
-	 * @param targetingRadius defenders only target players within this distance (blocks)
-	 * @param lifespanSeconds safety lifespan, read on every tick so a /glw reload applies to guards already deployed;
-	 *                        a guard is recalled once it outlives it regardless of contest state
-	 */
-	public void deploy(int turfId,
-	                   Location spawnLocation,
-	                   String civilianTypeId,
-	                   Supplier<Set<UUID>> challengerMembersSupplier,
-	                   int count,
-	                   double targetingRadius,
-	                   IntSupplier lifespanSeconds) {
-		if (count <= 0) return;
-		// T-I6: without Citizens, CivilianSpawnManager's factory reaches CitizensAPI directly and throws.
-		if (!citizens.getAsBoolean()) return;
-
-		Group group = byTurfId.computeIfAbsent(turfId,
-		                                       k -> new Group(challengerMembersSupplier, targetingRadius));
-		group.challengerMembers = challengerMembersSupplier;
-		group.targetingRadius   = targetingRadius;
-		long deployedAt = System.currentTimeMillis();
-		for (int i = 0; i < count; i++) {
-			CivilianNpc npc = spawnManager.spawnCivilian(spawnLocation, civilianTypeId);
-			if (npc == null) {
-				log.warn("Failed to spawn turf defender of type '{}' at {} (CivilianSpawnManager returned null)",
-				         civilianTypeId, spawnLocation);
-				continue;
-			}
-			track(turfId, npc, deployedAt, lifespanSeconds);
-		}
-	}
-
-	/**
 	 * Arms a garrison on a contested turf. Nothing spawns here: the next targeting tick spawns the first wave, and each
 	 * guard is taken out of the reserve only once it spawned. Without Citizens nothing is armed and nothing is spent
 	 * (TF-46).
@@ -357,7 +315,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		if (garrison.posts == null) {
 			garrison.posts = GarrisonPosts.posts(garrison.region, world::getHighestBlockYAt);
 		}
-		Choice choice = GarrisonPosts.chooseSpawn(garrison.posts, attackerEyes(world, group), (post, eye) -> sees(world, post, eye));
+		Choice choice = GarrisonPosts.chooseSpawn(garrison.posts, attackerEyes(world, group, garrison), (post, eye) -> sees(world, post, eye));
 		if (!choice.hidden()) {
 			if (garrison.delayedSince < 0) {
 				garrison.delayedSince = now;
@@ -397,18 +355,19 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	private void dress(CivilianNpc npc, TurfGarrison garrison) {
 		int number = garrison.nextNumber++;
 		npc.setFactionSquads(garrison.squads);
-		CitizensBridge.callsign(npc, GuardCallsign.npcName(garrison.tag, number),
-		                        "&6" + GuardCallsign.format(garrison.tag, number));
+		CitizensBridge.callsign(npc, "&6" + GuardCallsign.format(garrison.tag, number));
 	}
 
 	/** Eye positions {x, y, z} of the live attackers in {@code world}. */
-	private List<double[]> attackerEyes(World world, Group group) {
+	private List<double[]> attackerEyes(World world, Group group, TurfGarrison garrison) {
 		Set<UUID> ids = group.challengerMembers.get();
 		if (ids == null || ids.isEmpty()) return List.of();
 		List<double[]> eyes = new ArrayList<>();
 		for (Player player : world.getPlayers()) {
 			if (!ids.contains(player.getUniqueId()) || player.isDead()) continue;
 			Location eye = player.getEyeLocation();
+			// far players are no threat and a long ray would load chunks on the main thread
+			if (!GarrisonPosts.withinLeash(eye.getX(), eye.getZ(), garrison.region, garrison.config.leashMargin())) continue;
 			eyes.add(new double[]{eye.getX(), eye.getY(), eye.getZ()});
 		}
 		return eyes;
@@ -546,16 +505,16 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 
 	/**
 	 * Citizens-typed calls live on a nested class so no Citizens type appears on the deployer's own signatures (the
-	 * deployer is a bean). The Citizens name is the short plain callsign (16 characters or fewer, no colour, so it never
+	 * deployer is a bean). The Citizens name stays the type's plain display name (16 characters or fewer, no colour, so it never
 	 * becomes a {@code CIT-} team name); the nameplate is hidden and the coloured callsign is hologram line 0, where
 	 * the healthbars module puts its bar directly under it.
 	 */
 	private static final class CitizensBridge {
 
-		static void callsign(CivilianNpc npc, String plainName, String hologramLine) {
+		static void callsign(CivilianNpc npc, String hologramLine) {
 			NPC citizensNpc = npc.getNpc();
 			if (citizensNpc == null) return;
-			citizensNpc.setName(plainName);
+			// no setName here: renaming a spawned PLAYER NPC respawns it and loses its mark, gear and health bonus
 			citizensNpc.data().setPersistent(NPC.Metadata.NAMEPLATE_VISIBLE, false);
 			citizensNpc.getOrAddTrait(HologramTrait.class).addLine(ChatUtil.color(hologramLine));
 		}

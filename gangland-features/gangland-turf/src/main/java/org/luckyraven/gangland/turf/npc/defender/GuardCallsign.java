@@ -9,7 +9,6 @@ import java.util.Locale;
  */
 public final class GuardCallsign {
 
-	private static final int    MAX_NPC_NAME = 16;
 	private static final String CIT          = "CIT";
 	private static final String FALLBACK_TAG = "GNG";
 
@@ -34,12 +33,6 @@ public final class GuardCallsign {
 	/** The callsign shown above the guard: {@code [TAG] Guard n}. */
 	public static String format(String tag, int n) {
 		return "[" + tag + "] Guard " + n;
-	}
-
-	/** The Citizens NPC name: the callsign, plain text, at most 16 characters. */
-	public static String npcName(String tag, int n) {
-		String name = format(tag, n);
-		return name.length() <= MAX_NPC_NAME ? name : name.substring(0, MAX_NPC_NAME);
 	}
 
 	/** Upper-case letters and digits left once colour codes (ampersand or section sign plus code) and symbols are dropped. */

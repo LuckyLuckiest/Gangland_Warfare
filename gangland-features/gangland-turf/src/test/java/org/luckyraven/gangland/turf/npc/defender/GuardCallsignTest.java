@@ -40,7 +40,6 @@ class GuardCallsignTest {
 	void neverCit() {
 		assertEquals("CITY", GuardCallsign.tag("City Boys", "cityboys"));
 		assertFalse(GuardCallsign.tag("Cit", "cit").equals("CIT"));
-		assertFalse(GuardCallsign.npcName("CIT", 1).startsWith("CIT"));
 	}
 
 	@Test
@@ -49,7 +48,5 @@ class GuardCallsignTest {
 		assertEquals("[VIP] Guard 3", GuardCallsign.format("VIP", 3));
 		assertEquals(13, GuardCallsign.format("VIP", 3).length());
 		assertTrue(GuardCallsign.format("VIPR", 999).length() <= 16);
-		assertTrue(GuardCallsign.npcName("VIPR", 123456).length() <= 16);
-		assertEquals(GuardCallsign.format("VIP", 3), GuardCallsign.npcName("VIP", 3));
 	}
 }

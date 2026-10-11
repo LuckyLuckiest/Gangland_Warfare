@@ -133,6 +133,35 @@ class TurfDefenderDeployerTest {
 	}
 
 	@Test
+	@DisplayName("a challenger far outside the leash is ignored: no ray is traced for it")
+	void farChallenger_causesNoRayTrace() {
+		CivilianSpawnManager spawnManager = mock(CivilianSpawnManager.class);
+		TurfDefenderDeployer deployer = new TurfDefenderDeployer(mock(JavaPlugin.class), mock(CivilianService.class),
+				spawnManager);
+		deployer.setCitizensAvailable(() -> true);
+		TurfGarrison garrison = new TurfGarrison(1, new CuboidRegion("world", 0, 0, 20, 20),
+				new TurfDefenderConfig("turf_defender", 32.0, 600), "VIP", () -> 5, n -> n, n -> {
+		});
+		UUID id = UUID.randomUUID();
+		org.bukkit.entity.Player far = mock(org.bukkit.entity.Player.class);
+		when(far.getUniqueId()).thenReturn(id);
+		when(far.getEyeLocation()).thenReturn(new org.bukkit.Location(null, 2000, 70, 2000));
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			World world = mock(World.class);
+			when(world.getPlayers()).thenReturn(java.util.List.of(far));
+			bukkit.statics().when(() -> Bukkit.getWorld("world")).thenReturn(world);
+
+			deployer.startGarrison(garrison, () -> Set.of(id), () -> 600);
+			deployer.tick();
+
+			verify(world, org.mockito.Mockito.never()).rayTraceBlocks(org.mockito.ArgumentMatchers.any(org.bukkit.Location.class),
+					org.mockito.ArgumentMatchers.any(org.bukkit.util.Vector.class), org.mockito.ArgumentMatchers.anyDouble(),
+					org.mockito.ArgumentMatchers.any(org.bukkit.FluidCollisionMode.class), org.mockito.ArgumentMatchers.anyBoolean());
+		}
+	}
+
+	@Test
 	@DisplayName("resolves the turf id owning a tracked, valid defender's entity")
 	void findOwningTurfId_matchesTrackedDefender() {
 		TurfDefenderDeployer deployer = newDeployer();
