@@ -11,6 +11,7 @@ import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -33,7 +34,7 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	 */
 	private final Map<UUID, User<T>>  users;
 	/** Last add/lookup time per uuid, for {@link #pruneIdle(long)}. */
-	private final Map<UUID, Long>     touched = new HashMap<>();
+	private final Map<UUID, Long>     touched = new ConcurrentHashMap<>();
 	/** Hydrates one fresh user from its stored row; set by the host (impl owns the tables). */
 	private Predicate<User<T>>        storedLoader;
 
