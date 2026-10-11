@@ -33,6 +33,7 @@ public class FightSettlement implements BeanLifecycle {
 	private final Supplier<Long>              clock;
 	private final Map<Long, BigDecimal>       open = new ConcurrentHashMap<>();
 	private final Map<Long, Fight>            held = new ConcurrentHashMap<>();
+	private final java.util.Set<Long>         done = ConcurrentHashMap.newKeySet();
 
 	/** Unwired: no bank can be reached, so a bet fails closed. */
 	public FightSettlement() {
@@ -78,6 +79,7 @@ public class FightSettlement implements BeanLifecycle {
 
 	/** Pays out the escrow (if any) and reports the result once. */
 	public void settle(Fight fight, Outcome outcome) {
+		if (!done.add(fight.id())) return; // once per fight: a second settle must not record or fire the event again
 		BigDecimal stake = open.remove(fight.id());
 		held.remove(fight.id());
 
@@ -98,6 +100,7 @@ public class FightSettlement implements BeanLifecycle {
 
 	/** Gives both stakes back without a result (cancelled, never started, aborted). */
 	public void refund(Fight fight) {
+		done.add(fight.id()); // a refunded fight is over; a later settle is ignored
 		BigDecimal stake = open.remove(fight.id());
 		held.remove(fight.id());
 		if (stake == null) return;
@@ -134,7 +137,7 @@ public class FightSettlement implements BeanLifecycle {
 
 		EconomyHandler winnerBank = banks.apply(winner);
 		if (winnerBank == null) {
-			// the winner is gone (gang deleted): the loser keeps nothing it can lose twice, so give the loser its own stake
+			// the winner is gone (gang deleted): only the loser's stake is returned, the winner's is lost (not zero-sum). Unreachable by design: a disbanding gang forfeits first.
 			log.warn("Fight winner gang {} has no bank; refunding the loser's stake", winner);
 			give(loser, stake);
 			return;

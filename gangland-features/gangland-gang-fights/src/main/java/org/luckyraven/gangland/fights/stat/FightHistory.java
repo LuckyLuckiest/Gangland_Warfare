@@ -58,12 +58,13 @@ public class FightHistory implements BeanLifecycle {
 		// unsaved results must survive /glw reload
 	}
 
-	/** Records a finished fight: the record row, both gangs' results and every fighter's. Returns the row. */
+	/** Records a finished fight: the record row always, both gangs' and every fighter's results when ranked. */
 	public FightRecord record(Fight fight, int winnerGangId, long endedAt) {
 		long id = records.stream().mapToLong(FightRecord::id).max().orElse(0L) + 1;
 		FightRecord row = new FightRecord(id, fight.gangA(), fight.gangB(), winnerGangId, fight.bet(), fight.ranked(),
 		                                  endedAt);
 		records.add(row);
+		if (!fight.ranked()) return row; // sparring: the record feeds caps and rematch checks, never the win/loss stats
 
 		boolean draw = winnerGangId < 0;
 		for (int gang : new int[]{fight.gangA(), fight.gangB()}) {

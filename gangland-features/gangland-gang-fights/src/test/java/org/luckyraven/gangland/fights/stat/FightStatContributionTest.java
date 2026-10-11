@@ -89,6 +89,21 @@ class FightStatContributionTest {
 	}
 
 	@Test
+	@DisplayName("a sparring fight adds a record row but changes no win/loss stats")
+	void sparringNoStats() {
+		UUID winner = UUID.randomUUID();
+		Fight fight = fight(1, 2, 0, false);
+		fight.addParticipant(new Participant(winner, 1, FightSide.A));
+
+		history.record(fight, 1, DAY);
+
+		assertEquals(1, history.records().size());
+		assertEquals(new FightStats(1, 0, 0, 0), history.stats(1));
+		assertEquals(new FightStats(2, 0, 0, 0), history.stats(2));
+		assertEquals(new FightPlayerStats(winner, 0, 0, 0), history.playerStats(winner));
+	}
+
+	@Test
 	@DisplayName("daily money, ranked counts and rematch gap read the records")
 	void dailyQueries() {
 		history.record(fight(1, 2, 1000, true), 1, 5 * DAY + 100);

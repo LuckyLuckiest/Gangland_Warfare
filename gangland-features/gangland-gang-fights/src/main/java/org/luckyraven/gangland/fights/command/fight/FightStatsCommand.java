@@ -3,7 +3,6 @@ package org.luckyraven.gangland.fights.command.fight;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.fights.command.Operands;
 import org.luckyraven.gangland.fights.stat.FightHistory;
 import org.luckyraven.gangland.fights.stat.FightStatsReport;
 import org.luckyraven.gangland.fights.stat.FightTexts;
@@ -34,10 +33,11 @@ public final class FightStatsCommand extends SubArgument {
 
 	public FightStatsCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent) {
 		super(plugin, "stats", tree, parent);
-		OptionalArgument op0 = Operands.operand(plugin, tree, "gang", () -> {
+		OptionalArgument op0 = new OptionalArgument(plugin, tree, action(), sender -> {
 			Services s = services;
 			return s == null ? List.of() : s.gangs().getAll().stream().map(Gang::getName).toList();
 		});
+		op0.setDisplayName("gang");
 
 		this.addSubArgument(op0);
 	}
