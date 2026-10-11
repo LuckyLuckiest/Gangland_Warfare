@@ -27,7 +27,9 @@ class TurfModuleYamlKeysTest {
 
 	private static final List<String> MAP_KEYS = List.of(
 			"Map.Width", "Map.Height", "Map.Cell_Blocks", "Map.Auto_Min_Interval_Seconds", "Map.Bedrock_Text_Form",
-			"Hud.Enabled", "Hud.Interval_Seconds", "Hud.Priority");
+			"Hud.Enabled", "Hud.Interval_Seconds", "Hud.Priority",
+			"Web.Enabled", "Web.Layer_Label", "Web.Fill_Opacity", "Web.Line_Opacity", "Web.Line_Weight",
+			"Web.Unclaimed_Color");
 
 	private static final List<String> MESSAGE_KEYS = List.of(
 			"Reason.Attackable", "Reason.Cooldown", "Reason.Owners_Active", "Reason.No_Owners_Online", "Reason.Waking_Up",
