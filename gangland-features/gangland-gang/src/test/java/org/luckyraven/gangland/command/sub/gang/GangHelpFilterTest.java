@@ -102,8 +102,8 @@ class GangHelpFilterTest {
 		GangCommand command = new GangCommand(mock(JavaPlugin.class), mock(UserManager.class), mock(UserManager.class),
 		                                      null, null, null, null, mock(PermissionManager.class), mock(DependencyContainer.class), null,
 		                                      mock(GangRules.class), messages, new GangChatToggles(),
-		                                      new GangWorldPolicy(mock(GangRules.class)), new GangMembershipService(),
-		                                      new GangDisbandService(), new GangLeadership(), new CombatTag(),
+		                                      new GangWorldPolicy(mock(GangRules.class)), mock(GangMembershipService.class),
+		                                      mock(GangDisbandService.class), mock(GangLeadership.class), new CombatTag(),
 		                                      new GangStatsService(), new GangLimits(), new GangLevelTable(),
 		                                      new GangSafehouseService(), mock(FriendlyFirePolicy.class));
 
