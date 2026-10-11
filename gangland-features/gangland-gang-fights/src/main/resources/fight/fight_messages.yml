@@ -85,7 +85,17 @@ Stats:
 # end Stats
 
 # ---------------- Guards ----------------
-# Arena rule and warning texts.
+# Arena rule and warning texts. %count% of %max% is the leave warning number, %arena% the arena name.
+Guards:
+   Command_Blocked: "&cCommands are disabled during a fight."
+   Stay_In: "&cYou cannot leave the arena during a fight."
+   Leave_Warning: "&cGet back in the arena! Warning %count% of %max%; the next time you leave you forfeit."
+   Left_Forfeit: "&cYou left the arena too often and forfeited the fight."
+   Teleport_Refused: "&cYou cannot teleport out of a fight."
+   Arena_Busy: "&cA fight is on in %arena%. Stay out until it is over."
+   Blocks_Protected: "&cYou cannot build or break blocks in an arena during a fight."
+   Vehicle_Refused: "&cYou cannot ride in an arena fight."
+   Ejected: "&7You were moved out of the arena %arena%."
 # end Guards
 
 # ---------------- Arenas ----------------

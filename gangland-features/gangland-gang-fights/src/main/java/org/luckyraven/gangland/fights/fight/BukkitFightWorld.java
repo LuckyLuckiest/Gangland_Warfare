@@ -6,6 +6,7 @@ import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.fights.arena.ArenaPoint;
+import org.luckyraven.gangland.fights.listener.ExpectedTeleports;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
@@ -137,7 +138,9 @@ public final class BukkitFightWorld implements FightWorld {
 		org.bukkit.World world = Bukkit.getWorld(to.world());
 		if (world == null) return false;
 
-		return target.teleport(new org.bukkit.Location(world, to.x(), to.y(), to.z(), to.yaw(), to.pitch()));
+		org.bukkit.Location at = new org.bukkit.Location(world, to.x(), to.y(), to.z(), to.yaw(), to.pitch());
+		// the containment guard lets the fight's own teleports through
+		return ExpectedTeleports.run(player, () -> target.teleport(at));
 	}
 
 	@Override
@@ -152,7 +155,10 @@ public final class BukkitFightWorld implements FightWorld {
 	@Override
 	public void restore(PlayerSnapshot snapshot) {
 		Player online = Bukkit.getPlayer(snapshot.player());
-		if (online != null) snapshot.restore(online);
+		if (online != null) ExpectedTeleports.run(snapshot.player(), () -> {
+			snapshot.restore(online);
+			return true;
+		});
 	}
 
 	@Override
