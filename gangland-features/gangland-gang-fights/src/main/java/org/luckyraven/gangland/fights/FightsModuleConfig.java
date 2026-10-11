@@ -2,6 +2,7 @@ package org.luckyraven.gangland.fights;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.fights.command.fight.FightContribution;
+import org.luckyraven.gangland.fights.fight.FightManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -22,8 +23,8 @@ public class FightsModuleConfig {
 
 	/** Attaches {@code /glw gang fight ...} to the gang module's command (GangCommand queries path "gang"). */
 	@Bean
-	public FightContribution fightContribution(JavaPlugin plugin) {
-		return new FightContribution(plugin);
+	public FightContribution fightContribution(JavaPlugin plugin, FightManager manager) {
+		return new FightContribution(plugin, manager);
 	}
 
 }

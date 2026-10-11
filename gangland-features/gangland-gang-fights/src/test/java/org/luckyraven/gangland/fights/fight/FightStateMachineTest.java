@@ -112,6 +112,11 @@ class FightStateMachineTest {
 		}
 
 		@Override
+		public List<String> gangNames() {
+			return List.copyOf(names.values());
+		}
+
+		@Override
 		public boolean allied(int a, int b) {
 			return allied;
 		}

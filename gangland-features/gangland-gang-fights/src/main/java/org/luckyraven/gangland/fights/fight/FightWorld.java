@@ -18,6 +18,9 @@ public interface FightWorld {
 
 	String gangName(int gangId);
 
+	/** Names of every gang, for tab completion. */
+	List<String> gangNames();
+
 	boolean allied(int gangA, int gangB);
 
 	/** Rank gate: {@code GangPermissions.allows(member, player, FIGHT)}. */
