@@ -41,7 +41,11 @@ import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.math.BigDecimal;
+import org.luckyraven.gangland.command.HelpInfo;
+import org.luckyraven.gangland.command.data.CommandInformation;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -315,7 +319,32 @@ public final class GangCommand extends Command {
 
 	@Override
 	protected void help(CommandSender sender, int page) {
-		getHelpInfo().displayHelp(sender, page, "Gang");
+		// GP-04: a transient list of just the entries this sender may run; the shared HelpInfo stays whole
+		HelpInfo visible = new HelpInfo();
+		for (CommandInformation entry : getHelpInfo().getList()) {
+			if (mayRun(sender, entry)) visible.add(entry);
+		}
+
+		visible.displayHelp(sender, Math.min(Math.max(page, 1), Math.max(visible.getMaxPages(), 1)), "Gang");
+	}
+
+	/**
+	 * A help entry is shown when its verb (the third word of the usage, {@code /glw gang <verb> ...}) has a child
+	 * node the sender holds the permission of. An entry whose verb has no node (a module's verb that is not installed)
+	 * is not shown. The bare {@code gang} entry and {@code help} are always shown.
+	 */
+	private boolean mayRun(CommandSender sender, CommandInformation entry) {
+		String[] words = entry.usage().split(" ");
+		if (words.length < 3 || words[2].equalsIgnoreCase("help")) return true;
+
+		for (var child : getArgument().getNode().getChildren()) {
+			Argument argument = child.getData();
+			if (Arrays.stream(argument.getArguments()).noneMatch(words[2]::equalsIgnoreCase)) continue;
+
+			String permission = argument.getPermission();
+			return permission.isEmpty() || sender.hasPermission(permission);
+		}
+		return false;
 	}
 
 	// Note: a `gangStat`/`itemToBalance` pair of private methods that built an ad hoc gang-info GUI directly on the

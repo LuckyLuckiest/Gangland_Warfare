@@ -90,6 +90,7 @@ class GangMembersCommandTest {
 		userManager = mock(UserManager.class);
 		player      = mock(Player.class);
 		when(player.hasPermission(anyString())).thenReturn(true);
+		when(player.spigot()).thenReturn(mock(Player.Spigot.class));
 
 		User<Player> user = mock(User.class);
 		when(user.hasGang()).thenReturn(true);

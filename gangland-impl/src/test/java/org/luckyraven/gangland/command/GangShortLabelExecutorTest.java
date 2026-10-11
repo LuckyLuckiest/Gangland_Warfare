@@ -64,6 +64,7 @@ class GangShortLabelExecutorTest {
 	@Test
 	@DisplayName("tab completion is asked with the prefixed arguments")
 	void tabDelegation() {
+		when(sender.hasPermission(anyString())).thenReturn(true);
 		when(completer.onTabComplete(eq(sender), eq(target), eq("glw"), any())).thenReturn(List.of("info", "invite"));
 
 		List<String> result = label("gw", "gang").tabComplete(sender, "gw", new String[]{"in"});

@@ -26,6 +26,8 @@ List:
    Row: "&f%gang% &7- members: %members% - online: %online%"
    # Clickable footer when more pages follow. %page% is the next page number.
    Next: "&7[Next page &e%page%&7]"
+   # Row for a sender who may see other gangs' banks (gangland.gang.balance.others). %bank% is the amount.
+   Row_Bank: "&f%gang% &7- members: %members% - online: %online% - bank: &a%money_symbol%%bank%"
 # end List
 
 # ---------------- Info ----------------
@@ -46,7 +48,25 @@ Info:
    None: "none"
    # Shown when no gang matches the name or id. %gang% is what the player typed.
    Not_Found: "&cNo gang named %gang%."
+   # The bank line, shown to the gang's own members and to holders of gangland.gang.balance.others.
+   Bank: "&7Bank: &a%money_symbol%%bank%"
+   # Shown to everyone else, so they know the bank exists but is private.
+   Bank_Hidden: "&7Bank: &8private"
 # end Info
+
+# ---------------- Members ----------------
+Members:
+   # Header of /glw gang members. %gang% is the display name, %count% the member count, %page% / %pages% the page.
+   Header: "&6%gang% &7- %count% members - page %page%/%pages%"
+   # Printed once above each rank group. %rank% is the rank name, %count% how many members hold it.
+   Rank_Header: "&e%rank% &7(%count%)"
+   # One member. %player% is the name, %status% online or offline.
+   Entry: "  &f%player% &7- %status%"
+   Online: "&aonline"
+   Offline: "&coffline"
+   # Clickable footer when more pages follow. %page% is the next page number.
+   Next: "&7[Next page &e%page%&7]"
+# end Members
 
 # ---------------- Names ----------------
 Names:

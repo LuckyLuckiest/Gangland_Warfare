@@ -212,7 +212,7 @@ class GangInfoCommandTest {
 		OfflinePlayer rexPlayer = mock(OfflinePlayer.class);
 		when(rexPlayer.getUniqueId()).thenReturn(rexId);
 		when(rexPlayer.getName()).thenReturn("Rex");
-		bukkit.when(() -> Bukkit.getOfflinePlayer("Rex")).thenReturn(rexPlayer);
+		bukkit.when(() -> Bukkit.getOfflinePlayer(rexId)).thenReturn(rexPlayer);
 		bukkit.when(() -> Bukkit.getPlayerExact("Rex")).thenReturn(null);
 
 		lookup().executeArgument(player, new String[]{"gang", "info", "Rex"});

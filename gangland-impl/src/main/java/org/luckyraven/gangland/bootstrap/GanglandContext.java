@@ -2,6 +2,7 @@ package org.luckyraven.gangland.bootstrap;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import java.util.Locale;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -9,6 +10,8 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.CommandManager;
+import org.luckyraven.gangland.command.GangShortLabelExecutor;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.command.data.InformationManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.keystone.bean.BeanFactory;
@@ -301,6 +304,15 @@ public final class GanglandContext {
 		// Client-side Brigadier completion (Commodore ships in Keystone.jar; brigadier in the server jar). Safe on
 		// plain Spigot — on any failure it logs WARN and the server-side tab completer above stays the only path.
 		BrigadierTabRegistrar.registerIfSupported(gangland, command, commandManager);
+
+		// /gw, /gwc, /gwa: only when the gang module installed itself (its @PostConstruct ran in the LIFECYCLE phase)
+		GangMembership gangMembership = container.getInstance(GangMembership.class);
+		if (gangMembership != null) {
+			int shortLabels = GangShortLabelExecutor.registerIfInstalled(
+					gangland.getName().toLowerCase(Locale.ROOT), GangShortLabelExecutor.commandMap(), gangMembership,
+					commandManager, tabCompleter, command, Gangland.SHORT_PREFIX);
+			log.debug("Gang short labels registered: {}", shortLabels);
+		}
 
 		log.debug("Command phase complete: {} command(s) registered", commandManager.commandView().size());
 	}
