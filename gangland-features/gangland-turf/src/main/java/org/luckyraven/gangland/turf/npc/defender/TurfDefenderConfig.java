@@ -14,15 +14,24 @@ package org.luckyraven.gangland.turf.npc.defender;
  * @param waveCooldownSeconds seconds after a guard falls before the next top-up
  * @param standDownSeconds seconds survivors stay after the fight before they leave and return to the reserve
  * @param leashMargin blocks past the turf edge a guard may chase before walking back to a post
+ * @param composition the roles the guards take in spawn order ({@code Garrison.Composition})
  */
 public record TurfDefenderConfig(String typeId, double targetingRadius, int lifespanSeconds, int waveSize,
-                                 int maxAlive, int waveCooldownSeconds, int standDownSeconds, int leashMargin) {
+                                 int maxAlive, int waveCooldownSeconds, int standDownSeconds, int leashMargin,
+                                 GarrisonComposition composition) {
 
 	public static final int DEFAULT_WAVE_SIZE = 3;
 	public static final int DEFAULT_MAX_ALIVE = 6;
 	public static final int DEFAULT_WAVE_COOLDOWN_SECONDS = 20;
 	public static final int DEFAULT_STAND_DOWN_SECONDS = 8;
 	public static final int DEFAULT_LEASH_MARGIN = 16;
+
+	/** Without a composition: every guard is plain. */
+	public TurfDefenderConfig(String typeId, double targetingRadius, int lifespanSeconds, int waveSize, int maxAlive,
+	                          int waveCooldownSeconds, int standDownSeconds, int leashMargin) {
+		this(typeId, targetingRadius, lifespanSeconds, waveSize, maxAlive, waveCooldownSeconds, standDownSeconds,
+		     leashMargin, GarrisonComposition.NONE);
+	}
 
 	/** Deploy-side knobs only; the garrison wave knobs take their documented defaults. */
 	public TurfDefenderConfig(String typeId, double targetingRadius, int lifespanSeconds) {

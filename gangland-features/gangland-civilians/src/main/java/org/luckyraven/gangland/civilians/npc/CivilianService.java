@@ -80,6 +80,9 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	 */
 	final NpcSquadListener squadListener;
 
+	/** Squads holding after their commander fell; package-private so a test can swap in a fake clock. */
+	SquadHold squadHold = new SquadHold(System::currentTimeMillis);
+
 	@Getter
 	CiviliansConfig civiliansConfig;
 
@@ -98,6 +101,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		this.spawnManager     = spawnManager;
 		this.registry         = registry;
 		registry.factionSquads = this;
+		registry.squadHold     = squadHold;
 		this.shouts           = new SquadRadio(() -> civiliansConfig.shouts(), civilianMessages,
 		                                       System::currentTimeMillis,
 		                                       () -> ThreadLocalRandom.current().nextDouble(),

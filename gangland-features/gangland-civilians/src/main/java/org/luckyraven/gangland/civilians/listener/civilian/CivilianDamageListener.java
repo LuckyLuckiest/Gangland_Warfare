@@ -96,6 +96,13 @@ public class CivilianDamageListener implements Listener {
 		}
 	}
 
+	/**
+	 * A guard whose role blocks takes {@code Block_Fraction} off a hit from inside its front cone.
+	 */
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onShieldHit(EntityDamageByEntityEvent event) {
+	}
+
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerDowned(PlayerDownedEvent event) {
 		clearCivilianTargets(event.getPlayer().getUniqueId());
