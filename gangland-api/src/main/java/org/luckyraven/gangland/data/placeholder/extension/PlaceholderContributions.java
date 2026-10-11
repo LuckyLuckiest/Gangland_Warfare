@@ -34,6 +34,16 @@ public final class PlaceholderContributions {
 		return null;
 	}
 
+	/** The first non-null playerless, non-setting answer ({@code resolveGlobal}), or {@code null}. Since api 2.6. */
+	@Nullable
+	public String resolveGlobal(String token) {
+		for (PlaceholderContribution contribution : contributions) {
+			String value = contribution.resolveGlobal(token);
+			if (value != null) return value;
+		}
+		return null;
+	}
+
 	public static PlaceholderContributions none() {
 		return new PlaceholderContributions(List.of());
 	}

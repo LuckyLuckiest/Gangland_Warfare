@@ -1,6 +1,16 @@
 package org.luckyraven.gangland.command.sub.gang;
 
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.GangWorldPolicy;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.membership.GangDisbandService;
+import org.luckyraven.gangland.gang.membership.GangLeadership;
+import org.luckyraven.gangland.gang.combat.CombatTag;
+import org.luckyraven.gangland.gang.stats.GangStatsService;
+import org.luckyraven.gangland.gang.level.GangLimits;
+import org.luckyraven.gangland.gang.level.GangLevelTable;
+import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
+import org.luckyraven.gangland.gang.combat.FriendlyFirePolicy;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
 import org.bukkit.Bukkit;
@@ -17,6 +27,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.command.option.GangOptionContribution;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.member.MemberManager;
@@ -146,6 +157,48 @@ class GangCommandsJsonParityTest {
 		assertTrue(missing.isEmpty(), "registered verbs with no commands.json usage: " + missing);
 	}
 
+	private static final String OPTION_GANG_PREFIX = "/glw option gang ";
+
+	@Test
+	@DisplayName("every /glw option gang <verb> usage names a staff verb, and every staff verb has a usage")
+	void optionGangTree_matchesUsages() throws Exception {
+		Tree<Argument> tree = new Tree<>();
+		GangOptionContribution contribution = new GangOptionContribution(mock(JavaPlugin.class),
+		                                                                 mock(UserManager.class),
+		                                                                 mock(MemberManager.class),
+		                                                                 mock(GangManager.class),
+		                                                                 mock(RankManager.class));
+		List<Argument> created = contribution.create(tree, mock(Argument.class));
+		assertTrue(created.size() == 1, "the contribution attaches one gang argument under option");
+		List<Argument> verbs = children(created.get(0));
+
+		List<String> usages = new ArrayList<>();
+		try (InputStream in = GangCommandsJsonParityTest.class.getResourceAsStream("/commands.json")) {
+			JsonObject root = new Gson().fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), JsonObject.class);
+			for (Map.Entry<String, com.google.gson.JsonElement> entry : root.entrySet()) {
+				if (!entry.getKey().startsWith("option_gang")) continue;
+				usages.add(entry.getValue().getAsJsonObject().get("usage").getAsString().trim());
+			}
+		}
+
+		List<String> unknown = new ArrayList<>();
+		for (String usage : usages) {
+			assertTrue(usage.startsWith(OPTION_GANG_PREFIX), usage);
+			if (!namesAnyVerb(verbs, firstWord(usage.substring(OPTION_GANG_PREFIX.length())))) unknown.add(usage);
+		}
+		List<String> missing = new ArrayList<>();
+		for (Argument verb : verbs) {
+			if (usages.stream().noneMatch(usage -> aliases(verb).contains(
+					firstWord(usage.substring(OPTION_GANG_PREFIX.length()))))) {
+				missing.add(aliases(verb).get(0));
+			}
+		}
+
+		assertTrue(unknown.isEmpty(), "option gang usages naming no staff verb: " + unknown);
+		assertTrue(missing.isEmpty(), "staff verbs with no commands.json usage: " + missing);
+		assertTrue(verbs.size() >= 8, "rank plus the seven staff stubs: " + verbs.size());
+	}
+
 	private static GangCommand registeredGangCommand() {
 		GangCommand command = new GangCommand(mock(JavaPlugin.class),
 		                                      mock(UserManager.class), mock(UserManager.class),
@@ -153,7 +206,10 @@ class GangCommandsJsonParityTest {
 		                                      mock(RankManager.class), mock(RepositoryRegistry.class),
 		                                      mock(PermissionManager.class), mock(DependencyContainer.class), null,
 		                                      mock(GangRules.class), mock(GangMessages.class),
-		                                      new GangChatChannel());
+		                                      new GangChatToggles(), new GangWorldPolicy(mock(GangRules.class)), new GangMembershipService(),
+		                       new GangDisbandService(), new GangLeadership(), new CombatTag(),
+		                       new GangStatsService(), new GangLimits(), new GangLevelTable(),
+		                       new GangSafehouseService(), mock(FriendlyFirePolicy.class));
 		command.initializeArguments();
 		return command;
 	}

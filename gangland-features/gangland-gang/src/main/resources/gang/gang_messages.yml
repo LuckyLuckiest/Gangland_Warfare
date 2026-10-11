@@ -100,3 +100,44 @@ Progression:
    # To the gang owner when he disbands: a quarter of the creation fee back. %money_symbol%, %amount%.
    Fee_Refund: "&7Refunded a quarter of the creation fee: &a%money_symbol%%amount%"
 # end Progression
+
+# ---------------- Worlds ----------------
+Worlds:
+   # Shown instead of any /glw gang verb in a world listed in gang_rules.yml Worlds.Disabled.
+   Disabled_Here: "&cGangs are disabled in this world."
+   # Shown instead of any /glw gang verb when settings.yml Gang.Enable is false.
+   Gangs_Off: "&cGangs are turned off on this server."
+# end Worlds
+
+# ---------------- Membership ----------------
+# end Membership
+
+# ---------------- Levels ----------------
+# end Levels
+
+# ---------------- Ranks ----------------
+# end Ranks
+
+# ---------------- Combat ----------------
+# end Combat
+
+# ---------------- Safehouse ----------------
+# end Safehouse
+
+# ---------------- Chat ----------------
+# end Chat
+
+# ---------------- Stats ----------------
+# end Stats
+
+# ---------------- Help ----------------
+# end Help
+
+# ---------------- Notice ----------------
+# end Notice
+
+# ---------------- Titles ----------------
+# end Titles
+
+# ---------------- Staff ----------------
+# end Staff

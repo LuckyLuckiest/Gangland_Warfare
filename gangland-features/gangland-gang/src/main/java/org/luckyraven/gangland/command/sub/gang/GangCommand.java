@@ -8,10 +8,21 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.gang.GangWorldPolicy;
+import org.luckyraven.gangland.gang.combat.CombatTag;
+import org.luckyraven.gangland.gang.combat.FriendlyFirePolicy;
+import org.luckyraven.gangland.gang.level.GangLevelTable;
+import org.luckyraven.gangland.gang.level.GangLimits;
+import org.luckyraven.gangland.gang.membership.GangDisbandService;
+import org.luckyraven.gangland.gang.membership.GangLeadership;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.file.GangMessages;
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.extension.CommandContributions;
@@ -52,7 +63,19 @@ public final class GangCommand extends Command {
 	private final InventoryService           inventoryService;
 	private final GangRules                  gangRules;
 	private final GangMessages               gangMessages;
-	private final GangChatChannel           chatChannel;
+	private final GangChatToggles           chatChannel;
+
+	// seams of the gang parity wave (0.19.0): the lanes fill their bodies, the command only passes them on
+	private final GangWorldPolicy        worldPolicy;
+	private final GangMembershipService  membershipService;
+	private final GangDisbandService     disbandService;
+	private final GangLeadership         leadership;
+	private final CombatTag              combatTag;
+	private final GangStatsService       statsService;
+	private final GangLimits             limits;
+	private final GangLevelTable         levelTable;
+	private final GangSafehouseService   safehouseService;
+	private final FriendlyFirePolicy     friendlyFire;
 
 	private final JavaPlugin gangland;
 
@@ -68,9 +91,20 @@ public final class GangCommand extends Command {
 	                   InventoryService inventoryService,
 	                   GangRules gangRules,
 	                   GangMessages gangMessages,
-	                   GangChatChannel chatChannel
+	                   GangChatToggles chatChannel,
+	                   GangWorldPolicy worldPolicy,
+	                   GangMembershipService membershipService,
+	                   GangDisbandService disbandService,
+	                   GangLeadership leadership,
+	                   CombatTag combatTag,
+	                   GangStatsService statsService,
+	                   GangLimits limits,
+	                   GangLevelTable levelTable,
+	                   GangSafehouseService safehouseService,
+	                   FriendlyFirePolicy friendlyFire
 	) {
-		super(gangland, "gang", true);
+		// not a players-only command: runExecute refuses the console centrally, except for list and info (T-227)
+		super(gangland, "gang", false);
 
 		this.gangland = gangland;
 
@@ -85,6 +119,16 @@ public final class GangCommand extends Command {
 		this.gangRules          = gangRules;
 		this.gangMessages       = gangMessages;
 		this.chatChannel        = chatChannel;
+		this.worldPolicy        = worldPolicy;
+		this.membershipService  = membershipService;
+		this.disbandService     = disbandService;
+		this.leadership         = leadership;
+		this.combatTag          = combatTag;
+		this.statsService       = statsService;
+		this.limits             = limits;
+		this.levelTable         = levelTable;
+		this.safehouseService   = safehouseService;
+		this.friendlyFire       = friendlyFire;
 		this.contributions      = CommandContributions.from(container);
 
 		var list = getCommands().entrySet()
@@ -94,6 +138,44 @@ public final class GangCommand extends Command {
 				.map(Map.Entry::getValue)
 				.toList();
 		getHelpInfo().addAll(list);
+	}
+
+	/**
+	 * Central gate of {@code /glw gang}: permission, then GR-40 (gangs off on the whole server, or in the player's
+	 * world), then T-227 (the console may only run {@code list} and {@code info}; every other verb is refused once
+	 * here instead of each child casting the sender).
+	 */
+	@Override
+	public void runExecute(String commandPrefix, CommandSender sender, String[] args) {
+		if (!sender.hasPermission(getPermission())) {
+			sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			return;
+		}
+
+		if (!worldPolicy.enabled()) {
+			sender.sendMessage(gangMessages.text("Worlds.Gangs_Off", "&cGangs are turned off on this server."));
+			return;
+		}
+
+		if (sender instanceof Player player) {
+			if (!worldPolicy.enabledIn(player.getWorld())) {
+				sender.sendMessage(gangMessages.text("Worlds.Disabled_Here", "&cGangs are disabled in this world."));
+				return;
+			}
+		} else if (!consoleMayRun(args)) {
+			sender.sendMessage(Messages.NOT_PLAYER.toString());
+			return;
+		}
+
+		super.runExecute(commandPrefix, sender, args);
+	}
+
+	/** The console reaches the help page and the read-only verbs {@code list} and {@code info}. */
+	private static boolean consoleMayRun(String[] args) {
+		if (args.length < 2) return true;
+
+		String verb = args[1].toLowerCase();
+		return verb.equals("list") || verb.equals("info") || verb.equals("help");
 	}
 
 	@Override
@@ -137,24 +219,25 @@ public final class GangCommand extends Command {
 	protected void initializeArguments() {
 		Argument create = new GangCreateCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        memberManager, gangManager, rankManager, repositoryRegistry,
-		                                        gangRules::getNamePattern, gangMessages);
+		                                        gangRules::getNamePattern, gangMessages, membershipService);
 		Argument list = new GangListCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, userManager,
-		                                    gangMessages);
+		                                    gangMessages, statsService);
 		Argument info = new GangInfoCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, userManager,
-		                                    gangMessages);
+		                                    gangMessages, statsService);
 		Argument delete = new GangDeleteCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        offlineUserManager, memberManager, gangManager, rankManager,
-		                                        repositoryRegistry, gangMessages);
+		                                        repositoryRegistry, gangMessages, disbandService);
 		Argument removeUser = new GangKickCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                          offlineUserManager, memberManager, gangManager, rankManager);
+		                                          offlineUserManager, memberManager, gangManager, rankManager,
+		                                          membershipService);
 		Argument leave = new GangLeaveCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                      memberManager, gangManager, rankManager);
+		                                      memberManager, gangManager, rankManager, membershipService, combatTag);
 		Argument promoteUser = new GangPromoteCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                              memberManager, gangManager, rankManager);
 		Argument demoteUser = new GangDemoteCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                            memberManager, gangManager, rankManager);
 		Argument transferOwner = new GangTransferCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                                 memberManager, gangManager, rankManager);
+		                                                 memberManager, gangManager, rankManager, leadership);
 
 		Argument deposit = new GangDepositCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          memberManager, gangManager);
@@ -163,13 +246,13 @@ public final class GangCommand extends Command {
 		Argument balance = new GangBalanceCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          gangManager);
 		Argument members = new GangMembersCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                          gangManager);
+		                                          gangManager, statsService);
 		Argument name = new GangRenameCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                      memberManager, gangManager, gangRules::getNamePattern, gangMessages);
 		Argument description = new GangDescriptionCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                                  memberManager, gangManager);
 		Argument ally = new GangAllyCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,
-		                                    gangManager, contributions);
+		                                    gangManager, contributions, friendlyFire);
 		Argument display = new GangDisplayCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          memberManager, gangManager);
 		Argument color = new GangColorCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
@@ -186,7 +269,7 @@ public final class GangCommand extends Command {
 		arguments.add(new GangChatCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,
 		                                  gangManager, gangMessages, chatChannel));
 		arguments.add(new GangJoinCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,
-		                                  gangManager, rankManager, gangMessages));
+		                                  gangManager, rankManager, gangMessages, membershipService));
 		arguments.add(new GangRecruitingCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        memberManager, gangManager, gangMessages));
 		arguments.add(new GangBountyCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,
@@ -212,6 +295,17 @@ public final class GangCommand extends Command {
 		arguments.add(description);
 
 		arguments.add(ally);
+
+		// verbs of the gang parity wave: stubs until their lanes fill them (W5-L, W5-H, W5-F, W5-U2, W5-S)
+		arguments.add(new GangUpgradeCommand(getPlugin(), getArgumentTree(), getArgument(), limits, levelTable,
+		                                     gangManager));
+		arguments.add(new GangSafehouseCommand(getPlugin(), getArgumentTree(), getArgument(), safehouseService,
+		                                       limits, worldPolicy));
+		arguments.add(new GangRallyCommand(getPlugin(), getArgumentTree(), getArgument(), safehouseService));
+		arguments.add(new GangPvpCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, friendlyFire));
+		arguments.add(new GangNoticeCommand(getPlugin(), getArgumentTree(), getArgument()));
+		arguments.add(new GangRankingCommand(getPlugin(), getArgumentTree(), getArgument(), statsService));
+		arguments.add(new GangProfileCommand(getPlugin(), getArgumentTree(), getArgument(), statsService));
 
 		arguments.add(display);
 		arguments.add(color);

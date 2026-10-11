@@ -26,6 +26,8 @@ public class Member {
 	@Nullable
 	private Rank   rank;
 	private long   gangJoinDateLong;
+	/** Gang stats (W5-S counts them): kills, deaths and assists against other gangs. */
+	private int    kills, deaths, assists;
 
 	/**
 	 * Instantiates a new Member.

@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.combat.CombatTag;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -38,10 +40,18 @@ class GangLeaveCommand extends SubArgument {
 	private final ArgumentLock                       lock       = new ArgumentLock();
 	private final HashMap<CommandSender, BukkitTask> autoUnlock = new HashMap<>();
 
+	private final GangMembershipService membershipService;
+	private final CombatTag combatTag;
+
 	protected GangLeaveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                           @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                           RankManager rankManager) {
+	                           RankManager rankManager,
+								GangMembershipService membershipService,
+								CombatTag combatTag) {
 		super(gangland, "leave", tree, parent);
+
+		this.membershipService = membershipService;
+		this.combatTag = combatTag;
 
 		this.gangland      = gangland;
 		this.userManager   = userManager;

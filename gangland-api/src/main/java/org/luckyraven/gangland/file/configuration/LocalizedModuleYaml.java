@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.file.configuration;
 
+import org.bukkit.configuration.file.FileConfiguration;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -11,9 +12,10 @@ import java.util.List;
 
 /**
  * Base for a module-owned, localized message/config YAML: {@code <baseName>.yml} (English) is always required,
- * {@code <baseName>_es.yml} (Spanish) is optional and picked instead whenever {@link Settings#getLanguagePicked()}
- * is {@code "es"} <em>and</em> that file is registered — falling back to English otherwise, never throwing just
- * because the localized variant is missing. Every read is formatted through {@link GanglandChatUtil} the same way
+ * {@code <baseName>_<code>.yml} (for the picked language, e.g. {@code _es}, {@code _de}) is optional and read first
+ * whenever {@link Settings#getLanguagePicked()} names a language <em>and</em> that file is registered; a key it lacks,
+ * or a missing file, falls back to the English file and then to the caller's default, never throwing just because
+ * the localized variant is missing. Every read is formatted through {@link GanglandChatUtil} the same way
  * the core {@code Messages} enum does, so module-owned strings render identically to what {@code Messages} used to
  * produce.
  *
@@ -23,30 +25,40 @@ import java.util.List;
  * this class and keep their own copy of the same logic for now — migrating them onto this base is a follow-up,
  * not this gate.
  *
- * <p>Only {@code "es"} exists as a second language anywhere in this codebase today (mirrors core's own
- * {@code message_en.yml}/{@code message_es.yml} pair) — hard-coded rather than a generic {@code lang} parameter
- * nothing would ever pass a second value for; parameterize if a third language shows up.
+ * <p>Core's own {@code message_<code>.yml} pair follows the same naming.
  */
 public abstract class LocalizedModuleYaml implements FileInitializer {
 
-	private static final String SPANISH_SUFFIX = "_es";
-
 	private final FileHandler fileHandler;
+	private final FileHandler englishHandler;
 
 	protected LocalizedModuleYaml(FileManager fileManager, String baseName) {
-		this.fileHandler = resolveFileHandler(fileManager, baseName);
-	}
+		FileHandler english = tryGetFile(fileManager, baseName);
+		FileHandler localized = null;
 
-	private static FileHandler resolveFileHandler(FileManager fileManager, String baseName) {
-		if ("es".equalsIgnoreCase(Settings.getLanguagePicked())) {
-			FileHandler spanish = tryGetFile(fileManager, baseName + SPANISH_SUFFIX);
-			if (spanish != null) return spanish;
+		String language = Settings.getLanguagePicked();
+		if (language != null && !language.isBlank() && !"en".equalsIgnoreCase(language)) {
+			localized = tryGetFile(fileManager, baseName + "_" + language.toLowerCase());
 		}
 
-		FileHandler english = tryGetFile(fileManager, baseName);
-		if (english != null) return english;
+		if (localized == null && english == null) {
+			throw new PluginException("Neither " + baseName + " nor " + baseName + "_<language> is registered");
+		}
 
-		throw new PluginException("Neither " + baseName + " nor " + baseName + SPANISH_SUFFIX + " is registered");
+		this.fileHandler    = localized != null ? localized : english;
+		this.englishHandler = english;
+	}
+
+	/**
+	 * The configuration that answers {@code key}: the picked language's file when it sets the key, else the English
+	 * file, else the picked language's file (so the caller's fallback applies).
+	 */
+	private FileConfiguration configFor(String key) {
+		var own = fileHandler.getFileConfiguration();
+		if (own.isSet(key) || englishHandler == null || englishHandler == fileHandler) return own;
+
+		var english = englishHandler.getFileConfiguration();
+		return english.isSet(key) ? english : own;
 	}
 
 	private static FileHandler tryGetFile(FileManager fileManager, String fileName) {
@@ -69,7 +81,7 @@ public abstract class LocalizedModuleYaml implements FileInitializer {
 	}
 
 	protected final String raw(String key, String fallback) {
-		return fileHandler.getFileConfiguration().getString(key, fallback);
+		return configFor(key).getString(key, fallback);
 	}
 
 	protected final String color(String key, String fallback) {
@@ -99,7 +111,7 @@ public abstract class LocalizedModuleYaml implements FileInitializer {
 	 * {@code fallback}.
 	 */
 	protected final List<String> list(String key, List<String> fallback) {
-		var config = fileHandler.getFileConfiguration();
+		var config = configFor(key);
 		if (!config.isSet(key)) return fallback;
 		if (config.isList(key)) return config.getStringList(key);
 

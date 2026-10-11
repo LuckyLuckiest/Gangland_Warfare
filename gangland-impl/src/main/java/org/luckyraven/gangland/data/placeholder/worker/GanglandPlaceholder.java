@@ -117,6 +117,12 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 			value = getSetting(param);
 			if (value != null) return value;
+
+			// a playerless module token (a gang board row): user_/bank_ tokens need a player and never reach here
+			if (!param.contains("user_") && !param.contains("bank_")) {
+				value = contributions().resolveGlobal(param);
+				if (value != null) return value;
+			}
 			return isGanglandOwnedPrefix(param) ? "NA" : null;
 		}
 

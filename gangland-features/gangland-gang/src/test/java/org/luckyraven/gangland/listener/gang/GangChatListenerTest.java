@@ -16,7 +16,7 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.support.W2P2Messages;
 import org.luckyraven.keystone.message.MessageProvider;
@@ -47,7 +47,7 @@ class GangChatListenerTest {
 	private MockedStatic<Settings> settings;
 	private JavaPlugin             plugin;
 	private BukkitScheduler        scheduler;
-	private GangChatChannel        channel;
+	private GangChatToggles        channel;
 	private UserManager<Player>    userManager;
 	private GangMessages           messages;
 	private GangChatListener       listener;
@@ -80,7 +80,7 @@ class GangChatListenerTest {
 		bukkit.when(Bukkit::getOnlinePlayers).thenAnswer(invocation -> List.copyOf(online));
 
 		plugin      = mock(JavaPlugin.class);
-		channel     = new GangChatChannel();
+		channel     = new GangChatToggles();
 		userManager = mock(UserManager.class);
 		messages    = W2P2Messages.shipped(tempDir);
 		listener    = new GangChatListener(plugin, channel, userManager, messages);

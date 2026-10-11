@@ -32,4 +32,19 @@ public interface PlaceholderContribution {
 	default String resolveSetting(String parameter) {
 		return null;
 	}
+
+	/**
+	 * A placeholder that needs no player and is not a setting, such as a gang board row. The core asks this when the
+	 * player is {@code null} and the token contains neither {@code user_} nor {@code bank_}; the first non-null answer
+	 * wins.
+	 *
+	 * @param token the lower-cased placeholder parameter.
+	 * @return the resolved value, or {@code null} when this contribution doesn't own {@code token}.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	@Nullable
+	default String resolveGlobal(String token) {
+		return null;
+	}
 }

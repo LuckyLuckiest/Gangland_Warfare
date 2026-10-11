@@ -10,6 +10,7 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.combat.FriendlyFirePolicy;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -33,9 +34,11 @@ public class GangAllyCommand extends SubArgument {
 	private final MemberManager        memberManager;
 	private final GangManager          gangManager;
 	private final CommandContributions contributions;
+	private final FriendlyFirePolicy   friendlyFire;
 
 	public GangAllyCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
-	                       MemberManager memberManager, GangManager gangManager, CommandContributions contributions) {
+	                       MemberManager memberManager, GangManager gangManager, CommandContributions contributions,
+	                       FriendlyFirePolicy friendlyFire) {
 		super(gangland, "ally", tree, parent);
 
 		this.gangland      = gangland;
@@ -44,6 +47,7 @@ public class GangAllyCommand extends SubArgument {
 		this.memberManager = memberManager;
 		this.gangManager   = gangManager;
 		this.contributions = contributions;
+		this.friendlyFire  = friendlyFire;
 
 		initializeArguments();
 	}
@@ -74,6 +78,7 @@ public class GangAllyCommand extends SubArgument {
 
 		List<Argument> arguments = new ArrayList<>();
 		arguments.add(abandon);
+		arguments.add(new GangAllyPvpCommand(gangland, tree, this, gangManager, friendlyFire));
 		arguments.addAll(contributions.createFor(CONTRIBUTION_PARENT, tree, this));
 
 		this.addAllSubArguments(arguments);

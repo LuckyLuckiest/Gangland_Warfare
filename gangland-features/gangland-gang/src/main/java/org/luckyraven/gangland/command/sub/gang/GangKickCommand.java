@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -37,10 +38,15 @@ class GangKickCommand extends SubArgument {
 	private final GangManager                gangManager;
 	private final RankManager                rankManager;
 
+	private final GangMembershipService membershipService;
+
 	protected GangKickCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                          @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
+	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager,
+								GangMembershipService membershipService) {
 		super(gangland, "kick", tree, parent);
+
+		this.membershipService = membershipService;
 
 		this.gangland           = gangland;
 		this.tree               = tree;

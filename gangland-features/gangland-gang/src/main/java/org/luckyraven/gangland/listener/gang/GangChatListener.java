@@ -10,7 +10,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -23,11 +23,11 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 public class GangChatListener implements Listener {
 
 	private final JavaPlugin          plugin;
-	private final GangChatChannel     channel;
+	private final GangChatToggles     channel;
 	private final UserManager<Player> userManager;
 	private final GangMessages        messages;
 
-	public GangChatListener(JavaPlugin plugin, GangChatChannel channel,
+	public GangChatListener(JavaPlugin plugin, GangChatToggles channel,
 	                        @Qualifier("online") UserManager<Player> userManager, GangMessages messages) {
 		this.plugin      = plugin;
 		this.channel     = channel;

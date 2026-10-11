@@ -20,8 +20,10 @@ public class GangAllianceTable extends Table<GangAlliance> {
 		Attribute<Integer> gangId = new Attribute<>("gang_id", true, Integer.class);
 		Attribute<Integer> allyId = new Attribute<>("ally_id", true, Integer.class);
 		Attribute<Long>    since  = new Attribute<>("since", false, Long.class);
+		Attribute<Boolean> friendlyFire = new Attribute<>("friendly_fire", false, Boolean.class);
 
 		since.setDefaultValue(-1L);
+		friendlyFire.setDefaultValue(false);
 
 		gangId.setForeignKey(gangTable.get("id"), gangTable);
 		allyId.setForeignKey(gangTable.get("id"), gangTable);
@@ -29,6 +31,7 @@ public class GangAllianceTable extends Table<GangAlliance> {
 		this.addAttribute(gangId);
 		this.addAttribute(allyId);
 		this.addAttribute(since);
+		this.addAttribute(friendlyFire);
 	}
 
 	@Override
@@ -36,7 +39,7 @@ public class GangAllianceTable extends Table<GangAlliance> {
 		Gang originalGang = data.gang();
 		Gang alliedGang   = data.ally();
 
-		return new Object[]{originalGang.getId(), alliedGang.getId(), data.since()};
+		return new Object[]{originalGang.getId(), alliedGang.getId(), data.since(), data.isFriendlyFire()};
 	}
 
 	@Override

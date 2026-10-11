@@ -68,7 +68,10 @@ public class GangRepository extends AbstractRepository<Gang> implements LoadOutc
 		double bounty             = num(result[v++]).doubleValue();
 		long   created            = num(result[v++]).longValue();
 		long   lastMemberOnlineAt = num(result[v++]).longValue();
-		String state              = text(result[v], "INVITE");
+		String state              = text(result[v++], "INVITE");
+		// columns added in 0.19.0: an older or shorter row reads as the defaults
+		String  notice            = result.length > v && result[v] != null ? String.valueOf(result[v]) : null;
+		boolean friendlyFire      = result.length > v + 1 && flag(result[v + 1]);
 
 		Gang gang = new Gang(id);
 
@@ -83,6 +86,8 @@ public class GangRepository extends AbstractRepository<Gang> implements LoadOutc
 		gang.setCreated(created);
 		gang.setLastMemberOnlineAt(lastMemberOnlineAt);
 		gang.setState(parseState(state));
+		gang.setNotice(notice);
+		gang.setFriendlyFire(friendlyFire);
 
 		return gang;
 	}
@@ -112,6 +117,13 @@ public class GangRepository extends AbstractRepository<Gang> implements LoadOutc
 	/** A SQL NULL numeric column reads as 0; any other value is read through {@link Number}. */
 	public static Number num(Object raw) {
 		return raw instanceof Number number ? number : 0;
+	}
+
+	/** A boolean column: a {@link Boolean}, a number (SQLite 0/1) or text; NULL and anything else read as false. */
+	public static boolean flag(Object raw) {
+		if (raw instanceof Boolean bool) return bool;
+		if (raw instanceof Number number) return number.intValue() != 0;
+		return raw != null && ("true".equalsIgnoreCase(String.valueOf(raw)) || "1".equals(String.valueOf(raw)));
 	}
 
 	/** D7: OPEN stays OPEN; INVITE, CLOSE, NULL, "null" and anything unknown read as INVITE (never OPEN). */

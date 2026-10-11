@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -171,7 +172,7 @@ class GangListCommandTest {
 	@DisplayName("the list verb is its own verb, not an alias of members")
 	void listVerb_notAliasOfMembers() {
 		Argument members = new GangMembersCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class),
-		                                          mock(UserManager.class), gangManager);
+		                                          mock(UserManager.class), gangManager, new GangStatsService());
 
 		assertEquals(List.of("members"), List.of(members.getArguments()));
 		assertEquals(List.of("list"), List.of(list().getArguments()));
@@ -203,7 +204,7 @@ class GangListCommandTest {
 
 	private Argument list() {
 		return new GangListCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), gangManager,
-		                           mock(UserManager.class), messages);
+		                           mock(UserManager.class), messages, new GangStatsService());
 	}
 
 	private static Argument page(Argument list) {

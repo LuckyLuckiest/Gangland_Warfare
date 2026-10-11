@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangLeadership;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -56,10 +57,15 @@ class GangTransferCommand extends SubArgument {
 	private final HashMap<CommandSender, BukkitTask>           autoUnlock     = new HashMap<>();
 	private final ConfirmArgument                              confirmTransfer;
 
+	private final GangLeadership leadership;
+
 	protected GangTransferCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                              @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                              RankManager rankManager) {
+	                              RankManager rankManager,
+								GangLeadership leadership) {
 		super(gangland, "transfer", tree, parent);
+
+		this.leadership = leadership;
 
 		this.gangland      = gangland;
 		this.tree          = tree;

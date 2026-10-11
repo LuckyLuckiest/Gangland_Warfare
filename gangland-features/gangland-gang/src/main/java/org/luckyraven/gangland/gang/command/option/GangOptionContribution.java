@@ -113,7 +113,31 @@ public final class GangOptionContribution implements CommandContribution {
 
 		gang.addSubArgument(rank);
 
+		// staff verbs of the gang parity wave: stubs until lane W5-A fills them (console-safe: no Player cast here)
+		gang.addSubArgument(staffStub(tree, "disband", "gang", "confirm"));
+		gang.addSubArgument(staffStub(tree, "leader", "gang", "player"));
+		gang.addSubArgument(staffStub(tree, "bank", "gang", "balance|give|take|reset", "amount"));
+		gang.addSubArgument(staffStub(tree, "safehouse", "gang", "list|tp|remove", "name"));
+		gang.addSubArgument(staffStub(tree, "stats", "reset", "player"));
+		gang.addSubArgument(staffStub(tree, "spy"));
+		gang.addSubArgument(staffStub(tree, "purge", "preview|run"));
+
 		return gang;
+	}
+
+	/** A verb with a chain of free-text positions and no body yet; Keystone answers "not implemented yet". */
+	private Argument staffStub(Tree<Argument> tree, String verb, String... positions) {
+		Argument stub = new Argument(plugin, verb, tree);
+
+		Argument current = stub;
+		for (String position : positions) {
+			OptionalArgument next = new OptionalArgument(plugin, tree);
+			next.setDisplayName(position);
+			current.addSubArgument(next);
+			current = next;
+		}
+
+		return stub;
 	}
 
 	private @NotNull Argument getRankType(Tree<Argument> tree) {

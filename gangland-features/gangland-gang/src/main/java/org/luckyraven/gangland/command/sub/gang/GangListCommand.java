@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -30,9 +31,14 @@ class GangListCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final GangMessages        messages;
 
+	private final GangStatsService statsService;
+
 	protected GangListCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, GangManager gangManager,
-	                          @Qualifier("online") UserManager<Player> userManager, GangMessages messages) {
+	                          @Qualifier("online") UserManager<Player> userManager, GangMessages messages,
+								GangStatsService statsService) {
 		super(gangland, "list", tree, parent);
+
+		this.statsService = statsService;
 
 		this.gangManager = gangManager;
 		this.userManager = userManager;
