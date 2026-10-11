@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gang.file;
 
+import org.luckyraven.gangland.command.sub.gang.GangNameRules;
 import org.luckyraven.gangland.gang.GangLevels;
 import lombok.CustomLog;
 import org.bukkit.configuration.ConfigurationSection;
@@ -172,6 +173,11 @@ public class GangRules implements FileInitializer {
 		String regex = config.getString(NAME_PATTERN_KEY, DEFAULT_NAME_REGEX);
 		try {
 			namePattern = Pattern.compile(regex);
+			if (GangNameRules.allowsForbidden(namePattern)) {
+				log.warn("gang_rules.yml {} would accept whitespace, @, / or ;; using {}", NAME_PATTERN_KEY,
+				         DEFAULT_NAME_REGEX);
+				namePattern = Pattern.compile(DEFAULT_NAME_REGEX);
+			}
 		} catch (PatternSyntaxException exception) {
 			log.warn("gang_rules.yml {} is not a valid regular expression ({}); using {}", NAME_PATTERN_KEY,
 			         exception.getDescription(), DEFAULT_NAME_REGEX);

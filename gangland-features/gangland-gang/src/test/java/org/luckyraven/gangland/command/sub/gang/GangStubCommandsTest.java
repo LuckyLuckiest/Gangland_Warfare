@@ -73,7 +73,8 @@ class GangStubCommandsTest {
 	@DisplayName("upgrade has a confirm child")
 	void upgrade() {
 		Argument upgrade = new GangUpgradeCommand(plugin, tree, parent, new GangLimits(), new GangLevelTable(),
-		                                          mock(GangManager.class));
+		                                          mock(GangManager.class), mock(UserManager.class),
+		                                          mock(MemberManager.class), mock(GangMessages.class));
 
 		assertEquals(List.of("upgrade"), List.of(upgrade.getArguments()));
 		assertEquals(List.of("confirm"), childLabels(upgrade));
@@ -123,7 +124,7 @@ class GangStubCommandsTest {
 	@Test
 	@DisplayName("notice takes one greedy text position")
 	void notice() {
-		Argument notice = new GangNoticeCommand(plugin, tree, parent);
+		Argument notice = new GangNoticeCommand(plugin, tree, parent, null, null, null, null);
 
 		assertEquals(List.of("notice"), List.of(notice.getArguments()));
 		assertEquals(1, notice.getNode().getChildren().size());

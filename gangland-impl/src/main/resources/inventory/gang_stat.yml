@@ -56,3 +56,33 @@ Slots:
       Name: "&bDisplay name"
       Lore:
          - "&e%gangland_gang_display-name%"
+   46:
+      Item: IRON_SWORD
+      Name: "&bKills"
+      Lore:
+         - "&e%gangland_gang_kills%"
+   47:
+      Item: BONE
+      Name: "&bDeaths"
+      Lore:
+         - "&e%gangland_gang_deaths%"
+   48:
+      Item: COMPASS
+      Name: "&bKDR"
+      Lore:
+         - "&e%gangland_gang_kdr%"
+   49:
+      Item: ARROW
+      Name: "&bAssists"
+      Lore:
+         - "&e%gangland_gang_assists%"
+   50:
+      Item: MAP
+      Name: "&bTurfs held"
+      Lore:
+         - "&e%gangland_gang_stat_turfs%"
+   51:
+      Item: GOLDEN_SWORD
+      Name: "&bFight wins"
+      Lore:
+         - "&e%gangland_gang_stat_wins%"

@@ -33,6 +33,7 @@ import org.luckyraven.gangland.gang.file.GanglandGangSettings;
 import org.luckyraven.gangland.gang.file.GanglandRankLookup;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
+import org.luckyraven.gangland.gang.level.GangLevelTable;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.menu.GangMenuItemSourceContribution;
 import org.luckyraven.gangland.gang.placeholder.GangPlaceholderContribution;
@@ -101,6 +102,7 @@ public final class GangConfig {
 	public GangMessages gangMessages(GangModuleFiles files, FileManager fileManager) {
 		GangMessages messages = new GangMessages(fileManager);
 		fileManager.registerInitializer(messages);
+		GangPermissions.bindMessages(messages);   // Ranks.Needs_Rank for GangPermissions.denial
 		return messages;
 	}
 
@@ -149,9 +151,9 @@ public final class GangConfig {
 	@Bean
 	public GangManager gangManager(RepositoryRegistry repositoryRegistry,
 	                               GangAllianceRepositoryContract allianceRepository,
-	                               GangMigrationsContract migrations) {
+	                               GangMigrationsContract migrations, GangLevelTable levelTable) {
 		IRepository<Gang> gangRepository = repositoryRegistry.getRepository(Gang.class);
-		return new GangManager(gangRepository, allianceRepository, migrations);
+		return new GangManager(gangRepository, allianceRepository, migrations, levelTable);
 	}
 
 	/**
@@ -165,7 +167,9 @@ public final class GangConfig {
 	                               PermissionManager permissionManager, GangMigrationsContract migrations) {
 		GangPermissions.ALL.forEach(permissionManager::addPermission);
 
-		return new RankManager(repositoryRegistry, permissionRegistry, rules, migrations);
+		RankManager manager = new RankManager(repositoryRegistry, permissionRegistry, rules, migrations);
+		GangPermissions.bind(rules::getMinimumRanks, manager::getRankTree);
+		return manager;
 	}
 
 	/**

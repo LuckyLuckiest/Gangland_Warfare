@@ -1,0 +1,94 @@
+{
+	"gang_fight": {
+		"usage": "/glw gang fight",
+		"description": "Gang fights in arenas: propose, accept, decline, enlist, drop, info, arenas, stats."
+	},
+	"gang_fight_propose": {
+		"usage": "/glw gang fight propose <gang> <size> [bet]",
+		"description": "Challenge another gang to a fight of <size> per side; the bet leaves both banks when they accept."
+	},
+	"gang_fight_accept": {
+		"usage": "/glw gang fight accept <gang>",
+		"description": "Accept a gang's challenge."
+	},
+	"gang_fight_decline": {
+		"usage": "/glw gang fight decline <gang>",
+		"description": "Decline a gang's challenge."
+	},
+	"gang_fight_enlist": {
+		"usage": "/glw gang fight enlist",
+		"description": "Join your gang's side in the fight lobby."
+	},
+	"gang_fight_drop": {
+		"usage": "/glw gang fight drop",
+		"description": "Leave the fight lobby before the countdown."
+	},
+	"gang_fight_info": {
+		"usage": "/glw gang fight info",
+		"description": "Your gang's challenge or fight: sides, bet, arena, time left."
+	},
+	"gang_fight_arenas": {
+		"usage": "/glw gang fight arenas",
+		"description": "Arenas open for fights."
+	},
+	"gang_fight_stats": {
+		"usage": "/glw gang fight stats [gang]",
+		"description": "Fight wins, losses and draws."
+	},
+	"arena": {
+		"usage": "/glw arena",
+		"description": "Staff: build and manage fight arenas."
+	},
+	"arena_create": {
+		"usage": "/glw arena create <name>",
+		"description": "Start a new arena draft."
+	},
+	"arena_corner": {
+		"usage": "/glw arena corner",
+		"description": "Set a corner of the arena box where you stand (twice)."
+	},
+	"arena_spawn": {
+		"usage": "/glw arena spawn <a|b>",
+		"description": "Add a spawn for side a or b where you stand."
+	},
+	"arena_exit": {
+		"usage": "/glw arena exit",
+		"description": "Set where fighters return after a fight."
+	},
+	"arena_size": {
+		"usage": "/glw arena size",
+		"description": "Show the draft's box size."
+	},
+	"arena_finish": {
+		"usage": "/glw arena finish",
+		"description": "Check and save the draft (place arenas outside turfs)."
+	},
+	"arena_show": {
+		"usage": "/glw arena show [name]",
+		"description": "Show an arena's box as particles."
+	},
+	"arena_list": {
+		"usage": "/glw arena list",
+		"description": "List arenas."
+	},
+	"arena_tp": {
+		"usage": "/glw arena tp <name>",
+		"description": "Teleport to an arena's exit."
+	},
+	"arena_on": {
+		"usage": "/glw arena on <name>",
+		"description": "Open an arena for fights."
+	},
+	"arena_off": {
+		"usage": "/glw arena off <name>",
+		"description": "Close an arena."
+	},
+	"arena_delete": {
+		"usage": "/glw arena delete <name>",
+		"description": "Delete an arena."
+	},
+	"arena_reload": {
+		"usage": "/glw arena reload",
+		"description": "Reload fight/arenas.yml after a hand edit."
+	}
+}

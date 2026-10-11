@@ -118,6 +118,23 @@ class CivilianMessagesShoutsTest {
 		assertNotEquals(english.lines("In_Cover"), spanish.lines("In_Cover"));
 	}
 
+	@Test
+	@DisplayName("format_gangFallsBackToFaction: Turf_Held/Turf_Lost have English fallbacks and ship in both files")
+	void format_gangFallsBackToFaction() throws IOException {
+		CivilianMessages fallback = build("Shouts:\n   Lines: {}\n");
+		assertFalse(fallback.lines("Turf_Held").isEmpty());
+		assertFalse(fallback.lines("Turf_Lost").isEmpty());
+
+		for (String resource : List.of("npc/civilian_messages.yml", "npc/civilian_messages_es.yml")) {
+			CivilianMessages shippedMessages = build(shipped(resource));
+			assertFalse(shippedMessages.lines("Turf_Held").isEmpty(), resource);
+			assertFalse(shippedMessages.lines("Turf_Lost").isEmpty(), resource);
+			// the shipped Format reads naturally with no %gang% in it (it is empty for street civilians)
+			assertFalse(shippedMessages.lines("Format").get(0).contains("%gang%"), resource);
+		}
+		assertTrue(shipped("npc/civilian_messages.yml").contains("%gang%"), "the Shouts header documents %gang%");
+	}
+
 	private String shipped(String resource) throws IOException {
 		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(resource))) {
 			return new String(in.readAllBytes(), StandardCharsets.UTF_8);

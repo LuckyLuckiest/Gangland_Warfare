@@ -26,6 +26,8 @@ List:
    Row: "&f%gang% &7- members: %members% - online: %online%"
    # Clickable footer when more pages follow. %page% is the next page number.
    Next: "&7[Next page &e%page%&7]"
+   # Row for a sender who may see other gangs' banks (gangland.gang.balance.others). %bank% is the amount.
+   Row_Bank: "&f%gang% &7- members: %members% - online: %online% - bank: &a%money_symbol%%bank%"
 # end List
 
 # ---------------- Info ----------------
@@ -46,7 +48,25 @@ Info:
    None: "none"
    # Shown when no gang matches the name or id. %gang% is what the player typed.
    Not_Found: "&cNo gang named %gang%."
+   # The bank line, shown to the gang's own members and to holders of gangland.gang.balance.others.
+   Bank: "&7Bank: &a%money_symbol%%bank%"
+   # Shown to everyone else, so they know the bank exists but is private.
+   Bank_Hidden: "&7Bank: &8private"
 # end Info
+
+# ---------------- Members ----------------
+Members:
+   # Header of /glw gang members. %gang% is the display name, %count% the member count, %page% / %pages% the page.
+   Header: "&6%gang% &7- %count% members - page %page%/%pages%"
+   # Printed once above each rank group. %rank% is the rank name, %count% how many members hold it.
+   Rank_Header: "&e%rank% &7(%count%)"
+   # One member. %player% is the name, %status% online or offline.
+   Entry: "  &f%player% &7- %status%"
+   Online: "&aonline"
+   Offline: "&coffline"
+   # Clickable footer when more pages follow. %page% is the next page number.
+   Next: "&7[Next page &e%page%&7]"
+# end Members
 
 # ---------------- Names ----------------
 Names:
@@ -54,6 +74,12 @@ Names:
    Invalid: "&cGang names are 3 to 16 letters, digits or underscores."
    # Another gang already has this name, ignoring case. Names are always unique.
    Taken: "&cA gang named %gang% already exists."
+   # Display name refusals (gang_rules.yml Display_Name). %max% = Max_Length.
+   Display_Hex: "&cHex colours are not allowed in a gang display name."
+   Display_Too_Long: "&cA display name is at most %max% visible characters."
+   Display_Blocked: "&cThat display name contains a blocked word."
+   # Another gang's name or display name looks the same, ignoring colour, case and look-alike letters.
+   Display_Taken: "&cThat display name looks the same as another gang's."
    # The rank named by Rank.Tail does not exist, so a new gang has no owner seat. Refused before any fee is taken.
    No_Owner_Rank: "&cGangs cannot be created right now: the owner rank is missing. Tell an admin."
 # end Names
@@ -110,12 +136,43 @@ Worlds:
 # end Worlds
 
 # ---------------- Membership ----------------
+Membership:
+   # %gang% is the gang name, %count% its members now, %max% its level cap.
+   Full: "&c%gang% is full (%count%/%max%)."
+   # %seconds% is what is left of the combat tag.
+   Tagged: "&cYou are in a fight: wait %seconds% s."
+   Kick_Denied: "&cYour rank may not kick members."
+   Already_In_Gang: "&cLeave your gang first."
+   Unknown_Gang: "&cThat gang does not exist."
+   Not_In_Gang: "&cYou are not in a gang."
+   No_Rank: "&cThis gang has no starting rank; ask an admin."
+   No_Owner_Rank: "&cThe owner rank is missing. Tell an admin."
+   # Staff purge preview: one row per gang that would be disbanded. %gang%, %days% (days since the last member played).
+   Purge_Preview_Row: "&7%gang% &8- &7last seen %days% days ago"
+   Purge_Preview_Empty: "&7No gang is inactive enough to be purged."
+   # %count% gangs disbanded by a staff run.
+   Purge_Done: "&aPurged %count% gang(s)."
 # end Membership
 
 # ---------------- Levels ----------------
+Levels:
+   # /glw gang upgrade. %level% is the level being claimed; %xp_missing% and %money_missing% are what is still short;
+   # %cost% is the fee; %money_symbol% the currency symbol; %cap% the ally limit of the gang's level.
+   Preview: "&7Level &e%level% &7needs &c%xp_missing% &7more XP and &c%money_symbol%%money_missing% &7more in the bank."
+   Ready: "&aReady: level &e%level% &acosts &e%money_symbol%%cost% &7- &e/glw gang upgrade confirm"
+   Max: "&7Your gang is already at the highest level."
+   Claimed: "&aYour gang reached level &e%level%&a for &e%money_symbol%%cost%&a from the gang bank."
+   Cancelled: "&cThe level-up was cancelled. Nothing was charged."
+   No_Permission: "&cYour rank may not upgrade the gang."
+   # Alliance requests and accepts when the gang (%gang%) already has the allies its level allows.
+   Ally_Cap: "&c%gang% is at its limit of &e%cap% &callies for its level."
 # end Levels
 
 # ---------------- Ranks ----------------
+Ranks:
+   # Shown when a rank is below the Ranks.Minimum of a gang_rules.yml feature. %feature% = the feature word,
+   # %rank% = the lowest rank allowed.
+   Needs_Rank: "&c%feature% needs &f%rank% &cor higher."
 # end Ranks
 
 # ---------------- Combat ----------------
@@ -148,9 +205,29 @@ Stats:
 # end Help
 
 # ---------------- Notice ----------------
+Notice:
+   # To a member once per login while the gang has a notice. %gang%, %notice%.
+   Login: "&6[%gang%&6] &eNotice: &f%notice%"
+   Set: "&aThe gang notice is set. Members see it when they log in."
+   Cleared: "&7The gang notice was removed."
+   Too_Long: "&cA notice is at most %max% characters."
 # end Notice
 
 # ---------------- Titles ----------------
+# Shown on screen. An empty Title and Subtitle shows nothing. %gang% = the gang's display name.
+Titles:
+   # To every online member when the gang reaches a level. %level%.
+   Level_Up:
+      Title: "&6Level %level%"
+      Subtitle: "&7%gang% &7grew stronger"
+   # To the player who joined.
+   Joined:
+      Title: "&aWelcome"
+      Subtitle: "&7You joined %gang%"
+   # To each member of a gang that was disbanded.
+   Disbanded:
+      Title: "&cGang disbanded"
+      Subtitle: "&7%gang% &7is no more"
 # end Titles
 
 # ---------------- Staff ----------------

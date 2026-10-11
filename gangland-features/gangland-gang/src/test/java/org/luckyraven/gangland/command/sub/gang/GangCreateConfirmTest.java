@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import static org.mockito.ArgumentMatchers.anyInt;
+import org.luckyraven.gangland.gang.support.MembershipKit;
 import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -128,6 +130,7 @@ class GangCreateConfirmTest {
 		doReturn(mock(IRepository.class)).when(repositoryRegistry).getRepository(Gang.class);
 		doReturn(mock(IRepository.class)).when(repositoryRegistry).getRepository(Member.class);
 		when(gangManager.getGangs()).thenReturn(gangs);
+		when(gangManager.getGang(anyInt())).thenAnswer(i -> gangs.get(i.<Integer>getArgument(0)));
 		doAnswer(i -> {
 			Gang gang = i.getArgument(0);
 			gangs.put(gang.getId(), gang);
@@ -139,7 +142,9 @@ class GangCreateConfirmTest {
 
 		command = new GangCreateCommand(plugin, new Tree<>(), parent, userManager, memberManager, gangManager,
 		                                rankManager, repositoryRegistry, () -> Pattern.compile("[A-Za-z0-9_]{3,16}"),
-		                                messages, new GangMembershipService());
+		                                messages,
+		                                new MembershipKit(gangManager, memberManager, rankManager, userManager,
+		                                                  mock(UserManager.class), repositoryRegistry, messages).service);
 	}
 
 	@AfterEach
@@ -200,6 +205,7 @@ class GangCreateConfirmTest {
 		when(user.hasGang()).thenReturn(false);
 		when(user.getEconomy()).thenReturn(economy);
 		when(userManager.getUser(player)).thenReturn(user);
+		bukkit.when(() -> Bukkit.getPlayer(uuid)).thenReturn(player);
 
 		Member member = mock(Member.class);
 		when(member.getUuid()).thenReturn(uuid);

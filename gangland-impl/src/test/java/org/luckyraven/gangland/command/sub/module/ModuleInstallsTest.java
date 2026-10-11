@@ -33,8 +33,9 @@ class ModuleInstallsTest {
 		                            Path.of("modules", "gangland-turf-0.9.1.jar"));
 	}
 
-	@ParameterizedTest(name = "\"{0}\" is one of the six official ids")
-	@ValueSource(strings = {"mail", "turf", "civilians", "copsncrooks", "gadget", "npcshops"})
+	@ParameterizedTest(name = "\"{0}\" is one of the ten official ids")
+	@ValueSource(strings = {"mail", "turf", "civilians", "copsncrooks", "gadget", "npcshops", "gang", "lootchest", "fights",
+	                           "healthbars"})
 	@DisplayName("an official module id resolves to its org.luckyraven coordinate without a version")
 	void coordinate_officialId_resolvesToCoordinate(String id) {
 		ArtifactCoordinate coordinate = ModuleInstalls.coordinate(id);

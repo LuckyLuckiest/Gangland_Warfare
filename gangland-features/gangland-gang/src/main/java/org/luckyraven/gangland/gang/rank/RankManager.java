@@ -136,7 +136,10 @@ public class RankManager implements BeanLifecycle {
 		warnIfTailMissing();
 
 		// The fresh-install preset nodes go on after the ranks and the permission counter are loaded (FK-safe ids)
-		if (seeded) applyPresetPermissions();
+		if (seeded) {
+			applyPresetPermissions();
+			RankSeed.markComplete(migrations);
+		}
 
 		if (seeded) {
 			migrations.markDone(TURF_UPGRADE_MIGRATION);   // the fresh-install preset already grants the node
@@ -174,7 +177,7 @@ public class RankManager implements BeanLifecycle {
 
 		try {
 			return RankSeed.seedIfEmpty(repo, parentRepo, rules, GangSettings.getGangRankHead(),
-			                            GangSettings.getGangRankTail());
+			                            GangSettings.getGangRankTail(), migrations);
 		} catch (SQLException exception) {
 			throw new IllegalStateException("Failed to seed the gang rank preset", exception);
 		}

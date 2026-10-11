@@ -6,9 +6,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.events.user.UserDataInitEvent;
+import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.permission.RankPermissionApplier;
@@ -39,10 +43,15 @@ public final class MemberJoinListener implements Listener {
 
 	private final JavaPlugin    gangland;
 	private final MemberManager memberManager;
+	private final GangManager   gangManager;
+	private final GangMessages  messages;
 
-	public MemberJoinListener(JavaPlugin gangland, MemberManager memberManager) {
+	public MemberJoinListener(JavaPlugin gangland, MemberManager memberManager, GangManager gangManager,
+	                          GangMessages messages) {
 		this.gangland      = gangland;
 		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
+		this.messages      = messages;
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -62,6 +71,8 @@ public final class MemberJoinListener implements Listener {
 
 		Member member = memberManager.getMember(player.getUniqueId());
 
+		showNotice(player, member);
+
 		if (member == null) {
 			// Genuinely new — MemberManager.initialize() already preloaded every existing row, so a miss here
 			// means this player has never had a member row. No rank to apply yet.
@@ -70,6 +81,17 @@ public final class MemberJoinListener implements Listener {
 		}
 
 		RankPermissionApplier.initialize(gangland, user, member);
+	}
+
+	/** The gang notice, once per login (this runs once per {@link UserDataInitEvent}), to a member of that gang. */
+	private void showNotice(Player player, @Nullable Member member) {
+		if (member == null || !member.hasGang()) return;
+
+		Gang gang = gangManager.getGang(member.getGangId());
+		if (gang == null || gang.getNotice() == null || gang.getNotice().isBlank()) return;
+
+		player.sendMessage(messages.text("Notice.Login", "&6[%gang%] &eNotice: &f%notice%", "gang",
+		                                 gang.getDisplayNameString(), "notice", gang.getNotice()));
 	}
 
 }

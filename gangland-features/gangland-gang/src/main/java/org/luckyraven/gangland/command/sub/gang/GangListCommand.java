@@ -8,7 +8,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -22,7 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
 
-/** {@code /glw gang list [page]}: every gang, most members first, then by name. Open to gangless players and console. */
+/** {@code /glw gang list [page]}: every gang, most members first, then by name (bank column for balance.others). Open to gangless players and console. */
 class GangListCommand extends SubArgument {
 
 	private static final int PAGE_SIZE = 8;
@@ -90,14 +92,23 @@ class GangListCommand extends SubArgument {
 		sender.sendMessage(messages.text("List.Header", "&6Gangs &7- page %page%/%pages%",
 		                                 "page", page, "pages", pages));
 
+		boolean seeBanks = sender.hasPermission(GangPermissions.BALANCE_OTHERS);
 		int from = (page - 1) * PAGE_SIZE;
 		int to   = Math.min(from + PAGE_SIZE, sorted.size());
 		for (Gang gang : sorted.subList(from, to)) {
 			int online = gang.getOnlineMembers(userManager::getUser).size();
-			String row = messages.text("List.Row", "&f%gang% &7- members: %members% - online: %online%",
-			                           "gang", gang.getDisplayNameString(),
-			                           "members", gang.getMembers().size(),
-			                           "online", online);
+			// the bank column is private to holders of gangland.gang.balance.others
+			String row = seeBanks
+					? messages.text("List.Row_Bank", "&f%gang% &7- members: %members% - online: %online% - bank: &a%money_symbol%%bank%",
+					                "gang", gang.getDisplayNameString(),
+					                "members", gang.getMembers().size(),
+					                "online", online,
+					                "money_symbol", Settings.getMoneySymbol(),
+					                "bank", Settings.formatAmount(gang.getEconomy().getAmount()))
+					: messages.text("List.Row", "&f%gang% &7- members: %members% - online: %online%",
+					                "gang", gang.getDisplayNameString(),
+					                "members", gang.getMembers().size(),
+					                "online", online);
 			sender.spigot().sendMessage(new ComponentBuilder(row)
 					.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/glw gang info " + gang.getName()))
 					.create());

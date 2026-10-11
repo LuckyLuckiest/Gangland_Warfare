@@ -20,12 +20,12 @@ class ShippedInventoryConfigVersionTest {
 	private static final Path RESOURCES = Path.of("src/main/resources/inventory");
 
 	private static final List<String> MENUS = List.of(
-			"alliance_stat", "gang_info", "gang_stat", "phone", "phone_banking", "phone_bounty", "phone_contacts",
-			"phone_gang", "phone_gang_search", "user_stat"
+			"alliance_stat", "gang_info", "gang_ranking", "gang_stat", "phone", "phone_banking", "phone_bounty",
+			"phone_contacts", "phone_gang", "phone_gang_search", "player_profile", "user_stat"
 	);
 
 	@Test
-	@DisplayName("each of the 10 shipped menus has a top-level Config_Version key")
+	@DisplayName("each of the 12 shipped menus has a top-level Config_Version key")
 	void everyShippedMenu_hasTopLevelConfigVersion() throws IOException {
 		for (String menu : MENUS) {
 			List<String> lines = Files.readAllLines(RESOURCES.resolve(menu + ".yml"));
