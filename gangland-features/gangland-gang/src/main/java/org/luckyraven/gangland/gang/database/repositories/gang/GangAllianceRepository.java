@@ -81,10 +81,11 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 			                                                                   "gang_id INTEGER NOT NULL, " +
 			                                                                   "ally_id INTEGER NOT NULL, " +
 			                                                                   "since INTEGER DEFAULT -1, " +
+			                                                                   "friendly_fire BOOLEAN DEFAULT 0, " +
 			                                                                   "PRIMARY KEY (gang_id, ally_id), " +
 			                                                                   "FOREIGN KEY (gang_id) REFERENCES gang(id), " +
 			                                                                   "FOREIGN KEY (ally_id) REFERENCES gang(id))",
-			                                                                   "gang_id", "ally_id", "since");
+			                                                                   "gang_id", "ally_id", "since", "friendly_fire");
 			case DatabaseHandler.MYSQL -> migrateMysql(conn);
 		}
 
