@@ -57,6 +57,12 @@ public class CivilianNpc extends AbstractNpc {
 	 */
 	@Getter
 	private                 boolean                              wantedByPolice;
+	/**
+	 * Reach of the held gun in blocks, or null when unknown; clamps the role's firing band.
+	 */
+	@Getter
+	@Setter
+	private @Nullable       Double                               weaponReach;
 
 	/**
 	 * Location of the last entity that damaged this NPC — used by flee behavior.
@@ -130,7 +136,7 @@ public class CivilianNpc extends AbstractNpc {
 
 		// The firing band needs a gun: an unarmed guard keeps the default band rather than stand 12-24 blocks off
 		if (isRangedAttacker()) {
-			double[] band = role.rangedBand(null);
+			double[] band = role.rangedBand(getWeaponReach());
 			if (band != null) setRangedBand(band[0], band[1]);
 		}
 

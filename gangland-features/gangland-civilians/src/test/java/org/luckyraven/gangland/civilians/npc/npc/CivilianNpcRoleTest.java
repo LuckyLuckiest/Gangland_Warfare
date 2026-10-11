@@ -24,6 +24,7 @@ class CivilianNpcRoleTest {
 		CivilianNpc npc = mock(CivilianNpc.class);
 		doCallRealMethod().when(npc).applyRole(MARKSMAN);
 		when(npc.isRangedAttacker()).thenReturn(true);
+		when(npc.getWeaponReach()).thenReturn(null);
 
 		npc.applyRole(MARKSMAN);
 
@@ -43,5 +44,18 @@ class CivilianNpcRoleTest {
 
 		verify(npc, never()).setRangedBand(anyDouble(), anyDouble());
 		verify(npc).setLeaderPriority(3);
+	}
+
+	@Test
+	@DisplayName("a gun that reaches 10 blocks clamps the 12-24 Marksman band under that reach")
+	void band_clampedUnderGunReach() {
+		CivilianNpc npc = mock(CivilianNpc.class);
+		doCallRealMethod().when(npc).applyRole(MARKSMAN);
+		when(npc.isRangedAttacker()).thenReturn(true);
+		when(npc.getWeaponReach()).thenReturn(10.0);
+
+		npc.applyRole(MARKSMAN);
+
+		verify(npc).setRangedBand(8.0, 10.0);
 	}
 }
