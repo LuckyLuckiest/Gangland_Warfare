@@ -86,3 +86,10 @@ Slots:
       Name: "&bFight wins"
       Lore:
          - "&e%gangland_gang_stat_wins%"
+   53:
+      Item: GOLD_BLOCK
+      Name: "&bGang ranking"
+      Lore:
+         - "&eAll gangs by kills"
+      OnClick:
+         Inventory: gang_ranking

@@ -406,11 +406,26 @@ class InventoryParserRoundTripTest {
 	}
 
 	@Test
-	@DisplayName("gang_stat.yml — 6 rows, no slots, fill-only")
+	@DisplayName("gang_stat.yml — 6 rows, aggregate stat slots 46-51, slot 53 navigates to gang_ranking")
 	void gangStat() throws IOException {
-		ChestMenu menu = registerAndBuild("gang_stat");
+		registerNavigationTarget("gang_ranking");
 
-		assertEquals(54, menu.bukkitInventory().getSize());
+		ChestMenu menu = registerAndBuild("gang_stat", m -> {
+			assertEquals(54, m.bukkitInventory().getSize());
+			assertEquals(Material.IRON_SWORD, m.bukkitInventory().getItem(46).getType());
+			assertEquals(Material.GOLDEN_SWORD, m.bukkitInventory().getItem(51).getType());
+
+			m.dispatchClick(clickEvent(m, 53), player);
+			verify(player, times(2)).openInventory(any(Inventory.class));
+		});
+	}
+
+	@Test
+	@DisplayName("gang_ranking.yml — multi-inventory ranking registers with its Config_Version and Item_Source")
+	void gangRanking() throws IOException {
+		context.registerInventory(load("gang_ranking"));
+
+		assertNotNull(definitionStore.getInventory("gang_ranking"));
 	}
 
 	@Test
@@ -420,6 +435,10 @@ class InventoryParserRoundTripTest {
 
 		assertEquals(27, menu.bukkitInventory().getSize());
 		assertEquals(Material.DIAMOND_SWORD, menu.bukkitInventory().getItem(12).getType());
+		assertEquals(Material.COMPASS, menu.bukkitInventory().getItem(11).getType());
+		InventoryBuilder builder = definitionStore.getInventory("player_profile");
+		assertTrue(builder.inventoryData().getOpenInventories().stream().anyMatch(o ->
+				o.state() == org.luckyraven.gangland.menu.State.COMMAND && "/glw gang profile".equals(o.output())));
 	}
 
 	@Test
