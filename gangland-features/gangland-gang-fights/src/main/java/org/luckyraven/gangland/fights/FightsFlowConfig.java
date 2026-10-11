@@ -7,7 +7,10 @@ import org.luckyraven.gangland.fights.arena.ArenaRegistry;
 import org.luckyraven.gangland.fights.fight.BukkitFightClock;
 import org.luckyraven.gangland.fights.fight.BukkitFightWorld;
 import org.luckyraven.gangland.fights.fight.FightClock;
+import org.luckyraven.gangland.fights.fight.FightBetCaps;
 import org.luckyraven.gangland.fights.fight.FightManager;
+import org.luckyraven.gangland.fights.fight.RulesFightLimits;
+import org.luckyraven.gangland.fights.stat.FightHistory;
 import org.luckyraven.gangland.fights.fight.FightMessages;
 import org.luckyraven.gangland.fights.fight.FightSettings;
 import org.luckyraven.gangland.fights.fight.FightSettlement;
@@ -44,9 +47,11 @@ public class FightsFlowConfig {
 
 	@Bean
 	public FightManager fightManager(FightClock clock, FightSettlement settlement, CombatTag combatTag,
-	                                 ArenaRegistry arenas, FightWorld world, FightRules rules) {
+	                                 ArenaRegistry arenas, FightWorld world, FightRules rules,
+	                                 FightBetCaps caps, FightHistory history) {
 		// read the rules on every use so /glw reload is picked up
-		return new FightManager(clock, settlement, combatTag, arenas, world, () -> settings(rules));
+		return new FightManager(clock, settlement, combatTag, arenas, world, () -> settings(rules),
+		                        new RulesFightLimits(rules, caps, history, world, System::currentTimeMillis));
 	}
 
 	private static FightSettings settings(FightRules r) {

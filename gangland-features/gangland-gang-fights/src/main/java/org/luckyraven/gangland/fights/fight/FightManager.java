@@ -34,10 +34,12 @@ public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle 
 	private final @Nullable ArenaRegistry         arenas;
 	private final @Nullable FightWorld            world;
 	private final @Nullable Supplier<FightSettings> settings;
+	private final @Nullable FightLimits           limits;
 
 	private final Map<Long, Fight>           fights        = new LinkedHashMap<>();
 	private final Map<UUID, PlayerSnapshot>  snapshots     = new HashMap<>();
 	private final Map<String, Long>          declineUntil  = new HashMap<>();
+	private final Map<String, Long>          arenaClosedUntil = new HashMap<>();
 	private       long                       nextId        = 1;
 
 	/** Inert instance: nothing ever runs. For tests of other lanes. */
@@ -48,6 +50,13 @@ public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle 
 	public FightManager(@Nullable FightClock clock, @Nullable FightSettlement settlement,
 	                    @Nullable CombatTag combatTag, @Nullable ArenaRegistry arenas, @Nullable FightWorld world,
 	                    @Nullable Supplier<FightSettings> settings) {
+		this(clock, settlement, combatTag, arenas, world, settings, null);
+	}
+
+	public FightManager(@Nullable FightClock clock, @Nullable FightSettlement settlement,
+	                    @Nullable CombatTag combatTag, @Nullable ArenaRegistry arenas, @Nullable FightWorld world,
+	                    @Nullable Supplier<FightSettings> settings, @Nullable FightLimits limits) {
+		this.limits     = limits;
 		this.clock      = clock;
 		this.settlement = settlement;
 		this.combatTag  = combatTag;
@@ -89,6 +98,12 @@ public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle 
 		String refusal = ChallengeRules.propose(s, a == b, a != b && world.allied(a, b), proposer, other, size, bet);
 		if (refusal != null) {
 			world.tell(actor, refusal, "min", s.minTeamSize(), "max", s.maxTeamSize(), "gang", world.gangName(b));
+			return;
+		}
+
+		String limit = limits == null ? null : limits.refuse(a, b, bet, s.ranked(bet), false);
+		if (limit != null) {
+			world.tell(actor, limit);
 			return;
 		}
 
@@ -139,6 +154,11 @@ public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle 
 		                                                    world.bank(fight.gangB()), 0), fight.bet());
 		if (refusal != null) {
 			world.tell(actor, refusal);
+			return;
+		}
+		String limit = limits == null ? null : limits.refuse(fight.gangA(), fight.gangB(), fight.bet(), fight.ranked(), true);
+		if (limit != null) {
+			world.tell(actor, limit);
 			return;
 		}
 		Optional<Arena> arena = arenas.freeArena(busyArenas());
@@ -449,6 +469,9 @@ public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle 
 		}
 		fight.state(FightState.ENDED);
 		fights.remove(fight.id());
+		if (limits != null && fight.arenaName() != null) {
+			arenaClosedUntil.put(fight.arenaName(), clock.now().toEpochMilli() + limits.arenaCooldownMillis());
+		}
 	}
 
 	private void cancel(Fight fight, String key, Object... pairs) {
@@ -492,6 +515,9 @@ public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle 
 		for (Fight fight : fights.values()) {
 			if (fight.arenaName() != null) busy.add(fight.arenaName());
 		}
+		long now = clock.now().toEpochMilli();
+		arenaClosedUntil.values().removeIf(until -> until <= now);
+		busy.addAll(arenaClosedUntil.keySet());
 		return busy;
 	}
 

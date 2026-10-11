@@ -103,6 +103,13 @@ public final class BukkitFightWorld implements FightWorld {
 	}
 
 	@Override
+	public String address(UUID player) {
+		Player online = Bukkit.getPlayer(player);
+		if (online == null || online.getAddress() == null || online.getAddress().getAddress() == null) return null;
+		return online.getAddress().getAddress().getHostAddress();
+	}
+
+	@Override
 	public boolean downed(UUID player) {
 		return DownedPlayerRegistry.isDowned(player);
 	}

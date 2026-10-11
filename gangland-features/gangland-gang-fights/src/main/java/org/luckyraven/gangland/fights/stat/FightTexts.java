@@ -18,6 +18,7 @@ public class FightTexts {
 			Map.entry("Economy.Cannot_Afford_B", "&cThe challenged gang cannot afford the bet."),
 			Map.entry("Economy.Bet_Too_High", "&cThat bet is above the server maximum."),
 			Map.entry("Economy.Bet_Over_Percent", "&cA bet may not be more than a share of either gang bank."),
+			Map.entry("Economy.Same_Address", "&cThe two gangs have fighters on the same connection, so this stake is refused."),
 			Map.entry("Economy.Pair_Cap", "&cThese two gangs have already moved the daily limit between them."),
 			Map.entry("Economy.Gang_Cap", "&cOne of the gangs has reached its daily bet winnings limit."),
 			Map.entry("Economy.Ranked_Opponent_Too_Young", "&cThe other gang is too new for a ranked fight."),

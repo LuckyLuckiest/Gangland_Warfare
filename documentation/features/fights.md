@@ -95,8 +95,8 @@ first stake back.
 | `Bets.Max_Bet`                              | 100000   | Most money one gang may stake on one fight. |
 | `Bets.Max_Bet_Percent_Of_Bank`              | 50       | A stake may not be more than this percent of the staking gang's bank. The other bank must be able to match it. |
 | `Bets.House_Cut_Percent`                    | 0        | Percent of the pot the server keeps on settlement. |
-| `Bets.Max_Net_Transfer_Per_Pair_Per_Day` (no effect yet) | 200000   | Most money that may move between one pair of gangs through bets per day. |
-| `Bets.Max_Bet_Transfer_Per_Gang_Per_Day` (no effect yet) | 300000   | Most money one gang may win from bets per day. |
+| `Bets.Max_Net_Transfer_Per_Pair_Per_Day` | 200000   | Most money that may move between one pair of gangs through bets per day. |
+| `Bets.Max_Bet_Transfer_Per_Gang_Per_Day` | 300000   | Most money one gang may win from bets per day. |
 
 ---
 
@@ -108,8 +108,8 @@ A fight is **ranked** when its bet is at least `Ranked.Ranked_Min_Bet` (1000). A
 |-------------------------------------------------|---------|---------|
 | `Ranked.Ranked_Min_Member_Age_Hours`            | 24      | Ranked fighters must have been in their gang this many hours. |
 | `Ranked.Ranked_Min_Opponent_Gang_Age_Days`      | 7       | The other gang must be at least this many days old. |
-| `Ranked.Ranked_Per_Pair_Per_Day` (no effect yet) | 3       | Most ranked fights between the same two gangs per day. |
-| `Ranked.Rematch_Cooldown_Minutes` (no effect yet) | 30      | After a ranked fight the same two gangs wait this long before another ranked fight. |
+| `Ranked.Ranked_Per_Pair_Per_Day` | 3       | Most ranked fights between the same two gangs per day. |
+| `Ranked.Rematch_Cooldown_Minutes` | 30      | After a ranked fight the same two gangs wait this long before another ranked fight. |
 | `Ranked.Ranked_Board_Wins_Per_Opponent_Per_Day` | 1       | Wins against the same opponent that count on the board per day. |
 
 Ranked wins feed the `wins` stat of the gang ranking (`/glw gang ranking wins`). Extra wins over the same opponent in one
@@ -189,15 +189,12 @@ gangmates and allies; it does not change how fights are run.
 
 ---
 
-## Keys with no effect yet
+## Limits enforced at challenge and accept
 
-These keys are read from `fight/fight_rules.yml` but nothing in the module acts on them in this release. Changing them
-does nothing:
-
-- `Challenge.Arena_Cooldown_Seconds`: the arena is not held closed after a fight.
-- `Guards.Block_Same_Address`: two players on the same IP may still fight on opposite sides.
-- `Bets.Max_Net_Transfer_Per_Pair_Per_Day` and `Bets.Max_Bet_Transfer_Per_Gang_Per_Day`: the daily bet caps are not enforced, so a stake is never refused for a cap.
-- `Ranked.Ranked_Per_Pair_Per_Day` and `Ranked.Rematch_Cooldown_Minutes`: the daily ranked limit and the rematch cooldown are not enforced.
+- `Bets.Max_Net_Transfer_Per_Pair_Per_Day` and `Bets.Max_Bet_Transfer_Per_Gang_Per_Day`: a stake that would push the pair's net flow, or either gang's bet winnings, over the daily cap is refused (`Economy.Pair_Cap`, `Economy.Gang_Cap`).
+- `Ranked.Ranked_Per_Pair_Per_Day` and `Ranked.Rematch_Cooldown_Minutes`: a ranked fight over the daily count or inside the rematch cooldown is refused.
+- `Guards.Block_Same_Address`: when true, a stake is refused while online members of the two gangs share an IP address (`Economy.Same_Address`). Off by default.
+- `Challenge.Arena_Cooldown_Seconds`: an arena stays closed this long after a fight ends in it.
 
 ---
 
@@ -217,19 +214,19 @@ names. All 33 keys:
 | `Challenge`  | `Max_Team_Size`                             | 5 |
 | `Challenge`  | `Require_Equal_Teams`                       | true |
 | `Challenge`  | `Decline_Cooldown_Seconds`                  | 60 |
-| `Challenge`  | `Arena_Cooldown_Seconds` (no effect yet)    | 30 |
+| `Challenge`  | `Arena_Cooldown_Seconds`    | 30 |
 | `Challenge`  | `Timeout_Result`                            | MOST_ALIVE |
 | `Challenge`  | `Min_Member_Age_Hours`                      | 0 |
 | `Bets`       | `Max_Bet`                                   | 100000 |
 | `Bets`       | `Max_Bet_Percent_Of_Bank`                   | 50 |
 | `Bets`       | `House_Cut_Percent`                         | 0 |
-| `Bets`       | `Max_Net_Transfer_Per_Pair_Per_Day` (no effect yet) | 200000 |
-| `Bets`       | `Max_Bet_Transfer_Per_Gang_Per_Day` (no effect yet) | 300000 |
+| `Bets`       | `Max_Net_Transfer_Per_Pair_Per_Day` | 200000 |
+| `Bets`       | `Max_Bet_Transfer_Per_Gang_Per_Day` | 300000 |
 | `Ranked`     | `Ranked_Min_Bet`                            | 1000 |
 | `Ranked`     | `Ranked_Min_Member_Age_Hours`               | 24 |
 | `Ranked`     | `Ranked_Min_Opponent_Gang_Age_Days`         | 7 |
-| `Ranked`     | `Ranked_Per_Pair_Per_Day` (no effect yet)   | 3 |
-| `Ranked`     | `Rematch_Cooldown_Minutes` (no effect yet)  | 30 |
+| `Ranked`     | `Ranked_Per_Pair_Per_Day`   | 3 |
+| `Ranked`     | `Rematch_Cooldown_Minutes`  | 30 |
 | `Ranked`     | `Ranked_Board_Wins_Per_Opponent_Per_Day`    | 1 |
 | `Guards`     | `Max_Leave_Warnings`                        | 3 |
 | `Guards`     | `Protect_Blocks`                            | true |
@@ -238,13 +235,9 @@ names. All 33 keys:
 | `Guards`     | `Command_Block_Mode`                        | ALLOWLIST |
 | `Guards`     | `Allowed_Commands`                          | glw gang fight, gangland gang fight, msg, r, tell |
 | `Guards`     | `Blocked_Commands`                          | (empty) |
-| `Guards`     | `Block_Same_Address` (no effect yet)        | false |
+| `Guards`     | `Block_Same_Address`        | false |
 | `Arenas`     | `Min_Arena_Volume`                          | 64 |
 | `Arenas`     | `Outline_Seconds`                           | 10 |
-
-Six keys have no effect yet: `Challenge.Arena_Cooldown_Seconds`, `Guards.Block_Same_Address`,
-`Bets.Max_Net_Transfer_Per_Pair_Per_Day`, `Bets.Max_Bet_Transfer_Per_Gang_Per_Day`, `Ranked.Ranked_Per_Pair_Per_Day` and
-`Ranked.Rematch_Cooldown_Minutes`. They are listed under [Keys with no effect yet](#keys-with-no-effect-yet).
 
 ---
 
