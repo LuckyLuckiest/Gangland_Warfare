@@ -24,6 +24,9 @@ import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.placeholder.extension.PlaceholderContribution;
 import org.luckyraven.gangland.gang.command.debug.GangDebugContribution;
 import org.luckyraven.gangland.gang.command.option.GangOptionContribution;
+import org.luckyraven.gangland.gang.command.option.GangStaffVerbs;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.purge.GangPurgeTask;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.level.GangLimits;
@@ -208,8 +211,13 @@ public final class GangConfig {
 	public CommandContribution gangOptionContribution(JavaPlugin plugin,
 	                                                   @Qualifier("online") UserManager<Player> userManager,
 	                                                   MemberManager memberManager, GangManager gangManager,
-	                                                   RankManager rankManager) {
-		return new GangOptionContribution(plugin, userManager, memberManager, gangManager, rankManager);
+	                                                   RankManager rankManager, GangMembershipService membership,
+	                                                   GangSafehouseService safehouses, GangStatsService stats,
+	                                                   ChatSpyService spy, GangPurgeTask purge,
+	                                                   GangMessages messages) {
+		GangStaffVerbs staff = new GangStaffVerbs(gangManager, memberManager, membership, safehouses, stats, spy,
+		                                          purge, messages);
+		return new GangOptionContribution(plugin, userManager, memberManager, gangManager, rankManager, staff);
 	}
 
 	/**
