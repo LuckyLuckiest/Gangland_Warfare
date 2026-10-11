@@ -41,6 +41,8 @@ import java.sql.Statement;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -162,6 +164,24 @@ class UserDataLoaderTest {
 		assertEquals(0, BigDecimal.valueOf(150).compareTo(user.getBounty().getPostedAmount()));
 		assertEquals(0, BigDecimal.valueOf(50).compareTo(user.getBounty().getPaidAmount(poster)), "the live refund");
 		verify(bukkit.scheduler()).runTask(any(Plugin.class), any(Runnable.class));
+	}
+
+	@Test
+	@DisplayName("T-286: a failed read is reported as false after 3 attempts, and a good read as true")
+	void failedRead_isReported_goodReadIsNot() throws SQLException {
+		saveRow(0);
+		assertTrue(loader().loadUserData(user, new UserTable(), new BankTable(new UserTable())));
+
+		String url = "jdbc:sqlite:" + tempDir.resolve("database").resolve("userdata.db").toAbsolutePath();
+		try (Connection connection = DriverManager.getConnection(url); Statement statement = connection.createStatement()) {
+			statement.executeUpdate("DROP TABLE user");
+		}
+
+		long start = System.currentTimeMillis();
+		assertFalse(loader().loadUserData(user, new UserTable(), new BankTable(new UserTable())),
+		            "runQueries swallows the SQLException; the loader must still say the read failed");
+		assertTrue(System.currentTimeMillis() - start >= 2 * UserDataLoader.RETRY_DELAY_MILLIS - 50,
+		           "three attempts, 500 ms apart");
 	}
 
 	/** The only place the loader is constructed, so a constructor change touches one line. */

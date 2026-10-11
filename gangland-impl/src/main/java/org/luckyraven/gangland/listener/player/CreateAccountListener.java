@@ -12,6 +12,7 @@ import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.bean.listener.ListenerPriority;
 import org.luckyraven.gangland.data.user.UserDataLoader;
+import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
 import org.luckyraven.gangland.database.tables.player.BankTable;
@@ -74,7 +75,14 @@ public final class CreateAccountListener implements Listener {
 			UserTable      userTable = TableLookup.find(UserTable.class, tables);
 			BankTable      bankTable = TableLookup.find(BankTable.class, tables);
 
-			userDataLoader.loadUserData(user, userTable, bankTable);
+			if (!userDataLoader.loadUserData(user, userTable, bankTable)) {
+				// T-286: defaults must never reach the autosave, which would overwrite the stored row
+				userManager.remove(user);
+				Bukkit.getScheduler().runTask(gangland, () -> {
+					if (player.isOnline()) player.kickPlayer(Messages.USER_DATA_LOAD_FAILED.toString());
+				});
+				return;
+			}
 
 			if (!player.isOnline()) {
 				return;

@@ -8,6 +8,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankParentRepository;
@@ -69,6 +70,9 @@ public class RankManager implements BeanLifecycle {
 		Collection<Permission>     loadedPermissions     = permissionRepo.loadAll();
 		Collection<RankParent>     loadedRankParents     = rankParentRepo.loadAll();
 		Collection<RankPermission> loadedRankPermissions = rankPermissionRepo.loadAll();
+
+		boolean loadFailed = loadFailed(rankRepo) || loadFailed(permissionRepo) || loadFailed(rankParentRepo)
+		                     || loadFailed(rankPermissionRepo);
 
 		ranksParent.addAll(loadedRankParents);
 		ranksPermissions.addAll(loadedRankPermissions);
@@ -140,6 +144,9 @@ public class RankManager implements BeanLifecycle {
 
 		if (seeded) {
 			migrations.markDone(TURF_UPGRADE_MIGRATION);   // the fresh-install preset already grants the node
+		} else if (loadFailed) {
+			// T-283: a failed rank_permission read looks like "no grants"; marking now would skip the grant for good
+			log.warn("A rank table did not load; the 0.17.0 officer turf-upgrade migration waits for a boot that reads it");
 		} else if (!ranks.isEmpty() && !ranksPermissions.isEmpty() && !permissions.isEmpty()
 		           && !migrations.isDone(TURF_UPGRADE_MIGRATION)) {
 			// T-266: ranks that may withdraw from the bank may also spend it at the Quartermaster, once (0.17.0).
@@ -160,6 +167,10 @@ public class RankManager implements BeanLifecycle {
 		permissionRepo.setDataSupplier(permissions::values);
 		rankParentRepo.setDataSupplier(() -> ranksParent);
 		rankPermissionRepo.setDataSupplier(() -> ranksPermissions);
+	}
+
+	private static boolean loadFailed(IRepository<?> repository) {
+		return repository instanceof LoadOutcome outcome && outcome.lastLoadFailed();
 	}
 
 	/**

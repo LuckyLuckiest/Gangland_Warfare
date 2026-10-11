@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 
 /**
  * Records which one-shot gang data migrations ran ({@code gang_migration}, W2-K). A migration is looked up once from
- * the table and then answered from memory; {@link #markDone} writes through the normal repository save.
+ * the table and then answered from memory; {@link #markDone} writes the row synchronously.
  *
  * <p>{@code done_at} is the moment the migration ran: it is read from the table and kept, and is only stamped by
  * {@link #markDone}. Autosave and shutdown rewrite the stored value, never re-stamp it (T-250).
@@ -80,7 +80,13 @@ public class GangMigrationRepository extends AbstractRepository<GangMigration> i
 	public synchronized void markDone(String id) {
 		long now = System.currentTimeMillis();
 		doneAt.put(id, now);
-		save(new GangMigration(id, now));
+		// T-284: written on the calling thread, not queued behind the boot's other async writers (first-tick
+		// SQLITE_BUSY). On failure the in-memory row is written by the next autosave.
+		try {
+			tableBackend().upsert(new GangMigration(id, now));
+		} catch (SQLException exception) {
+			log.warn("gang_migration {} could not be written ({}); the next autosave retries", id, exception.getMessage());
+		}
 	}
 
 	/** One row per migration with the done_at it was stamped with; never re-stamped (T-250). */

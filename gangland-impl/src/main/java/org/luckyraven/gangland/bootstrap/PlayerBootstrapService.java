@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.keystone.bean.BeanPostInitialize;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.gangland.data.user.UserDataLoader;
@@ -102,7 +103,12 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 				uniqueItem.addItemToInventory(player);
 			}
 
-			userDataLoader.loadUserData(newUser, userTable, bankTable);
+			if (!userDataLoader.loadUserData(newUser, userTable, bankTable)) {
+				// T-286: defaults must never reach the autosave, which would overwrite the stored row
+				log.warn("User data for {} could not be read at boot; not caching the user", player.getUniqueId());
+				player.kickPlayer(Messages.USER_DATA_LOAD_FAILED.toString());
+				continue;
+			}
 
 			// Member row creation/lookup and rank-permission attach now live in the gang module's
 			// MemberJoinListener, reacting to this event (WS5 G2 step 11b).
@@ -134,7 +140,11 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 				}
 
 				User<OfflinePlayer> offlineUser = offlineUserManager.create(offlinePlayer);
-				userDataLoader.loadUserData(offlineUser, userTable, bankTable);
+				if (!userDataLoader.loadUserData(offlineUser, userTable, bankTable)) {
+					// T-286: a failed read must not be cached; the autosave would overwrite the stored row
+					log.warn("User data for {} could not be read at boot; not caching the offline user", uuid);
+					continue;
+				}
 				offlineUserManager.add(offlineUser);
 			}
 		});

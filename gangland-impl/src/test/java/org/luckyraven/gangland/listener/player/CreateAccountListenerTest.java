@@ -79,6 +79,7 @@ class CreateAccountListenerTest {
 		userManager        = mock(UserManager.class);
 		offlineUserManager = mock(UserManager.class);
 		userDataLoader     = mock(UserDataLoader.class);
+		when(userDataLoader.loadUserData(any(), any(), any())).thenReturn(true);
 		ganglandDatabase   = mock(GanglandDatabase.class);
 
 		// The updater is optional (CM-01); a null checker is the disabled-updater shape and keeps this test off
@@ -168,6 +169,23 @@ class CreateAccountListenerTest {
 		listener.onPlayerJoin(joinEvent());
 
 		verify(offlineUserManager).remove(uuid);
+	}
+
+	@Test
+	@DisplayName("T-286: a failed data read removes the user, fires no init event and kicks the player")
+	void onPlayerJoin_failedLoad_removesUserFiresNothingAndKicks() {
+		economyWith(5_000D);
+		org.luckyraven.gangland.file.configuration.Messages.init(new org.luckyraven.gangland.support.FakeMessageProvider()
+				.withString("Errors.User.Data_Load_Failed", "reload please"));
+		when(userDataLoader.loadUserData(any(), any(), any())).thenReturn(false);
+		when(player.isOnline()).thenReturn(true);
+		var pluginManager = bukkit.pluginManager();
+
+		listener.onPlayerJoin(joinEvent());
+
+		verify(userManager).remove(user);
+		verify(pluginManager, never()).callEvent(any(org.bukkit.event.Event.class));
+		verify(player).kickPlayer(any(String.class));
 	}
 
 }

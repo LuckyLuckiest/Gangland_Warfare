@@ -69,8 +69,36 @@ public final class UserDataLoader {
 		}
 	}
 
-	public <T extends OfflinePlayer> void loadUserData(User<T> user, UserTable userTable, BankTable bankTable) {
+	public static final int  LOAD_ATTEMPTS    = 3;
+	public static final long RETRY_DELAY_MILLIS = 500L;
+
+	/**
+	 * Hydrates the user, retrying a failed read up to {@link #LOAD_ATTEMPTS} times {@link #RETRY_DELAY_MILLIS} apart
+	 * (blocks the calling thread, so call it off the main thread). Keystone's {@code runQueries} swallows a
+	 * {@code SQLException}, so success is "the read ran to the end" (T-286).
+	 *
+	 * @return {@code false} when every attempt failed; the user then still holds defaults and must not be saved
+	 */
+	public <T extends OfflinePlayer> boolean loadUserData(User<T> user, UserTable userTable, BankTable bankTable) {
+		for (int attempt = 1; attempt <= LOAD_ATTEMPTS; attempt++) {
+			if (tryLoad(user, userTable, bankTable)) return true;
+
+			if (attempt == LOAD_ATTEMPTS) break;
+			log.warn("User data read failed for {} (attempt {}/{}); retrying", user.getUuid(), attempt, LOAD_ATTEMPTS);
+			try {
+				Thread.sleep(RETRY_DELAY_MILLIS);
+			} catch (InterruptedException exception) {
+				Thread.currentThread().interrupt();
+				return false;
+			}
+		}
+		log.error("User data for {} could not be read after {} attempts", user.getUuid(), LOAD_ATTEMPTS);
+		return false;
+	}
+
+	private <T extends OfflinePlayer> boolean tryLoad(User<T> user, UserTable userTable, BankTable bankTable) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, database);
+		boolean[]      ran    = {false};
 
 		helper.runQueries(db -> {
 			Map<String, Object> userSearch = userTable.searchCriteria(user);
@@ -86,6 +114,7 @@ public final class UserDataLoader {
 				user.getEconomy().setAmount(Settings.getUserInitialBalance());
 
 				if (!Settings.isAutoSave()) userTable.insertTableQuery(db, user);
+				ran[0] = true;
 				return;
 			}
 
@@ -156,7 +185,10 @@ public final class UserDataLoader {
 			Runnable restoreBounty = () -> restoreBounty(user, bounty, posters);
 			if (Bukkit.isPrimaryThread()) restoreBounty.run();
 			else Bukkit.getScheduler().runTask(gangland, restoreBounty);
+			ran[0] = true;
 		});
+
+		return ran[0];
 	}
 
 	private void restoreBounty(User<? extends OfflinePlayer> user, double saved, @Nullable String posters) {
