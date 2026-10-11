@@ -188,4 +188,16 @@ class CreateAccountListenerTest {
 		verify(player).kickPlayer(any(String.class));
 	}
 
+	@Test
+	@DisplayName("T-293: the user is cached for lookups but marked load-pending before the async read")
+	void onPlayerJoin_marksTheUserLoadPending() {
+		economyWith(5_000D);
+
+		listener.onPlayerJoin(joinEvent());
+
+		var order = org.mockito.Mockito.inOrder(user, userManager);
+		order.verify(user).setLoadPending(true);
+		order.verify(userManager).add(user);
+	}
+
 }

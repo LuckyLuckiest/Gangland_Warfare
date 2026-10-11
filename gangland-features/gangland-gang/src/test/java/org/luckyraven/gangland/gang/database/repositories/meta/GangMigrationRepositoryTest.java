@@ -1,5 +1,12 @@
 package org.luckyraven.gangland.gang.database.repositories.meta;
 
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Collection;
+import java.util.function.Consumer;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
@@ -116,4 +123,35 @@ class GangMigrationRepositoryTest {
 		verify(backend).upsert(eq("gang_migration"), any(), any(), any());
 	}
 
+
+	@SuppressWarnings("unchecked")
+	private AbstractRepository<String> repositoryWriting(boolean committed) {
+		AbstractRepository<String> repo = mock(AbstractRepository.class);
+		// Keystone 1.15.2: saveAllChecked reports the outcome; the plain saveAll callback fires either way
+		doAnswer(call -> {
+			((Consumer<Boolean>) call.getArgument(1)).accept(committed);
+			return null;
+		}).when(repo).saveAllChecked(anyCollection(), any());
+		doAnswer(call -> {
+			((Runnable) call.getArgument(1)).run();
+			return null;
+		}).when(repo).saveAll(anyCollection(), any(Runnable.class));
+		return repo;
+	}
+
+	@Test
+	@DisplayName("T-278: a migration is marked done only after the write committed")
+	void saveThen_runsAfterACommittedWrite() {
+		AtomicBoolean done = new AtomicBoolean();
+		GangMigrationRepository.saveThen(repositoryWriting(true), java.util.List.of("row"), () -> done.set(true));
+		assertTrue(done.get());
+	}
+
+	@Test
+	@DisplayName("T-278: a failed write leaves the migration not done")
+	void saveThen_doesNotRunAfterAFailedWrite() {
+		AtomicBoolean done = new AtomicBoolean();
+		GangMigrationRepository.saveThen(repositoryWriting(false), java.util.List.of("row"), () -> done.set(true));
+		assertFalse(done.get());
+	}
 }

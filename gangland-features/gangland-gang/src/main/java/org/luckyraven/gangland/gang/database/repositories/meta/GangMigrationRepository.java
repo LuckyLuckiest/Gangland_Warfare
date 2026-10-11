@@ -42,14 +42,19 @@ public class GangMigrationRepository extends AbstractRepository<GangMigration> i
 	}
 
 	/**
-	 * Saves {@code rows}, then runs {@code then} once the write attempt finished. Keystone's {@code AbstractRepository}
-	 * runs the callback in a finally, so {@code then} also runs when the write failed: Keystone logs that failure and the
-	 * in-memory rows are written again by the next autosave (proposed docket row T-278, upstream). A repository without the
-	 * callback saves and runs {@code then} at once.
+	 * Saves {@code rows}, then runs {@code then} only if the write committed (T-278, Keystone 1.15.2
+	 * {@code saveAllChecked}): a failed write leaves the migration not done, so the next boot runs it again. A repository
+	 * without the checked callback saves and runs {@code then} at once.
 	 */
 	public static <T> void saveThen(IRepository<T> repository, Collection<T> rows, Runnable then) {
 		if (repository instanceof AbstractRepository<T> abstractRepository) {
-			abstractRepository.saveAll(rows, then);
+			abstractRepository.saveAllChecked(rows, committed -> {
+				if (Boolean.TRUE.equals(committed)) {
+					then.run();
+				} else {
+					log.warn("Migration rows could not be written; the migration is not marked done and runs again next boot");
+				}
+			});
 			return;
 		}
 		repository.saveAll(rows);

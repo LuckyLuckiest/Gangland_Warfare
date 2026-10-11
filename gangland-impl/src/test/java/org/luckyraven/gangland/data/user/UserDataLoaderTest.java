@@ -207,4 +207,30 @@ class UserDataLoaderTest {
 		}
 	}
 
+
+	@Test
+	@DisplayName("T-293: a successful load clears the load-pending flag, a failed one leaves it")
+	void load_clearsLoadPendingOnlyOnSuccess() throws SQLException {
+		saveRow(0);
+		user.setLoadPending(true);
+		assertTrue(loader().loadUserData(user, new UserTable(), new BankTable(new UserTable())));
+		assertFalse(user.isLoadPending());
+	}
+
+	@Test
+	@DisplayName("T-294: on the main thread a failing read gets one attempt and never sleeps")
+	void failedRead_onTheMainThread_doesNotSleep() throws SQLException {
+		saveRow(0);
+		String url = "jdbc:sqlite:" + tempDir.resolve("database").resolve("userdata.db").toAbsolutePath();
+		try (Connection connection = DriverManager.getConnection(url); Statement statement = connection.createStatement()) {
+			statement.executeUpdate("DROP TABLE user");
+		}
+		bukkit.statics().when(org.bukkit.Bukkit::isPrimaryThread).thenReturn(true);
+		user.setLoadPending(true);
+
+		long start = System.currentTimeMillis();
+		assertFalse(loader().loadUserData(user, new UserTable(), new BankTable(new UserTable())));
+		assertTrue(System.currentTimeMillis() - start < UserDataLoader.RETRY_DELAY_MILLIS, "no 500 ms retry sleep");
+		assertTrue(user.isLoadPending());
+	}
 }

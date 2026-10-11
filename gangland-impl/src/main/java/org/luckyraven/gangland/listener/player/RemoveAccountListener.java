@@ -71,6 +71,9 @@ public final class RemoveAccountListener implements Listener {
 		// Remove the user from a user manager group
 		userManager.remove(user);
 
+		// T-293: quit before the join load finished - the user holds defaults, so the stored row stays untouched
+		if (user.isLoadPending()) return;
+
 		IRepository<User<? extends OfflinePlayer>> userRepository = ganglandDatabase.getRepositoryRegistry()
 		                                                                            .getGenericRepository(User.class);
 		IRepository<Bank> bankRepository = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
