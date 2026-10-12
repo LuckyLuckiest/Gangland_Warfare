@@ -186,7 +186,7 @@ class TurfOwnerAlertsTest {
 	@Test
 	@DisplayName("in-code fallbacks equal the shipped YAML lines")
 	void fallbacksMatchShippedYaml() throws IOException {
-		TurfMessages empty = TurfTextFixture.emptyMessages(tempDir.resolve("empty"), mock(TurfMessageContract.class));
+		TurfMessages empty = TurfTextFixture.emptyMessages(java.nio.file.Files.createDirectories(tempDir.resolve("empty")), mock(TurfMessageContract.class));
 		List<String> shipped  = new ArrayList<>();
 		List<String> fallback = new ArrayList<>();
 		TurfOwnerAlerts s = new TurfOwnerAlerts(turfs, gangs, text, () -> 0);

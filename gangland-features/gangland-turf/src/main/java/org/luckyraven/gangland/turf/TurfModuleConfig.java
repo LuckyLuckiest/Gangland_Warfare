@@ -46,6 +46,7 @@ import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderMoneyDropSource;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
+import org.luckyraven.gangland.turf.npc.guard.TurfOwnerAlerts;
 import org.luckyraven.gangland.turf.npc.view.QuartermasterAccess;
 import org.luckyraven.gangland.turf.npc.view.QuartermasterPlacement;
 import org.luckyraven.keystone.npc.NpcSupport;
@@ -410,5 +411,14 @@ public final class TurfModuleConfig {
 	                                                       TurfNpcsConfigLoader loader) {
 		return new TurfPowerupOpenContractImpl(flow, turfs, npcs, gangs, users, messages,
 		                                       loader::getPowerupSettings);
+	}
+
+	// W7-E (D28=A): owner alerts; the cop-hit hook comes from TurfCopGuard
+	@Bean
+	public TurfOwnerAlerts turfOwnerAlerts(TurfManager turfs, GangLookupContract gangs, TurfMessages messages,
+	                                       TurfNpcsConfigLoader loader, TurfCopGuard guard) {
+		TurfOwnerAlerts alerts = new TurfOwnerAlerts(turfs, gangs, messages, loader::getOwnerAlertCooldownSeconds);
+		guard.bindProtectedHit(alerts::copHit);
+		return alerts;
 	}
 }
