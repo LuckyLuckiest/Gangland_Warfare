@@ -17,6 +17,7 @@ order you meet it. Read the whole page before you start the server on the new ja
 - **Optional plugins.** `dynmap` and `WorldGuard` are optional soft dependencies. Neither is required (see Optional plugins).
 - **Back up** `plugins/Gangland_Warfare/` before the first boot. The first boot adds columns and tables and refreshes some
   menus; the backup is your rollback.
+- **Every upgrade boot refreshes** `settings.yml` and all shipped menus (alliance_stat, gang_info, gang_stat, phone, phone_banking, phone_bounty, phone_contacts, phone_gang, phone_gang_search, user_stat), keeping `*-old.yml` copies. Copy your edits back from the old files.
 
 ## New and changed files
 

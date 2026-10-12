@@ -73,9 +73,17 @@ behaviour change.
 - **Console verbs (T-227):** staff gang list and info run from the console.
 - **Gang levels (US-43, US-08, GP-10):** a cancelled level-up changes nothing; the fee is taken before the level is claimed.
 - **Rank gates (T-235):** the seed rank preset is written atomically or healed on boot.
-- **Gang fights and commands (CM-38, T-701):** the fights command set and its help text are complete.
-- **Guards (T-700):** a guard kill does not mint cash.
-- **Permissions (T-702):** new parent nodes replace the flat command gates (see the migration page).
+- **Gang fights and commands (CM-38, T-772):** the fights command set and its help text are complete.
+- **Guards (T-771):** a guard kill does not mint cash.
+- **Waypoints (T-827):** `/glw waypoint list`, `info` and `select` are open to players; `create`, `delete` and `edit` stay staff.
+- **Permissions (T-773):** new parent nodes replace the flat command gates (see the migration page).
+
+## Known issues
+
+- T-727 fight escrow is memory-only: a crash in the middle of a fight loses both stakes.
+- T-707 `Ranks.Minimum.Chat` and `gangland.gang.chat` are not enforced on gang and ally chat.
+- T-708 rally join has no rank gate.
+- T-710 `Ranks.Minimum` Upgrade=owner does not stop officers, who hold `gangland.turf.upgrade` through the preset.
 
 ## API
 

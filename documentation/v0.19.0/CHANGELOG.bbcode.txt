@@ -2,7 +2,7 @@
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Read [ICODE]documentation/migration-0.19.0.md[/ICODE] before you start the server. It lists every new key, node, table and behaviour change.
+Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documentation/migration-0.19.0.md'][B]migration-0.19.0.md[/B][/URL] before you start the server. It lists every new key, node, table and behaviour change.
 
 [SIZE=6][B]Requires[/B][/SIZE]
 
@@ -21,6 +21,7 @@ Read [ICODE]documentation/migration-0.19.0.md[/ICODE] before you start the serve
 [*][B]Guard bounty, not cash.[/B] A rival who kills a guard gets half the guard price; guards drop no civilian cash.
 [*][B]Guard roles.[/B] [ICODE]Garrison.Composition[/ICODE] gives guards jobs: shields block half of a frontal hit, marksmen keep range, and the commander's death makes the rest take cover.
 [*][B]Local outlines.[/B] [ICODE]/glw turf show[/ICODE] and [ICODE]/glw map border[/ICODE] draw only the part within 40 blocks of you.
+[*][B]Map zoom.[/B] [ICODE]/glw map zoom in|out[/ICODE] sets your own zoom: 8, 16, 32 or 64 blocks per cell.
 [*][B]Teleport guard.[/B] Gang teleports are refused near turfs under attack, into rival turf and during a turf fight.
 [*][B]dynmap.[/B] Turfs appear on a Turfs layer when dynmap is installed.
 [*][B]Civilian shouts.[/B] Owners hear shouts when a turf is held or lost.
@@ -36,7 +37,7 @@ Read [ICODE]documentation/migration-0.19.0.md[/ICODE] before you start the serve
 [*][B]Caps are grow-only.[/B] Member, safehouse and ally caps apply to existing gangs without removing anything.
 [*][B]Ranks by minimum.[/B] [ICODE]Ranks.Minimum[/ICODE] grants a feature to a rank and every rank above it.
 [*][B]Safehouses and rally.[/B] [ICODE]/glw gang safehouse set|remove|list|<name>[/ICODE] and [ICODE]/glw gang rally [safehouse][/ICODE], with [ICODE]rally join[/ICODE].
-[*][B]Friendly fire rules.[/B] [ICODE]/glw gang pvp on|off[/ICODE] and [ICODE]/glw gang ally pvp <gang> on|off[/ICODE] (allies fight only when both sides turn it on). Your own arrows and splash potions hurt you again; harmful potions are blocked between friends by default.
+[*][B]Friendly fire rules.[/B] [ICODE]/glw gang pvp on|off[/ICODE] and [ICODE]/glw gang ally pvp <gang> on|off[/ICODE] (allies fight only when both sides turn it on). Your own arrows and splash potions hurt you again ([ICODE]Allow_Self_Damage[/ICODE]); harmful potions are blocked between friends by default.
 [*][B]Combat tag.[/B] A player hit by another gang is tagged for 15 seconds and cannot leave the gang or use a gang waypoint.
 [*][B]Chat.[/B] [ICODE]/glw gang chat allies[/ICODE] talks to your gang and its allies. Staff can spy on gang and ally chat. The public chat tag is off by default.
 [*][B]Notice.[/B] [ICODE]/glw gang notice <text|clear>[/ICODE] shows members a message when they log in.
@@ -57,6 +58,7 @@ Read [ICODE]documentation/migration-0.19.0.md[/ICODE] before you start the serve
 [*][B]Module [ICODE]gangland-gang-fights[/ICODE][/B] (install id [ICODE]fights[/ICODE], needs [ICODE]gang[/ICODE]): challenge another gang to a fight of [ICODE]<size>[/ICODE] per side, with an optional bet that moves bank to bank.
 [*][B]Commands.[/B] [ICODE]/glw gang fight propose|accept|decline|enlist|drop|info|arenas|stats[/ICODE].
 [*][B]Arenas.[/B] Staff build arenas with [ICODE]/glw arena[/ICODE] (create, corner, spawn, exit, size, finish, show, list, tp, on, off, delete, reload). Arenas live in [ICODE]plugins/Gangland_Warfare/fight/arenas.yml[/ICODE].
+[*][B]Ranked fights[/B] feed fight stats (wins, losses, draws) and the gang ranking.
 [*][B]Command limit.[/B] During a fight a fighter may run only the fight verbs and [ICODE]Guards.Allowed_Commands[/ICODE].
 [/LIST]
 
@@ -74,9 +76,21 @@ Read [ICODE]documentation/migration-0.19.0.md[/ICODE] before you start the serve
 [*][B]Console verbs[/B] (T-227): staff gang list and info run from the console.
 [*][B]Gang levels[/B] (US-43, US-08, GP-10): a cancelled level-up changes nothing; the fee is taken before the level is claimed.
 [*][B]Rank seed[/B] (T-235): the preset rank seed is written atomically or healed on boot.
-[*][B]Fight commands[/B] (CM-38, T-701): the fights command set and its help text are complete.
-[*][B]Guard kills[/B] (T-700): a guard kill does not mint cash.
-[*][B]Permissions[/B] (T-702): new parent nodes replace the flat command gates (see the migration page).
+[*][B]Fight commands[/B] (CM-38, T-772): the fights command set and its help text are complete.
+[*][B]Guard kills[/B] (T-771): a guard kill does not mint cash.
+[*][B]Waypoints[/B] (T-827): [ICODE]/glw waypoint list[/ICODE], [ICODE]info[/ICODE] and [ICODE]select[/ICODE] are open to players; [ICODE]create[/ICODE], [ICODE]delete[/ICODE] and [ICODE]edit[/ICODE] stay staff.
+[*][B]Permissions[/B] (T-773): new parent nodes replace the flat command gates (see the migration page).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Known issues[/B][/SIZE]
+
+[LIST]
+[*]T-727 fight escrow is memory-only: a crash in the middle of a fight loses both stakes.
+[*]T-707 [ICODE]Ranks.Minimum.Chat[/ICODE] and [ICODE]gangland.gang.chat[/ICODE] are not enforced on gang and ally chat.
+[*]T-708 rally join has no rank gate.
+[*]T-710 [ICODE]Ranks.Minimum[/ICODE] Upgrade=owner does not stop officers, who hold [ICODE]gangland.turf.upgrade[/ICODE] through the preset.
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
