@@ -14,16 +14,19 @@ public class TurfGarrisonTable extends Table<Garrison> {
 
 		Attribute<Integer> turfId = new Attribute<>("turf_id", true, Integer.class);
 		Attribute<Integer> count  = new Attribute<>("count", false, Integer.class);
+		Attribute<Boolean> hold   = new Attribute<>("hold", false, Boolean.class);
 
 		count.setDefaultValue(0);
+		hold.setDefaultValue(false);
 
 		this.addAttribute(turfId);
 		this.addAttribute(count);
+		this.addAttribute(hold);
 	}
 
 	@Override
 	public Object[] getData(Garrison data) {
-		return new Object[]{data.getTurfId(), data.getCount()};
+		return new Object[]{data.getTurfId(), data.getCount(), data.isHold()};
 	}
 
 	@Override

@@ -14,7 +14,8 @@ public final class Garrison {
 
 	private final int turfId;
 	private       int count;
-	private boolean hold;
+	/** Hold order (W7-F): guards keep to their posts and the turf leaves cops alone. False = Defend. */
+	private       boolean hold;
 
 	public Garrison(int turfId, int count) {
 		this.turfId = turfId;

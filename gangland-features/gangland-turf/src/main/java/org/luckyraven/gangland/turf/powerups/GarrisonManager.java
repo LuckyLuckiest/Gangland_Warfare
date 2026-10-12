@@ -35,11 +35,26 @@ public final class GarrisonManager {
 		return g == null ? 0 : g.getCount();
 	}
 
+	/** Whether the turf's guards are on the Hold order (W7-F). No row means Defend. */
 	public boolean holding(int turfId) {
-		return false;
+		Garrison g = byTurf.get(turfId);
+		return g != null && g.isHold();
 	}
 
+	/**
+	 * Sets the turf's guard order (W7-F) and persists it. Defend on a turf with no row is the default, so nothing is
+	 * written; Hold on a turf with no row creates one at zero stock.
+	 */
 	public void setHolding(int turfId, boolean hold) {
+		Garrison g = byTurf.get(turfId);
+		if (g == null) {
+			if (!hold) return;
+			g = new Garrison(turfId, 0, true);
+			byTurf.put(turfId, g);
+		} else {
+			g.setHold(hold);
+		}
+		repository.save(g);
 	}
 
 	public void add(int turfId, int delta) {
