@@ -1,0 +1,6 @@
+[SIZE=5][B]Gangland Warfare 0.21.0[/B][/SIZE]
+
+[SIZE=4][B]Fixed[/B][/SIZE]
+[LIST]
+[*]Includes the 0.17.1 fixes (T-307, T-279, T-825, T-826). No new player permission nodes were declared by this merge.
+[/LIST]
