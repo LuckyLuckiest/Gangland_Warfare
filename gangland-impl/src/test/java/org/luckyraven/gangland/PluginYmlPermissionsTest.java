@@ -58,12 +58,43 @@ class PluginYmlPermissionsTest {
 			"gangland.command.gang.join",
 			"gangland.command.gang.recruiting",
 			"gangland.command.gang.bounty",
+			"gangland.command.gang.delete",
+			"gangland.command.gang.rename",
+			"gangland.command.gang.transfer",
+			"gangland.command.gang.color",
+			"gangland.command.gang.display",
+			"gangland.command.gang.description",
+			"gangland.command.gang.ally",
+			"gangland.command.gang.ally.abandon",
+			"gangland.command.gang.ally.request",
+			"gangland.command.gang.ally.accept",
+			"gangland.command.gang.ally.reject",
+			"gangland.command.gang.ally.pending",
+			"gangland.command.gang.ally.pending.cancel",
+			"gangland.command.bank",
+			"gangland.command.bank.balance",
+			"gangland.command.bank.deposit",
+			"gangland.command.bank.withdraw",
+			"gangland.command.bank.menu",
+			"gangland.command.bank.create",
+			"gangland.command.balance",
+			"gangland.command.teleport",
+			"gangland.command.respawn",
+			"gangland.command.wanted",
+			"gangland.command.contact",
+			"gangland.command.filter",
+			"gangland.command.resource",
+			"gangland.command.car",
+			"gangland.command.car.list",
+			"gangland.command.car.info",
+			"gangland.command.grapple",
+			"gangland.command.jetpack",
 			"gangland.inventory.gang_stat",
 			"gangland.inventory.gang_info",
 			"gangland.inventory.alliance_stat");
 
 	/** Children of gangland.turf.admin; never default true. */
-	static final List<String> ADMIN = List.of(
+	public static final List<String> ADMIN = List.of(
 			"gangland.command.turf.wand",
 			"gangland.command.turf.pos1",
 			"gangland.command.turf.pos2",
@@ -79,6 +110,21 @@ class PluginYmlPermissionsTest {
 			"gangland.command.turf.buff",
 			"gangland.command.turf.powerupnpc",
 			"gangland.command.turf.rename");
+
+	/** Staff verbs under otherwise-open roots (T-307); never default true. */
+	public static final List<String> OP_ONLY = List.of(
+			"gangland.command.wanted.add",
+			"gangland.command.wanted.remove",
+			"gangland.command.wanted.clear",
+			"gangland.command.car.give",
+			"gangland.command.grapple.give",
+			"gangland.command.jetpack.give",
+			"gangland.command.balance.admin",
+			"gangland.command.teleport.cooldown_bypass",
+			"gangland.command.waypoint",
+			"gangland.command.waypoint.create",
+			"gangland.command.waypoint.delete",
+			"gangland.command.bank.resetcap");
 
 	private static Map<String, Object> permissions;
 
@@ -151,6 +197,9 @@ class PluginYmlPermissionsTest {
 	@DisplayName("admin verbs, rank and option commands never default to true")
 	void adminVerbs_notDefaultTrue() {
 		for (String node : ADMIN) {
+			assertFalse(permissions.containsKey(node) && isTrue(defaultOf(node)), node + " must not default to true");
+		}
+		for (String node : OP_ONLY) {
 			assertFalse(permissions.containsKey(node) && isTrue(defaultOf(node)), node + " must not default to true");
 		}
 		for (String node : permissions.keySet()) {

@@ -89,8 +89,9 @@ Each waypoint automatically generates a permission node:
 gangland.waypoint.<name>
 ```
 
-Players without this permission node cannot see or use the waypoint. Grant it via your permissions plugin to control
-access.
+Since 0.17.1 the node defaults to `true`, so every player can see and use every waypoint. To restrict one, negate the
+node for the players or groups that must not use it (e.g. LuckPerms `gangland.waypoint.<name> false`). Before 0.17.1
+these nodes were op-only, so on upgrade waypoints that only ops could reach become visible to everyone.
 
 ---
 
