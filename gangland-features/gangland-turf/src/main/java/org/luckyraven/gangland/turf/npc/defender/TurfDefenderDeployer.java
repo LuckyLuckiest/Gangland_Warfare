@@ -227,6 +227,11 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		return turfByEntity.getOrDefault(entity.getUniqueId(), -1);
 	}
 
+	/** Turf of a tracked guard by NPC, or -1; unlike {@link #findOwningTurfId} it needs no live body. */
+	public int turfOf(CivilianNpc npc) {
+		return -1;
+	}
+
 	/**
 	 * The defenders of {@code turfId} that are still alive and not yet expired; empty when the turf has no group.
 	 */

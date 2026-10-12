@@ -60,8 +60,9 @@ class TurfOwnerAlertListenerTest {
 		listener = new TurfOwnerAlertListener(alerts, defenders, powerups, turfs, gangs);
 		npc      = mock(CivilianNpc.class);
 		body     = mock(LivingEntity.class);
-		when(npc.getEntity()).thenReturn(body);
+		when(npc.getEntity()).thenReturn(null); // Citizens has despawned the body by MONITOR
 		when(defenders.findOwningTurfId(any())).thenReturn(-1);
+		when(defenders.turfOf(any())).thenReturn(-1);
 		victim = mock(LivingEntity.class);
 		TurfPowerupNpc victimQm = qm(4);
 		when(powerups.getByEntity(victim)).thenReturn(victimQm);
@@ -94,7 +95,7 @@ class TurfOwnerAlertListenerTest {
 	@Test
 	@DisplayName("a guard death alerts guardDown for its turf only")
 	void guardDeath_alertsGuardDown() {
-		when(defenders.findOwningTurfId(body)).thenReturn(3);
+		when(defenders.turfOf(npc)).thenReturn(3);
 		listener.onCivilianDeath(new CivilianDeathEvent(npc, null, 0));
 		verify(alerts).guardDown(3, npc);
 		verify(alerts, never()).quartermasterDown(anyInt(), any());
@@ -104,7 +105,7 @@ class TurfOwnerAlertListenerTest {
 	@DisplayName("a Quartermaster death alerts quartermasterDown")
 	void quartermasterDeath_alertsQuartermasterDown() {
 		TurfPowerupNpc bodyQm = qm(4);
-		when(powerups.getByEntity(body)).thenReturn(bodyQm);
+		when(powerups.getByCivilian(npc)).thenReturn(bodyQm);
 		listener.onCivilianDeath(new CivilianDeathEvent(npc, null, 0));
 		verify(alerts).quartermasterDown(4, npc);
 	}
