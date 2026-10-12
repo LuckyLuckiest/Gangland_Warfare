@@ -76,6 +76,9 @@ class PluginYmlPermissionsTest {
 			"gangland.command.bank.deposit",
 			"gangland.command.bank.withdraw",
 			"gangland.command.bank.menu",
+			"gangland.command.bank.create",
+			"gangland.command.balance",
+			"gangland.command.teleport",
 			"gangland.command.respawn",
 			"gangland.command.wanted",
 			"gangland.command.contact",
@@ -90,7 +93,7 @@ class PluginYmlPermissionsTest {
 			"gangland.inventory.alliance_stat");
 
 	/** Children of gangland.turf.admin; never default true. */
-	static final List<String> ADMIN = List.of(
+	public static final List<String> ADMIN = List.of(
 			"gangland.command.turf.wand",
 			"gangland.command.turf.pos1",
 			"gangland.command.turf.pos2",
@@ -108,11 +111,18 @@ class PluginYmlPermissionsTest {
 			"gangland.command.turf.rename");
 
 	/** Staff verbs under otherwise-open roots (T-307); never default true. */
-	static final List<String> OP_ONLY = List.of(
+	public static final List<String> OP_ONLY = List.of(
 			"gangland.command.wanted.add",
 			"gangland.command.wanted.remove",
 			"gangland.command.wanted.clear",
 			"gangland.command.car.give",
+			"gangland.command.grapple.give",
+			"gangland.command.jetpack.give",
+			"gangland.command.balance.admin",
+			"gangland.command.teleport.cooldown_bypass",
+			"gangland.command.waypoint",
+			"gangland.command.waypoint.create",
+			"gangland.command.waypoint.delete",
 			"gangland.command.bank.resetcap");
 
 	private static Map<String, Object> permissions;

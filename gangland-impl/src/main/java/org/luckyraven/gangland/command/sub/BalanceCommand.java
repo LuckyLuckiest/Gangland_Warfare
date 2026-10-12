@@ -32,6 +32,9 @@ import java.util.stream.Collectors;
 @CommandHandler
 public final class BalanceCommand extends Command {
 
+	/** Looking up another player's balance ({@code /glw balance <player>}); the plain form is open to everyone (T-826). */
+	public static final String ADMIN_PERMISSION = "gangland.command.balance.admin";
+
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final GanglandDatabase           ganglandDatabase;
@@ -69,6 +72,10 @@ public final class BalanceCommand extends Command {
 		} else {
 			commandSender.sendMessage(Messages.BALANCE_REGISTERED_ONLY.toString());
 		}
+	}
+
+	static boolean mayLookUpOthers(CommandSender sender) {
+		return true;
 	}
 
 	@Override
