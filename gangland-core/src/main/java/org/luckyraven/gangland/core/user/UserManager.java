@@ -11,6 +11,7 @@ import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
@@ -31,6 +33,10 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	 * snapshot survived the join eviction, overwriting the live row on the next autosave.
 	 */
 	private final Map<UUID, User<T>>  users;
+	/** Last add/lookup time per uuid, for {@link #pruneIdle(long)}. */
+	private final Map<UUID, Long>     touched = new ConcurrentHashMap<>();
+	/** Hydrates one fresh user from its stored row; set by the host (impl owns the tables). */
+	private Predicate<User<T>>        storedLoader;
 
 	/**
 	 * Every manager whose cache must be persisted together with this one — always contains {@code this}, and grows
@@ -93,7 +99,9 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 		List<User<? extends OfflinePlayer>> grouped = new ArrayList<>();
 
 		for (UserManager<? extends OfflinePlayer> manager : cacheGroup) {
-			grouped.addAll(manager.users.values());
+			for (User<? extends OfflinePlayer> user : manager.users.values()) {
+				if (!user.isLoadPending()) grouped.add(user);
+			}
 		}
 
 		return grouped;
@@ -107,7 +115,7 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
 		for (UserManager<? extends OfflinePlayer> manager : cacheGroup) {
 			for (User<? extends OfflinePlayer> user : manager.users.values()) {
-				if (!user.hasBank()) continue;
+				if (user.isLoadPending() || !user.hasBank()) continue;
 
 				grouped.add(user.getBank());
 			}
@@ -116,14 +124,30 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 		return grouped;
 	}
 
+	public void setStoredLoader(Predicate<User<T>> storedLoader) {
+		this.storedLoader = storedLoader;
+	}
+
+	/**
+	 * Loads only {@code user}'s own stored row (balance, stats, bank, gang id) into it, without touching any other
+	 * player or Vault account. The user is not cached; the caller adds it on success.
+	 *
+	 * @return {@code false} when no loader is set or the read failed; the user then holds defaults
+	 */
+	public boolean loadStored(User<T> user) {
+		return storedLoader != null && storedLoader.test(user);
+	}
+
 	public void add(User<T> user) {
 		users.put(user.getUuid(), user);
+		touched.put(user.getUuid(), System.currentTimeMillis());
 	}
 
 	public void remove(@NotNull User<T> user) {
 		Preconditions.checkArgument(user != null, "User can't be null!");
 
 		users.remove(user.getUuid());
+		touched.remove(user.getUuid());
 	}
 
 	/**
@@ -135,11 +159,37 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	public User<T> remove(UUID uuid) {
 		if (uuid == null) return null;
 
+		touched.remove(uuid);
 		return users.remove(uuid);
 	}
 
 	public void clear() {
 		users.clear();
+		touched.clear();
+	}
+
+	/**
+	 * Evicts every entry not added or looked up for {@code maxIdleMillis}, except a load-pending one (its defaults
+	 * are not saved, so evicting it would also drop whatever the caller changed on it). Call it right after a save
+	 * snapshot: an idle entry has had no lookup, hence no change, since the last save.
+	 *
+	 * @return how many entries were evicted.
+	 */
+	public int pruneIdle(long maxIdleMillis) {
+		long cutoff = System.currentTimeMillis() - maxIdleMillis;
+		int  pruned = 0;
+
+		for (var iterator = users.entrySet().iterator(); iterator.hasNext(); ) {
+			var entry = iterator.next();
+			if (entry.getValue().isLoadPending()) continue;
+			if (touched.getOrDefault(entry.getKey(), 0L) > cutoff) continue;
+
+			iterator.remove();
+			touched.remove(entry.getKey());
+			pruned++;
+		}
+
+		return pruned;
 	}
 
 	@Override
@@ -169,7 +219,7 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	public User<T> getUser(T userPred) {
 		if (userPred == null) return null;
 
-		return users.get(userPred.getUniqueId());
+		return getUser(userPred.getUniqueId());
 	}
 
 	/**
@@ -179,7 +229,9 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	public User<T> getUser(UUID uuid) {
 		if (uuid == null) return null;
 
-		return users.get(uuid);
+		User<T> user = users.get(uuid);
+		if (user != null) touched.put(uuid, System.currentTimeMillis());
+		return user;
 	}
 
 	public int size() {

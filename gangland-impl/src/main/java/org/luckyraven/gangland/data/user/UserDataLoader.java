@@ -69,10 +69,44 @@ public final class UserDataLoader {
 		}
 	}
 
-	public <T extends OfflinePlayer> void loadUserData(User<T> user, UserTable userTable, BankTable bankTable) {
+	public static final int  LOAD_ATTEMPTS    = 3;
+	public static final long RETRY_DELAY_MILLIS = 500L;
+
+	/**
+	 * Hydrates the user, retrying a failed read up to {@link #LOAD_ATTEMPTS} times {@link #RETRY_DELAY_MILLIS} apart
+	 * (blocks the calling thread, so call it off the main thread). Success is Keystone's {@code tryRunQueries} result: the read ran to
+	 * the end (T-286). On the main thread there is a single attempt, no sleep (T-294). Success also clears the user's
+	 * {@link User#isLoadPending() load-pending} flag (T-293).
+	 *
+	 * @return {@code false} when every attempt failed; the user then still holds defaults and must not be saved
+	 */
+	public <T extends OfflinePlayer> boolean loadUserData(User<T> user, UserTable userTable, BankTable bankTable) {
+		// T-294: the retry sleeps, and the main thread (boot, reload) must never sleep, so it gets one attempt
+		int attempts = Bukkit.isPrimaryThread() ? 1 : LOAD_ATTEMPTS;
+
+		for (int attempt = 1; attempt <= attempts; attempt++) {
+			if (tryLoad(user, userTable, bankTable)) {
+				user.setLoadPending(false);
+				return true;
+			}
+
+			if (attempt == attempts) break;
+			log.warn("User data read failed for {} (attempt {}/{}); retrying", user.getUuid(), attempt, attempts);
+			try {
+				Thread.sleep(RETRY_DELAY_MILLIS);
+			} catch (InterruptedException exception) {
+				Thread.currentThread().interrupt();
+				return false;
+			}
+		}
+		log.error("User data for {} could not be read after {} attempts", user.getUuid(), attempts);
+		return false;
+	}
+
+	private <T extends OfflinePlayer> boolean tryLoad(User<T> user, UserTable userTable, BankTable bankTable) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, database);
 
-		helper.runQueries(db -> {
+		return helper.tryRunQueries(db -> {
 			Map<String, Object> userSearch = userTable.searchCriteria(user);
 			Object[] userData = db.table(userTable.getName())
 			                      .select((String) userSearch.get("search"), (Object[]) userSearch.get("info"),

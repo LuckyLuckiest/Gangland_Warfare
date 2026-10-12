@@ -7,7 +7,7 @@ behaviour change.
 
 ## Requires
 
-- **Keystone 1.15.1** (unchanged). Gangland refuses to start on an older Keystone.
+- **Keystone 1.15.3** (as 0.17.0). Gangland refuses to start on an older Keystone.
 - **Host_Api 2.6** for `gangland-gang`, `gangland-civilians`, `gangland-turf`, `cops-n-crooks` and `gangland-gang-fights`.
   Update all jars together.
 - **Optional:** dynmap (turf layer) and WorldGuard (`glw-gang-pvp` flag, after a full restart). Neither is required.

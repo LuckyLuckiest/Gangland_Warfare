@@ -9,7 +9,6 @@ import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
-import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
 import org.luckyraven.gangland.gang.level.GangLevelTable;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
@@ -78,8 +77,7 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 			for (Gang gang : gangs.values()) {
 				gang.setState(Gang.State.INVITE);
 			}
-			GangMigrationRepository.saveThen(gangRepository, new ArrayList<>(gangs.values()),
-			                                 () -> migrations.markDone(STATE_MIGRATION));
+			migrations.migrate(STATE_MIGRATION, gangRepository, () -> new ArrayList<>(gangs.values()));
 			log.info("Gang states migrated: every gang is invite-only (D7); /glw gang recruiting open opens one");
 		}
 	}

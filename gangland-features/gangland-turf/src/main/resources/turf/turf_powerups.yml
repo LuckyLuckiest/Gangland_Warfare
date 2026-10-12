@@ -22,6 +22,7 @@
 # Effect_Type values:
 #   INCOME_MULTIPLIER     Magnitude is the multiplier on the per-interval payout. 1.25 → +25% income.
 #   GARRISON_DISCOUNT     Magnitude is the multiplier on the guard price (Garrison.Cost_Per_Guard below). 0.8 → 20% off.
+#                         The result is clamped to 10-100% of the full price; a Magnitude outside (0, 1] warns at load.
 #   CAPTURE_DEFENSE_BONUS retired in 0.17.0 (guards on the capture bar replaced it). An entry that still uses it is
 #                         skipped with a warning.
 #

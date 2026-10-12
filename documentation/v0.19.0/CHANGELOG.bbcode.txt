@@ -7,7 +7,7 @@ Read [ICODE]documentation/migration-0.19.0.md[/ICODE] before you start the serve
 [SIZE=6][B]Requires[/B][/SIZE]
 
 [LIST]
-[*][B]Keystone 1.15.1[/B] (unchanged). Gangland refuses to start on an older Keystone.
+[*][B]Keystone 1.15.3[/B] (as 0.17.0). Gangland refuses to start on an older Keystone.
 [*][B]Host_Api 2.6[/B] for [ICODE]gangland-gang[/ICODE], [ICODE]gangland-civilians[/ICODE], [ICODE]gangland-turf[/ICODE], [ICODE]cops-n-crooks[/ICODE] and [ICODE]gangland-gang-fights[/ICODE]. Update all jars together.
 [*][B]Optional:[/B] dynmap (turf layer) and WorldGuard ([ICODE]glw-gang-pvp[/ICODE] flag, after a full restart). Neither is required.
 [/LIST]

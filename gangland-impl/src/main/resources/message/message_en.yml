@@ -451,6 +451,8 @@ Commands:
 
 Errors:
    Prefix: "&4Error&7: "
+   User:
+      Data_Load_Failed: "&cYour data could not be loaded, please rejoin."
    Help:
       No_Entries: "&cNo help information is available for this command."
    Permissions:

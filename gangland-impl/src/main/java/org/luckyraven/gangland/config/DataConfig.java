@@ -22,6 +22,9 @@ import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.data.teleportation.WaypointRegionProvider;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
+import org.luckyraven.gangland.database.TableLookup;
+import org.luckyraven.gangland.database.tables.player.BankTable;
+import org.luckyraven.gangland.database.tables.player.UserTable;
 import org.luckyraven.gangland.core.bounty.BountySettings;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserFactory;
@@ -82,10 +85,16 @@ public class DataConfig {
 	@Bean(name = "offline", isGeneric = true)
 	public UserManager<OfflinePlayer> offlineUserManager(RepositoryRegistry repositoryRegistry,
 	                                                     UserFactory userFactory,
-	                                                     @Qualifier("online") UserManager<Player> onlineUserManager) {
+	                                                     @Qualifier("online") UserManager<Player> onlineUserManager,
+	                                                     GanglandDatabase database,
+	                                                     UserDataLoader userDataLoader) {
 		UserManager<OfflinePlayer> manager = new UserManager<>(gangland, repositoryRegistry, userFactory);
 
 		manager.link(onlineUserManager);
+		// One member's own row, for the gang module's disband (T-300); tables resolve at call time
+		manager.setStoredLoader(user -> userDataLoader.loadUserData(
+				user, TableLookup.find(UserTable.class, database.getTables()),
+				TableLookup.find(BankTable.class, database.getTables())));
 
 		return manager;
 	}

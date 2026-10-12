@@ -308,7 +308,10 @@ public class GangMembershipService {
 		OfflinePlayer       offline = Bukkit.getOfflinePlayer(uuid);
 		User<OfflinePlayer> user    = offlineUserManager.getUser(offline);
 		if (user == null) {
+			// Fallback only: the row failed to load, so this User holds defaults. Load-pending keeps autosave
+			// and shutdown from writing them over the stored row.
 			user = offlineUserManager.create(offline);
+			if (!offlineUserManager.loadStored(user)) user.setLoadPending(true);
 			offlineUserManager.add(user);
 		}
 		return user;

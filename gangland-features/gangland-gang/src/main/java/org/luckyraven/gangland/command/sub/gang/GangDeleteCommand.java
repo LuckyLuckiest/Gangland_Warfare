@@ -30,7 +30,9 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.luckyraven.keystone.bean.Qualifier;
+import lombok.CustomLog;
 
+@CustomLog
 class GangDeleteCommand extends SubArgument {
 
 	private final JavaPlugin                   gangland;

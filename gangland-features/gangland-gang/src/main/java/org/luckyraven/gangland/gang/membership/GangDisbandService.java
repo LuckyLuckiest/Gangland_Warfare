@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gang.membership;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
  * rows and announces {@link GangDeleteEvent}. Body moved unchanged from {@code GangDeleteCommand}; also used by the
  * staff disband and the purge.
  */
+@CustomLog
 public class GangDisbandService {
 
 	private final UserManager<Player>        userManager;
@@ -126,16 +128,26 @@ public class GangDisbandService {
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(mem.getUuid());
 
 			User<OfflinePlayer> offlineUser = offlineUserManager.getUser(offlinePlayer);
-			if (offlineUser == null) {
-				offlineUser = offlineUserManager.create(offlinePlayer);
-				offlineUserManager.add(offlineUser);
+			// Not cached, or cached as a load-pending default (T-300, B3): load just this member's row, the path boot
+			// uses. Never loadAll, which rebuilds every player's User (Vault balance writes, wanted events).
+			if (offlineUser == null || offlineUser.isLoadPending()) {
+				boolean cached = offlineUser != null;
+				if (!cached) offlineUser = offlineUserManager.create(offlinePlayer);
+				// A failed read leaves defaults: load-pending keeps autosave and the save below off it.
+				if (!offlineUserManager.loadStored(offlineUser)) offlineUser.setLoadPending(true);
+				if (!cached) offlineUserManager.add(offlineUser);
 			}
 
 			BigDecimal amount = payouts.getOrDefault(mem.getUuid(), Currency.ZERO);
 
 			gang.getEconomy().withdrawAmount(amount);
 			offlineUser.getEconomy().depositAmount(amount);
-			userRepository.save(offlineUser);
+			if (offlineUser.isLoadPending()) {
+				log.warn("Disband payout of {} for {} was not saved: no stored row could be read",
+				         amount, mem.getUuid());
+			} else {
+				userRepository.save(offlineUser);
+			}
 
 			gang.removeMember(offlineUser, mem);
 
@@ -183,7 +195,8 @@ public class GangDisbandService {
 		User<? extends OfflinePlayer> target = online;
 		if (target == null) {
 			User<OfflinePlayer> offlineUser = offlineUserManager.getUser(Bukkit.getOfflinePlayer(payee));
-			if (offlineUser == null) return;
+			// A load-pending default is not the stored account: depositing into it and saving would overwrite the row.
+			if (offlineUser == null || offlineUser.isLoadPending()) return;
 
 			target = offlineUser;
 		}
