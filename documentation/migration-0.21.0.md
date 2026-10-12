@@ -75,6 +75,81 @@ The new config key is `Powerup_Npc.Placement_Cost` in `turf/turf_npcs.yml` (defa
 - The Quartermaster shows the owning gang's short tag above its name.
 - A refused player is told which gang the Quartermaster serves, and how to ally with it.
 
+## Part W7 (continued) - Guards you can steer and hear
+
+### 1. Owner alerts
+
+- Who hears: online members of the owning gang, by chat line and action bar. Allies and rivals get none of these.
+- Four triggers: a cop hits a player the turf protects (`Alerts.Cop_Hit`), a guard falls (`Alerts.Guard_Down`), someone
+  outside the owning gang and its allies hits the Quartermaster (`Alerts.Quartermaster_Hit`), the Quartermaster is killed
+  (`Alerts.Quartermaster_Down`).
+- Cooldown: `Owner_Alerts.Cooldown_Seconds` in `turf/turf_npcs.yml` (default `60`), per turf and per kind. `0` = every time.
+- A guard's death or the Quartermaster's death is told once per NPC.
+- Cop-hit alerts only happen while `Cop_Response.Enabled` is `true`.
+- The guard order does not silence these alerts: owners hear of cop hits under Hold too.
+
+### 2. Guard orders: Hold and Defend
+
+- The Quartermaster hub has a **Guard Orders** button in slot 13. Each click switches the turf between Hold and Defend.
+- Who may click: the owning gang's rank that holds `gangland.turf.upgrade` (the top rank always may). Allies can look, not switch.
+- Defend is the default and is today's behaviour: guards chase attackers and turn on cops.
+- Hold: guards keep within `Garrison.Hold_Radius` (`6.0`) of their post. They pick only attackers that close and walk back when
+  they stray further. The Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released.
+- The order is saved to the database, so it survives a restart.
+- The order is not reset when a turf changes hands. A turf that is taken keeps its current order, and the new owners'
+  rank decides who may switch it.
+
+### 3. Database
+
+- Table `turf_garrison` gains the column `hold` (BOOLEAN, default `false`). It is added automatically at first boot; run no SQL.
+- Existing rows read as Defend. A turf with no row is Defend too, and choosing Defend on such a turf writes nothing.
+
+### 4. Garrison panel
+
+- The Garrison panel shows the guards on duty, the reserve as `x/12` (stock plus guards on duty; the cap is
+  `Garrison.Max_Reserve` in `turf/turf_rules.yml`, default `12`), and the next wave.
+- The next wave comes from the reserve. It costs nothing extra; it was paid for when bought.
+- The Buy button's lore says "Reserve full" once stock plus guards on duty reach the cap.
+
+### 5. Staff placement
+
+- `/glw turf powerupnpc set` now works only while the staff member stands inside the selected turf. Anywhere else it is
+  refused with a chat message and nothing changes. (T-803.)
+
+### 6. New keys
+
+Defaults below are the shipped text. Existing files are not rewritten: a missing key uses the default, and to customise a
+key copy its block into your file.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `turf_npcs.yml` `Owner_Alerts.Cooldown_Seconds` | `60` | Seconds before the same owner alert for the same turf is sent again. `0` = every time. |
+| `turf_npcs.yml` `Garrison.Hold_Radius` | `6.0` | Blocks around its post a guard keeps to while the order is Hold. Minimum `1.0`. |
+| `Alerts.Cop_Hit` | `&c%turf%: a cop is attacking &f%player%` | Owner alert: a cop hits a member on the turf. |
+| `Alerts.Guard_Down` | `&c%turf%: one of your guards fell` | Owner alert: a guard is killed. |
+| `Alerts.Quartermaster_Hit` | `&c%turf%: &f%attacker% &cis attacking your Quartermaster` | Owner alert: an outsider hits the Quartermaster. |
+| `Alerts.Quartermaster_Down` | `&c%turf%: your Quartermaster was killed` | Owner alert: the Quartermaster is killed. |
+| `Quartermaster.Menu_Order` | `&7Guard order: %order%` | Hub line showing the turf's order. |
+| `Quartermaster.Order_Hold` | `&eHold` | The word Hold. |
+| `Quartermaster.Order_Defend` | `&cDefend` | The word Defend. |
+| `Quartermaster.Order_Name` | `&e&lGuard Orders` | Name of the hub button in slot 13. |
+| `Quartermaster.Order_Lore_Hold` | `&7Hold: guards stay by their posts and leave cops alone.` | Button lore under Hold. |
+| `Quartermaster.Order_Lore_Defend` | `&7Defend: guards chase attackers and turn on cops.` | Button lore under Defend. |
+| `Quartermaster.Order_Click` | `&aClick to switch to %order%&a.` | Button lore, click line. |
+| `Quartermaster.Order_Set` | `&aGuards on &f%turf%&a now: %order%` | Chat after a click. |
+| `Quartermaster.Garrison_On_Duty` | `&7On duty: &f%count%` | Garrison panel: guards alive on the turf. |
+| `Quartermaster.Garrison_Reserve` | `&7Reserve: &f%count%&7/&f%max% &8(stock and on duty)` | Garrison panel: reserve against the cap. |
+| `Quartermaster.Garrison_Next_Wave` | `&7Next wave: up to &f%count% &7guards, no extra cost` | Garrison panel: the next wave. |
+| `Quartermaster.Garrison_Buy_Full` | `&cReserve full: &f%max% &cguards.` | Buy lore at the cap. |
+
+### For the changelog
+
+- Owners are told by chat and action bar when a cop hits one of their members on their turf, a guard falls, an outsider
+  hits the Quartermaster, or the Quartermaster is killed.
+- Guard Orders on the Quartermaster hub: Hold keeps guards by their posts and away from cops; Defend is the default.
+- The Garrison panel shows guards on duty, the reserve against the cap, and the next wave.
+- `/glw turf powerupnpc set` now needs the staff member to stand inside the selected turf.
+
 ## Part T-808 - Players can use /glw gang ally
 
 ### 1. The ally commands are open to every player

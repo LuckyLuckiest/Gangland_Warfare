@@ -132,6 +132,8 @@ are `small_income_boost` (300), `large_income_boost` (1000) and `garrison_discou
   It costs `Powerup_Npc.Placement_Cost` from the gang bank (`0` is free). Staff use `/glw turf powerupnpc` instead, for free.
 - **Hub rows.** The hub shows the guards on duty and who may spend: the owning gang buys, allies only look.
 - **Gang tag.** A short tag of the owning gang is drawn on a line above the Quartermaster. It follows owner changes.
+- **Guard orders.** The hub's Guard Orders button (slot 13) switches the guards between Hold and Defend. The owning gang's rank with `gangland.turf.upgrade` may switch it; allies only look. See [Guards](#guards).
+- **Garrison read-out.** The Garrison panel shows guards on duty, the reserve against `Garrison.Max_Reserve` (`turf_rules.yml`), and the next wave, which comes from the reserve at no extra cost.
 
 ---
 
@@ -227,6 +229,10 @@ and only a warning is logged.
 stop again when the cop dies, when the victim leaves or stops being protected, or when the cop moves out of range. Set
 `Enabled` to `false` and defenders ignore cops entirely.
 
+**Guard orders.** Under Hold (Quartermaster hub, Guard Orders) the Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released. The order is saved per turf.
+
+**Owner alerts.** Online members of the owning gang (not allies or rivals) get a chat line and an action-bar line when a cop hits one of them on the turf, a guard falls, an outsider hits the Quartermaster, or the Quartermaster is killed. Each kind is sent at most once per `Owner_Alerts.Cooldown_Seconds` (default 60) per turf; guard and Quartermaster deaths are told once per NPC. Cop-hit alerts need `Cop_Response.Enabled` to be `true`. Hold does not silence them.
+
 ### Guard keys (`turf/turf_npcs.yml`)
 
 | Key | Default | Meaning |
@@ -244,6 +250,8 @@ stop again when the cop dies, when the victim leaves or stops being protected, o
 | `Cop_Response.Enabled` | `true` | Defenders answer cops hitting a protected player. |
 | `Cop_Response.Targeting_Radius` | `32.0` | Range within which defenders answer a cop. |
 | `Cop_Response.Include_Allies` | `true` | Also protect members of allied gangs. |
+| `Garrison.Hold_Radius` | `6.0` | Blocks around its post a guard keeps to while the order is Hold. Minimum `1.0`. |
+| `Owner_Alerts.Cooldown_Seconds` | `60` | Seconds before the same owner alert for the same turf is sent again. `0` = every time. |
 
 ---
 
@@ -533,7 +541,7 @@ Player commands are open to everyone from 0.17.0. Admin verbs are marked **admin
 | `/glw turf income <amount>` | Sets the per-interval income of your active-selection turf. | Admin |
 | `/glw turf garrison [count]` | Sets, or prints, the guard stock of your active-selection turf. | Admin |
 | `/glw turf buff [powerup_id]` | Activates a powerup on your active-selection turf, for no gang money (a staff tool); with no id, lists the active buffs. | Admin |
-| `/glw turf powerupnpc <set\|remove>` | Places or removes the Quartermaster NPC of your active-selection turf. | Admin |
+| `/glw turf powerupnpc <set\|remove>` | Places the Quartermaster NPC where you stand (`set` only while you are inside the selected turf), or removes it. | Admin |
 | `/glw turf quartermaster` | Places or moves your gang's Quartermaster where you stand, inside a turf your gang owns. Costs `Powerup_Npc.Placement_Cost` from the gang bank. | Player (gang rank with `gangland.turf.upgrade`) |
 
 Wand, status and turf-card texts come from `turf/turf_messages.yml`.
