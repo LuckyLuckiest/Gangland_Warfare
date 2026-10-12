@@ -11,11 +11,15 @@ import org.luckyraven.gangland.core.support.FakeIdentitySettingsContract;
 import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.events.gang.GangLevelUpEvent;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.file.GangRules.LevelRowValues;
+import org.luckyraven.gangland.gang.level.GangLevelTable;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.mockito.MockedStatic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,7 +46,14 @@ class GangManagerExperienceTest {
 		bukkit        = mockStatic(Bukkit.class);
 		bukkit.when(Bukkit::getPluginManager).thenReturn(pluginManager);
 
-		manager = new GangManager(mock(IRepository.class), mock(GangAllianceRepositoryContract.class));
+		manager = managerWith(new LevelRowValues(0, 0, 0, 0, "", List.of()));
+	}
+
+	/** W5-L: a manager whose level table has one row, inherited by every level (cost 0 = the automatic path). */
+	@SuppressWarnings("unchecked")
+	private GangManager managerWith(LevelRowValues row) {
+		return new GangManager(mock(IRepository.class), mock(GangAllianceRepositoryContract.class),
+		                       GangMigrationsContract.NONE, new GangLevelTable(() -> Map.of(0, row)));
 	}
 
 	@AfterEach
@@ -161,6 +172,35 @@ class GangManagerExperienceTest {
 		}
 
 		assertEquals(List.of(2, 6, 13), reachedOnDay.subList(0, 3));
+	}
+
+	@Test
+	@DisplayName("bankedXp_noLevelWhenCostPositive: with a fee on the next level the XP is banked and the gang never levels itself")
+	void bankedXp_noLevelWhenCostPositive() {
+		manager = managerWith(new LevelRowValues(20000, 0, 0, 0, "", List.of()));
+		Gang gang = newGang();
+
+		manager.addExperience(gang, 766);
+		manager.addExperience(gang, 100);
+
+		assertEquals(0, gang.getLevel().getLevelValue());
+		assertEquals(866D, gang.getLevel().getExperience(), 1e-9);
+		verify(pluginManager, never()).callEvent(any(Event.class));
+	}
+
+	@Test
+	@DisplayName("auto-levelling stops at the first level that has a fee")
+	void autoLevelling_stopsAtThePaidLevel() {
+		manager = new GangManager(mock(IRepository.class), mock(GangAllianceRepositoryContract.class),
+		                          GangMigrationsContract.NONE,
+		                          new GangLevelTable(() -> Map.of(0, new LevelRowValues(0, 0, 0, 0, "", List.of()),
+		                                                          2, new LevelRowValues(5000, 0, 0, 0, "", List.of()))));
+		Gang gang = newGang();
+
+		manager.addExperience(gang, 766);
+
+		assertEquals(1, gang.getLevel().getLevelValue());
+		assertEquals(566D, gang.getLevel().getExperience(), 1e-9);
 	}
 
 }

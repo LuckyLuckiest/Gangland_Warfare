@@ -1,0 +1,40 @@
+# +--------------+ #
+# | Fight arenas | #
+# +--------------+ #
+# Arenas built with /glw arena are saved here. Edit by hand only while the server is stopped, or run
+# /glw arena reload afterwards. An entry that does not parse is skipped with a console warning, the others load.
+# Arenas are per server and cannot see turfs: keep them outside turfs.
+#
+# Arenas:
+#    Pit:
+#       World: world
+#       Enabled: true
+#       Box:
+#          Min:
+#             X: 0
+#             Y: 60
+#             Z: 0
+#          Max:
+#             X: 9
+#             Y: 69
+#             Z: 9
+#       Spawns:
+#          A:
+#             - X: 1.5
+#               Y: 60.0
+#               Z: 1.5
+#               Yaw: 0.0
+#               Pitch: 0.0
+#          B:
+#             - X: 8.5
+#               Y: 60.0
+#               Z: 8.5
+#               Yaw: 180.0
+#               Pitch: 0.0
+#       Exit:
+#          World: world
+#          X: 50.5
+#          Y: 64.0
+#          Z: 50.5
+#          Yaw: 0.0
+#          Pitch: 0.0

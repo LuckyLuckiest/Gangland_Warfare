@@ -24,6 +24,8 @@ public class GangTable extends Table<Gang> {
 		Attribute<Long>    created            = new Attribute<>("created", false, Long.class);
 		Attribute<Long>    lastMemberOnlineAt = new Attribute<>("last_member_online_at", false, Long.class);
 		Attribute<String>  state              = new Attribute<>("state", false, String.class);
+		Attribute<String>  notice             = new Attribute<>("notice", false, String.class);
+		Attribute<Boolean> friendlyFire       = new Attribute<>("friendly_fire", false, Boolean.class);
 
 		balance.setDefaultValue(0D);
 		level.setDefaultValue(0);
@@ -31,6 +33,9 @@ public class GangTable extends Table<Gang> {
 		bounty.setDefaultValue(0D);
 		state.setDefaultValue(Gang.State.INVITE.name());
 		lastMemberOnlineAt.setDefaultValue(0L);
+		friendlyFire.setDefaultValue(false);
+		// no notice by default; a NULL column also lets the diff engine add it to a table that already has rows
+		notice.setCanBeNull(true);
 
 		this.addAttribute(id);
 		this.addAttribute(name);
@@ -44,6 +49,8 @@ public class GangTable extends Table<Gang> {
 		this.addAttribute(created);
 		this.addAttribute(lastMemberOnlineAt);
 		this.addAttribute(state);
+		this.addAttribute(notice);
+		this.addAttribute(friendlyFire);
 	}
 
 	@Override
@@ -51,7 +58,8 @@ public class GangTable extends Table<Gang> {
 		return new Object[]{data.getId(), data.getName(), data.getDisplayName(), data.getDescription(), data.getColor(),
 		                    data.getEconomy().getAmount().doubleValue(), data.getLevel().getLevelValue(),
 		                    data.getLevel().getExperience(), data.getBounty().getAmount().doubleValue(),
-		                    data.getCreated(), data.getLastMemberOnlineAt(), data.getState().name()};
+		                    data.getCreated(), data.getLastMemberOnlineAt(), data.getState().name(),
+		                    data.getNotice(), data.isFriendlyFire()};
 	}
 
 	@Override

@@ -25,6 +25,9 @@ public class CivilianNpcRegistry {
 	 */
 	@Nullable FactionSquads factionSquads;
 
+	/** Handed to every civilian on {@link #register} so a squad whose commander fell can be told to hold. */
+	@Nullable SquadHold squadHold;
+
 	/**
 	 * Registers an already-spawned civilian NPC so it is tracked by the system.
 	 */
@@ -33,6 +36,7 @@ public class CivilianNpcRegistry {
 		Entity entity = npc.getEntity();
 		if (entity == null) return;
 		if (factionSquads != null) npc.setFactionSquads(factionSquads);
+		if (squadHold != null) npc.setSquadHold(squadHold);
 		activeNpcs.put(entity.getUniqueId(), npc);
 	}
 

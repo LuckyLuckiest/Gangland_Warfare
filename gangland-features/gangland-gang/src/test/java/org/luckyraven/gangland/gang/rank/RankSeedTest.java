@@ -4,10 +4,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankParentRepository;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankRepository;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.mockito.ArgumentCaptor;
 
+import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -23,6 +27,18 @@ class RankSeedTest {
 	private final RankRepository       ranks   = mock(RankRepository.class);
 	private final RankParentRepository parents = mock(RankParentRepository.class);
 	private final GangRules            rules   = mock(GangRules.class);
+	private final Set<String>          done    = new HashSet<>();
+	private final GangMigrationsContract migrations = new GangMigrationsContract() {
+		@Override
+		public boolean isDone(String id) {
+			return done.contains(id);
+		}
+
+		@Override
+		public void markDone(String id) {
+			done.add(id);
+		}
+	};
 
 	@Test
 	@DisplayName("an empty table with the default preset seeds member, officer, owner and two links")
@@ -30,7 +46,7 @@ class RankSeedTest {
 		when(ranks.totalRanks()).thenReturn(0);
 		when(rules.getRankPreset()).thenReturn(List.of("member", "officer", "owner"));
 
-		assertTrue(RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner"));
+		assertTrue(RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner", migrations));
 
 		ArgumentCaptor<Rank> saved = ArgumentCaptor.forClass(Rank.class);
 		verify(ranks, times(3)).insertNow(saved.capture());
@@ -45,7 +61,7 @@ class RankSeedTest {
 	void nonEmptyTable_seedsNothing() throws Exception {
 		when(ranks.totalRanks()).thenReturn(4);
 
-		assertFalse(RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner"));
+		assertFalse(RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner", migrations));
 
 		verify(ranks, never()).insertNow(any(Rank.class));
 		verify(parents, never()).insertInitialRelation(anyInt(), anyInt());
@@ -57,7 +73,7 @@ class RankSeedTest {
 		when(ranks.totalRanks()).thenReturn(0);
 		when(rules.getRankPreset()).thenReturn(List.of("member", "soldier", "officer", "underboss", "owner"));
 
-		RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner");
+		RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner", migrations);
 
 		ArgumentCaptor<Rank> saved = ArgumentCaptor.forClass(Rank.class);
 		verify(ranks, times(5)).insertNow(saved.capture());
@@ -75,11 +91,60 @@ class RankSeedTest {
 		when(ranks.totalRanks()).thenReturn(0);
 		when(rules.getRankPreset()).thenReturn(List.of("soldier", "officer", "boss"));
 
-		RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner");
+		RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner", migrations);
 
 		ArgumentCaptor<Rank> saved = ArgumentCaptor.forClass(Rank.class);
 		verify(ranks, times(3)).insertNow(saved.capture());
 		assertEquals(List.of("member", "officer", "owner"), saved.getAllValues().stream().map(Rank::getName).toList());
+	}
+
+	@Test
+	@DisplayName("T-235: a failure after the first rank is written leaves the seed pending; the next boot finishes it")
+	void presetSeed_atomic_orSelfHealing() throws Exception {
+		when(rules.getRankPreset()).thenReturn(List.of("member", "officer", "owner"));
+
+		// boot 1: the second rank write fails
+		when(ranks.totalRanks()).thenReturn(0);
+		doNothing().doThrow(new SQLException("disk full")).when(ranks).insertNow(any(Rank.class));
+		assertThrows(SQLException.class, () -> RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner", migrations));
+		assertTrue(RankSeed.isPending(migrations), "the half-written seed is remembered");
+
+		// boot 2: one rank row exists, so the table is not empty, but the pending seed is completed
+		reset(ranks);
+		when(ranks.totalRanks()).thenReturn(1);
+		assertTrue(RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner", migrations));
+		verify(ranks, times(3)).insertNow(any(Rank.class));
+		assertTrue(RankSeed.isPending(migrations), "still pending until the preset permissions are written");
+
+		RankSeed.markComplete(migrations);
+		assertFalse(RankSeed.isPending(migrations));
+
+		// boot 3: complete, a populated table is left alone
+		reset(ranks);
+		when(ranks.totalRanks()).thenReturn(3);
+		assertFalse(RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner", migrations));
+		verify(ranks, never()).insertNow(any(Rank.class));
+	}
+
+	@Test
+	@DisplayName("an install that was never seeded here (no marker) is never pending")
+	void existingInstall_isNeverPending() {
+		assertFalse(RankSeed.isPending(migrations));
+	}
+
+	@Test
+	@DisplayName("T-235: the STARTED marker is written synchronously before the first rank row")
+	void startedMarker_writtenSynchronouslyBeforeFirstRank() throws Exception {
+		GangMigrationsContract mock = mock(GangMigrationsContract.class);
+		when(ranks.totalRanks()).thenReturn(0);
+		when(rules.getRankPreset()).thenReturn(List.of("member", "officer", "owner"));
+
+		RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner", mock);
+
+		var order = inOrder(mock, ranks);
+		order.verify(mock).markDoneNow(RankSeed.STARTED);
+		order.verify(ranks, atLeastOnce()).insertNow(any(Rank.class));
+		verify(mock, never()).markDone(RankSeed.STARTED);
 	}
 
 }

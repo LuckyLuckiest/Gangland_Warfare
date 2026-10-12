@@ -55,7 +55,7 @@ class GangDescriptionCommand extends SubArgument {
 			// GR-03: any member could rewrite the gang description.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.DESCRIPTION)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.DESCRIPTION));
 				return;
 			}
 

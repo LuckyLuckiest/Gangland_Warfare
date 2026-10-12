@@ -19,7 +19,7 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.support.W2P2Messages;
@@ -50,7 +50,7 @@ class GangChatCommandTest {
 	private GangManager            gangManager;
 	private UserManager<Player>    userManager;
 	private MemberManager          memberManager;
-	private GangChatChannel        channel;
+	private GangChatToggles        channel;
 	private Player                 rex;
 	private Player                 mate;
 	private Player                 foe;
@@ -88,11 +88,15 @@ class GangChatCommandTest {
 		gangManager   = mock(GangManager.class);
 		userManager   = mock(UserManager.class);
 		memberManager = mock(MemberManager.class);
-		channel       = new GangChatChannel();
+		channel       = new GangChatToggles();
 
 		Gang vipers = mock(Gang.class);
 		when(vipers.getId()).thenReturn(1);
 		when(gangManager.getGang(1)).thenReturn(vipers);
+		Gang rats = mock(Gang.class);
+		when(rats.getId()).thenReturn(2);
+		when(gangManager.getGang(2)).thenReturn(rats);
+		when(vipers.isAlly(rats)).thenReturn(true);
 
 		rexId = UUID.randomUUID();
 		rex   = member("Rex", rexId, 1);
@@ -169,6 +173,41 @@ class GangChatCommandTest {
 		assertFalse(channel.isOn(rexId));
 	}
 
+	@Test
+	@DisplayName("alliesLiteral_notSwallowedByMessage: 'chat allies hi' through the real tree is an ally line 'hi', not a gang line 'allies hi'")
+	void alliesLiteral_notSwallowedByMessage() throws Exception {
+		when(rex.hasPermission(anyString())).thenReturn(true);
+		Tree<Argument> tree = new Tree<>();
+		Argument       gang = new Argument(mock(JavaPlugin.class), "gang", tree, null, "gang");
+		tree.add(gang.getNode());
+		gang.addSubArgument(chat(tree, gang));
+
+		gang.execute("glw", rex, new String[]{"gang", "chat", "allies", "hi", "there"});
+
+		verify(mate).sendMessage(argThat((String line) -> org.bukkit.ChatColor.stripColor(line).contains("hi there")
+		                                                  && !line.contains("allies")));
+		verify(foe).sendMessage(argThat((String line) -> line.contains("hi there")));
+		assertEquals(org.luckyraven.gangland.data.gang.GangChatChannel.PUBLIC, channel.channelOf(rexId));
+	}
+
+	@Test
+	@DisplayName("'chat allies' with no message toggles ally chat on, then off")
+	void alliesNoMessage_toggles() throws Exception {
+		when(rex.hasPermission(anyString())).thenReturn(true);
+		Tree<Argument> tree = new Tree<>();
+		Argument       gang = new Argument(mock(JavaPlugin.class), "gang", tree, null, "gang");
+		tree.add(gang.getNode());
+		gang.addSubArgument(chat(tree, gang));
+
+		gang.execute("glw", rex, new String[]{"gang", "chat", "allies"});
+		assertEquals(org.luckyraven.gangland.data.gang.GangChatChannel.ALLIES, channel.channelOf(rexId));
+		verify(rex).sendMessage(messages.text("Chat.Allies_On", "&aAlly chat on."));
+
+		gang.execute("glw", rex, new String[]{"gang", "chat", "allies"});
+		assertEquals(org.luckyraven.gangland.data.gang.GangChatChannel.PUBLIC, channel.channelOf(rexId));
+		verify(rex).sendMessage(messages.text("Chat.Allies_Off", "&7Ally chat off."));
+	}
+
 	private Argument chat() {
 		return chat(new Tree<>(), mock(Argument.class));
 	}
@@ -180,7 +219,8 @@ class GangChatCommandTest {
 
 	/** The {@code <message>} child of {@code chat}; a message is sent through it, not the parent. */
 	private Argument messageArgument() {
-		return chat().getNode().getChildren().get(0).getData();
+		// children: the literal "allies" stub first, the optional <message> last
+		return chat().getNode().getChildren().get(1).getData();
 	}
 
 	/** A player in gang {@code gangId}, known to the user manager and to the online list. */

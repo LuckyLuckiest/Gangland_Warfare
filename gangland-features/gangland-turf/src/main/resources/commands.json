@@ -98,5 +98,13 @@
 	"map_legend": {
 		"usage": "/glw map legend",
 		"description": "Every gang on your map with its letter and relation."
+	},
+	"map_zoom": {
+		"usage": "/glw map zoom <in|out>",
+		"description": "Zoom your map in or out: 8, 16, 32 or 64 blocks per cell. Only you see it; it resets when you log out."
+	},
+	"map_border": {
+		"usage": "/glw map border",
+		"description": "Show the border of the turf you stand in, or the nearest turf, as particles for 10 seconds (only the part near you)."
 	}
 }

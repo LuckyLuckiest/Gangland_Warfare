@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.mail.command.invite;
 
-import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -42,10 +42,12 @@ class GangInviteAcceptCommand extends SubArgument {
 	private final RankManager         rankManager;
 	private final MailManager         mailManager;
 	private final MailMessages        messages;
+	private final GangMembershipService membershipService;
 
 	GangInviteAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                        MemberManager memberManager, GangManager gangManager, RankManager rankManager,
-	                        MailManager mailManager, MailMessages messages) {
+	                        MailManager mailManager, MailMessages messages,
+	                        GangMembershipService membershipService) {
 		super(plugin, "accept", tree, parent);
 
 		this.plugin      = plugin;
@@ -56,6 +58,7 @@ class GangInviteAcceptCommand extends SubArgument {
 		this.rankManager   = rankManager;
 		this.mailManager   = mailManager;
 		this.messages      = messages;
+		this.membershipService = membershipService;
 
 		this.addSubArgument(senderGangArgument());
 	}
@@ -171,19 +174,14 @@ class GangInviteAcceptCommand extends SubArgument {
 	}
 
 	private void doAccept(User<Player> user, Player player, Gang gang, MailItem mail) {
-		Member member = memberManager.getMember(player.getUniqueId());
-		Rank   rank   = rankManager.get(GangSettings.getGangRankHead());
-
-		List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager::getUser);
-		for (User<Player> onUser : gangOnlineMembers) {
-			String playerJoined = Messages.GANG_PLAYER_JOINED.toString()
-			                                                 .replace("%player%", user.getUser().getName());
-
-			onUser.sendMessage(playerJoined);
+		// the one membership path applies the member cap, tells the gang and fires the join events
+		GangMembershipService.Result result = membershipService.join(gang.getId(), player.getUniqueId(),
+		                                                             GangMembershipService.JoinSource.INVITE);
+		if (!result.ok()) {
+			player.sendMessage(membershipService.text(result));
+			return;
 		}
 
-		member.setGangJoinDateLong(Instant.now().toEpochMilli());
-		gang.addMember(user, member, rank);
 		player.sendMessage(Messages.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
 
 		// GR-23: accepting cancels the rest of this player's gang invites; say so if there were any.

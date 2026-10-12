@@ -85,7 +85,7 @@ class GangDepositCommand extends SubArgument {
 
 			// GR-03: deposits move a member's own money into the gang vault, which withdraw rights then control.
 			if (!GangPermissions.allows(member, player, GangPermissions.DEPOSIT)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.DEPOSIT));
 				return;
 			}
 

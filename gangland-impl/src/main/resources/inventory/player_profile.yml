@@ -1,0 +1,49 @@
+# Replaced from the plugin jar when the plugin version changes; the old file is kept as <name>-old.yml.
+Config_Version: '${project.version}'
+
+Information:
+   Display_Name: "&6&lPlayer Profile"
+   Size: 27
+   Type: inventory
+   Open:
+      Command: "/glw gang profile"
+      Permission: "gangland.command.gang.profile"
+      # A player with no gang falls through to the chat 'not in a gang' line (the menu is gang-only).
+      Condition: "%gangland_user_has-gang%"
+   Configuration:
+      Fill: true
+      Border: false
+   Permission: "gangland.inventory.player_profile"
+
+Slots:
+   10:
+      Item: NAME_TAG
+      Name: "&bGang"
+      Lore:
+         - "&e%gangland_gang_name%"
+   11:
+      Item: COMPASS
+      Name: "&bKDR"
+      Lore:
+         - "&e%gangland_user_kd%"
+   12:
+      Item: DIAMOND_SWORD
+      Name: "&bKills"
+      Lore:
+         - "&e%gangland_user_kills%"
+   13:
+      Item: SKELETON_SKULL
+      Name: "&bDeaths"
+      Lore:
+         - "&e%gangland_user_deaths%"
+   14:
+      Item: BOW
+      Name: "&bAssists"
+      Lore:
+         - "&e%gangland_user_assists%"
+   16:
+      Item: GOLD_INGOT
+      Name: "&bRank position"
+      Lore:
+         - "&e#%gangland_user_rank-position%"
+         - "&7%gangland_user_rank%"

@@ -40,9 +40,11 @@ public final class GangOptionContribution implements CommandContribution {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
+	private final GangStaffVerbs      staff;
 
 	public GangOptionContribution(JavaPlugin plugin, UserManager<Player> userManager, MemberManager memberManager,
-	                              GangManager gangManager, RankManager rankManager) {
+	                              GangManager gangManager, RankManager rankManager, GangStaffVerbs staff) {
+		this.staff         = staff;
 		this.plugin        = plugin;
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
@@ -113,7 +115,36 @@ public final class GangOptionContribution implements CommandContribution {
 
 		gang.addSubArgument(rank);
 
+		// staff verbs: every one runs from the console (GangStaffVerbs holds the bodies)
+		gang.addSubArgument(staffVerb(tree, "disband", "gang", "confirm"));
+		gang.addSubArgument(staffVerb(tree, "leader", "gang", "player"));
+		gang.addSubArgument(staffVerb(tree, "bank", "gang", "balance|give|take|reset", "amount"));
+		gang.addSubArgument(staffVerb(tree, "safehouse", "gang", "list|tp|remove", "name"));
+		gang.addSubArgument(staffVerb(tree, "stats", "reset", "player"));
+		gang.addSubArgument(staffVerb(tree, "spy"));
+		gang.addSubArgument(staffVerb(tree, "purge", "preview|run"));
+
 		return gang;
+	}
+
+	/**
+	 * A verb with a chain of free-text positions. The verb and every position run the same body, which reports a
+	 * missing argument itself, so the usage line is the same wherever the line stops.
+	 */
+	private Argument staffVerb(Tree<Argument> tree, String verb, String... positions) {
+		Argument root = new Argument(plugin, verb, tree, (argument, sender, args) -> staff.handle(verb, sender, args));
+
+		Argument current = root;
+		for (String position : positions) {
+			OptionalArgument next = new OptionalArgument(plugin, tree,
+			                                             (argument, sender, args) -> staff.handle(verb, sender, args),
+			                                             sender -> staff.complete(position));
+			next.setDisplayName(position);
+			current.addSubArgument(next);
+			current = next;
+		}
+
+		return root;
 	}
 
 	private @NotNull Argument getRankType(Tree<Argument> tree) {

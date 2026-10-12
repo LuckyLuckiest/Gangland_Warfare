@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.support.MembershipKit;
+import org.luckyraven.gangland.gang.membership.GangDisbandService;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 import net.md_5.bungee.api.ChatColor;
 import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.events.gang.GangDeleteEvent;
+import org.luckyraven.gangland.events.gangs.GangMemberLeftEvent;
 import org.luckyraven.gangland.core.support.FakeIdentitySettingsContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -51,9 +54,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -92,6 +97,7 @@ class GangDeleteCommandTest {
 	private       RankManager             rankManager;
 	private       Argument                parent;
 	private       GangDeleteCommand       command;
+	private       MembershipKit           kit;
 
 	@BeforeEach
 	@SuppressWarnings("unchecked")
@@ -172,8 +178,10 @@ class GangDeleteCommandTest {
 	}
 
 	private GangDeleteCommand commandWith(GangMessages messages) {
-		return new GangDeleteCommand(plugin, new Tree<>(), parent, userManager, offlineUserManager, memberManager,
-		                             gangManager, rankManager, repositoryRegistry, messages);
+		kit = new MembershipKit(gangManager, memberManager, rankManager, userManager, offlineUserManager,
+		                                      repositoryRegistry, messages);
+		return new GangDeleteCommand(plugin, new Tree<>(), parent, userManager, memberManager, gangManager,
+		                             rankManager, kit.service);
 	}
 
 	@AfterEach
@@ -258,6 +266,122 @@ class GangDeleteCommandTest {
 	}
 
 	@Test
+	@DisplayName("a payout to an offline member with no loaded row is load-pending and never saved over the stored row")
+	void fallbackOfflineUser_isLoadPendingAndNotSaved() {
+		UUID                uuid = UUID.randomUUID();
+		User<OfflinePlayer> dave = mock(User.class);
+		AtomicBoolean       pending = new AtomicBoolean();
+		when(dave.getEconomy()).thenReturn(new EconomyHandler(null));
+		doAnswer(i -> {
+			pending.set(i.getArgument(0));
+			return null;
+		}).when(dave).setLoadPending(anyBoolean());
+		when(dave.isLoadPending()).thenAnswer(i -> pending.get());
+		// no cached row: the command falls back to create(), as it does when the boot read failed
+		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(null);
+		doReturn(dave).when(offlineUserManager).create(any(OfflinePlayer.class));
+		member(uuid, 1.0, memberRank);
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("1000"));
+
+		disband(alice);
+
+		verify(offlineUserManager).add(dave);
+		assertEquals(true, dave.isLoadPending(), "the fallback user must be load-pending");
+		verify(userRepository, never()).save(dave);
+	}
+
+	@Test
+	@DisplayName("T-300: an uncached offline member is loaded by its own row only; stored balance + payout is saved")
+	void uncachedOfflineMember_usesStoredRowBalancePlusPayout() throws Exception {
+		UUID                uuid   = UUID.randomUUID();
+		member(uuid, 1.0, memberRank);
+		User<OfflinePlayer> loaded = mock(User.class);
+		EconomyHandler      loadedEconomy = new EconomyHandler(null);
+		when(loaded.getEconomy()).thenReturn(loadedEconomy);
+		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(null);
+		doReturn(loaded).when(offlineUserManager).create(any(OfflinePlayer.class));
+		// the per-row loader stamps the stored balance on the fresh user
+		doAnswer(i -> {
+			loadedEconomy.setAmount(new BigDecimal("250"));
+			return true;
+		}).when(offlineUserManager).loadStored(loaded);
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("1000"));
+
+		List<BigDecimal> savedBalance = new ArrayList<>();
+		doAnswer(i -> savedBalance.add(loadedEconomy.getAmount())).when(userRepository).save(loaded);
+
+		disband(alice);
+
+		verify(offlineUserManager).add(loaded);
+		assertEquals(1, savedBalance.size(), "the stored row must be saved once");
+		assertEquals(0, new BigDecimal("750").compareTo(savedBalance.get(0)), "saved balance " + savedBalance);
+		// loadAll would rebuild every player's User (Vault balance writes, wanted events for online players)
+		verify(userRepository, never()).loadAll();
+	}
+
+	@Test
+	@DisplayName("T-300: when the member's stored row cannot be read the payout is load-pending and not saved")
+	void uncachedOfflineMember_withNoStoredRow_isNotSaved() throws Exception {
+		UUID                uuid = UUID.randomUUID();
+		User<OfflinePlayer> dave = mock(User.class);
+		AtomicBoolean       pending = new AtomicBoolean();
+		when(dave.getEconomy()).thenReturn(new EconomyHandler(null));
+		doAnswer(i -> {
+			pending.set(i.getArgument(0));
+			return null;
+		}).when(dave).setLoadPending(anyBoolean());
+		when(dave.isLoadPending()).thenAnswer(i -> pending.get());
+		when(offlineUserManager.loadStored(dave)).thenReturn(false);
+		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(null);
+		doReturn(dave).when(offlineUserManager).create(any(OfflinePlayer.class));
+		member(uuid, 1.0, memberRank);
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("1000"));
+
+		disband(alice);
+
+		assertEquals(true, dave.isLoadPending());
+		verify(userRepository, never()).save(dave);
+		verify(userRepository, never()).loadAll();
+	}
+
+	@Test
+	@DisplayName("B3: a cached load-pending member is read from its stored row and saved once with balance + payout")
+	void cachedPendingMember_isLoadedAndSaved() throws Exception {
+		UUID                uuid   = UUID.randomUUID();
+		member(uuid, 1.0, memberRank);
+		User<OfflinePlayer> cached = mock(User.class);
+		EconomyHandler      economy = new EconomyHandler(null);
+		AtomicBoolean       pending = new AtomicBoolean(true);
+		when(cached.getEconomy()).thenReturn(economy);
+		when(cached.isLoadPending()).thenAnswer(i -> pending.get());
+		doAnswer(i -> {
+			pending.set(i.getArgument(0));
+			return null;
+		}).when(cached).setLoadPending(anyBoolean());
+		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(cached);
+		doAnswer(i -> {
+			economy.setAmount(new BigDecimal("250"));
+			pending.set(false);
+			return true;
+		}).when(offlineUserManager).loadStored(cached);
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("1000"));
+
+		List<BigDecimal> savedBalance = new ArrayList<>();
+		doAnswer(i -> savedBalance.add(economy.getAmount())).when(userRepository).save(cached);
+
+		disband(alice);
+
+		assertEquals(1, savedBalance.size(), "the cached pending entry must be saved once");
+		assertEquals(0, new BigDecimal("750").compareTo(savedBalance.get(0)), "saved balance " + savedBalance);
+		verify(offlineUserManager, never()).create(any(OfflinePlayer.class));
+		verify(offlineUserManager, never()).add(cached);
+	}
+
+	@Test
 	@DisplayName("disband announces the deleted gang so other modules (mail) can drop what points at it")
 	void disband_firesGangDeleteEvent() {
 		disband(owner(1.0));
@@ -291,7 +415,7 @@ class GangDeleteCommandTest {
 		UUID cy    = UUID.randomUUID();
 		List<Member> members = List.of(zeroMember(owner), zeroMember(bob), zeroMember(cy));
 
-		Map<UUID, BigDecimal> shares = GangDeleteCommand.payouts(new BigDecimal("100.00"), members, owner);
+		Map<UUID, BigDecimal> shares = GangDisbandService.payouts(new BigDecimal("100.00"), members, owner);
 
 		assertEquals(0, new BigDecimal("33.33").compareTo(shares.get(bob)), "bob " + shares.get(bob));
 		assertEquals(0, new BigDecimal("33.33").compareTo(shares.get(cy)), "cy " + shares.get(cy));
@@ -320,6 +444,31 @@ class GangDeleteCommandTest {
 		assertEquals(1, plain.stream().filter(line -> line.startsWith("DEPOSITED")).count(), plain.toString());
 		assertEquals(1, plain.stream().filter(line -> line.startsWith("Refunded a quarter")).count(), plain.toString());
 		assertMoney("1100", alice.getEconomy());   // 1000 share + 100 fee refund, paid once
+	}
+
+	@Test
+	@DisplayName("every member leaves with the DISBANDED reason, once each, online or offline")
+	void disband_firesLeftEventPerMember() {
+		onlineMember(1.0);
+		offlineMember(1.0);
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("300"));
+
+		disband(alice);
+
+		verify(pluginManager, times(3)).callEvent(argThat(
+				event -> event instanceof GangMemberLeftEvent left && left.gangId() == GANG_ID
+				         && left.reason() == GangMemberLeftEvent.Reason.DISBANDED));
+	}
+
+	@Test
+	@DisplayName("a staff or purge disband gives no creation-fee refund (refundFee false)")
+	void staffDisband_noRefund() {
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("100"));
+		kit.service.disband(GANG_ID, alice.getUser().getUniqueId(), true);
+
+		assertMoney("100", alice.getEconomy());   // the vault only, no fee refund
 	}
 
 	private Member zeroMember(UUID uuid) {

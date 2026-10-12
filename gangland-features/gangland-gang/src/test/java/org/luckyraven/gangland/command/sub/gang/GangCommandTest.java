@@ -1,6 +1,16 @@
 package org.luckyraven.gangland.command.sub.gang;
 
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.GangWorldPolicy;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.membership.GangDisbandService;
+import org.luckyraven.gangland.gang.membership.GangLeadership;
+import org.luckyraven.gangland.gang.combat.CombatTag;
+import org.luckyraven.gangland.gang.stats.GangStatsService;
+import org.luckyraven.gangland.gang.level.GangLimits;
+import org.luckyraven.gangland.gang.level.GangLevelTable;
+import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
+import org.luckyraven.gangland.gang.combat.FriendlyFirePolicy;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -149,7 +159,10 @@ class GangCommandTest {
 	private GangCommand command(UserManager<Player> userManager) {
 		return new GangCommand(mock(JavaPlugin.class), userManager, mock(UserManager.class), null, null, null, null,
 		                       null, mock(DependencyContainer.class), null, mock(GangRules.class), messages,
-		                       new GangChatChannel());
+		                       new GangChatToggles(), new GangWorldPolicy(mock(GangRules.class)), mock(GangMembershipService.class),
+		                       mock(GangDisbandService.class), mock(GangLeadership.class), new CombatTag(),
+		                       new GangStatsService(), new GangLimits(), new GangLevelTable(),
+		                       mock(GangSafehouseService.class), mock(FriendlyFirePolicy.class));
 	}
 
 	private static boolean hasClick(BaseComponent[] components, ClickEvent.Action action, String value) {

@@ -1,0 +1,9 @@
+# Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
+Id: fights
+Name: Gangland Gang Fights
+Version: ${project.version}
+Main: org.luckyraven.gangland.fights.FightsModule
+Host_Api: 2.6
+Depends:
+  - gang
+Artifact: org.luckyraven:gangland-gang-fights

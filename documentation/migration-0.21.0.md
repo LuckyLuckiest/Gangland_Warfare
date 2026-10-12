@@ -2,9 +2,10 @@
 
 [← Back to Documentation Index](./README.md)
 
-Gangland 0.21.0 needs Keystone 1.15.1 (the `keystone.version` in the root `pom.xml`). Nothing needs a new dependency.
-`gangland-api` stays at `2.3` and no module's `Host_Api` changes. Read the part below before you start the server on the
-new jar.
+Gangland 0.21.0 needs Keystone 1.15.3 (the `keystone.version` in the root `pom.xml`). Nothing needs a new dependency.
+`gangland-api` is at `2.6` (additive since 0.16.x) and no module's `Host_Api` changes in this release. Upgrading from
+0.16.x: first apply [`migration-0.17.0.md`](./migration-0.17.0.md) and [`migration-0.19.0.md`](./migration-0.19.0.md), then
+read the part below before you start the server on the new jar.
 
 ## Part W7 - Quartermaster that just works
 

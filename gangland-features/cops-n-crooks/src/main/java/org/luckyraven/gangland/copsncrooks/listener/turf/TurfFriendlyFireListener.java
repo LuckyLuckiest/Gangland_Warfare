@@ -114,13 +114,23 @@ public final class TurfFriendlyFireListener implements Listener {
 	}
 
 	private boolean isNpcFriendlyFire(Entity shooter, Entity victim) {
-		if (shooter == null || !(victim instanceof Player target)) return false;
+		if (shooter == null || victim == null) return false;
 
 		int turfId = resolveTurfId(shooter);
 		if (turfId < 0) return false;
 
 		Turf turf = turfs.get(turfId);
 		if (turf == null || turf.isUnclaimed()) return false;
+
+		// T-287: guards are Citizens PLAYER entities with no User, so guard-on-guard rounds used to pass.
+		int victimTurfId = resolveTurfId(victim);
+		if (victimTurfId >= 0) {
+			Turf victimTurf = turfs.get(victimTurfId);
+			return victimTurf != null && !victimTurf.isUnclaimed() &&
+				   isFriendly(turf.getOwnerGangId(), victimTurf.getOwnerGangId());
+		}
+
+		if (!(victim instanceof Player target)) return false;
 
 		User<Player> user = users.findByPlayer(target);
 		if (user == null || !user.hasGang()) return false;

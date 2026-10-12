@@ -14,22 +14,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The gang module's declaration to the host (WS5 G1): one configuration class, its listener/command/repository
+ * The gang module's declaration to the host (WS5 G1): nine configuration classes, its listener/command/repository
  * packages.
  */
 @DisplayName("GangModule")
 class GangModuleTest {
 
 	@Test
-	@DisplayName("configure registers GangConfig plus the listener, command and repository packages")
+	@DisplayName("configure registers the nine configurations plus the listener, command and repository packages")
 	void configure_declaresConfigAndPackages() {
 		ModuleRegistrations registrations = new ModuleRegistrations();
 
 		new GangModule().configure(registrations);
 
 		// GangMembershipInstaller is no longer its own @Configuration class (T-53, W55) — it's a @Bean produced
-		// inside GangConfig now. GangModuleFileConfig (0.17.0) registers the module's own YAML files first.
-		assertEquals(List.of(GangModuleFileConfig.class, GangConfig.class), registrations.configurations());
+		// inside GangConfig now. GangModuleFileConfig (0.17.0) registers the module's own YAML files first, then
+		// GangConfig, then the seven lane configurations of the gang parity wave (0.19.0), in this order.
+		assertEquals(List.of(GangModuleFileConfig.class, GangConfig.class, GangMembershipConfig.class,
+		                     GangLevelConfig.class, GangCombatConfig.class, GangSafehouseConfig.class,
+		                     GangChatConfig.class, GangStatsConfig.class, GangUxConfig.class),
+		             registrations.configurations());
 		assertEquals(List.of(GangModule.LISTENER_PACKAGE), registrations.listenerPackages());
 		assertEquals(List.of(GangModule.GANG_COMMAND_PACKAGE, GangModule.RANK_COMMAND_PACKAGE),
 		            registrations.commandPackages());

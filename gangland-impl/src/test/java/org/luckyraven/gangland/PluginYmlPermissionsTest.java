@@ -67,7 +67,47 @@ class PluginYmlPermissionsTest {
 			"gangland.command.gang.bounty",
 			"gangland.inventory.gang_stat",
 			"gangland.inventory.gang_info",
-			"gangland.inventory.alliance_stat");
+			"gangland.inventory.alliance_stat",
+			"gangland.command.map.zoom",
+			"gangland.command.map.border",
+			"gangland.command.gang.transfer",
+			"gangland.command.gang.delete",
+			"gangland.command.gang.rename",
+			"gangland.command.gang.description",
+			"gangland.command.gang.display",
+			"gangland.command.gang.color",
+			"gangland.command.gang.ally",
+			"gangland.command.gang.ally.request",
+			"gangland.command.gang.ally.accept",
+			"gangland.command.gang.ally.reject",
+			"gangland.command.gang.ally.pending",
+			"gangland.command.gang.ally.pending.cancel",
+			"gangland.command.gang.ally.abandon",
+			"gangland.command.gang.ally.pvp",
+			"gangland.command.gang.chat.allies",
+			"gangland.command.gang.upgrade",
+			"gangland.command.gang.upgrade.confirm",
+			"gangland.command.gang.safehouse",
+			"gangland.command.gang.safehouse.set",
+			"gangland.command.gang.safehouse.remove",
+			"gangland.command.gang.safehouse.list",
+			"gangland.command.gang.rally",
+			"gangland.command.gang.rally.join",
+			"gangland.command.gang.pvp",
+			"gangland.command.gang.notice",
+			"gangland.command.gang.ranking",
+			"gangland.command.gang.profile",
+			"gangland.command.gang.fight",
+			"gangland.command.gang.fight.propose",
+			"gangland.command.gang.fight.accept",
+			"gangland.command.gang.fight.decline",
+			"gangland.command.gang.fight.enlist",
+			"gangland.command.gang.fight.drop",
+			"gangland.command.gang.fight.info",
+			"gangland.command.gang.fight.arenas",
+			"gangland.command.gang.fight.stats",
+			"gangland.inventory.player_profile",
+			"gangland.inventory.gang_ranking");
 
 	/** Children of gangland.turf.admin; never default true. */
 	static final List<String> ADMIN = List.of(
@@ -86,6 +126,30 @@ class PluginYmlPermissionsTest {
 			"gangland.command.turf.buff",
 			"gangland.command.turf.powerupnpc",
 			"gangland.command.turf.rename");
+
+	static final List<String> ARENA = List.of(
+			"gangland.command.arena",
+			"gangland.command.arena.create",
+			"gangland.command.arena.corner",
+			"gangland.command.arena.spawn",
+			"gangland.command.arena.exit",
+			"gangland.command.arena.size",
+			"gangland.command.arena.finish",
+			"gangland.command.arena.show",
+			"gangland.command.arena.list",
+			"gangland.command.arena.tp",
+			"gangland.command.arena.on",
+			"gangland.command.arena.off",
+			"gangland.command.arena.delete",
+			"gangland.command.arena.reload");
+
+	/** Children of gangland.admin.gang; never default true (a default-true gangland.gang.* would bypass rank gates). */
+	static final List<String> ADMIN_GANG = List.of(
+			"gangland.admin.gang.spy",
+			"gangland.admin.gang.force_rank",
+			"gangland.gang.balance.others",
+			"gangland.gang.ranking.wealth",
+			"gangland.gang.fight.bypass_commands");
 
 	private static Map<String, Object> permissions;
 
@@ -164,6 +228,71 @@ class PluginYmlPermissionsTest {
 			if (node.startsWith("gangland.command.rank") || node.startsWith("gangland.command.option")) {
 				assertFalse(isTrue(defaultOf(node)), node + " must not default to true");
 			}
+		}
+	}
+
+	@Test
+	@DisplayName("gangland.arena.admin defaults to op and owns every arena verb")
+	void arenaAdmin_isOpAndOwnsTheArenaVerbs() {
+		Map<String, Object> arena = castMap(permissions.get("gangland.arena.admin"));
+
+		assertTrue(arena != null, "gangland.arena.admin must exist");
+		assertEquals("op", String.valueOf(arena.get("default")));
+		Map<String, Object> children = castMap(arena.get("children"));
+		assertTrue(children != null, "gangland.arena.admin must list its children");
+		for (String node : ARENA) {
+			assertTrue(isTrue(children.get(node)), node + " must be a child of gangland.arena.admin");
+		}
+	}
+
+	@Test
+	@DisplayName("gangland.admin.gang defaults to op and owns every gang staff node")
+	void gangAdmin_isOpAndOwnsTheStaffNodes() {
+		Map<String, Object> staff = castMap(permissions.get("gangland.admin.gang"));
+
+		assertTrue(staff != null, "gangland.admin.gang must exist");
+		assertEquals("op", String.valueOf(staff.get("default")));
+		Map<String, Object> children = castMap(staff.get("children"));
+		assertTrue(children != null, "gangland.admin.gang must list its children");
+		for (String node : ADMIN_GANG) {
+			assertTrue(isTrue(children.get(node)), node + " must be a child of gangland.admin.gang");
+		}
+	}
+
+	@Test
+	@DisplayName("no rank-gated gangland.gang.* or gangland.admin.* key defaults to true")
+	void noRankGateNode_defaultsTrue() {
+		for (String node : permissions.keySet()) {
+			if (node.startsWith("gangland.gang.") || node.startsWith("gangland.admin.")) {
+				assertFalse(isTrue(defaultOf(node)), node + " must not default to true");
+			}
+		}
+	}
+
+	@Test
+	@DisplayName("gangland.command.player defaults to true and lists every player node as a child")
+	void playerParent_coversEveryPlayerNode() {
+		Map<String, Object> parent = castMap(permissions.get("gangland.command.player"));
+
+		assertTrue(parent != null, "gangland.command.player must exist");
+		assertTrue(isTrue(parent.get("default")), "gangland.command.player must default to true");
+		Map<String, Object> children = castMap(parent.get("children"));
+		assertTrue(children != null, "gangland.command.player must list its children");
+		for (String node : PLAYER) {
+			assertTrue(isTrue(children.get(node)), node + " must be a child of gangland.command.player");
+		}
+	}
+
+	@Test
+	@DisplayName("softdepend lists dynmap and WorldGuard as optional soft dependencies")
+	void softdepend_listsDynmapAndWorldGuard() throws IOException {
+		try (InputStream stream = PluginYmlPermissionsTest.class.getResourceAsStream("/plugin.yml")) {
+			Map<String, Object> root = new Yaml().load(new InputStreamReader(stream, StandardCharsets.UTF_8));
+			List<?> soft = (List<?>) root.get("softdepend");
+
+			assertTrue(soft != null, "plugin.yml must declare softdepend");
+			assertTrue(soft.contains("dynmap"), "softdepend must list dynmap");
+			assertTrue(soft.contains("WorldGuard"), "softdepend must list WorldGuard");
 		}
 	}
 }

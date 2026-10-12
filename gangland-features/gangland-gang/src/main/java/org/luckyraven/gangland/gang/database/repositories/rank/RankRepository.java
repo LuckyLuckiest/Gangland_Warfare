@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.gang.database.repositories.rank;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.database.repositories.gang.GangRepository;
 import org.luckyraven.gangland.gang.database.tables.rank.RankTable;
 import org.luckyraven.gangland.gang.rank.Rank;
@@ -17,7 +18,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Repository(Rank.class)
-public class RankRepository extends AbstractRepository<Rank> {
+public class RankRepository extends AbstractRepository<Rank> implements LoadOutcome {
+
+	private volatile boolean lastLoadFailed;
 
 	private final RankTable rankTable;
 
@@ -55,6 +58,7 @@ public class RankRepository extends AbstractRepository<Rank> {
 
 	@Override
 	protected Collection<Rank> doLoadAll() throws SQLException {
+		lastLoadFailed = true;   // stays true when selectAll throws; Keystone reports it and returns an empty list (T-283)
 		List<Rank>     ranks = new ArrayList<>();
 		List<Object[]> data  = tableBackend().selectAll();
 
@@ -62,7 +66,13 @@ public class RankRepository extends AbstractRepository<Rank> {
 			ranks.add(fromRow(result));
 		}
 
+		lastLoadFailed = false;
 		return ranks;
+	}
+
+	@Override
+	public boolean lastLoadFailed() {
+		return lastLoadFailed;
 	}
 
 	/** One rank row; the id reads through {@link Number}, a SQL NULL as 0 (T-199). */

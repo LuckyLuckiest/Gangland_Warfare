@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.membership.GangMembershipService.Result;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -37,10 +39,15 @@ class GangKickCommand extends SubArgument {
 	private final GangManager                gangManager;
 	private final RankManager                rankManager;
 
+	private final GangMembershipService membershipService;
+
 	protected GangKickCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                          @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
+	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager,
+								GangMembershipService membershipService) {
 		super(gangland, "kick", tree, parent);
+
+		this.membershipService = membershipService;
 
 		this.gangland           = gangland;
 		this.tree               = tree;
@@ -160,59 +167,15 @@ class GangKickCommand extends SubArgument {
 				return;
 			}
 
-			// Self-action is a domain rule, never a permission decision — applied before the rank-hierarchy gate.
-			if (targetMember.getUuid().equals(player.getUniqueId())) {
-				user.sendMessage(Messages.GANG_CANNOT_ACT_SELF.toString());
+			Result result = membershipService.kick(gang.getId(), player.getUniqueId(), targetMember.getUuid());
+			if (!result.ok()) {
+				user.sendMessage(membershipService.text(result));
 				return;
 			}
-
-			Rank playerRank = userMember.getRank();
-			Rank targetRank = targetMember.getRank();
-
-			if (playerRank == null || targetRank == null) {
-				user.sendMessage(Messages.INVALID_RANK.toString());
-				return;
-			}
-
-			Tree.Node<Rank> playerNode = userMember.getRank().getNode();
-			Tree.Node<Rank> targetNode = targetMember.getRank().getNode();
-
-			if (!rankManager.getRankTree().isDescendant(targetNode, playerNode)) {
-				user.sendMessage(Messages.GANG_HIGHER_RANK_ACTION.toString());
-				return;
-			}
-
-			User<? extends OfflinePlayer> targetUser;
-			OfflinePlayer                 offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-
-			if (offlinePlayer.isOnline()) {
-				targetUser = userManager.getUser(offlinePlayer.getPlayer());
-			} else {
-				// Every existing gang member already has a User row, hydrated into offlineUserManager's cache by
-				// PlayerBootstrapService at boot (and on /glw reload) before any command can run — reuse that
-				// cache instead of re-hydrating from gangland-impl's UserTable/BankTable directly, which the gang
-				// module cannot import (WS5 G1+G2+G3 gate). The create() branch is a defensive fallback for a
-				// target this session has never loaded, not the expected path.
-				targetUser = offlineUserManager.getUser(offlinePlayer);
-
-				if (targetUser == null) {
-					User<OfflinePlayer> offlineUser = offlineUserManager.create(offlinePlayer);
-					offlineUserManager.add(offlineUser);
-					targetUser = offlineUser;
-				}
-			}
-
-			if (targetUser == null) return;
-
-			if (targetUser.getUser() instanceof Player targetPlayer) {
-				targetPlayer.sendMessage(Messages.KICKED_FROM_GANG.toString());
-			}
-
-			gang.removeMember(targetUser, targetMember);
 
 			user.sendMessage(Messages.GANG_KICKED_TARGET.toString()
-			                                            .replace("%player%",
-			                                                     Objects.requireNonNull(offlinePlayer.getName())));
+			                                            .replace("%player%", Bukkit.getOfflinePlayer(
+					                                            targetMember.getUuid()).getName()));
 		}, sender -> getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 
 		this.addSubArgument(kickName);

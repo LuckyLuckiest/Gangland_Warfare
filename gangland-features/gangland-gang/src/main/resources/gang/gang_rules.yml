@@ -31,6 +31,29 @@ Ranks:
          - gangland.gang.invite
          - gangland.gang.description
          - gangland.turf.upgrade
+   # The lowest rank that may use each feature; ranks above it (toward the Tail) may too. An unknown rank name logs one
+   # warning and turns that entry off. Node lists in Preset_Permissions and the top rank still pass.
+   Minimum:
+      Chat: member
+      Deposit: member
+      Safehouse: member
+      Fight: officer
+      Rally: officer
+      Invite: officer
+      Kick: officer
+      Promote: officer
+      Demote: officer
+      Withdraw: officer
+      Safehouse_Manage: officer
+      Recruiting: officer
+      Description: officer
+      Ally: owner
+      Rename: owner
+      Display: owner
+      Color: owner
+      Notice: owner
+      Upgrade: owner
+      Friendly_Fire: owner
 # end Ranks
 
 # ---------------- Progression ----------------
@@ -43,3 +66,269 @@ Progression:
    # restart.
    Base_Experience: 200
 # end Progression
+
+# ---------------- Levels ----------------
+Levels:
+   # XP still comes only from held turf (Progression); a level is claimed with /glw gang upgrade confirm when the XP bar
+   # is full and Cost is paid from the gang bank. Cost 0 on a row levels automatically as before. Commands run from the
+   # console for every member older than Reward_Min_Member_Age_Hours; tokens %gang% (ASCII name), %gang_id%, %player%,
+   # %level%. 0 = unlimited for the three Max_ keys. A missing row inherits the row before it.
+   Reward_Min_Member_Age_Hours: 24
+   Level_0:
+      Cost: 0
+      Max_Members: 8
+      Max_Safehouses: 1
+      Max_Allies: 1
+      Chat_Prefix: ""
+      Commands: []
+   Level_1:
+      Cost: 20000
+      Max_Members: 10
+      Max_Safehouses: 1
+      Max_Allies: 1
+      Chat_Prefix: "&8[&71&8]"
+      Commands: []
+   Level_2:
+      Cost: 40000
+      Max_Members: 12
+      Max_Safehouses: 2
+      Max_Allies: 2
+      Chat_Prefix: "&8[&72&8]"
+      Commands: []
+   Level_3:
+      Cost: 75000
+      Max_Members: 14
+      Max_Safehouses: 2
+      Max_Allies: 2
+      Chat_Prefix: "&8[&a3&8]"
+      Commands: []
+   Level_4:
+      Cost: 120000
+      Max_Members: 16
+      Max_Safehouses: 3
+      Max_Allies: 2
+      Chat_Prefix: "&8[&a4&8]"
+      Commands: []
+   Level_5:
+      Cost: 180000
+      Max_Members: 18
+      Max_Safehouses: 3
+      Max_Allies: 3
+      Chat_Prefix: "&8[&b5&8]"
+      Commands: []
+   Level_6:
+      Cost: 230000
+      Max_Members: 19
+      Max_Safehouses: 3
+      Max_Allies: 3
+      Chat_Prefix: "&8[&b6&8]"
+      Commands: []
+   Level_7:
+      Cost: 280000
+      Max_Members: 20
+      Max_Safehouses: 4
+      Max_Allies: 3
+      Chat_Prefix: "&8[&b7&8]"
+      Commands: []
+   Level_8:
+      Cost: 330000
+      Max_Members: 21
+      Max_Safehouses: 4
+      Max_Allies: 3
+      Chat_Prefix: "&8[&b8&8]"
+      Commands: []
+   Level_9:
+      Cost: 380000
+      Max_Members: 22
+      Max_Safehouses: 4
+      Max_Allies: 3
+      Chat_Prefix: "&8[&b9&8]"
+      Commands: []
+   Level_10:
+      Cost: 455000
+      Max_Members: 24
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&610&8]"
+      Commands: []
+   Level_11:
+      Cost: 530000
+      Max_Members: 24
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&611&8]"
+      Commands: []
+   Level_12:
+      Cost: 605000
+      Max_Members: 25
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&612&8]"
+      Commands: []
+   Level_13:
+      Cost: 680000
+      Max_Members: 25
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&613&8]"
+      Commands: []
+   Level_14:
+      Cost: 755000
+      Max_Members: 26
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&614&8]"
+      Commands: []
+   Level_15:
+      Cost: 830000
+      Max_Members: 26
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&615&8]"
+      Commands: []
+   Level_16:
+      Cost: 905000
+      Max_Members: 27
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&616&8]"
+      Commands: []
+   Level_17:
+      Cost: 980000
+      Max_Members: 27
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&617&8]"
+      Commands: []
+   Level_18:
+      Cost: 1055000
+      Max_Members: 28
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&618&8]"
+      Commands: []
+   Level_19:
+      Cost: 1130000
+      Max_Members: 28
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&619&8]"
+      Commands: []
+   Level_20:
+      Cost: 1205000
+      Max_Members: 29
+      Max_Safehouses: 5
+      Max_Allies: 3
+      Chat_Prefix: "&8[&620&8]"
+      Commands: []
+# end Levels
+
+# ---------------- Commands ----------------
+Commands:
+   # Console commands run once per join/leave/kick. Tokens: %gang% (the ASCII gang name, only when it matches
+   # [A-Za-z0-9_]+, else the id), %gang_id%, %player%. The display name is never spliced.
+   On_Join: []
+   On_Leave: []
+   On_Kick: []
+# end Commands
+
+# ---------------- Purge ----------------
+Purge:
+   # Off by default. Staff can always run /glw option gang purge preview, then run.
+   Enabled: false
+   # A gang none of whose members played for this many days is disbanded.
+   Inactive_Days: 30
+   # A member not seen for this many days no longer keeps a gang alive.
+   Member_Inactive_Days: 60
+   # Hours after a restart before the first purge run.
+   First_Run_Delay_Hours: 24
+   # Give back the creation fee when a gang is purged.
+   Refund_Fee: false
+# end Purge
+
+# ---------------- Worlds ----------------
+Worlds:
+   # Worlds where gangs do not exist: gang commands, friendly-fire rules, gang stats, safehouses and rallies are off
+   # there. settings.yml Gang.Enable false turns gangs off everywhere. One world name per line, for example:
+   #    - world_nether
+   Disabled: []
+# end Worlds
+
+# ---------------- Friendly_Fire ----------------
+Friendly_Fire:
+   # OFF (never between gangmates), GANG_CHOICE (each gang's /glw gang pvp), ON (always). Allies hurt each other only
+   # when both sides turned /glw gang ally pvp on.
+   Global: GANG_CHOICE
+   # Whether a player may hurt himself (own splash potions, own arrows).
+   Allow_Self_Damage: true
+   # NEGATIVE_ONLY (only harmful potions are blocked between friends) or ALL.
+   Potions: NEGATIVE_ONLY
+   # Per-world override, for example:
+   #    Worlds:
+   #       world_pvp: ALLOW
+   #       world_peace: DENY
+# end Friendly_Fire
+
+# ---------------- Combat ----------------
+Combat:
+   # A gang member hit by a member of another gang cannot leave the gang or take a gang teleport for this long.
+   Tag_Seconds: 15
+# end Combat
+
+# ---------------- Safehouse ----------------
+Safehouse:
+   # Gang safehouses and rallies; the count is capped per level (Levels.Level_<n>.Max_Safehouses).
+   Enabled: true
+   Warm_Up_Seconds: 5
+   Cooldown_Seconds: 60
+   # Money taken from the player after each successful safehouse teleport (0 = free). Setting a safehouse and joining a rally never cost anything.
+   Cost: 0
+   # Refuse a safehouse spot that is not safe to stand on.
+   Safe_Check: true
+   # How long a rally call stays open for members to answer.
+   Rally_Consent_Seconds: 60
+# end Safehouse
+
+# ---------------- Chat ----------------
+Chat:
+   # Also print gang and ally chat lines to the server console.
+   Log_To_Console: false
+   # What {glw_gang} shows for a player without a gang.
+   No_Gang_Tag: ""
+   # Public_Tag replaces {glw_gang} in the public chat format (off by default).
+   Public_Tag:
+      Enabled: false
+# end Chat
+
+# ---------------- Stats ----------------
+Stats:
+   # Gang stats never count kills between gangmates or allies, of gangless players, of members younger than
+   # Min_Victim_Member_Age_Hours, or in Worlds.Disabled.
+   Assist_Window_Seconds: 10
+   Min_Victim_Member_Age_Hours: 24
+   Repeat_Kill_Cooldown_Seconds: 300
+   Max_Kills_Per_Victim_Per_Day: 3
+   Snapshot_Seconds: 60
+# end Stats
+
+# ---------------- Ranking ----------------
+Ranking:
+   # /glw gang ranking.
+   Min_Kills: 10
+   Page_Size: 10
+# end Ranking
+
+# ---------------- Placeholders ----------------
+Placeholders:
+   # Shown by a gang placeholder for a gangless player or an empty board row.
+   Default_Value: "-"
+# end Placeholders
+
+# ---------------- Display_Name ----------------
+Display_Name:
+   # The free-form display name (any language). Uniqueness ignores colour, case and look-alike letters.
+   Allow_Hex: true
+   Parse_Colours: true
+   Max_Length: 24
+   Blocked_Words: []
+# end Display_Name

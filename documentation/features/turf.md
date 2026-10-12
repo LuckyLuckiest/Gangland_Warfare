@@ -84,7 +84,8 @@ capture fills one bar at `Capture.Duration_Seconds`. They stay so older files lo
   or the gang is younger than that. Guards count up to 4 and never block a start.
 - **Alerts.** When a capture starts, the owning gang is told wherever it is, in any world, with the attacker count and
   side; allies get the start line. Half the guards down, the last stand at 75%, and the outcome (held, lost, taken or
-  stalled) are announced the same way.
+  stalled) are announced the same way. A gang that starts again on the same turf within 15 minutes of its last start is
+  not announced again; the half-guards, last-stand and outcome lines still are.
 - **While you were away.** On login you get up to five lines: the income earned since you left, then the turf events
   (captured, lost, held, stalled, released).
 - **Start.** The side with the most people inside wins the start. Sides are frozen at the start: a player who joins
@@ -124,12 +125,125 @@ are `small_income_boost` (300), `large_income_boost` (1000) and `garrison_discou
 - **Guards.** One guard costs `Garrison.Cost_Per_Guard` (1000) from the gang bank, multiplied by any active
   `garrison_discount`. The price stays between 10 % and 100 % of `Garrison.Cost_Per_Guard` and never drops below 1. A turf holds at most `Garrison.Max_Reserve` (12) guards in reserve.
 - **Survivors.** Guards still alive when a contest fails return to the reserve, up to the `Garrison.Max_Reserve` cap.
-  Guards on the field count against that cap too, so a buy is refused while stock plus live guards reach it.
+  Guards on the field count against that cap too, so a buy is refused while stock plus live guards reach it. How the
+  guards fight and stand down is in [Guards](#guards).
 - **Boost catalogue** pages nine boosts at a time.
 - **Owner placement.** The owning gang places its Quartermaster with `/glw turf quartermaster`, standing inside the turf.
   It costs `Powerup_Npc.Placement_Cost` from the gang bank (`0` is free). Staff use `/glw turf powerupnpc` instead, for free.
 - **Hub rows.** The hub shows the guards on duty and who may spend: the owning gang buys, allies only look.
 - **Gang tag.** A short tag of the owning gang is drawn on a line above the Quartermaster. It follows owner changes.
+
+---
+
+## Guards
+
+Guards are the NPCs a gang buys at its turf's Quartermaster. When a rival starts capturing the turf, they defend it.
+This section describes the code as shipped. The numbers are the defaults in `turf/turf_npcs.yml` (section `Garrison:`)
+and `Garrison.Max_Reserve` in `turf/turf_rules.yml`. Guards need Citizens: on a server without it nothing spawns and
+nothing is spent.
+
+### Stock and waves
+
+- **Stock.** Buying a guard adds one to the turf's reserve. The reserve holds at most `Garrison.Max_Reserve` (12) guards,
+  counting guards on duty.
+- **Spending.** A capture does not take anything from the reserve. Each guard leaves the reserve only once it has
+  spawned, so a wave that never spawns costs nothing.
+- **First wave.** When a rival starts a capture, the first wave of `Garrison.Wave_Size` (3) guards spawns within a few
+  ticks at one of five posts: the four corners of the turf, inset 2 blocks, and the centre, each on the ground above
+  the surface.
+- **Hidden posts.** A post is hidden when no attacker can see it. A wave takes the hidden post farthest from the nearest
+  attacker. If every post is in sight of an attacker, the wave waits 3 seconds for a hidden one and then takes the
+  farthest post. With no attacker near the turf, the first corner is used.
+- **Top-ups.** Each guard that falls is owed a replacement. Replacements come in waves of up to `Wave_Size`, at most
+  `Garrison.Max_Alive` (6) guards stand at once, and a top-up waits `Garrison.Wave_Cooldown_Seconds` (20) after the last
+  fall. A top-up never takes more than the reserve holds.
+- **Owners are told** when a wave takes its posts: `N guards took their posts at <turf>` (`Garrison.Wave` in
+  `turf_messages.yml`).
+
+### Targets, leash and stand-down
+
+- **Targets.** A guard fights the closest attacker within `Defender.Targeting_Radius` (32) that stands inside the leash.
+  The leash is the turf plus `Garrison.Leash_Margin` (16) blocks on every side. Attackers outside it are ignored, and
+  they do not pick the posts either.
+- **Leash.** A guard that is past the leash drops its target and walks back to the nearest post.
+- **Stand-down.** When a capture ends, survivors stop fighting and walk to the nearest post. When the contest fails, they
+  shout `Shouts.Turf_Held` ("Turf's ours. Back to your posts."). When the turf is captured, they shout `Shouts.Turf_Lost`, but the
+  owner change recalls the guards in the same tick, so that line is often cut short. After
+  `Garrison.Stand_Down_Seconds` (8) the survivors leave.
+- **Return.** A failed contest sends the survivors back to the reserve, up to `Max_Reserve`, and the owners are told
+  `N guards back in the reserve at <turf>`. A completed capture returns nothing, because the turf changes hands and the
+  old owner's stock is reset. Guards still in the field when the server stops are not refunded.
+- **Recycling.** A guard that cannot reach anyone for `Garrison.Recycle_Seconds` (12), while no attacker can see it, is
+  replaced by a new guard at another post. The new guard keeps the number and the role of the old one and spends no
+  stock. Set `0` to turn this off.
+
+### Callsigns and health bars
+
+Each guard shows a gold hologram line above its head: `[TAG] Guard n`. The tag is the first three letters or digits of
+the gang's name without colour codes. It is padded from the gang name when that is short, it is `GNG` when the name has
+none, and it is four characters long when three would spell `CIT`. The guard's Citizens nameplate is hidden. The number
+`n` counts from 1 in each contest; a replacement takes the next number, and a recycled guard keeps its number. With
+`gangland-healthbars` installed, the guard's health bar sits directly under the callsign.
+
+### Roles
+
+`Garrison.Composition` gives roles to the guards in spawn order. The shipped default is:
+
+```yaml
+Garrison:
+   Composition:
+      - "Commander@1"
+      - "Shield@2"
+      - "Marksman@2"
+```
+
+The role names are the `AI.Combat.Roles` of the `turf_defender` type in `civilians.yml`.
+
+| Role | Guards | What it does |
+|---|---|---|
+| Commander | 1 | When it falls, its squad holds for 5 seconds: the others stop moving and stop attacking, and the squad shouts once. |
+| Shield | 2 and 3 | Takes half of every hit that comes from inside the 90-degree cone in front of it. |
+| Marksman | 4 and 5 | Fires from its own band (12 to 24 blocks in `civilians.yml`), clamped under its gun's reach. With Bartizan's shipped rifle that is 8 to 10 blocks. |
+
+- Guards 6 and up are plain guards. A replacement past guard 5 is plain, and a fallen commander is not replaced by another
+  commander.
+- An empty list gives no roles. A name the guard type does not define is logged once, and that guard is plain.
+
+### Guard bounty
+
+A guard drops no civilian cash. Any player who is neither in the owning gang nor in a gang allied to it (a player with no
+gang included) who kills a guard finds cash at its feet worth `Garrison.Bounty_Share` (0.5) of the guard's price, rounded down. The price is the
+guard price in force when the capture starts, discount included. It is the price the owner pays for a guard now, not a
+stored record of what it paid. Nothing is minted: the owner has paid for the guard already. The owning gang and its allies
+get nothing. Set `Bounty_Share` to `0` to turn the bounty off. If a server enables an NPC drop in `money.yml`, that drop
+is paid on top of the bounty. The bounty needs `money.yml` to have a default variation; without one the bounty is not paid
+and only a warning is logged.
+
+### Cop response
+
+`Cop_Response` in `turf_npcs.yml` covers the turf's defenders when a cop hits a player on a turf that the gang protects
+(the owning gang, and its allies when `Include_Allies` is on). The Quartermaster and the guards within
+`Cop_Response.Targeting_Radius` of the cop then turn on it. Defenders never start a fight with a cop on their own. They
+stop again when the cop dies, when the victim leaves or stops being protected, or when the cop moves out of range. Set
+`Enabled` to `false` and defenders ignore cops entirely.
+
+### Guard keys (`turf/turf_npcs.yml`)
+
+| Key | Default | Meaning |
+|---|---|---|
+| `Garrison.Wave_Size` | `3` | Guards per wave. |
+| `Garrison.Max_Alive` | `6` | Most guards standing at once on one turf. |
+| `Garrison.Wave_Cooldown_Seconds` | `20` | Seconds after a fall before the next top-up. |
+| `Garrison.Stand_Down_Seconds` | `8` | Seconds survivors stay after the fight before they leave. |
+| `Garrison.Leash_Margin` | `16` | Blocks past the turf edge a guard may chase. |
+| `Garrison.Composition` | the three roles above | Roles in spawn order. An empty list gives none. |
+| `Garrison.Bounty_Share` | `0.5` | Share of a guard's price paid to a rival who kills it. `0` turns it off. |
+| `Garrison.Recycle_Seconds` | `12` | Seconds a guard may be unreachable before it reappears at another post. `0` turns it off. |
+| `Defender.Targeting_Radius` | `32.0` | How far a guard looks for an attacker. |
+| `Defender.Lifespan_Seconds` | `600` | Safety lifespan. A guard lives at least as long as the longest contest (`Max_Contest_Minutes` plus 60 seconds). |
+| `Cop_Response.Enabled` | `true` | Defenders answer cops hitting a protected player. |
+| `Cop_Response.Targeting_Radius` | `32.0` | Range within which defenders answer a cop. |
+| `Cop_Response.Include_Allies` | `true` | Also protect members of allied gangs. |
 
 ---
 
@@ -251,6 +365,8 @@ The `+` is your cell. Every row is 41 cells wide.
 | `/glw map auto` | Turns the auto map on or off. When on, the map is sent again when what it shows changes (its content, not your position). Sent at most every `Map.Auto_Min_Interval_Seconds` seconds. Off by default; the setting is forgotten when you log off. |
 | `/glw map text` | The turfs around you as a list, nearest first, with owner, relation and state in words. |
 | `/glw map legend` | Every gang on your map with its letter and relation. |
+| `/glw map zoom in\|out` | Halves or doubles your cell size (8 to 64 blocks). See Zoom and border. |
+| `/glw map border` | Outlines the turf you stand in, or the nearest one within 64 blocks, for 10 seconds. |
 | `/glw map hud <on\|off\|default>` | Sets the turf line in the action bar (see HUD). |
 
 ### Map keys (`turf/turf_map.yml`, `Map:`)
@@ -259,11 +375,42 @@ The `+` is your cell. Every row is 41 cells wide.
 |---|---|---|
 | `Map.Width` | `41` | Columns of the grid. Odd numbers only (an even value is raised by one); 11 to 61. |
 | `Map.Height` | `7` | Rows of the grid. Odd numbers only; 3 to 15. With the header and the two legend lines this is 10 chat lines, the height of the unfocused chat. `9` is the tall option. |
-| `Map.Cell_Blocks` | `16` | Blocks per cell along each side (16 = one chunk). One of `8`, `16`, `32` or `64`; anything else uses 16. |
+| `Map.Cell_Blocks` | `16` | Blocks per cell along each side (16 = one chunk). One of `8`, `16`, `32` or `64`; anything else uses 16. This is the starting size for every player; `/glw map zoom` changes it for that player until they log off. |
 | `Map.Auto_Min_Interval_Seconds` | `5` | Minimum seconds between two automatic maps. |
 | `Map.Bedrock_Text_Form` | `true` | Bedrock players (detected by their UUID prefix) get the text list instead of the grid, because their font is not monospaced. |
 
 Changes apply after `/glw reload`.
+
+### Zoom and border
+
+`/glw map zoom in` halves the cell size you see, and `out` doubles it: 8, 16, 32 or 64 blocks per cell. The size is yours
+alone. It starts at `Map.Cell_Blocks` and is forgotten when you log off. The chat map, the text form and the auto map use
+your size, and an auto map redraws when you change it. Zooming past 8 or 64 shows a limit line and changes nothing.
+
+`/glw map border` outlines the turf you stand in, or the nearest turf within 64 blocks, for 10 seconds. Only the part of
+the outline within 40 blocks of you is drawn, in the particle set by `Visualization_Particle` (`turf_settings.yml`,
+`FLAME` by default). It is redrawn each second with at most 600 particles, and on a large turf the spacing grows to keep
+the count under that. With no turf within 64 blocks it says so.
+
+### Web map (dynmap)
+
+When the dynmap plugin is installed and `Web.Enabled` is `true`, every turf is drawn as a rectangle on a dynmap layer
+named by `Web.Layer_Label` (`Turfs`). Without dynmap nothing is loaded and nothing happens; the server boots as normal.
+
+- **Colour.** The fill and the border take the owning gang's colour. Unclaimed turfs, and gangs whose colour cannot be
+  read, use `Web.Unclaimed_Color`.
+- **Popup.** The turf name, then `Owner: <gang>` or `Owner: Unclaimed`. Colour codes are stripped.
+- **Timing.** An owner change redraws that turf at once. Creating or deleting a turf fires no event, so it reaches the
+  map within 30 seconds. `/glw reload` redraws the whole layer.
+
+| Key (`turf/turf_map.yml`, `Web:`) | Default | Meaning |
+|---|---|---|
+| `Web.Enabled` | `true` | Draws the turfs on dynmap when dynmap is installed. |
+| `Web.Layer_Label` | `"Turfs"` | Name of the dynmap layer. |
+| `Web.Fill_Opacity` | `0.25` | Fill opacity of a turf rectangle, 0.0 to 1.0. |
+| `Web.Line_Opacity` | `0.8` | Border opacity, 0.0 to 1.0. |
+| `Web.Line_Weight` | `2` | Border width in pixels. |
+| `Web.Unclaimed_Color` | `"#AAAAAA"` | Colour of unclaimed turfs and of gangs whose colour cannot be read. |
 
 ---
 
@@ -371,6 +518,8 @@ Player commands are open to everyone from 0.17.0. Admin verbs are marked **admin
 | `/glw map hud <on\|off\|default>` | Turf line in the action bar. | Everyone |
 | `/glw map text` | Turfs around you as a list. | Everyone |
 | `/glw map legend` | Every gang on your map with its letter and relation. | Everyone |
+| `/glw map zoom <in\|out>` | Halves or doubles your map cell size (8 to 64 blocks). | Everyone |
+| `/glw map border` | Outlines the nearest turf for 10 seconds, the part near you. | Everyone |
 | `/glw turf wand` | Receives the selection wand. Left-click = pos1, right-click = pos2. | Admin |
 | `/glw turf pos1` / `pos2` | Sets a selection corner to your location. | Admin |
 | `/glw turf create <displayName>` | Creates a turf from your selection. | Admin |
@@ -383,7 +532,7 @@ Player commands are open to everyone from 0.17.0. Admin verbs are marked **admin
 | `/glw turf show` | Particle outline along the edges of the turf. | Admin |
 | `/glw turf income <amount>` | Sets the per-interval income of your active-selection turf. | Admin |
 | `/glw turf garrison [count]` | Sets, or prints, the guard stock of your active-selection turf. | Admin |
-| `/glw turf buff [powerup_id]` | Activates a powerup on your active-selection turf; with no id, lists the active buffs. | Admin |
+| `/glw turf buff [powerup_id]` | Activates a powerup on your active-selection turf, for no gang money (a staff tool); with no id, lists the active buffs. | Admin |
 | `/glw turf powerupnpc <set\|remove>` | Places or removes the Quartermaster NPC of your active-selection turf. | Admin |
 | `/glw turf quartermaster` | Places or moves your gang's Quartermaster where you stand, inside a turf your gang owns. Costs `Powerup_Npc.Placement_Cost` from the gang bank. | Player (gang rank with `gangland.turf.upgrade`) |
 
@@ -396,7 +545,7 @@ Wand, status and turf-card texts come from `turf/turf_messages.yml`.
 | Node | Default | Grants |
 |---|---|---|
 | `gangland.command.main` | `true` | `/glw` itself. |
-| `gangland.command.map` (and `.auto`, `.hud`, `.text`, `.legend`) | `true` | The map commands. |
+| `gangland.command.map` (and `.auto`, `.hud`, `.text`, `.legend`, `.zoom`, `.border`) | `true` | The map commands. |
 | `gangland.command.turf`, `.turf.info`, `.turf.list`, `.turf.rules` | `true` | The turf root, info, list and rules. |
 | `gangland.command.turf.quartermaster` | `true` | `/glw turf quartermaster`. Placing also needs `gangland.turf.upgrade` in the gang. |
 | `gangland.turf.admin` | `op` | Every turf admin verb (the `gangland.command.turf.<verb>` nodes for wand, pos1, pos2, create, delete, setowner, show, status, select, tp, income, garrison, buff, powerupnpc and rename are its children). |

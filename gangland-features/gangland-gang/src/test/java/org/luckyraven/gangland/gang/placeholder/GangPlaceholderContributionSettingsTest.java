@@ -5,7 +5,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.level.GangLimits;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
 
 import java.math.BigDecimal;
@@ -26,7 +29,8 @@ class GangPlaceholderContributionSettingsTest {
 		GangSettings.bind(new FakeGangSettingsContract().withCreateFee(new BigDecimal("2500")).withRankHead("recruit"));
 		player = mock(OfflinePlayer.class);
 		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
-		contribution = new GangPlaceholderContribution(null, mock(MemberManager.class), mock(GangManager.class));
+		contribution = new GangPlaceholderContribution(null, mock(MemberManager.class), mock(GangManager.class),
+		                                              new GangStatsService(), mock(GangSafehouseService.class), new GangLimits(), null);
 	}
 
 	@Test

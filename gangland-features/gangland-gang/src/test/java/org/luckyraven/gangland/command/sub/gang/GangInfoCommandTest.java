@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -25,6 +26,7 @@ import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.member.Member;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
 import org.luckyraven.gangland.util.GanglandChatUtil;
@@ -101,6 +103,8 @@ class GangInfoCommandTest {
 		userManager = mock(UserManager.class);
 		player      = mock(Player.class);
 		when(player.hasPermission(anyString())).thenReturn(true);
+		// the bank is private: the shared fixture is a plain outsider (no balance.others, no gang)
+		when(player.hasPermission(GangPermissions.BALANCE_OTHERS)).thenReturn(false);
 
 		rats = gang(5, "Rats", "Dockside vermin.", "owner", "Boss", 3);
 		when(gangManager.getAll()).thenReturn(List.of(rats));
@@ -150,7 +154,7 @@ class GangInfoCommandTest {
 	void card_neverShowsBalance() throws Exception {
 		lookup().executeArgument(player, new String[]{"gang", "info", "Rats"});
 
-		assertTrue(lines().stream().noneMatch(line -> line.contains(BALANCE)), lines().toString());
+		assertTrue(lines().stream().noneMatch(line -> line.contains(Settings.formatAmount(new BigDecimal(BALANCE)))), lines().toString());
 		verify(rats, never()).getEconomy();
 	}
 
@@ -198,6 +202,50 @@ class GangInfoCommandTest {
 		verify(player).sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<gang>"));
 	}
 
+	@Test
+	@DisplayName("a player name that is no gang name shows that player's gang")
+	void playerName_resolvesGang() throws Exception {
+		UUID rexId = UUID.randomUUID();
+		Member rex = mock(Member.class);
+		when(rex.getUuid()).thenReturn(rexId);
+		rats.getMembers().add(rex);
+		OfflinePlayer rexPlayer = mock(OfflinePlayer.class);
+		when(rexPlayer.getUniqueId()).thenReturn(rexId);
+		when(rexPlayer.getName()).thenReturn("Rex");
+		bukkit.when(() -> Bukkit.getOfflinePlayer(rexId)).thenReturn(rexPlayer);
+		bukkit.when(() -> Bukkit.getPlayerExact("Rex")).thenReturn(null);
+
+		lookup().executeArgument(player, new String[]{"gang", "info", "Rex"});
+
+		assertTrue(lines().stream().noneMatch(line -> line.contains("No gang named")), lines().toString());
+		assertTrue(lines().stream().anyMatch(line -> line.contains("Dockside vermin.")), lines().toString());
+	}
+
+	@Test
+	@DisplayName("another gang's bank is hidden from an outsider and shown to a holder of balance.others")
+	void bankHiddenForOutsiders() throws Exception {
+		lookup().executeArgument(player, new String[]{"gang", "info", "Rats"});
+		assertTrue(lines().stream().noneMatch(line -> line.contains(Settings.formatAmount(new BigDecimal(BALANCE)))), lines().toString());
+		assertTrue(lines().stream().anyMatch(line -> line.contains("private")), "hidden line: " + lines());
+
+		when(player.hasPermission(GangPermissions.BALANCE_OTHERS)).thenReturn(true);
+		lookup().executeArgument(player, new String[]{"gang", "info", "Rats"});
+		assertTrue(lines().stream().anyMatch(line -> line.contains(Settings.formatAmount(new BigDecimal(BALANCE)))), lines().toString());
+	}
+
+	@Test
+	@DisplayName("a member of the gang sees their own bank")
+	void bankShownToOwnMembers() throws Exception {
+		User<Player> user = mock(User.class);
+		when(user.hasGang()).thenReturn(true);
+		when(user.getGangId()).thenReturn(5);
+		when(userManager.getUser(player)).thenReturn(user);
+
+		lookup().executeArgument(player, new String[]{"gang", "info", "Rats"});
+
+		assertTrue(lines().stream().anyMatch(line -> line.contains(Settings.formatAmount(new BigDecimal(BALANCE)))), lines().toString());
+	}
+
 	/** The optional name/id child of {@code info}, which is where a typed gang name is answered. */
 	private Argument lookup() {
 		return info().getNode().getChildren().get(0).getData();
@@ -205,7 +253,7 @@ class GangInfoCommandTest {
 
 	private Argument info() {
 		return new GangInfoCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), gangManager,
-		                           userManager, messages);
+		                           userManager, messages, new GangStatsService());
 	}
 
 	/** Plain text of every line sent to the player through {@code sendMessage}, in order. */

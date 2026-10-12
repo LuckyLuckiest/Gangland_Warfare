@@ -67,7 +67,7 @@
 
         <!-- Dependencies/Libraries versions -->
         <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->
-        <keystone.version>1.15.1</keystone.version>
+        <keystone.version>1.15.3</keystone.version>
         <bartizan.version>0.6.0</bartizan.version>
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
@@ -149,6 +149,18 @@
         <repository>
             <id>mvn-wesjd-net</id>
             <url>https://mvn.wesjd.net/</url>
+        </repository>
+
+        <!-- dynmap-api (W3-W) -->
+        <repository>
+            <id>dynmap-repo</id>
+            <url>https://repo.mikeprimm.com/</url>
+        </repository>
+
+        <!-- worldguard-bukkit, worldedit-bukkit (W6-W) -->
+        <repository>
+            <id>enginehub-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
         </repository>
     </repositories>
 
@@ -287,6 +299,11 @@
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-gang</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-gang-fights</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -6,7 +6,9 @@
 
 ## 📦 Requires
 
-- **Keystone 1.15.1** (unchanged from 0.16.1). Gangland refuses to start on an older Keystone.
+- **Keystone 1.15.3** (0.16.1 shipped on 1.15.1; 1.15.2 adds WAL and busy timeouts to Keystone's SQLite pools, which fixes SQLITE_BUSY on boot; a player whose data still cannot load is kicked to rejoin instead of being saved over; 1.15.3 also flushes the database journal on a clean stop, so a stopped server's .db file is complete). Gangland refuses to start on an older Keystone.
+- **Back up the database before the first boot.** 1.15.2 converts the SQLite database to WAL. Stop the server, back up `.db`, `.db-wal` and `.db-shm` together (expect the two extra files while the server runs). WAL needs a local filesystem, not SMB or NFS. See [the 0.17.0 migration notes](../migration-0.17.0.md).
+- **Update the core jar and the gang, turf and mail module jars together.** Mixing versions is not supported; mail uses gang's new `GangJoinEvent`.
 - **Bartizan 0.6.0** is the version Gangland builds against. Only cops-n-crooks needs Bartizan (`Plugins: [Bartizan]`); without it cops-n-crooks is skipped. Civilians, gadget and turf load without it, and weapon item references resolve to nothing.
 - **Menus refresh on the first boot.** Shipped `inventory/*.yml` menus with no `Config_Version` are replaced from the jar. Your old copy is kept as `inventory/<name>-old.yml`; copy your changes back by hand. Your own menus are not touched.
 - **Read [the 0.17.0 migration notes](../migration-0.17.0.md) before you start the server.** Every existing gang becomes invite-only, and a few one-time migrations run on the first boot.
@@ -29,9 +31,11 @@
 - **Gang decline and offline invites** — `/glw gang decline [gang]` declines an invite. Invites to offline players expire after 72 hours (`Invite_Offline_Expiry_Hours`).
 - **Turf admin** — One permission, `gangland.turf.admin`, covers every turf admin verb. `/glw turf rename <name>` is new, and `/glw turf list` is sorted by distance and paged. New turfs snap to whole chunks, and each side must be 16 to 512 blocks.
 - **Fresh-install ranks** — A new server gets the `member`, `officer` and `owner` ranks with preset permissions. Existing rank trees are not changed.
+- **Offline cache kept after autosave** — Offline players stay in memory after an autosave, so a gang disband pays them and saves their share. An entry nobody has touched for `Database.Auto_Save.Offline_Cache_Minutes` (default 30, minimum 1) is dropped after a save.
 
 ## 🔧 Changed
 
+- **gangland-api 2.4** — adds `Messages.USER_DATA_LOAD_FAILED`; modules built for 2.0-2.3 load unchanged.
 - **Invite-only by default (D7)** — Every existing gang is invite-only after the upgrade. Run `/glw gang recruiting open` to let players join with `/glw gang join`.
 - **Contribution reset (D15)** — Stored gang contributions reset to 0 once, on the first 0.17.0 boot. Contributions used to mix bank share and turf points.
 - **Turf contribution removed** — The old turf contribution feature is gone.

@@ -15,6 +15,7 @@ import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.GangWorldPolicy;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
@@ -80,6 +81,7 @@ public final class TurfCommand extends Command {
 	private final TurfRules            rules;
 	private final TurfEventBuffer      events;
 	private final QuartermasterPlacement placement;
+	private final GangWorldPolicy      worldPolicy;
 
 	public TurfCommand(JavaPlugin plugin,
 	                   TurfManager turfs,
@@ -99,7 +101,8 @@ public final class TurfCommand extends Command {
 	                   CaptureEligibility eligibility,
 	                   TurfRules rules,
 	                   TurfEventBuffer events,
-	                   QuartermasterPlacement placement) {
+	                   QuartermasterPlacement placement,
+	                   GangWorldPolicy worldPolicy) {
 		super(plugin, "turf", false);
 
 		this.turfs           = turfs;
@@ -120,6 +123,7 @@ public final class TurfCommand extends Command {
 		this.rules           = rules;
 		this.events          = events;
 		this.placement       = placement;
+		this.worldPolicy     = worldPolicy;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -180,7 +184,7 @@ public final class TurfCommand extends Command {
 		TurfPos1Command pos1 = new TurfPos1Command(getPlugin(), getArgumentTree(), getArgument(), selections, text);
 		TurfPos2Command pos2 = new TurfPos2Command(getPlugin(), getArgumentTree(), getArgument(), selections, text);
 		TurfCreateCommand create = new TurfCreateCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
-		                                                 selections, messages, settings, rules, text);
+		                                                 selections, messages, settings, rules, text, worldPolicy);
 		TurfDeleteCommand delete = new TurfDeleteCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                 turfs, selections, messages, text,
 		                                                 garrisons, activeBuffs, powerupNpcs, ownership);

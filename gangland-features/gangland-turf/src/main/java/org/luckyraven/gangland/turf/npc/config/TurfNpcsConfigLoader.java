@@ -2,6 +2,7 @@ package org.luckyraven.gangland.turf.npc.config;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import org.luckyraven.gangland.turf.npc.defender.GarrisonComposition;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.guard.CopGuardConfig;
 import org.luckyraven.keystone.bean.BeanLifecycle;
@@ -14,6 +15,7 @@ import org.luckyraven.keystone.persistence.config.MappingNode;
 import org.luckyraven.keystone.persistence.config.NodeReader;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -21,6 +23,8 @@ import java.util.Objects;
  * cops-n-crooks in group I, T-I5). One file, one section per turf-NPC role:
  * <ul>
  *   <li>{@code Powerup_Npc} — the per-turf Quartermaster's display + protection settings</li>
+ *   <li>{@code Garrison} — how the bought guards defend: wave size, most alive, wave cooldown, stand-down time,
+ *       leash margin and the roles the guards take in spawn order ({@code Composition}) (they ride on {@link TurfDefenderConfig})</li>
  *   <li>{@code Defender} — deploy-side knobs only (civilian type id from {@code civilians.yml}, targeting radius,
  *       lifespan). Actual defender stats / model / equipment / AI tuning live in {@code civilians.yml} under the
  *       referenced type id — defenders ARE civilians, just with their target hand-picked at deploy time.</li>
@@ -77,15 +81,48 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 			powerupSettings = new TurfPowerupSettings("quartermaster", 32.0, "Quartermaster", 5000.0);
 		}
 
+		MappingNode garNode = root.get("Garrison").asMapping().orNull();
+		NodeReader  gr      = garNode == null ? null : NodeReader.of(garNode, report);
+		int waveSize = gr == null ? TurfDefenderConfig.DEFAULT_WAVE_SIZE
+		                          : gr.get("Wave_Size").asInt().min(1).orDefault(TurfDefenderConfig.DEFAULT_WAVE_SIZE);
+		int maxAlive = gr == null ? TurfDefenderConfig.DEFAULT_MAX_ALIVE
+		                          : gr.get("Max_Alive").asInt().min(1).orDefault(TurfDefenderConfig.DEFAULT_MAX_ALIVE);
+		int waveCooldown = gr == null ? TurfDefenderConfig.DEFAULT_WAVE_COOLDOWN_SECONDS
+		                              : gr.get("Wave_Cooldown_Seconds").asInt().min(0)
+		                                  .orDefault(TurfDefenderConfig.DEFAULT_WAVE_COOLDOWN_SECONDS);
+		int standDown = gr == null ? TurfDefenderConfig.DEFAULT_STAND_DOWN_SECONDS
+		                           : gr.get("Stand_Down_Seconds").asInt().min(0)
+		                               .orDefault(TurfDefenderConfig.DEFAULT_STAND_DOWN_SECONDS);
+		int leashMargin = gr == null ? TurfDefenderConfig.DEFAULT_LEASH_MARGIN
+		                             : gr.get("Leash_Margin").asInt().min(0)
+		                                 .orDefault(TurfDefenderConfig.DEFAULT_LEASH_MARGIN);
+
+		double bountyShare = gr == null ? TurfDefenderConfig.DEFAULT_BOUNTY_SHARE
+		                                : Math.max(0.0, Math.min(1.0, gr.get("Bounty_Share").asDouble()
+		                                                                .orDefault(TurfDefenderConfig.DEFAULT_BOUNTY_SHARE)));
+		int recycleSeconds = gr == null ? TurfDefenderConfig.DEFAULT_RECYCLE_SECONDS
+		                                : gr.get("Recycle_Seconds").asInt().min(0)
+		                                    .orDefault(TurfDefenderConfig.DEFAULT_RECYCLE_SECONDS);
+
+		// absent = the shipped composition; present (even empty) = exactly what the file says
+		GarrisonComposition composition = gr != null && gr.has("Composition")
+		                                  ? GarrisonComposition.parse(gr.get("Composition").asList().ofStrings().orEmpty(),
+		                                                              log::warn)
+		                                  : GarrisonComposition.DEFAULT;
+
 		MappingNode defNode = root.get("Defender").asMapping().required().orNull();
 		if (defNode != null) {
 			NodeReader dr = NodeReader.of(defNode, report);
 			defenderConfig = new TurfDefenderConfig(
 					dr.get("Type_Id").asString().orDefault("turf_defender"),
 					dr.get("Targeting_Radius").asDouble().min(1.0).orDefault(32.0),
-					dr.get("Lifespan_Seconds").asInt().min(1).orDefault(600));
+					dr.get("Lifespan_Seconds").asInt().min(1).orDefault(600),
+					waveSize, maxAlive, waveCooldown, standDown, leashMargin, composition, bountyShare,
+					recycleSeconds);
 		} else {
-			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, 600);
+			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, 600, waveSize, maxAlive, waveCooldown,
+			                                        standDown, leashMargin, composition, bountyShare,
+			                                        recycleSeconds);
 		}
 
 		MappingNode copNode = root.get("Cop_Response").asMapping().orNull();

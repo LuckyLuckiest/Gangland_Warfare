@@ -12,6 +12,7 @@ import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.gang.GangWorldPolicy;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.config.TurfSettings;
@@ -44,10 +45,12 @@ class TurfCreateCommand extends SubArgument {
 	private final TurfSettings         settings;
 	private final TurfRules            rules;
 	private final TurfMessages         text;
+	private final GangWorldPolicy      worldPolicy;
 
 	protected TurfCreateCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
-	                            TurfSettings settings, TurfRules rules, TurfMessages text) {
+	                            TurfSettings settings, TurfRules rules, TurfMessages text,
+	                            GangWorldPolicy worldPolicy) {
 		super(plugin, "create", tree, parent);
 
 		this.plugin     = plugin;
@@ -58,6 +61,7 @@ class TurfCreateCommand extends SubArgument {
 		this.settings   = settings;
 		this.rules      = rules;
 		this.text       = text;
+		this.worldPolicy = worldPolicy;
 
 		this.addSubArgument(displayNameArgument());
 	}
@@ -127,6 +131,12 @@ class TurfCreateCommand extends SubArgument {
 		if (pos1.getWorld() == null || pos2.getWorld() == null
 		    || !pos1.getWorld().getName().equals(pos2.getWorld().getName())) {
 			messages.send(sender, "TURF_CREATE_FAIL_CROSS_WORLD");
+			return;
+		}
+
+		if (!worldPolicy.enabledIn(pos1.getWorld())) {
+			sender.sendMessage(text.text("Teleport_Guard.Create_Gang_World_Disabled",
+			                             "&cGangs are disabled in this world, so a turf here could never be held."));
 			return;
 		}
 

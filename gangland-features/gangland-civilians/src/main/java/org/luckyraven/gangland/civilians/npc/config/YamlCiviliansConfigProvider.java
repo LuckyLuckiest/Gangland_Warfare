@@ -7,15 +7,19 @@ import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcDifficulty;
+import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.keystone.persistence.config.MappingNode;
 import org.luckyraven.keystone.persistence.config.NodeReader;
+import org.luckyraven.keystone.persistence.config.Severity;
+import org.luckyraven.keystone.persistence.config.SourceLocation;
 
 import java.util.*;
 
@@ -274,7 +278,62 @@ public class YamlCiviliansConfigProvider {
 
 		return new CivilianAIBehaviorConfig(wanderEnabled, wanderRange, fleeEnabled, fleeRange,
 		                                    combatEnabled, attackDamage, attackRange, attackIntervalTicks, difficulty,
-		                                    alertRange, searchSeconds, tactics, melee, fireRateMultiplier, retreat);
+		                                    alertRange, searchSeconds, tactics, melee, fireRateMultiplier, retreat,
+		                                    parseRoles(combat, report, typeId));
+	}
+
+	/**
+	 * {@code AI.Combat.Roles.<Name>}: the optional role overlay, by role name. Absent = no roles (every civilian of the
+	 * type is plain). {@code Placement} is ANY, CENTER or FLANK, with FRONT (= CENTER) and BACK (= ANY) as the guard
+	 * words; an unknown one is reported and keeps ANY. The firing band needs both {@code Ranged_Min} and
+	 * {@code Ranged_Max}.
+	 */
+	private Map<String, NpcRole> parseRoles(@Nullable NodeReader combat, ConfigReport report, String typeId) {
+		MappingNode rolesSection = combat == null ? null : combat.get("Roles").asMapping().orNull();
+		if (rolesSection == null) return Map.of();
+
+		NodeReader          roles  = NodeReader.of(rolesSection, report);
+		Map<String, NpcRole> result = new LinkedHashMap<>();
+		for (String name : roles.keys()) {
+			MappingNode node = roles.get(name).asMapping().required().orNull();
+			if (node == null) continue;
+			NodeReader role = NodeReader.of(node, report);
+
+			NpcFanPlacement placement    = NpcFanPlacement.ANY;
+			String          rawPlacement = role.get("Placement").asString().orNull();
+			if (rawPlacement != null) {
+				String key = rawPlacement.trim().toUpperCase(Locale.ROOT);
+				switch (key) {
+					case "FRONT" -> placement = NpcFanPlacement.CENTER;
+					case "BACK" -> placement = NpcFanPlacement.ANY;
+					default -> {
+						try {
+							placement = NpcFanPlacement.valueOf(key);
+						} catch (IllegalArgumentException e) {
+							NodeReader.NodeAccess access = role.get("Placement");
+							SourceLocation        where  = access.node() != null ? access.node().location()
+							                                                     : role.mapping().location();
+							report.add(Severity.WARNING, where,
+							           "Types." + typeId + ".AI.Combat.Roles." + name + ".Placement",
+							           "unknown Placement '" + rawPlacement + "' (ANY, CENTER, FLANK, FRONT or BACK), ANY used",
+							           "config.enum");
+						}
+					}
+				}
+			}
+
+			Double rangedMin = role.has("Ranged_Min") ? role.get("Ranged_Min").asDouble().min(0).max(64).orDefault(Double.NaN) : Double.NaN;
+			Double rangedMax = role.has("Ranged_Max") ? role.get("Ranged_Max").asDouble().min(0).max(64).orDefault(Double.NaN) : Double.NaN;
+			boolean band     = !rangedMin.isNaN() && !rangedMax.isNaN() && rangedMin < rangedMax;
+
+			result.put(name, new NpcRole(name, name, placement, band ? rangedMin : null, band ? rangedMax : null,
+			                             role.get("Health_Multiplier").asDouble().min(0.1).max(10).orDefault(1.0),
+			                             role.get("Leader_Priority").asInt().orDefault(0), null, 1.0, 0, null,
+			                             role.get("Block_Fraction").asDouble().min(0).max(1).orDefault(0.0),
+			                             role.get("Block_Cone_Degrees").asDouble().min(0).max(360).orDefault(0.0),
+			                             false, role.get("Commander").asBool().orDefault(false)));
+		}
+		return Collections.unmodifiableMap(result);
 	}
 
 	private TacticsConfig parseTactics(@Nullable NodeReader combat, ConfigReport report) {

@@ -18,6 +18,9 @@ Spawner_List_Empty: "No hay generadores de civiles colocados actualmente."
 # Gritos de facción (fase H12). Mismas claves que civilian_messages.yml (inglés); si falta una, se usa el inglés.
 Shouts:
    Format: "&c[%faction%] &f%unit%&7: &f%line%"
+   # Dicho por un guardia al retirarse tras mantener / perder un territorio. Líneas simples, no listas.
+   Turf_Held: "El territorio es nuestro. Volved a vuestros puestos."
+   Turf_Lost: "Lo perdimos. Replegaos."
    Compass:
       - "norte"
       - "noreste"
@@ -60,6 +63,8 @@ Shouts:
          - "¡Le dieron a %member%!"
       Leader_Down:
          - "¡El jefe cayó! %unit%, tú lideras!"
+      Commander_Down:
+         - "¡Cayó el jefe! ¡A cubierto!"
       Fall_Back:
          - "¡Me dieron! ¡Cúbranme!"
          - "¡Me echo para atrás!"

@@ -23,15 +23,22 @@ class TurfModuleYamlKeysTest {
 			"Capture.Window", "Capture.Wake_Up_Shield_Seconds", "Capture.Window_Min_Member_Age_Hours",
 			"Capture.Presence_Seconds", "Capture.Min_Capture_Seconds", "Capture.Max_Contest_Minutes",
 			"Capture.Guard_Weight_Cap", "Turf_Cap.Base", "Turf_Cap.Per_Level", "Turf_Cap.Ceiling",
-			"Income.Idle_Hours", "Income.Max_Multiplier", "Income.Gang_XP_Per_Payout", "Garrison.Max_Reserve");
+			"Income.Idle_Hours", "Income.Max_Multiplier", "Income.Gang_XP_Per_Payout", "Garrison.Max_Reserve", "Teleport_Guard.Buffer_Blocks");
 
 	private static final List<String> MAP_KEYS = List.of(
 			"Map.Width", "Map.Height", "Map.Cell_Blocks", "Map.Auto_Min_Interval_Seconds", "Map.Bedrock_Text_Form",
-			"Hud.Enabled", "Hud.Interval_Seconds", "Hud.Priority");
+			"Hud.Enabled", "Hud.Interval_Seconds", "Hud.Priority",
+			"Web.Enabled", "Web.Layer_Label", "Web.Fill_Opacity", "Web.Line_Opacity", "Web.Line_Weight",
+			"Web.Unclaimed_Color");
 
 	private static final List<String> MESSAGE_KEYS = List.of(
 			"Reason.Attackable", "Reason.Cooldown", "Reason.Owners_Active", "Reason.No_Owners_Online", "Reason.Waking_Up",
-			"Reason.Over_Cap", "Info.BossBar_Guards");
+			"Reason.Over_Cap", "Info.BossBar_Guards",
+			"Map.Zoom_Set", "Map.Zoom_Limit_In", "Map.Zoom_Limit_Out", "Map.Zoom_Usage",
+			"Map.Border_Shown", "Map.Border_None",
+			"Teleport_Guard.Source_Under_Attack", "Teleport_Guard.Destination_Under_Attack",
+			"Teleport_Guard.Destination_Rival", "Teleport_Guard.Gang_In_Fight",
+			"Teleport_Guard.Safehouse_Refused", "Teleport_Guard.Create_Gang_World_Disabled");
 
 	private static YamlConfiguration load(String resource) throws IOException {
 		return YamlConfiguration.loadConfiguration(new StringReader(YamlFixture.shipped(resource)));

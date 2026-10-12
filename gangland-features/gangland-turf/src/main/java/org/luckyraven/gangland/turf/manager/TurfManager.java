@@ -32,6 +32,7 @@ public final class TurfManager {
 	private final Map<String, List<Turf>>        turfsByWorld;
 	private final Map<Integer, TurfRuntimeState> runtimeStates;
 	private final AtomicInteger                  nextId = new AtomicInteger(1);
+	private volatile java.util.function.Predicate<String> gangsDisabledIn;
 
 	/**
 	 * Without a persisted sequence the id mark lives only in memory, so ids are reused across restarts. Production
@@ -82,8 +83,31 @@ public final class TurfManager {
 		// throws IllegalStateException("No data supplier set for repository: TurfRepository").
 		repository.setDataSupplier(turfsById::values);
 
+		warnGangDisabledWorlds();
+
 		log.debug("Loaded {} turf(s) across {} world(s); next id = {}",
 		          turfsById.size(), turfsByWorld.size(), nextId.get());
+	}
+
+	/** Set by the gang link config: true when gangs are off in the named world. */
+	public void setGangsDisabledIn(java.util.function.Predicate<String> gangsDisabledIn) {
+		this.gangsDisabledIn = gangsDisabledIn;
+	}
+
+	/** Logs one warning per turf sitting in a gang-disabled world; returns those turfs. */
+	public List<Turf> warnGangDisabledWorlds() {
+		List<Turf> flagged = new ArrayList<>();
+		if (gangsDisabledIn == null) {
+			return flagged;
+		}
+		for (Turf turf : turfsById.values()) {
+			if (gangsDisabledIn.test(turf.getRegion().getWorld())) {
+				flagged.add(turf);
+				log.warn("Turf '{}' is in world '{}' where gangs are disabled; it can never be held.",
+				         turf.getDisplayName(), turf.getRegion().getWorld());
+			}
+		}
+		return flagged;
 	}
 
 	public int allocateId() {

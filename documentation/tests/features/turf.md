@@ -225,6 +225,23 @@ placeholders).
 - [ ] Wake-up shield after a server restart; the turf cap refusal at a gang's cap; dormant income after 24 h; over-cap payout; multiplier cap. (Unit tests cover the last four; the restart and digest checks need a live server.)
 - [ ] `/glw turf rules` prints the five sentences with this server's numbers.
 
+## 0.19.0 Manual Checks (Guards, map zoom and border, dynmap)
+
+- [ ] Two guard waves with Citizens: a capture on a turf with six guards in stock brings the first wave of three to its posts; after a guard falls a top-up follows after the cooldown; the owners get the `took their posts` line each time.
+- [ ] No stock spent without Citizens: on a server without Citizens, start a capture; `/glw turf garrison` on that turf shows the same count afterwards.
+- [ ] Guards walk back after a chase past the edge: chase a guard beyond the 16-block margin; it walks to a post and stops targeting.
+- [ ] Survivors return after a failed attack: defend a capture and let it fail; the count goes back to the reserve (capped at 12) and the owners get the `back in the reserve` line.
+- [ ] Callsign and bar layout at GUI scale 2: `[TAG] Guard n` sits above each guard, the health bar directly under it, and nothing overlaps.
+- [ ] Commander down: kill the commander guard; the rest of the squad holds for about 5 seconds and then resumes.
+- [ ] Shield guard blocks frontal hits: take hits from the front and from the side; the front hits do about half the damage.
+- [ ] Killing guards pays the attacker, never the owner: a rival kill and a gangless player's kill each drop cash worth half the guard price; an owner or ally kill drops nothing.
+- [ ] Cop response: a cop hitting a protected player brings the nearby defenders onto the cop; defenders do not start a fight with a cop on their own.
+- [ ] Map zoom in/out limits: from 16, `zoom in` twice shows `Closest zoom already` at 8; from 16, `zoom out` three times shows `Widest zoom already` at 64.
+- [ ] Map border near a 512-block turf: the outline appears only within about 40 blocks of you, for about 10 seconds, and the server stays responsive.
+- [ ] Dynmap layer colours after a capture: the rectangle takes the new owner's colour at once; a turf created in the last 30 seconds appears on the layer.
+- [ ] Server without dynmap boots normally, and the map commands still work.
+- [ ] `/glw turf buff` on a turf does not change the gang bank balance (TF-31, by design: staff tool).
+
 ---
 
 [Back to Test Index](../README.md)

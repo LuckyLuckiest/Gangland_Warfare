@@ -25,6 +25,8 @@ public class CivilianMessages extends LocalizedModuleYaml implements RadioLines 
 	private static final String BASE_NAME = "civilian_messages";
 
 	private static final List<String> DEFAULT_FORMAT  = List.of("&c[%faction%] &f%unit%&7: &f%line%");
+	private static final List<String> DEFAULT_TURF_HELD = List.of("Turf's ours. Back to your posts.");
+	private static final List<String> DEFAULT_TURF_LOST = List.of("We lost it. Fall back.");
 	private static final List<String> DEFAULT_COMPASS = List.of("north", "north-east", "east", "south-east", "south",
 	                                                             "south-west", "west", "north-west");
 	private static final List<String> DEFAULT_SIDES   = List.of("front", "left", "right", "back");
@@ -64,6 +66,8 @@ public class CivilianMessages extends LocalizedModuleYaml implements RadioLines 
 		return switch (key) {
 			case "Format" -> list("Shouts.Format", DEFAULT_FORMAT);
 			case "Compass" -> list("Shouts.Compass", DEFAULT_COMPASS);
+			case "Turf_Held" -> list("Shouts.Turf_Held", DEFAULT_TURF_HELD);
+			case "Turf_Lost" -> list("Shouts.Turf_Lost", DEFAULT_TURF_LOST);
 			case "Sides" -> list("Shouts.Sides", DEFAULT_SIDES);
 			default -> list("Shouts.Lines." + key, DEFAULT_LINES.getOrDefault(key, List.of()));
 		};

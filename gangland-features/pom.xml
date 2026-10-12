@@ -26,6 +26,7 @@
         <module>gangland-npc-shops</module>
         <module>gangland-lootchest</module>
         <module>gangland-gang</module>
+        <module>gangland-gang-fights</module>
     </modules>
 
 </project>

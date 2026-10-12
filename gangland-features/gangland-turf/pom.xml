@@ -97,6 +97,33 @@
             <artifactId>XSeries</artifactId>
         </dependency>
 
+        <!-- dynmap (soft dependency; only map/web/DynmapTurfLayer names these types). DynmapCoreAPI carries
+             org.dynmap.markers.*; dynmap-api only lists it at runtime scope, so both are declared. -->
+        <dependency>
+            <groupId>us.dynmap</groupId>
+            <artifactId>dynmap-api</artifactId>
+            <version>3.4</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>us.dynmap</groupId>
+            <artifactId>DynmapCoreAPI</artifactId>
+            <version>3.4</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- NBTAPI -->
         <dependency>
             <groupId>de.tr7zw</groupId>

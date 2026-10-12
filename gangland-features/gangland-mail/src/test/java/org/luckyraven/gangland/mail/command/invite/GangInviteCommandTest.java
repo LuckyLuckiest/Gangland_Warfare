@@ -3,6 +3,7 @@ package org.luckyraven.gangland.mail.command.invite;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -109,7 +110,7 @@ class GangInviteCommandTest {
 		invite = new GangInviteCommand(mock(JavaPlugin.class), new Tree<>(), parent, userManager,
 		                               mock(UserManager.class), mock(MemberManager.class), gangManager,
 		                               mock(RankManager.class), mailManager, mock(MailRules.class),
-		                               mock(MailMessages.class));
+		                               mock(MailMessages.class), mock(GangMembershipService.class));
 	}
 
 	@AfterEach

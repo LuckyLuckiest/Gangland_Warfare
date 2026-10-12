@@ -370,6 +370,23 @@ Types:
                Strafe_Degrees: 8.0
                Reposition_Ticks: 80
                Moving_Aim_Error: 0.12
+            # Optional squad jobs a Garrison.Composition (turf_npcs.yml) hands out in spawn order; a type with no Roles
+            # block is plain. Per role: Placement (ANY, CENTER, FLANK; FRONT = CENTER, BACK = ANY), Leader_Priority (the
+            # highest leads), Ranged_Min and Ranged_Max (own firing band, both needed, clamped under the gun's reach),
+            # Health_Multiplier, Block_Fraction (share of a hit from inside the front cone taken off, 0-1),
+            # Block_Cone_Degrees (full width of that cone) and Commander (its death makes the squad take cover for 5 s).
+            Roles:
+               Shield:
+                  Placement: FRONT
+                  Block_Fraction: 0.5
+                  Block_Cone_Degrees: 90.0
+               Marksman:
+                  Placement: BACK
+                  Ranged_Min: 12.0
+                  Ranged_Max: 24.0
+               Commander:
+                  Leader_Priority: 10
+                  Commander: true
 
    quartermaster:
       Display_Name: "&6&lQuartermaster"

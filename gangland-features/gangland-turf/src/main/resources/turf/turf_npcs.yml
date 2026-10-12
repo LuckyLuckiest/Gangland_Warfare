@@ -58,3 +58,33 @@ Defender:
    Targeting_Radius: 32.0
    # Safety lifespan — TurfDefenderDeployer.recall() should fire on capture-end, this is the fallback.
    Lifespan_Seconds: 600
+# Garrison: how the guards bought at the Quartermaster defend a turf under attack. They spawn at hidden posts in waves,
+# are taken out of the turf's reserve only once they have spawned, stay near the turf, and go back to the reserve when
+# the fight ends. Nothing is spent on a server without Citizens.
+Garrison:
+   # Guards spawned per wave.
+   Wave_Size: 3
+   # Most guards standing at once on one turf.
+   Max_Alive: 6
+   # Seconds after a guard falls before the next top-up.
+   Wave_Cooldown_Seconds: 20
+   # Seconds survivors stay after the fight before they leave (and return to the reserve).
+   Stand_Down_Seconds: 8
+   # Blocks past the turf edge a guard may chase before walking back to a post.
+   Leash_Margin: 16
+   # Roles the guards of a turf take in spawn order (guard 1, 2, ...); the rest are plain guards. Names are the
+   # AI.Combat.Roles of the Defender type in civilians.yml (Shield blocks half of a frontal hit, Marksman keeps its
+   # distance, Commander: when it falls the others take cover for 5 s). "Name@2" gives two guards that role; an
+   # unknown name is reported once and that guard is plain. An empty list means no roles.
+   Composition:
+      - "Commander@1"
+      - "Shield@2"
+      - "Marksman@2"
+   # Share of a guard's price paid to a rival who kills it, as cash at its feet (0 turns the bounty off). Funded by the
+   # owner's purchase (turf_powerups.yml Garrison.Cost_Per_Guard, discount included); nothing is minted. The owning
+   # gang and its allies get nothing, and a guard drops no civilian cash.
+   Bounty_Share: 0.5
+   # A guard that cannot reach anyone for this many seconds, with no attacker looking at it, reappears at another post
+   # (0 turns it off). The garrison's stock is unchanged.
+   Recycle_Seconds: 12
+# end Garrison

@@ -1,0 +1,22 @@
+# Replaced from the plugin jar when the plugin version changes; the old file is kept as <name>-old.yml.
+Config_Version: '${project.version}'
+
+Information:
+   Display_Name: "&6&lGang Ranking"
+   Size: 54
+   Type: multi-inventory
+   Configuration:
+      Fill: true
+      Border: true
+   Permission: "gangland.inventory.gang_ranking"
+   Multi:
+      # Ranks by kills. Other stats: Item_Source gang_ranking_<stat> with <stat> one of kdr, assists, level, members,
+      # online, turfs, wins, balance (balance needs gangland.gang.ranking.wealth).
+      Item_Source: "gang_ranking"
+   Item_Template:
+      Item: PAPER
+      Name: "&b%name%"
+      Lore:
+         - "&7#%rank% &f%name%"
+         - "&7Value: &e%value%"
+         - "&7Level: &e%level%"

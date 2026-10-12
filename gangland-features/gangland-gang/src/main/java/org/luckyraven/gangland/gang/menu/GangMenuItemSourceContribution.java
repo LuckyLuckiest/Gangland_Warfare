@@ -13,6 +13,8 @@ import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.menu.filter.FilterApplier;
 import org.luckyraven.gangland.menu.filter.FilterStore;
@@ -43,6 +45,9 @@ public final class GangMenuItemSourceContribution implements GangItemSourceContr
 	private static final String BINDING_GANGS        = "gangs";
 	private static final String BINDING_GANG_MEMBERS = "gang_members";
 
+	/** {@code gang_ranking} ranks by kills; {@code gang_ranking_<stat>} by any other stat. */
+	private static final String SOURCE_RANKING = "gang_ranking";
+
 	private static final Set<String> SOURCES = Set.of(SOURCE_GANG_MEMBERS, SOURCE_GANG_ALLIES, SOURCE_GANGS);
 
 	private final UserManager<Player> userManager;
@@ -51,10 +56,20 @@ public final class GangMenuItemSourceContribution implements GangItemSourceContr
 	private final FilterApplier       filterApplier;
 	private final GangFilterAdapter   gangFilterAdapter;
 	private final MemberFilterAdapter memberFilterAdapter;
+	private final GangStatsService    statsService;
 
 	public GangMenuItemSourceContribution(@Qualifier("online") UserManager<Player> userManager, GangManager gangManager,
 	                                      FilterStore filterStore, FilterApplier filterApplier,
 	                                      GangFilterAdapter gangFilterAdapter, MemberFilterAdapter memberFilterAdapter) {
+		this(userManager, gangManager, filterStore, filterApplier, gangFilterAdapter, memberFilterAdapter,
+		     new GangStatsService());
+	}
+
+	public GangMenuItemSourceContribution(@Qualifier("online") UserManager<Player> userManager, GangManager gangManager,
+	                                      FilterStore filterStore, FilterApplier filterApplier,
+	                                      GangFilterAdapter gangFilterAdapter, MemberFilterAdapter memberFilterAdapter,
+	                                      GangStatsService statsService) {
+		this.statsService        = statsService;
 		this.userManager         = userManager;
 		this.gangManager         = gangManager;
 		this.filterStore         = filterStore;
@@ -65,11 +80,39 @@ public final class GangMenuItemSourceContribution implements GangItemSourceContr
 
 	@Override
 	public boolean supports(String source) {
-		return source != null && SOURCES.contains(source.toLowerCase());
+		return source != null && (SOURCES.contains(source.toLowerCase()) || ranking(source) != null);
+	}
+
+	/** The stat a {@code gang_ranking[_<stat>]} source ranks by, or {@code null} for any other source. */
+	private static String ranking(String source) {
+		String lower = source.toLowerCase();
+		if (lower.equals(SOURCE_RANKING)) return "kills";
+		return lower.startsWith(SOURCE_RANKING + "_") ? lower.substring(SOURCE_RANKING.length() + 1) : null;
+	}
+
+	/** One entry per ranked gang: rank, name, value, level; the same snapshot the chat ranking reads. */
+	private List<Map<String, String>> getRanking(Player player, String stat) {
+		List<GangStatsService.Row> ranked = statsService.ranking(stat, player.hasPermission(GangPermissions.RANKING_WEALTH));
+
+		List<Map<String, String>> entries = new ArrayList<>(ranked.size());
+		for (int i = 0; i < ranked.size(); i++) {
+			GangStatsService.Row row = ranked.get(i);
+
+			Map<String, String> placeholders = new LinkedHashMap<>();
+			placeholders.put("rank", String.valueOf(i + 1));
+			placeholders.put("name", row.name());
+			placeholders.put("value", GangStatsService.format(stat, row.value(stat)));
+			placeholders.put("level", String.valueOf(row.level()));
+			entries.add(placeholders);
+		}
+		return entries;
 	}
 
 	@Override
 	public List<Map<String, String>> entries(Player player, String source) {
+		String stat = ranking(source);
+		if (stat != null) return getRanking(player, stat);
+
 		return switch (source.toLowerCase()) {
 			case SOURCE_GANG_MEMBERS -> getGangMembers(player);
 			case SOURCE_GANG_ALLIES -> getGangAllies(player);

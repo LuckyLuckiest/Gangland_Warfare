@@ -83,7 +83,7 @@ class GangRenameCommand extends SubArgument {
 			// GR-03: renaming the gang was open to every member, down to the newest recruit.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.RENAME)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.RENAME));
 				return;
 			}
 

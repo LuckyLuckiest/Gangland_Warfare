@@ -12,6 +12,7 @@ import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.bean.listener.ListenerPriority;
 import org.luckyraven.gangland.data.user.UserDataLoader;
+import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
 import org.luckyraven.gangland.database.tables.player.BankTable;
@@ -64,6 +65,8 @@ public final class CreateAccountListener implements Listener {
 		offlineUserManager.remove(player.getUniqueId());
 
 		// Add user to cache immediately so other systems can find them
+		// T-293: cached for lookups at once, but not saveable until the load below succeeds
+		user.setLoadPending(true);
 		userManager.add(user);
 
 		// Load data from DB asynchronously, then fire the init event.
@@ -74,7 +77,16 @@ public final class CreateAccountListener implements Listener {
 			UserTable      userTable = TableLookup.find(UserTable.class, tables);
 			BankTable      bankTable = TableLookup.find(BankTable.class, tables);
 
-			userDataLoader.loadUserData(user, userTable, bankTable);
+			if (!userDataLoader.loadUserData(user, userTable, bankTable)) {
+				// T-286: defaults must never reach the autosave, which would overwrite the stored row
+				// main thread only (the cache is a HashMap), and only while this session's User is still the cached
+				// one: after quit+rejoin the uuid holds a newer session's User that must survive
+				Bukkit.getScheduler().runTask(gangland, () -> {
+					if (userManager.getUser(player) == user) userManager.remove(user);
+					if (player.isOnline()) player.kickPlayer(Messages.USER_DATA_LOAD_FAILED.toString());
+				});
+				return;
+			}
 
 			if (!player.isOnline()) {
 				return;

@@ -115,7 +115,11 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 		int    gangId       = num(result[v++]).intValue();
 		double contribution = num(result[v++]).doubleValue();
 		int    rankId       = num(result[v++]).intValue();
-		long   joinedGang   = num(result[v]).longValue();
+		long   joinedGang   = num(result[v++]).longValue();
+		// columns added in 0.19.0: an older or shorter row reads as 0
+		int kills   = result.length > v ? num(result[v]).intValue() : 0;
+		int deaths  = result.length > v + 1 ? num(result[v + 1]).intValue() : 0;
+		int assists = result.length > v + 2 ? num(result[v + 2]).intValue() : 0;
 
 		Rank   rank   = rankLookup.get(rankId);
 		Member member = new Member(uuid);
@@ -129,6 +133,9 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 		member.setContribution(contribution);
 		member.setRank(rank);
 		member.setGangJoinDateLong(joinedGang);
+		member.setKills(kills);
+		member.setDeaths(deaths);
+		member.setAssists(assists);
 
 		return member;
 	}

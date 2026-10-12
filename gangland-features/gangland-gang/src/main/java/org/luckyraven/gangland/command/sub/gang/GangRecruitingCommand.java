@@ -82,8 +82,9 @@ final class GangRecruitingCommand extends SubArgument {
 		}
 
 		Player player = (Player) sender;
-		if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player, GangPermissions.INVITE)) {
-			sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+		if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+		                            GangPermissions.RECRUITING)) {
+			sender.sendMessage(GangPermissions.refusal(GangPermissions.RECRUITING));
 			return;
 		}
 

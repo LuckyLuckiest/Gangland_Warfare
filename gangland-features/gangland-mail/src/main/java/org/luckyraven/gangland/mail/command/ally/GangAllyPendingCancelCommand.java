@@ -110,7 +110,7 @@ public class GangAllyPendingCancelCommand extends SubArgument {
 
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.ALLY)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.ALLY));
 				return;
 			}
 

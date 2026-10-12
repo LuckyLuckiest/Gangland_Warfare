@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
+import java.util.function.ToIntFunction;
 
 /**
  * 1-Hz task that re-sends the auto map of every viewer that turned it on. A raster is recomputed only when the viewer's
@@ -35,7 +36,7 @@ public final class MapAutoTask implements BeanLifecycle {
 	private final Function<Player, TerritoryRaster.Raster> rasters;
 	private final Consumer<Player>                       sender;
 	private final LongSupplier                           clock;
-	private final IntSupplier                            cellBlocks;
+	private final ToIntFunction<Player>                  cellBlocks;
 	private final IntSupplier                            minIntervalSeconds;
 	private final Map<UUID, Viewer>                      viewers = new HashMap<>();
 
@@ -53,7 +54,7 @@ public final class MapAutoTask implements BeanLifecycle {
 
 	public MapAutoTask(JavaPlugin plugin, MapPrefsService prefs, Function<UUID, Player> players,
 	                   Function<Player, TerritoryRaster.Raster> rasters, Consumer<Player> sender, LongSupplier clock,
-	                   IntSupplier cellBlocks, IntSupplier minIntervalSeconds) {
+	                   ToIntFunction<Player> cellBlocks, IntSupplier minIntervalSeconds) {
 		this.plugin             = plugin;
 		this.prefs              = prefs;
 		this.players            = players;
@@ -119,8 +120,8 @@ public final class MapAutoTask implements BeanLifecycle {
 	private String cellKey(Player player) {
 		Location at    = player.getLocation();
 		World    world = at.getWorld();
-		int      cell  = Math.max(1, cellBlocks.getAsInt());
+		int      cell  = Math.max(1, cellBlocks.applyAsInt(player));
 		String   name  = world == null ? "" : world.getName();
-		return name + ":" + Math.floorDiv(at.getBlockX(), cell) + ":" + Math.floorDiv(at.getBlockZ(), cell);
+		return name + ":" + cell + ":" + Math.floorDiv(at.getBlockX(), cell) + ":" + Math.floorDiv(at.getBlockZ(), cell);
 	}
 }

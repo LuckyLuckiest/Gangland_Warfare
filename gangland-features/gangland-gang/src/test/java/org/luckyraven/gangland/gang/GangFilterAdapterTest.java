@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pins {@link GangFilterAdapter}'s projection of {@link Gang} onto {@link StandardFilterField} — restored
@@ -106,4 +107,29 @@ class GangFilterAdapterTest {
 		assertNull(adapter.project(gang, null));
 	}
 
+
+	@Test
+	void registerStatSorts_addsStatAxesToGangsBinding() {
+		var registry = new org.luckyraven.gangland.menu.filter.FilterRegistry();
+		registry.register(new org.luckyraven.gangland.menu.filter.FilterBinding("gangs", "inv",
+				List.of(StandardFilterField.NAME), org.luckyraven.gangland.menu.filter.SortDescriptor.asc(StandardFilterField.NAME),
+				List.of(org.luckyraven.gangland.menu.filter.SortDescriptor.asc(StandardFilterField.NAME))));
+
+		var low  = org.luckyraven.gangland.gang.support.StatsFixtures.gang(1, "Low", 1, 0,
+				org.luckyraven.gangland.gang.support.StatsFixtures.member(1, 5, 0, 0));
+		var high = org.luckyraven.gangland.gang.support.StatsFixtures.gang(2, "High", 1, 0,
+				org.luckyraven.gangland.gang.support.StatsFixtures.member(2, 50, 0, 0));
+		var stats   = org.luckyraven.gangland.gang.support.StatsFixtures.service(0, 0, List.of(), low, high);
+		var adapter = new GangFilterAdapter(stats, registry);
+		adapter.registerStatSorts();
+
+		var binding = registry.get("gangs");
+		var kills   = org.luckyraven.gangland.menu.filter.SortDescriptor.desc(GangStatFilterField.KILLS);
+		assertTrue(binding.sortCycle().contains(kills));
+
+		var applier = new org.luckyraven.gangland.menu.filter.FilterApplier();
+		var sorted  = applier.apply(List.of(low, high),
+				org.luckyraven.gangland.menu.filter.SearchFilter.empty(kills), adapter);
+		assertEquals(List.of(high, low), sorted);
+	}
 }

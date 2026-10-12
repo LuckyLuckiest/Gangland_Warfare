@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -24,6 +25,9 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.member.Member;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
+import org.luckyraven.keystone.economy.EconomyHandler;
+import java.math.BigDecimal;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.message.MessageProvider;
@@ -89,6 +93,7 @@ class GangListCommandTest {
 		gangManager = mock(GangManager.class);
 		player      = mock(Player.class);
 		when(player.hasPermission(anyString())).thenReturn(true);
+		when(player.hasPermission(GangPermissions.BALANCE_OTHERS)).thenReturn(false);
 		when(player.spigot()).thenReturn(mock(Player.Spigot.class));
 	}
 
@@ -168,10 +173,31 @@ class GangListCommandTest {
 	}
 
 	@Test
+	@DisplayName("the bank column appears only for a holder of balance.others")
+	void bankColumn_onlyWithBalanceOthers() throws Exception {
+		useGangs(new String[][]{{"Solo", "1"}});
+		Gang solo = gangManager.getAll().iterator().next();
+		EconomyHandler economy = new EconomyHandler(null);
+		economy.setAmount(new BigDecimal("4321"));
+		when(solo.getEconomy()).thenReturn(economy);
+		String shown = Settings.formatAmount(new BigDecimal("4321"));
+
+		list().executeArgument(player, new String[]{"gang", "list"});
+		assertTrue(sentRows(player).get(0).contains("members: 1"), sentRows(player).toString());
+		assertFalse(sentRows(player).get(0).contains(shown), sentRows(player).toString());
+
+		Player staff = mock(Player.class);
+		when(staff.hasPermission(anyString())).thenReturn(true);
+		when(staff.spigot()).thenReturn(mock(Player.Spigot.class));
+		list().executeArgument(staff, new String[]{"gang", "list"});
+		assertTrue(sentRows(staff).get(0).contains(shown), sentRows(staff).toString());
+	}
+
+	@Test
 	@DisplayName("the list verb is its own verb, not an alias of members")
 	void listVerb_notAliasOfMembers() {
 		Argument members = new GangMembersCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class),
-		                                          mock(UserManager.class), gangManager);
+		                                          mock(UserManager.class), gangManager, messages, new GangStatsService());
 
 		assertEquals(List.of("members"), List.of(members.getArguments()));
 		assertEquals(List.of("list"), List.of(list().getArguments()));
@@ -203,7 +229,7 @@ class GangListCommandTest {
 
 	private Argument list() {
 		return new GangListCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), gangManager,
-		                           mock(UserManager.class), messages);
+		                           mock(UserManager.class), messages, new GangStatsService());
 	}
 
 	private static Argument page(Argument list) {

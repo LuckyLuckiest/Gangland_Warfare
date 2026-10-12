@@ -9,7 +9,7 @@ import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
-import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
+import org.luckyraven.gangland.gang.level.GangLevelTable;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
@@ -27,6 +27,7 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 	public static final String STATE_MIGRATION = "0.17.0-gang-state-invite";
 
 	private final GangMigrationsContract migrations;
+	private final GangLevelTable         levelTable;
 	private       boolean                loaded;
 
 	public GangManager(IRepository<Gang> gangRepository,
@@ -37,9 +38,16 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 	public GangManager(IRepository<Gang> gangRepository,
 	                   GangAllianceRepositoryContract allianceRepository,
 	                   GangMigrationsContract migrations) {
+		this(gangRepository, allianceRepository, migrations, new GangLevelTable());
+	}
+
+	public GangManager(IRepository<Gang> gangRepository,
+	                   GangAllianceRepositoryContract allianceRepository,
+	                   GangMigrationsContract migrations, GangLevelTable levelTable) {
 		this.gangRepository     = gangRepository;
 		this.allianceRepository = allianceRepository;
 		this.migrations         = migrations;
+		this.levelTable         = levelTable;
 		this.gangs              = new HashMap<>();
 	}
 
@@ -69,14 +77,15 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 			for (Gang gang : gangs.values()) {
 				gang.setState(Gang.State.INVITE);
 			}
-			GangMigrationRepository.saveThen(gangRepository, new ArrayList<>(gangs.values()),
-			                                 () -> migrations.markDone(STATE_MIGRATION));
+			migrations.migrate(STATE_MIGRATION, gangRepository, () -> new ArrayList<>(gangs.values()));
 			log.info("Gang states migrated: every gang is invite-only (D7); /glw gang recruiting open opens one");
 		}
 	}
 
 	/**
-	 * Adds XP to the gang and levels it up, firing one {@link GangLevelUpEvent} per level gained, each after that
+	 * Adds XP to the gang and levels it up while the next level is free (fee 0 in gang_rules.yml Levels; a level with a
+	 * fee is claimed with /glw gang upgrade confirm and the XP is only banked), firing one {@link GangLevelUpEvent} per
+	 * level gained, each after that
 	 * level's increment (so a listener reads the level just reached). Cancelling an event undoes that one level and
 	 * stops further levels in this call, so the gang stays at the level before that step. A non-finite or non-positive
 	 * amount does nothing; a gang at its maximum level gains no XP and fires nothing. No save call: autosave writes the
@@ -89,8 +98,16 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 		}
 
 		Level level = gang.getLevel();
-		// T-254: Level fires one GangLevelUpEvent per level, each after its own increment
-		level.addExperience(amount, true, new GangLevelUpEvent(false, gang, level));
+		level.addExperience(amount, false, null);
+
+		// T-254: one GangLevelUpEvent per level, each after its own increment. Only levels whose fee is 0 are taken
+		// here; a level with a fee (D16 C) waits for /glw gang upgrade confirm and its XP stays banked. The bar is
+		// checked here because Level.addLevels itself levels below it.
+		while (level.getLevelValue() < level.getMaxLevel()
+		       && levelTable.row(level.nextLevel()).cost() <= 0
+		       && level.getExperience() >= level.experienceCalculation(level.nextLevel())) {
+			if (level.addLevels(1, new GangLevelUpEvent(false, gang, level)) == 0) break;
+		}
 	}
 
 	public void add(Gang gang) {

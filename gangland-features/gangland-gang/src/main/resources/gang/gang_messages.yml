@@ -26,6 +26,8 @@ List:
    Row: "&f%gang% &7- members: %members% - online: %online%"
    # Clickable footer when more pages follow. %page% is the next page number.
    Next: "&7[Next page &e%page%&7]"
+   # Row for a sender who may see other gangs' banks (gangland.gang.balance.others). %bank% is the amount.
+   Row_Bank: "&f%gang% &7- members: %members% - online: %online% - bank: &a%money_symbol%%bank%"
 # end List
 
 # ---------------- Info ----------------
@@ -46,7 +48,25 @@ Info:
    None: "none"
    # Shown when no gang matches the name or id. %gang% is what the player typed.
    Not_Found: "&cNo gang named %gang%."
+   # The bank line, shown to the gang's own members and to holders of gangland.gang.balance.others.
+   Bank: "&7Bank: &a%money_symbol%%bank%"
+   # Shown to everyone else, so they know the bank exists but is private.
+   Bank_Hidden: "&7Bank: &8private"
 # end Info
+
+# ---------------- Members ----------------
+Members:
+   # Header of /glw gang members. %gang% is the display name, %count% the member count, %page% / %pages% the page.
+   Header: "&6%gang% &7- %count% members - page %page%/%pages%"
+   # Printed once above each rank group. %rank% is the rank name, %count% how many members hold it.
+   Rank_Header: "&e%rank% &7(%count%)"
+   # One member. %player% is the name, %status% online or offline.
+   Entry: "  &f%player% &7- %status%"
+   Online: "&aonline"
+   Offline: "&coffline"
+   # Clickable footer when more pages follow. %page% is the next page number.
+   Next: "&7[Next page &e%page%&7]"
+# end Members
 
 # ---------------- Names ----------------
 Names:
@@ -54,14 +74,20 @@ Names:
    Invalid: "&cGang names are 3 to 16 letters, digits or underscores."
    # Another gang already has this name, ignoring case. Names are always unique.
    Taken: "&cA gang named %gang% already exists."
+   # Display name refusals (gang_rules.yml Display_Name). %max% = Max_Length.
+   Display_Hex: "&cHex colours are not allowed in a gang display name."
+   Display_Too_Long: "&cA display name is at most %max% visible characters."
+   Display_Blocked: "&cThat display name contains a blocked word."
+   # Another gang's name or display name looks the same, ignoring colour, case and look-alike letters.
+   Display_Taken: "&cThat display name looks the same as another gang's."
    # The rank named by Rank.Tail does not exist, so a new gang has no owner seat. Refused before any fee is taken.
    No_Owner_Rank: "&cGangs cannot be created right now: the owner rank is missing. Tell an admin."
 # end Names
 
 # ---------------- Social: gang chat, gang join, gang recruiting (W2-P2) ----------------
 Social:
-   # Gang chat line. %player% = sender, %message%.
-   Chat_Format: "&a[Gang] &f%player%&7: &f%message%"
+   # Gang chat line. %prefix% = the gang's level prefix (empty or ending in a space), %player% = sender, %message%.
+   Chat_Format: "&a[Gang] %prefix%&f%player%&7: &f%message%"
    # Gang chat mode switched on / off with /glw gang chat.
    Chat_On: "&aGang chat on: what you type goes to your gang only. &7/glw gang chat again to switch it off."
    Chat_Off: "&7Gang chat off."
@@ -100,3 +126,190 @@ Progression:
    # To the gang owner when he disbands: a quarter of the creation fee back. %money_symbol%, %amount%.
    Fee_Refund: "&7Refunded a quarter of the creation fee: &a%money_symbol%%amount%"
 # end Progression
+
+# ---------------- Worlds ----------------
+Worlds:
+   # Shown instead of any /glw gang verb in a world listed in gang_rules.yml Worlds.Disabled.
+   Disabled_Here: "&cGangs are disabled in this world."
+   # Shown instead of any /glw gang verb when settings.yml Gang.Enable is false.
+   Gangs_Off: "&cGangs are turned off on this server."
+# end Worlds
+
+# ---------------- Membership ----------------
+Membership:
+   # %gang% is the gang name, %count% its members now, %max% its level cap.
+   Full: "&c%gang% is full (%count%/%max%)."
+   # %seconds% is what is left of the combat tag.
+   Tagged: "&cYou are in a fight: wait %seconds% s."
+   Kick_Denied: "&cYour rank may not kick members."
+   Already_In_Gang: "&cLeave your gang first."
+   Unknown_Gang: "&cThat gang does not exist."
+   Not_In_Gang: "&cYou are not in a gang."
+   No_Rank: "&cThis gang has no starting rank; ask an admin."
+   No_Owner_Rank: "&cThe owner rank is missing. Tell an admin."
+   # Staff purge preview: one row per gang that would be disbanded. %gang%, %days% (days since the last member played).
+   Purge_Preview_Row: "&7%gang% &8- &7last seen %days% days ago"
+   Purge_Preview_Empty: "&7No gang is inactive enough to be purged."
+   # %count% gangs disbanded by a staff run.
+   Purge_Done: "&aPurged %count% gang(s)."
+# end Membership
+
+# ---------------- Levels ----------------
+Levels:
+   # /glw gang upgrade. %level% is the level being claimed; %xp_missing% and %money_missing% are what is still short;
+   # %cost% is the fee; %money_symbol% the currency symbol; %cap% the ally limit of the gang's level.
+   Preview: "&7Level &e%level% &7needs &c%xp_missing% &7more XP and &c%money_symbol%%money_missing% &7more in the bank."
+   Ready: "&aReady: level &e%level% &acosts &e%money_symbol%%cost% &7- &e/glw gang upgrade confirm"
+   Max: "&7Your gang is already at the highest level."
+   Claimed: "&aYour gang reached level &e%level%&a for &e%money_symbol%%cost%&a from the gang bank."
+   Cancelled: "&cThe level-up was cancelled. Nothing was charged."
+   No_Permission: "&cYour rank may not upgrade the gang."
+   # Alliance requests and accepts when the gang (%gang%) already has the allies its level allows.
+   Ally_Cap: "&c%gang% is at its limit of &e%cap% &callies for its level."
+# end Levels
+
+# ---------------- Ranks ----------------
+Ranks:
+   # Shown when a rank is below the Ranks.Minimum of a gang_rules.yml feature. %feature% = the feature word,
+   # %rank% = the lowest rank allowed.
+   Needs_Rank: "&c%feature% needs &f%rank% &cor higher."
+# end Ranks
+
+# ---------------- Combat ----------------
+Combat:
+   # /glw gang pvp with no argument. %gang% and %state% (on or off) are filled in.
+   Pvp_Now: "&7Gang pvp is &e%state% &7for %gang%."
+   # /glw gang pvp on: gangmates can hurt each other.
+   Pvp_On: "&e%gang% members can now hurt each other."
+   # /glw gang pvp off.
+   Pvp_Off: "&a%gang% members can no longer hurt each other."
+   # /glw gang ally pvp <gang> on, when the ally has already agreed. %gang% is the ally.
+   Ally_Pvp_On: "&e%gang% and your gang can now hurt each other."
+   # /glw gang ally pvp <gang> off.
+   Ally_Pvp_Off: "&a%gang% can no longer be hurt by your gang."
+   # /glw gang ally pvp <gang> on, while the ally has not agreed yet.
+   Ally_Pvp_Waiting: "&7Your side is on; %gang% must turn it on too."
+   # The gang named in /glw gang ally pvp is not an ally.
+   Ally_Not_Allied: "&c%gang% is not allied with your gang."
+   # A gang waypoint (safehouse, rally) used while tagged by a rival gang. %seconds% is the time left.
+   Tagged_Teleport: "&cYou are in combat: wait %seconds% s before using a gang teleport."
+# end Combat
+
+# ---------------- Safehouse ----------------
+Safehouse:
+   # /glw gang safehouse set <name>. %name%, %count% = safehouses the gang has now, %max% = the level cap or "unlimited".
+   Set: "&aSafehouse %name% set (%count%/%max%)."
+   Removed: "&7Safehouse %name% removed."
+   # /glw gang safehouse list. %count%, %max% in the header; %name%, %world%, %x%, %y%, %z% per row.
+   List_Header: "&6Safehouses &7(%count%/%max%)"
+   List_Row: "&7- &f%name% &7(%world% %x% %y% %z%)"
+   # %name% is what the player typed.
+   Not_Found: "&cYour gang has no safehouse named %name%."
+   Name_Invalid: "&cA safehouse name is 1 to 16 letters, digits or underscores, and not set, remove, list or join."
+   # The gang level allows no more safehouses. %count% = safehouses now, %max% = the cap.
+   Cap: "&cYour gang level allows %max% safehouses; remove one or upgrade first."
+   # The spot has lava, fire, a cactus, a one block gap or no floor. %name% is the safehouse (or the caller for a rally).
+   Unsafe: "&c%name% is not safe to stand on."
+   # Another plugin or the turf rules cancelled the new safehouse.
+   Set_Refused: "&cYou cannot set a safehouse here."
+   Disabled_World: "&cGangs are disabled in this world."
+   Off: "&cSafehouses are turned off."
+   # Teleport lines. %seconds% = warm-up or cooldown left, %cost% = money, %name% = the safehouse.
+   Warm_Up: "&7Teleporting in %seconds%s. Do not move."
+   Arrived: "&aYou arrived at %name%."
+   Failed: "&cYou could not teleport to %name%."
+   Cooldown: "&cYou can teleport again in %seconds%s."
+   Too_Poor: "&cA safehouse teleport costs %cost%."
+   # Sent to each online member. %player% = caller, %where% = safehouse name or caller name, %seconds% = answer window.
+   Rally_Call: "&6%player% calls the gang to %where%. &7Answer with /glw gang rally join within %seconds%s."
+   # To the caller. %count% = members asked.
+   Rally_Sent: "&aRally called: %count% members asked."
+   # /glw gang rally join with no open call for this member, or after the window closed.
+   Rally_Expired: "&cThere is no rally call open for you."
+   Rally_None: "&7No other member of your gang is online."
+# end Safehouse
+
+# ---------------- Chat ----------------
+Chat:
+   # Ally chat line (gang plus allies). %prefix% = level prefix of the sender's gang, %gang% = its name, %player%,
+   # %message%.
+   Ally_Format: "&d[Ally] %prefix%&e%gang% &f%player%&7: &f%message%"
+   # The copy a staff member with /glw option gang spy on gets of every gang and ally line. Same tokens.
+   Spy_Format: "&8[Spy] %prefix%&7%gang% &f%player%&7: &f%message%"
+   Allies_On: "&aAlly chat on: what you type goes to your gang and its allies. &7/glw gang chat allies again to switch it off."
+   Allies_Off: "&7Ally chat off."
+   Spy_On: "&aGang chat spy on."
+   Spy_Off: "&7Gang chat spy off."
+# end Chat
+
+# ---------------- Stats ----------------
+Stats:
+   # %stat%, %page%, %pages% in the header; %rank%, %name%, %value%, %level% in a row.
+   Ranking_Header: "&6Gang ranking &7- &e%stat% &7- page %page%/%pages%"
+   Ranking_Row: "&e#%rank% &f%name% &7- &a%value%"
+   Ranking_Next: "&7[Next page &e%page%&7]"
+   Ranking_Empty: "&7No gang is ranked for &f%stat%&7 yet."
+   # %stats% lists the stats the asker may use.
+   Unknown_Stat: "&cUnknown stat. Choose one of: &f%stats%"
+   Profile_Needs_Player: "&cName a player: /glw gang profile <player>"
+   Profile_No_Gang: "&f%player% &7is not in a gang."
+   Profile_Card_Title: "&6%player% &7- %gang%"
+   Profile_Card_Rank: "&7Rank: &f%rank% &7- joined &f%joined%"
+   Profile_Card_Stats: "&7Kills &a%kills% &7- deaths &c%deaths% &7- kdr &e%kdr% &7- assists &b%assists%"
+   Profile_Card_Gang: "&7Gang ranking by kills: &e#%position%"
+# end Stats
+
+# ---------------- Help ----------------
+# end Help
+
+# ---------------- Notice ----------------
+Notice:
+   # To a member once per login while the gang has a notice. %gang%, %notice%.
+   Login: "&6[%gang%&6] &eNotice: &f%notice%"
+   Set: "&aThe gang notice is set. Members see it when they log in."
+   Cleared: "&7The gang notice was removed."
+   Too_Long: "&cA notice is at most %max% characters."
+# end Notice
+
+# ---------------- Titles ----------------
+# Shown on screen. An empty Title and Subtitle shows nothing. %gang% = the gang's display name.
+Titles:
+   # To every online member when the gang reaches a level. %level%.
+   Level_Up:
+      Title: "&6Level %level%"
+      Subtitle: "&7%gang% &7grew stronger"
+   # To the player who joined.
+   Joined:
+      Title: "&aWelcome"
+      Subtitle: "&7You joined %gang%"
+   # To each member of a gang that was disbanded.
+   Disbanded:
+      Title: "&cGang disbanded"
+      Subtitle: "&7%gang% &7is no more"
+# end Titles
+
+# ---------------- Staff ----------------
+# /glw option gang <verb>: staff only, and every verb also runs from the console.
+Staff:
+   # %usage% is the verb with its arguments.
+   Usage: "&cUsage: /glw option gang %usage%"
+   Unknown_Gang: "&cNo gang named %gang%."
+   Disband_Confirm: "&eThis disbands %gang%. Run &f/glw option gang disband %gang% confirm &eto do it."
+   Disbanded: "&aGang %gang% disbanded."
+   Not_Member: "&c%player% is not in %gang%."
+   Leader_Set: "&a%player% now leads %gang%."
+   Bank_Balance: "&7%gang% holds &e%amount%&7."
+   # %before% and %after% are the bank before and after the change.
+   Bank_Changed: "&aBank of %gang%: %before% -> %after%."
+   Bank_Short: "&c%gang% holds only %amount%."
+   Bad_Amount: "&c%value% is not an amount."
+   Safehouse_Header: "&6Safehouses of %gang% &7(%count%)"
+   Safehouse_Row: "&7- &f%name% &7(%world% %x% %y% %z%)"
+   Safehouse_Missing: "&c%gang% has no safehouse %name%."
+   Safehouse_Removed: "&7Safehouse %name% removed."
+   World_Missing: "&cWorld %world% is not loaded."
+   Stats_Reset: "&aKills, deaths and assists of %player% reset."
+   Player_Not_Found: "&c%player% is in no gang."
+   Spy_On: "&aYou now read gang and ally chat."
+   Spy_Off: "&7You stopped reading gang and ally chat."
+# end Staff

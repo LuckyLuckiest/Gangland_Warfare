@@ -1,0 +1,98 @@
+# +-------------------------+ #
+# | Gang fight module rules | #
+# +-------------------------+ #
+# Gameplay rules of the gang fights module (/glw gang fight, /glw arena). One top-level section per feature.
+# /glw reload re-reads this file.
+
+# ---------------- Challenge ----------------
+Challenge:
+   # How long a proposal waits for the other gang to accept before it lapses.
+   Challenge_Expiry_Seconds: 60
+   # After the other gang accepts, how long members have to /glw gang fight enlist before the countdown starts.
+   Join_Window_Seconds: 60
+   # Countdown before the fight begins; fighters are in the arena and cannot attack yet.
+   Countdown_Seconds: 10
+   # A fight that is still running after this many minutes is decided by Timeout_Result.
+   Max_Duration_Minutes: 10
+   # How long the result is shown before fighters are sent back to where they came from.
+   Result_Seconds: 5
+   # Fewest and most fighters per side. The proposer picks <size> inside this range.
+   Min_Team_Size: 1
+   Max_Team_Size: 5
+   # true: both sides must field exactly <size> fighters or the fight is cancelled; false: a smaller side may start.
+   Require_Equal_Teams: true
+   # After a gang declines (or lets a proposal lapse) the proposer may not challenge it again for this long.
+   Decline_Cooldown_Seconds: 60
+   # An arena that just hosted a fight stays closed for this long.
+   Arena_Cooldown_Seconds: 30
+   # What happens when time runs out: MOST_ALIVE (the side with more fighters left wins, equal is a draw) or DRAW.
+   Timeout_Result: MOST_ALIVE
+   # A member must have been in the gang this many hours to fight in a sparring (no bet, unranked) fight.
+   # Ranked fights use Ranked.Ranked_Min_Member_Age_Hours instead.
+   Min_Member_Age_Hours: 0
+# end Challenge
+
+# ---------------- Bets ----------------
+Bets:
+   # Most money one gang can stake on a single fight.
+   Max_Bet: 100000
+   # A bet may not be more than this percent of the staking gang's bank.
+   Max_Bet_Percent_Of_Bank: 50
+   # Percent of the pot the server keeps when a fight is settled. 0 keeps nothing.
+   House_Cut_Percent: 0
+   # Most money that may move from one gang to another through bets, per pair of gangs, per day.
+   Max_Net_Transfer_Per_Pair_Per_Day: 200000
+   # Most money one gang may win from bets in total, per day.
+   Max_Bet_Transfer_Per_Gang_Per_Day: 300000
+# end Bets
+
+# ---------------- Ranked ----------------
+Ranked:
+   # A fight with a bet at least this large counts as ranked and feeds the fight ranking.
+   Ranked_Min_Bet: 1000
+   # Ranked fighters must have been in their gang this many hours.
+   Ranked_Min_Member_Age_Hours: 24
+   # The other gang must be at least this many days old for a ranked fight.
+   Ranked_Min_Opponent_Gang_Age_Days: 7
+   # Most ranked fights between the same two gangs per day.
+   Ranked_Per_Pair_Per_Day: 3
+   # After a ranked fight the same two gangs wait this many minutes before they can fight ranked again.
+   Rematch_Cooldown_Minutes: 30
+   # Wins against the same opponent that count on the board per day.
+   Ranked_Board_Wins_Per_Opponent_Per_Day: 1
+# end Ranked
+
+# ---------------- Guards ----------------
+Guards:
+   # How many times a fighter may step out of the arena box before he is counted as forfeited.
+   Max_Leave_Warnings: 3
+   # true: nobody can break or place blocks in an arena during a fight.
+   Protect_Blocks: true
+   # true: fighters may ride vehicles and mounts in the arena.
+   Allow_Vehicles: false
+   # true: a totem of undying saves a fighter; false: it is ignored in fights.
+   Respect_Totems: false
+   # ALLOWLIST: a fighter may only run the commands listed in Allowed_Commands.
+   # BLOCKLIST: a fighter may run anything except the commands listed in Blocked_Commands.
+   # OFF: no command limit.
+   Command_Block_Mode: ALLOWLIST
+   # Commands (without the slash; a command starts with one of these) a fighter may use in ALLOWLIST mode.
+   Allowed_Commands:
+      - glw gang fight
+      - gangland gang fight
+      - msg
+      - r
+      - tell
+   # Commands a fighter may not use in BLOCKLIST mode.
+   Blocked_Commands: []
+   # true: a fight with a bet is refused while online members of the two gangs share an IP address (stops bet boosting). Fights with no bet are not checked.
+   Block_Same_Address: false
+# end Guards
+
+# ---------------- Arenas ----------------
+Arenas:
+   # Smallest box (in blocks) /glw arena finish accepts.
+   Min_Arena_Volume: 64
+   # How many seconds /glw arena show draws the box.
+   Outline_Seconds: 10
+# end Arenas

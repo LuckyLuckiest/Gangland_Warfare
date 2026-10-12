@@ -1,6 +1,10 @@
 package org.luckyraven.gangland.gang;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.scheduler.BukkitScheduler;
+import org.junit.jupiter.api.AfterEach;
+import org.mockito.MockedStatic;
 import org.luckyraven.gangland.gang.database.repositories.meta.GangMigration;
 import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
 import org.bukkit.entity.Player;
@@ -11,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.gang.safehouse.Safehouse;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.core.permission.Permission;
@@ -37,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 /**
@@ -76,9 +82,13 @@ class GangConfigBeanGraphTest {
 
 	private DependencyContainer container;
 	private BeanFactory         factory;
+	// GangPurgeTask schedules its hourly check when it initializes
+	private MockedStatic<Bukkit> bukkit;
 
 	@BeforeEach
 	void setUp() {
+		bukkit = mockStatic(Bukkit.class);
+		bukkit.when(Bukkit::getScheduler).thenReturn(mock(BukkitScheduler.class));
 		container = new DependencyContainer();
 		JavaPlugin plugin = mock(JavaPlugin.class);
 		// FileHandler (gang_settings.yml, built inside gangSettingsContract) reads the plugin version.
@@ -106,6 +116,8 @@ class GangConfigBeanGraphTest {
 		container.registerInstance(ModuleLoader.class, mock(ModuleLoader.class));
 		container.registerInstance(FilterStore.class, mock(FilterStore.class));
 		container.registerInstance(FilterApplier.class, mock(FilterApplier.class));
+		container.registerInstance(org.luckyraven.gangland.menu.filter.FilterRegistry.class,
+		                           new org.luckyraven.gangland.menu.filter.FilterRegistry());
 
 		@SuppressWarnings("unchecked")
 		UserManager<Player> userManager = mock(UserManager.class);
@@ -120,10 +132,23 @@ class GangConfigBeanGraphTest {
 
 		factory.registerConfiguration(FixtureGangMembershipProducer.class);
 		factory.registerConfiguration(GangConfig.class);
+		// the seven lane configurations of the gang parity wave (0.19.0) produce the beans GangConfig consumes
+		factory.registerConfiguration(GangMembershipConfig.class);
+		factory.registerConfiguration(GangLevelConfig.class);
+		factory.registerConfiguration(GangCombatConfig.class);
+		factory.registerConfiguration(GangSafehouseConfig.class);
+		factory.registerConfiguration(GangChatConfig.class);
+		factory.registerConfiguration(GangStatsConfig.class);
+		factory.registerConfiguration(GangUxConfig.class);
 		// Harmless no-op once GangMembershipInstaller isn't @Configuration-annotated any more
 		// (BeanFactory.registerConfiguration silently rejects a non-annotated class) — kept so this same test
 		// reproduces the pre-fix crash unchanged when the fix is temporarily reverted for the red-first check.
 		factory.registerConfiguration(GangMembershipInstaller.class);
+	}
+
+	@AfterEach
+	void tearDown() {
+		bukkit.close();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -154,6 +179,9 @@ class GangConfigBeanGraphTest {
 
 		IRepository<RankPermission> rankPermissionRepo = mock(IRepository.class);
 		when(registry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
+
+		// GangSafehouseConfig: the safehouse repository (W5-H)
+		when(registry.getRepository(Safehouse.class)).thenReturn(mock(IRepository.class));
 
 		// GangConfig.gangMigrations casts this repository to GangMigrationsContract (W2-K).
 		when(registry.getRepository(GangMigration.class)).thenReturn(mock(GangMigrationRepository.class));
