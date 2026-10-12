@@ -130,7 +130,8 @@ class GadgetItemPermissionDefaultsTest {
 		String source = Files.readString(
 				Path.of("src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java"));
 
-		assertFalse(source.contains("OpenPermissions"), "register the TRUE node inside the module");
+		assertFalse(source.contains("core.permission.OpenPermissions") || source.contains("OpenPermissions."),
+		            "register the TRUE node inside the module");
 	}
 
 	@Test

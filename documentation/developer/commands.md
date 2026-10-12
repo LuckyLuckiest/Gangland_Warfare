@@ -195,12 +195,12 @@ When no argument matches, the system provides helpful suggestions:
 
 `plugin.yml` is the only place a command node gets `default: true` (Keystone registers every other node with the OP
 default). Open to everyone: the gang verbs, `bank` (`create`, `balance`, `deposit`, `withdraw`, `menu`), `balance`,
-`teleport`, `respawn`, `wanted`, `contact`, `resource`, `car` (`list`, `info`), `grapple`, `jetpack`. Nodes whose names
-only exist at runtime are registered open in code through `OpenPermissions` (gangland-core): `gangland.cars.<id>`,
-`gangland.jetpacks.<id>`, `gangland.grapples.<id>`, `gangland.uniqueitem.<id>` and `gangland.waypoint.<id>`. Staff
-stays op: `balance.admin` (`/glw balance <player>`), `bank.admin`, `bank resetcap`, `wanted add|remove|clear`,
-`car|grapple|jetpack give`, `teleport.cooldown_bypass`, `waypoint` verbs. `CommandPermissionDriftTest` fails when a
-`commands.json` command is neither declared nor on its staff list.
+`teleport`, `respawn`, `wanted`, `contact`, `resource`, `filter`, `car` (`list`, `info`), `grapple`, `jetpack`. Runtime
+nodes (`gangland.waypoint.<id>`, `gangland.cars|jetpacks|grapples|uniqueitem.<id>`) are registered open in code; see
+[Permission defaults](#permission-defaults-0171) below. Staff stays op: `balance.admin` (`/glw balance <player>`),
+`bank.admin`, `bank resetcap`, `wanted add|remove|clear`, `car|grapple|jetpack give`, `teleport.cooldown_bypass`,
+`waypoint` verbs. `CommandPermissionDriftTest` fails when a `commands.json` command is neither declared nor on its staff
+list.
 
 ### Admin Commands
 

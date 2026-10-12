@@ -86,7 +86,7 @@ class CommandPermissionDriftTest {
 			       .forEach(files::add);
 		}
 
-		// a moved or renamed module folder must not silently shrink coverage: core + 9 modules
+		// a moved or renamed module folder must not silently shrink coverage: core + 8 modules (healthbars has none)
 		assertTrue(files.size() >= 9, "expected at least 9 commands.json files, found " + files.size());
 
 		Set<String> nodes = new TreeSet<>();
