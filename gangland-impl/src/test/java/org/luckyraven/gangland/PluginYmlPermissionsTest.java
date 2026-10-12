@@ -82,6 +82,7 @@ class PluginYmlPermissionsTest {
 			"gangland.command.respawn",
 			"gangland.command.wanted",
 			"gangland.command.contact",
+			"gangland.command.filter",
 			"gangland.command.resource",
 			"gangland.command.car",
 			"gangland.command.car.list",

@@ -1,7 +1,14 @@
 package org.luckyraven.gangland.command.sub;
 
 import org.bukkit.command.CommandSender;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.io.TempDir;
+import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.support.SettingsFixture;
+
+import java.nio.file.Path;
+import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,6 +22,15 @@ import static org.mockito.Mockito.when;
 
 @DisplayName("T-826: /glw balance is open, /glw balance <player> stays behind an admin node")
 class BalanceAdminGateTest {
+
+	@TempDir
+	static Path tempDir;
+
+	@BeforeAll
+	static void messages() {
+		SettingsFixture.initializeMinimal(tempDir);
+		Messages.init(new FakeMessageProvider().withString("Errors.Permissions.Command", "no perm"));
+	}
 
 	@Test
 	void adminNodeName() {
@@ -38,6 +54,16 @@ class BalanceAdminGateTest {
 		when(sender.hasPermission(BalanceCommand.ADMIN_PERMISSION)).thenReturn(true);
 
 		assertTrue(BalanceCommand.mayLookUpOthers(sender));
+		verify(sender, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("B1: the tab completer stays silent for a non-admin (it runs on every keystroke)")
+	void completer_nonAdmin_sendsNothing() {
+		CommandSender sender = mock(CommandSender.class);
+		when(sender.hasPermission(BalanceCommand.ADMIN_PERMISSION)).thenReturn(false);
+
+		assertTrue(BalanceCommand.suggestions(sender, null, null).isEmpty());
 		verify(sender, never()).sendMessage(anyString());
 	}
 }

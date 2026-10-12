@@ -135,7 +135,7 @@ public final class BalanceCommand extends Command {
 
 				if (!found) sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", target));
 			});
-		}, sender -> mayLookUpOthers(sender) ? cachedNames(userManager, offlineUserManager) : List.of());
+		}, sender -> suggestions(sender, userManager, offlineUserManager));
 
 		getArgument().addSubArgument(targetBalance);
 	}
@@ -152,6 +152,11 @@ public final class BalanceCommand extends Command {
 	 *
 	 * @return sorted, de-duplicated names; never {@code null}.
 	 */
+	static List<String> suggestions(CommandSender sender, UserManager<Player> userManager,
+	                                UserManager<OfflinePlayer> offlineUserManager) {
+		return mayLookUpOthers(sender) ? cachedNames(userManager, offlineUserManager) : List.of();
+	}
+
 	static List<String> cachedNames(UserManager<Player> userManager,
 	                                UserManager<OfflinePlayer> offlineUserManager) {
 		Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);

@@ -31,7 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("every help-listed command has a declared default or is explicitly staff-only")
 class CommandPermissionDriftTest {
 
-	/** Roots (and nodes) that are staff-only on purpose, or never checked; everything beneath them is exempt. */
+	/**
+	 * Roots (and nodes) that are staff-only on purpose, or never checked. Each prefix exempts its WHOLE subtree, so a
+	 * new player verb added under one of these roots is not caught: declare it in plugin.yml and list it in PLAYER.
+	 */
 	private static final List<String> STAFF = List.of(
 			"gangland.command.rank", "gangland.command.module", "gangland.command.permissions",
 			"gangland.command.debug", "gangland.command.economy", "gangland.command.item",
@@ -39,7 +42,7 @@ class CommandPermissionDriftTest {
 			"gangland.command.reload", "gangland.command.cop", "gangland.command.jail",
 			"gangland.command.civilian", "gangland.command.banker", "gangland.command.trader",
 			"gangland.command.bounty", "gangland.command.cuff", "gangland.command.uncuff",
-			"gangland.command.waypoint", "gangland.command.perm", "gangland.command.filter",
+			"gangland.command.waypoint", "gangland.command.perm",
 			"gangland.command.fuel", "gangland.command.update", "gangland.command.lootchest",
 			"gangland.command.spawn",
 			// help entries that name an alias (tp, desc), an unchecked ConfirmArgument-style child, or no longer
@@ -82,6 +85,9 @@ class CommandPermissionDriftTest {
 			       .filter(Files::exists)
 			       .forEach(files::add);
 		}
+
+		// a moved or renamed module folder must not silently shrink coverage: core + 9 modules
+		assertTrue(files.size() >= 9, "expected at least 9 commands.json files, found " + files.size());
 
 		Set<String> nodes = new TreeSet<>();
 		for (Path file : files) {

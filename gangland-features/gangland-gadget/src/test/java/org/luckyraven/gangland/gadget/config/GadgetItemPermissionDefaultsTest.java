@@ -22,7 +22,13 @@ import org.luckyraven.keystone.persistence.FileManager;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.verify;
@@ -116,5 +122,41 @@ class GadgetItemPermissionDefaultsTest {
 			GrappleAddon addon = config.grappleAddon(manager, files, null, loader);
 			addon.initialize();
 		});
+	}
+
+	@Test
+	@DisplayName("B2: the module must not use the host-new OpenPermissions (Host_Api 2.2 floor, no api bump)")
+	void gadgetDoesNotNameOpenPermissions() throws Exception {
+		String source = Files.readString(
+				Path.of("src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java"));
+
+		assertFalse(source.contains("OpenPermissions"), "register the TRUE node inside the module");
+	}
+
+	@Test
+	@DisplayName("a car with the reserved id 'bypass' never opens the admin bypass node")
+	void reservedBypassIdStaysAdmin() throws Exception {
+		PermissionManager manager = mock(PermissionManager.class);
+		when(manager.resolve("gangland.cars.bypass")).thenReturn("gangland.cars.bypass");
+		FileManager files   = mock(FileManager.class);
+		FileHandler handler = mock(FileHandler.class);
+		when(files.getFile("cars")).thenReturn(handler);
+		YamlConfiguration config = new YamlConfiguration();
+		config.loadFromString("""
+				bypass:
+				   Material: MINECART
+				   Display_Name: "&bSedan"
+				""");
+		when(handler.getFileConfiguration()).thenReturn(config);
+		ModuleLoader loader = mock(ModuleLoader.class);
+		when(loader.classLoader()).thenReturn(mock(ModuleClassLoader.class));
+		PluginManager plugins = mock(PluginManager.class);
+		when(Bukkit.getServer().getPluginManager()).thenReturn(plugins);
+
+		try (MockedConstruction<FileHandler> ignored = mockConstruction(FileHandler.class)) {
+			new GadgetFileConfig(mock(JavaPlugin.class)).carAddon(manager, files, null, loader).initialize();
+		}
+
+		verify(plugins, never()).addPermission(any(Permission.class));
 	}
 }
