@@ -5,6 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.GanglandApi;
+import org.luckyraven.gangland.core.permission.OpenPermissions;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.ArgumentUtil;
 import org.luckyraven.keystone.command.argument.SubArgument;
@@ -94,7 +95,7 @@ class WaypointCreateCommand extends SubArgument {
 			}
 
 			// create waypoint permission
-			permissionManager.addPermission(waypoint.getPermission());
+			OpenPermissions.register(permissionManager, waypoint.getPermission());
 
 			// select the waypoint
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected
