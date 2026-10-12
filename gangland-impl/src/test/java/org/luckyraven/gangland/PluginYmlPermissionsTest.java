@@ -38,6 +38,7 @@ class PluginYmlPermissionsTest {
 			"gangland.command.turf.info",
 			"gangland.command.turf.list",
 			"gangland.command.turf.rules",
+			"gangland.command.turf.quartermaster",
 			"gangland.command.gang",
 			"gangland.command.gang.create",
 			"gangland.command.gang.leave",

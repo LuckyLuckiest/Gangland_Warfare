@@ -2,4 +2,4 @@
 
 ## Fixed
 
-- Includes the 0.17.1 fixes (T-307, T-279, T-825, T-826). No new player permission nodes were declared by this merge: the 0.21.0 commands add none beyond those 0.17.1 already declared.
+- Includes the 0.17.1 fixes (T-307, T-279, T-825, T-826). The 0.21.0 player verbs `gangland.command.turf.quartermaster` and `gangland.command.gang.ally.*` default to true and are children of `gangland.command.player`, so negating that parent removes them too.
