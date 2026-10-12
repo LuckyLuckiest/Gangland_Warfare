@@ -82,6 +82,39 @@ class TurfNpcsConfigLoaderTest {
 		assertEquals(0.0, loader(handler).getPowerupSettings().placementCost());
 	}
 
+	@Test
+	@DisplayName("W7-F: Garrison.Hold_Radius is read, defaults to 6 and is clamped to at least 1 block")
+	void holdRadius_readDefaultAndClamp() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Garrison:\n   Hold_Radius: 9.5\n"));
+		assertEquals(9.5, loader(handler).getDefenderConfig().holdRadius());
+
+		when(handler.getParsedDocument()).thenReturn(document(COP_ENABLED));
+		assertEquals(6.0, loader(handler).getDefenderConfig().holdRadius());
+
+		when(handler.getParsedDocument()).thenReturn(document("Garrison:\n   Hold_Radius: 0.2\n"));
+		assertEquals(1.0, loader(handler).getDefenderConfig().holdRadius());
+	}
+
+	@Test
+	@DisplayName("W7-E: Owner_Alerts.Cooldown_Seconds is read, defaults to 60, clamps at 0 and reloads")
+	void ownerAlertCooldown_readDefaultAndClamp() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Owner_Alerts:\n   Cooldown_Seconds: 15\n"));
+		TurfNpcsConfigLoader loader = loader(handler);
+		assertEquals(15, loader.getOwnerAlertCooldownSeconds());
+
+		when(handler.getParsedDocument()).thenReturn(document("Owner_Alerts:\n   Cooldown_Seconds: 30\n"));
+		loader.onInitialize(false);
+		assertEquals(30, loader.getOwnerAlertCooldownSeconds());
+
+		when(handler.getParsedDocument()).thenReturn(document(COP_ENABLED));
+		assertEquals(60, loader(handler).getOwnerAlertCooldownSeconds());
+
+		when(handler.getParsedDocument()).thenReturn(document("Owner_Alerts:\n   Cooldown_Seconds: -5\n"));
+		assertEquals(0, loader(handler).getOwnerAlertCooldownSeconds());
+	}
+
 	private static TurfNpcsConfigLoader loader(FileHandler handler) {
 		FileManager fileManager = mock(FileManager.class);
 		when(fileManager.getFile("turf_npcs")).thenReturn(handler);
