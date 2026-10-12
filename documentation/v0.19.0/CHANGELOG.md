@@ -83,4 +83,4 @@ behaviour change.
   - `GangMembershipView` defaults, `GangChatChannel`, and the `events.gangs` events.
   - `PlaceholderContribution.resolveGlobal`.
   - `GanglandMoneyDropClassifier.installFirst(NpcMoneyDropSource)`.
-- 2.4 and 2.5 are reserved and unused on this branch. Full details in [gangland-api.md](../gangland-api.md).
+- 2.4 is the 0.17.0 hardening (Messages.USER_DATA_LOAD_FAILED, offline-cache API); 2.5 is reserved and unused on this branch. Full details in [gangland-api.md](../gangland-api.md).

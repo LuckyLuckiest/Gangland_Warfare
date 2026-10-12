@@ -84,5 +84,5 @@ Read [ICODE]documentation/migration-0.19.0.md[/ICODE] before you start the serve
 
 [LIST]
 [*][B]gangland-api 2.6[/B] (additive; no removal, rename or signature change): [ICODE]NpcRole[/ICODE] for NPC squads; [ICODE]GangMembershipView[/ICODE] defaults, [ICODE]GangChatChannel[/ICODE] and the [ICODE]events.gangs[/ICODE] events; [ICODE]PlaceholderContribution.resolveGlobal[/ICODE]; [ICODE]GanglandMoneyDropClassifier.installFirst(NpcMoneyDropSource)[/ICODE].
-[*] 2.4 and 2.5 are reserved and unused on this branch. Details in [ICODE]documentation/gangland-api.md[/ICODE].
+[*] 2.4 is the 0.17.0 hardening (Messages.USER_DATA_LOAD_FAILED, offline-cache API); 2.5 is reserved and unused on this branch. Details in [ICODE]documentation/gangland-api.md[/ICODE].
 [/LIST]
