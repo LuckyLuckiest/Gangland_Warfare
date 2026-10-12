@@ -59,8 +59,13 @@ public class TurfPowerupNpcCommand extends SubArgument {
 				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<set|remove>"));
 	}
 
-	/** Places the Quartermaster at the staff member's position. W7-H red: no containment check yet. */
+	/** Staff placement only while standing inside the resolved turf (T-803). */
 	void placeHere(Player player, Turf turf) {
+		Turf at = turfs.findAt(player.getLocation());
+		if (at == null || at.getId() != turf.getId()) {
+			messages.send(player, "TURF_NOT_INSIDE");
+			return;
+		}
 		powerupNpcs.place(turf.getId(), player.getLocation(), null);
 		messages.send(player, "TURF_POWERUPNPC_SET", "turf", turf.getDisplayName());
 	}
