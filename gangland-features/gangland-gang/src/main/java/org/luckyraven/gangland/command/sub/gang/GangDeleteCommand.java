@@ -207,10 +207,17 @@ class GangDeleteCommand extends SubArgument {
 			String depositMoney = Messages.DEPOSIT_MONEY_PLAYER.toString();
 			for (User<Player> gangUser : gangOnlineMembers) {
 				Player currentPlayer = gangUser.getUser();
-				Member mem           = memberManager.getMember(currentPlayer.getUniqueId());
+				UUID   currentId     = currentPlayer.getUniqueId();
+				Member mem           = memberManager.getMember(currentId);
 
-				// An online gang member with no cached Member cannot be paid out or reset — skip rather than NPE
-				// halfway through the disband (GR-01).
+				// T-279: the manager cache can miss an online member the gang still lists, and payouts() already
+				// reserved that member's share from gang.getMembers(); use the gang's own Member so the share is paid.
+				if (mem == null) {
+					mem = gang.getMembers().stream().filter(m -> m.getUuid().equals(currentId)).findFirst().orElse(null);
+				}
+
+				// Not in the gang's list either: nothing was reserved for it and there is nothing to reset — skip
+				// rather than NPE halfway through the disband (GR-01).
 				if (mem == null) continue;
 
 				BigDecimal amount = payouts.getOrDefault(currentPlayer.getUniqueId(), Currency.ZERO);
