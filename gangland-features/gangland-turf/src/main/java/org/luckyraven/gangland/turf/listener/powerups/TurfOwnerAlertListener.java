@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.turf.listener.powerups;
 
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -43,14 +42,14 @@ public final class TurfOwnerAlertListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onCivilianDeath(CivilianDeathEvent e) {
-		CivilianNpc  npc  = e.getCivilianNpc();
-		LivingEntity body = npc.getEntity();
-		int guardTurf = defenders.findOwningTurfId(body);
+		// The body is gone by MONITOR: Citizens despawns the NPC in its LOW death handler, so npc.getEntity() is null.
+		CivilianNpc npc = e.getCivilianNpc();
+		int guardTurf = defenders.turfOf(npc);
 		if (guardTurf >= 0) {
 			alerts.guardDown(guardTurf, npc);
 			return;
 		}
-		TurfPowerupNpc qm = powerups.getByEntity(body);
+		TurfPowerupNpc qm = powerups.getByCivilian(npc);
 		if (qm != null) {
 			alerts.quartermasterDown(qm.getData().getTurfId(), npc);
 		}

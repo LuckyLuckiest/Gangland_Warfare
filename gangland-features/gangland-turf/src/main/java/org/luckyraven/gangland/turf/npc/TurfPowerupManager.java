@@ -130,6 +130,9 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	/** The Quartermaster wrapping this civilian, or null; needs no live body. */
 	@Nullable
 	public TurfPowerupNpc getByCivilian(CivilianNpc civilian) {
+		for (TurfPowerupNpc qm : byTurfId.values()) {
+			if (qm.getCivilian() == civilian) return qm;
+		}
 		return null;
 	}
 

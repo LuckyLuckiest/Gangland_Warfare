@@ -229,7 +229,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 
 	/** Turf of a tracked guard by NPC, or -1; unlike {@link #findOwningTurfId} it needs no live body. */
 	public int turfOf(CivilianNpc npc) {
-		return -1;
+		return turfByNpc.getOrDefault(npc, -1);
 	}
 
 	/**
