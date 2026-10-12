@@ -34,6 +34,7 @@ import java.util.Objects;
 public final class TurfNpcsConfigLoader implements BeanLifecycle {
 
 	private static final String FILE_NAME = "turf_npcs";
+	public static final int DEFAULT_OWNER_ALERT_COOLDOWN_SECONDS = 60;
 
 	private final FileHandler fileHandler;
 
@@ -43,6 +44,8 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 	private TurfDefenderConfig  defenderConfig;
 	@Getter
 	private CopGuardConfig      copGuardConfig;
+	@Getter
+	private int                 ownerAlertCooldownSeconds = DEFAULT_OWNER_ALERT_COOLDOWN_SECONDS;
 
 	public TurfNpcsConfigLoader(FileManager fileManager) {
 		try {
@@ -104,6 +107,10 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		                                : gr.get("Recycle_Seconds").asInt().min(0)
 		                                    .orDefault(TurfDefenderConfig.DEFAULT_RECYCLE_SECONDS);
 
+		double holdRadius = gr == null ? TurfDefenderConfig.DEFAULT_HOLD_RADIUS
+		                               : Math.max(1.0, gr.get("Hold_Radius").asDouble()
+		                                                .orDefault(TurfDefenderConfig.DEFAULT_HOLD_RADIUS));
+
 		// absent = the shipped composition; present (even empty) = exactly what the file says
 		GarrisonComposition composition = gr != null && gr.has("Composition")
 		                                  ? GarrisonComposition.parse(gr.get("Composition").asList().ofStrings().orEmpty(),
@@ -118,11 +125,11 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 					dr.get("Targeting_Radius").asDouble().min(1.0).orDefault(32.0),
 					dr.get("Lifespan_Seconds").asInt().min(1).orDefault(600),
 					waveSize, maxAlive, waveCooldown, standDown, leashMargin, composition, bountyShare,
-					recycleSeconds);
+					recycleSeconds, holdRadius);
 		} else {
 			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, 600, waveSize, maxAlive, waveCooldown,
 			                                        standDown, leashMargin, composition, bountyShare,
-			                                        recycleSeconds);
+			                                        recycleSeconds, holdRadius);
 		}
 
 		MappingNode copNode = root.get("Cop_Response").asMapping().orNull();
@@ -135,6 +142,12 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		} else {
 			copGuardConfig = new CopGuardConfig(true, 32.0, true);
 		}
+
+		MappingNode alertNode = root.get("Owner_Alerts").asMapping().orNull();
+		ownerAlertCooldownSeconds = alertNode == null ? DEFAULT_OWNER_ALERT_COOLDOWN_SECONDS
+		                                              : Math.max(0, NodeReader.of(alertNode, report).get("Cooldown_Seconds")
+		                                                                 .asInt()
+		                                                                 .orDefault(DEFAULT_OWNER_ALERT_COOLDOWN_SECONDS));
 
 		if (!report.isEmpty()) report.log(log);
 	}

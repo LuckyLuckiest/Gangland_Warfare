@@ -48,6 +48,12 @@ Cop_Response:
    Targeting_Radius: 32.0
    # Also protect members of gangs allied with the turf owner, not only the owner's own members.
    Include_Allies: true
+# Owner alerts (W7-E): a chat line and an action-bar line to the owning gang's online members when a cop attacks
+# one of them on the turf, a guard falls, or the Quartermaster is attacked or killed. Allies and rivals never get them.
+# Texts: turf_messages.yml Alerts.Cop_Hit, Guard_Down, Quartermaster_Hit, Quartermaster_Down.
+Owner_Alerts:
+   # Seconds before the same alert for the same turf is sent again. 0 = every time. Minimum 0.
+   Cooldown_Seconds: 60
 Defender:
    # civilians.yml type id to spawn for each garrisoned defender. The type's combat behaviour, equipment, and
    # stats are fully owned by civilians.yml.
@@ -87,4 +93,7 @@ Garrison:
    # A guard that cannot reach anyone for this many seconds, with no attacker looking at it, reappears at another post
    # (0 turns it off). The garrison's stock is unchanged.
    Recycle_Seconds: 12
+   # Blocks around its post a guard keeps to while the owning gang's order is Hold (Quartermaster hub, Guard Orders):
+   # it picks only attackers this close to the post and walks back when it strays further. Minimum 1.0.
+   Hold_Radius: 6.0
 # end Garrison

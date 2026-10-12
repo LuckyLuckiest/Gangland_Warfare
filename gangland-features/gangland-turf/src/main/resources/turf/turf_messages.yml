@@ -230,6 +230,16 @@ Alerts:
    Lost: "&c%turf% lost to %gang%"
    # To the new owners. %turf%.
    Taken: "&aYou took %turf%"
+   # To the owning gang's online members (chat and action bar) when a cop hits one of them on the turf, at most once per
+   # turf_npcs.yml Owner_Alerts.Cooldown_Seconds. %turf%, %player% = the member who was hit.
+   Cop_Hit: "&c%turf%: a cop is attacking &f%player%"
+   # Same channels and cooldown, when one of the turf's guards is killed. %turf%.
+   Guard_Down: "&c%turf%: one of your guards fell"
+   # Same channels and cooldown, when anyone outside the owning gang and its allies hits the Quartermaster.
+   # %turf%, %attacker% = their name.
+   Quartermaster_Hit: "&c%turf%: &f%attacker% &cis attacking your Quartermaster"
+   # Same channels and cooldown, when the Quartermaster is killed. %turf%.
+   Quartermaster_Down: "&c%turf%: your Quartermaster was killed"
 # end Alerts
 
 # ---------------- Garrison: lines to the owners while their guards defend (W3-B) ----------------
@@ -401,6 +411,30 @@ Quartermaster:
    Nameplate_Tag: "&8[&e%tag%&8]"
    # Chat when a gang record is missing (open contract).
    Gang_Missing: "&cGang record missing — contact an admin."
+   # Hub line: the turf's guard order (W7-F). %order% = Order_Hold or Order_Defend.
+   Menu_Order: "&7Guard order: %order%"
+   # The order words used in %order%. Hold: guards keep to their posts and answer no cop.
+   Order_Hold: "&eHold"
+   # Defend: guards chase attackers on the turf and turn on cops (the default).
+   Order_Defend: "&cDefend"
+   # Guard Orders button on the hub.
+   Order_Name: "&e&lGuard Orders"
+   # Guard Orders lore: what Hold does.
+   Order_Lore_Hold: "&7Hold: guards stay by their posts and leave cops alone."
+   # Guard Orders lore: what Defend does.
+   Order_Lore_Defend: "&7Defend: guards chase attackers and turn on cops."
+   # Guard Orders lore for the owning gang. %order% = the order a click switches to.
+   Order_Click: "&aClick to switch to %order%&a."
+   # Chat after the order changed. %turf%, %order%.
+   Order_Set: "&aGuards on &f%turf%&a now: %order%"
+   # Garrison panel (W7-H): guards alive on the turf now. %count%.
+   Garrison_On_Duty: "&7On duty: &f%count%"
+   # Stock plus guards on duty against the cap. %count%, %max% = turf_rules.yml Garrison.Max_Reserve.
+   Garrison_Reserve: "&7Reserve: &f%count%&7/&f%max% &8(stock and on duty)"
+   # Guards the next wave sends from the reserve (already paid for). %count%.
+   Garrison_Next_Wave: "&7Next wave: up to &f%count% &7guards, no extra cost"
+   # Buy button lore when stock plus guards on duty reach the cap. %max%.
+   Garrison_Buy_Full: "&cReserve full: &f%max% &cguards."
 # end Quartermaster
 
 # ---------------- Rules: /glw turf rules (W2-E1) ----------------
