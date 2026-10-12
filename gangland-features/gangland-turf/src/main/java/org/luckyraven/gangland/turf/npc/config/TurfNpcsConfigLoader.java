@@ -108,7 +108,7 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		                                    .orDefault(TurfDefenderConfig.DEFAULT_RECYCLE_SECONDS);
 
 		double holdRadius = gr == null ? TurfDefenderConfig.DEFAULT_HOLD_RADIUS
-		                               : Math.max(1.0, gr.get("Hold_Radius").asDouble()
+		                               : Math.max(3.0, gr.get("Hold_Radius").asDouble()
 		                                                .orDefault(TurfDefenderConfig.DEFAULT_HOLD_RADIUS));
 
 		// absent = the shipped composition; present (even empty) = exactly what the file says

@@ -94,6 +94,6 @@ Garrison:
    # (0 turns it off). The garrison's stock is unchanged.
    Recycle_Seconds: 12
    # Blocks around its post a guard keeps to while the owning gang's order is Hold (Quartermaster hub, Guard Orders):
-   # it picks only attackers this close to the post and walks back when it strays further. Minimum 1.0.
+   # it picks only attackers this close to the post and walks back when it strays further. Minimum 3.0.
    Hold_Radius: 6.0
 # end Garrison

@@ -96,8 +96,7 @@ The new config key is `Powerup_Npc.Placement_Cost` in `turf/turf_npcs.yml` (defa
 - Hold: guards keep within `Garrison.Hold_Radius` (`6.0`) of their post. They pick only attackers that close and walk back when
   they stray further. The Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released.
 - The order is saved to the database, so it survives a restart.
-- The order is not reset when a turf changes hands. A turf that is taken keeps its current order, and the new owners'
-  rank decides who may switch it.
+- The order resets to Defend whenever a turf changes hands (capture, admin, disband, inactivity): the garrison row is dropped with the old owner's stock (T-270). Deleting a turf drops it too.
 
 ### 3. Database
 
@@ -124,7 +123,7 @@ key copy its block into your file.
 | Key | Default | Meaning |
 |---|---|---|
 | `turf_npcs.yml` `Owner_Alerts.Cooldown_Seconds` | `60` | Seconds before the same owner alert for the same turf is sent again. `0` = every time. |
-| `turf_npcs.yml` `Garrison.Hold_Radius` | `6.0` | Blocks around its post a guard keeps to while the order is Hold. Minimum `1.0`. |
+| `turf_npcs.yml` `Garrison.Hold_Radius` | `6.0` | Blocks around its post a guard keeps to while the order is Hold. Minimum `3.0`. |
 | `Alerts.Cop_Hit` | `&c%turf%: a cop is attacking &f%player%` | Owner alert: a cop hits a member on the turf. |
 | `Alerts.Guard_Down` | `&c%turf%: one of your guards fell` | Owner alert: a guard is killed. |
 | `Alerts.Quartermaster_Hit` | `&c%turf%: &f%attacker% &cis attacking your Quartermaster` | Owner alert: an outsider hits the Quartermaster. |

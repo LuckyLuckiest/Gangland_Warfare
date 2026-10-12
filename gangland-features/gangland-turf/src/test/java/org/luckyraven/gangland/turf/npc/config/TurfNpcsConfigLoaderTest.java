@@ -83,7 +83,7 @@ class TurfNpcsConfigLoaderTest {
 	}
 
 	@Test
-	@DisplayName("W7-F: Garrison.Hold_Radius is read, defaults to 6 and is clamped to at least 1 block")
+	@DisplayName("W7-F: Garrison.Hold_Radius is read, defaults to 6 and is clamped to at least 3 blocks")
 	void holdRadius_readDefaultAndClamp() throws Exception {
 		FileHandler handler = mock(FileHandler.class);
 		when(handler.getParsedDocument()).thenReturn(document("Garrison:\n   Hold_Radius: 9.5\n"));
@@ -93,7 +93,15 @@ class TurfNpcsConfigLoaderTest {
 		assertEquals(6.0, loader(handler).getDefenderConfig().holdRadius());
 
 		when(handler.getParsedDocument()).thenReturn(document("Garrison:\n   Hold_Radius: 0.2\n"));
-		assertEquals(1.0, loader(handler).getDefenderConfig().holdRadius());
+		assertEquals(3.0, loader(handler).getDefenderConfig().holdRadius());
+	}
+
+	@Test
+	@DisplayName("T-824: Hold_Radius 1.0 loads as 3.0, above the deployer's at-post threshold (2 blocks)")
+	void holdRadius_belowAtPostThreshold_clampsToThree() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Garrison:\n   Hold_Radius: 1.0\n"));
+		assertEquals(3.0, loader(handler).getDefenderConfig().holdRadius());
 	}
 
 	@Test

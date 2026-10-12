@@ -229,7 +229,7 @@ and only a warning is logged.
 stop again when the cop dies, when the victim leaves or stops being protected, or when the cop moves out of range. Set
 `Enabled` to `false` and defenders ignore cops entirely.
 
-**Guard orders.** Under Hold (Quartermaster hub, Guard Orders) the Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released. The order is saved per turf.
+**Guard orders.** Under Hold (Quartermaster hub, Guard Orders) the Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released. The order is saved per turf. The order resets to Defend whenever a turf changes hands (capture, admin, disband, inactivity): the garrison row is dropped with the old owner's stock (T-270). Deleting a turf drops it too.
 
 **Owner alerts.** Online members of the owning gang (not allies or rivals) get a chat line and an action-bar line when a cop hits one of them on the turf, a guard falls, an outsider hits the Quartermaster, or the Quartermaster is killed. Each kind is sent at most once per `Owner_Alerts.Cooldown_Seconds` (default 60) per turf; guard and Quartermaster deaths are told once per NPC. Cop-hit alerts need `Cop_Response.Enabled` to be `true`. Hold does not silence them.
 
@@ -250,7 +250,7 @@ stop again when the cop dies, when the victim leaves or stops being protected, o
 | `Cop_Response.Enabled` | `true` | Defenders answer cops hitting a protected player. |
 | `Cop_Response.Targeting_Radius` | `32.0` | Range within which defenders answer a cop. |
 | `Cop_Response.Include_Allies` | `true` | Also protect members of allied gangs. |
-| `Garrison.Hold_Radius` | `6.0` | Blocks around its post a guard keeps to while the order is Hold. Minimum `1.0`. |
+| `Garrison.Hold_Radius` | `6.0` | Blocks around its post a guard keeps to while the order is Hold. Minimum `3.0`. |
 | `Owner_Alerts.Cooldown_Seconds` | `60` | Seconds before the same owner alert for the same turf is sent again. `0` = every time. |
 
 ---
