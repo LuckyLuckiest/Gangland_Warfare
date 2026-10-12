@@ -440,6 +440,21 @@ class GangDeleteCommandTest {
 		assertMoney("1100", alice.getEconomy());   // 1000 share + 100 fee refund, paid once
 	}
 
+	@Test
+	@DisplayName("T-279: an online member with no cached Member still gets the disband payout (the gang's own Member is used)")
+	void onlineMemberWithoutCachedMember_isStillPaid() {
+		User<Player> alice = owner(1.0);
+		User<Player> bob   = onlineMember(1.0);
+		UUID         bobId = bob.getUser().getUniqueId();
+		when(memberManager.getMember(bobId)).thenReturn(null);
+		gang.getEconomy().setAmount(new BigDecimal("1000"));
+
+		disband(alice);
+
+		assertMoney("500", bob.getEconomy());
+		assertMoney("0", gang.getEconomy());
+	}
+
 	private Member zeroMember(UUID uuid) {
 		Member member = new Member(uuid);
 		member.setContribution(0D);

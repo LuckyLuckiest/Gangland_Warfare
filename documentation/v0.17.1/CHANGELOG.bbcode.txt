@@ -13,7 +13,8 @@
 [SIZE=6][B]🔧 Fixed[/B][/SIZE]
 
 [LIST]
-[*][B]Gang owners who are not ops can disband again[/B] — [ICODE]/glw gang delete[/ICODE] (and [ICODE]remove[/ICODE]/[ICODE]del[/ICODE]) was op-only on live servers because [ICODE]gangland.command.gang.delete[/ICODE] was missing from [ICODE]plugin.yml[/ICODE]. Keystone registers every command node at runtime, but with the OP default; only a [ICODE]plugin.yml[/ICODE] entry with [ICODE]default: true[/ICODE] opens it to players, and 0.17.0 left several player verbs out.
+[*][B]Disbanding a gang no longer loses an online member's share.[/B] If an online member was missing from the plugin's member cache, their disband payout stayed in the deleted gang's bank. The payout now uses the gang's own member record. (T-279)
+[*][B]Gang owners who are not ops can disband[/B] — [ICODE]/glw gang delete[/ICODE] (and [ICODE]remove[/ICODE]/[ICODE]del[/ICODE]) was op-only on live servers because [ICODE]gangland.command.gang.delete[/ICODE] was missing from [ICODE]plugin.yml[/ICODE]. Keystone registers every command node at runtime, but with the OP default; only a [ICODE]plugin.yml[/ICODE] entry with [ICODE]default: true[/ICODE] opens it to players, and 0.17.0 left several player verbs out.
 [*][B]Other player commands that were op-only[/B] now default to true: [ICODE]gang rename[/ICODE], [ICODE]transfer[/ICODE], [ICODE]color[/ICODE], [ICODE]display[/ICODE], [ICODE]description[/ICODE], the whole [ICODE]gang ally[/ICODE] flow, [ICODE]/glw bank[/ICODE] (balance, deposit, withdraw, menu), [ICODE]/glw respawn[/ICODE], [ICODE]/glw wanted[/ICODE], [ICODE]/glw contact[/ICODE], [ICODE]/glw resource[/ICODE], [ICODE]/glw car[/ICODE] (list, info), [ICODE]/glw grapple[/ICODE] and [ICODE]/glw jetpack[/ICODE]. Staff children ([ICODE]wanted add|remove|clear[/ICODE], [ICODE]car give[/ICODE], [ICODE]bank resetcap[/ICODE]) stay op. Rank gates and the [ICODE][player][/ICODE] admin forms are still enforced inside the commands.
 [/LIST]
 
