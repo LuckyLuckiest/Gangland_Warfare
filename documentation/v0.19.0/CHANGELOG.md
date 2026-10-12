@@ -64,6 +64,7 @@ behaviour change.
 
 ## Fixes
 
+- **Includes the 0.17.1 fixes (T-307, T-279, T-825, T-826):** non-op gang owners can disband and every online member is paid; newly declared player nodes (default true): `gangland.command.bank` (+ `.balance`, `.deposit`, `.withdraw`, `.menu`, `.create`), `balance`, `teleport`, `respawn`, `wanted`, `contact`, `filter`, `resource`, `car` (+ `.list`, `.info`), `grapple`, `jetpack`. Staff verbs stay op-only.
 - **Turf waves and bounty (TF-20, TF-35, TF-46):** guard waves and the bounty-share rules replace the all-at-once spend and the cash drop.
 - **Turf visuals (TF-43, TF-21):** outlines and the map border draw only the part near you.
 - **Turf civilian shouts (TF-47):** held and lost shouts use the civilian messages file.

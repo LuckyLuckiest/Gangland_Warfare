@@ -104,6 +104,71 @@ permissions:
       default: true
    gangland.command.gang.bounty:
       default: true
+   # Player verbs missing from CM-37 (T-307, 0.17.1); staff children (wanted add/remove/clear, car give, bank resetcap) stay op.
+   gangland.command.gang.delete:
+      default: true
+   gangland.command.gang.rename:
+      default: true
+   gangland.command.gang.transfer:
+      default: true
+   gangland.command.gang.color:
+      default: true
+   gangland.command.gang.display:
+      default: true
+   gangland.command.gang.description:
+      default: true
+   gangland.command.gang.ally:
+      default: true
+   gangland.command.gang.ally.abandon:
+      default: true
+   gangland.command.gang.ally.request:
+      default: true
+   gangland.command.gang.ally.accept:
+      default: true
+   gangland.command.gang.ally.reject:
+      default: true
+   gangland.command.gang.ally.pending:
+      default: true
+   gangland.command.gang.ally.pending.cancel:
+      default: true
+   gangland.command.bank:
+      default: true
+   gangland.command.bank.balance:
+      default: true
+   gangland.command.bank.deposit:
+      default: true
+   gangland.command.bank.withdraw:
+      default: true
+   gangland.command.bank.menu:
+      default: true
+   # Owner ruling T-826 (0.17.1): open to everyone. /glw balance <player> stays behind gangland.command.balance.admin
+   # (checked inside the command); waypoint use nodes are registered open at load; the staff verbs stay op.
+   gangland.command.bank.create:
+      default: true
+   gangland.command.balance:
+      default: true
+   gangland.command.teleport:
+      default: true
+   gangland.command.respawn:
+      default: true
+   gangland.command.wanted:
+      default: true
+   gangland.command.contact:
+      default: true
+   gangland.command.filter:
+      default: true
+   gangland.command.resource:
+      default: true
+   gangland.command.car:
+      default: true
+   gangland.command.car.list:
+      default: true
+   gangland.command.car.info:
+      default: true
+   gangland.command.grapple:
+      default: true
+   gangland.command.jetpack:
+      default: true
    # Gang menus (W1-G): gang_stat / alliance_stat check these before opening. gang_info defaults to true (T-226) so
    # members open it again from /glw gang; its Open.Condition hands gangless players to the onboarding screen.
    gangland.inventory.gang_info:
@@ -136,32 +201,6 @@ permissions:
    gangland.command.map.zoom:
       default: true
    gangland.command.map.border:
-      default: true
-   gangland.command.gang.transfer:
-      default: true
-   gangland.command.gang.delete:
-      default: true
-   gangland.command.gang.rename:
-      default: true
-   gangland.command.gang.description:
-      default: true
-   gangland.command.gang.display:
-      default: true
-   gangland.command.gang.color:
-      default: true
-   gangland.command.gang.ally:
-      default: true
-   gangland.command.gang.ally.request:
-      default: true
-   gangland.command.gang.ally.accept:
-      default: true
-   gangland.command.gang.ally.reject:
-      default: true
-   gangland.command.gang.ally.pending:
-      default: true
-   gangland.command.gang.ally.pending.cancel:
-      default: true
-   gangland.command.gang.ally.abandon:
       default: true
    gangland.command.gang.ally.pvp:
       default: true
@@ -290,6 +329,24 @@ permissions:
          gangland.command.gang.fight.stats: true
          gangland.inventory.player_profile: true
          gangland.inventory.gang_ranking: true
+         gangland.command.bank: true
+         gangland.command.bank.balance: true
+         gangland.command.bank.deposit: true
+         gangland.command.bank.withdraw: true
+         gangland.command.bank.menu: true
+         gangland.command.bank.create: true
+         gangland.command.balance: true
+         gangland.command.teleport: true
+         gangland.command.respawn: true
+         gangland.command.wanted: true
+         gangland.command.contact: true
+         gangland.command.filter: true
+         gangland.command.resource: true
+         gangland.command.car: true
+         gangland.command.car.list: true
+         gangland.command.car.info: true
+         gangland.command.grapple: true
+         gangland.command.jetpack: true
    # Gang staff tools; never default true (a default-true gangland.gang.* node would bypass every rank gate).
    gangland.admin.gang:
       default: op
