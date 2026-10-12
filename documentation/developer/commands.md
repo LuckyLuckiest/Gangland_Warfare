@@ -406,3 +406,7 @@ warn(throwable.getMessage(),throwable);
 ```
 
 This prevents command errors from crashing the server while still logging the stack trace.
+
+> **Permissions (0.17.1):** Keystone registers every command node at runtime with the OP default. A node players should
+> have must also be declared in `gangland-impl/src/main/resources/plugin.yml` with `default: true`
+> (`PluginYmlPermissionsTest.PLAYER` pins the list). Every node on the path is checked, so a parent does not open its children.
