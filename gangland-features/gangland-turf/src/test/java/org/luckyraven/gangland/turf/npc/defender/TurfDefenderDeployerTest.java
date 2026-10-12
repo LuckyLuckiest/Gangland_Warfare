@@ -13,6 +13,9 @@ import org.luckyraven.gangland.civilians.listener.civilian.CivilianDeathListener
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.config.CivilianDropConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
+import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.item.money.MoneyAddon;
+import org.luckyraven.gangland.item.money.MoneyDepositService;
 import org.luckyraven.gangland.turf.listener.powerups.TurfDefenderDeathListener;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
@@ -399,15 +402,13 @@ class TurfDefenderDeployerTest {
 			guards.add(npc);
 			putDefender(deployer, 1, npc);
 		}
-		Field deployed = Class.forName(TurfDefenderDeployer.class.getName() + "$Group").getDeclaredField("deployed");
-		deployed.setAccessible(true);
-		deployed.setInt(fieldMap(deployer).get(1), 4);
-
+		// putDefender -> track() already counted the four deployments
 		CivilianService service = mock(CivilianService.class);
 		when(service.getNpc(org.mockito.ArgumentMatchers.any(UUID.class)))
 				.thenAnswer(call -> registry.get(call.<UUID>getArgument(0)));
 		CivilianDeathListener civilianListener = new CivilianDeathListener(service, null);
-		TurfDefenderDeathListener turfListener = new TurfDefenderDeathListener(deployer);
+		TurfDefenderDeathListener turfListener = new TurfDefenderDeathListener(deployer, new GangMembership(),
+				mock(MoneyAddon.class), mock(MoneyDepositService.class));
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			org.mockito.Mockito.doAnswer(call -> {

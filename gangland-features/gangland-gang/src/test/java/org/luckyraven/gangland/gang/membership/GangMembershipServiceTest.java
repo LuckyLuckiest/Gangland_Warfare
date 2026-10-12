@@ -47,11 +47,13 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
 
 /** The one membership path: cap, tag refusal, console tokens and exactly one api event per change. */
@@ -70,6 +72,7 @@ class GangMembershipServiceTest {
 	private GangManager            gangManager;
 	private MemberManager          memberManager;
 	private UserManager<Player>    userManager;
+	private UserManager<OfflinePlayer> offlineUserManager;
 	private Rank                   head;
 	private Rank                   tail;
 	private Gang                   gang;
@@ -118,7 +121,8 @@ class GangMembershipServiceTest {
 		gang.setName("Vipers");
 		when(gangManager.getGang(GANG_ID)).thenReturn(gang);
 
-		kit = new MembershipKit(gangManager, memberManager, rankManager, userManager, mock(UserManager.class),
+		offlineUserManager = mock(UserManager.class);
+		kit = new MembershipKit(gangManager, memberManager, rankManager, userManager, offlineUserManager,
 		                        mock(RepositoryRegistry.class), W2P2Messages.shipped(tempDir));
 	}
 
@@ -163,6 +167,37 @@ class GangMembershipServiceTest {
 		assertEquals(1, left.size());
 		assertEquals(GangMemberLeftEvent.Reason.KICKED, left.get(0).reason());
 		assertEquals(invited.getUniqueId(), left.get(0).player());
+	}
+
+	@Test
+	@DisplayName("kicking an offline member whose row never loaded caches a load-pending fallback user")
+	@SuppressWarnings("unchecked")
+	void kickOfflineTarget_withoutLoadedRow_isLoadPending() {
+		Player creator = player("Ann");
+		Player bob     = player("Bob");
+		assertTrue(kit.service.join(GANG_ID, creator.getUniqueId(), JoinSource.CREATE).ok());
+		assertTrue(kit.service.join(GANG_ID, bob.getUniqueId(), JoinSource.INVITE).ok());
+		memberOf(creator).setRank(tail);
+		memberOf(bob).setRank(head);
+		UUID bobUuid = bob.getUniqueId();
+		bukkit.when(() -> Bukkit.getPlayer(bobUuid)).thenReturn(null);
+
+		User<OfflinePlayer> bobUser = mock(User.class);
+		AtomicBoolean       pending = new AtomicBoolean();
+		doAnswer(i -> {
+			pending.set(i.getArgument(0));
+			return null;
+		}).when(bobUser).setLoadPending(anyBoolean());
+		when(bobUser.isLoadPending()).thenAnswer(i -> pending.get());
+		// no cached row for bob: the service falls back to create(), as it does when the boot read failed
+		when(offlineUserManager.getUser(any(OfflinePlayer.class))).thenReturn(null);
+		doReturn(bobUser).when(offlineUserManager).create(any(OfflinePlayer.class));
+
+		assertTrue(kit.service.kick(GANG_ID, creator.getUniqueId(), bobUuid).ok());
+
+		verify(offlineUserManager).add(bobUser);
+		verify(bobUser).setLoadPending(true);
+		assertTrue(bobUser.isLoadPending(), "the fallback user must stay load-pending");
 	}
 
 	@Test
