@@ -178,8 +178,8 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	/**
 	 * Starts the periodical update tasks.
 	 *
-	 * <p>The timer is deliberately <b>synchronous</b> (CL-02): {@link #updatingDatabase(Runnable)} clears the offline
-	 * user cache and every repository data supplier copies its manager's live map. Those maps are mutated on the main
+	 * <p>The timer is deliberately <b>synchronous</b> (CL-02): {@link #updatingDatabase(Runnable)} prunes idle entries
+	 * from the offline user cache and every repository data supplier copies its manager's live map. Those maps are mutated on the main
 	 * thread by join / quit handling, so iterating them off-thread raced into
 	 * {@code ConcurrentModificationException}s (a partial save that skipped the remaining repositories) and lost
 	 * writes. Every snapshot is therefore taken on the main thread; only the JDBC work leaves it, through
