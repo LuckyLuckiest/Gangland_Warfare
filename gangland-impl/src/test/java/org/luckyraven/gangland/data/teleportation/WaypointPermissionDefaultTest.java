@@ -53,7 +53,9 @@ class WaypointPermissionDefaultTest {
 		PluginManager plugins = mock(PluginManager.class);
 
 		try (MockedStatic<Bukkit> bukkit = mockStatic(Bukkit.class)) {
-			bukkit.when(Bukkit::getServer).thenReturn(mock(Server.class));
+			Server server = mock(Server.class);
+			when(server.getPluginManager()).thenReturn(plugins);
+			bukkit.when(Bukkit::getServer).thenReturn(server);
 			bukkit.when(Bukkit::getPluginManager).thenReturn(plugins);
 
 			new WaypointManager(mock(Gangland.class), database, manager).initialize();

@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
+import org.luckyraven.gangland.command.sub.BalanceCommand;
 import org.luckyraven.gangland.command.sub.bank.BankCommand;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
@@ -211,5 +212,6 @@ public class DataConfig {
 		// they gate core /glw bank deposit|withdraw forms (moved from BankerConfig, T14).
 		permissionManager.addPermission(BankTiers.BYPASS_CAP_PERMISSION);
 		permissionManager.addPermission(BankCommand.ADMIN_PERMISSION);
+		permissionManager.addPermission(BalanceCommand.ADMIN_PERMISSION);
 	}
 }

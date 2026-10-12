@@ -75,12 +75,19 @@ public final class BalanceCommand extends Command {
 	}
 
 	static boolean mayLookUpOthers(CommandSender sender) {
-		return true;
+		if (sender.hasPermission(ADMIN_PERMISSION)) {
+			return true;
+		}
+
+		sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+		return false;
 	}
 
 	@Override
 	protected void initializeArguments() {
 		Argument targetBalance = new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
+			if (!mayLookUpOthers(sender)) return;
+
 			// get the target, validate if they are in the system — the caches first, the DB only as a fallback
 			String                        target = args[1];
 			User<? extends OfflinePlayer> user   = findCached(target, userManager, offlineUserManager);
@@ -128,7 +135,7 @@ public final class BalanceCommand extends Command {
 
 				if (!found) sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", target));
 			});
-		}, sender -> cachedNames(userManager, offlineUserManager));
+		}, sender -> mayLookUpOthers(sender) ? cachedNames(userManager, offlineUserManager) : List.of());
 
 		getArgument().addSubArgument(targetBalance);
 	}

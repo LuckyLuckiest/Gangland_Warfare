@@ -5,6 +5,7 @@ import lombok.CustomLog;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.core.permission.OpenPermissions;
 import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.exception.PluginException;
@@ -164,7 +165,7 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 			this.uniqueItems.put(key, uniqueItem);
 			temp.add(key);
 
-			permissionManager.addPermission(uniqueItem.getPermission());
+			OpenPermissions.register(permissionManager, uniqueItem.getPermission());
 		}
 
 		log.debug("Loaded the following unique items:");

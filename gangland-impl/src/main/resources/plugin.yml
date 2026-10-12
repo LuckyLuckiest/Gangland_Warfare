@@ -122,6 +122,14 @@ permissions:
       default: true
    gangland.command.bank.menu:
       default: true
+   # Owner ruling T-826 (0.17.1): open to everyone. /glw balance <player> stays behind gangland.command.balance.admin
+   # (checked inside the command); waypoint use nodes are registered open at load; the staff verbs stay op.
+   gangland.command.bank.create:
+      default: true
+   gangland.command.balance:
+      default: true
+   gangland.command.teleport:
+      default: true
    gangland.command.respawn:
       default: true
    gangland.command.wanted:

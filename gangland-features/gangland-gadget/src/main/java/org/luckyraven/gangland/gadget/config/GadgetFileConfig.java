@@ -2,6 +2,7 @@ package org.luckyraven.gangland.gadget.config;
 
 import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.core.permission.OpenPermissions;
 import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
@@ -47,7 +48,7 @@ public class GadgetFileConfig {
 	                         Placeholder placeholderService, ModuleLoader moduleLoader) {
 		fileManager.addFile(new FileHandler(plugin, "cars", "items", ".yml", moduleLoader.classLoader()), true);
 
-		CarAddon addon = new CarAddon(permissionManager::addPermission, fileManager, placeholderService);
+		CarAddon addon = new CarAddon(OpenPermissions.registrar(permissionManager), fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}
@@ -57,7 +58,7 @@ public class GadgetFileConfig {
 	                                 Placeholder placeholderService, ModuleLoader moduleLoader) {
 		fileManager.addFile(new FileHandler(plugin, "jetpacks", "items", ".yml", moduleLoader.classLoader()), true);
 
-		JetpackAddon addon = new JetpackAddon(permissionManager::addPermission, fileManager, placeholderService);
+		JetpackAddon addon = new JetpackAddon(OpenPermissions.registrar(permissionManager), fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}
@@ -67,7 +68,7 @@ public class GadgetFileConfig {
 	                                 Placeholder placeholderService, ModuleLoader moduleLoader) {
 		fileManager.addFile(new FileHandler(plugin, "grapples", "items", ".yml", moduleLoader.classLoader()), true);
 
-		GrappleAddon addon = new GrappleAddon(permissionManager::addPermission, fileManager, placeholderService);
+		GrappleAddon addon = new GrappleAddon(OpenPermissions.registrar(permissionManager), fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}

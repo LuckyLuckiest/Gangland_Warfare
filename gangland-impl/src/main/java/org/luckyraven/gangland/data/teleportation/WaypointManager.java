@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.core.permission.OpenPermissions;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.database.GanglandDatabase;
@@ -45,7 +46,8 @@ public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 
 			if (id > maxId) maxId = id;
 
-			permissionManager.addPermission("waypoint." + id);
+			OpenPermissions.register(permissionManager, "waypoint." + id);
+			OpenPermissions.register(permissionManager, waypoint.getPermission());
 			waypoints.put(id, waypoint);
 		}
 

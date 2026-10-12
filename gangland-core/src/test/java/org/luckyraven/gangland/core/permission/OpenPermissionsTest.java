@@ -1,10 +1,12 @@
 package org.luckyraven.gangland.core.permission;
 
+import org.bukkit.Bukkit;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.PluginManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.mockito.ArgumentCaptor;
 
@@ -25,6 +27,9 @@ class OpenPermissionsTest {
 		PermissionManager manager = mock(PermissionManager.class);
 		PluginManager     plugins = mock(PluginManager.class);
 		when(manager.resolve("waypoint.4")).thenReturn("gangland.waypoint.4");
+		// new Permission(...) recalculates through the server's plugin manager
+		BukkitRegistryFixture.install();
+		when(Bukkit.getServer().getPluginManager()).thenReturn(plugins);
 
 		OpenPermissions.register(manager, plugins, "waypoint.4");
 

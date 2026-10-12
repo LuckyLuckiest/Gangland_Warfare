@@ -20,8 +20,11 @@
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[SIZE=6][B]⚠ Still op-only (owner decision pending)[/B][/SIZE]
+[SIZE=6][B]🔓 Now open to everyone (owner ruling)[/B][/SIZE]
 
 [LIST]
-[*][ICODE]bank create[/ICODE], [ICODE]balance[/ICODE], [ICODE]teleport[/ICODE] and the per-item nodes ([ICODE]gangland.cars.<id>[/ICODE], [ICODE]gangland.jetpacks.<id>[/ICODE], [ICODE]gangland.grapples.<id>[/ICODE], [ICODE]gangland.uniqueitem.<id>[/ICODE], [ICODE]gangland.waypoint.<id>[/ICODE]) are unchanged. Grant them with a permissions plugin if you want players to have them.
+[*][ICODE]/glw bank create[/ICODE], [ICODE]/glw balance[/ICODE] and [ICODE]/glw teleport[/ICODE] default to true. [ICODE]/glw balance <player>[/ICODE] stays behind the new admin node [ICODE]gangland.command.balance.admin[/ICODE], checked inside the command. [ICODE]teleport.cooldown_bypass[/ICODE], the [ICODE]waypoint[/ICODE] create/delete/edit verbs and [ICODE]bank resetcap[/ICODE] stay op. (T-826)
+[*][B]Waypoint use nodes[/B] ([ICODE]gangland.waypoint.<id>[/ICODE] and the per-name node a teleport checks) are registered with the default true when a waypoint is created or loaded. (T-826)
+[*][B]Per-item nodes[/B] [ICODE]gangland.cars.<id>[/ICODE], [ICODE]gangland.jetpacks.<id>[/ICODE], [ICODE]gangland.grapples.<id>[/ICODE] and [ICODE]gangland.uniqueitem.<id>[/ICODE] are registered with the default true, so a non-op can mount a bought car, equip a jetpack and fire a grapple. Bypass and admin nodes ([ICODE]gangland.cars.bypass[/ICODE], the [ICODE]give[/ICODE] commands) stay op. (T-825)
+[*]A new test walks the [ICODE]commands.json[/ICODE] help entries of core and every module and fails when a listed command is neither declared in [ICODE]plugin.yml[/ICODE] nor on an explicit staff list.
 [/LIST]

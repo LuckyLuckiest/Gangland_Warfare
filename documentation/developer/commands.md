@@ -191,6 +191,17 @@ When no argument matches, the system provides helpful suggestions:
 | `/glw gang promote` | `gangland.command.gang`   | Promote/demote gang members           |
 | `/glw wanted`       | `gangland.command.wanted` | Check wanted level                    |
 
+### Default permissions (0.17.1)
+
+`plugin.yml` is the only place a command node gets `default: true` (Keystone registers every other node with the OP
+default). Open to everyone: the gang verbs, `bank` (`create`, `balance`, `deposit`, `withdraw`, `menu`), `balance`,
+`teleport`, `respawn`, `wanted`, `contact`, `resource`, `car` (`list`, `info`), `grapple`, `jetpack`. Nodes whose names
+only exist at runtime are registered open in code through `OpenPermissions` (gangland-core): `gangland.cars.<id>`,
+`gangland.jetpacks.<id>`, `gangland.grapples.<id>`, `gangland.uniqueitem.<id>` and `gangland.waypoint.<id>`. Staff
+stays op: `balance.admin` (`/glw balance <player>`), `bank.admin`, `bank resetcap`, `wanted add|remove|clear`,
+`car|grapple|jetpack give`, `teleport.cooldown_bypass`, `waypoint` verbs. `CommandPermissionDriftTest` fails when a
+`commands.json` command is neither declared nor on its staff list.
+
 ### Admin Commands
 
 | Command          | Permission                   | Description                     |
@@ -212,7 +223,7 @@ When no argument matches, the system provides helpful suggestions:
 
 | Command | Jar that owns it | `commands.json` keys | Permission |
 |---|---|---|---|
-| `/glw contact [stars]` | core (`gangland-impl`, `command/sub/contact/ContactCommand`) | `contact` | `gangland.command.contact` (grant it like `/glw bounty`; no default in `plugin.yml`) |
+| `/glw contact [stars]` | core (`gangland-impl`, `command/sub/contact/ContactCommand`) | `contact` | `gangland.command.contact` (default true since 0.17.0) |
 | `/glw cop setup wand\|mode\|save\|list\|remove\|tp\|link` | `cops-n-crooks` (`command/cops/setup/SetupCommand`) | `cop_setup_wand`, `cop_setup_mode`, `cop_setup_save`, `cop_setup_list`, `cop_setup_remove`, `cop_setup_tp`, `cop_setup_link` | `gangland.command.cop.setup` (the wand listener and every action check it too) |
 
 A command's help page is the `commands.json` entries whose key starts with its name (`CopCommand` filters on `cop`,
