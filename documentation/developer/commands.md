@@ -223,7 +223,7 @@ stays op: `balance.admin` (`/glw balance <player>`), `bank.admin`, `bank resetca
 
 | Command | Jar that owns it | `commands.json` keys | Permission |
 |---|---|---|---|
-| `/glw contact [stars]` | core (`gangland-impl`, `command/sub/contact/ContactCommand`) | `contact` | `gangland.command.contact` (default true since 0.17.0) |
+| `/glw contact [stars]` | core (`gangland-impl`, `command/sub/contact/ContactCommand`) | `contact` | `gangland.command.contact` (default true since 0.17.1) |
 | `/glw cop setup wand\|mode\|save\|list\|remove\|tp\|link` | `cops-n-crooks` (`command/cops/setup/SetupCommand`) | `cop_setup_wand`, `cop_setup_mode`, `cop_setup_save`, `cop_setup_list`, `cop_setup_remove`, `cop_setup_tp`, `cop_setup_link` | `gangland.command.cop.setup` (the wand listener and every action check it too) |
 
 A command's help page is the `commands.json` entries whose key starts with its name (`CopCommand` filters on `cop`,
@@ -421,3 +421,17 @@ This prevents command errors from crashing the server while still logging the st
 > **Permissions (0.17.1):** Keystone registers every command node at runtime with the OP default. A node players should
 > have must also be declared in `gangland-impl/src/main/resources/plugin.yml` with `default: true`
 > (`PluginYmlPermissionsTest.PLAYER` pins the list). Every node on the path is checked, so a parent does not open its children.
+
+## Permission defaults (0.17.1)
+
+Keystone registers every command node at runtime with the OP default. A player verb is only open to players when
+`gangland-impl/src/main/resources/plugin.yml` declares it with `default: true` (list it in
+`PluginYmlPermissionsTest.PLAYER`); staff children under an open root go in `OP_ONLY`.
+`CommandPermissionDriftTest` walks the `commands.json` help entries of core and the modules and fails on a command that
+is neither declared nor under an explicit staff prefix (a staff prefix exempts its whole subtree).
+
+Nodes whose names exist only at runtime are registered open with `PermissionDefault.TRUE`: `gangland.waypoint.<id>`
+and the per-item nodes `gangland.cars|jetpacks|grapples|uniqueitem.<id>`. Core/item use
+`org.luckyraven.gangland.core.permission.OpenPermissions`; the gadget module keeps its own private equivalent so it
+needs no newer host API. The reserved id `bypass` stays admin. `/glw balance <player>` is gated inside the command
+by `gangland.command.balance.admin`.

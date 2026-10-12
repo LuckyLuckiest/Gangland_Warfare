@@ -136,6 +136,8 @@ permissions:
       default: true
    gangland.command.contact:
       default: true
+   gangland.command.filter:
+      default: true
    gangland.command.resource:
       default: true
    gangland.command.car:

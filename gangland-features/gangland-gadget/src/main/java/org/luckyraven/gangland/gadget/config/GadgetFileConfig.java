@@ -1,8 +1,11 @@
 package org.luckyraven.gangland.gadget.config;
 
 import lombok.CustomLog;
+import org.bukkit.Bukkit;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.permission.OpenPermissions;
 import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
@@ -16,6 +19,8 @@ import org.luckyraven.keystone.module.ModuleLoader;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
+
+import java.util.function.Consumer;
 
 /**
  * FILE-phase wiring for the gadget module: the {@code carAddon} and {@code gadgetPhysicsConfig} beans moved out of
@@ -33,6 +38,24 @@ public class GadgetFileConfig {
 		this.plugin = plugin;
 	}
 
+	/**
+	 * Per-item nodes ({@code gangland.cars.<id>} etc.) are open to everyone (T-825). Kept inside the module on purpose:
+	 * the host-side open-permission helper is newer than Host_Api 2.2, and a missing class inside a bean body would abort
+	 * the host (KS-MO-07). The reserved {@code bypass} id keeps the OP default of the admin node.
+	 */
+	private static Consumer<String> openRegistrar(PermissionManager permissionManager) {
+		return node -> {
+			PluginManager plugins = Bukkit.getServer() == null ? null : Bukkit.getPluginManager();
+			String        full    = permissionManager.resolve(node);
+
+			if (plugins != null && full != null && !full.endsWith(".bypass") && plugins.getPermission(full) == null) {
+				plugins.addPermission(new Permission(full, PermissionDefault.TRUE));
+			}
+
+			permissionManager.addPermission(node);
+		};
+	}
+
 	@Bean
 	public GadgetPhysicsConfig gadgetPhysicsConfig(FileManager fileManager, ModuleLoader moduleLoader) {
 		FileHandler handler = new FileHandler(plugin, "gadget_settings", "gadget", ".yml", moduleLoader.classLoader());
@@ -48,7 +71,7 @@ public class GadgetFileConfig {
 	                         Placeholder placeholderService, ModuleLoader moduleLoader) {
 		fileManager.addFile(new FileHandler(plugin, "cars", "items", ".yml", moduleLoader.classLoader()), true);
 
-		CarAddon addon = new CarAddon(OpenPermissions.registrar(permissionManager), fileManager, placeholderService);
+		CarAddon addon = new CarAddon(openRegistrar(permissionManager), fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}
@@ -58,7 +81,7 @@ public class GadgetFileConfig {
 	                                 Placeholder placeholderService, ModuleLoader moduleLoader) {
 		fileManager.addFile(new FileHandler(plugin, "jetpacks", "items", ".yml", moduleLoader.classLoader()), true);
 
-		JetpackAddon addon = new JetpackAddon(OpenPermissions.registrar(permissionManager), fileManager, placeholderService);
+		JetpackAddon addon = new JetpackAddon(openRegistrar(permissionManager), fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}
@@ -68,7 +91,7 @@ public class GadgetFileConfig {
 	                                 Placeholder placeholderService, ModuleLoader moduleLoader) {
 		fileManager.addFile(new FileHandler(plugin, "grapples", "items", ".yml", moduleLoader.classLoader()), true);
 
-		GrappleAddon addon = new GrappleAddon(OpenPermissions.registrar(permissionManager), fileManager, placeholderService);
+		GrappleAddon addon = new GrappleAddon(openRegistrar(permissionManager), fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}

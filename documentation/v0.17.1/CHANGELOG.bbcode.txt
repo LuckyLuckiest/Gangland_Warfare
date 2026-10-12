@@ -5,7 +5,7 @@
 [SIZE=6][B]📦 Requires[/B][/SIZE]
 
 [LIST]
-[*][B]Keystone 1.15.3[/B], unchanged from 0.17.0. No migration, no new config keys. Replace the core jar only.
+[*][B]Keystone 1.15.3[/B], unchanged from 0.17.0. No migration, no new config keys. Replace the core jar [B]and[/B] the [ICODE]gangland-gang[/ICODE] and [ICODE]gangland-gadget[/ICODE] module jars (or simply all module jars): the disband fix lives in the gang module and the car, jetpack and grapple node fix in the gadget module.
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -15,7 +15,7 @@
 [LIST]
 [*][B]Disbanding a gang no longer loses an online member's share.[/B] If an online member was missing from the plugin's member cache, their disband payout stayed in the deleted gang's bank. The payout now uses the gang's own member record. (T-279)
 [*][B]Gang owners who are not ops can disband[/B] — [ICODE]/glw gang delete[/ICODE] (and [ICODE]remove[/ICODE]/[ICODE]del[/ICODE]) was op-only on live servers because [ICODE]gangland.command.gang.delete[/ICODE] was missing from [ICODE]plugin.yml[/ICODE]. Keystone registers every command node at runtime, but with the OP default; only a [ICODE]plugin.yml[/ICODE] entry with [ICODE]default: true[/ICODE] opens it to players, and 0.17.0 left several player verbs out.
-[*][B]Other player commands that were op-only[/B] now default to true: [ICODE]gang rename[/ICODE], [ICODE]transfer[/ICODE], [ICODE]color[/ICODE], [ICODE]display[/ICODE], [ICODE]description[/ICODE], the whole [ICODE]gang ally[/ICODE] flow, [ICODE]/glw bank[/ICODE] (balance, deposit, withdraw, menu), [ICODE]/glw respawn[/ICODE], [ICODE]/glw wanted[/ICODE], [ICODE]/glw contact[/ICODE], [ICODE]/glw resource[/ICODE], [ICODE]/glw car[/ICODE] (list, info), [ICODE]/glw grapple[/ICODE] and [ICODE]/glw jetpack[/ICODE]. Staff children ([ICODE]wanted add|remove|clear[/ICODE], [ICODE]car give[/ICODE], [ICODE]bank resetcap[/ICODE]) stay op. Rank gates and the [ICODE][player][/ICODE] admin forms are still enforced inside the commands.
+[*][B]Other player commands that were op-only[/B] now default to true: [ICODE]gang rename[/ICODE], [ICODE]transfer[/ICODE], [ICODE]color[/ICODE], [ICODE]display[/ICODE], [ICODE]description[/ICODE], the whole [ICODE]gang ally[/ICODE] flow, [ICODE]/glw bank[/ICODE] (balance, deposit, withdraw, menu), [ICODE]/glw respawn[/ICODE], [ICODE]/glw wanted[/ICODE], [ICODE]/glw contact[/ICODE], [ICODE]/glw resource[/ICODE], [ICODE]/glw car[/ICODE] (list, info), [ICODE]/glw grapple[/ICODE], [ICODE]/glw jetpack[/ICODE] and [ICODE]/glw filter[/ICODE] (the gang members view buttons run it). Staff children ([ICODE]wanted add|remove|clear[/ICODE], [ICODE]car give[/ICODE], [ICODE]bank resetcap[/ICODE]) stay op. Rank gates and the [ICODE][player][/ICODE] admin forms are still enforced inside the commands.
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -23,7 +23,7 @@
 [SIZE=6][B]🔓 Now open to everyone (owner ruling)[/B][/SIZE]
 
 [LIST]
-[*][ICODE]/glw bank create[/ICODE], [ICODE]/glw balance[/ICODE] and [ICODE]/glw teleport[/ICODE] default to true. [ICODE]/glw balance <player>[/ICODE] stays behind the new admin node [ICODE]gangland.command.balance.admin[/ICODE], checked inside the command. [ICODE]teleport.cooldown_bypass[/ICODE], the [ICODE]waypoint[/ICODE] create/delete/edit verbs and [ICODE]bank resetcap[/ICODE] stay op. (T-826)
+[*][ICODE]/glw bank create[/ICODE], [ICODE]/glw balance[/ICODE] and [ICODE]/glw teleport[/ICODE] default to true. [ICODE]/glw balance <player>[/ICODE] stays behind the new admin node [ICODE]gangland.command.balance.admin[/ICODE], checked inside the command. A non-admin can no longer run [ICODE]/glw balance <own name>[/ICODE]; plain [ICODE]/glw balance[/ICODE] shows their own. [ICODE]teleport.cooldown_bypass[/ICODE], the [ICODE]waypoint[/ICODE] create/delete/edit verbs and [ICODE]bank resetcap[/ICODE] stay op. (T-826)
 [*][B]Waypoint use nodes[/B] ([ICODE]gangland.waypoint.<id>[/ICODE] and the per-name node a teleport checks) are registered with the default true when a waypoint is created or loaded. (T-826)
 [*][B]Per-item nodes[/B] [ICODE]gangland.cars.<id>[/ICODE], [ICODE]gangland.jetpacks.<id>[/ICODE], [ICODE]gangland.grapples.<id>[/ICODE] and [ICODE]gangland.uniqueitem.<id>[/ICODE] are registered with the default true, so a non-op can mount a bought car, equip a jetpack and fire a grapple. Bypass and admin nodes ([ICODE]gangland.cars.bypass[/ICODE], the [ICODE]give[/ICODE] commands) stay op. (T-825)
 [*]A new test walks the [ICODE]commands.json[/ICODE] help entries of core and every module and fails when a listed command is neither declared in [ICODE]plugin.yml[/ICODE] nor on an explicit staff list.

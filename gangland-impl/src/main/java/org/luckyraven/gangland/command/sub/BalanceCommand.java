@@ -154,7 +154,8 @@ public final class BalanceCommand extends Command {
 	 */
 	static List<String> suggestions(CommandSender sender, UserManager<Player> userManager,
 	                                UserManager<OfflinePlayer> offlineUserManager) {
-		return mayLookUpOthers(sender) ? cachedNames(userManager, offlineUserManager) : List.of();
+		// silent: this runs on every tab keystroke, so it must never send the no-permission message
+		return sender.hasPermission(ADMIN_PERMISSION) ? cachedNames(userManager, offlineUserManager) : List.of();
 	}
 
 	static List<String> cachedNames(UserManager<Player> userManager,
