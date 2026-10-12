@@ -102,7 +102,7 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
 | Addition | Package | Kind |
 |---|---|---|
 | `Messages.USER_DATA_LOAD_FAILED` | `org.luckyraven.gangland.file.configuration` | Message constant (`Errors.User.Data_Load_Failed`, the kick text when a player's data cannot load) |
-| `UserManager.loadStored(User)` | `org.luckyraven.gangland.core.user` | Returns `boolean`: asks the host loader to load a saved user into the offline cache; `false` when no loader is set or the user is not stored |
+| `UserManager.loadStored(User)` | `org.luckyraven.gangland.core.user` | Returns `boolean`: loads only `user`'s own stored row into `user` and never caches it (the caller adds the user on success). `true` when the read succeeds, including when no row exists (the initial balance is stamped); `false` when no loader is set or the read failed, leaving the user at defaults |
 | `UserManager.setStoredLoader(Predicate<User>)` | same | Installs the host loader that `loadStored` delegates to |
 | `UserManager.pruneIdle(long maxIdleMillis)` | same | Returns `int`: drops offline entries idle longer than the limit, keeping load-pending ones; the autosave calls it |
 | `Settings.getOfflineCacheMinutes()` | `org.luckyraven.gangland.file.configuration` | `Database.Auto_Save.Offline_Cache_Minutes` (default 30, minimum 1): the idle window `pruneIdle` uses |
@@ -113,7 +113,7 @@ core (`module.host.incompatible`).
 
 ## Api 2.6 (0.19.0)
 
-`GanglandApi.VERSION` is `"2.6"`. Within the major, the contract is unchanged: only additions. Version `2.4` is the 0.17.0 hardening (next section); `2.5` is reserved for another release and not used on the Gang & Turf II branch. A module built against `2.6` needs a host at
+`GanglandApi.VERSION` is `"2.6"`. Within the major, the contract is unchanged: only additions. Version `2.4` is the 0.17.0 hardening (previous section); `2.5` is reserved for another release and not used on the Gang & Turf II branch. A module built against `2.6` needs a host at
 `2.6` or newer.
 
 Added in 2.6, all additive:
@@ -138,8 +138,8 @@ Added in 2.6, all additive:
 | `gangland-civilians` | `civilians` | `2.6` |
 | `cops-n-crooks` | `copsncrooks` | `2.6` |
 
-The other modules keep their lines: `gangland-gadget` and `gangland-npc-shops` `2.2`; `gangland-mail`,
-`gangland-lootchest` and `gangland-healthbars` `2.0`. A module is accepted when its `Host_Api` has the host's major and a
+The other modules keep their lines: `gangland-gadget` and `gangland-npc-shops` `2.2`; `gangland-lootchest` and
+`gangland-healthbars` `2.0`; `gangland-mail` `2.4` (it calls `loadStored`). A module is accepted when its `Host_Api` has the host's major and a
 minor not above the host's minor.
 
 ## Api 2.3 (0.16.0)
