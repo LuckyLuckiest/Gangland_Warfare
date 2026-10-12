@@ -45,6 +45,12 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	private PermissionAttachment permissionAttachment;
 
 	/**
+	 * T-293: {@code true} from the join-time cache insert until the DB read succeeded. A pending user still holds
+	 * defaults, so autosave and the quit save skip it instead of writing them over the stored row.
+	 */
+	private volatile boolean loadPending;
+
+	/**
 	 * Instantiates a new User. Prefer constructing through {@link UserFactory} so the {@link Placeholder}
 	 * dependency comes from the bean container.
 	 */

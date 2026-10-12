@@ -27,6 +27,21 @@ the money is deducted.
 
 ---
 
+## Gang List and Info
+
+```
+/glw gang list [page]      Every gang, most members first (any player)
+/glw gang info [gang]      Public card: name, description, members online/total, owner, allies, created date
+/glw gang members          Your own gang's members
+```
+
+- `gang info` accepts a name (any case) or a numeric id. It never shows the bank balance.
+- Gang names must match `Name_Pattern` in `gang/gang_rules.yml` (default 3 to 16 letters, digits or underscores).
+  Names are always unique: `Name_Duplicates` in `gang/gang_settings.yml` is ignored.
+- Known gap: `gang list` and `gang info` refuse console senders (see [migration 0.17.0](../migration-0.17.0.md)).
+
+---
+
 ## Rank Hierarchy
 
 Gangs use the server's global rank system internally. Two ranks are reserved:
@@ -51,9 +66,14 @@ and never the Tail rank: ownership moves with `/glw gang transfer`. Staff holdin
 
 | Command                      | Description                                                                  |
 |------------------------------|------------------------------------------------------------------------------|
-| `/glw gang invite <player>`  | Sends a join invitation. The invited player has **60 seconds** to accept.    |
-| `/glw gang accept`           | Accepts a pending gang invitation.                                           |
+| `/glw gang invite <player>`  | Sends a join invitation. An online player has **60 seconds** to accept; an offline player has **72 hours** (`Invite_Offline_Expiry_Hours` in `mail/mail_rules.yml`, `0` = until they next log in). |
+| `/glw gang accept [gang]`    | Accepts a pending gang invitation. Name the gang when you have more than one invite. Accepting one cancels the player's other gang invites. |
+| `/glw gang decline [gang]`   | Declines a pending gang invitation. Name the gang when you have more than one invite. |
 | `/glw gang kick <player>`    | Removes a member. You can only kick members who hold a lower rank than you.  |
+| `/glw gang join <gang>`      | Joins an open gang at the starting rank. Needs the gang's recruiting set to `open`. |
+| `/glw gang recruiting open\|invite` | Sets whether anyone may join (`open`) or only invited players (`invite`, the default; every existing gang starts there). Leader or a rank with `gangland.gang.invite`. |
+| `/glw gang chat <message>`   | Sends a message to your online gang. `/glw gang chat` alone toggles gang chat mode; leaving the gang or quitting clears it. |
+| `/glw gang bounty <gang> <amount>` | Puts money from your own balance on another gang (not your own or an ally). The gang that captures one of its turfs collects the whole bounty, unless that would take the capturing gang's bank over `Account.Maximum_Balance`; then the bounty stays on the target. Needs `gangland.command.gang.bounty` (default true). |
 | `/glw gang leave`            | Leaves the gang. The owner cannot leave — they must delete the gang instead. |
 | `/glw gang promote <player>` | Moves a member up one rank in the hierarchy.                                 |
 | `/glw gang demote <player>`  | Moves a member down one rank in the hierarchy.                               |
@@ -80,7 +100,7 @@ The gang has a shared bank account separate from all personal balances. Deposits
 
 | Command                       | Description                                                   |
 |-------------------------------|---------------------------------------------------------------|
-| `/glw gang rename <new name>` | Renames the gang.                                             |
+| `/glw gang rename <name>` | Renames the gang.                                             |
 | `/glw gang display <name>`    | Sets a custom display name shown in chat and (via Plaque) scoreboards. |
 | `/glw gang display remove`    | Removes the custom display name, reverting to the plain name. |
 | `/glw gang desc`              | Opens an anvil GUI to write a gang description.               |
@@ -150,3 +170,14 @@ Account:
 ---
 
 [← Back to Index](../README.md) | [Next: Economy →](./economy.md)
+
+## Levels, disband split and turf income (0.17.0)
+
+- **Gang levels.** Gang XP comes only from turf the gang holds while a member is online (1 XP per paying turf payout by
+  default). `gang/gang_rules.yml` `Progression` sets `Max_Level` and `Base_Experience`. Each level lets the gang hold one
+  more turf (`turf/turf_rules.yml` `Turf_Cap`).
+- **Disband split.** A disband with zero contributions splits the gang bank equally among members; the owner takes the
+  rounding remainder. The disband fee refund has its own line (`Progression.Fee_Refund`).
+- **Gangless players** running `/glw gang` get the onboarding screen; members get the gang menu.
+- **Bounty claim.** A bounty on a gang with no turf cannot be claimed until it holds one. Disbanding a bountied gang
+  destroys the bounty; posters are not refunded.

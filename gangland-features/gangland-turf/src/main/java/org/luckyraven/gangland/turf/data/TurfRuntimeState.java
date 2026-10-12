@@ -5,6 +5,8 @@ import lombok.Setter;
 import org.luckyraven.gangland.turf.state.CapturePhase;
 import org.luckyraven.gangland.turf.state.TurfState;
 
+import java.util.Map;
+
 /**
  * Live per-turf state that is <b>not</b> persisted. Capture progress resets to zero and state resets to IDLE on every
  * server start — in-flight captures do not survive restart. Cooldown anchors on {@link Turf#getLastCaptureTimestamp()}
@@ -17,8 +19,7 @@ public final class TurfRuntimeState {
 	private final int          turfId;
 	private       TurfState    state;
 	/**
-	 * Unclaimed-turf sub-state: which half of the two-phase capture is currently in play. Ignored for owned-turf
-	 * captures (they're single-phase).
+	 * Always CLAIM since 0.17.0 (one bar for every capture, D5); CONSOLIDATE is never set.
 	 */
 	private       CapturePhase phase;
 	/**
@@ -34,6 +35,25 @@ public final class TurfRuntimeState {
 	 * epoch ms; used for abandon-grace detection
 	 */
 	private       long         lastChallengerSeenAt;
+	/**
+	 * Gang id -> attackers of that gang COUNTED on the last capture tick (alive, inside for Presence_Seconds, sides
+	 * frozen at the contest start); owner and allies excluded.
+	 */
+	private       Map<Integer, Integer> challengersInside = Map.of();
+	/**
+	 * Owner and allied players counted on the last capture tick.
+	 */
+	private       int                   defendersInside;
+	/**
+	 * Epoch ms the running contest started; 0 when no contest runs. Set by CaptureService (W2-R2); read by the stall
+	 * rule (Max_Contest_Minutes) and the frozen sides (A4).
+	 */
+	private       long                  contestStartedAt;
+	/**
+	 * Guards counted for the defenders on the last tick: min(alive guards, Guard_Weight_Cap); 0 when idle or on an
+	 * unclaimed turf. Written by CaptureService (W2-R2), read by the boss bar (W2-R3).
+	 */
+	private       int                   guardsCounted;
 
 	public TurfRuntimeState(int turfId) {
 		this.turfId          = turfId;
@@ -48,5 +68,9 @@ public final class TurfRuntimeState {
 		this.captureProgress      = 0.0;
 		this.challengerGangId     = null;
 		this.lastChallengerSeenAt = 0L;
+		this.challengersInside    = Map.of();
+		this.defendersInside      = 0;
+		this.contestStartedAt     = 0L;
+		this.guardsCounted        = 0;
 	}
 }

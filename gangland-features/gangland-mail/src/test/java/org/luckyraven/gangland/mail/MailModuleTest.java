@@ -26,7 +26,7 @@ class MailModuleTest {
 
 		new MailModule().configure(registrations);
 
-		assertEquals(List.of(MailModuleConfig.class), registrations.configurations());
+		assertEquals(List.of(MailModuleFileConfig.class, MailModuleConfig.class), registrations.configurations());
 		assertEquals(List.of(MailModule.LISTENER_PACKAGE), registrations.listenerPackages());
 		assertEquals(List.of(MailModule.REPOSITORY_PACKAGE), registrations.repositoryPackages());
 		assertTrue(registrations.commandPackages().isEmpty(), "mail ships no top-level /glw command");

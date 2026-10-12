@@ -46,7 +46,7 @@ public class Settings implements FileInitializer {
 	private static @Getter String  mysqlHost, mysqlUsername, mysqlPassword;
 	private static @Getter int     mysqlPort;
 	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave, autoSaveDebug;
-	private static @Getter int    autoSaveTime;
+	private static @Getter int    autoSaveTime, offlineCacheMinutes;
 	private static @Getter double cleanUpTime;
 	// inventory configuration
 	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName, nextPage,
@@ -555,6 +555,7 @@ public class Settings implements FileInitializer {
 		autoSave          = bool(autoSaveSection, "Enable", true);
 		autoSaveDebug     = bool(autoSaveSection, "Debug", true);
 		autoSaveTime      = intVal(autoSaveSection, "Time", 10);
+		offlineCacheMinutes = Math.max(1, intVal(autoSaveSection, "Offline_Cache_Minutes", 30));
 		cleanUpTime       = dbl(cleanUp, "Time", 30);
 
 		// inventory
@@ -698,7 +699,8 @@ public class Settings implements FileInitializer {
 		gangNameDuplicates   = bool(gang, "Name_Duplicates", false);
 		gangRankHead         = str(gangRank, "Head", "member");
 		gangRankTail         = str(gangRank, "Tail", "owner");
-		gangDisplayNameChar  = str(gang, "Display_Name_Char", "*").substring(0, 1);
+		String displayNameChar = str(gang, "Display_Name_Char", "*");
+		gangDisplayNameChar    = displayNameChar.isEmpty() ? "*" : displayNameChar.substring(0, 1);
 		gangInitialBalance   = money(gangAccount, "Initial_Balance", "0");
 		gangCreateFee        = money(gangAccount, "Create_Cost", "100000");
 		gangMaxBalance       = money(gangAccount, "Maximum_Balance", "100000000000");

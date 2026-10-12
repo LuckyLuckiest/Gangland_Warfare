@@ -1,0 +1,386 @@
+# +----------------------+ #
+# | Turf module messages | #
+# +----------------------+ #
+# Turf texts added since 0.17.0. Older turf texts are still in message_en.yml (Commands.Turf and Errors.Turf).
+# Colour codes use &. Words between % signs are filled in by the plugin.
+
+# ---------------- Reason: one sentence for every surface (map hover, HUD, info card, enter feedback) ----------------
+Reason:
+   # Nothing stops you from capturing this turf right now.
+   Attackable: "&aattackable"
+   # Captured recently. %time% = time left until it can be attacked again.
+   Cooldown: "&eshielded: just captured, attackable in %time%"
+   # OWNERS_OFFLINE window only: an owner was online recently. %gang% = owning gang, %grace% = Post_Logoff_Protection_Minutes.
+   Owners_Active: "&eshielded: %gang% were online in the last %grace%"
+   # OWNERS_ONLINE window: nobody of the owning gang online now or recently. %gang% = owning gang.
+   No_Owners_Online: "&eshielded: no %gang% online (attackable when one logs in)"
+   # The owning gang just came online; attackable when the wake-up shield ends. %gang%, %time% = time left.
+   Waking_Up: "&eshielded: %gang% waking up, attackable in %time%"
+   # The viewer's gang already holds as many turfs as its level allows (turf_rules.yml Turf_Cap).
+   Over_Cap: "&eshielded: your gang already holds its turf cap"
+# end Reason
+
+# ---------------- Map: /glw map ----------------
+Map:
+   # First line. %owned% = turfs your gang owns.
+   Header: "&7Map - &fTurfs %owned% &7- north is up - &f+ &7you"
+   # First line for a player without a gang.
+   Header_Gangless: "&7Map - north is up - &f+ &7you"
+   # First line when no turf is in view. %turf%, %distance% (blocks), %direction% (N, NE, E, ...).
+   Header_Empty: "&7No turf in view - nearest &f%turf% &7%distance%m %direction%"
+   # First line when the world has no turf at all.
+   Header_None: "&7No turf in this world."
+   # Second legend line; it never changes.
+   Legend_Key: "&7# unclaimed  &8- &7none  &7&oitalic&r &7attacked  &7&nunderlined&r &7shielded"
+   # Words after a gang in the first legend line.
+   Legend_You: "(you)"
+   Legend_Ally: "(ally)"
+   Legend_Rival: "(rival)"
+   # End of the first legend line when not every gang fits. %count% = gangs left out.
+   Legend_More: "+%count% more"
+   # Replies of /glw map auto.
+   Auto_On: "&7Auto map &aon&7: the map is sent again when what it shows changes."
+   Auto_Off: "&7Auto map &coff&7."
+   # Hover of a turf run, first line: the turf name. %name% = the turf display name (its own colour codes are kept).
+   Hover_Name: "&f%name%"
+   # Hover of a turf run: the owning gang (%gang%).
+   Hover_Owner: "&7Owner &f%gang%"
+   # Hover of a turf run nobody owns.
+   Hover_Unclaimed: "&7Owner &fUnclaimed"
+   # Hover line for a turf nobody is capturing.
+   Hover_Quiet: "&7Quiet"
+   # Hover line while a gang is capturing. %gang% = the challenger, %percent% = capture progress.
+   Hover_Under_Attack: "&cUnder attack by %gang%, %percent%%"
+   # Owning gang only: the last member logout, %time% = how long ago.
+   Hover_Online: "&7Last member online &f%time% &7ago"
+   # Owning gang only: a member is online now.
+   Hover_Online_Now: "&7Members &aonline now"
+   # Income per interval: %money_symbol% and %amount% = the income, %time% = the interval.
+   Hover_Pays: "&7Pays &f%money_symbol%%amount% &7per %time%"
+   # A turf with no income.
+   Hover_Dormant: "&7Pays &fnothing &7(dormant)"
+   # Owning gang only: %count% = guards in reserve on the turf.
+   Hover_Guards: "&7Your guards: &f%count% &7in reserve"
+   # Admins only, plain text, never a click. %id% = the turf id.
+   Hover_Admin_Tp: "&7Admin: &f/glw turf tp %id%"
+   # Hover of the plus. %place% = the turf under you or Hover_You_No_Turf, %x% and %z% = your block, %facing% = compass.
+   Hover_You: "&fYou&7: %place% &8(%x%, %z%) &7facing %facing%"
+   # The %place% of Hover_You when no turf covers you.
+   Hover_You_No_Turf: "no turf"
+   # One row of /glw map text. %relation% = Relation_ word, %reason% = a Reason line.
+   Text_Row: "&f%name% &7- &f%owner% &7(%relation%) - %distance%m %direction% - %reason%"
+   # The direction of a text row when the viewer stands inside that turf (no compass direction then).
+   Text_Here: "here"
+   # The owner in a text row when no gang owns the turf.
+   Text_Unclaimed: "Unclaimed"
+   # Relation words of a text row.
+   Relation_Own: "own"
+   Relation_Ally: "ally"
+   Relation_Rival: "rival"
+   Relation_Unclaimed: "unclaimed"
+   # A gang with no gang of the viewer's own (gangless viewer).
+   Relation_Other: "other"
+   # One row of /glw map legend. %name% = full name, %relation% = Legend_You, Legend_Ally, Legend_Rival or nothing.
+   Legend_Row: "&7%name% %relation%"
+   # Suffix of a legend row when the gang is shielded.
+   Legend_Shielded: "&7shielded"
+   # Suffix of a legend row when the gang's turf is under attack.
+   Legend_Under_Attack: "&7under attack"
+   # /glw map legend when no gang is in view.
+   Legend_Empty: "&7No gang in view."
+   # Hover of the +N more entry. %list% = the entries not shown.
+   Legend_More_Hover: "&7Not shown: %list%"
+# end Map
+
+# ---------------- Hud: the action-bar turf line ----------------
+Hud:
+   # Inside a turf. %turf% = turf name, %owner% = one of the Owner_ lines, %reason% = a Reason line, Quiet,
+   # Under_Attack or Gangless.
+   Inside: "&f%turf% &7- %owner% &7- %reason%"
+   Owner_Own: "&ayour turf"
+   Owner_Ally: "&b%gang% turf"
+   Owner_Rival: "&c%gang% turf"
+   # An owned turf as seen by a player without a gang.
+   Owner_Gangless: "&e%gang% turf"
+   Owner_Unclaimed: "&7unclaimed"
+   # Reason part for a player without a gang.
+   Gangless: "&ejoin a gang to capture"
+   # Reason part on your own or an allied turf that nobody attacks.
+   Quiet: "&aquiet"
+   # Reason part on your own or an allied turf under attack. %gang% = attacker, %percent% = capture progress.
+   Under_Attack: "&cunder attack by %gang%, %percent%%"
+   # Outside every turf, only after /glw map hud on.
+   Nearest: "&7Nearest turf: &f%turf% &7%distance%m %direction%"
+   # Replies of /glw map hud.
+   Mode_On: "&7Turf line: &finside turfs and the nearest turf&7."
+   Mode_Off: "&7Turf line: &coff&7."
+   Mode_Default: "&7Turf line: &finside turfs only&7."
+   # Placeholder answer (%gangland_turf-name%, %gangland_turf-owner%, ...) when there is no turf to name.
+   Placeholder_None: "-"
+# end Hud
+
+# ---------------- Info: /glw turf info card and the capture boss bar ----------------
+Info:
+   # Line added to /glw turf info. %reason% = a Reason line.
+   Reason_Line: "&7Capture: %reason%"
+   # Chat line when a gang member enters a rival or unclaimed turf that cannot be captured yet. %turf% = turf name,
+   # %reason% = a Reason line.
+   Blocked_Line: "&e%turf% &7- %reason%"
+   # Capture boss bar title. %gang%, %turf%, %attackers%, %defenders%, %time% (time left at this pace, or Stalled).
+   BossBar_Title: "&c%gang% &fis capturing &e%turf% &7- &f%attackers% &7vs &f%defenders% &7- &f%time%"
+   # %time% when the capture is not moving forward.
+   BossBar_Stalled: "stalled"
+   # Added to the boss bar defenders count while guards hold the bar. %guards% = guards counted.
+   BossBar_Guards: " &7+%guards% guards"
+# end Info
+
+# ---------------- Turf: /glw turf admin and player texts ----------------
+Turf:
+   # Enter title for a player without a gang.
+   Title_Gangless: "&eJoin a gang to capture turf"
+   # Refusal when a player without turf admin rights runs a turf admin command.
+   Admin_Only: "&cOnly turf admins can do that."
+   # Enter subtitle on your own turf.
+   Subtitle_Own: "&aYour turf"
+   # Enter subtitle on an allied turf. %gang% = owning gang.
+   Subtitle_Ally: "&b%gang% turf - allied"
+   # Enter subtitle on a rival turf. %gang% = owning gang, %reason% = a Reason line.
+   Subtitle_Rival: "&c%gang% turf &7- %reason%"
+   # Enter subtitle on an unclaimed turf. %reason% = a Reason line.
+   Subtitle_Unclaimed: "&7Unclaimed &7- %reason%"
+   # Refusal when a new turf is smaller than Create.Min_Side_Blocks. %x%, %z% = the sides, %min%, %max% = the limits.
+   Create_Too_Small: "&cThat turf is too small: %x% x %z% blocks. The minimum side is %min% blocks."
+   # Refusal when a new turf is larger than Create.Max_Side_Blocks.
+   Create_Too_Large: "&cThat turf is too large: %x% x %z% blocks. The maximum side is %max% blocks."
+   # Info line after a snapped create. The bounds are the snapped ones.
+   Create_Snapped: "&7Snapped to chunks: (%minx%, %minz%) to (%maxx%, %maxz%)"
+   # Refusal when a turf already has this name (ignoring case and colour codes).
+   Name_Taken: "&cA turf named %turf% already exists."
+   # Refusal when a wand corner is in another world than the other corner. Giving a new wand starts a new selection.
+   Selection_Other_World: "&cThat corner is in another world than your selection. Run /glw turf wand to start a new one."
+   # Reply of /glw turf rename. %old% = the old name, %turf% = the new name.
+   Renamed: "&7Renamed turf &f%old% &7to &f%turf%&7."
+   # Wand item name and lore.
+   Wand_Name: "&6Turf Wand"
+   # Wand item lore (the click controls).
+   Wand_Lore: "&7Left-click = pos1, right-click = pos2."
+   # Wand corner message. %corner% = Corner_1 or Corner_2, %x%, %y%, %z%, %world%.
+   Corner_Set: "&7Turf %corner% &7set to &f(%x%, %y%, %z%)&7 in world &f%world%"
+   # Corner names used in Corner_Set: the first and the second corner.
+   Corner_1: "&apos1"
+   # Name of the second corner, see Corner_1.
+   Corner_2: "&epos2"
+   # /glw turf status while the turf is in cooldown. %turf% = turf name, %reason% = a Reason line.
+   Status_Cooldown: "&7%turf% &7- %reason%"
+   # Header of /glw turf list. %page%, %pages%.
+   List_Header: "&7Turfs - page %page%/%pages%"
+   # One row of /glw turf list in your world. %distance% blocks, %direction% a compass word (empty when inside).
+   List_Row: "&f%turf% &7- %owner% &7- &f%distance%m %direction%"
+   # One row of /glw turf list in another world (and every row for the console).
+   List_Row_Elsewhere: "&f%turf% &7- %owner% &7- in %world%"
+   # Footer of /glw turf list when a next page exists. %next% = the page number.
+   List_Next: "&7Next: /glw turf list %next%"
+   # Clickable line under /glw turf help and the gang turf list.
+   Map_Link: "&7[map] &8- open /glw map"
+   # Refusal when a turf create or rename name is empty once colour codes are stripped (T-243).
+   Name_Empty: "&cA turf name needs at least one letter or digit."
+# end Turf
+
+# ---------------- Capture: capture-rule lines (W2-R1) ----------------
+Capture:
+   # To the member whose login woke the gang, once per owned turf with rivals inside. %gang% = the rival gang,
+   # %turf%, %time% = when the wake-up shield ends.
+   Camping: "&c%gang% are camping %turf% &7- shield ends in %time%"
+   # Entering an attackable rival or unclaimed turf while Presence_Seconds is on. %turf%, %seconds%.
+   Count_In: "&e%turf% &7- attackable - you count after %seconds% s inside"
+# end Capture
+
+# ---------------- Alerts: turf alerts that reach a gang anywhere (W2-N1) ----------------
+Alerts:
+   # To the owning gang, anywhere, when a capture of their turf starts. %turf%, %count% = attackers counted,
+   # %gang% = attacking gang, %direction% = N, NE, E ... from the turf centre.
+   Start: "&c%turf% is under attack! &f%count% %gang% &cfrom the %direction%"
+   # Same as Start when no attacker is seen on a side yet (the direction is unknown). %turf%, %count%, %gang%.
+   Start_No_Side: "&c%turf% is under attack! &f%count% %gang%"
+   # To the owner's allies when the capture starts (the only alert allies get). %turf%, %owner%, %gang%.
+   Start_Ally: "&e%turf% &7(%owner%) &eis under attack by %gang%"
+   # To the owners, once per capture, when half the guards of the turf are down. %turf%.
+   Half_Guards: "&eHalf the guards at %turf% are down"
+   # To the owners, once per capture, when the bar passes 75%. %turf%, %progress%.
+   Last_Stand: "&cLast stand at %turf% &7- %progress%%"
+   # To the owners when the attack failed (defended or abandoned). %turf%, %gang% = attackers.
+   Held: "&a%turf% held &7against %gang%"
+   # To the attackers when their attack failed. %turf%.
+   Attack_Failed: "&7Your attack on %turf% failed"
+   # To both sides when the capture ran out of time (turf_rules.yml Capture.Max_Contest_Minutes). %turf%.
+   Stalled: "&7%turf%: the attack stalled"
+   # To the old owners when the turf was taken. %turf%, %gang% = new owner.
+   Lost: "&c%turf% lost to %gang%"
+   # To the new owners. %turf%.
+   Taken: "&aYou took %turf%"
+# end Alerts
+
+# ---------------- Income: the payout line and the turf cap line (W2-N2) ----------------
+Income:
+   # Action bar to online members at each payout. %money_symbol%, %amount% = paid this payout, %count% = turfs that
+   # paid, %bank% = gang bank after the payout.
+   Action_Bar: "&aTurf income +%money_symbol%%amount% &7(%count% turfs) - bank %money_symbol%%bank%"
+   # Line in /glw turf for your gang. %owned% = turfs held, %cap% = turfs your gang may hold, %paying% = turfs paying now.
+   Cap_Line: "&7Turfs &f%owned%/%cap% &7- &f%paying% &7paying"
+# end Income
+
+# ---------------- Digest: what happened while you were away (W2-N2) ----------------
+Digest:
+   # First line on join when your gang earned turf income since you left. %money_symbol%, %amount%.
+   Income: "&7Income earned while you were away: &a%money_symbol%%amount%"
+   # Your gang took a turf. %turf%, %gang% = previous owner ("unclaimed" when none).
+   Captured: "&aCaptured %turf% &7from %gang%"
+   # Your gang lost a turf to a capture. %turf%, %gang% = new owner.
+   Lost: "&cLost %turf% &7to %gang%"
+   # Your gang held a turf. %turf%, %gang% = attackers.
+   Held: "&aHeld %turf% &7against %gang%"
+   # An attack ran out of time (both sides). %turf%.
+   Stalled: "&7Attack on %turf% stalled"
+   # Your gang lost a turf because nobody was online for the inactivity limit. %turf%, %days%.
+   Released_Inactive: "&cLost %turf% &7(no owner online for %days% days)"
+   # Your gang lost a turf because its record could not be found. %turf%.
+   Released_Orphaned: "&cLost %turf% &7(gang data missing)"
+# end Digest
+
+# ---------------- Quartermaster: the turf shop panels (W2-Q) ----------------
+Quartermaster:
+   # Panel titles. %npc% = the Quartermaster's name (turf_npcs.yml Powerup_Npc.Display_Name).
+   Title_Menu: "&8&l[&6&l%npc%&8&l]"
+   # Buff catalogue title. %npc% = the Quartermaster's name.
+   Title_Buffs: "&8&l[&b&lBuffs &8— &6%npc%&8&l]"
+   # Garrison title. %npc% = the Quartermaster's name.
+   Title_Garrison: "&8&l[&c&lGarrison &8— &6%npc%&8&l]"
+   # Back button on the buff catalogue and garrison panels.
+   Back: "&7← Back"
+   # Close button on every panel.
+   Close: "&cClose"
+   # Catalogue arrow to the next page (shown only when a next page exists).
+   Page_Next: "&7Next page →"
+   # Catalogue arrow to the previous page (shown only after page one).
+   Page_Previous: "&7← Previous page"
+   # Catalogue page counter. %page%, %pages% = this page and the page count.
+   Page_Info: "&7Page %page% of %pages%"
+   # Menu item name. %turf% = the turf display name (its own colour codes are kept).
+   Menu_Turf: "&6&l%turf%"
+   # Menu line: the owning gang. %gang% = owner gang name.
+   Menu_Owner: "&7Owning gang: &e%gang%"
+   # Menu line for an allied viewer. %gang% = the viewer's own gang name.
+   Menu_Allied: "&7You: &b%gang% &8(allied)"
+   # Menu line: guards in reserve. %count% = guard count.
+   Menu_Stock: "&7Garrison stock: &f%count%"
+   # Menu line: active buffs. %count% = buff count.
+   Menu_Active: "&7Active buffs: &f%count%"
+   # Menu line: the viewer's gang bank. %money% = the balance.
+   Menu_Bank: "&7Your gang bank: &a%money%"
+   # Timed Buffs button name.
+   Menu_Buffs_Name: "&b&lTimed Buffs"
+   # Timed Buffs button lore, line 1.
+   Menu_Buffs_Lore_1: "&7Browse the powerup catalogue and"
+   # Timed Buffs button lore, line 2.
+   Menu_Buffs_Lore_2: "&7buy timed boosts on this turf."
+   # Timed Buffs button lore, line 3. %count% = active buffs on the turf.
+   Menu_Buffs_Active: "&7Currently active: &f%count%"
+   # Garrison button name.
+   Menu_Garrison_Name: "&c&lGarrison"
+   # Garrison button lore, line 1.
+   Menu_Garrison_Lore_1: "&7View / buy defender stock."
+   # Garrison button lore, line 2.
+   Menu_Garrison_Lore_2: "&7Guards hold the capture bar"
+   # Garrison button lore, line 3.
+   Menu_Garrison_Lore_3: "&7and fight attackers on this turf."
+   # Garrison button lore, line 4. %count% = guards in reserve.
+   Menu_Garrison_Stock: "&7Current stock: &f%count%"
+   # Catalogue item lore: the effect. %effect% = Effect_Type, %magnitude% = Magnitude.
+   Buffs_Effect: "&7Effect: &f%effect% &7x&f%magnitude%"
+   # Catalogue item lore: the duration. %seconds% = Duration_Seconds.
+   Buffs_Duration: "&7Duration: &b%seconds%s"
+   # Catalogue item lore: the cost. %money% = the price.
+   Buffs_Cost: "&7Cost: &6%money%"
+   # Catalogue item lore when the gang can pay.
+   Buffs_Click: "&aClick to activate."
+   # Catalogue item lore when the gang cannot pay.
+   Buffs_Insufficient: "&cInsufficient gang funds."
+   # Garrison item name.
+   Garrison_Name: "&c&lGarrison"
+   # Garrison info lore. %turf% = turf name, %count% = guards in reserve.
+   Garrison_Stock: "&7Stock on &f%turf%&7: &f%count%"
+   # Garrison info lore: the price of one guard after any discount. %money% = the price.
+   Garrison_Per_Guard: "&7Per defender: &6%money%"
+   # Garrison info lore: the viewer's gang bank. %money% = the balance.
+   Garrison_Bank: "&7Gang bank: &a%money%"
+   # Garrison buy button name.
+   Garrison_Buy_Name: "&aBuy &f1 &aDefender"
+   # Garrison buy button lore: the price. %money% = the price.
+   Garrison_Buy_Cost: "&7Cost: &6%money%"
+   # Garrison buy button lore when the gang can pay.
+   Garrison_Buy_Click: "&aClick to add &f1 &ato the garrison."
+   # Garrison buy button lore when the gang cannot pay.
+   Garrison_Buy_Insufficient: "&cInsufficient gang funds."
+   # Chat after a guard is bought. %turf% = turf name.
+   Bought_Guard: "&aBought &f1 &adefender for &f%turf%&a."
+   # Chat after a boost is bought. %boost% = the boost id, %turf% = turf name.
+   Bought_Boost: "&aActivated &f%boost% &aon &f%turf%&a."
+   # Chat when the gang bank cannot cover a purchase. %money% = the price.
+   Cannot_Afford: "&cYour gang bank can't cover &f%money%&c."
+   # %max% = turf_rules.yml Garrison.Max_Reserve. Guards already deployed in a contest count too.
+   Reserve_Full: "&cThis turf already has %max% guards (stock and on duty)."
+   # Chat when the viewer's rank may not spend (needs gangland.turf.upgrade).
+   No_Rank: "&cYour rank may not spend gang money here."
+   # Chat for an allied viewer who tries to buy: they may only look.
+   Allies_Look: "&eAllied gangs can look, but only the owning gang can buy."
+   # Chat when the turf no longer exists. Also the open-contract refusal.
+   Turf_Gone: "&cThis turf no longer exists."
+   # Chat when the turf changed hands while the panel was open; the panel closes.
+   Owner_Changed: "&cThis turf changed hands. The panel is closed."
+   # Chat when the viewer is no longer in the owning gang; the panel closes.
+   Not_Member: "&cYou are no longer in the owning gang."
+   # Chat when an allied gang's alliance with the owner ended while the panel was open; the panel closes.
+   Not_Allied: "&cYour gang is no longer allied with the owning gang."
+   # Chat when the turf has no owner yet (open contract).
+   No_Owner: "&cThis turf has no owner — nothing to manage here yet."
+   # Chat for a player who is in no gang that owns or allies the turf (open contract).
+   Only_Owner_Or_Allies: "&cOnly members of the owning gang or its allies can use this NPC."
+   # Chat when a gang record is missing (open contract).
+   Gang_Missing: "&cGang record missing — contact an admin."
+# end Quartermaster
+
+# ---------------- Rules: /glw turf rules (W2-E1) ----------------
+# Sentences of /glw turf rules. Placeholders: %window%, %wake_up%, %presence%, %guards%, %min_capture%, %max_contest%,
+# %cap_base%, %per_level%, %ceiling%, %money_symbol%, %amount%, %interval%, %idle%, %max_mult%. Durations are filled in
+# with the server's own numbers; a sentence whose rule is off is left out.
+Rules:
+   # The header line.
+   Header: "&6How turf wars work"
+   # OWNERS_ONLINE window. %window% = Capture.Post_Logoff_Protection_Minutes (turf_settings.yml) as a duration.
+   Window_Online: "&7You can attack a turf while one of its owners is online, and for &f%window%&7 after the last one logs off."
+   # OWNERS_ONLINE window when Post_Logoff_Protection_Minutes is 0: the attack clause without a window.
+   Window_Online_Only: "&7You can attack a turf while one of its owners is online."
+   # OWNERS_OFFLINE window. %window% = Capture.Post_Logoff_Protection_Minutes as a duration.
+   Window_Offline: "&7You can attack a turf once all its owners have been offline for &f%window%&7."
+   # OWNERS_ONLINE only, when Wake_Up_Shield_Seconds is above 0. %wake_up% = that many seconds as a duration.
+   Wake_Up: "&7When the first owner logs in, the turf stays shielded for &f%wake_up%&7."
+   # First sentence of the start rule.
+   Start: "&7A capture starts when your gang has more people inside than the owners and their allies, and more than any other gang."
+   # Second sentence of the start rule, only when Presence_Seconds is above 0. %presence% = that many seconds as a duration.
+   Start_Presence: "&7You count after &f%presence%&7 inside; dying or leaving starts your count again."
+   # Guard clause, only when Guard_Weight_Cap is above 0. %guards% = the cap.
+   Bar_Guards: "&7Each living guard holds back one attacker (up to &f%guards%&7)."
+   # Minimum-capture clause, only when Min_Capture_Seconds is above 0. %min_capture% = that many seconds as a duration.
+   Bar_Min_Capture: "&7A capture takes at least &f%min_capture%&7."
+   # Stall clause, only when Max_Contest_Minutes is above 0. %max_contest% = that many minutes as a duration.
+   Bar_Max_Contest: "&7A capture that goes nowhere for &f%max_contest%&7 ends."
+   # Third-gang clause, always shown.
+   Bar_Third_Gang: "&7A third gang inside a capture of someone else's turf does not count."
+   # Cap sentence. %cap_base%, %per_level%, %ceiling% = Turf_Cap.Base, Turf_Cap.Per_Level, Turf_Cap.Ceiling.
+   Cap: "&7Your gang can hold &f%cap_base%&7 turfs, plus &f%per_level%&7 for each gang level, at most &f%ceiling%&7."
+   # Cap sentence when Turf_Cap.Per_Level is 0 (no level clause). %cap_base%, %ceiling% as above.
+   Cap_Flat: "&7Your gang can hold &f%cap_base%&7 turfs, at most &f%ceiling%&7."
+   # Income sentence. %money_symbol% and %amount% = Default_Income_Amount, %interval% = Income_Interval_Minutes as a
+   # duration, %idle% = Income.Idle_Hours as a duration, %max_mult% = Income.Max_Multiplier.
+   Income: "&7A new turf pays &f%money_symbol%%amount%&7 every &f%interval%&7 while one of its owners was online in the last &f%idle%&7; boosts at most x&f%max_mult%&7."
+# end Rules

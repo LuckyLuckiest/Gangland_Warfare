@@ -13,6 +13,8 @@ import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
  * host runs the scans and folds {@link GangConfig} into its phased bean pipeline.
  *
  * <ul>
+ *     <li>{@link GangModuleFileConfig} - the KERNEL-phase registration of {@code gang/gang_rules.yml} and
+ *     {@code gang/gang_messages.yml} (0.17.0), read by {@code GangRules} and {@code GangMessages}.</li>
  *     <li>{@link GangConfig} - the module-owned contract beans (GangMessageContract, GangPermissionBridgeContract,
  *     GangSettingsContract, GangAllianceRepositoryContract's own binding, MemberRepositoryContract's own binding)
  *     plus the {@code @Bean}-produced {@code GangMembershipInstaller} whose {@code @PostConstruct} wires the
@@ -34,7 +36,8 @@ public final class GangModule implements KeystoneModule {
 
 	@Override
 	public void configure(ModuleRegistrar registrar) {
-		registrar.configuration(GangConfig.class)
+		registrar.configuration(GangModuleFileConfig.class)
+		         .configuration(GangConfig.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .commandPackage(GANG_COMMAND_PACKAGE)
 		         .commandPackage(RANK_COMMAND_PACKAGE)

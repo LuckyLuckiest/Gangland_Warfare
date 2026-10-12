@@ -20,6 +20,11 @@ import java.util.function.Consumer;
 @Repository(CopSpawner.class)
 public class CopSpawnerRepository extends AbstractRepository<CopSpawner> {
 
+	/** A SQL NULL reads as 0; any other value is read through Number (MySQL may return Long/BigDecimal). */
+	private static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
+	}
+
 	private final CopSpawnerTable copSpawnerTable;
 	private       int             highestStoredId;
 
@@ -44,15 +49,15 @@ public class CopSpawnerRepository extends AbstractRepository<CopSpawner> {
 		for (Object[] result : data) {
 			int v = 0;
 
-			int    id        = (int) result[v++];
+			int    id        = num(result[v++]).intValue();
 			// before the unloaded-world skip: the next created spawner must never reuse that row's id
 			highestStoredId = Math.max(highestStoredId, id);
 			String worldName = String.valueOf(result[v++]);
-			double x         = (double) result[v++];
-			double y         = (double) result[v++];
-			double z         = (double) result[v++];
-			double yaw       = (double) result[v++];
-			double pitch     = (double) result[v++];
+			double x         = num(result[v++]).doubleValue();
+			double y         = num(result[v++]).doubleValue();
+			double z         = num(result[v++]).doubleValue();
+			double yaw       = num(result[v++]).doubleValue();
+			double pitch     = num(result[v++]).doubleValue();
 			// station_id was appended in 0.16: an older table has no such index
 			Integer stationId = result.length > v && result[v] != null ? ((Number) result[v]).intValue() : null;
 

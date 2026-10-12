@@ -22,14 +22,16 @@
 #                   This section only controls how the deployer routes them: which type to spawn, how far they
 #                   chase attackers, and a safety lifespan in case the recall event misses them.
 #
-# These are NOT the powerup catalogue (which lives in turf_powerups.yml) and NOT the contribution payout knobs
-# (which live in turf_settings.yml under Contribution). They're hot-reloadable.
+# These are NOT the powerup catalogue (which lives in turf_powerups.yml). They're hot-reloadable.
 Powerup_Npc:
    # civilians.yml type id used to spawn the per-turf Quartermaster. Display name, model, equipment, health,
    # invulnerability, AI, and combat stats all live in civilians.yml under this type — turf module just routes
    # to it. While the turf is being contested, TurfPowerupNpc.engage() flips this NPC into COMBAT and points
    # its target at the closest attacker; on capture-end it pacifies back to IDLE.
    Type_Id: quartermaster
+   # Name shown over the Quartermaster and in its panel titles. Changing it renames Quartermasters placed after a
+   # restart; existing ones keep the name they were placed with.
+   Display_Name: "Quartermaster"
    # Blocks from the Quartermaster within which a contest target (an attacker) is picked up. Minimum 1.0.
    Targeting_Radius: 32.0
 # Cop response (T-189): while a cop NPC hits a player standing on a turf their gang protects, the turf's

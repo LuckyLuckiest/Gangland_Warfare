@@ -7,6 +7,7 @@ import org.luckyraven.gangland.gang.database.tables.member.MemberTable;
 import org.luckyraven.gangland.gang.database.tables.rank.RankTable;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
 import org.luckyraven.gangland.gang.member.Member;
@@ -17,6 +18,8 @@ import org.luckyraven.keystone.persistence.database.component.Table;
 import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 import org.luckyraven.keystone.persistence.repository.Repository;
 
+import static org.luckyraven.gangland.gang.database.repositories.gang.GangRepository.num;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,9 +29,10 @@ import java.util.function.Consumer;
 
 @CustomLog
 @Repository(Member.class)
-public class MemberRepository extends AbstractRepository<Member> implements MemberRepositoryContract {
+public class MemberRepository extends AbstractRepository<Member> implements MemberRepositoryContract, LoadOutcome {
 
 	private final MemberTable memberTable;
+	private volatile boolean   lastLoadFailed;
 
 	private RankLookupContract rankLookup;
 	private GangLookupContract gangLookup;
@@ -53,30 +57,32 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 
 	@Override
 	protected Collection<Member> doLoadAll() throws SQLException {
+		lastLoadFailed = true;   // stays true when readRows throws; Keystone reports the exception and returns an empty list
+		Collection<Member> rows = readRows();
+		lastLoadFailed = false;
+		return rows;
+	}
+
+	@Override
+	public boolean lastLoadFailed() {
+		return lastLoadFailed;
+	}
+
+	private Collection<Member> readRows() throws SQLException {
 		List<Member>   members = new ArrayList<>();
 		List<Object[]> data    = tableBackend().selectAll();
 
 		for (Object[] result : data) {
-			int v = 0;
-
-			UUID   uuid         = UUID.fromString(String.valueOf(result[v++]));
-			int    gangId       = (int) result[v++];
-			double contribution = (double) result[v++];
-			int    rankId       = (int) result[v++];
-			long   joinedGang   = (long) result[v];
-
-			Rank   rank   = rankLookup.get(rankId);
-			Member member = new Member(uuid);
-
-			if (rank == null) {
-				// convert the rank to the initial rank (head)
-				rank = rankLookup.getRootRank();
+			Member member;
+			try {
+				member = fromRow(result, rankLookup);
+			} catch (IllegalArgumentException exception) {
+				// T-262: a NULL or malformed uuid skips this row instead of failing the whole member load
+				log.warn("Skipping a member row with a bad uuid '{}'", result.length > 0 ? result[0] : null);
+				continue;
 			}
-
-			member.setGangId(gangId);
-			member.setContribution(contribution);
-			member.setRank(rank);
-			member.setGangJoinDateLong(joinedGang);
+			UUID   uuid   = member.getUuid();
+			int    gangId = member.getGangId();
 
 			Gang gang = gangLookup.findById(gangId);
 
@@ -99,6 +105,32 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 		}
 
 		return members;
+	}
+
+	/** One member row. Every numeric column reads through {@link Number}; a SQL NULL reads as 0 (T-199). */
+	public static Member fromRow(Object[] result, RankLookupContract rankLookup) {
+		int v = 0;
+
+		UUID   uuid         = UUID.fromString(String.valueOf(result[v++]));
+		int    gangId       = num(result[v++]).intValue();
+		double contribution = num(result[v++]).doubleValue();
+		int    rankId       = num(result[v++]).intValue();
+		long   joinedGang   = num(result[v]).longValue();
+
+		Rank   rank   = rankLookup.get(rankId);
+		Member member = new Member(uuid);
+
+		if (rank == null) {
+			// convert the rank to the initial rank (head)
+			rank = rankLookup.getRootRank();
+		}
+
+		member.setGangId(gangId);
+		member.setContribution(contribution);
+		member.setRank(rank);
+		member.setGangJoinDateLong(joinedGang);
+
+		return member;
 	}
 
 	@Override

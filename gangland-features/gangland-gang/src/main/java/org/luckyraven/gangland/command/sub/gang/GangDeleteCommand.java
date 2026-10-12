@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -33,6 +34,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.util.TimeMessages;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +44,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.luckyraven.keystone.bean.Qualifier;
+import lombok.CustomLog;
 
+@CustomLog
 class GangDeleteCommand extends SubArgument {
 
 	private final JavaPlugin                   gangland;
@@ -53,6 +57,7 @@ class GangDeleteCommand extends SubArgument {
 	private final GangManager                gangManager;
 	private final RankManager                rankManager;
 	private final RepositoryRegistry         repositoryRegistry;
+	private final GangMessages messages;
 
 	private final HashMap<User<Player>, AtomicReference<String>> deleteGangName;
 	private final HashMap<CommandSender, CountdownTimer>         deleteGangTimer;
@@ -62,7 +67,8 @@ class GangDeleteCommand extends SubArgument {
 	protected GangDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                            MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager, RepositoryRegistry repositoryRegistry) {
+	                            RankManager rankManager, RepositoryRegistry repositoryRegistry,
+	                            GangMessages messages) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
 		this.gangland           = gangland;
@@ -73,6 +79,7 @@ class GangDeleteCommand extends SubArgument {
 		this.gangManager        = gangManager;
 		this.rankManager        = rankManager;
 		this.repositoryRegistry = repositoryRegistry;
+		this.messages           = messages;
 
 		this.deleteGangName  = new HashMap<>();
 		this.deleteGangTimer = new HashMap<>();
@@ -219,7 +226,10 @@ class GangDeleteCommand extends SubArgument {
 				// inform the online users
 				String kickedFromGang      = Messages.KICKED_FROM_GANG.toString();
 				String gangRemoved         = Messages.GANG_REMOVED.toString();
-				String gangRemovedReplace  = gangRemoved.replace("%gang%", deleteGangName.get(user).get());
+				// GR-30: the confirm map entry can be gone; fall back to the gang's current name.
+				AtomicReference<String> confirmedName = deleteGangName.get(user);
+				String gangName = confirmedName != null && confirmedName.get() != null ? confirmedName.get() : gang.getName();
+				String gangRemovedReplace  = gangRemoved.replace("%gang%", gangName);
 				String depositMoneyReplace = depositMoney.replace("%amount%", Settings.formatAmount(amount));
 				gangUser.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);
 			}
@@ -244,16 +254,26 @@ class GangDeleteCommand extends SubArgument {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(mem.getUuid());
 
 				User<OfflinePlayer> offlineUser = offlineUserManager.getUser(offlinePlayer);
-				if (offlineUser == null) {
-					offlineUser = offlineUserManager.create(offlinePlayer);
-					offlineUserManager.add(offlineUser);
+				// Not cached, or cached as a load-pending default (T-300, B3): load just this member's row, the path
+				// boot uses. Never loadAll, which rebuilds every player's User (Vault balance writes, wanted events).
+				if (offlineUser == null || offlineUser.isLoadPending()) {
+					boolean cached = offlineUser != null;
+					if (!cached) offlineUser = offlineUserManager.create(offlinePlayer);
+					// A failed read leaves defaults: load-pending keeps autosave and the save below off it.
+					if (!offlineUserManager.loadStored(offlineUser)) offlineUser.setLoadPending(true);
+					if (!cached) offlineUserManager.add(offlineUser);
 				}
 
 				BigDecimal amount = payouts.getOrDefault(mem.getUuid(), Currency.ZERO);
 
 				gang.getEconomy().withdrawAmount(amount);
 				offlineUser.getEconomy().depositAmount(amount);
-				userRepository.save(offlineUser);
+				if (offlineUser.isLoadPending()) {
+					log.warn("Disband payout of {} for {} was not saved: no stored row could be read",
+					         amount, mem.getUuid());
+				} else {
+					userRepository.save(offlineUser);
+				}
 
 				gang.removeMember(offlineUser, mem);
 
@@ -265,7 +285,10 @@ class GangDeleteCommand extends SubArgument {
 			                            .divide(BigDecimal.valueOf(4), Currency.SCALE, Currency.ROUNDING_MODE);
 
 			user.getEconomy().depositAmount(amount);
-			user.sendMessage(depositMoney.replace("%amount%", Settings.formatAmount(amount)));
+			user.sendMessage(messages.text("Progression.Fee_Refund",
+			                               "&7Refunded a quarter of the creation fee: &a%money_symbol%%amount%",
+			                               "money_symbol", Settings.getMoneySymbol(),
+			                               "amount", Settings.formatAmount(amount)));
 
 			IRepository<Gang>         gangRepository         = repositoryRegistry.getRepository(Gang.class);
 			IRepository<GangAlliance> gangAllianceRepository = repositoryRegistry.getRepository(GangAlliance.class);
@@ -296,17 +319,21 @@ class GangDeleteCommand extends SubArgument {
 	}
 
 	/**
-	 * Splits the whole vault pro rata on each member's contribution, a negative contribution counting as zero. The
-	 * disbanding owner also takes whatever a zero total or rounding leaves, so the shares sum to exactly {@code pool}.
+	 * Splits the whole vault pro rata on each member's contribution, a negative contribution counting as zero. When
+	 * the total contribution is zero (D15) every member gets an equal share of the pool, rounded down to the currency
+	 * scale. The disbanding owner also takes whatever rounding leaves, so the shares sum to exactly {@code pool}.
 	 */
 	static Map<UUID, BigDecimal> payouts(BigDecimal pool, List<Member> members, UUID owner) {
 		double                total  = members.stream().mapToDouble(m -> Math.max(0, m.getContribution())).sum();
+		BigDecimal            equal  = members.isEmpty() ? Currency.ZERO :
+		                               pool.divide(BigDecimal.valueOf(members.size()), Currency.SCALE, RoundingMode.DOWN);
 		Map<UUID, BigDecimal> shares = new HashMap<>();
 		BigDecimal            left   = pool;
 
 		for (Member member : members) {
-			BigDecimal share = total > 0 ? Currency.multiply(pool, Math.max(0, member.getContribution()) / total)
-			                                       .min(left) : Currency.ZERO;
+			BigDecimal share = total > 0 ?
+			                   Currency.multiply(pool, Math.max(0, member.getContribution()) / total).min(left) :
+			                   equal;
 			shares.put(member.getUuid(), share);
 			left = left.subtract(share);
 		}

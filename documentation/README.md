@@ -10,7 +10,8 @@
 
 | Version                                 | Status  | Changelog                                                      |
 |-----------------------------------------|---------|----------------------------------------------------------------|
-| [v0.16.1](./v0.16.1/CHANGELOG.md)       | Current | Cops N Crooks patch: post-escape search and bounty bar, turf defenders answer cops, command and radio text, tab completion (needs Keystone 1.15.1) |
+| [v0.17.0](./v0.17.0/CHANGELOG.md)       | Current | Gang & Turf I: turf map and HUD, owners-online capture window, one capture bar, alerts anywhere, income rules and gang levels, Quartermaster prices, gang bounty, gang chat and recruiting (needs Keystone 1.15.3; 1.15.3 also flushes the database journal on a clean stop, so a stopped server's .db file is complete) |
+| [v0.16.1](./v0.16.1/CHANGELOG.md)       | Stable  | Cops N Crooks patch: post-escape search and bounty bar, turf defenders answer cops, command and radio text, tab completion (needs Keystone 1.15.1) |
 | [v0.16.0](./v0.16.0/CHANGELOG.md)       | Stable  | Cops N Crooks "Where they come from": dispatch from stations, mixed-tier squads, perimeter posts, hideouts, cold trail, hospital respawns, bribe-star pickups |
 | [v0.15.2](./v0.15.2/CHANGELOG.md)       | Stable  | Cops N Crooks "Smart star drops": AUTO mode judges chase endings, learning per player and level, momentum timers |
 | [v0.15.0](./v0.15.0/CHANGELOG.md)       | Stable  | Cops N Crooks "Lose them": heat, evasion, wanted HUD, charge sheet, regroup, paid bounties |
@@ -42,6 +43,7 @@ Guides for features that are part of the base plugin and not tied to a specific 
 | 14 | [Traders](./features/traders.md)                   | Trader NPCs — buy, barter, sell, tip; mood and traits (module: `gangland-npc-shops`) |
 | 15 | [Bank & Banker](./features/bank.md)                | Banker NPC, tier ladder, daily caps, interest, loans (module: `gangland-npc-shops`) |
 | 16 | [Jail & Detainment](./features/jail-detainment.md) | Handcuffing, jailing, bail, bribery, and sentence timers         |
+| 17 | [Turf](./features/turf.md)                         | Turf capture, the `/glw map` grid, HUD line, placeholders and turf admin (module: `gangland-turf`) |
 
 Weapons, ammunition and wearables are provided by the standalone **Bartizan** plugin as of 0.9.0, not this repo —
 see its own documentation in `E:\Programming\java\Bartizan\documentation`.
@@ -69,7 +71,7 @@ In-depth technical documentation for developers working on the codebase.
 
 Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in
 [`bartizan-integration.md`](./bartizan-integration.md); server-owner migration notes are in
-[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts), and [`migration-0.16.1.md`](./migration-0.16.1.md) (0.16.1 Keystone 1.15.1, moved text keys, new keys). Recoil is documented in
+[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts), and [`migration-0.16.1.md`](./migration-0.16.1.md) (0.16.1 Keystone 1.15.1, moved text keys, new keys), and [`migration-0.17.0.md`](./migration-0.17.0.md) (0.16.1 to 0.17.0, Gang & Turf I). Recoil is documented in
 [Version Compatibility](./developer/compatibility.md), now a Bartizan-side reflective packet call rather than an
 NMS adapter this repo ships.
 

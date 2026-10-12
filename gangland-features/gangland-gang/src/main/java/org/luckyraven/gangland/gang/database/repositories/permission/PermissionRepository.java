@@ -1,8 +1,10 @@
 package org.luckyraven.gangland.gang.database.repositories.permission;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.database.tables.permission.PermissionTable;
 import org.luckyraven.gangland.core.permission.Permission;
+import org.luckyraven.gangland.gang.database.repositories.gang.GangRepository;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
 import org.luckyraven.keystone.persistence.database.component.Table;
@@ -24,7 +26,9 @@ import java.util.function.Consumer;
  * {@code permission} table name are unchanged.
  */
 @Repository(Permission.class)
-public class PermissionRepository extends AbstractRepository<Permission> {
+public class PermissionRepository extends AbstractRepository<Permission> implements LoadOutcome {
+
+	private volatile boolean lastLoadFailed;
 
 	private final PermissionTable permissionTable;
 
@@ -36,17 +40,29 @@ public class PermissionRepository extends AbstractRepository<Permission> {
 
 	@Override
 	protected Collection<Permission> doLoadAll() throws SQLException {
+		lastLoadFailed = true;   // stays true when selectAll throws; Keystone reports it and returns an empty list (T-283)
 		List<Permission> permissions = new ArrayList<>();
 		List<Object[]>   data        = tableBackend().selectAll();
 
 		for (Object[] result : data) {
-			int    id         = (int) result[0];
-			String permission = String.valueOf(result[1]);
-
-			permissions.add(new Permission(id, permission));
+			permissions.add(fromRow(result));
 		}
 
+		lastLoadFailed = false;
 		return permissions;
+	}
+
+	@Override
+	public boolean lastLoadFailed() {
+		return lastLoadFailed;
+	}
+
+	/** One permission row. The id reads through {@link Number}; a SQL NULL reads as 0 (T-199). */
+	public static Permission fromRow(Object[] result) {
+		int    id         = GangRepository.num(result[0]).intValue();
+		String permission = String.valueOf(result[1]);
+
+		return new Permission(id, permission);
 	}
 
 	@Override

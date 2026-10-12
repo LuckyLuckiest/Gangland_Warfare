@@ -10,6 +10,7 @@ import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
@@ -33,11 +34,12 @@ public class TurfPowerupNpcCommand extends SubArgument {
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfMessages         text;
 	private final TurfPowerupManager   powerupNpcs;
 
 	public TurfPowerupNpcCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                             TurfManager turfs, WandSelectionManager selections,
-	                             TurfMessageContract messages, TurfPowerupManager powerupNpcs) {
+	                             TurfMessageContract messages, TurfMessages text, TurfPowerupManager powerupNpcs) {
 		super(plugin, "powerupnpc", tree, parent);
 
 		this.plugin    = plugin;
@@ -45,6 +47,7 @@ public class TurfPowerupNpcCommand extends SubArgument {
 		this.turfs       = turfs;
 		this.selections  = selections;
 		this.messages    = messages;
+		this.text        = text;
 		this.powerupNpcs = powerupNpcs;
 
 		this.addSubArgument(actionArgument());
@@ -60,8 +63,7 @@ public class TurfPowerupNpcCommand extends SubArgument {
 		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			// GI-35: nested SubArgument permissions only add onto the base "gangland.command.turf" node — they
 			// never require the stricter admin one on their own.
-			if (!sender.hasPermission(WandSelectionManager.ADMIN_PERMISSION)) {
-				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			if (!TurfPermissions.requireAdmin(sender, text)) {
 				return;
 			}
 			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);

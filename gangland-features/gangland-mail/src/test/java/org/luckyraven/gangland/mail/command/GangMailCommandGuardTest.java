@@ -24,6 +24,8 @@ import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
+import org.luckyraven.gangland.mail.MailMessages;
+import org.luckyraven.gangland.mail.MailRules;
 import org.luckyraven.gangland.mail.MailStatus;
 import org.luckyraven.gangland.mail.MailType;
 import org.luckyraven.gangland.mail.support.FakeMailRepositoryContract;
@@ -132,7 +134,8 @@ class GangMailCommandGuardTest {
 		when(parent.getPermission()).thenReturn("glw.gang");
 
 		invite = new GangMailContribution(plugin, userManager, offlineUserManager, memberManager, gangManager,
-		                                  mock(RankManager.class), mailManager).create(tree, parent).get(0);
+		                                  mock(RankManager.class), mailManager, mock(MailRules.class),
+		                                                  mock(MailMessages.class)).create(tree, parent).get(0);
 		ally   = new Argument(plugin, "ally", tree);
 		ally.addAllSubArguments(new GangAllyMailContribution(plugin, userManager, memberManager, gangManager,
 		                                                     mailManager).create(tree, ally));

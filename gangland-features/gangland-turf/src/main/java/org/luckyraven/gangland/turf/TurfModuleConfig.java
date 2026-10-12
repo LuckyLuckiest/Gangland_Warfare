@@ -13,31 +13,37 @@ import org.luckyraven.gangland.turf.database.ActiveTurfBuffRepository;
 import org.luckyraven.gangland.turf.database.TurfGarrisonRepository;
 import org.luckyraven.gangland.turf.database.TurfPowerupNpcRepository;
 import org.luckyraven.gangland.turf.database.TurfRepository;
+import org.luckyraven.gangland.turf.database.TurfSequenceRepository;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.GanglandTurfMessages;
 import org.luckyraven.gangland.turf.config.GanglandTurfSounds;
 import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.place.TurfRegionProvider;
+import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.gangland.turf.capture.CaptureEligibility;
+import org.luckyraven.gangland.turf.config.TurfMapSettings;
+import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.config.TurfRules;
+import org.luckyraven.gangland.turf.map.MapPrefsService;
+import org.luckyraven.gangland.turf.log.TurfEventBuffer;
 import org.luckyraven.gangland.turf.capture.CaptureService;
+import org.luckyraven.gangland.turf.capture.TurfOwnership;
 import org.luckyraven.gangland.turf.capture.CaptureSettings;
 import org.luckyraven.gangland.turf.contract.TurfDisplayContract;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
-import org.luckyraven.gangland.turf.contribution.TurfContributionSettings;
-import org.luckyraven.gangland.turf.contribution.TurfContributionTickTask;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupOpenContractImpl;
-import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
-import org.luckyraven.gangland.turf.npc.guard.CopGuardConfig;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
+import org.luckyraven.gangland.turf.npc.view.QuartermasterAccess;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupBuffCatalogueView;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupFlow;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupGarrisonView;
@@ -47,6 +53,8 @@ import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 import org.luckyraven.gangland.turf.task.GangPresenceTracker;
 import org.luckyraven.gangland.turf.task.InactivityReleaseTask;
 import org.luckyraven.gangland.turf.task.TurfIncomeDistributor;
+import org.bukkit.Bukkit;
+import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.gangland.turf.task.TurfLocationTracker;
 
 import java.util.List;
@@ -99,11 +107,11 @@ public final class TurfModuleConfig {
 		return new ActiveBuffManager(plugin, repository);
 	}
 
+	// TF-41: no explicit manager.initialize() — the LIFECYCLE convention pass calls it once (same reasoning as
+	// activeBuffManager above). Calling it here as well loaded the table twice at boot.
 	@Bean
 	public GarrisonManager garrisonManager(GarrisonRepositoryContract repository) {
-		GarrisonManager manager = new GarrisonManager(repository);
-		manager.initialize();
-		return manager;
+		return new GarrisonManager(repository);
 	}
 
 	@Bean
@@ -121,11 +129,11 @@ public final class TurfModuleConfig {
 		return settings::isShowEnterTitle;
 	}
 
+	// TF-41: no explicit manager.initialize() — the LIFECYCLE convention pass calls it once. The sequence repository
+	// supplies the persisted turf id high-water mark (TF-05) so deleted ids are never handed out again.
 	@Bean
-	public TurfManager turfManager(TurfRepositoryContract repository) {
-		TurfManager manager = new TurfManager(repository);
-		manager.initialize();
-		return manager;
+	public TurfManager turfManager(TurfRepositoryContract repository, TurfSequenceRepository sequence) {
+		return new TurfManager(repository, sequence);
 	}
 
 	@Bean
@@ -162,12 +170,62 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
+	public TurfOwnership turfOwnership(TurfManager turfs) {
+		return new TurfOwnership(turfs);
+	}
+
+	@Bean
 	public CaptureService captureService(TurfManager turfs,
 	                                     GangLookupContract gangs,
 	                                     UserLookupContract users,
 	                                     CaptureSettings settings,
-	                                     TurfSoundContract sounds) {
-		return new CaptureService(turfs, gangs, users, settings, sounds);
+	                                     TurfSoundContract sounds,
+	                                     TurfOwnership ownership,
+	                                     CaptureEligibility eligibility,
+	                                     TurfRules rules,
+	                                     TurfDefenderDeployer defenders) {
+		return new CaptureService(turfs, gangs, users, settings, sounds, ownership, eligibility, rules::capture,
+		                          defenders::aliveCount);
+	}
+
+	@Bean
+	public CaptureEligibility captureEligibility(GangLookupContract gangs, CaptureSettings settings, TurfRules rules,
+	                                             GangPresenceTracker presence, TurfManager turfs) {
+		return new CaptureEligibility(gangs, settings, rules::capture, presence::wokeAt,
+		                              gangId -> {
+		                              	Gang gang = gangs.findById(gangId);
+		                              	return gang == null ? 0 : rules.cap(gang.getLevel().getLevelValue());
+		                              },
+		                              turfs::countOwnedBy);
+	}
+
+	@Bean
+	public TurfRules turfRules(TurfModuleFiles files, FileManager fileManager) {
+		TurfRules rules = new TurfRules(fileManager);
+		fileManager.registerInitializer(rules);
+		return rules;
+	}
+
+	@Bean
+	public TurfMapSettings turfMapSettings(TurfModuleFiles files, FileManager fileManager) {
+		TurfMapSettings settings = new TurfMapSettings(fileManager);
+		fileManager.registerInitializer(settings);
+		return settings;
+	}
+
+	@Bean
+	public TurfMessages turfMessages(TurfModuleFiles files,
+	                                 FileManager fileManager,
+	                                 TurfMessageContract legacy,
+	                                 CaptureSettings capture) {
+		TurfMessages messages = new TurfMessages(fileManager, legacy, capture);
+		fileManager.registerInitializer(messages);
+		return messages;
+	}
+
+	@Bean
+	public MapPrefsService mapPrefsService() {
+		return new MapPrefsService();
 	}
 
 	@Bean
@@ -181,50 +239,47 @@ public final class TurfModuleConfig {
 	public TurfIncomeDistributor turfIncomeDistributor(JavaPlugin plugin, TurfSettings settings,
 	                                                   TurfManager turfs,
 	                                                   GangLookupContract gangs,
-	                                                   ActiveBuffManager buffs) {
-		long                  intervalTicks = settings.getIncomeIntervalMinutes() * 60L * 20L;
-		TurfIncomeDistributor distributor   = new TurfIncomeDistributor(plugin, turfs, gangs, buffs, intervalTicks);
+	                                                   UserLookupContract users,
+	                                                   ActiveBuffManager buffs,
+	                                                   TurfOwnership ownership,
+	                                                   TurfRules rules,
+	                                                   TurfEventBuffer buffer,
+	                                                   TurfMessages text) {
+		long                 intervalTicks = settings.getIncomeIntervalMinutes() * 60L * 20L;
+		TurfIncomeDistributor distributor   = new TurfIncomeDistributor(plugin, turfs, gangs, users, buffs, ownership,
+		                                                                intervalTicks, rules, buffer, text,
+		                                                                ActionBarManager::sendBackground,
+		                                                                () -> Bukkit.getOnlinePlayers(),
+		                                                                System::currentTimeMillis);
 		distributor.start();
 		return distributor;
 	}
 
 	@Bean
+	public TurfEventBuffer turfEventBuffer() {
+		return new TurfEventBuffer();
+	}
+
+	@Bean
 	public InactivityReleaseTask inactivityReleaseTask(TurfManager turfs,
 	                                                   GangLookupContract gangs,
-	                                                   CaptureSettings settings) {
-		return new InactivityReleaseTask(turfs, gangs, settings.getInactivityAutoReleaseDays());
+	                                                   CaptureSettings settings,
+	                                                   TurfOwnership ownership) {
+		return new InactivityReleaseTask(turfs, gangs, ownership, settings.getInactivityAutoReleaseDays());
 	}
 
 	@Bean
 	public GangPresenceTracker gangPresenceTracker(JavaPlugin plugin,
 	                                               GangLookupContract gangs,
-	                                               UserLookupContract users,
+	                                               GangMembership membership,
 	                                               CaptureSettings settings,
-	                                               InactivityReleaseTask release) {
-		GangPresenceTracker tracker = new GangPresenceTracker(
-				plugin, gangs, users, settings.getInactivityAutoReleaseDays(), release);
+	                                               InactivityReleaseTask release,
+	                                               TurfRules rules) {
+		GangPresenceTracker tracker = new GangPresenceTracker(plugin, gangs, membership,
+		                                                      settings.getInactivityAutoReleaseDays(), release,
+		                                                      rules::capture, settings);
 		tracker.start();
 		return tracker;
-	}
-
-	@Bean
-	public TurfContributionSettings turfContributionSettings(TurfSettings turf) {
-		return new TurfContributionSettings(
-				turf.getContributionDefenderPresenceTick(),
-				turf.getContributionAttackerPresenceTick(),
-				turf.getContributionCaptureCompleteBonus(),
-				turf.getContributionDefenseSuccessBonus());
-	}
-
-	@Bean
-	public TurfContributionTickTask turfContributionTickTask(JavaPlugin plugin,
-	                                                         TurfManager turfs,
-	                                                         GangLookupContract gangs,
-	                                                         UserLookupContract users,
-	                                                         TurfContributionSettings settings) {
-		TurfContributionTickTask task = new TurfContributionTickTask(plugin, turfs, gangs, users, settings);
-		task.start();
-		return task;
 	}
 
 	// TurfBossBarListener and TurfCaptureNotifier are @ListenerHandler classes — the framework instantiates them
@@ -248,11 +303,6 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfDefenderConfig turfDefenderConfig(TurfNpcsConfigLoader loader) {
-		return loader.getDefenderConfig();
-	}
-
-	@Bean
 	public TurfDefenderDeployer turfDefenderDeployer(JavaPlugin plugin, CivilianService civilianService,
 	                                                 CivilianSpawnManager spawnManager) {
 		TurfDefenderDeployer deployer = new TurfDefenderDeployer(plugin, civilianService, spawnManager);
@@ -260,18 +310,14 @@ public final class TurfModuleConfig {
 		return deployer;
 	}
 
-	@Bean
-	public CopGuardConfig copGuardConfig(TurfNpcsConfigLoader loader) {
-		return loader.getCopGuardConfig();
-	}
-
 	// T-189: turf defenders and the Quartermaster answer cops that hit a player standing on their gang's turf. The
 	// cops-n-crooks listener feeds the hits in; this bean only owns the 5-tick engagement release task.
 	@Bean
 	public TurfCopGuard turfCopGuard(JavaPlugin plugin, TurfManager turfs, UserLookupContract users,
 	                                 GangMembership membership, TurfPowerupManager powerups,
-	                                 TurfDefenderDeployer defenders, CopGuardConfig config) {
-		TurfCopGuard guard = new TurfCopGuard(plugin, turfs, users, membership, powerups, defenders, config);
+	                                 TurfDefenderDeployer defenders, TurfNpcsConfigLoader loader) {
+		TurfCopGuard guard = new TurfCopGuard(plugin, turfs, users, membership, powerups, defenders,
+		                                      loader::getCopGuardConfig);
 		guard.start();
 		return guard;
 	}
@@ -279,30 +325,42 @@ public final class TurfModuleConfig {
 	@Bean
 	public TurfPowerupManager turfPowerupManager(JavaPlugin plugin, TurfPowerupNpcRepository repository,
 	                                             TurfNpcsConfigLoader loader, CivilianSpawnManager spawnManager) {
-		return new TurfPowerupManager(plugin, repository, loader.getPowerupSettings(), spawnManager);
+		return new TurfPowerupManager(plugin, repository, loader::getPowerupSettings, spawnManager);
+	}
+
+	@Bean
+	public QuartermasterAccess quartermasterAccess(TurfManager turfs, GangLookupContract gangs,
+	                                               UserLookupContract users) {
+		return new QuartermasterAccess(turfs, gangs, users);
 	}
 
 	@Bean
 	public TurfPowerupMenuView turfPowerupMenuView(@SuppressWarnings("unused") Settings settings,
-	                                               GarrisonManager garrisons, ActiveBuffManager buffs) {
-		return new TurfPowerupMenuView(garrisons, buffs,
+	                                               GarrisonManager garrisons, ActiveBuffManager buffs,
+	                                               TurfMessages messages) {
+		return new TurfPowerupMenuView(garrisons, buffs, messages,
 		                               Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
 	@Bean
 	public TurfPowerupBuffCatalogueView turfPowerupBuffCatalogueView(@SuppressWarnings("unused") Settings settings,
 	                                                                 PowerupRegistry registry,
-	                                                                 ActiveBuffManager buffs) {
-		return new TurfPowerupBuffCatalogueView(registry, buffs,
+	                                                                 ActiveBuffManager buffs,
+	                                                                 QuartermasterAccess access,
+	                                                                 TurfMessages messages) {
+		return new TurfPowerupBuffCatalogueView(registry, buffs, access, messages,
 		                                        Settings.getInventoryFillItem(),
 		                                        Settings.getInventoryFillName());
 	}
 
 	@Bean
 	public TurfPowerupGarrisonView turfPowerupGarrisonView(@SuppressWarnings("unused") Settings settings,
-	                                                       GarrisonManager garrisons) {
-		return new TurfPowerupGarrisonView(garrisons,
-		                                   Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+	                                                       GarrisonManager garrisons, PowerupRegistry registry,
+	                                                       ActiveBuffManager buffs, QuartermasterAccess access,
+	                                                       TurfRules rules, TurfDefenderDeployer defenders,
+	                                                       TurfMessages messages) {
+		return new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules, defenders::aliveCount,
+		                                   messages, Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
 	@Bean
@@ -315,7 +373,9 @@ public final class TurfModuleConfig {
 	@Bean
 	public TurfPowerupOpenContract turfPowerupOpenContract(TurfPowerupFlow flow, TurfManager turfs,
 	                                                       TurfPowerupManager npcs, GangLookupContract gangs,
-	                                                       UserLookupContract users) {
-		return new TurfPowerupOpenContractImpl(flow, turfs, npcs, gangs, users);
+	                                                       UserLookupContract users, TurfMessages messages,
+	                                                       TurfNpcsConfigLoader loader) {
+		return new TurfPowerupOpenContractImpl(flow, turfs, npcs, gangs, users, messages,
+		                                       loader::getPowerupSettings);
 	}
 }

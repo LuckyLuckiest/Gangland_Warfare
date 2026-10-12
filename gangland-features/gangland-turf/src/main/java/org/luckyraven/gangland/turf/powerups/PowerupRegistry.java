@@ -2,6 +2,7 @@ package org.luckyraven.gangland.turf.powerups;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -17,6 +18,17 @@ public final class PowerupRegistry {
 
 	private final AtomicReference<Map<String, PowerupDefinition>> byId =
 			new AtomicReference<>(Collections.emptyMap());
+
+	/** Price of one guard at the Quartermaster, from {@code Garrison.Cost_Per_Guard} (W2-Q, TF-17). */
+	private volatile BigDecimal garrisonCost = BigDecimal.valueOf(1000);
+
+	public BigDecimal garrisonCost() {
+		return garrisonCost;
+	}
+
+	public void setGarrisonCost(BigDecimal cost) {
+		this.garrisonCost = cost;
+	}
 
 	public @Nullable PowerupDefinition get(String id) {
 		return byId.get().get(id);

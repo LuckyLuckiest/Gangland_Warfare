@@ -6,14 +6,19 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.support.TestLevelUpEvent;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Pins {@link Level}'s XP-curve arithmetic and the boundary behaviours flagged by the
  * users-levels-economy-bank.md audit (Observation #8: {@code addLevels} now clamps on the resulting level
- * instead of the iteration count (GI 3), though a reused/cancelled event still consumes XP every iteration -
- * that half of #8 is untouched here; Observation #9: {@code getPercentage} divides by zero when the formula
- * evaluates to 0).
+ * instead of the iteration count (GI 3); a cancelled event now rolls its step back and consumes no XP (T-253/US-43);
+ * Observation #9: {@code getPercentage} divides by zero when the formula evaluates to 0).
  *
  * <p>Uses the {@code Level(int maxLevel, double baseAmount)} constructor with an explicit
  * {@link Level#setFormula(String)} throughout, so none of these tests need {@code GangSettings} bound.
@@ -137,6 +142,29 @@ class LevelTest {
 		assertTrue(Double.isNaN(percentage), "0/0 division pinned as NaN until a formula/level guard is added");
 	}
 
+	@Test
+	@DisplayName("T-277: addLevels with a null event levels without firing an event")
+	void addLevels_nullEvent_levelsWithoutAnEvent() {
+		Level level = new Level(5, 1000);
+		level.setFormula("0");
+
+		int counter = level.addLevels(2, null);
+
+		assertEquals(2, counter);
+		assertEquals(2, level.getLevelValue());
+	}
+
+	@Test
+	@DisplayName("T-255: getPercentage reads 100 at max level, never above")
+	void getPercentage_atMaxLevel_is100() {
+		Level level = new Level(1, 1000);
+		level.setFormula("100");
+		level.setLevelValue(1);
+		level.setExperience(250);
+
+		assertEquals(100D, level.getPercentage(), 0.0001);
+	}
+
 	@Nested
 	@DisplayName("addLevels — Observation #8 (users-levels-economy-bank.md)")
 	class AddLevelsTest {
@@ -158,8 +186,8 @@ class LevelTest {
 		}
 
 		@Test
-		@DisplayName("one LevelUpEvent instance is reused for the whole loop: a pre-cancelled event stays cancelled (sticky) for every iteration, yet XP is subtracted before the cancellation check runs")
-		void addLevels_cancelledEvent_stillConsumesExperienceEveryIteration() {
+		@DisplayName("T-253/US-43: a pre-cancelled event undoes its own step and stops: no level, no XP spent, counter 0")
+		void addLevels_cancelledEvent_changesNothing() {
 			try (BukkitStatics bukkit = BukkitStatics.install()) {
 				Level level = new Level(10, 1000);
 				level.setFormula("50"); // fixed requirement per level
@@ -170,10 +198,9 @@ class LevelTest {
 
 				int counter = level.addLevels(3, event);
 
-				assertEquals(3, counter, "the loop still iterates 3 times even though every attempt is cancelled");
-				assertEquals(0, level.getLevelValue(), "cancelled on every iteration, so the level never advances");
-				assertEquals(50D, level.getExperience(), 0.0001,
-						"200 - 3*50 = 50: XP is subtracted before event.isCancelled() is consulted (line-order bug)");
+				assertEquals(0, counter, "the first cancelled attempt stops the loop and counts nothing");
+				assertEquals(0, level.getLevelValue(), "cancelled, so the level never advances");
+				assertEquals(200D, level.getExperience(), 0.0001, "a cancelled level-up eats no XP");
 			}
 		}
 	}
@@ -183,8 +210,8 @@ class LevelTest {
 	class AddExperienceWithEventTest {
 
 		@Test
-		@DisplayName("a permanently-cancelled event drains XP every loop pass (levelValue never advances, so nextLevelAmount never changes), not just once")
-		void addExperience_cancelledEvent_keepsDrainingUntilBelowRequirement() {
+		@DisplayName("T-253: a cancelled level-up rolls back its own step and stops: level stays, XP untouched")
+		void addExperience_cancelledEvent_changesNothing() {
 			try (BukkitStatics bukkit = BukkitStatics.install()) {
 				Level level = new Level(10, 1000);
 				level.setFormula("100"); // fixed requirement, independent of levelValue
@@ -194,12 +221,42 @@ class LevelTest {
 
 				level.addExperience(250, event);
 
-				assertEquals(0, level.getLevelValue(), "every attempt is cancelled, so the level never advances");
-				assertEquals(50D, level.getExperience(), 0.0001,
-						"250 - 100 - 100 = 50: the while-loop keeps re-attempting and re-deducting the same "
-						+ "unreachable level's cost because nothing distinguishes an already-cancelled attempt "
-						+ "from a fresh one");
+				assertEquals(0, level.getLevelValue(), "cancelled, so the level never advances");
+				assertEquals(250D, level.getExperience(), 0.0001, "a cancelled level-up eats no XP");
 			}
+		}
+
+		@Test
+		@DisplayName("T-253: the listener reads the level just reached, once per level (seen [1, 2] for a two-level jump)")
+		void addExperience_listenerReadsTheLevelJustReached() {
+			try (BukkitStatics bukkit = BukkitStatics.install()) {
+				Level level = new Level(10, 1000);
+				level.setFormula("100");
+				List<Integer> seen = new ArrayList<>();
+				TestLevelUpEvent event = new TestLevelUpEvent(level);
+				doAnswer(inv -> {
+					seen.add(event.getLevel().getLevelValue());
+					return null;
+				}).when(bukkit.pluginManager()).callEvent(any());
+
+				level.addExperience(250, event);
+
+				assertEquals(List.of(1, 2), seen);
+				assertEquals(2, level.getLevelValue());
+				assertEquals(50D, level.getExperience(), 0.0001);
+			}
+		}
+
+		@Test
+		@DisplayName("T-255: a player at max level collects no XP")
+		void addExperience_atMaxLevel_addsNothing() {
+			Level level = new Level(1, 1000);
+			level.setFormula("100");
+			level.setLevelValue(1);
+
+			level.addExperience(500, false, null);
+
+			assertEquals(0D, level.getExperience(), 0.0001);
 		}
 	}
 

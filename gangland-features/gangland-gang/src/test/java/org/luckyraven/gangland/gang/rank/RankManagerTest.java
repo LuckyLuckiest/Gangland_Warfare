@@ -7,16 +7,25 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
+import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankParentRepository;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankRepository;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
 import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -41,6 +50,7 @@ class RankManagerTest {
 	private IRepository<Permission>         permissionRepo;
 	private IRepository<RankPermission>     rankPermissionRepo;
 	private PermissionRegistryContract      permissionRegistry;
+	private GangRules                       rules;
 	private RankManager                     manager;
 
 	@SuppressWarnings("unchecked")
@@ -54,6 +64,8 @@ class RankManagerTest {
 		permissionRepo     = mock(IRepository.class);
 		rankPermissionRepo = mock(IRepository.class);
 		permissionRegistry = mock(PermissionRegistryContract.class);
+		rules              = mock(GangRules.class);
+		when(rules.getRankPreset()).thenReturn(List.of("member", "officer", "owner"));
 
 		when(registry.getRepository(Rank.class)).thenReturn(rankRepo);
 		when(registry.getRepository(RankParent.class)).thenReturn(rankParentRepo);
@@ -65,7 +77,7 @@ class RankManagerTest {
 		when(permissionRepo.loadAll()).thenReturn(List.of());
 		when(rankPermissionRepo.loadAll()).thenReturn(Set.of());
 
-		manager = new RankManager(registry, permissionRegistry);
+		manager = new RankManager(registry, permissionRegistry, rules);
 	}
 
 	@AfterEach
@@ -203,7 +215,7 @@ class RankManagerTest {
 	class TreeConstructionTest {
 
 		@Test
-		@DisplayName("wires the head rank as root and the tail as its child, reading the child id from RankParent.parentId() "
+		@DisplayName("wires the head rank as root and the tail as its child, reading the child id from RankParent.childId() "
 		             + "(Obs. #22, gangs-ranks-mail.md: the field named parentId actually stores the CHILD id)")
 		void initialize_wiresHeadAsRootAndTailAsChild() {
 			// Mirrors GanglandDatabase.insertInitialData: tail inserted first (id 1), head second (id 2),
@@ -222,20 +234,50 @@ class RankManagerTest {
 		}
 
 		@Test
-		@DisplayName("Observation #13 (gangs-ranks-mail.md): when no persisted rank matches Gang.Rank.Head, a brand-new "
-		             + "detached Rank becomes the tree root instead of failing loudly")
-		void initialize_headNameMissing_installsDetachedFallbackRoot() {
+		@DisplayName("GR-13: when no persisted rank matches Gang.Rank.Head, the persisted root is kept and nothing is created")
+		void initialize_headNameMissing_keepsPersistedRootAndWarns() {
 			GangSettings.bind(new FakeGangSettingsContract().withRankHead("does-not-exist"));
 			Rank onlyRank = new Rank("member", 2);
 			when(rankRepo.loadAll()).thenReturn(List.of(onlyRank));
 
 			manager.initialize();
 
-			Rank root = manager.getRankTree().getRoot().getData();
-			assertEquals("does-not-exist", root.getName());
-			assertNotSame(onlyRank, root, "the fallback root is a fresh Rank, not the persisted one");
-			assertFalse(manager.getRanks().containsValue(root),
-					"the fallback root is never added to the ranks map, so it is unreachable from RankManager.get(...)");
+			assertSame(onlyRank, manager.getRankTree().getRoot().getData(), "the persisted root stays the root");
+			assertFalse(manager.getRanks().values().stream().anyMatch(rank -> rank.getName().equals("does-not-exist")),
+					"no rank named after the renamed head is invented on a non-empty table");
+			verify(rankRepo, never()).save(any());
+		}
+
+		@Test
+		@DisplayName("GR-13: several persisted roots with a missing head keep the lowest id as the root")
+		void initialize_headNameMissing_severalRoots_keepsLowestId() {
+			GangSettings.bind(new FakeGangSettingsContract().withRankHead("does-not-exist"));
+			Rank higher = new Rank("alpha", 5);
+			Rank lower  = new Rank("beta", 2);
+			when(rankRepo.loadAll()).thenReturn(List.of(higher, lower));
+
+			manager.initialize();
+
+			assertSame(lower, manager.getRankTree().getRoot().getData(), "the lowest-id root is kept");
+		}
+
+		@Test
+		@DisplayName("a renamed Rank.Tail on a non-empty table creates nothing; the persisted ranks and links stay as they are")
+		void initialize_tailNameMissing_warnsAndCreatesNothing() {
+			GangSettings.bind(new FakeGangSettingsContract().withRankTail("does-not-exist"));
+			Rank member  = new Rank("member", 1);
+			Rank officer = new Rank("officer", 2);
+			Rank owner   = new Rank("owner-old", 3);
+			when(rankRepo.loadAll()).thenReturn(List.of(member, officer, owner));
+			when(rankParentRepo.loadAll()).thenReturn(Set.of(new RankParent(1, 2), new RankParent(2, 3)));
+
+			manager.initialize();
+
+			assertEquals(3, manager.getRanks().size(), "no rank is created for the renamed tail");
+			assertNull(manager.get("does-not-exist"));
+			assertEquals(Set.of(new RankParent(1, 2), new RankParent(2, 3)), manager.getRanksParent());
+			verify(rankRepo, never()).save(any());
+			verify(rankParentRepo, never()).save(any());
 		}
 
 		@Test
@@ -253,37 +295,69 @@ class RankManagerTest {
 	}
 
 	@Nested
-	@DisplayName("seedInitialRanks() - WS5 G2 step 7b, moved from GanglandDatabase.insertInitialData")
+	@DisplayName("initialize() seeds the preset ladder on an empty rank table only (D13 A)")
 	class SeedInitialRanksTest {
 
 		/**
-		 * Before this gate, rank seeding ran once from {@code GanglandDatabase.insertInitialData()} — never from
-		 * {@code RankManager} at all. Concrete-class mocks (not the {@code IRepository<Rank>} interface mocks the
-		 * outer {@code setUp()} uses) so {@code instanceof RankRepository}/{@code RankParentRepository} — the guard
-		 * {@code seedInitialRanks} actually branches on — passes.
+		 * D13 = A: the preset ladder is written only when the rank table is empty (a fresh install). Concrete-class
+		 * mocks so {@code instanceof RankRepository}/{@code RankParentRepository} - the guard RankManager branches on -
+		 * passes.
 		 */
 		@Test
-		@DisplayName("initialize() seeds head/tail ranks and their parent relation before loadAll() reads them")
-		void initialize_seedsHeadAndTailBeforeLoading() throws Exception {
-			RepositoryRegistry      seedRegistry = mock(RepositoryRegistry.class);
-			RankRepository          realRankRepo = mock(RankRepository.class);
-			RankParentRepository    realParentRepo = mock(RankParentRepository.class);
+		@DisplayName("GR-13 / D13 A: an empty rank table seeds the preset ladder member -> officer -> owner, then loads it")
+		void initialize_emptyTable_seedsPreset() throws Exception {
+			RepositoryRegistry   seedRegistry = mock(RepositoryRegistry.class);
+			RankRepository       realRankRepo = mock(RankRepository.class);
+			RankParentRepository realParentRepo = mock(RankParentRepository.class);
 
 			when(seedRegistry.getRepository(Rank.class)).thenReturn(realRankRepo);
 			when(seedRegistry.getRepository(RankParent.class)).thenReturn(realParentRepo);
 			when(seedRegistry.getRepository(Permission.class)).thenReturn(permissionRepo);
 			when(seedRegistry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
 
-			when(realRankRepo.insertInitialRanks(GangSettings.getGangRankHead(), GangSettings.getGangRankTail()))
-					.thenReturn(new int[]{2, 1});
-			when(realRankRepo.loadAll()).thenReturn(List.of());
-			when(realParentRepo.loadAll()).thenReturn(Set.of());
+			Rank member  = new Rank("member", 1);
+			Rank officer = new Rank("officer", 2);
+			Rank owner   = new Rank("owner", 3);
+			when(realRankRepo.totalRanks()).thenReturn(0);
+			when(realRankRepo.loadAll()).thenReturn(List.of(member, officer, owner));
+			when(realParentRepo.loadAll()).thenReturn(Set.of(new RankParent(1, 2), new RankParent(2, 3)));
+			when(rules.getPresetPermissions("member")).thenReturn(List.of("gangland.gang.deposit"));
+			when(rules.getPresetPermissions("officer")).thenReturn(List.of("gangland.gang.deposit",
+			                                                              "gangland.gang.invite"));
 
-			RankManager seedingManager = new RankManager(seedRegistry, permissionRegistry);
+			RankManager seedingManager = new RankManager(seedRegistry, permissionRegistry, rules);
 			seedingManager.initialize();
 
-			verify(realRankRepo).insertInitialRanks(GangSettings.getGangRankHead(), GangSettings.getGangRankTail());
-			verify(realParentRepo).insertInitialRelation(2, 1);
+			verify(realRankRepo, times(3)).insertNow(any(Rank.class));
+			verify(realParentRepo).insertInitialRelation(1, 2);
+			verify(realParentRepo).insertInitialRelation(2, 3);
+			assertEquals("member", seedingManager.getRankTree().getRoot().getData().getName());
+			assertTrue(member.contains("gangland.gang.deposit"), "the member rank gets its preset node");
+			assertTrue(officer.contains("gangland.gang.invite"), "the officer rank gets its preset node");
+			assertFalse(owner.contains("gangland.gang.invite"), "the owner rank gets only the nodes listed for it");
+		}
+
+		@Test
+		@DisplayName("GR-13 / D13 A: a non-empty rank table is never touched - no rank or link is inserted on boot")
+		void initialize_nonEmptyTable_seedsNothing() throws Exception {
+			RepositoryRegistry   seedRegistry = mock(RepositoryRegistry.class);
+			RankRepository       realRankRepo = mock(RankRepository.class);
+			RankParentRepository realParentRepo = mock(RankParentRepository.class);
+
+			when(seedRegistry.getRepository(Rank.class)).thenReturn(realRankRepo);
+			when(seedRegistry.getRepository(RankParent.class)).thenReturn(realParentRepo);
+			when(seedRegistry.getRepository(Permission.class)).thenReturn(permissionRepo);
+			when(seedRegistry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
+
+			when(realRankRepo.totalRanks()).thenReturn(2);
+			when(realRankRepo.loadAll()).thenReturn(List.of(new Rank("member", 1), new Rank("owner", 2)));
+			when(realParentRepo.loadAll()).thenReturn(Set.of(new RankParent(1, 2)));
+
+			new RankManager(seedRegistry, permissionRegistry, rules).initialize();
+
+			verify(realRankRepo, never()).insertNow(any(Rank.class));
+			verify(realParentRepo, never()).insertInitialRelation(anyInt(), anyInt());
+			verify(rules, never()).getRankPreset();
 		}
 
 		@Test
@@ -378,8 +452,8 @@ class RankManagerTest {
 	class ClearReloadTest {
 
 		@Test
-		@DisplayName("clear() resets ranks and rankTree but leaves permissions, ranksParent and ranksPermissions populated")
-		void clear_wipesRanksAndTree_butNotThePermissionOrParentSets() {
+		@DisplayName("GR-12: clear() empties ranks, rankTree, permissions, ranksParent and ranksPermissions")
+		void clear_wipesEverything() {
 			Rank tail = new Rank("owner", 1);
 			Rank head = new Rank("member", 2);
 			when(rankRepo.loadAll()).thenReturn(List.of(tail, head));
@@ -398,18 +472,14 @@ class RankManagerTest {
 
 			assertTrue(manager.getRanks().isEmpty(), "clear() empties the ranks map");
 			assertTrue(manager.getRankTree().isEmpty(), "clear() empties the rank tree");
-			assertEquals(1, manager.getRanksParent().size(),
-					"ranksParent survives clear() untouched - Observation #12");
-			assertEquals(1, manager.getPermissions().size(),
-					"permissions survives clear() untouched - Observation #12");
-			assertEquals(1, manager.getRanksPermissions().size(),
-					"ranksPermissions survives clear() untouched - Observation #12");
+			assertTrue(manager.getRanksParent().isEmpty(), "clear() empties ranksParent (GR-12)");
+			assertTrue(manager.getPermissions().isEmpty(), "clear() empties permissions (GR-12)");
+			assertTrue(manager.getRanksPermissions().isEmpty(), "clear() empties ranksPermissions (GR-12)");
 		}
 
 		@Test
-		@DisplayName("a reload after a rank was actually removed from the backing store crashes initialize(), because the "
-		             + "stale ranksParent entry from before clear() now points at a rank id that never gets reloaded")
-		void clear_thenReinitializeAfterARankWasDeletedUpstream_throwsNpeBuildingTheTree() {
+		@DisplayName("GR-12: a reload after clear() does not NPE on a stale ranksParent entry (the set is now empty)")
+		void clear_thenReinitializeAfterARankWasDeletedUpstream_doesNotThrow() {
 			Rank tail = new Rank("owner", 1);
 			Rank head = new Rank("member", 2);
 			// First load: both ranks and the head-to-tail link exist.
@@ -423,9 +493,220 @@ class RankManagerTest {
 			// /glw rank delete, which per Observation #9 does not prune RankManager.ranksParent either) - the
 			// repository now reports zero rank_parent rows and only the surviving "member" rank, but the
 			// in-memory ranksParent set from before clear() still references tail's id (1).
-			assertThrows(NullPointerException.class, manager::initialize,
-					"initialize() looks up ranks.get(rp.parentId()) unguarded while building the child-name list; "
-					+ "a stale ranksParent entry pointing at a now-unloaded rank id NPEs instead of being skipped");
+			assertDoesNotThrow(manager::initialize,
+					"clear() dropped the stale ranksParent entry, so the reload has nothing to resolve");
+		}
+
+	}
+
+	@Nested
+	@DisplayName("T-266: 0.17.0 one-shot grant of gangland.turf.upgrade to ranks holding gangland.gang.withdraw")
+	class TurfUpgradeMigration {
+
+		/** In-memory record of which migrations ran, standing in for the gang_migration table. */
+		static class FakeMigrations implements GangMigrationsContract {
+
+			private final Set<String> done = new HashSet<>();
+
+			@Override
+			public boolean isDone(String id) {
+				return done.contains(id);
+			}
+
+			@Override
+			public void markDone(String id) {
+				done.add(id);
+			}
+		}
+
+		private static final String TURF_UPGRADE = GangPermissions.TURF_UPGRADE;
+
+		/** A non-empty, not freshly seeded tree: officer holds withdraw, member holds only deposit. */
+		private void persistedTree() {
+			Rank member  = new Rank("member", 1);
+			Rank officer = new Rank("officer", 2);
+			when(rankRepo.loadAll()).thenReturn(List.of(member, officer));
+			when(rankParentRepo.loadAll()).thenReturn(Set.of());
+			when(permissionRepo.loadAll()).thenReturn(List.of(new Permission(10, GangPermissions.WITHDRAW),
+			                                                  new Permission(11, GangPermissions.DEPOSIT)));
+			when(rankPermissionRepo.loadAll()).thenReturn(Set.of(new RankPermission(2, 10),
+			                                                     new RankPermission(1, 11)));
+		}
+
+		@Test
+		@DisplayName("existingTree_withdrawRankGetsTurfUpgradeOnce: officer gets the node, member does not, and the migration is recorded")
+		void existingTree_withdrawRankGetsTurfUpgradeOnce() {
+			persistedTree();
+			FakeMigrations migrations = new FakeMigrations();
+
+			RankManager upgrading = new RankManager(registry, permissionRegistry, rules, migrations);
+			upgrading.initialize();
+
+			assertTrue(upgrading.get("officer").contains(TURF_UPGRADE));
+			assertFalse(upgrading.get("member").contains(TURF_UPGRADE));
+			assertTrue(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
+		@DisplayName("T-302: the grants go through the checked migration; the marker waits for the rows to commit")
+		void grants_goThroughCheckedMigration_markerWaitsForCommit() {
+			persistedTree();
+			List<Runnable> pending = new java.util.ArrayList<>();
+			List<IRepository<?>> migrated = new java.util.ArrayList<>();
+			FakeMigrations migrations = new FakeMigrations() {
+				@Override
+				public <T> void migrate(String id, IRepository<T> repository,
+				                        java.util.function.Supplier<java.util.Collection<T>> rows) {
+					migrated.add(repository);
+					pending.add(() -> {
+						repository.saveAll(rows.get());
+						markDone(id);
+					});
+				}
+			};
+
+			RankManager upgrading = new RankManager(registry, permissionRegistry, rules, migrations);
+			upgrading.initialize();
+
+			assertTrue(upgrading.get("officer").contains(TURF_UPGRADE));
+			assertEquals(List.of(rankPermissionRepo), migrated, "the link rows are written by the migration");
+			verify(rankPermissionRepo, never()).save(any(RankPermission.class));
+			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION), "no marker before the rows commit");
+
+			pending.forEach(Runnable::run);
+
+			assertTrue(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		@DisplayName("T-302: a committed permission write links the rows, and only then marks the migration done")
+		void checkedPermissionWrite_committed_linksThenMarks() {
+			AbstractRepository<Permission> checked = mock(AbstractRepository.class);
+			permissionRepo = checked;
+			when(registry.getRepository(Permission.class)).thenReturn(checked);
+			persistedTree();
+			List<IRepository<?>> linked = new java.util.ArrayList<>();
+			FakeMigrations migrations = new FakeMigrations() {
+				@Override
+				public <T> void migrate(String id, IRepository<T> repository,
+				                        java.util.function.Supplier<java.util.Collection<T>> rows) {
+					linked.add(repository);
+					markDone(id);
+				}
+			};
+
+			RankManager upgrading = new RankManager(registry, permissionRegistry, rules, migrations);
+			upgrading.initialize();
+
+			org.mockito.ArgumentCaptor<java.util.function.Consumer> onResult =
+					org.mockito.ArgumentCaptor.forClass(java.util.function.Consumer.class);
+			verify(checked).saveAllChecked(org.mockito.ArgumentMatchers.anyCollection(), onResult.capture());
+			assertTrue(linked.isEmpty(), "no link rows before the permission write commits");
+			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+
+			onResult.getValue().accept(true);
+
+			assertEquals(List.of(rankPermissionRepo), linked);
+			assertTrue(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
+		@SuppressWarnings({"unchecked", "rawtypes"})
+		@DisplayName("T-302: a failed permission write links nothing and marks nothing")
+		void checkedPermissionWrite_failed_linksNothingAndMarksNothing() {
+			AbstractRepository<Permission> checked = mock(AbstractRepository.class);
+			permissionRepo = checked;
+			when(registry.getRepository(Permission.class)).thenReturn(checked);
+			persistedTree();
+			List<IRepository<?>> linked = new java.util.ArrayList<>();
+			FakeMigrations migrations = new FakeMigrations() {
+				@Override
+				public <T> void migrate(String id, IRepository<T> repository,
+				                        java.util.function.Supplier<java.util.Collection<T>> rows) {
+					linked.add(repository);
+					markDone(id);
+				}
+			};
+
+			RankManager upgrading = new RankManager(registry, permissionRegistry, rules, migrations);
+			upgrading.initialize();
+
+			org.mockito.ArgumentCaptor<java.util.function.Consumer> onResult =
+					org.mockito.ArgumentCaptor.forClass(java.util.function.Consumer.class);
+			verify(checked).saveAllChecked(org.mockito.ArgumentMatchers.anyCollection(), onResult.capture());
+			onResult.getValue().accept(false);
+
+			assertTrue(linked.isEmpty(), "migrate is never called when the permission rows did not commit");
+			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
+		@DisplayName("ownerRemovedNode_isNotGrantedAgain: a node the owner removed stays removed on the next boot")
+		void ownerRemovedNode_isNotGrantedAgain() {
+			persistedTree();
+			FakeMigrations migrations = new FakeMigrations();
+			RankManager first = new RankManager(registry, permissionRegistry, rules, migrations);
+			first.initialize();
+			first.removePermission(first.get("officer"), TURF_UPGRADE);
+
+			RankManager second = new RankManager(registry, permissionRegistry, rules, migrations);
+			second.initialize();
+
+			assertFalse(second.get("officer").contains(TURF_UPGRADE));
+		}
+
+		@Test
+		@DisplayName("failedPermissionRead_isNotMarkedDone: an empty permission table read skips the grant without marking it done")
+		void failedPermissionRead_isNotMarkedDone() {
+			persistedTree();
+			when(permissionRepo.loadAll()).thenReturn(List.of());
+			FakeMigrations migrations = new FakeMigrations();
+
+			new RankManager(registry, permissionRegistry, rules, migrations).initialize();
+
+			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
+		@DisplayName("T-283: a repository that reports a failed load skips the grant without marking it done")
+		void reportedFailedLoad_isNotMarkedDone() {
+			persistedTree();
+			@SuppressWarnings("unchecked")
+			IRepository<RankParent> failing = mock(IRepository.class,
+			                                       org.mockito.Mockito.withSettings().extraInterfaces(LoadOutcome.class));
+			when(failing.loadAll()).thenReturn(Set.of());
+			when(((LoadOutcome) failing).lastLoadFailed()).thenReturn(true);
+			when(registry.getRepository(RankParent.class)).thenReturn(failing);
+			FakeMigrations migrations = new FakeMigrations();
+
+			RankManager manager = new RankManager(registry, permissionRegistry, rules, migrations);
+			manager.initialize();
+
+			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+			assertFalse(manager.get("officer").contains(TURF_UPGRADE));
+		}
+
+		@Test
+		@DisplayName("freshInstall_marksDoneWithoutLog: the seeding path records the migration as done")
+		void freshInstall_marksDoneWithoutLog() throws Exception {
+			RepositoryRegistry   seedRegistry = mock(RepositoryRegistry.class);
+			RankRepository       realRankRepo = mock(RankRepository.class);
+			RankParentRepository realParentRepo = mock(RankParentRepository.class);
+
+			when(seedRegistry.getRepository(Rank.class)).thenReturn(realRankRepo);
+			when(seedRegistry.getRepository(RankParent.class)).thenReturn(realParentRepo);
+			when(seedRegistry.getRepository(Permission.class)).thenReturn(permissionRepo);
+			when(seedRegistry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
+			when(realRankRepo.totalRanks()).thenReturn(0);
+			when(realRankRepo.loadAll()).thenReturn(List.of(new Rank("member", 1), new Rank("officer", 2),
+			                                                new Rank("owner", 3)));
+			when(realParentRepo.loadAll()).thenReturn(Set.of(new RankParent(1, 2), new RankParent(2, 3)));
+			FakeMigrations migrations = new FakeMigrations();
+
+			new RankManager(seedRegistry, permissionRegistry, rules, migrations).initialize();
+
+			assertTrue(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
 		}
 
 	}

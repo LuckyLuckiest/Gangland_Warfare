@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.database.repositories.player;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -19,7 +20,13 @@ import java.util.*;
 import java.util.function.Consumer;
 
 @Repository(value = User.class, isGeneric = true)
+@CustomLog
 public class UserRepository extends AbstractRepository<User<? extends OfflinePlayer>> {
+
+	/** A SQL NULL reads as 0; any other value is read through Number (MySQL may return Long/BigDecimal). */
+	private static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
+	}
 
 	private final UserTable userTable;
 
@@ -42,15 +49,22 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 
 		for (Object[] result : data) {
 			int    v          = 0;
-			UUID   uuid       = UUID.fromString(String.valueOf(result[v++]));
-			double balance    = (double) result[v++];
-			int    kills      = (int) result[v++];
-			int    deaths     = (int) result[v++];
-			int    mobKills   = (int) result[v++];
-			double bounty     = (double) result[v++];
-			int    level      = (int) result[v++];
-			double experience = (double) result[v++];
-			int    wanted     = (int) result[v++];
+			UUID uuid;
+			try {
+				uuid = UUID.fromString(String.valueOf(result[v++]));
+			} catch (IllegalArgumentException exception) {
+				// T-262: a NULL or malformed uuid skips this row instead of failing the whole load
+				log.warn("Skipping a user row with a bad uuid '{}'", result[0]);
+				continue;
+			}
+			double balance    = num(result[v++]).doubleValue();
+			int    kills      = num(result[v++]).intValue();
+			int    deaths     = num(result[v++]).intValue();
+			int    mobKills   = num(result[v++]).intValue();
+			double bounty     = num(result[v++]).doubleValue();
+			int    level      = num(result[v++]).intValue();
+			double experience = num(result[v++]).doubleValue();
+			int    wanted     = num(result[v++]).intValue();
 			// NULL = a row saved before the ledger existed
 			String posters    = result.length > v && result[v] != null ? String.valueOf(result[v]) : null;
 

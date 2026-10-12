@@ -27,7 +27,8 @@ import org.luckyraven.keystone.bean.Qualifier;
 
 class GangLeaveCommand extends SubArgument {
 
-	private static final long CONFIRM_WINDOW_TICKS = 20L * 60L;
+	/** 30 s - the Keystone confirm lock's own expiry (T-195). */
+	private static final long CONFIRM_WINDOW_TICKS = 20L * 30L;
 
 	private final JavaPlugin                           gangland;
 	private final UserManager<Player>                userManager;

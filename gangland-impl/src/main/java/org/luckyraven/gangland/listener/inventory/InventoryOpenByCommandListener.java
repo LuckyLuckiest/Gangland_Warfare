@@ -83,6 +83,12 @@ public class InventoryOpenByCommandListener implements Listener {
 			                               .allMatch(i -> command[i].equals(inventoryCommandArr[i]));
 			if (!arraysEqual) continue;
 
+			// T-226: a false Open.Condition skips this menu without opening it or cancelling the command.
+			String condition = openInventory.condition();
+			if (condition != null && !conditionEvaluator.evaluate(player, condition)) {
+				continue;
+			}
+
 			String permission = builder.permission();
 			if (permission != null && !player.hasPermission(permission)) break;
 

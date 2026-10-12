@@ -40,9 +40,8 @@ import static org.mockito.Mockito.verify;
  * entirely through the public {@code tick(Map)} entry point against fake repositories/contracts — matches the
  * "CaptureService maths" bullet in turf.md's Test Surface section.
  *
- * <p>{@link #emptyTurf_decaysAtFixedRateInsteadOfRespectingAbandonGrace()} pins Observation #12 (turf.md):
- * {@code Abandon_Grace_Seconds} is never consulted on the owned-turf path — an emptied contest decays at the fixed
- * 1v0 (-1 net) rate and can take up to {@code Duration_Seconds} to cancel, not the configured grace window.
+ * <p>{@link #emptyTurf_freezesDuringGraceThenAbandons()} (W2-R2, TF-12) replaces the old Observation #12 pin: an empty
+ * contest freezes its bar and ends ABANDONED once Abandon_Grace_Seconds has passed since an attacker was last counted.
  *
  * <p>{@link #thirdGangInside_isIgnoredEntirely()} pins Observation #26: only the registered challenger gang's
  * members count on an owned turf; a third gang standing in the same turf neither helps nor hinders.
@@ -81,7 +80,7 @@ class CaptureServiceOwnedTurfTest {
 	private CaptureService service(int durationSeconds) {
 		CaptureSettings settings = CaptureFixtures.settings(durationSeconds, 15, 15, 10,
 		                                                    new int[]{25, 50, 75}, 90, 90);
-		return new CaptureService(turfManager, gangs, users, settings, sounds);
+		return new CaptureService(turfManager, gangs, users, settings, sounds, new TurfOwnership(turfManager));
 	}
 
 	private TurfRuntimeState contestAt(double progress) {
@@ -177,18 +176,28 @@ class CaptureServiceOwnedTurfTest {
 	}
 
 	@Test
-	@DisplayName("empty turf decays at the fixed -1 net rate instead of respecting Abandon_Grace_Seconds")
-	void emptyTurf_decaysAtFixedRateInsteadOfRespectingAbandonGrace() {
-		// Abandon_Grace_Seconds is configured very short (1s) here to make the point: it is never read on this
-		// path, so the contest survives well past it and only ends once the -1v0 decay walks progress to zero.
-		CaptureSettings settings = CaptureFixtures.settings(20, 15, 1, 10, new int[]{25, 50, 75}, 90, 90);
-		CaptureService  service  = new CaptureService(turfManager, gangs, users, settings, sounds);
-		contestAt(3.0); // base = 5, one tick of -1 net drives 3 -> 0 (clamped), not -2
+	@DisplayName("TF-12: an empty owned contest freezes during Abandon_Grace_Seconds, then ends ABANDONED")
+	void emptyTurf_freezesDuringGraceThenAbandons() {
+		long            t0       = 100_000_000L;
+		CaptureSettings settings = CaptureFixtures.settings(20, 15, 15, 10, new int[]{25, 50, 75}, 90, 90);
+		CaptureService  service  = new CaptureService(turfManager, gangs, users, settings, sounds,
+		                                              new TurfOwnership(turfManager));
+		TurfRuntimeState state = contestAt(40.0);
+		state.setLastChallengerSeenAt(t0);
 
-		tick(service, new HashMap<>());
+		service.tick(new HashMap<>(), t0 + 10_000L);
+		assertEquals(40.0, state.getCaptureProgress(), 1e-9, "nobody inside: the bar freezes");
+		assertEquals(TurfState.CONTESTING, state.getState());
 
-		TurfRuntimeState state = turfManager.getRuntimeState(turf.getId());
-		assertEquals(TurfState.IDLE, state.getState(), "0 challengers cancels as ABANDONED on this same tick");
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			service.tick(new HashMap<>(), t0 + 16_000L);
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager()).callEvent(captor.capture());
+			assertInstanceOf(TurfCaptureFailedEvent.class, captor.getValue());
+			assertEquals(TurfCaptureFailedEvent.Reason.ABANDONED,
+			            ((TurfCaptureFailedEvent) captor.getValue()).getReason());
+		}
+		assertEquals(TurfState.IDLE, state.getState(), "past the 15 s grace the contest ends ABANDONED");
 	}
 
 	@Test
@@ -211,6 +220,30 @@ class CaptureServiceOwnedTurfTest {
 			assertInstanceOf(TurfCaptureFailedEvent.class, captor.getValue());
 			assertEquals(TurfCaptureFailedEvent.Reason.ABANDONED,
 			            ((TurfCaptureFailedEvent) captor.getValue()).getReason());
+		}
+	}
+
+	@Test
+	@DisplayName("a DEFENDED cancel carries the challenger gang id on the failed event")
+	void defendedCancel_carriesChallenger() {
+		CaptureService service = service(1); // base = 100
+		contestAt(10.0);
+		Map<UUID, Turf> cache = new HashMap<>();
+		insidePlayerTracked(challenger.getId(), cache); // 1 challenger present
+		for (int i = 0; i < 5; i++) {
+			insidePlayerTracked(owner.getId(), cache); // 5 defenders
+		}
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			for (UUID id : cache.keySet()) {
+				Player player = playerFor(cache, id);
+				bukkit.statics().when(() -> Bukkit.getPlayer(id)).thenReturn(player);
+			}
+			service.tick(cache);
+
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager()).callEvent(captor.capture());
+			assertEquals(challenger.getId(), ((TurfCaptureFailedEvent) captor.getValue()).getChallengerGangId());
 		}
 	}
 
@@ -295,8 +328,9 @@ class CaptureServiceOwnedTurfTest {
 			service.tick(cache);
 
 			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
-			// 3 progress-milestone events (25, 50, 75) plus the TurfCapturedEvent from completion.
-			verify(bukkit.pluginManager(), org.mockito.Mockito.times(4)).callEvent(captor.capture());
+			// 3 progress-milestone events (25, 50, 75) plus the TurfOwnerChangedEvent (cause CAPTURE) and the
+			// TurfCapturedEvent from completion (W0-A: a capture now fires one owner-changed event).
+			verify(bukkit.pluginManager(), org.mockito.Mockito.times(5)).callEvent(captor.capture());
 			long progressEvents = captor.getAllValues().stream().filter(TurfCaptureProgressEvent.class::isInstance).count();
 			long capturedEvents = captor.getAllValues().stream().filter(TurfCapturedEvent.class::isInstance).count();
 			assertEquals(3, progressEvents);
@@ -329,7 +363,7 @@ class CaptureServiceOwnedTurfTest {
 	@DisplayName("a dead attacker is excluded from the head-count, pausing the capture")
 	void deadPlayer_excludedFromClassification() {
 		CaptureService service = service(20); // base = 5
-		contestAt(50.0);
+		contestAt(50.0).setLastChallengerSeenAt(System.currentTimeMillis());
 
 		Map<UUID, Turf> cache = new HashMap<>();
 		Player dead = CaptureFixtures.deadPlayer();
@@ -339,7 +373,7 @@ class CaptureServiceOwnedTurfTest {
 
 		tick(service, cache);
 
-		// Both challengers and defenders read 0 -> the "both zero" -1 decay branch applies.
-		assertEquals(45.0, turfManager.getRuntimeState(turf.getId()).getCaptureProgress(), 1e-9);
+		// Both sides read 0 -> the one bar freezes (TF-12), it does not decay.
+		assertEquals(50.0, turfManager.getRuntimeState(turf.getId()).getCaptureProgress(), 1e-9);
 	}
 }

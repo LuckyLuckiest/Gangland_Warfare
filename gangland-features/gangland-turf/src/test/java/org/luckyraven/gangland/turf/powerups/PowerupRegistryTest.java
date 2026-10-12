@@ -3,11 +3,21 @@ package org.luckyraven.gangland.turf.powerups;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import org.luckyraven.gangland.turf.support.YamlFixture;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.persistence.config.ConfigParser;
+import org.luckyraven.keystone.persistence.config.ConfigReport;
+
+import java.io.StringReader;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Proves {@link PowerupRegistry#replaceAll(Map)} is a defensive, atomic swap: mutating the caller's source map
@@ -78,6 +88,99 @@ class PowerupRegistryTest {
 		assertFalse(registry.exists("old_entry"), "the old generation is gone entirely, not merged");
 		assertTrue(registry.exists("new_entry"));
 		assertEquals(1, registry.all().size());
+	}
+
+	@Test
+	@DisplayName("W2-Q: a reinforced_defense entry from an old file is skipped, the rest of the catalogue loads (D4)")
+	void loader_skipsReinforcedDefense() throws Exception {
+		PowerupRegistry registry = load("Powerups:\n"
+		                                + "   reinforced_defense:\n"
+		                                + "      Display_Name: \"&cReinforced\"\n"
+		                                + "      Cost: 8000\n"
+		                                + "      Effect_Type: CAPTURE_DEFENSE_BONUS\n"
+		                                + "      Magnitude: 1.0\n"
+		                                + "      Duration_Seconds: 1800\n"
+		                                + "   small_income_boost:\n"
+		                                + "      Display_Name: \"&aSmall\"\n"
+		                                + "      Cost: 300\n"
+		                                + "      Effect_Type: INCOME_MULTIPLIER\n"
+		                                + "      Magnitude: 1.25\n"
+		                                + "      Duration_Seconds: 3600\n");
+
+		assertEquals(Set_of("small_income_boost"), registry.ids());
+	}
+
+	@Test
+	@DisplayName("W2-Q: the shipped catalogue has no reinforced_defense and prices the boosts 300 and 1000 (D4, D9)")
+	void shippedCatalogue_hasNoReinforcedDefense() throws Exception {
+		PowerupRegistry registry = load(YamlFixture.shipped("/turf/turf_powerups.yml"));
+
+		assertFalse(registry.exists("reinforced_defense"));
+		assertTrue(registry.exists("garrison_discount"));
+		assertEquals(0, new BigDecimal("300").compareTo(registry.get("small_income_boost").cost()));
+		assertEquals(0, new BigDecimal("1000").compareTo(registry.get("large_income_boost").cost()));
+	}
+
+	@Test
+	@DisplayName("W2-Q: Garrison.Cost_Per_Guard is read from the YAML (TF-17)")
+	void garrisonCost_fromYaml() throws Exception {
+		PowerupRegistry registry = load("Garrison:\n   Cost_Per_Guard: 1234\n"
+		                                + "Powerups:\n   a:\n"
+		                                + "      Cost: 1\n      Effect_Type: INCOME_MULTIPLIER\n"
+		                                + "      Magnitude: 1.1\n      Duration_Seconds: 60\n");
+
+		assertEquals(0, new BigDecimal("1234").compareTo(registry.garrisonCost()));
+	}
+
+	@Test
+	@DisplayName("W2-Q: a missing Garrison section keeps the 1000 guard price (TF-17)")
+	void garrisonCost_defaultsTo1000() throws Exception {
+		PowerupRegistry registry = load("Powerups:\n   a:\n      Cost: 1\n      Effect_Type: INCOME_MULTIPLIER\n"
+		                                + "      Magnitude: 1.1\n      Duration_Seconds: 60\n");
+
+		assertEquals(0, new BigDecimal("1000").compareTo(registry.garrisonCost()));
+	}
+
+	@Test
+	@DisplayName("W2-Q: a zero or negative Garrison.Cost_Per_Guard falls back to 1000 (review minor)")
+	void garrisonCost_nonPositive_defaultsTo1000() throws Exception {
+		PowerupRegistry zero     = load("Garrison:\n   Cost_Per_Guard: 0\n");
+		PowerupRegistry negative = load("Garrison:\n   Cost_Per_Guard: -5\n");
+
+		assertEquals(0, new BigDecimal("1000").compareTo(zero.garrisonCost()));
+		assertEquals(0, new BigDecimal("1000").compareTo(negative.garrisonCost()));
+	}
+
+	@Test
+	@DisplayName("W2-Q: a fractional Garrison.Cost_Per_Guard is rounded to whole units when read (review minor)")
+	void garrisonCost_fractional_roundsToWholeUnits() throws Exception {
+		PowerupRegistry registry = load("Garrison:\n   Cost_Per_Guard: 1234.6\n");
+
+		assertEquals(0, new BigDecimal("1235").compareTo(registry.garrisonCost()));
+	}
+
+	@Test
+	@DisplayName("W2-Q: a boost with a negative Cost is skipped, so buying it can never pay the gang (review minor)")
+	void boost_negativeCost_skipped() throws Exception {
+		PowerupRegistry registry = load("Powerups:\n"
+		                                + "   bad_boost:\n      Cost: -100\n      Effect_Type: INCOME_MULTIPLIER\n"
+		                                + "      Magnitude: 1.1\n      Duration_Seconds: 60\n"
+		                                + "   good_boost:\n      Cost: 300\n      Effect_Type: INCOME_MULTIPLIER\n"
+		                                + "      Magnitude: 1.1\n      Duration_Seconds: 60\n");
+
+		assertEquals(Set_of("good_boost"), registry.ids());
+	}
+
+	private static PowerupRegistry load(String yaml) throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(
+				new ConfigParser().parse(Path.of("turf_powerups.yml"), new StringReader(yaml), new ConfigReport()));
+		FileManager fileManager = mock(FileManager.class);
+		when(fileManager.getFile("turf_powerups")).thenReturn(handler);
+
+		PowerupRegistry registry = new PowerupRegistry();
+		new PowerupRegistryLoader(registry, fileManager).onInitialize(true);
+		return registry;
 	}
 
 	private static java.util.Set<String> Set_of(String... values) {

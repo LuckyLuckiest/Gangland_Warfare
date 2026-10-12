@@ -1,6 +1,8 @@
 package org.luckyraven.gangland.gang;
 
 import org.bukkit.OfflinePlayer;
+import org.luckyraven.gangland.gang.database.repositories.meta.GangMigration;
+import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,11 +20,14 @@ import org.luckyraven.gangland.gang.rank.RankParent;
 import org.luckyraven.gangland.gang.rank.RankPermission;
 import org.luckyraven.gangland.menu.filter.FilterApplier;
 import org.luckyraven.gangland.menu.filter.FilterStore;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.BeanFactory;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.module.ModuleLoader;
+import org.luckyraven.keystone.permission.PermissionManager;
+import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.repository.IRepository;
@@ -86,7 +91,18 @@ class GangConfigBeanGraphTest {
 		container.registerInstance(RepositoryRegistry.class, repositoryRegistry());
 		container.registerInstance(DatabaseHandler.class, mock(DatabaseHandler.class));
 		container.registerInstance(PermissionRegistryContract.class, mock(PermissionRegistryContract.class));
-		container.registerInstance(FileManager.class, mock(FileManager.class));
+		// rankManager registers the gangland.gang.* nodes with Keystone's PermissionManager (fix round 1)
+		container.registerInstance(PermissionManager.class, mock(PermissionManager.class));
+		// GangRules and GangMessages (0.17.0) read gang_rules / gang_messages through the FileManager at bean time.
+		FileManager fileManager = mock(FileManager.class);
+		FileHandler rulesFile = mock(FileHandler.class);
+		FileHandler messagesFile = mock(FileHandler.class);
+		when(rulesFile.getFileConfiguration()).thenReturn(new YamlConfiguration());
+		when(messagesFile.getFileConfiguration()).thenReturn(new YamlConfiguration());
+		when(fileManager.getFile("gang_rules")).thenReturn(rulesFile);
+		when(fileManager.getFile("gang_messages")).thenReturn(messagesFile);
+		container.registerInstance(FileManager.class, fileManager);
+		container.registerInstance(GangModuleFiles.class, new GangModuleFiles(rulesFile, messagesFile));
 		container.registerInstance(ModuleLoader.class, mock(ModuleLoader.class));
 		container.registerInstance(FilterStore.class, mock(FilterStore.class));
 		container.registerInstance(FilterApplier.class, mock(FilterApplier.class));
@@ -138,6 +154,9 @@ class GangConfigBeanGraphTest {
 
 		IRepository<RankPermission> rankPermissionRepo = mock(IRepository.class);
 		when(registry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
+
+		// GangConfig.gangMigrations casts this repository to GangMigrationsContract (W2-K).
+		when(registry.getRepository(GangMigration.class)).thenReturn(mock(GangMigrationRepository.class));
 
 		return registry;
 	}

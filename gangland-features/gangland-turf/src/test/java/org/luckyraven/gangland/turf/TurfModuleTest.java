@@ -3,6 +3,9 @@ package org.luckyraven.gangland.turf;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.turf.command.TurfCommand;
+import org.luckyraven.gangland.turf.map.MapCommand;
+import org.luckyraven.gangland.turf.map.TurfMapConfig;
+import org.luckyraven.gangland.turf.placeholder.TurfHudConfig;
 import org.luckyraven.gangland.turf.database.TurfRepository;
 import org.luckyraven.gangland.turf.listener.TurfBossBarListener;
 import org.luckyraven.gangland.turf.task.GangPresenceListener;
@@ -23,15 +26,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class TurfModuleTest {
 
 	@Test
-	@DisplayName("configure registers TurfModuleFileConfig and TurfModuleConfig plus the listener, command and repository packages")
+	@DisplayName("configure registers TurfModuleFileConfig, TurfModuleConfig, TurfMapConfig and TurfHudConfig plus the listener, command and repository packages")
 	void configure_declaresConfigsAndPackages() {
 		ModuleRegistrations registrations = new ModuleRegistrations();
 
 		new TurfModule().configure(registrations);
 
-		assertEquals(List.of(TurfModuleFileConfig.class, TurfModuleConfig.class), registrations.configurations());
+		assertEquals(List.of(TurfModuleFileConfig.class, TurfModuleConfig.class, TurfMapConfig.class, TurfHudConfig.class),
+		             registrations.configurations());
 		assertEquals(List.of(TurfModule.LISTENER_PACKAGE, TurfModule.TASK_PACKAGE), registrations.listenerPackages());
-		assertEquals(List.of(TurfModule.COMMAND_PACKAGE), registrations.commandPackages());
+		assertEquals(List.of(TurfModule.COMMAND_PACKAGE, TurfModule.MAP_PACKAGE), registrations.commandPackages());
 		assertEquals(List.of(TurfModule.REPOSITORY_PACKAGE), registrations.repositoryPackages());
 	}
 
@@ -41,6 +45,7 @@ class TurfModuleTest {
 		assertEquals(TurfModule.LISTENER_PACKAGE, TurfBossBarListener.class.getPackageName());
 		assertEquals(TurfModule.TASK_PACKAGE, GangPresenceListener.class.getPackageName());
 		assertEquals(TurfModule.COMMAND_PACKAGE, TurfCommand.class.getPackageName());
+		assertEquals(TurfModule.MAP_PACKAGE, MapCommand.class.getPackageName());
 		assertEquals(TurfModule.REPOSITORY_PACKAGE, TurfRepository.class.getPackageName());
 	}
 }

@@ -58,14 +58,10 @@ public class Gang {
 		this.members.addAll(members);
 	}
 
-	public Gang() {
-		this(generateId());
-	}
-
 	public Gang(int id) {
 		this.id      = id;
 		this.allies  = new HashSet<>();
-		this.level   = new Level();
+		this.level   = GangLevels.newLevel();
 		this.bounty  = new Bounty(IdentitySettings.getBountyEachKillValue(), IdentitySettings.getBountyTimerMultiple());
 		this.economy = new EconomyHandler(null);
 		this.members = new ArrayList<>();
@@ -75,7 +71,7 @@ public class Gang {
 		this.color       = Color.LIGHT_BLUE.name();
 		this.description = "Conquering the hood";
 		this.created     = Instant.now().toEpochMilli();
-		this.state       = State.OPEN;
+		this.state       = State.INVITE;
 	}
 
 	public static int generateId() {
@@ -99,8 +95,15 @@ public class Gang {
 		allies.removeIf(gangAlliance -> gangAlliance.ally().getId() == gang.getId());
 	}
 
+	/**
+	 * Alliances are mutual (TF-24): true when either gang lists the other, so a one-sided entry counts for both.
+	 */
 	public boolean isAlly(Gang gang) {
-		return !allies.stream().filter(gangAlliance -> gangAlliance.ally().getId() == gang.getId()).toList().isEmpty();
+		return gang != null && (listsAlly(gang.getId()) || gang.listsAlly(this.id));
+	}
+
+	private boolean listsAlly(int gangId) {
+		return allies.stream().anyMatch(alliance -> alliance.ally().getId() == gangId);
 	}
 
 	public Set<GangAlliance> getAllies() {
@@ -216,6 +219,11 @@ public class Gang {
 	}
 
 	@Override
+	public int hashCode() {
+		return Integer.hashCode(id);
+	}
+
+	@Override
 	public String toString() {
 		return String.format(
 				"Gang{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%s,level=%.2f,bounty=%s,allies=%s}",
@@ -223,6 +231,10 @@ public class Gang {
 				level.getExperience(), bounty.getAmount().toPlainString(), getAllyListString());
 	}
 
+	/**
+	 * OPEN = anyone may /glw gang join; INVITE = invited players only (the default since 0.17.0, D7); CLOSE = read as
+	 * INVITE (kept so old rows load).
+	 */
 	public enum State {
 		OPEN,
 		INVITE,

@@ -1,11 +1,16 @@
 package org.luckyraven.gangland.gang.rank;
 
+import lombok.CustomLog;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
+import org.luckyraven.gangland.gang.file.GangRules;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankParentRepository;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankRepository;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
@@ -14,11 +19,15 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 
+@CustomLog
 public class RankManager implements BeanLifecycle {
 
 	private final         RepositoryRegistry          repositoryRegistry;
 	private final         PermissionRegistryContract  permissionRegistry;
+	private final         GangRules                   rules;
 	private final         Map<Integer, Rank>          ranks;
 	private final         Set<RankParent>             ranksParent;
 	private final         Map<Integer, Permission>    permissions;
@@ -27,11 +36,22 @@ public class RankManager implements BeanLifecycle {
 	private               IRepository<Permission>     permissionRepo;
 	private               IRepository<RankPermission> rankPermissionRepo;
 	private               IRepository<RankParent>     rankParentRepo;
+	private final         GangMigrationsContract      migrations;
 
-	public RankManager(RepositoryRegistry repositoryRegistry,
-	                   PermissionRegistryContract permissionRegistry) {
+	/** 0.17.0 (T-266): ranks holding gangland.gang.withdraw also get gangland.turf.upgrade, once. */
+	public static final String TURF_UPGRADE_MIGRATION = "0.17.0-officer-turf-upgrade";
+
+	public RankManager(RepositoryRegistry repositoryRegistry, PermissionRegistryContract permissionRegistry,
+	                   GangRules rules) {
+		this(repositoryRegistry, permissionRegistry, rules, GangMigrationsContract.NONE);
+	}
+
+	public RankManager(RepositoryRegistry repositoryRegistry, PermissionRegistryContract permissionRegistry,
+	                   GangRules rules, GangMigrationsContract migrations) {
 		this.repositoryRegistry = repositoryRegistry;
 		this.permissionRegistry = permissionRegistry;
+		this.rules              = rules;
+		this.migrations         = migrations;
 		this.ranks              = new HashMap<>();
 		this.ranksParent        = new HashSet<>();
 		this.rankTree           = new Tree<>();
@@ -45,12 +65,15 @@ public class RankManager implements BeanLifecycle {
 		this.permissionRepo     = repositoryRegistry.getRepository(Permission.class);
 		this.rankPermissionRepo = repositoryRegistry.getRepository(RankPermission.class);
 
-		seedInitialRanks(rankRepo, rankParentRepo);
+		boolean seeded = seedIfEmpty(rankRepo, rankParentRepo);
 
 		Collection<Rank>           loadedRanks           = rankRepo.loadAll();
 		Collection<Permission>     loadedPermissions     = permissionRepo.loadAll();
 		Collection<RankParent>     loadedRankParents     = rankParentRepo.loadAll();
 		Collection<RankPermission> loadedRankPermissions = rankPermissionRepo.loadAll();
+
+		boolean loadFailed = loadFailed(rankRepo) || loadFailed(permissionRepo) || loadFailed(rankParentRepo)
+		                     || loadFailed(rankPermissionRepo);
 
 		ranksParent.addAll(loadedRankParents);
 		ranksPermissions.addAll(loadedRankPermissions);
@@ -94,20 +117,15 @@ public class RankManager implements BeanLifecycle {
 		for (int rankId : ranks.keySet()) {
 			List<String> children = ranksParent.stream()
 					.filter(rp -> rp.rankId() == rankId)
-					.map(rp -> ranks.get(rp.parentId()).getName())
+					.map(rp -> ranks.get(rp.childId()).getName())
 					.toList();
 
 			nodeMap.put(ranks.get(rankId).getNode(), children);
 		}
 
-		// Add the rank head to the tree
-		rankTree.add(nodeMap.keySet()
-							 .stream()
-							 .filter(node -> node.getData()
-				                                 .getName()
-				                                 .equalsIgnoreCase(GangSettings.getGangRankHead()))
-				             .findFirst()
-				             .orElse(new Rank(GangSettings.getGangRankHead(), Rank.getNewId()).getNode()));
+		// Add the rank head to the tree (GR-13: a missing head keeps the persisted root, it never invents one)
+		Tree.Node<Rank> root = rootNode();
+		if (root != null) rankTree.add(root);
 
 		// Wire each node's children
 		for (Map.Entry<Tree.Node<Rank>, List<String>> entry : nodeMap.entrySet()) {
@@ -120,6 +138,32 @@ public class RankManager implements BeanLifecycle {
 			}
 		}
 
+		warnIfTailMissing();
+
+		// The fresh-install preset nodes go on after the ranks and the permission counter are loaded (FK-safe ids)
+		if (seeded) applyPresetPermissions();
+
+		if (seeded) {
+			migrations.markDone(TURF_UPGRADE_MIGRATION);   // the fresh-install preset already grants the node
+		} else if (loadFailed) {
+			// T-283: a failed rank_permission read looks like "no grants"; marking now would skip the grant for good
+			log.warn("A rank table did not load; the 0.17.0 officer turf-upgrade migration waits for a boot that reads it");
+		} else if (!ranks.isEmpty() && !ranksPermissions.isEmpty() && !permissions.isEmpty()
+		           && !migrations.isDone(TURF_UPGRADE_MIGRATION)) {
+			// T-266: ranks that may withdraw from the bank may also spend it at the Quartermaster, once (0.17.0).
+			// An empty read (failed or truly empty) skips without marking, so the next boot retries it.
+			// T-302: the grants are written by the checked migration, which marks it done only once they committed
+			int granted = 0;
+			for (Rank rank : ranks.values()) {
+				if (rank.contains(GangPermissions.WITHDRAW) && grant(rank, GangPermissions.TURF_UPGRADE, false)) {
+					granted++;
+				}
+			}
+			persistTurfUpgradeGrants();
+			log.info("Rank permissions migrated once (0.17.0): {} rank(s) holding {} now also hold {}", granted,
+			         GangPermissions.WITHDRAW, GangPermissions.TURF_UPGRADE);
+		}
+
 		// Set data suppliers so repositoryRegistry.saveAll() can persist each collection
 		rankRepo.setDataSupplier(ranks::values);
 		permissionRepo.setDataSupplier(permissions::values);
@@ -127,24 +171,82 @@ public class RankManager implements BeanLifecycle {
 		rankPermissionRepo.setDataSupplier(() -> ranksPermissions);
 	}
 
+	private static boolean loadFailed(IRepository<?> repository) {
+		return repository instanceof LoadOutcome outcome && outcome.lastLoadFailed();
+	}
+
 	/**
-	 * Ensures the head/tail ranks (and their parent relation) exist before {@code loadAll()} reads them. Moved
-	 * from {@code GanglandDatabase.insertInitialData()} (WS5 G2 step 7b) — impl can no longer name
-	 * {@code RankRepository}/{@code RankParentRepository}. Both target methods are resolve-or-insert (idempotent:
-	 * a no-op when the rows already exist), so running this on every boot, not only a fresh install, is safe —
-	 * unlike the deleted override, which Keystone's {@code DatabaseHandler.initialize()} only ever called once,
-	 * right after {@code createTables()}, before any bean (including this one) existed.
+	 * Writes the preset ladder before {@code loadAll()} reads it, only while the rank table is empty (a fresh install,
+	 * D13 A). An existing rank tree is never touched. The every-boot head/tail insert is gone.
+	 *
+	 * @return {@code true} when the preset was seeded
 	 */
-	private void seedInitialRanks(IRepository<Rank> rankRepo, IRepository<RankParent> rankParentRepo) {
-		if (!(rankRepo instanceof RankRepository repo)) return;
-		if (!(rankParentRepo instanceof RankParentRepository parentRepo)) return;
+	private boolean seedIfEmpty(IRepository<Rank> rankRepo, IRepository<RankParent> rankParentRepo) {
+		if (!(rankRepo instanceof RankRepository repo)) return false;
+		if (!(rankParentRepo instanceof RankParentRepository parentRepo)) return false;
 
 		try {
-			int[] ids = repo.insertInitialRanks(GangSettings.getGangRankHead(), GangSettings.getGangRankTail());
-			parentRepo.insertInitialRelation(ids[0], ids[1]);
+			return RankSeed.seedIfEmpty(repo, parentRepo, rules, GangSettings.getGangRankHead(),
+			                            GangSettings.getGangRankTail());
 		} catch (SQLException exception) {
-			throw new IllegalStateException("Failed to seed initial gang ranks", exception);
+			throw new IllegalStateException("Failed to seed the gang rank preset", exception);
 		}
+	}
+
+	/**
+	 * Grants each preset rank its {@code Ranks.Preset_Permissions} nodes on a fresh install.
+	 */
+	private void applyPresetPermissions() {
+		for (Rank rank : ranks.values()) {
+			for (String node : rules.getPresetPermissions(rank.getName())) {
+				addPermission(rank, node);
+			}
+		}
+	}
+
+	/**
+	 * A renamed {@code Rank.Tail} is not recreated (D13 A): the persisted ranks stay as they are, and one warning names
+	 * the configured tail and the persisted leaf ranks so the owner can fix the config.
+	 */
+	private void warnIfTailMissing() {
+		String tail = GangSettings.getGangRankTail();
+		if (ranks.isEmpty() || get(tail) != null) return;
+
+		Set<Integer> parentIds = ranksParent.stream().map(RankParent::rankId).collect(Collectors.toSet());
+		String leaves = ranks.values()
+				.stream()
+				.filter(rank -> !parentIds.contains(rank.getUsedId()))
+				.map(Rank::getName)
+				.collect(Collectors.joining(", "));
+
+		log.warn("Rank.Tail '{}' matches no persisted rank; no rank is created. The persisted leaf rank(s): [{}]",
+		         tail, leaves);
+	}
+
+	/**
+	 * The tree root is the rank named {@code Rank.Head}. When no persisted rank has that name (the head was renamed), the
+	 * persisted root is kept (the rank nobody sits above; lowest id first) and one warning names both. Nothing is created.
+	 */
+	@Nullable
+	private Tree.Node<Rank> rootNode() {
+		String head = GangSettings.getGangRankHead();
+
+		Rank named = ranks.values()
+				.stream().filter(rank -> rank.getName().equalsIgnoreCase(head)).findFirst().orElse(null);
+		if (named != null) return named.getNode();
+
+		Set<Integer> childIds = ranksParent.stream().map(RankParent::childId).collect(Collectors.toSet());
+
+		Rank persistedRoot = ranks.values()
+				.stream()
+				.filter(rank -> !childIds.contains(rank.getUsedId()))
+				.min(Comparator.comparingInt(Rank::getUsedId))
+				.orElse(null);
+		if (persistedRoot == null) return null;
+
+		log.warn("Rank.Head '{}' matches no persisted rank; keeping '{}' (id {}) as the rank tree root",
+		         head, persistedRoot.getName(), persistedRoot.getUsedId());
+		return persistedRoot.getNode();
 	}
 
 	public void add(Rank rank) {
@@ -162,6 +264,7 @@ public class RankManager implements BeanLifecycle {
 		boolean rankPermissions = permissions.values()
 				.stream().anyMatch(p -> p.getPermission().equalsIgnoreCase(permissionString));
 
+		if (!rankPermissions) rankPermissions = GangPermissions.ALL.stream().anyMatch(permissionString::equalsIgnoreCase);
 		if (!rankPermissions) rankPermissions = permissionRegistry.contains(permissionString);
 
 		return rankPermissions;
@@ -190,6 +293,10 @@ public class RankManager implements BeanLifecycle {
 	 * @return true if the permission was added, false if it already existed on the rank
 	 */
 	public boolean addPermission(Rank rank, String permissionString) {
+		return grant(rank, permissionString, true);
+	}
+
+	private boolean grant(Rank rank, String permissionString, boolean persist) {
 		// Check if the rank already has this permission
 		if (rank.contains(permissionString)) {
 			return false;
@@ -213,10 +320,38 @@ public class RankManager implements BeanLifecycle {
 		rank.addPermission(permission);
 
 		// Persist immediately so a server restart before autosave doesn't lose the change
-		if (freshPerm && permissionRepo != null) permissionRepo.save(permission);
-		if (rankPermissionRepo != null) rankPermissionRepo.save(link);
+		if (persist) {
+			if (freshPerm && permissionRepo != null) permissionRepo.save(permission);
+			if (rankPermissionRepo != null) rankPermissionRepo.save(link);
+		}
 
 		return true;
+	}
+
+	/**
+	 * Writes the permission rows (the link rows reference them), then hands the link rows to the checked migration, so
+	 * the marker is written only after both committed. If the permission write fails nothing is marked and the next
+	 * boot grants again.
+	 */
+	private void persistTurfUpgradeGrants() {
+		if (rankPermissionRepo == null) {
+			migrations.markDone(TURF_UPGRADE_MIGRATION);
+			return;
+		}
+		Runnable linkRows = () -> migrations.migrate(TURF_UPGRADE_MIGRATION, rankPermissionRepo,
+		                                             () -> new ArrayList<>(ranksPermissions));
+		if (permissionRepo instanceof AbstractRepository<Permission> checked) {
+			checked.saveAllChecked(new ArrayList<>(permissions.values()), committed -> {
+				if (Boolean.TRUE.equals(committed)) {
+					linkRows.run();
+				} else {
+					log.warn("Permission rows could not be written; the turf-upgrade grant is retried on the next boot");
+				}
+			});
+			return;
+		}
+		if (permissionRepo != null) permissionRepo.saveAll(permissions.values());
+		linkRows.run();
 	}
 
 	public void removePermission(Rank rank, String permission) {
@@ -285,7 +420,7 @@ public class RankManager implements BeanLifecycle {
 		Tree.Node<Rank> parent = rank.getNode().getParent();
 		if (parent != null) parent.remove(rank.getNode());
 
-		ranksParent.removeIf(link -> link.rankId() == id || link.parentId() == id);
+		ranksParent.removeIf(link -> link.rankId() == id || link.childId() == id);
 		ranksPermissions.removeIf(link -> link.rankId() == id);
 
 		return ranks.remove(id) != null;
@@ -293,8 +428,12 @@ public class RankManager implements BeanLifecycle {
 
 	public void clear() {
 		Rank.setID(0);
+		Permission.setID(0);
 		ranks.clear();
 		rankTree.clear();
+		ranksParent.clear();
+		permissions.clear();
+		ranksPermissions.clear();
 	}
 
 	@Override

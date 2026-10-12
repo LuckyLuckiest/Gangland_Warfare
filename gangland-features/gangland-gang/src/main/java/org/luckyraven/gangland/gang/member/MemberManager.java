@@ -1,10 +1,12 @@
 package org.luckyraven.gangland.gang.member;
 
+import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
-import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
 import org.luckyraven.gangland.gang.rank.Rank;
@@ -15,6 +17,7 @@ import org.luckyraven.keystone.persistence.database.component.Table;
 
 import java.util.*;
 
+@CustomLog
 public class MemberManager implements BeanLifecycle {
 
 	private final JavaPlugin               plugin;
@@ -23,12 +26,26 @@ public class MemberManager implements BeanLifecycle {
 	private final GangLookupContract       gangLookup;
 	private final RankLookupContract       rankLookup;
 	private final Map<UUID, Member>        members;
+	private final GangMigrationsContract   migrations;
+
+	/** D15 (0.17.0): one-shot migration id that resets every stored contribution to 0 (TF-44). */
+	public static final String CONTRIBUTION_MIGRATION = "0.17.0-contribution-reset";
 
 	public MemberManager(JavaPlugin plugin,
 	                     DatabaseHandler databaseHandler,
 	                     MemberRepositoryContract memberRepository,
 	                     GangLookupContract gangLookup,
 	                     RankLookupContract rankLookup) {
+		this(plugin, databaseHandler, memberRepository, gangLookup, rankLookup, GangMigrationsContract.NONE);
+	}
+
+	public MemberManager(JavaPlugin plugin,
+	                     DatabaseHandler databaseHandler,
+	                     MemberRepositoryContract memberRepository,
+	                     GangLookupContract gangLookup,
+	                     RankLookupContract rankLookup,
+	                     GangMigrationsContract migrations) {
+		this.migrations       = migrations;
 		this.plugin           = plugin;
 		this.databaseHandler  = databaseHandler;
 		this.memberRepository = memberRepository;
@@ -46,6 +63,18 @@ public class MemberManager implements BeanLifecycle {
 		}
 
 		memberRepository.setDataSupplier(members::values);
+
+		// D15 (0.17.0): contribution used to mix bank share and turf points (TF-44); every stored value resets to 0 once.
+		if (memberRepository instanceof LoadOutcome outcome && outcome.lastLoadFailed()) {
+			// T-249: a failed read is not an empty table; resetting now would mark D15 done over zero members
+			log.warn("Member table did not load; the D15 contribution reset waits for a boot that reads it");
+		} else if (!migrations.isDone(CONTRIBUTION_MIGRATION)) {
+			for (Member member : members.values()) {
+				member.setContribution(0D);
+			}
+			migrations.migrate(CONTRIBUTION_MIGRATION, memberRepository, () -> new ArrayList<>(members.values()));
+			log.info("Member contributions reset to 0 once (D15): disbanding now splits the bank by money deposited since");
+		}
 	}
 
 	public void initializeMemberData(Member member, Table<Member> memberTable) {
@@ -58,14 +87,15 @@ public class MemberManager implements BeanLifecycle {
 			                                (int[]) search.get("type"), new String[]{"*"});
 
 			// create member data into a database
+			// GR-32: a member row missing from the database is inserted right away.
 			if (memberInfo.length == 0) {
-				if (!IdentitySettings.isAutoSave()) memberTable.insertTableQuery(db, member);
+				memberTable.insertTableQuery(db, member);
 			} else {
 				int    v            = 1;
-				int    gangId       = (int) memberInfo[v++];
-				double contribution = (double) memberInfo[v++];
-				int    rankId       = (int) memberInfo[v++];
-				long   gangJoin     = (long) memberInfo[v];
+				int    gangId       = number(memberInfo[v++]).intValue();
+				double contribution = number(memberInfo[v++]).doubleValue();
+				int    rankId       = number(memberInfo[v++]).intValue();
+				long   gangJoin     = number(memberInfo[v]).longValue();
 
 				Rank rank = rankLookup.get(rankId);
 
@@ -80,6 +110,11 @@ public class MemberManager implements BeanLifecycle {
 				member.setGangJoinDateLong(gangJoin);
 			}
 		});
+	}
+
+	/** A SQL NULL numeric column reads as 0; any other value is read through {@link Number}. */
+	private static Number number(Object raw) {
+		return raw instanceof Number n ? n : 0;
 	}
 
 	public void add(Member member) {

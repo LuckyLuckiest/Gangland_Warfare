@@ -100,11 +100,6 @@ public class InventoryRuntimeContext {
 		ConfigReport report = new ConfigReport();
 		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
 
-		if (root.get("Config_Version").asString().orNull() != null) {
-			log.warn("Skipping inventory file '{}' — it has a Config_Version key (treated as non-inventory)", fileName);
-			return;
-		}
-
 		MappingNode informationSection = root.get("Information").asMapping().required().orNull();
 		if (informationSection == null) {
 			log.warn("Skipping inventory file '{}' — missing or malformed 'Information' block", fileName);
@@ -148,6 +143,9 @@ public class InventoryRuntimeContext {
 		}
 
 		String openPermission = open == null ? null : open.get("Permission").asString().orNull();
+		// T-226: a ConditionEvaluator expression that must hold for Open.Command to open the menu (else the command
+		// runs its own executor, e.g. gang onboarding). Absent = always open, as before.
+		String openCondition = open == null ? null : open.get("Condition").asString().orNull();
 
 		// Open.Type is an admin-facing hint for inventory event state; consumed via the legacy Bukkit path further
 		// below. Touching it here suppresses a spurious unknown_key sweep warning.
@@ -213,7 +211,8 @@ public class InventoryRuntimeContext {
 		}
 
 		for (Pair<State, String> state : states) {
-			inventoryData.addOpenInventory(new OpenInventory(state.first(), state.second(), openPermission));
+			inventoryData.addOpenInventory(new OpenInventory(state.first(), state.second(), openPermission,
+			                                                 openCondition));
 		}
 
 		if (!report.isEmpty()) report.log(log);

@@ -95,6 +95,22 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
   civilians' 1 event and gangland-item's `PlayerItemInitEvent` all stay module/infra-owned — no named consumer
   outside their own module, so none were promoted (WS3's explicit decline for the loot-chest 9 still stands).
 
+## Api 2.4 (0.17.0)
+
+`GanglandApi.VERSION` is `"2.4"`. Nothing was removed or changed; every row is an addition.
+
+| Addition | Package | Kind |
+|---|---|---|
+| `Messages.USER_DATA_LOAD_FAILED` | `org.luckyraven.gangland.file.configuration` | Message constant (`Errors.User.Data_Load_Failed`, the kick text when a player's data cannot load) |
+| `UserManager.loadStored(User)` | `org.luckyraven.gangland.core.user` | Returns `boolean`: loads only `user`'s own stored row into `user` and never caches it (the caller adds the user on success). `true` when the read succeeds, including when no row exists (the initial balance is stamped); `false` when no loader is set or the read failed, leaving the user at defaults |
+| `UserManager.setStoredLoader(Predicate<User>)` | same | Installs the host loader that `loadStored` delegates to |
+| `UserManager.pruneIdle(long maxIdleMillis)` | same | Returns `int`: drops offline entries idle longer than the limit, keeping load-pending ones; the autosave calls it |
+| `Settings.getOfflineCacheMinutes()` | `org.luckyraven.gangland.file.configuration` | `Database.Auto_Save.Offline_Cache_Minutes` (default 30, minimum 1): the idle window `pruneIdle` uses |
+
+`gang` and `mail` declare `Host_Api: 2.4` because they call `loadStored`. The other modules keep their `2.0`, `2.2` or
+`2.3` line and still load unchanged (same major, module minor `<=` host minor). A `2.4` module does not load on a 0.16.x
+core (`module.host.incompatible`).
+
 ## Api 2.3 (0.16.0)
 
 `GanglandApi.VERSION` is `"2.3"`. `cops-n-crooks` and `gangland-turf` declare `Host_Api: 2.3` because they publish places

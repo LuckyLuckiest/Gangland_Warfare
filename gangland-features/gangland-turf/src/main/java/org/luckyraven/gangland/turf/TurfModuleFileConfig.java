@@ -44,6 +44,15 @@ public final class TurfModuleFileConfig {
 		                                      moduleLoader.classLoader());
 		fileManager.addFile(settings, true);
 
-		return new TurfModuleFiles(powerups, npcs, settings);
+		FileHandler rules = new FileHandler(plugin, "turf_rules", "turf", ".yml", moduleLoader.classLoader());
+		fileManager.addFile(rules, true);
+
+		FileHandler map = new FileHandler(plugin, "turf_map", "turf", ".yml", moduleLoader.classLoader());
+		fileManager.addFile(map, true);
+
+		FileHandler messages = new FileHandler(plugin, "turf_messages", "turf", ".yml", moduleLoader.classLoader());
+		fileManager.addFile(messages, true);
+
+		return new TurfModuleFiles(powerups, npcs, settings, rules, map, messages);
 	}
 }

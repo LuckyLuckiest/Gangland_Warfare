@@ -21,6 +21,8 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
+import org.luckyraven.gangland.mail.MailMessages;
+import org.luckyraven.gangland.mail.MailRules;
 import org.luckyraven.gangland.mail.MailStatus;
 import org.luckyraven.gangland.mail.MailType;
 
@@ -43,10 +45,13 @@ public class GangInviteCommand extends SubArgument {
 	private final GangManager                gangManager;
 	private final RankManager                rankManager;
 	private final MailManager                mailManager;
+	private final MailRules                  rules;
+	private final MailMessages               messages;
 
 	public GangInviteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                         @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
-	                         GangManager gangManager, RankManager rankManager, MailManager mailManager) {
+	                         GangManager gangManager, RankManager rankManager, MailManager mailManager, MailRules rules,
+	                         MailMessages messages) {
 		super(plugin, new String[]{"invite", "add"}, tree, parent);
 
 		this.plugin           = plugin;
@@ -58,6 +63,8 @@ public class GangInviteCommand extends SubArgument {
 		this.gangManager        = gangManager;
 		this.rankManager        = rankManager;
 		this.mailManager        = mailManager;
+		this.rules              = rules;
+		this.messages           = messages;
 
 		// Add the literal `cancel` SubArgument before the `<player>` OptionalArgument so the argument tree resolves
 		// `/glw gang invite cancel` to the cancel branch instead of treating "cancel" as a target player name.
@@ -74,7 +81,15 @@ public class GangInviteCommand extends SubArgument {
 	 */
 	public Argument gangAccept() {
 		return new GangInviteAcceptCommand(plugin, tree, gangArgumentParent, userManager, memberManager, gangManager,
-		                                   rankManager, mailManager);
+		                                   rankManager, mailManager, messages);
+	}
+
+	/**
+	 * Builds the {@code /glw gang decline [gang]} argument, a sibling of {@code accept} for the same reason.
+	 */
+	public Argument gangDecline() {
+		return new GangInviteDeclineCommand(plugin, tree, gangArgumentParent, userManager, memberManager, gangManager,
+		                                    mailManager, messages);
 	}
 
 	@Override
@@ -158,20 +173,26 @@ public class GangInviteCommand extends SubArgument {
 			Player  onlineTarget = Bukkit.getPlayer(targetUuid);
 			boolean targetOnline = onlineTarget != null;
 
-			// Online targets get 1-minute expiry so the invite cleans itself up if ignored. Offline targets get a
-			// non-expiring invite (expiresAt = 0 → MailItem#isExpired returns false) so they can act on it whenever
-			// they next log in.
+			// Online targets get a 1-minute expiry so the invite cleans itself up if ignored. Offline targets lapse after
+			// Invite_Offline_Expiry_Hours (mail_rules.yml, default 72); 0 keeps them open until they next log in.
 			long now      = System.currentTimeMillis();
-			long expireAt = targetOnline ? now + INVITE_EXPIRY_MS : 0L;
+			int  offlineHours = rules.getInviteOfflineExpiryHours();
+			long expireAt = targetOnline ? now + INVITE_EXPIRY_MS :
+			                (offlineHours > 0 ? now + offlineHours * 3_600_000L : 0L);
 			MailItem mail = new MailItem(mailManager.allocateId(), MailType.GANG_INVITE, null, user.getGangId(),
 			                             targetUuid, MailItem.NO_GANG, null, now, expireAt, MailStatus.PENDING,
 			                             false);
 			mailManager.send(mail);
 
 			user.sendMessage(Messages.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
-			user.sendMessage(targetOnline ?
-			                 Messages.GANG_INVITE_EXPIRES_ONLINE.toString() :
-			                 Messages.GANG_INVITE_NO_EXPIRY.toString());
+			// T-208: the inviter hears only his own line; the expiry line is for the target.
+			if (!targetOnline) {
+				if (offlineHours > 0) {
+					user.sendMessage(messages.inviteOfflineExpires(offlineHours));
+				} else {
+					user.sendMessage(Messages.GANG_INVITE_NO_EXPIRY.toString());
+				}
+			}
 
 			if (targetOnline) {
 				String replace = Messages.GANG_INVITE_TARGET.toString().replace("%gang%", gang.getDisplayNameString());

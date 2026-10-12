@@ -4,10 +4,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
+import org.luckyraven.gangland.turf.contract.TurfSequenceContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.support.InMemoryTurfRepository;
+import org.luckyraven.gangland.turf.support.InMemoryTurfSequence;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,6 +35,70 @@ class TurfManagerTest {
 	void setUp() {
 		repository = new InMemoryTurfRepository();
 		manager    = new TurfManager(repository);
+	}
+
+	@Test
+	@DisplayName("T-201: a failed load never writes a high-water mark below the stored one")
+	void initialize_emptyLoadNeverLowersStoredMark() {
+		RecordingSequence sequence = new RecordingSequence(7);
+		manager = new TurfManager(repository, sequence);
+
+		manager.initialize();
+
+		assertTrue(sequence.saves.isEmpty(), "nothing higher than the stored mark 7, so nothing is written");
+		assertEquals(8, manager.allocateId(), "the allocator still continues past the stored mark");
+	}
+
+	@Test
+	@DisplayName("T-201: a loaded turf above the stored mark raises the saved mark to it")
+	void initialize_raisesStoredMarkToHighestLoadedTurf() {
+		RecordingSequence sequence = new RecordingSequence(7);
+		repository.seed(turf(9, "world", 0, 0, 10, 10));
+		manager = new TurfManager(repository, sequence);
+
+		manager.initialize();
+
+		assertEquals(List.of(9), sequence.saves);
+		assertEquals(10, manager.allocateId());
+	}
+
+	/** Records every value saved, starting from a stored high-water mark. */
+	private static final class RecordingSequence implements TurfSequenceContract {
+
+		private final int           stored;
+		private final List<Integer> saves = new ArrayList<>();
+
+		private RecordingSequence(int stored) {
+			this.stored = stored;
+		}
+
+		@Override
+		public int loadHighWaterMark() {
+			return stored;
+		}
+
+		@Override
+		public void saveHighWaterMark(int highestAllocatedId) {
+			saves.add(highestAllocatedId);
+		}
+	}
+
+	@Test
+	@DisplayName("countOwnedBy counts the turfs one gang owns and ignores unclaimed ones")
+	void countOwnedBy_countsPerGang() {
+		manager.create(ownedBy(1, 7));
+		manager.create(ownedBy(2, 7));
+		manager.create(ownedBy(3, 8));
+		manager.create(turf(4, "world", 200, 0, 210, 10));
+
+		assertEquals(2, manager.countOwnedBy(7));
+		assertEquals(1, manager.countOwnedBy(8));
+		assertEquals(0, manager.countOwnedBy(9));
+	}
+
+	private static Turf ownedBy(int id, int gangId) {
+		return new Turf(id, "Turf " + id, new CuboidRegion("world", id * 20, 0, id * 20 + 10, 10), gangId,
+		                BigDecimal.valueOf(100), System.currentTimeMillis(), 0L);
 	}
 
 	private static Turf turf(int id, String world, int x1, int z1, int x2, int z2) {
@@ -58,23 +126,43 @@ class TurfManagerTest {
 	}
 
 	@Test
-	@DisplayName("deleting the highest-id turf then re-initialising re-uses that id (Observation #5)")
-	void idAllocation_reusesHighestIdAfterDeleteAndRestart() {
+	@DisplayName("TF-05: deleting the highest-id turf then restarting never hands its id to a new turf")
+	void idAllocation_neverReusesHighestIdAfterDeleteAndRestart() {
+		InMemoryTurfSequence sequence = new InMemoryTurfSequence();
 		repository.seed(turf(1, "world", 0, 0, 10, 10));
 		repository.seed(turf(2, "world", 20, 20, 30, 30));
 		repository.seed(turf(3, "world", 40, 40, 50, 50));
+		manager = new TurfManager(repository, sequence);
 		manager.initialize();
 		assertEquals(4, manager.allocateId(), "first session allocates past the highest seeded id");
 
 		Turf highest = manager.get(3);
 		manager.delete(highest);
 
-		// Simulate a restart: a fresh TurfManager over the same (now-mutated) repository.
-		TurfManager restarted = new TurfManager(repository);
+		// Simulate a restart: a fresh TurfManager over the same repository and the same persisted sequence.
+		TurfManager restarted = new TurfManager(repository, sequence);
 		restarted.initialize();
 
-		assertEquals(3, restarted.allocateId(),
-		             "id 3 is re-used because nextId reseeds from max(existing)+1, not a monotonic counter");
+		assertEquals(5, restarted.allocateId(),
+		             "id 4 was handed out before the restart and must stay used; 3 must not come back");
+	}
+
+	@Test
+	@DisplayName("TF-05: deleting a turf without allocating, then restarting, never reuses its id")
+	void idAllocation_deleteWithoutAllocateThenRestart_neverReusesId() {
+		InMemoryTurfSequence sequence = new InMemoryTurfSequence();
+		repository.seed(turf(1, "world", 0, 0, 10, 10));
+		repository.seed(turf(2, "world", 20, 20, 30, 30));
+		repository.seed(turf(3, "world", 40, 40, 50, 50));
+		manager = new TurfManager(repository, sequence);
+		manager.initialize();
+
+		manager.delete(manager.get(3));
+
+		TurfManager restarted = new TurfManager(repository, sequence);
+		restarted.initialize();
+
+		assertEquals(4, restarted.allocateId(), "id 3 was used before the delete and must not come back");
 	}
 
 	@Test
@@ -128,5 +216,30 @@ class TurfManagerTest {
 
 		assertNotNull(manager.getRuntimeState(9));
 		assertEquals(turf, repository.loadAll().stream().filter(t -> t.getId() == 9).findFirst().orElseThrow());
+	}
+
+	@Test
+	@DisplayName("TF-34: getTurfsInWorld returns a list callers cannot mutate")
+	void getTurfsInWorld_isUnmodifiable() {
+		manager.create(turf(1, "world", 0, 0, 10, 10));
+
+		List<Turf> view = manager.getTurfsInWorld("world");
+
+		assertThrows(UnsupportedOperationException.class, () -> view.add(turf(2, "world", 20, 20, 30, 30)));
+	}
+
+	@Test
+	@DisplayName("TF-34: iterating getTurfsInWorld while a turf is created in that world does not throw")
+	void getTurfsInWorld_iterationSurvivesCreate() {
+		manager.create(turf(1, "world", 0, 0, 10, 10));
+
+		int seen = 0;
+		for (Turf ignored : manager.getTurfsInWorld("world")) {
+			seen++;
+			manager.create(turf(100 + seen, "world", 100 * seen, 0, 100 * seen + 10, 10));
+		}
+
+		assertEquals(1, seen, "the loop walks the snapshot it started with");
+		assertEquals(2, manager.getTurfsInWorld("world").size());
 	}
 }

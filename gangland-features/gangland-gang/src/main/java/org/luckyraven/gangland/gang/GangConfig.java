@@ -4,6 +4,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.database.repositories.meta.GangMigration;
 import org.luckyraven.gangland.gang.contract.GangMessageContract;
 import org.luckyraven.gangland.gang.contract.GangPermissionBridgeContract;
 import org.luckyraven.gangland.gang.contract.GangSettingsContract;
@@ -16,6 +19,8 @@ import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.placeholder.extension.PlaceholderContribution;
 import org.luckyraven.gangland.gang.command.debug.GangDebugContribution;
 import org.luckyraven.gangland.gang.command.option.GangOptionContribution;
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.file.GanglandGangMessages;
 import org.luckyraven.gangland.gang.file.GanglandGangPermissionBridge;
 import org.luckyraven.gangland.gang.file.GanglandGangSettings;
@@ -25,6 +30,7 @@ import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.menu.GangMenuItemSourceContribution;
 import org.luckyraven.gangland.gang.placeholder.GangPlaceholderContribution;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.menu.filter.FilterApplier;
 import org.luckyraven.gangland.menu.filter.FilterStore;
@@ -33,6 +39,7 @@ import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.module.ModuleLoader;
+import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
@@ -71,6 +78,20 @@ public final class GangConfig {
 	}
 
 	@Bean
+	public GangRules gangRules(GangModuleFiles files, FileManager fileManager) {
+		GangRules rules = new GangRules(fileManager);
+		fileManager.registerInitializer(rules);
+		return rules;
+	}
+
+	@Bean
+	public GangMessages gangMessages(GangModuleFiles files, FileManager fileManager) {
+		GangMessages messages = new GangMessages(fileManager);
+		fileManager.registerInitializer(messages);
+		return messages;
+	}
+
+	@Bean
 	public GangMessageContract gangMessageContract() {
 		return new GanglandGangMessages();
 	}
@@ -101,17 +122,37 @@ public final class GangConfig {
 		return (MemberRepositoryContract) registry.getRepository(Member.class);
 	}
 
+	/** Who has gang chat switched on (W2-P2 adds the delivery). */
 	@Bean
-	public GangManager gangManager(RepositoryRegistry repositoryRegistry,
-	                               GangAllianceRepositoryContract allianceRepository) {
-		IRepository<Gang> gangRepository = repositoryRegistry.getRepository(Gang.class);
-		return new GangManager(gangRepository, allianceRepository);
+	public GangChatChannel gangChatChannel() {
+		return new GangChatChannel();
 	}
 
 	@Bean
+	public GangMigrationsContract gangMigrations(RepositoryRegistry registry) {
+		return (GangMigrationsContract) registry.getRepository(GangMigration.class);
+	}
+
+	@Bean
+	public GangManager gangManager(RepositoryRegistry repositoryRegistry,
+	                               GangAllianceRepositoryContract allianceRepository,
+	                               GangMigrationsContract migrations) {
+		IRepository<Gang> gangRepository = repositoryRegistry.getRepository(Gang.class);
+		return new GangManager(gangRepository, allianceRepository, migrations);
+	}
+
+	/**
+	 * Registers every {@code gangland.gang.*} node with Keystone's {@link PermissionManager} (default OP, never default
+	 * true), so {@code /glw permission} search, help and LuckPerms completion list them. {@link RankManager} itself only
+	 * knows the nodes through {@link GangPermissions#ALL}.
+	 */
+	@Bean
 	public RankManager rankManager(RepositoryRegistry repositoryRegistry,
-	                               PermissionRegistryContract permissionRegistry) {
-		return new RankManager(repositoryRegistry, permissionRegistry);
+	                               PermissionRegistryContract permissionRegistry, GangRules rules,
+	                               PermissionManager permissionManager, GangMigrationsContract migrations) {
+		GangPermissions.ALL.forEach(permissionManager::addPermission);
+
+		return new RankManager(repositoryRegistry, permissionRegistry, rules, migrations);
 	}
 
 	/**
@@ -122,8 +163,8 @@ public final class GangConfig {
 	@Bean
 	public MemberManager memberManager(JavaPlugin plugin, DatabaseHandler databaseHandler,
 	                                   MemberRepositoryContract memberRepository, GangLookupContract gangLookup,
-	                                   RankLookupContract rankLookup) {
-		return new MemberManager(plugin, databaseHandler, memberRepository, gangLookup, rankLookup);
+	                                   RankLookupContract rankLookup, GangMigrationsContract migrations) {
+		return new MemberManager(plugin, databaseHandler, memberRepository, gangLookup, rankLookup, migrations);
 	}
 
 	/**

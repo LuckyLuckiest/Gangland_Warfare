@@ -30,7 +30,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 
 	private final JavaPlugin                   plugin;
 	private final IRepository<TurfPowerupData> repository;
-	private final TurfPowerupSettings          settings;
+	private final Supplier<TurfPowerupSettings> settings;
 	private final CivilianSpawnManager         civilianSpawnManager;
 
 	private final Map<Integer, TurfPowerupNpc>    byTurfId = new HashMap<>();
@@ -42,7 +42,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 
 	public TurfPowerupManager(JavaPlugin plugin,
 	                          IRepository<TurfPowerupData> repository,
-	                          TurfPowerupSettings settings,
+	                          Supplier<TurfPowerupSettings> settings,
 	                          CivilianSpawnManager civilianSpawnManager) {
 		this.plugin               = plugin;
 		this.repository           = repository;
@@ -89,7 +89,8 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	 */
 	public TurfPowerupNpc place(int turfId, Location location, @Nullable String displayName) {
 		remove(turfId);
-		TurfPowerupData data = new TurfPowerupData(turfId, location, displayName);
+		String name = displayName != null ? displayName : settings.get().displayName();
+		TurfPowerupData data = new TurfPowerupData(turfId, location, name);
 		repository.save(data);
 		return spawn(data);
 	}
@@ -97,12 +98,10 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	public void remove(int turfId) {
 		TurfPowerupNpc existing = byTurfId.remove(turfId);
 		if (existing != null) existing.destroy();
-
-		repository.loadAll()
-				.stream()
-				.filter(d -> d.getTurfId() == turfId)
-				.findFirst()
-				.ifPresent(repository::delete);
+		// TF-42: drop the queued spawn too, or a chunk load would resurrect a removed Quartermaster.
+		pending.removeIf(data -> data.getTurfId() == turfId);
+		// TF-33: doDelete keys on turf_id only, so no table scan is needed.
+		repository.delete(new TurfPowerupData(turfId, null, null));
 	}
 
 	@Nullable
@@ -129,7 +128,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	public void engage(int turfId, Supplier<Set<UUID>> attackers) {
 		TurfPowerupNpc npc = byTurfId.get(turfId);
 		if (npc == null) return;
-		npc.engage(attackers, settings.targetingRadius());
+		npc.engage(attackers, settings.get().targetingRadius());
 	}
 
 	/**
@@ -160,7 +159,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 			if (loc.getWorld() == null || !loc.getWorld().equals(world)) continue;
 			if (loc.getBlockX() >> 4 != chunkX || loc.getBlockZ() >> 4 != chunkZ) continue;
 			it.remove();
-			TurfPowerupNpc npc = TurfPowerupNpc.spawn(plugin, data, settings, civilianSpawnManager);
+			TurfPowerupNpc npc = TurfPowerupNpc.spawn(plugin, data, settings.get(), civilianSpawnManager);
 			if (npc != null) byTurfId.put(data.getTurfId(), npc);
 		}
 	}
@@ -182,7 +181,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 			pending.add(data);
 			return null;
 		}
-		TurfPowerupNpc npc = TurfPowerupNpc.spawn(plugin, data, settings, civilianSpawnManager);
+		TurfPowerupNpc npc = TurfPowerupNpc.spawn(plugin, data, settings.get(), civilianSpawnManager);
 		if (npc == null) return null;
 		byTurfId.put(data.getTurfId(), npc);
 		return npc;

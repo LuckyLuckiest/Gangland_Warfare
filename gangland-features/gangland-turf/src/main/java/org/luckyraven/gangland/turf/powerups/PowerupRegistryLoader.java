@@ -12,6 +12,7 @@ import org.luckyraven.keystone.persistence.config.NodeReader;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 /**
@@ -29,6 +30,7 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 
 	private static final String FILE_NAME    = "turf_powerups";
 	private static final String POWERUPS_KEY = "Powerups";
+	private static final BigDecimal DEFAULT_GUARD_COST = BigDecimal.valueOf(1000);
 
 	private final FileHandler     fileHandler;
 	private final PowerupRegistry registry;
@@ -57,6 +59,8 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 	public void load() {
 		ConfigReport report = new ConfigReport();
 		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
+
+		readGarrisonCost(root, report);
 
 		MappingNode powerupsNode = root.get(POWERUPS_KEY).asMapping().required().orNull();
 		if (powerupsNode == null) {
@@ -89,6 +93,31 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 		log.debug("Loaded {} turf powerup(s): {}", parsed.size(), parsed.keySet());
 	}
 
+	/** The guard price from {@code Garrison.Cost_Per_Guard}; absent or unparseable means 1000 (W2-Q, TF-17). */
+	private void readGarrisonCost(NodeReader root, ConfigReport report) {
+		MappingNode garrisonNode = root.get("Garrison").asMapping().orNull();
+		if (garrisonNode == null) {
+			registry.setGarrisonCost(DEFAULT_GUARD_COST);
+			return;
+		}
+		String raw = NodeReader.of(garrisonNode, report).get("Cost_Per_Guard").asString().orDefault("1000");
+		try {
+			BigDecimal cost = new BigDecimal(raw.replace("_", "").trim());
+			if (cost.signum() <= 0) {
+				log.warn("turf_powerups.yml Garrison.Cost_Per_Guard '{}' must be above zero; using 1000", raw);
+				registry.setGarrisonCost(DEFAULT_GUARD_COST);
+				return;
+			}
+			if (cost.stripTrailingZeros().scale() > 0) {
+				log.warn("turf_powerups.yml Garrison.Cost_Per_Guard '{}' is fractional; rounded to whole units", raw);
+			}
+			registry.setGarrisonCost(cost.setScale(0, RoundingMode.HALF_UP));
+		} catch (NumberFormatException exception) {
+			log.warn("turf_powerups.yml Garrison.Cost_Per_Guard '{}' is not a number; using 1000", raw);
+			registry.setGarrisonCost(DEFAULT_GUARD_COST);
+		}
+	}
+
 	private PowerupDefinition parseDefinition(String id, NodeReader r) {
 		String displayName     = r.get("Display_Name").asString().orDefault(id);
 		String effectTypeRaw   = r.get("Effect_Type").asString().required().orDefault("");
@@ -104,12 +133,29 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 			return null;
 		}
 
+		if (effectType == EffectType.GARRISON_DISCOUNT && (magnitude <= 0 || magnitude > 1)) {
+			log.warn("turf_powerups.yml {}: GARRISON_DISCOUNT Magnitude {} is outside (0, 1]; guard prices are clamped to 10-100% of Cost_Per_Guard", id, magnitude);
+		}
+
+		if (effectType == EffectType.CAPTURE_DEFENSE_BONUS) {
+			log.warn("{} has no effect since 0.17.0 - guards on the capture bar replaced it; entry skipped", id);
+			return null;
+		}
+
 		BigDecimal cost;
 		try {
 			cost = new BigDecimal(costRaw.replace("_", "").trim());
 		} catch (NumberFormatException exception) {
 			log.warn("Powerup '{}' has unparseable Cost '{}' — skipping", id, costRaw);
 			return null;
+		}
+
+		if (cost.signum() < 0) {
+			log.warn("Powerup '{}' has a negative Cost '{}' - skipping", id, costRaw);
+			return null;
+		}
+		if (cost.signum() == 0) {
+			log.warn("Powerup '{}' has Cost 0 - it activates for free", id);
 		}
 
 		return new PowerupDefinition(id, displayName, cost, effectType, magnitude, durationSeconds);

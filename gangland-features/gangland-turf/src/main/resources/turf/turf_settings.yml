@@ -15,7 +15,7 @@
 # +---------------+ #
 # | Turf Settings | #
 # +---------------+ #
-# Income, wand, outline, capture, sound and contribution knobs of the turf module. These keys lived in settings.yml
+# Income, wand, outline, capture and sound knobs of the turf module. These keys lived in settings.yml
 # under Turf: until 0.15.1; a value still tuned in settings.yml, or in the settings-old.yml backup the upgrade leaves,
 # keeps working for now (the server log says so once),
 # but copy the value here and delete it there. The turf-NPC knobs are in turf_npcs.yml and the powerup catalogue is
@@ -24,8 +24,10 @@
 # Interval (minutes) between income payouts to each turf's owning gang. Paid straight into
 # the gang vault; orphaned turfs (owning gang deleted) auto-release.
 Income_Interval_Minutes: 10
-# Default income amount stamped on new turfs by /glw turf create when no amount is given.
-Default_Income_Amount: 100
+# Income stamped on NEW turfs by /glw turf create when no amount is given, paid every Income_Interval_Minutes while an
+# owner was online in the last turf_rules.yml Income.Idle_Hours. Existing turfs keep their own amount (/glw turf income
+# <amount> changes one).
+Default_Income_Amount: 250
 # Material given by /glw turf wand; any ItemStack NBT-tagged as a turf wand still works, so
 # changing this does not invalidate previously given wands.
 Wand_Item_Type: CARROT_ON_A_STICK
@@ -40,28 +42,27 @@ Show_Enter_Title: true
 # Capture subsystem. Runtime state (contested/cooldown/progress) is not persisted — only
 # Last_Capture_Timestamp anchors cooldowns across restarts.
 Capture:
-   # Base time (seconds) for a single attacker to fill 0 -> 100 with no defenders present.
-   # Multiple attackers fill proportionally faster; defenders inside roll progress backward.
-   # Applies to captures of OWNED turfs. Unclaimed turfs use the two-phase timings below.
+   # Base time (seconds) for one attacker with nobody against them to fill the capture bar from 0 to 100, for owned and
+   # unclaimed turfs alike. More attackers fill it faster (never faster than turf_rules.yml Capture.Min_Capture_Seconds);
+   # defenders and guards push it back.
    Duration_Seconds: 180
-   # Unclaimed turfs capture in two phases with independent timings. Phase 1 (CLAIM) marks the turf
-   # as "potentially" yours; Phase 2 (CONSOLIDATE) locks it in. Other gangs present inside decrease
-   # progress; if they push Phase 1 all the way to zero while dominating, they take over and start
-   # at Phase 2 (aggression reward). Each base time assumes one attacker with no opposition — net
-   # head-count scales the actual fill rate.
+   # Unused since 0.17.0: every capture, owned or unclaimed, fills one bar at Duration_Seconds. Kept so older files load.
    Unclaimed_Phase1_Seconds: 90
    Unclaimed_Phase2_Seconds: 90
    # Lockout window (minutes) after a capture completes during which the turf cannot be
    # contested again.
    Cooldown_Minutes: 15
-   # Grace (seconds) after the challenger leaves the turf before the contest cancels as
-   # ABANDONED.
+   # Seconds the attacking gang may have nobody inside the turf before the contest ends
+   # ABANDONED. Stepping out and back in keeps the contest; the attacker counts again after
+   # turf_rules.yml Presence_Seconds.
    Abandon_Grace_Seconds: 15
-   # After the last gang member logs off, the gang's turfs stay protected for this many
-   # minutes; after that they become capturable again with the gang fully offline.
+   # Minutes after the owner gang's last member logs off. With turf_rules.yml Capture.Window OWNERS_ONLINE (the default)
+   # a turf stays attackable this long after its last owner leaves, then is shielded until an owner returns. With
+   # OWNERS_OFFLINE it is the other way round: shielded this long, then attackable.
    Post_Logoff_Protection_Minutes: 10
-   # Days of zero gang activity before every turf the gang owns auto-releases.
-   Inactivity_Auto_Release_Days: 10
+   # Days without any owner online before every turf the gang owns is released. Servers that already have this file
+   # keep their own value.
+   Inactivity_Auto_Release_Days: 4
    # Play the capture start / complete / failed sounds (see Sounds below) to players inside
    # the turf. Disable to keep captures silent.
    Enable_Sound: true
@@ -102,18 +103,3 @@ Capture:
          Name: ENTITY_ENDER_DRAGON_GROWL
          Volume: 0.5
          Pitch: 1.5
-# Contribution points awarded to Member.contribution when players take part in turf activity. The gang
-# module already persists this field and exposes it to commands / leaderboards; values here just control
-# how aggressively presence + capture events feed it. Tune to match the intended payout weighting.
-Contribution:
-   Points:
-      # Per 1-Hz tick to defender-gang members standing inside an OWNED turf under contest.
-      Defender_Presence_Tick: 0.5
-      # Per 1-Hz tick to attacker-gang members standing inside the turf they're capturing.
-      Attacker_Presence_Tick: 1.0
-      # Flat one-shot bonus to every challenger-gang member inside the turf at the moment a capture
-      # completes.
-      Capture_Complete_Bonus: 50.0
-      # Flat one-shot bonus to every defender-gang member inside the turf at the moment an attack is
-      # pushed back to zero (DEFENDED).
-      Defense_Success_Bonus: 25.0

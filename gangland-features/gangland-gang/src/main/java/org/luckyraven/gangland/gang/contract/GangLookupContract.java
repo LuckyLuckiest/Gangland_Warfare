@@ -14,4 +14,9 @@ public interface GangLookupContract {
 	@Nullable Gang findById(int gangId);
 
 	Collection<Gang> getAll();
+	/** Adds gang XP (turf income, per paying turf per payout). The default does nothing; GangManager levels gangs up. */
+	default void addExperience(Gang gang, double amount) {
+	}
+
 }
+

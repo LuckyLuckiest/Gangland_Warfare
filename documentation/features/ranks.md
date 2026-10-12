@@ -6,32 +6,41 @@
 
 ## Overview
 
-The rank system lets server owners define a hierarchy of gang ranks, each with its own set of permissions. Ranks can
-have **parent ranks** — when a rank inherits from a parent, it automatically gains all of that parent's permissions in
-addition to its own. This makes it easy to build structured trees like Recruit → Member → Officer → Leader without
-duplicating permissions at every level.
+The rank system lets server owners define a hierarchy of gang ranks, each with its own set of permissions. A rank has
+exactly the permissions listed on it. A **parent rank** orders the ranks: promotion and demotion move a member along the
+parent chain (Recruit → Member → Officer → Leader). A parent does not pass its permissions down to its children.
 
 ---
 
-## How Inheritance Works
+## How Ranks Are Ordered
 
-When a rank has a parent, it inherits all permissions from that parent recursively. This means:
-
-- A rank inherits its direct parent's permissions.
-- It also inherits its grandparent's permissions, and so on up the chain.
-- Permissions are resolved at the time of a permission check, so changes to a parent rank take effect immediately for
-  all child ranks.
-
-**Example chain:**
+Each rank sits above at most one parent. The parent link decides the order that `/glw gang promote` and
+`/glw gang demote` walk. Permission checks read only the permissions listed on the rank itself (`Rank.contains`), and a
+member's own permission check does not walk the parent chain.
 
 ```
-Recruit  (can: gang.chat)
-   ╰── Member  (can: gang.deposit, gang.invite)
-          ╰── Officer  (can: gang.kick, gang.promote)
-                 ╰── Leader  (can: gang.delete, gang.rename)
+Recruit  (gang.chat)
+   ╰── Member  (gang.deposit, gang.invite)
+          ╰── Officer  (gang.kick, gang.promote)
+                 ╰── Leader  (gang.delete, gang.rename)
 ```
 
-A Leader in this chain can do everything — all permissions from every rank below them are inherited.
+A Leader holds only `gang.delete` and `gang.rename`. To give a Leader the kick permission too, add `gang.kick` to Leader.
+
+---
+
+## Fresh-Install Preset
+
+A server with an empty rank table gets the gang preset from `gang/gang_rules.yml`:
+
+- The fresh-install officer preset (`gang/gang_rules.yml` `Preset_Permissions`) includes `gangland.turf.upgrade`, so officers buy guards and boosts at the Quartermaster.
+- `Ranks.Preset` lists the ranks, lowest first (default `member`, `officer`, `owner`). The first should equal `Rank.Head`
+  and the last `Rank.Tail` in `gang/gang_settings.yml`.
+- `Ranks.Preset_Permissions` lists the `gangland.gang.*` nodes each preset rank gets. A rank does not inherit the nodes
+  of the ranks below it, so list them again. The top rank may do everything anyway.
+
+The preset is seeded only into an empty table. An existing rank tree is never changed by it; edit ranks with the
+commands above.
 
 ---
 
@@ -59,7 +68,7 @@ All rank commands require appropriate admin permissions.
 
 | Command                                   | Description                                          |
 |-------------------------------------------|------------------------------------------------------|
-| `/glw rank parent add <rank> <parent>`    | Sets a parent rank, enabling permission inheritance. A rank sits above one rank only, and a rank already below `<rank>` is refused. |
+| `/glw rank parent add <rank> <parent>`    | Sets a parent rank, which orders promotion and demotion. A rank sits above one rank only, and a rank already below `<rank>` is refused. |
 | `/glw rank parent remove <rank> <parent>` | Removes the parent relationship.                     |
 | `/glw rank traverse`                      | Displays a visual tree of the entire rank hierarchy. |
 
@@ -102,7 +111,7 @@ All rank commands require appropriate admin permissions.
 /glw rank traverse
 ```
 
-This will display the full tree with all inherited permissions at each level.
+This displays the full tree. Each rank's own permissions are listed on it.
 
 ---
 
@@ -112,22 +121,16 @@ This will display the full tree with all inherited permissions at each level.
 RankManager rankManager = gangland.getContext().get(RankManager.class);
 
 // Get a rank by name
-Optional<Rank> rank = rankManager.getRank("Leader");
+Rank leader = rankManager.get("Leader");
 
-// Check if a rank has a permission (including inherited)
-boolean canKick = rankManager.hasPermission(rank.get(), "gang.kick");
+// Grant a permission to a rank (returns false if the permission is unknown)
+rankManager.addPermission(leader, "gang.kick");
 
-// Get all permissions for a rank (including all inherited)
-Set<String> allPermissions = rankManager.resolvePermissions(rank.get());
+// Set a parent (returns false when refused)
+rankManager.addParent(leader, officer);
 
-// Get direct parent
-Optional<Rank> parent = rankManager.getParent(rank.get());
-
-// Set a parent
-rankManager.setParent(childRank, parentRank);
-
-// Remove parent
-rankManager.removeParent(childRank);
+// Remove a parent
+rankManager.removeParent(leader, officer);
 ```
 
 ---

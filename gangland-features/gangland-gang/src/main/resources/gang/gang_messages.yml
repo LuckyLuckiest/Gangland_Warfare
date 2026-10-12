@@ -1,0 +1,102 @@
+# +----------------------+ #
+# | Gang module messages | #
+# +----------------------+ #
+# Gang texts added since 0.17.0. Older gang texts are still in message_en.yml.
+# Every value may use & colour codes and the %name% placeholders listed above it.
+
+# ---------------- Onboarding ----------------
+Onboarding:
+   # The first line a gangless player sees on /glw gang.
+   What: "&6Gangs &7team up to hold turf, share a bank and fight together."
+   # The second line: the create fee. %money_symbol% and %cost% are filled in.
+   Cost: "&7Starting a gang costs &e%money_symbol%%cost%&7. Joining one is free."
+   # Button that runs /glw gang list.
+   Browse: "&a[Browse gangs]"
+   # Button that fills /glw gang create into the chat so the player only types the name.
+   Create: "&a[Create a gang]"
+# end Onboarding
+
+# ---------------- List ----------------
+List:
+   # Shown when no gang exists yet. Used by /glw gang list.
+   Empty: "&7There are no gangs yet."
+   # Header line. %page% is the current page, %pages% the total.
+   Header: "&6Gangs &7- page %page%/%pages%"
+   # One gang per row. %gang% is the display name, %members% the member count, %online% how many are online.
+   Row: "&f%gang% &7- members: %members% - online: %online%"
+   # Clickable footer when more pages follow. %page% is the next page number.
+   Next: "&7[Next page &e%page%&7]"
+# end List
+
+# ---------------- Info ----------------
+Info:
+   # Card title: %gang% is the display name, %name% the plain gang name.
+   Title: "&6%gang% &7(%name%)"
+   # The gang description.
+   Description: "&7Description: &f%description%"
+   # Member counts: %online% online out of %total% members.
+   Members: "&7Members: &a%online%&7/&e%total%"
+   # The member holding the tail rank.
+   Owner: "&7Owner: &f%owner%"
+   # Allied gangs by display name, comma separated.
+   Allies: "&7Allies: &f%allies%"
+   # Creation date, dd/MM/yyyy.
+   Created: "&7Created: &f%created%"
+   # Shown in place of an owner or an ally list that is empty.
+   None: "none"
+   # Shown when no gang matches the name or id. %gang% is what the player typed.
+   Not_Found: "&cNo gang named %gang%."
+# end Info
+
+# ---------------- Names ----------------
+Names:
+   # A name must match the gang_rules.yml Name_Pattern after colour codes are stripped.
+   Invalid: "&cGang names are 3 to 16 letters, digits or underscores."
+   # Another gang already has this name, ignoring case. Names are always unique.
+   Taken: "&cA gang named %gang% already exists."
+   # The rank named by Rank.Tail does not exist, so a new gang has no owner seat. Refused before any fee is taken.
+   No_Owner_Rank: "&cGangs cannot be created right now: the owner rank is missing. Tell an admin."
+# end Names
+
+# ---------------- Social: gang chat, gang join, gang recruiting (W2-P2) ----------------
+Social:
+   # Gang chat line. %player% = sender, %message%.
+   Chat_Format: "&a[Gang] &f%player%&7: &f%message%"
+   # Gang chat mode switched on / off with /glw gang chat.
+   Chat_On: "&aGang chat on: what you type goes to your gang only. &7/glw gang chat again to switch it off."
+   Chat_Off: "&7Gang chat off."
+   # /glw gang recruiting. %gang% = your gang.
+   Recruiting_Open: "&a%gang% is open: anyone can /glw gang join it."
+   Recruiting_Invite: "&7%gang% is invite only."
+   # /glw gang recruiting without an argument. %state% = open or invite only.
+   Recruiting_Now: "&7%gang% is %state%. &7Use /glw gang recruiting open|invite to change it."
+   # /glw gang join. %gang%.
+   Joined: "&aYou joined %gang%."
+   Invite_Only: "&c%gang% is invite only."
+   Unknown: "&cNo gang named %gang%."
+   Already_In_Gang: "&cLeave your gang first."
+   No_Rank: "&cThis gang has no starting rank; ask an admin."
+# end Social
+
+# ---------------- Bounty: gang bounties (W2-P1) ----------------
+Bounty:
+   # To the poster. %money_symbol%, %amount% = posted now, %gang%, %total% = the gang's whole bounty.
+   Posted: "&aPosted %money_symbol%%amount% on %gang%. &7The gang that takes one of their turfs collects %money_symbol%%total%."
+   # Refusals.
+   Own_Gang: "&cYou cannot put a bounty on your own gang."
+   Ally: "&cYou cannot put a bounty on an allied gang."
+   Unknown: "&cNo gang named %gang%."
+   # To the capturing gang's online members. %gang% = bountied gang, %money_symbol%, %amount%, %turf%.
+   Claimed: "&aYour gang took %turf% from %gang% and collected their %money_symbol%%amount% bounty."
+   # To the bountied gang's online members. %gang% = capturing gang, %money_symbol%, %amount%, %turf%.
+   Lost: "&c%gang% took %turf% and collected the %money_symbol%%amount% bounty on your gang."
+   # To the capturing gang's online members when the bounty does not fit under gang_settings.yml Maximum_Balance; the
+   # bounty stays on the other gang. %money_symbol%, %amount%, %gang% = bountied gang.
+   Bank_Full: "&eYour gang bank cannot hold the %money_symbol%%amount% bounty on %gang%; it stays on them."
+# end Bounty
+
+# ---------------- Progression: gang levels and the disband payout (W2-P1) ----------------
+Progression:
+   # To the gang owner when he disbands: a quarter of the creation fee back. %money_symbol%, %amount%.
+   Fee_Refund: "&7Refunded a quarter of the creation fee: &a%money_symbol%%amount%"
+# end Progression

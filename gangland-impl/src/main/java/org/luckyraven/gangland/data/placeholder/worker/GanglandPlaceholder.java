@@ -176,7 +176,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	private static boolean isGanglandOwnedPrefix(String param) {
 		return param.contains("user_") || param.contains("bank_") || param.contains("unique-item_")
-		       || param.contains("gang_");
+		       || param.contains("gang_") || param.contains("turf-");
 	}
 
 	@Nullable

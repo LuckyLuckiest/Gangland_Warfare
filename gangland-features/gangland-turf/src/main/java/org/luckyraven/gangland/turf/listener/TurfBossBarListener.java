@@ -11,18 +11,19 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.turf.capture.CaptureEligibility;
+import org.luckyraven.gangland.turf.capture.CaptureSettings;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
 import org.luckyraven.gangland.turf.events.*;
 import org.luckyraven.gangland.turf.manager.TurfManager;
-import org.luckyraven.gangland.turf.state.CapturePhase;
 import org.luckyraven.gangland.turf.state.TurfState;
 
 import java.util.HashMap;
@@ -30,13 +31,12 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Renders per-viewer BossBars while a turf is CONTESTING. Owned-turf captures show a single bar (consolidate).
- * Unclaimed-turf captures show two stacked bars: a neutral "Unclaimed Territory" bar that fills 0→100 during the CLAIM
- * phase, then sticks at 100 throughout CONSOLIDATE; and a coloured "%gang% is capturing %turf%" bar that stays at 0
- * during CLAIM and fills 0→100 during CONSOLIDATE. Bar B colour is red for defenders, green for the capturing gang,
- * white for bystanders. Progress syncs against {@link TurfRuntimeState#getCaptureProgress()} on a 1-Hz scheduler so
- * bars fill smoothly between milestone events. Every upward tick on the active bar plays the subtle tick sound so
- * attackers get audio feedback alongside the moving bar.
+ * Renders one per-viewer BossBar while a turf is CONTESTING, owned or unclaimed alike (one bar since 0.17.0; the
+ * stacked "Unclaimed Territory" claim bar is gone). The title is "%gang% is capturing %turf%" with the attackers
+ * against the defenders, and "+N guards" appended to the defenders while guards hold the bar. The colour is red for
+ * defenders, green for the capturing gang, white for bystanders. Progress syncs against
+ * {@link TurfRuntimeState#getCaptureProgress()} on a 1-Hz scheduler so the bar fills smoothly between milestone
+ * events. Every upward tick plays the subtle tick sound so attackers get audio feedback alongside the moving bar.
  *
  * <p>Three categories of viewer see the bars at any given moment:
  * <ul>
@@ -61,22 +61,30 @@ public final class TurfBossBarListener implements Listener {
 	private final UserLookupContract  users;
 	private final TurfMessageContract messages;
 	private final TurfSoundContract   sounds;
+	private final CaptureSettings     settings;
+	private final CaptureEligibility  eligibility;
+	private final TurfMessages        text;
 
-	private final Map<Integer, Map<UUID, BarPair>> barsByTurf              = new HashMap<>();
-	private final Map<Integer, Double>             lastClaimProgress       = new HashMap<>();
-	private final Map<Integer, Double>             lastConsolidateProgress = new HashMap<>();
+	private final Map<Integer, Map<UUID, BossBar>> barsByTurf   = new HashMap<>();
+	private final Map<Integer, Double>             lastProgress = new HashMap<>();
 
 	public TurfBossBarListener(JavaPlugin plugin,
 	                           TurfManager turfs,
 	                           GangLookupContract gangs,
 	                           UserLookupContract users,
 	                           TurfMessageContract messages,
-	                           TurfSoundContract sounds) {
-		this.turfs    = turfs;
-		this.gangs    = gangs;
-		this.users    = users;
-		this.messages = messages;
-		this.sounds   = sounds;
+	                           TurfSoundContract sounds,
+	                           CaptureSettings settings,
+	                           CaptureEligibility eligibility,
+	                           TurfMessages text) {
+		this.turfs       = turfs;
+		this.gangs       = gangs;
+		this.users       = users;
+		this.messages    = messages;
+		this.sounds      = sounds;
+		this.settings    = settings;
+		this.eligibility = eligibility;
+		this.text        = text;
 
 		Bukkit.getScheduler().runTaskTimer(plugin, this::refreshProgress, 20L, 20L);
 	}
@@ -118,10 +126,8 @@ public final class TurfBossBarListener implements Listener {
 		if (state == null) {
 			return;
 		}
-		// CaptureService re-fires this event on the Phase 1 → Phase 2 transition with a (possibly
-		// different) newly-elected challenger gang. Tear the old bars down first so the gang label and
-		// per-viewer colour rebuild against the current challenger instead of being stuck on the prior
-		// one's identity.
+		// CaptureService re-fires this event when the challenger changes. Tear the old bars down first so
+		// the gang label and per-viewer colour rebuild against the current challenger.
 		clearTurf(turf.getId());
 		int     challengerGangId = event.getChallengerGang().getId();
 		Integer defenderGangId   = turf.getOwnerGangId();
@@ -175,10 +181,10 @@ public final class TurfBossBarListener implements Listener {
 	@EventHandler
 	public void onQuit(PlayerQuitEvent event) {
 		UUID uuid = event.getPlayer().getUniqueId();
-		for (Map<UUID, BarPair> perViewer : barsByTurf.values()) {
-			BarPair pair = perViewer.remove(uuid);
-			if (pair != null) {
-				pair.removeAll();
+		for (Map<UUID, BossBar> perViewer : barsByTurf.values()) {
+			BossBar bar = perViewer.remove(uuid);
+			if (bar != null) {
+				bar.removeAll();
 			}
 		}
 	}
@@ -189,45 +195,26 @@ public final class TurfBossBarListener implements Listener {
 	}
 
 	private void showFor(Player viewer, Turf turf, TurfRuntimeState state) {
-		Map<UUID, BarPair> perViewer = barsByTurf.computeIfAbsent(turf.getId(), k -> new HashMap<>());
+		Map<UUID, BossBar> perViewer = barsByTurf.computeIfAbsent(turf.getId(), k -> new HashMap<>());
 		if (perViewer.containsKey(viewer.getUniqueId())) {
 			return;
 		}
 
-		Gang     challenger = state.getChallengerGangId() == null ? null : gangs.findById(state.getChallengerGangId());
-		BarColor color      = resolveColor(viewer, turf.getOwnerGangId(), state.getChallengerGangId());
-
-		BossBar consolidateBar = Bukkit.createBossBar(buildConsolidateTitle(turf, challenger), color, BarStyle.SOLID);
-		BossBar claimBar       = null;
-
-		if (turf.isUnclaimed()) {
-			claimBar = Bukkit.createBossBar(buildClaimTitle(), BarColor.WHITE, BarStyle.SOLID);
-			// Claim bar fills first; consolidate bar stays at 0 until CLAIM completes.
-			double claimProgress = state.getPhase() == CapturePhase.CLAIM
-			                       ? Math.max(0.0, Math.min(state.getCaptureProgress() / 100.0, 1.0))
-			                       : 1.0;
-			double consolidateProgress = state.getPhase() == CapturePhase.CONSOLIDATE
-			                             ? Math.max(0.0, Math.min(state.getCaptureProgress() / 100.0, 1.0))
-			                             : 0.0;
-			claimBar.setProgress(claimProgress);
-			consolidateBar.setProgress(consolidateProgress);
-			claimBar.addPlayer(viewer);
-		} else {
-			consolidateBar.setProgress(Math.max(0.0, Math.min(state.getCaptureProgress() / 100.0, 1.0)));
-		}
-
-		consolidateBar.addPlayer(viewer);
-		perViewer.put(viewer.getUniqueId(), new BarPair(claimBar, consolidateBar));
+		BarColor color = resolveColor(viewer, turf.getOwnerGangId(), state.getChallengerGangId());
+		BossBar  bar   = Bukkit.createBossBar(bossTitle(turf, state), color, BarStyle.SOLID);
+		bar.setProgress(progress(state));
+		bar.addPlayer(viewer);
+		perViewer.put(viewer.getUniqueId(), bar);
 	}
 
 	private void hideFor(Player viewer, int turfId) {
-		Map<UUID, BarPair> perViewer = barsByTurf.get(turfId);
+		Map<UUID, BossBar> perViewer = barsByTurf.get(turfId);
 		if (perViewer == null) {
 			return;
 		}
-		BarPair pair = perViewer.remove(viewer.getUniqueId());
-		if (pair != null) {
-			pair.removeAll();
+		BossBar bar = perViewer.remove(viewer.getUniqueId());
+		if (bar != null) {
+			bar.removeAll();
 		}
 		if (perViewer.isEmpty()) {
 			barsByTurf.remove(turfId);
@@ -235,19 +222,18 @@ public final class TurfBossBarListener implements Listener {
 	}
 
 	private void clearTurf(int turfId) {
-		lastClaimProgress.remove(turfId);
-		lastConsolidateProgress.remove(turfId);
-		Map<UUID, BarPair> perViewer = barsByTurf.remove(turfId);
+		lastProgress.remove(turfId);
+		Map<UUID, BossBar> perViewer = barsByTurf.remove(turfId);
 		if (perViewer == null) {
 			return;
 		}
-		for (BarPair pair : perViewer.values()) {
-			pair.removeAll();
+		for (BossBar bar : perViewer.values()) {
+			bar.removeAll();
 		}
 	}
 
 	private void refreshProgress() {
-		for (Map.Entry<Integer, Map<UUID, BarPair>> entry : barsByTurf.entrySet()) {
+		for (Map.Entry<Integer, Map<UUID, BossBar>> entry : barsByTurf.entrySet()) {
 			int              turfId = entry.getKey();
 			TurfRuntimeState state  = turfs.getRuntimeState(turfId);
 			if (state == null) {
@@ -258,46 +244,55 @@ public final class TurfBossBarListener implements Listener {
 				continue;
 			}
 
-			double progress = Math.max(0.0, Math.min(state.getCaptureProgress() / 100.0, 1.0));
-			double claimProgress;
-			double consolidateProgress;
-			if (turf.isUnclaimed()) {
-				claimProgress       = state.getPhase() == CapturePhase.CLAIM ? progress : 1.0;
-				consolidateProgress = state.getPhase() == CapturePhase.CONSOLIDATE ? progress : 0.0;
-			} else {
-				claimProgress       = 0.0; // unused; owned turfs have no claim bar
-				consolidateProgress = progress;
-			}
+			double  progress = progress(state);
+			boolean advanced = progress > lastProgress.getOrDefault(turfId, 0.0) + 0.0005;
+			String  title    = bossTitle(turf, state);
 
-			double  prevClaim       = lastClaimProgress.getOrDefault(turfId, 0.0);
-			double  prevConsolidate = lastConsolidateProgress.getOrDefault(turfId, 0.0);
-			boolean claimAdvanced   = claimProgress > prevClaim + 0.0005;
-			boolean consAdvanced    = consolidateProgress > prevConsolidate + 0.0005;
-
-			for (BarPair pair : entry.getValue().values()) {
-				if (pair.claim() != null) {
-					pair.claim().setProgress(claimProgress);
+			for (BossBar bar : entry.getValue().values()) {
+				bar.setProgress(progress);
+				if (!title.equals(bar.getTitle())) {
+					bar.setTitle(title);
 				}
-				pair.consolidate().setProgress(consolidateProgress);
-				if (claimAdvanced || consAdvanced) {
-					for (Player listener : pair.consolidate().getPlayers()) {
+				if (advanced) {
+					for (Player listener : bar.getPlayers()) {
 						sounds.playCaptureTick(listener);
 					}
 				}
 			}
-			lastClaimProgress.put(turfId, claimProgress);
-			lastConsolidateProgress.put(turfId, consolidateProgress);
+			lastProgress.put(turfId, progress);
 		}
 	}
 
-	private String buildConsolidateTitle(Turf turf, Gang challenger) {
-		return ChatUtil.color(messages.format("TURF_BOSSBAR_TITLE",
-		                                      "turf", turf.getDisplayName(),
-		                                      "gang", GangDisplayNameResolver.resolve(challenger)));
+	private static double progress(TurfRuntimeState state) {
+		return Math.max(0.0, Math.min(state.getCaptureProgress() / 100.0, 1.0));
 	}
 
-	private String buildClaimTitle() {
-		return ChatUtil.color(messages.format("TURF_BOSSBAR_TITLE_UNCLAIMED"));
+	/**
+	 * The boss bar title at this moment, the same for owned and unclaimed turfs. Attackers = the challenger's count
+	 * inside. Defenders = the owner and allies inside (owned) or every other gang inside (unclaimed), with the guards
+	 * holding the bar appended. The time is the time left at the pace {@link BossBarText#pace} gives (attackers minus
+	 * defenders minus guards), clamped to the minimum capture time.
+	 */
+	String bossTitle(Turf turf, TurfRuntimeState state) {
+		Integer               challengerId = state.getChallengerGangId();
+		Map<Integer, Integer> inside       = state.getChallengersInside();
+		int                   attackers    = challengerId == null ? 0 : inside.getOrDefault(challengerId, 0);
+		int                   defenders    = turf.isUnclaimed()
+		                                     ? BossBarText.unclaimedDefenders(inside, challengerId)
+		                                     : state.getDefendersInside();
+		int                   guards       = state.getGuardsCounted();
+
+		int    pace        = BossBarText.pace(attackers, defenders, guards);
+		long   secondsLeft = BossBarText.secondsLeft(state.getCaptureProgress(), pace,
+		                                             settings.getCaptureDurationSeconds(),
+		                                             eligibility.rules().minCaptureSeconds());
+		String time        = secondsLeft < 0
+		                     ? text.text("Info.BossBar_Stalled", "stalled")
+		                     : messages.formatDuration(secondsLeft);
+		Gang   challenger  = challengerId == null ? null : gangs.findById(challengerId);
+
+		return BossBarText.title(text, GangDisplayNameResolver.resolve(challenger), turf.getDisplayName(),
+		                         attackers, BossBarText.defendersLabel(text, defenders, guards), time);
 	}
 
 	private BarColor resolveColor(Player viewer, Integer defenderGangId, Integer challengerGangId) {
@@ -313,19 +308,5 @@ public final class TurfBossBarListener implements Listener {
 			return BarColor.GREEN;
 		}
 		return BarColor.WHITE;
-	}
-
-	/**
-	 * Owned-turf captures use {@code claim == null}; unclaimed captures populate both. {@link #removeAll()} hides
-	 * whatever is present, so callers don't have to null-check at teardown sites.
-	 */
-	private record BarPair(BossBar claim, BossBar consolidate) {
-
-		void removeAll() {
-			if (claim != null) {
-				claim.removeAll();
-			}
-			consolidate.removeAll();
-		}
 	}
 }

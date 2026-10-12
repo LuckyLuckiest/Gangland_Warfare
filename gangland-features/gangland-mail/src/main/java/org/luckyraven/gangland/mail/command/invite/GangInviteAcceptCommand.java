@@ -10,6 +10,7 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
@@ -20,6 +21,7 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
+import org.luckyraven.gangland.mail.MailMessages;
 import org.luckyraven.gangland.mail.MailType;
 
 import java.time.Instant;
@@ -39,10 +41,11 @@ class GangInviteAcceptCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 	private final MailManager         mailManager;
+	private final MailMessages        messages;
 
 	GangInviteAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                        MemberManager memberManager, GangManager gangManager, RankManager rankManager,
-	                        MailManager mailManager) {
+	                        MailManager mailManager, MailMessages messages) {
 		super(plugin, "accept", tree, parent);
 
 		this.plugin      = plugin;
@@ -52,6 +55,7 @@ class GangInviteAcceptCommand extends SubArgument {
 		this.gangManager   = gangManager;
 		this.rankManager   = rankManager;
 		this.mailManager   = mailManager;
+		this.messages      = messages;
 
 		this.addSubArgument(senderGangArgument());
 	}
@@ -76,19 +80,18 @@ class GangInviteAcceptCommand extends SubArgument {
 				return;
 			}
 
+			if (pending.size() > 1) {
+				// Accepting cancels the other invites, so auto-picking one would take the choice away. Ask for the gang.
+				user.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<gang>"));
+				return;
+			}
+
 			MailItem mail = pending.get(0);
 			Gang     gang = gangManager.getGang(mail.getSenderGangId());
 			if (gang == null) {
 				mailManager.cancel(mail);
 				user.sendMessage(Messages.NO_GANG_INVITATION.toString());
 				return;
-			}
-
-			if (pending.size() > 1) {
-				user.sendMessage(Messages.GANG_INVITE_ACCEPT_MULTIPLE.toString()
-				                                                     .replace("%count%",
-				                                                              String.valueOf(pending.size()))
-				                                                     .replace("%gang%", gang.getDisplayNameString()));
 			}
 
 			doAccept(user, player, gang, mail);
@@ -143,7 +146,8 @@ class GangInviteAcceptCommand extends SubArgument {
 			try {
 				senderId = Integer.parseInt(value);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", value));
+				// Not a sender id: a gang name with no pending invite from it (the gang token is free text).
+				user.sendMessage(Messages.GANG_INVITE_NO_INVITE_FROM.toString().replace("%gang%", value));
 				return;
 			}
 
@@ -182,7 +186,13 @@ class GangInviteAcceptCommand extends SubArgument {
 		gang.addMember(user, member, rank);
 		player.sendMessage(Messages.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
 
+		// GR-23: accepting cancels the rest of this player's gang invites; say so if there were any.
+		long others = mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)
+		                         .stream()
+		                         .filter(pending -> pending != mail)
+		                         .count();
 		mailManager.accept(mail);
+		if (others > 0) user.sendMessage(messages.inviteSiblingsCancelled());
 	}
 
 }

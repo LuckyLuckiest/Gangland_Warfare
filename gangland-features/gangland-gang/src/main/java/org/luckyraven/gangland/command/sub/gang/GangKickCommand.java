@@ -196,7 +196,10 @@ class GangKickCommand extends SubArgument {
 				targetUser = offlineUserManager.getUser(offlinePlayer);
 
 				if (targetUser == null) {
+					// Fallback only: the row failed to load, so this User holds defaults. Load-pending keeps autosave
+					// and shutdown from writing them over the stored row.
 					User<OfflinePlayer> offlineUser = offlineUserManager.create(offlinePlayer);
+					if (!offlineUserManager.loadStored(offlineUser)) offlineUser.setLoadPending(true);
 					offlineUserManager.add(offlineUser);
 					targetUser = offlineUser;
 				}

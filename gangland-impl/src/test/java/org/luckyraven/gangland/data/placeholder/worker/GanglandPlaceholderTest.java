@@ -74,6 +74,14 @@ class GanglandPlaceholderTest {
 	}
 
 	@Test
+	@DisplayName("a turf-owned prefix left unanswered (turf-name with no turf contribution installed) still renders NA")
+	void onRequest_turfPrefixUnanswered_rendersNa() {
+		OfflinePlayer player = mock(OfflinePlayer.class);
+
+		assertEquals("NA", placeholder().onRequest(player, "turf-name"));
+	}
+
+	@Test
 	@DisplayName("player == null: a foreign/typo'd token still returns null")
 	void onRequest_nullPlayer_unrecognizedToken_returnsNull() {
 		assertNull(placeholder().onRequest(null, "foo_unknown"));

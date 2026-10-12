@@ -1,0 +1,7 @@
+# +-----------------+ #
+# | Gang invites    | #
+# +-----------------+ #
+#
+# How long an invite to an OFFLINE player stays open, in hours. Invites to online players still expire after 1 minute.
+# 0 keeps the old behaviour: the invite waits until the player next logs in, however long that takes.
+Invite_Offline_Expiry_Hours: 72

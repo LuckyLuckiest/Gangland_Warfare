@@ -78,4 +78,17 @@ Gang creation, membership, ranks within the gang, alliances, gang chat, gang ban
 
 ---
 
+## W2 Manual Checks (0.17.0 Gangs)
+
+- [ ] `/glw gang chat hello` reaches online members only; `/glw gang chat` toggles chat mode; leaving the gang clears it.
+- [ ] `/glw gang recruiting open` then a non-member runs `/glw gang join <gang>` and joins at the starting rank.
+- [ ] Without `open`, `/glw gang join <gang>` is refused; a fresh gang starts on `invite`.
+- [ ] `/glw gang bounty <gang> <amount>`: refused for your own gang and for an ally; accepted from a gangless player; the bounty is paid to the capturing gang's bank.
+- [ ] A bounty on a gang with no turf cannot be claimed; disbanding the bountied gang destroys it.
+- [ ] Disband a gang with no contributions: the bank splits equally, the owner takes the rounding remainder.
+- [ ] `/glw gang accept` with two invites asks for `[gang]`.
+- [ ] `/glw gang` for a gangless player opens the onboarding screen; for a member it opens the gang menu.
+
+---
+
 [Back to Test Index](../README.md)

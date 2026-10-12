@@ -1,0 +1,134 @@
+package org.luckyraven.gangland.listener.inventory;
+
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.data.placeholder.PlaceholderService;
+import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
+import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
+import org.luckyraven.gangland.menu.InventoryBuilder;
+import org.luckyraven.gangland.menu.InventoryData;
+import org.luckyraven.gangland.menu.OpenInventory;
+import org.luckyraven.gangland.menu.State;
+import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
+import org.luckyraven.keystone.inventory.InventoryService;
+import org.luckyraven.keystone.inventory.chest.ChestMenu;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * T-226: an {@code Open.Condition} on a menu's {@code Open.Command} decides whether the command opens it. A false
+ * condition makes the listener skip the menu without opening it and without cancelling the command, so the command
+ * reaches its own executor (the gang onboarding for {@code /glw gang}). With no condition the old behaviour holds.
+ */
+@DisplayName("InventoryOpenByCommandListener - Open.Condition gates a command-opened menu")
+class InventoryOpenConditionTest {
+
+	private static final String CONDITION = "%gangland_user_has-gang%";
+
+	private Player                 player;
+	private PlayerCommandPreprocessEvent event;
+	private InventoryBuilder       builder;
+	private ChestMenu              menu;
+	private ConditionEvaluator     conditions;
+	private InventoryDefinitionStore store;
+	private InventoryData          data;
+	private InventoryOpenByCommandListener listener;
+
+	@BeforeEach
+	void setUp() {
+		player     = mock(Player.class);
+		event      = mock(PlayerCommandPreprocessEvent.class);
+		when(event.getMessage()).thenReturn("/glw gang");
+		when(event.getPlayer()).thenReturn(player);
+		builder    = mock(InventoryBuilder.class);
+		menu       = mock(ChestMenu.class);
+		conditions = mock(ConditionEvaluator.class);
+		store      = mock(InventoryDefinitionStore.class);
+		data       = new InventoryData("gang_info", "Gang", "chest", 27);
+
+		when(builder.inventoryData()).thenReturn(data);
+		when(store.getInventoryKeys()).thenReturn(Set.of("gang_info"));
+		when(store.getInventory("gang_info")).thenReturn(builder);
+		when(builder.createMenu(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+				.thenReturn(menu);
+
+		listener = new InventoryOpenByCommandListener(mock(Gangland.class), mock(PlaceholderService.class),
+		                                              conditions, store, mock(InventoryRuntimeContext.class),
+		                                              mock(InventoryService.class));
+	}
+
+	private void openCommandWith(String condition) {
+		data.addOpenInventory(new OpenInventory(State.COMMAND, "/glw gang", null, condition));
+	}
+
+	private PlayerCommandPreprocessEvent runCommand() {
+		listener.onInventoryCommand(event);
+		return event;
+	}
+
+	@Test
+	@DisplayName("a false condition neither opens the menu nor cancels the command, so GangCommand runs")
+	void falseCondition_skipsMenuAndLetsCommandThrough() {
+		openCommandWith(CONDITION);
+		when(conditions.evaluate(player, CONDITION)).thenReturn(false);
+
+		runCommand();
+
+		verify(event, never()).setCancelled(true);
+		verify(builder, never()).createMenu(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+		verify(menu, never()).open(any());
+	}
+
+	@Test
+	@DisplayName("a true condition opens the menu and cancels the command")
+	void trueCondition_opensMenuAndCancels() {
+		openCommandWith(CONDITION);
+		when(conditions.evaluate(eq(player), eq(CONDITION))).thenReturn(true);
+
+		runCommand();
+
+		verify(event).setCancelled(true);
+		verify(menu).open(player);
+	}
+
+	@Test
+	@DisplayName("without an Open.Condition the menu opens and cancels as before")
+	void noCondition_opensMenuAndCancels() {
+		openCommandWith(null);
+
+		runCommand();
+
+		verify(event).setCancelled(true);
+		verify(menu).open(player);
+	}
+
+	@Test
+	@DisplayName("the shipped gang_info.yml gates its Open.Command on membership")
+	void shippedGangInfo_hasMembershipCondition() throws Exception {
+		try (InputStream in = InventoryOpenConditionTest.class.getResourceAsStream("/inventory/gang_info.yml")) {
+			assertNotNull(in);
+			YamlConfiguration yaml = YamlConfiguration.loadConfiguration(
+					new InputStreamReader(in, StandardCharsets.UTF_8));
+
+			assertEquals(CONDITION, yaml.getString("Information.Open.Condition"));
+			assertEquals("/glw gang", yaml.getString("Information.Open.Command"));
+		}
+	}
+}

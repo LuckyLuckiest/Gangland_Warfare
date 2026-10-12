@@ -11,9 +11,12 @@ import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.gangland.turf.events.TurfDefenderDownEvent;
 import org.luckyraven.keystone.npc.NpcSupport;
 
 import java.util.*;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -29,7 +32,7 @@ import java.util.function.Supplier;
  * target, and forces a transition into COMBAT if not already there.
  */
 @CustomLog
-public final class TurfDefenderDeployer {
+public final class TurfDefenderDeployer implements BeanLifecycle {
 
 	private static final long TICK_PERIOD = 5L;
 
@@ -38,6 +41,8 @@ public final class TurfDefenderDeployer {
 	private final CivilianSpawnManager spawnManager;
 
 	private final Map<Integer, Group> byTurfId = new HashMap<>();
+	/** Guards whose death was reported by {@link #markKilled}; only these count as "down" (T-251). */
+	private final Set<CivilianNpc> killed = Collections.newSetFromMap(new IdentityHashMap<>());
 	private       BukkitTask          tickTask;
 
 	public TurfDefenderDeployer(JavaPlugin plugin,
@@ -53,6 +58,11 @@ public final class TurfDefenderDeployer {
 		tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, TICK_PERIOD, TICK_PERIOD);
 	}
 
+	@Override
+	public void onShutdown() {
+		stop();
+	}
+
 	public void stop() {
 		if (tickTask != null) {
 			tickTask.cancel();
@@ -60,6 +70,7 @@ public final class TurfDefenderDeployer {
 		}
 		for (Group g : byTurfId.values()) g.recallAll();
 		byTurfId.clear();
+		killed.clear();
 	}
 
 	/**
@@ -73,7 +84,8 @@ public final class TurfDefenderDeployer {
 	 * @param challengerMembersSupplier resolves the set of player UUIDs the defenders should attack
 	 * @param count how many defenders to spawn
 	 * @param targetingRadius defenders only target players within this distance (blocks)
-	 * @param lifespanSeconds safety lifespan — defender is recalled if it outlives this regardless of contest state
+	 * @param lifespanSeconds safety lifespan, read on every tick so a /glw reload applies to guards already deployed;
+	 *                        a guard is recalled once it outlives it regardless of contest state
 	 */
 	public void deploy(int turfId,
 	                   Location spawnLocation,
@@ -81,7 +93,7 @@ public final class TurfDefenderDeployer {
 	                   Supplier<Set<UUID>> challengerMembersSupplier,
 	                   int count,
 	                   double targetingRadius,
-	                   int lifespanSeconds) {
+	                   IntSupplier lifespanSeconds) {
 		if (count <= 0) return;
 		// T-I6: without Citizens, CivilianSpawnManager's factory reaches CitizensAPI directly and throws. The
 		// garrison stock stays consumed by the caller (GarrisonDeployListener) either way — only the NPC spawn is
@@ -92,7 +104,7 @@ public final class TurfDefenderDeployer {
 		                                       k -> new Group(challengerMembersSupplier, targetingRadius));
 		group.challengerMembers = challengerMembersSupplier;
 		group.targetingRadius   = targetingRadius;
-		long expiresAt = System.currentTimeMillis() + lifespanSeconds * 1000L;
+		long deployedAt = System.currentTimeMillis();
 		for (int i = 0; i < count; i++) {
 			CivilianNpc npc = spawnManager.spawnCivilian(spawnLocation, civilianTypeId);
 			if (npc == null) {
@@ -100,7 +112,8 @@ public final class TurfDefenderDeployer {
 				         civilianTypeId, spawnLocation);
 				continue;
 			}
-			group.defenders.add(new TrackedDefender(npc, expiresAt));
+			group.defenders.add(new TrackedDefender(npc, deployedAt, lifespanSeconds));
+			group.deployed++;
 		}
 	}
 
@@ -110,7 +123,24 @@ public final class TurfDefenderDeployer {
 	 */
 	public void recall(int turfId) {
 		Group group = byTurfId.remove(turfId);
-		if (group != null) group.recallAll();
+		if (group != null) {
+			for (TrackedDefender d : group.defenders) {
+				killed.remove(d.npc);
+			}
+			group.recallAll();
+		}
+	}
+
+	/** T-251: records that this guard died (not merely vanished); a no-op for an NPC that is not a tracked guard. */
+	public void markKilled(CivilianNpc npc) {
+		for (Group group : byTurfId.values()) {
+			for (TrackedDefender d : group.defenders) {
+				if (d.npc == npc) {
+					killed.add(npc);
+					return;
+				}
+			}
+		}
 	}
 
 	/**
@@ -138,7 +168,7 @@ public final class TurfDefenderDeployer {
 		long now = System.currentTimeMillis();
 		List<CivilianNpc> live = new ArrayList<>(group.defenders.size());
 		for (TrackedDefender d : group.defenders) {
-			if (d.npc.isValid() && !d.npc.isMarkedForRemoval() && now < d.expiresAt) live.add(d.npc);
+			if (d.npc.isValid() && !d.npc.isMarkedForRemoval() && now < d.expiresAt()) live.add(d.npc);
 		}
 		return live;
 	}
@@ -153,20 +183,40 @@ public final class TurfDefenderDeployer {
 		return civilianService;
 	}
 
-	private void tick() {
+	/** How many guards of {@code turfId} are alive, valid and not expired right now (0 when none were deployed). */
+	public int aliveCount(int turfId) {
+		return liveDefenders(turfId).size();
+	}
+
+	/** Package-private for tests (W2-K). */
+	void tick() {
 		long now = System.currentTimeMillis();
 
 		for (Iterator<Map.Entry<Integer, Group>> entries = byTurfId.entrySet().iterator(); entries.hasNext(); ) {
 			Map.Entry<Integer, Group> entry = entries.next();
 			Group                     group = entry.getValue();
 
+			int down = 0;
 			// Reap dead / expired defenders first so targeting only runs over live ones.
 			for (Iterator<TrackedDefender> it = group.defenders.iterator(); it.hasNext(); ) {
 				TrackedDefender d = it.next();
-				if (!d.npc.isValid() || d.npc.isMarkedForRemoval() || now >= d.expiresAt) {
+				if (!d.npc.isValid() || d.npc.isMarkedForRemoval() || now >= d.expiresAt()) {
+					boolean died = killed.remove(d.npc);
+					if (now < d.expiresAt()) {
+						if (died) {
+							down++;
+						} else {
+							// T-251: unloaded or despawned, not killed - drop it without a defender-down alert
+							log.debug("Turf {}: guard left without dying (despawned or unloaded); not counted as down", entry.getKey());
+						}
+					}
 					if (d.npc.isValid()) d.npc.markForRemoval();
 					it.remove();
 				}
+			}
+			if (down > 0) {
+				Bukkit.getPluginManager().callEvent(
+						new TurfDefenderDownEvent(entry.getKey(), group.defenders.size(), group.deployed));
 			}
 			if (group.defenders.isEmpty()) {
 				entries.remove();
@@ -207,6 +257,7 @@ public final class TurfDefenderDeployer {
 	private static final class Group {
 
 		final List<TrackedDefender> defenders = new ArrayList<>();
+		int deployed;
 		Supplier<Set<UUID>> challengerMembers;
 		double              targetingRadius;
 
@@ -226,6 +277,10 @@ public final class TurfDefenderDeployer {
 		}
 	}
 
-	private record TrackedDefender(CivilianNpc npc, long expiresAt) {
+	private record TrackedDefender(CivilianNpc npc, long deployedAt, IntSupplier lifespanSeconds) {
+
+		long expiresAt() {
+			return deployedAt + lifespanSeconds.getAsInt() * 1000L;
+		}
 	}
 }

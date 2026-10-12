@@ -1,7 +1,9 @@
 package org.luckyraven.gangland.gang.database.repositories.gang;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.database.tables.gang.GangTable;
+import org.luckyraven.keystone.color.Color;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
@@ -17,9 +19,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Repository(Gang.class)
-public class GangRepository extends AbstractRepository<Gang> {
+public class GangRepository extends AbstractRepository<Gang> implements LoadOutcome {
 
 	private final GangTable gangTable;
+	private volatile boolean lastLoadFailed;
 
 	public GangRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
 		super(plugin, databaseHandler, backend);
@@ -29,42 +32,59 @@ public class GangRepository extends AbstractRepository<Gang> {
 
 	@Override
 	protected Collection<Gang> doLoadAll() throws SQLException {
+		lastLoadFailed = true;   // stays true when readRows throws; Keystone reports the exception and returns an empty list
+		Collection<Gang> rows = readRows();
+		lastLoadFailed = false;
+		return rows;
+	}
+
+	private Collection<Gang> readRows() throws SQLException {
 		List<Gang>     gangs     = new ArrayList<>();
 		List<Object[]> gangsData = tableBackend().selectAll();
 
 		for (Object[] result : gangsData) {
-			int    v                  = 0;
-			int    id                 = (int) result[v++];
-			String name               = String.valueOf(result[v++]);
-			String displayName        = String.valueOf(result[v++]);
-			String description        = String.valueOf(result[v++]);
-			String color              = String.valueOf(result[v++]);
-			double balance            = (double) result[v++];
-			int    level              = (int) result[v++];
-			double experience         = (double) result[v++];
-			double bounty             = (double) result[v++];
-			long   created            = (long) result[v++];
-			long   lastMemberOnlineAt = (long) result[v++];
-			String state              = String.valueOf(result[v]);
-
-			Gang gang = new Gang(id);
-
-			gang.setName(name);
-			gang.setDisplayName(displayName);
-			gang.setColor(color);
-			gang.setDescription(description);
-			gang.getEconomy().setAmount(Currency.of(balance));
-			gang.getLevel().setLevelValue(level);
-			gang.getLevel().setExperience(experience);
-			gang.getBounty().setAmount(Currency.of(bounty));
-			gang.setCreated(created);
-			gang.setLastMemberOnlineAt(lastMemberOnlineAt);
-			gang.setState(parseState(state));
-
-			gangs.add(gang);
+			gangs.add(fromRow(result));
 		}
 
 		return gangs;
+	}
+
+	@Override
+	public boolean lastLoadFailed() {
+		return lastLoadFailed;
+	}
+
+	/** One gang row. Every numeric column reads through {@link Number}; a SQL NULL reads as 0 (T-199). */
+	public static Gang fromRow(Object[] result) {
+		int    v                  = 0;
+		int    id                 = num(result[v++]).intValue();
+		String name               = text(result[v++], "");
+		String displayName        = text(result[v++], "");
+		String description        = text(result[v++], "Conquering the hood");
+		String color              = text(result[v++], Color.LIGHT_BLUE.name());
+		double balance            = num(result[v++]).doubleValue();
+		int    level              = num(result[v++]).intValue();
+		double experience         = num(result[v++]).doubleValue();
+		double bounty             = num(result[v++]).doubleValue();
+		long   created            = num(result[v++]).longValue();
+		long   lastMemberOnlineAt = num(result[v++]).longValue();
+		String state              = text(result[v], "INVITE");
+
+		Gang gang = new Gang(id);
+
+		gang.setName(name);
+		gang.setDisplayName(displayName);
+		gang.setColor(color);
+		gang.setDescription(description);
+		gang.getEconomy().setAmount(Currency.of(balance));
+		gang.getLevel().setLevelValue(level);
+		gang.getLevel().setExperience(experience);
+		gang.getBounty().setAmount(Currency.of(bounty));
+		gang.setCreated(created);
+		gang.setLastMemberOnlineAt(lastMemberOnlineAt);
+		gang.setState(parseState(state));
+
+		return gang;
 	}
 
 	@Override
@@ -82,14 +102,23 @@ public class GangRepository extends AbstractRepository<Gang> {
 		tableBackend().delete("id = ?", data.getId());
 	}
 
-	private Gang.State parseState(String raw) {
-		if (raw == null || raw.equals("null")) {
+	/**
+	 * GR-20: a SQL NULL text column loads as the fallback, never as the literal string {@code "null"}.
+	 */
+	static String text(Object raw, String fallback) {
+		return raw == null ? fallback : String.valueOf(raw);
+	}
+
+	/** A SQL NULL numeric column reads as 0; any other value is read through {@link Number}. */
+	public static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
+	}
+
+	/** D7: OPEN stays OPEN; INVITE, CLOSE, NULL, "null" and anything unknown read as INVITE (never OPEN). */
+	static Gang.State parseState(String raw) {
+		if ("OPEN".equals(raw)) {
 			return Gang.State.OPEN;
 		}
-		try {
-			return Gang.State.valueOf(raw);
-		} catch (IllegalArgumentException ignored) {
-			return Gang.State.OPEN;
-		}
+		return Gang.State.INVITE;
 	}
 }

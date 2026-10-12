@@ -65,7 +65,10 @@ public final class GangOptionContribution implements CommandContribution {
 		Argument rank = new Argument(plugin, "rank", tree);
 
 		Argument target = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
-			Player       player = (Player) sender;
+			if (!(sender instanceof Player player)) {
+				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				return;
+			}
 			User<Player> user   = userManager.getUser(player);
 
 			if (user == null) return;
@@ -77,7 +80,10 @@ public final class GangOptionContribution implements CommandContribution {
 
 			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<rank>"));
 		}, sender -> {
-			Player       player = (Player) sender;
+			if (!(sender instanceof Player player)) {
+				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				return null;
+			}
 			User<Player> user   = userManager.getUser(player);
 
 			if (user == null) return null;
@@ -112,7 +118,10 @@ public final class GangOptionContribution implements CommandContribution {
 
 	private @NotNull Argument getRankType(Tree<Argument> tree) {
 		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
-			Player       player = (Player) sender;
+			if (!(sender instanceof Player player)) {
+				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				return;
+			}
 			User<Player> user   = userManager.getUser(player);
 
 			if (user == null) return;
@@ -180,7 +189,10 @@ public final class GangOptionContribution implements CommandContribution {
 			                                                     .replace("%player%", targetStr)
 			                                                     .replace("%rank%", nextRank.getName()));
 		}, sender -> {
-			Player       player = (Player) sender;
+			if (!(sender instanceof Player player)) {
+				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				return null;
+			}
 			User<Player> user   = userManager.getUser(player);
 
 			if (user == null) return null;

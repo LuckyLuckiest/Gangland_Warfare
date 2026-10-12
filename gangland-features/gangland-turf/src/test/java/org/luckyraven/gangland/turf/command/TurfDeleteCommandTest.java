@@ -1,7 +1,13 @@
 package org.luckyraven.gangland.turf.command;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.mockito.ArgumentCaptor;
+import org.luckyraven.gangland.turf.capture.TurfOwnership;
+import org.luckyraven.gangland.turf.data.TurfRuntimeState;
+import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
+import org.luckyraven.gangland.turf.state.TurfState;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +16,7 @@ import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -19,6 +26,8 @@ import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.selection.Selection;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
+import org.luckyraven.gangland.turf.support.CaptureFixtures;
+import org.luckyraven.gangland.turf.support.YamlFixture;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.message.MessageProvider;
@@ -61,6 +70,7 @@ class TurfDeleteCommandTest {
 	private TurfManager          turfs;
 	private WandSelectionManager selections;
 	private TurfMessageContract  messages;
+	private TurfMessages         text;
 	private GarrisonManager      garrisons;
 	private ActiveBuffManager    buffs;
 	private TurfPowerupManager   powerupNpcs;
@@ -88,10 +98,13 @@ class TurfDeleteCommandTest {
 	}
 
 	@BeforeEach
-	void setUp() {
+	void setUp() throws IOException {
 		turfs       = mock(TurfManager.class);
 		selections  = new WandSelectionManager();
 		messages    = mock(TurfMessageContract.class);
+		text        = new TurfMessages(
+				YamlFixture.fileManager(tempDir, "turf_messages", YamlFixture.shipped("/turf/turf_messages.yml")),
+				messages, CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
 		garrisons   = mock(GarrisonManager.class);
 		buffs       = mock(ActiveBuffManager.class);
 		powerupNpcs = mock(TurfPowerupManager.class);
@@ -102,8 +115,8 @@ class TurfDeleteCommandTest {
 		when(parent.getPermission()).thenReturn("gangland.command.turf");
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			command = new TurfDeleteCommand(plugin, tree, parent, turfs, selections, messages,
-			                                garrisons, buffs, powerupNpcs);
+			command = new TurfDeleteCommand(plugin, tree, parent, turfs, selections, messages, text,
+			                                garrisons, buffs, powerupNpcs, new TurfOwnership(turfs));
 		}
 
 		turf = new Turf(5, "Dup", new CuboidRegion("world", 0, 0, 10, 10), null,
@@ -119,7 +132,7 @@ class TurfDeleteCommandTest {
 	}
 
 	@Test
-	@DisplayName("GI-35: no gangland.turf.admin -> COMMAND_NO_PERM, and nothing about the turf is touched")
+	@DisplayName("GI-35 (T-242): no gangland.turf.admin -> Turf.Admin_Only, and nothing about the turf is touched")
 	void action_withoutAdminPermission_deniedAndNoMutation() {
 		Player player = adminPlayer(false);
 		Selection selection = selections.get(player);
@@ -127,7 +140,7 @@ class TurfDeleteCommandTest {
 
 		command.action().accept(command, player, new String[]{"turf", "delete"});
 
-		verify(player).sendMessage(Messages.COMMAND_NO_PERM.toString());
+		verify(player).sendMessage(text.text("Turf.Admin_Only", "&cOnly turf admins can do that."));
 		verify(turfs, never()).delete(any());
 		verify(garrisons, never()).remove(anyInt());
 		verify(buffs, never()).removeAll(anyInt());
@@ -148,5 +161,27 @@ class TurfDeleteCommandTest {
 		verify(buffs).removeAll(5);
 		verify(powerupNpcs).remove(5);
 		verify(player, never()).sendMessage(Messages.COMMAND_NO_PERM.toString());
+	}
+
+	@Test
+	@DisplayName("TF-40: delete during a contest cancels it first, firing one TurfCaptureFailedEvent(CANCELLED)")
+	void delete_duringContest_firesCancelledOnce() {
+		TurfRuntimeState state = new TurfRuntimeState(5);
+		state.setState(TurfState.CONTESTING);
+		state.setChallengerGangId(2);
+		when(turfs.getRuntimeState(5)).thenReturn(state);
+		Player player = adminPlayer(true);
+		selections.get(player).setActiveTurfId(5);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			command.action().accept(command, player, new String[]{"turf", "delete"});
+
+			assertEquals(TurfState.IDLE, state.getState());
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager(), times(1)).callEvent(captor.capture());
+			TurfCaptureFailedEvent failed = (TurfCaptureFailedEvent) captor.getValue();
+			assertEquals(TurfCaptureFailedEvent.Reason.CANCELLED, failed.getReason());
+		}
+		verify(turfs).delete(turf);
 	}
 }

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 import org.luckyraven.keystone.persistence.repository.IRepository;
+import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -15,7 +16,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -40,7 +44,7 @@ class TurfPowerupManagerTest {
 		CivilianSpawnManager         spawnManager = mock(CivilianSpawnManager.class);
 		when(spawnManager.spawnCivilian(any(Location.class), anyString())).thenReturn(null);
 
-		TurfPowerupManager manager = new TurfPowerupManager(plugin, repository, settings, spawnManager);
+		TurfPowerupManager manager = new TurfPowerupManager(plugin, repository, () -> settings, spawnManager);
 
 		World loadedWorld = mock(World.class);
 		World otherWorld  = mock(World.class);
@@ -55,6 +59,61 @@ class TurfPowerupManagerTest {
 
 		assertEquals(List.of(2, 3), turfIds(readPending(manager)),
 				"the matching entry drains from the queue; the wrong-chunk and wrong-world entries stay queued");
+	}
+
+	@Test
+	@DisplayName("remove drops the pending entry, so a later chunk load of its spawn chunk spawns nothing (TF-42)")
+	void remove_purgesPendingEntry_soAChunkLoadSpawnsNothing() throws Exception {
+		JavaPlugin plugin = mock(JavaPlugin.class);
+		@SuppressWarnings("unchecked")
+		IRepository<TurfPowerupData> repository = mock(IRepository.class);
+		TurfPowerupSettings          settings   = new TurfPowerupSettings("quartermaster", 32.0);
+		CivilianSpawnManager         spawnManager = mock(CivilianSpawnManager.class);
+
+		TurfPowerupManager manager = new TurfPowerupManager(plugin, repository, () -> settings, spawnManager);
+
+		World world = mock(World.class);
+		seedPending(manager, List.of(new TurfPowerupData(4, new Location(world, 20, 64, 20), null)));
+
+		manager.remove(4);
+
+		assertEquals(List.of(), turfIds(readPending(manager)), "remove must drop the queued Quartermaster");
+		manager.onChunkLoaded(world, 1, 1);
+		verify(spawnManager, never()).spawnCivilian(any(Location.class), anyString());
+	}
+
+	@Test
+	@DisplayName("remove deletes one row by turf id and never loads the whole table (TF-33)")
+	void remove_neverLoadsTheWholeTable() {
+		JavaPlugin plugin = mock(JavaPlugin.class);
+		@SuppressWarnings("unchecked")
+		IRepository<TurfPowerupData> repository = mock(IRepository.class);
+		TurfPowerupSettings          settings   = new TurfPowerupSettings("quartermaster", 32.0);
+		CivilianSpawnManager         spawnManager = mock(CivilianSpawnManager.class);
+
+		TurfPowerupManager manager = new TurfPowerupManager(plugin, repository, () -> settings, spawnManager);
+
+		manager.remove(4);
+
+		verify(repository, never()).loadAll();
+		verify(repository).delete(argThat(data -> data.getTurfId() == 4));
+	}
+
+	@Test
+	@DisplayName("W2-Q: place with no name stores the configured Quartermaster name (TF-38)")
+	void place_nullName_usesConfiguredName() {
+		JavaPlugin plugin = mock(JavaPlugin.class);
+		@SuppressWarnings("unchecked")
+		IRepository<TurfPowerupData> repository = mock(IRepository.class);
+		TurfPowerupSettings          settings   = new TurfPowerupSettings("quartermaster", 32.0, "Boss");
+		CivilianSpawnManager         spawnManager = mock(CivilianSpawnManager.class);
+		TurfPowerupManager manager = new TurfPowerupManager(plugin, repository, () -> settings, spawnManager);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			manager.place(5, new Location(mock(World.class), 0, 64, 0), null);
+		}
+
+		verify(repository).save(argThat(data -> "Boss".equals(data.getDisplayName())));
 	}
 
 	@SuppressWarnings("unchecked")

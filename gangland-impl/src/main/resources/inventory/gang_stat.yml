@@ -1,3 +1,6 @@
+# Replaced from the plugin jar when the plugin version changes; the old file is kept as <name>-old.yml.
+Config_Version: '${project.version}'
+
 Information:
    Display_Name: "&6&lGang Statistics"
    Size: 54
@@ -6,3 +9,50 @@ Information:
       Fill: true
       Border: false
    Permission: "gangland.inventory.gang_stat"
+
+Slots:
+   11:
+      Item: NAME_TAG
+      Name: "&bName"
+      Lore:
+         - "&e%gangland_gang_name%"
+   13:
+      Item: CRAFTING_TABLE
+      Name: "&bID"
+      Lore:
+         - "&e%gangland_gang_id%"
+   15:
+      Item: WRITABLE_BOOK
+      Name: "&bCreated"
+      Lore:
+         - "&e%gangland_gang_created%"
+      Enchanted: true
+   20:
+      Item:
+         Type: PLAYER_HEAD
+         Data: "%gangland_user_name%"
+      Name: "&bMembers"
+      Lore:
+         - "&a%gangland_gang_online-members-size%&7/&e%gangland_gang_members-size%"
+         - "&7online / total"
+   22:
+      Item: GOLD_BLOCK
+      Name: "&bBalance"
+      Lore:
+         - "&e%money_symbol%%gangland_gang_balance%"
+      Enchanted: true
+   24:
+      Item: REDSTONE
+      Name: "&bAllies"
+      Lore:
+         - "&e%gangland_gang_ally-size%"
+   30:
+      Item: PAPER
+      Name: "&bDescription"
+      Lore:
+         - "&e%gangland_gang_description%"
+   32:
+      Item: BOOK
+      Name: "&bDisplay name"
+      Lore:
+         - "&e%gangland_gang_display-name%"

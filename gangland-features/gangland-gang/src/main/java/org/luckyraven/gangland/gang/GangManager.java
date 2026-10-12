@@ -1,25 +1,44 @@
 package org.luckyraven.gangland.gang;
 
+import lombok.CustomLog;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.gangland.events.gang.GangLevelUpEvent;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@CustomLog
 public class GangManager implements BeanLifecycle, GangLookupContract {
 
 	private final IRepository<Gang>              gangRepository;
 	private final GangAllianceRepositoryContract allianceRepository;
 	private final Map<Integer, Gang>             gangs;
 
+	/** D7 (0.17.0): one-shot migration id that makes every stored gang invite-only. */
+	public static final String STATE_MIGRATION = "0.17.0-gang-state-invite";
+
+	private final GangMigrationsContract migrations;
+	private       boolean                loaded;
+
 	public GangManager(IRepository<Gang> gangRepository,
 	                   GangAllianceRepositoryContract allianceRepository) {
+		this(gangRepository, allianceRepository, GangMigrationsContract.NONE);
+	}
+
+	public GangManager(IRepository<Gang> gangRepository,
+	                   GangAllianceRepositoryContract allianceRepository,
+	                   GangMigrationsContract migrations) {
 		this.gangRepository     = gangRepository;
 		this.allianceRepository = allianceRepository;
+		this.migrations         = migrations;
 		this.gangs              = new HashMap<>();
 	}
 
@@ -40,6 +59,36 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 		// Set data suppliers so repositoryRegistry.saveAll() can persist gangs and alliances
 		gangRepository.setDataSupplier(gangs::values);
 		allianceRepository.setDataSupplier(this::buildAllAlliances);
+
+		// D7 (0.17.0): every stored gang becomes invite-only once; from now on only /glw gang recruiting open opens one.
+		if (gangRepository instanceof LoadOutcome outcome && outcome.lastLoadFailed()) {
+			// T-249: a failed read is not an empty table; migrating now would mark D7 done over zero gangs
+			log.warn("Gang table did not load; the D7 invite-only migration waits for a boot that reads it");
+		} else if (!migrations.isDone(STATE_MIGRATION)) {
+			for (Gang gang : gangs.values()) {
+				gang.setState(Gang.State.INVITE);
+			}
+			migrations.migrate(STATE_MIGRATION, gangRepository, () -> new ArrayList<>(gangs.values()));
+			log.info("Gang states migrated: every gang is invite-only (D7); /glw gang recruiting open opens one");
+		}
+	}
+
+	/**
+	 * Adds XP to the gang and levels it up, firing one {@link GangLevelUpEvent} per level gained, each after that
+	 * level's increment (so a listener reads the level just reached). Cancelling an event undoes that one level and
+	 * stops further levels in this call, so the gang stays at the level before that step. A non-finite or non-positive
+	 * amount does nothing; a gang at its maximum level gains no XP and fires nothing. No save call: autosave writes the
+	 * gang row.
+	 */
+	@Override
+	public void addExperience(Gang gang, double amount) {
+		if (gang == null || !Double.isFinite(amount) || amount <= 0) {
+			return;
+		}
+
+		Level level = gang.getLevel();
+		// T-254: Level fires one GangLevelUpEvent per level, each after its own increment
+		level.addExperience(amount, true, new GangLevelUpEvent(false, gang, level));
 	}
 
 	public void add(Gang gang) {
@@ -60,8 +109,15 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 		clear();
 	}
 
+	/**
+	 * Keystone's BeanFactory calls this once per bean registration; only the first load initializes, so the D7
+	 * migration cannot run twice (its {@code markDone} is async and would not have landed yet).
+	 */
 	@Override
 	public void onInitialize(boolean firstLoad) {
+		if (firstLoad && loaded) return;
+
+		loaded = true;
 		initialize();
 	}
 

@@ -46,9 +46,13 @@ public class GangLevelMessageListener implements Listener {
 		}
 	}
 
-	private String replacePlaceholders(String message, Level level) {
-		return message.replace("%level%", String.valueOf(level.getLevelValue()))
-		              .replace("%next_level%", String.valueOf(level.nextLevel()))
+	/**
+	 * {@link GangLevelUpEvent} fires after {@code GangManager.addExperience} incremented the level, so
+	 * {@code getLevelValue()} is the level just reached and {@code previousLevel()} the one before it.
+	 */
+	static String replacePlaceholders(String message, Level level) {
+		return message.replace("%level%", String.valueOf(level.previousLevel()))
+		              .replace("%next_level%", String.valueOf(level.getLevelValue()))
 		              .replace("%max_level%", String.valueOf(level.getMaxLevel()));
 	}
 

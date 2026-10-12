@@ -1,6 +1,8 @@
 package org.luckyraven.gangland.gang.database.repositories.rank;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
+import org.luckyraven.gangland.gang.database.repositories.gang.GangRepository;
 import org.luckyraven.gangland.gang.database.tables.rank.RankTable;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
@@ -16,7 +18,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Repository(Rank.class)
-public class RankRepository extends AbstractRepository<Rank> {
+public class RankRepository extends AbstractRepository<Rank> implements LoadOutcome {
+
+	private volatile boolean lastLoadFailed;
 
 	private final RankTable rankTable;
 
@@ -27,62 +31,60 @@ public class RankRepository extends AbstractRepository<Rank> {
 	}
 
 	/**
-	 * Inserts the initial tail and head ranks if they do not already exist in the database.
-	 * <p>
-	 * The tail rank is inserted first (lower rank), followed by the head rank (leader). Each rank only gets created
-	 * when absent, making this method safe to call on every startup.
-	 *
-	 * @param headName the name of the head (leader) rank
-	 * @param tailName the name of the tail (lowest) rank
-	 *
-	 * @return {@code int[0]} = head rank id, {@code int[1]} = tail rank id
+	 * The next free rank id: {@code max(id) + 1}. {@code total + 1} collides with a surviving id after a delete leaves a
+	 * gap (GR-21).
 	 */
-	public int[] insertInitialRanks(String headName, String tailName) throws SQLException {
-		// Tail rank first (lower rank), then the head rank — same insertion order as before.
-		int tailId = resolveOrInsertRank(tailName);
-		int headId = resolveOrInsertRank(headName);
+	public int nextRankId() throws SQLException {
+		List<Integer> maxIds = getBackend().query("SELECT COALESCE(MAX(id), 0) AS max_id FROM " + rankTable.getName(),
+		                                          resultSet -> resultSet.getInt("max_id"));
 
-		return new int[]{headId, tailId};
+		return maxIds.isEmpty() ? 1 : maxIds.get(0) + 1;
 	}
 
-	private int resolveOrInsertRank(String name) throws SQLException {
-		Integer existingId = getBackend().queryBuilder(rankTable.getName())
-		                                 .where("name", name)
-		                                 .one(resultSet -> resultSet.getInt("id"));
-		if (existingId != null) {
-			return existingId;
-		}
-
-		int id = totalRanks() + 1;
-		tableBackend().insert(new Rank(name, id));
-
-		return id;
-	}
-
-	private int totalRanks() throws SQLException {
+	public int totalRanks() throws SQLException {
 		List<Integer> counts = getBackend().query("SELECT COUNT(*) AS total FROM " + rankTable.getName(),
 		                                          resultSet -> resultSet.getInt("total"));
 
 		return counts.isEmpty() ? 0 : counts.get(0);
 	}
 
+	/**
+	 * Writes one rank synchronously. {@link AbstractRepository#save} is asynchronous, so a read right after it can miss
+	 * the row (fresh-install seeding, R1/G1).
+	 */
+	public void insertNow(Rank rank) throws SQLException {
+		tableBackend().upsert(rank);
+	}
+
 	@Override
 	protected Collection<Rank> doLoadAll() throws SQLException {
+		lastLoadFailed = true;   // stays true when selectAll throws; Keystone reports it and returns an empty list (T-283)
 		List<Rank>     ranks = new ArrayList<>();
 		List<Object[]> data  = tableBackend().selectAll();
 
 		for (Object[] result : data) {
-			int    id         = (int) result[0];
-			String name       = String.valueOf(result[1]);
-			String vaultGroup = result.length > 2 && result[2] != null ? String.valueOf(result[2]) : "";
-			if (vaultGroup.isEmpty()) vaultGroup = null; // '' is how RankTable stores an unlinked rank
-
-			Rank rank = new Rank(name, id);
-			rank.setVaultGroup(vaultGroup);
-			ranks.add(rank);
+			ranks.add(fromRow(result));
 		}
 
+		lastLoadFailed = false;
 		return ranks;
+	}
+
+	@Override
+	public boolean lastLoadFailed() {
+		return lastLoadFailed;
+	}
+
+	/** One rank row; the id reads through {@link Number}, a SQL NULL as 0 (T-199). */
+	public static Rank fromRow(Object[] result) {
+		int    id         = GangRepository.num(result[0]).intValue();
+		String name       = String.valueOf(result[1]);
+		String vaultGroup = result.length > 2 && result[2] != null ? String.valueOf(result[2]) : "";
+		if (vaultGroup.isEmpty()) vaultGroup = null; // '' is how RankTable stores an unlinked rank
+
+		Rank rank = new Rank(name, id);
+		rank.setVaultGroup(vaultGroup);
+		return rank;
 	}
 
 	@Override
