@@ -128,6 +128,15 @@ permissions:
    # (checked inside the command); waypoint use nodes are registered open at load; the staff verbs stay op.
    gangland.command.bank.create:
       default: true
+   # Owner ruling 2026-10-13: players may list, inspect and select waypoints; create/delete/edit verbs stay op.
+   gangland.command.waypoint:
+      default: true
+   gangland.command.waypoint.list:
+      default: true
+   gangland.command.waypoint.info:
+      default: true
+   gangland.command.waypoint.select:
+      default: true
    gangland.command.balance:
       default: true
    gangland.command.teleport:
@@ -273,6 +282,10 @@ permissions:
          gangland.inventory.gang_info: true
          gangland.inventory.alliance_stat: true
          gangland.command.map.zoom: true
+         gangland.command.waypoint: true
+         gangland.command.waypoint.list: true
+         gangland.command.waypoint.info: true
+         gangland.command.waypoint.select: true
          gangland.command.map.border: true
          gangland.command.gang.transfer: true
          gangland.command.gang.delete: true

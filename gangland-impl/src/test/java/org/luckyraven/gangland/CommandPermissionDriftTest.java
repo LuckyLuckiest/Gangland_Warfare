@@ -42,7 +42,12 @@ class CommandPermissionDriftTest {
 			"gangland.command.reload", "gangland.command.cop", "gangland.command.jail",
 			"gangland.command.civilian", "gangland.command.banker", "gangland.command.trader",
 			"gangland.command.bounty", "gangland.command.cuff", "gangland.command.uncuff",
-			"gangland.command.waypoint", "gangland.command.perm",
+			"gangland.command.perm",
+			"gangland.command.waypoint.create", "gangland.command.waypoint.delete",
+			"gangland.command.waypoint.deselect", "gangland.command.waypoint.type",
+			"gangland.command.waypoint.gangid", "gangland.command.waypoint.timer",
+			"gangland.command.waypoint.cooldown", "gangland.command.waypoint.shield",
+			"gangland.command.waypoint.cost", "gangland.command.waypoint.radius",
 			"gangland.command.fuel", "gangland.command.update", "gangland.command.lootchest",
 			"gangland.command.spawn", "gangland.command.arena",
 			// help entries that name an alias (tp, desc), an unchecked ConfirmArgument-style child, or no longer
