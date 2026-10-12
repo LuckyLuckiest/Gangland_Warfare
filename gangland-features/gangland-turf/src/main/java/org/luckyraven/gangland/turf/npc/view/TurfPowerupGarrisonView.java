@@ -9,6 +9,8 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
+import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.EffectType;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
@@ -26,6 +28,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntUnaryOperator;
+import java.util.function.Supplier;
 
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.refusal;
@@ -52,6 +55,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	private final QuartermasterAccess  access;
 	private final TurfRules            rules;
 	private final IntUnaryOperator     aliveGuards;
+	private final Supplier<TurfDefenderConfig> waves;
 	private final TurfMessages         messages;
 	private final String               fillItem;
 	private final String               fillName;
@@ -98,6 +102,21 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		multiplier = Double.isFinite(multiplier) ? Math.max(0.1, Math.min(1.0, multiplier)) : 1.0;
 		BigDecimal price = registry.garrisonCost().multiply(BigDecimal.valueOf(multiplier)).setScale(0, RoundingMode.HALF_UP);
 		return price.max(BigDecimal.ONE);
+	}
+
+	/** W7-H red stub: the full lore lands in the green step. */
+	List<String> infoLore(Turf turf, Gang gang) {
+		return List.of();
+	}
+
+	/** W7-H red stub. */
+	static int nextWave(int stock, int alive, TurfDefenderConfig config) {
+		return -1;
+	}
+
+	/** W7-H red stub. */
+	String buyLine(TurfPowerupFlowSession session, boolean canAfford) {
+		return clickLine(session, canAfford);
 	}
 
 	private ItemBuilder infoItem(Turf turf, Gang gang) {

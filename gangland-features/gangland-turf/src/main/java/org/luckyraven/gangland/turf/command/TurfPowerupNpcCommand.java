@@ -59,6 +59,12 @@ public class TurfPowerupNpcCommand extends SubArgument {
 				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<set|remove>"));
 	}
 
+	/** Places the Quartermaster at the staff member's position. W7-H red: no containment check yet. */
+	void placeHere(Player player, Turf turf) {
+		powerupNpcs.place(turf.getId(), player.getLocation(), null);
+		messages.send(player, "TURF_POWERUPNPC_SET", "turf", turf.getDisplayName());
+	}
+
 	private OptionalArgument actionArgument() {
 		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			// GI-35: nested SubArgument permissions only add onto the base "gangland.command.turf" node — they
@@ -75,8 +81,7 @@ public class TurfPowerupNpcCommand extends SubArgument {
 					messages.send(sender, "TURF_NOT_INSIDE");
 					return;
 				}
-				powerupNpcs.place(turf.getId(), player.getLocation(), null);
-				messages.send(sender, "TURF_POWERUPNPC_SET", "turf", turf.getDisplayName());
+				placeHere(player, turf);
 			} else if (ACTION_REMOVE.equalsIgnoreCase(action)) {
 				powerupNpcs.remove(turf.getId());
 				messages.send(sender, "TURF_POWERUPNPC_REMOVED", "turf", turf.getDisplayName());

@@ -391,9 +391,10 @@ public final class TurfModuleConfig {
 	                                                       GarrisonManager garrisons, PowerupRegistry registry,
 	                                                       ActiveBuffManager buffs, QuartermasterAccess access,
 	                                                       TurfRules rules, TurfDefenderDeployer defenders,
-	                                                       TurfMessages messages) {
+	                                                       TurfNpcsConfigLoader loader, TurfMessages messages) {
 		return new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules, defenders::aliveCount,
-		                                   messages, Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+		                                   loader::getDefenderConfig, messages,
+		                                   Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
 	@Bean
