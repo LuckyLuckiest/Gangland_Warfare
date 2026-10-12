@@ -35,6 +35,13 @@ public final class GarrisonManager {
 		return g == null ? 0 : g.getCount();
 	}
 
+	public boolean holding(int turfId) {
+		return false;
+	}
+
+	public void setHolding(int turfId, boolean hold) {
+	}
+
 	public void add(int turfId, int delta) {
 		if (delta <= 0) return;
 		Garrison g = byTurf.get(turfId);

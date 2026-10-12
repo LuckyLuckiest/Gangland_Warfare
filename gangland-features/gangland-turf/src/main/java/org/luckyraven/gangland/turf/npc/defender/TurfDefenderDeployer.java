@@ -108,6 +108,9 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		recycledAt.clear();
 	}
 
+	public void bindHolding(java.util.function.IntPredicate holding) {
+	}
+
 	/** Test seam: whether Citizens counts as available. */
 	void setCitizensAvailable(BooleanSupplier available) {
 		this.citizens = available;

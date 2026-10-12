@@ -39,6 +39,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 	private final GarrisonManager   garrisons;
 	private final ActiveBuffManager buffs;
 	private final IntUnaryOperator  aliveGuards;
+	private final QuartermasterAccess access;
 	private final TurfMessages      messages;
 	private final String            fillItem;
 	private final String            fillName;
@@ -101,6 +102,9 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 			                       "gang", ownerGang.getName()));
 		}
 		return lore;
+	}
+
+	void toggleOrder(MenuFlow<TurfPowerupFlowSession> flow, org.bukkit.entity.Player viewer, TurfPowerupFlowSession session) {
 	}
 
 	private ItemBuilder buffsButton(Turf turf) {

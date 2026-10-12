@@ -26,6 +26,41 @@ class GarrisonManagerTest {
 	}
 
 	@Test
+	@DisplayName("setHolding_createsRowAtZeroStock: Hold on a turf with no row creates one; Defend on no row saves nothing")
+	void setHolding_createsRowAtZeroStock() {
+		manager.setHolding(5, true);
+
+		assertTrue(manager.holding(5));
+		assertEquals(0, manager.count(5));
+
+		int saves = repository.saved.size();
+		manager.setHolding(6, false);
+
+		assertFalse(manager.holding(6));
+		assertEquals(saves, repository.saved.size());
+	}
+
+	@Test
+	@DisplayName("stockChangesKeepTheOrder: add, consume and refund leave the order alone")
+	void stockChangesKeepTheOrder() {
+		manager.setHolding(5, true);
+		manager.add(5, 3);
+		manager.consume(5, 1);
+		manager.refund(5, 1, 12);
+
+		assertTrue(manager.holding(5));
+	}
+
+	@Test
+	@DisplayName("remove_resetsToDefend: an owner change drops the row, so the order is Defend again (T-270)")
+	void remove_resetsToDefend() {
+		manager.setHolding(5, true);
+		manager.remove(5);
+
+		assertFalse(manager.holding(5));
+	}
+
+	@Test
 	@DisplayName("count returns 0 for a turf with no garrison row")
 	void count_zeroForMissingRow() {
 		assertEquals(0, manager.count(99));

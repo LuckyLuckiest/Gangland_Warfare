@@ -14,9 +14,15 @@ public final class Garrison {
 
 	private final int turfId;
 	private       int count;
+	private boolean hold;
 
 	public Garrison(int turfId, int count) {
 		this.turfId = turfId;
 		this.count  = count;
+	}
+
+	public Garrison(int turfId, int count, boolean hold) {
+		this(turfId, count);
+		this.hold = hold;
 	}
 }

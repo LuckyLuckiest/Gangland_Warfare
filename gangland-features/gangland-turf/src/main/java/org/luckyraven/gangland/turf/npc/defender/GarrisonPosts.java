@@ -87,6 +87,10 @@ public final class GarrisonPosts {
 		return bestHidden != null ? new Choice(bestHidden, true) : new Choice(bestAny, false);
 	}
 
+	public static boolean withinHold(Post post, double x, double z, double radius) {
+		return false;
+	}
+
 	/** The post closest to a point. */
 	public static Post nearest(List<Post> posts, double x, double z) {
 		Post   best     = null;

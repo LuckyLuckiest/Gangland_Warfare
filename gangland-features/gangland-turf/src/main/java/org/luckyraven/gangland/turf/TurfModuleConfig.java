@@ -309,8 +309,10 @@ public final class TurfModuleConfig {
 
 	@Bean
 	public TurfDefenderDeployer turfDefenderDeployer(JavaPlugin plugin, CivilianService civilianService,
-	                                                 CivilianSpawnManager spawnManager) {
+	                                                 CivilianSpawnManager spawnManager, GarrisonManager garrisons) {
 		TurfDefenderDeployer deployer = new TurfDefenderDeployer(plugin, civilianService, spawnManager);
+		// W7-F: per-turf Hold/Defend order (D26=A)
+		deployer.bindHolding(garrisons::holding);
 		deployer.start();
 		return deployer;
 	}
@@ -330,9 +332,12 @@ public final class TurfModuleConfig {
 	@Bean
 	public TurfCopGuard turfCopGuard(JavaPlugin plugin, TurfManager turfs, UserLookupContract users,
 	                                 GangMembership membership, TurfPowerupManager powerups,
-	                                 TurfDefenderDeployer defenders, TurfNpcsConfigLoader loader) {
+	                                 TurfDefenderDeployer defenders, TurfNpcsConfigLoader loader,
+	                                 GarrisonManager garrisons) {
 		TurfCopGuard guard = new TurfCopGuard(plugin, turfs, users, membership, powerups, defenders,
 		                                      loader::getCopGuardConfig);
+		// W7-F: per-turf Hold/Defend order (D26=A)
+		guard.bindHolding(garrisons::holding);
 		guard.start();
 		return guard;
 	}
@@ -358,8 +363,10 @@ public final class TurfModuleConfig {
 	@Bean
 	public TurfPowerupMenuView turfPowerupMenuView(@SuppressWarnings("unused") Settings settings,
 	                                               GarrisonManager garrisons, ActiveBuffManager buffs,
-	                                               TurfDefenderDeployer defenders, TurfMessages messages) {
-		return new TurfPowerupMenuView(garrisons, buffs, defenders::aliveCount, messages,
+	                                               TurfDefenderDeployer defenders, QuartermasterAccess access,
+	                                               TurfMessages messages) {
+		// W7-F: the access check also gates the Guard Orders click
+		return new TurfPowerupMenuView(garrisons, buffs, defenders::aliveCount, access, messages,
 		                               Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
