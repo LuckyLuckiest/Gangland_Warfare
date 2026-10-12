@@ -16113,7 +16113,7 @@
 "sysName": "Gangs, Ranks & Mail",
 "sysOrder": "06",
 "num": 279,
-"tier": "P2",
+"tier": "P1",
 "title": "GangDelete skips payout for an online member with no cached Member",
 "fix": "Not fixed. GR-01 NPE itself is guarded; this residual payout share stays in the deleted bank.",
 "tests": "-",
