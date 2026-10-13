@@ -63,7 +63,7 @@ public class VehicleSession {
 	/**
 	 * Scales the speed {@link VehicleMovementTask} applies to the entity (clamped 0..2, default 1.0).
 	 */
-	private       double              speedMultiplier = 0.0; // TDD skeleton: the green chunk makes the default 1.0
+	private       double              speedMultiplier = 1.0;
 
 	// WASD input state — written by VehicleInputInterceptor (Netty IO thread), read by VehicleMovementTask (main thread)
 	private volatile boolean inputForward;
@@ -99,8 +99,15 @@ public class VehicleSession {
 		currentDurability = Math.max(0, currentDurability - amount);
 	}
 
+	/**
+	 * Sets the speed multiplier. NaN resets to 1.0; any other value is clamped to 0..2.
+	 */
 	public void setSpeedMultiplier(double multiplier) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (Double.isNaN(multiplier)) {
+			speedMultiplier = 1.0;
+			return;
+		}
+		speedMultiplier = Math.max(0.0, Math.min(2.0, multiplier));
 	}
 
 	public boolean hasFuel() {
