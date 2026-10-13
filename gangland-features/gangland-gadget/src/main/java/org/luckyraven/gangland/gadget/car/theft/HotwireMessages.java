@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gadget.car.theft;
 
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.persistence.FileHandler;
 
 /**
@@ -18,19 +19,24 @@ public class HotwireMessages {
 	 * Action bar line while the hotwire counts down; {@code %seconds%} is the whole seconds left.
 	 */
 	public String progress(int secondsLeft) {
-		return ""; // TDD stub
+		return ChatUtil.color(get("Hotwire_Progress", "&eHotwiring... &f%seconds%s")
+				.replace("%seconds%", String.valueOf(secondsLeft)));
 	}
 
 	public String done() {
-		return ""; // TDD stub
+		return ChatUtil.color(get("Hotwire_Done", "&aThe engine roars to life."));
 	}
 
 	public String cancel() {
-		return ""; // TDD stub
+		return ChatUtil.color(get("Hotwire_Cancel", "&cYou gave up hotwiring."));
 	}
 
 	public String noLockpick() {
-		return ""; // TDD stub
+		return ChatUtil.color(get("Hotwire_No_Lockpick", "&cYou need your lockpick for that."));
+	}
+
+	private String get(String key, String fallback) {
+		return fileHandler.getFileConfiguration().getString(key, fallback);
 	}
 
 }
