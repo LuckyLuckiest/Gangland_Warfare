@@ -33,6 +33,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -396,10 +397,11 @@ class TrackerTagsTest {
 	}
 
 	@Test
-	@DisplayName("the stored tag is a plain LONG epoch: a copy of the container (save and reload) keeps pinging")
+	@DisplayName("the stored tag is a plain LONG epoch written with PersistentDataType.LONG; a copy of the container keeps pinging")
 	void tagValueIsPlainLong() {
 		tickEverySecond(4);
 		assertTrue(pdcA.get(KEY) instanceof Long);
+		verify(carA.getPersistentDataContainer()).set(eq(KEY), eq(PersistentDataType.LONG), eq(T0 + 154 * SEC));
 
 		Map<NamespacedKey, Object> reloaded = new HashMap<>(pdcA);
 		pdcA.clear();
@@ -407,5 +409,49 @@ class TrackerTagsTest {
 		tickEverySecond(7);
 
 		verify(squad, times(1)).reportSighting(locA);
+	}
+
+	@Test
+	@DisplayName("the action bar stops after a swap to an untagged car")
+	void hudStopsAfterSwapToUntagged() {
+		tag(pdcA, T0 + 150 * SEC);
+		tags.tick(player, group);
+		verify(notifier, atLeastOnce()).hud(eq(player), anyInt());
+
+		clearInvocations(notifier);
+		riding = carB;
+		sees   = false;
+		tickEverySecond(5);
+
+		verify(notifier, never()).hud(any(), anyInt());
+	}
+
+	/** An extra cop with its own role and sight. */
+	private static CopNpc cop(CopRole role, boolean canSee) {
+		CopNpc c = mock(CopNpc.class);
+		when(c.getRole()).thenReturn(role);
+		when(c.canSee(any(Player.class), anyDouble())).thenReturn(canSee);
+		return c;
+	}
+
+	@Test
+	@DisplayName("one cop must be ranged AND see: a melee cop who sees plus a marksman who cannot tags nothing")
+	void meleeSeerWithBlindMarksmanDoesNotTag() {
+		when(group.getCops()).thenReturn(List.of(cop(ASSAULT, true), cop(MARKSMAN, false)));
+
+		tickEverySecond(10);
+
+		assertNull(pdcA.get(KEY));
+		verify(notifier, never()).tagged(any());
+	}
+
+	@Test
+	@DisplayName("any cop of the squad counts, not only the first: a blind melee cop then a marksman who sees tags")
+	void secondCopMarksmanTags() {
+		when(group.getCops()).thenReturn(List.of(cop(ASSAULT, false), cop(MARKSMAN, true)));
+
+		tickEverySecond(4);
+
+		assertEquals(T0 + 4 * SEC + 150 * SEC, pdcA.get(KEY));
 	}
 }
