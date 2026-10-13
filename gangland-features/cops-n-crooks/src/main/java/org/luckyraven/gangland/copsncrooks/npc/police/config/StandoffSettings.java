@@ -9,6 +9,5 @@ public record StandoffSettings(boolean enabled, int timerSeconds, int negotiateS
                                int manDownCount, int manDownWindowSeconds, double spotRadius, int postCount,
                                double postRadius, int starsOnTimeout, int cooldownSeconds) {
 
-	/** TDD stub: neutral zeros; the green phase sets the shipped cops.yml numbers. */
-	public static final StandoffSettings DEFAULT = new StandoffSettings(false, 0, 0, 0, 0, 0, 0.0, 0, 0.0, 0, 0);
+	public static final StandoffSettings DEFAULT = new StandoffSettings(true, 45, 15, 10, 2, 30, 8.0, 4, 12.0, 1, 60);
 }
