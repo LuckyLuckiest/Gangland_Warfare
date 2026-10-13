@@ -1,8 +1,21 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+
 /**
- * TDD stub (cnc21 fnd-squad): becomes an empty {@code @Configuration} with a (JavaPlugin, DependencyContainer)
- * constructor in the green phase.
+ * 0.21.0 fnd-squad: empty feature configuration; the owning lane adds its {@code @Bean} methods here.
  */
+@Configuration
 public class BreachModuleConfig {
+
+	private final JavaPlugin          plugin;
+	private final DependencyContainer container;
+
+	public BreachModuleConfig(JavaPlugin plugin, DependencyContainer container) {
+		this.plugin    = plugin;
+		this.container = container;
+	}
+
 }
