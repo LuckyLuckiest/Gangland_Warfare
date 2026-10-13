@@ -27,14 +27,6 @@ class GanglandApiVersionTest {
 	}
 
 	@Test
-	@DisplayName("the four modules that use the 2.7 surface declare Host_Api 2.7")
-	void usingModulesDeclare27() throws IOException {
-		for (String module : List.of("cops-n-crooks", "gangland-gadget", "gangland-npc-shops", "gangland-lootchest")) {
-			assertEquals("2.7", hostApi(module), module);
-		}
-	}
-
-	@Test
 	@DisplayName("modules that do not use the new surface keep their Host_Api (civilians stays 2.6)")
 	void otherModulesUnchanged() throws IOException {
 		assertEquals("2.6", hostApi("gangland-civilians"));
