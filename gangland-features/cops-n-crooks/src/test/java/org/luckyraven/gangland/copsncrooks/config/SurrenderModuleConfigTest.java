@@ -81,10 +81,12 @@ class SurrenderModuleConfigTest {
 		when(player.getUniqueId()).thenReturn(id);
 		when(player.getInventory()).thenReturn(inv);
 		when(player.isSneaking()).thenReturn(true);
-		when(player.getLocation()).thenReturn(mock(org.bukkit.Location.class));
+		org.bukkit.Location loc = mock(org.bukkit.Location.class);
+		when(loc.clone()).thenReturn(loc);
+		when(player.getLocation()).thenReturn(loc);
 		CopGroup group = new CopGroup(id);
 		group.setLevel(2);
-		group.getSquad().reportSighting(player.getLocation());
+		group.getSquad().reportSighting(loc);
 
 		built.tick(player, group);
 		assertFalse(group.isCeaseFire(), "disabled in the first read");
