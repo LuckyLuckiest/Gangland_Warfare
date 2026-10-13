@@ -537,6 +537,51 @@ The implementation, `GadgetSettings`, lives in the gadget module and parses the 
 
 ---
 
+### Car events, speed multiplier and hotwire (0.20.0)
+
+**Events** (`org.luckyraven.gangland.events.vehicle`, in `gangland-api`; all fired by gangland-gadget):
+
+| Event                  | Fires when                                                                 | Cancellable |
+|------------------------|----------------------------------------------------------------------------|-------------|
+| `CarEnterEvent`        | A player mounts a gadget car                                               | No          |
+| `CarExitEvent`         | A player dismounts voluntarily (`CarDismountListener`, parked=true only)   | No          |
+| `CarMoveEvent`         | The car moves; throttled to one event every `Car_Events.Move_Interval_Ticks` (minimum 1) | No |
+| `CarDamageEvent`       | Melee punch or environmental damage (`CarDamageListener`); damager may be null | Yes     |
+| `CarTheftAttemptEvent` | A hotwire starts (owner may be null); cancel = no hotwire                  | Yes         |
+
+`CarMoveEvent` speed is the applied speed (current speed x multiplier) in blocks/s, counted over moving ticks only.
+Quit, force-park and destroy paths fire no `CarExitEvent`. Weapon and explosion damage (`CarDamageMath`) fires no `CarDamageEvent`.
+
+**Speed multiplier.** `VehicleSession.setSpeedMultiplier(double)` scales the speed `VehicleMovementTask` applies.
+Values are clamped to 0..2; NaN resets to 1.0; the default is 1.0.
+
+**Hotwire** (`car/theft/HotwireService`). A player who may not use a car holds the lockpick in the main hand and
+right-clicks it within `Hotwire.Max_Distance` blocks (`CarEntityInteractListener` calls `start`):
+
+1. `HotwireService.start` checks the lockpick and fires `CarTheftAttemptEvent`; a cancelled event never starts.
+2. A repeating task steps every 10 ticks for `Hotwire.Seconds` x 2 steps (6 s by default). Moving out of range,
+   losing the lockpick, or quitting cancels with no crime.
+3. On success the lockpick is consumed (`Hotwire.Consume_Lockpick`, first matching stack in the inventory), the thief
+   is granted `canMount` for the car (`CarAccessPolicy.grant`), `CrimeService.commit(thief, Crimes.CAR_THEFT, location)`
+   runs, and the car is marked stolen.
+4. The grant lives only in memory: it is lost on restart. Ownership never transfers (docket T-73). `canUse` (pickup and
+   refuel) stays with the owner and gang mates.
+
+**Configuration** (`gadget/gadget_settings.yml`; all keys optional, code defaults shown):
+
+| Key                              | Default   |
+|----------------------------------|-----------|
+| `Car_Events.Move_Interval_Ticks` | `4`       |
+| `Hotwire.Enable`                 | `true`    |
+| `Hotwire.Seconds`                | `6`       |
+| `Hotwire.Max_Distance`           | `3.0`     |
+| `Hotwire.Consume_Lockpick`       | `true`    |
+| `Hotwire.Lockpick_Item`          | `lockpick` |
+
+Messages (`gadget/gadget_messages.yml`): `Hotwire_Progress`, `Hotwire_Done`, `Hotwire_Cancel`, `Hotwire_No_Lockpick`.
+
+Migration notes: the keys are optional and have no legacy fallback; existing configs keep working without edits.
+
 ## Jetpack System (5 classes)
 
 The jetpack system provides velocity-based flight for players wearing a jetpack wearable in the
