@@ -7,3 +7,9 @@ Jetpack_Invalid: "&cInvalid jetpack '%name%'."
 Grapple_No_Permission: "&cYou do not have permission to use this grapple."
 Grapple_Gave: "&aGave %amount% grapple(s) '%name%'."
 Grapple_Invalid: "&cInvalid grapple '%name%'."
+
+# Car hotwire
+Hotwire_Progress: "&eHotwiring... &f%seconds%s"
+Hotwire_Done: "&aThe engine roars to life."
+Hotwire_Cancel: "&cYou gave up hotwiring."
+Hotwire_No_Lockpick: "&cYou need your lockpick for that."

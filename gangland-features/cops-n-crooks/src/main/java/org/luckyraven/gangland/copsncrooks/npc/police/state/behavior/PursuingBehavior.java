@@ -5,6 +5,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
@@ -34,6 +35,7 @@ public class PursuingBehavior implements CopBehavior {
 	private final CuffLockRegistry  cuffLocks;
 	private final CopRetreat        retreat;
 	private final Predicate<UUID>   searching;
+	private final CopPerception     perception;
 
 	public PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
 	                        DetainmentService detainmentService, CuffLockRegistry cuffLocks, RetreatSettings retreat) {
@@ -55,6 +57,15 @@ public class PursuingBehavior implements CopBehavior {
 	public PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
 	                        DetainmentService detainmentService, CuffLockRegistry cuffLocks, RetreatSettings retreat,
 	                        LongSupplier clock, Predicate<UUID> searching) {
+		this(cuffRadius, alertRange, maxPursuitDistance, maxPursuitTicks, detainmentService, cuffLocks, retreat, clock,
+		     searching, new CopPerception());
+	}
+
+	/** {@code perception} decides acquisition and the pursuit sight range (0.20.0 seam). */
+	public PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
+	                        DetainmentService detainmentService, CuffLockRegistry cuffLocks, RetreatSettings retreat,
+	                        LongSupplier clock, Predicate<UUID> searching, CopPerception perception) {
+		this.perception         = perception;
 		this.cuffRadius         = cuffRadius;
 		this.alertRange         = alertRange;
 		this.maxPursuitDistance = maxPursuitDistance;
@@ -77,7 +88,7 @@ public class PursuingBehavior implements CopBehavior {
 
 		// Rotation: only ticks spent stuck while nobody in the squad sees the target count toward giving up
 		// (an entity target has no shared squad, so the cop's own sight decides)
-		boolean seen       = squad != null ? squad.hasFreshSighting() : cop.canSee(target, alertRange);
+		boolean seen       = squad != null ? squad.hasFreshSighting() : perception.acquires(cop, target, alertRange);
 		int     stuckTicks = cop.isNavigationStuck() && !seen ? cop.getPursuitTicks() + 1 : 0;
 		cop.setPursuitTicks(stuckTicks);
 		if (stuckTicks >= maxPursuitTicks) {
@@ -139,7 +150,7 @@ public class PursuingBehavior implements CopBehavior {
 		if (CombatBehavior.holdsForFieldCare(cop, () -> shooter && retreat.takeCover(cop, target))) return;
 		if (shooter && retreat.takeCover(cop, target)) return;
 
-		cop.pursue(target, squad, alertRange);
+		cop.pursue(target, squad, perception.pursuitRange(cop, target, squad, alertRange));
 	}
 
 	@Override
