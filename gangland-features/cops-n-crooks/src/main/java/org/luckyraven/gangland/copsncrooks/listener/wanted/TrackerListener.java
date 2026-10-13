@@ -18,11 +18,11 @@ public class TrackerListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onWantedEnd(WantedEndEvent event) {
-		throw new UnsupportedOperationException("TDD stub");
+		tags.forget(event.getPlayer().getUniqueId());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onQuit(PlayerQuitEvent event) {
-		throw new UnsupportedOperationException("TDD stub");
+		tags.forget(event.getPlayer().getUniqueId());
 	}
 }
