@@ -148,8 +148,10 @@ class SirenServiceTest {
 	@Test
 	@DisplayName("a pursuer in another world and a cop without an entity are skipped without throwing")
 	void otherWorldOrEntitylessSkipped() {
-		LivingEntity foreign = mock(LivingEntity.class);
-		when(foreign.getLocation()).thenReturn(new Location(mock(World.class), 40, 64, 0));
+		World        otherWorld = mock(World.class);
+		LivingEntity foreign    = mock(LivingEntity.class);
+		when(foreign.getWorld()).thenReturn(otherWorld);
+		when(foreign.getLocation()).thenReturn(new Location(otherWorld, 40, 64, 0));
 		CopNpc far = mock(CopNpc.class);
 		when(far.getCurrentState()).thenReturn(CopState.PURSUING);
 		when(far.getEntity()).thenReturn(foreign);

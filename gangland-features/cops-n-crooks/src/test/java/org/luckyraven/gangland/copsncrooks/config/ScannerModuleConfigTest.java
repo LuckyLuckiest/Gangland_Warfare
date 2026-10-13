@@ -1,6 +1,11 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,20 +16,25 @@ import org.luckyraven.gangland.copsncrooks.npc.police.SirenService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.ScannerSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.SirenSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.ScannerOverhearing;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.npc.NpcSquad;
+import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,27 +78,65 @@ class ScannerModuleConfigTest {
 	@Test
 	@DisplayName("the overhearing bean reads Cops.Scanner from the loaded provider on every call; a missing provider falls back to the defaults")
 	void overhearingBean_readsTheLoadedConfigPerCall() {
-		CopLoader         loader   = mock(CopLoader.class);
-		CopConfigProvider provider = mock(CopConfigProvider.class);
-		when(provider.getScannerSettings()).thenReturn(new ScannerSettings(false, 160.0, "CLOCK", "x", List.of()));
-		when(loader.getLoadedProvider()).thenReturn(null, provider);
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			CopLoader         loader   = mock(CopLoader.class);
+			CopConfigProvider provider = mock(CopConfigProvider.class);
+			when(provider.getScannerSettings()).thenReturn(new ScannerSettings(false, 160.0, "CLOCK", "x", List.of()));
+			when(loader.getLoadedProvider()).thenReturn(null, provider);
 
-		ScannerOverhearing bean = new ScannerModuleConfig(mock(JavaPlugin.class), new DependencyContainer())
-				.scannerOverhearing(loader, mock(CopsItems.class));
-		assertNotNull(bean);
+			ItemStack stack = mock(ItemStack.class);
+			CopsItems items = mock(CopsItems.class);
+			when(items.isScanner(stack)).thenReturn(true);
 
-		NpcSquad squad = mock(NpcSquad.class);
-		when(squad.members()).thenReturn(List.of());
-		Player player = mock(Player.class);
-		assertFalse(bean.test(player, squad));
-		assertFalse(bean.test(player, squad));
-		verify(loader, atLeast(2)).getLoadedProvider();
+			World           world     = mock(World.class);
+			PlayerInventory inventory = mock(PlayerInventory.class);
+			when(inventory.getContents()).thenReturn(new ItemStack[]{stack});
+			when(inventory.getItemInOffHand()).thenReturn(null);
+			Player player = mock(Player.class);
+			when(player.getInventory()).thenReturn(inventory);
+			when(player.getWorld()).thenReturn(world);
+			when(player.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+
+			LivingEntity entity = mock(LivingEntity.class);
+			when(entity.getLocation()).thenReturn(new Location(world, 120, 64, 0));
+			when(entity.getWorld()).thenReturn(world);
+			CopNpc cop = mock(CopNpc.class);
+			when(cop.getEntity()).thenReturn(entity);
+			NpcSquad squad = mock(NpcSquad.class);
+			when(squad.members()).thenReturn(List.of(cop));
+
+			ScannerOverhearing bean = new ScannerModuleConfig(mock(JavaPlugin.class), new DependencyContainer())
+					.scannerOverhearing(loader, items);
+			assertNotNull(bean);
+
+			assertTrue(bean.test(player, squad), "no provider yet: the enabled defaults apply");
+			assertFalse(bean.test(player, squad), "the loaded provider disables the scanner");
+			verify(loader, atLeast(2)).getLoadedProvider();
+			verify(items, atLeastOnce()).isScanner(stack);
+		}
 	}
 
 	@Test
-	@DisplayName("the siren bean is built from the loader")
-	void sirenBean_isBuilt() {
-		assertNotNull(new ScannerModuleConfig(mock(JavaPlugin.class), new DependencyContainer())
-				              .sirenService(mock(CopLoader.class)));
+	@DisplayName("the siren bean reads Cops.Siren from the loaded provider on every call")
+	void sirenBean_readsTheLoadedConfigPerCall() {
+		CopLoader         loader   = mock(CopLoader.class);
+		CopConfigProvider provider = mock(CopConfigProvider.class);
+		when(provider.getSirenSettings()).thenReturn(new SirenSettings(false, 5, 24.0, "X", 3f, 1f));
+		when(loader.getLoadedProvider()).thenReturn(null, provider);
+
+		SirenService bean = new ScannerModuleConfig(mock(JavaPlugin.class), new DependencyContainer())
+				.sirenService(loader);
+		assertNotNull(bean);
+
+		Player player = mock(Player.class);
+		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(player.getLocation()).thenReturn(new Location(mock(World.class), 0, 64, 0));
+		CopGroup group = mock(CopGroup.class);
+		when(group.getCops()).thenReturn(List.of());
+
+		bean.tick(player, group);
+		bean.tick(player, group);
+		verify(loader, atLeast(2)).getLoadedProvider();
+		verify(provider).getSirenSettings();
 	}
 }
