@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.civilians.witness;
 
+import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -10,6 +12,7 @@ import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.keystone.util.ActionBarManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +33,7 @@ import java.util.function.Supplier;
  *
  * @since 0.20.0
  */
+@CustomLog
 public final class WitnessService {
 
 	/** Whether {@code npc} has {@code criminal} in line of sight within {@code range}. */
@@ -52,7 +56,12 @@ public final class WitnessService {
 
 		/** The production hooks: wall clock, {@code npc.canSee}, {@link WitnessAim}, Bukkit events, action bar. */
 		public static Hooks live(JavaPlugin plugin) {
-			throw new UnsupportedOperationException("TDD stub");
+			return new Hooks(System::currentTimeMillis,
+			                 (npc, criminal, range) -> npc.canSee(criminal, range),
+			                 new WitnessAim(new BartizanArmed()),
+			                 event -> Bukkit.getPluginManager().callEvent(event),
+			                 (player, text) -> ActionBarManager.send(plugin, player, text, 100L),
+			                 line -> log.debug(line));
 		}
 	}
 
