@@ -463,54 +463,52 @@ Cops:
             - RIGHT_ARM
             - LEFT_LEG
             - RIGHT_LEG
-   # 0.21.0: barricade standoff. A cop squad holds behind cover, negotiates and times out; Man_Down_Count fallen cops
-   # in the window end it early. Every key is optional.
+   # 0.21.0: cops surround a suspect they cannot reach (or who drops Man_Down_Count cops fast) instead of feeding officers in; every key optional
    Standoff:
-      # Set to false: no standoffs, the squad keeps the old pursuit.
+      # Cops surround a suspect they cannot reach instead of feeding officers in
       Enabled: true
-      # Seconds the squad waits before it moves in on the barricade.
+      # Countdown before the next tier comes in
       Timer_Seconds: 45
-      # Seconds of negotiation before the timer counts.
+      # Gap between Negotiate radio lines
       Negotiate_Seconds: 15
-      # Seconds without a sighting before the squad calls the standoff unreachable.
+      # Most hunting cops unable to reach him this long starts a standoff
       Unreachable_Seconds: 10
-      # Cops down within the window that end the standoff early.
+      # This many cops killed...
       Man_Down_Count: 2
-      # Window in seconds for Man_Down_Count.
+      # ...within this many seconds...
       Man_Down_Window_Seconds: 30
-      # Blocks a cop spots a barricaded suspect within.
+      # ...within this many blocks of each other starts a standoff
       Spot_Radius: 8.0
-      # Cops posted around the barricade.
+      # Cops posted in a ring around the suspect; the rest take cover
       Post_Count: 4
-      # Blocks the posts stand off from the barricade.
+      # Ring radius in blocks
       Post_Radius: 12.0
-      # Wanted stars left on a timed-out standoff.
+      # Stars added when the countdown runs out
       Stars_On_Timeout: 1
-      # Seconds before the same barricade starts another standoff.
+      # Minimum gap between standoffs for one suspect
       Cooldown_Seconds: 60
-   # 0.21.0: breach. A stack of cops goes through a roof or door of the barricade; Flashbang stuns the room first.
-   # Every key is optional.
+   # 0.21.0: cops stack up at a door and breach an indoor suspect instead of walking in one by one; no block is ever broken; every key optional
    Breach:
-      # Set to false: a standoff never breaches, it only times out.
+      # Cops stack up at a door and breach instead of walking in one by one
       Enabled: true
-      # Roof blocks a breaching cop opens.
+      # Suspect counts as indoors with more than this many blocks of roof above him
       Roof_Blocks: 2
-      # Blocks from the barricade a breach door is picked within.
+      # Door search radius around the last-known spot
       Door_Radius: 6
-      # Cops in the entry stack.
+      # Cops in the stack
       Stack_Size: 3
-      # Seconds the stack waits outside before it goes in.
+      # Go when the stack is full or after this long
       Stack_Wait_Seconds: 6
-      # Ticks between each cop entering.
+      # Gap between officers going through the door
       Entry_Gap_Ticks: 20
-      # Seconds before the same barricade is breached again.
+      # Minimum gap between breaches for one squad
       Cooldown_Seconds: 30
       Flashbang:
-         # Wanted stars the suspect needs before a flashbang is thrown.
+         # Wanted level from which a flashbang goes in first
          Min_Stars: 4
-         # Blocks the flashbang blinds players within.
+         # Players this close to the door with a clear line to it are blinded
          Radius: 8.0
-         # Ticks the blindness lasts (40 = 2 s).
+         # Blindness and Slowness duration
          Ticks: 40
    Tiers:
       1:
