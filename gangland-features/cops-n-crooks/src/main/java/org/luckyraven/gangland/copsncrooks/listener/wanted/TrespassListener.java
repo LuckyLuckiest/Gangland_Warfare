@@ -94,9 +94,9 @@ public class TrespassListener implements Listener {
 		World world = to.getWorld();
 		if (world == null) return;
 
-		Map<String, Boolean> ids = new HashMap<>();
+		Map<String, String> ids = new HashMap<>();
 		for (PlaceRegion region : regions.regionsAt(to)) {
-			if (region.hasTag(PlaceRegion.TAG_RESTRICTED)) ids.put(region.id(), true);
+			if (region.hasTag(PlaceRegion.TAG_RESTRICTED)) ids.put(region.id(), region.name());
 		}
 
 		// always track, so a player released while inside is not charged for an entry they were exempt for
@@ -109,7 +109,7 @@ public class TrespassListener implements Listener {
 
 			crimes.commit(player, Crimes.TRESPASS_RESTRICTED, to, true, 0);
 			player.sendMessage(messages.format(WantedMessages.Key.TRESPASS, Map.of()));
-			log.debug("TRESPASS {} region={}", player.getName(), id);
+			log.debug("TRESPASS {} region={}", player.getName(), ids.get(id));
 		}
 	}
 
