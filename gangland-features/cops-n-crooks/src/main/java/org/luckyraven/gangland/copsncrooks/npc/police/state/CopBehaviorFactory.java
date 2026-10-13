@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.state;
 import lombok.Getter;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolServices;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.behavior.*;
@@ -27,6 +28,8 @@ public class CopBehaviorFactory {
 	private final Predicate<UUID>           searching;
 	/** Sight decisions for the idle, pursuing and combat behaviours (0.20.0 seam). */
 	private final CopPerception             perception;
+	/** The beat cops' services (0.20.0 lane patrol); {@code null}: PATROL and WARNING stay inert. */
+	private final PatrolServices            patrolServices;
 
 	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier,
 	                          DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry,
@@ -37,6 +40,14 @@ public class CopBehaviorFactory {
 	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier,
 	                          DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry,
 	                          Predicate<UUID> searching, CopPerception perception) {
+		this(configProvider, spawnManagerSupplier, detainmentService, cuffLockRegistry, searching, perception, null);
+	}
+
+	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier,
+	                          DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry,
+	                          Predicate<UUID> searching, CopPerception perception,
+	                          @org.jetbrains.annotations.Nullable PatrolServices patrolServices) {
+		this.patrolServices      = patrolServices;
 		this.perception          = perception;
 		this.configProvider       = configProvider;
 		this.spawnManagerSupplier = spawnManagerSupplier;

@@ -18,6 +18,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolServices;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
@@ -346,6 +347,11 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	public void setPerception(CopPerception perception) {
 		this.perception = Objects.requireNonNull(perception, "perception");
 		rebuildFactories();
+	}
+
+	/** The beat cops' services (0.20.0 lane patrol); read when the factories are rebuilt. */
+	public void setPatrolServices(PatrolServices patrolServices) {
+		throw new UnsupportedOperationException("TDD stub");
 	}
 
 	private void rebuildFactories() {
