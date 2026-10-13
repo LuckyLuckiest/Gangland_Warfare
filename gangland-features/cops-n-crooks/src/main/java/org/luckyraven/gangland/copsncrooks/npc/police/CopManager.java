@@ -888,6 +888,7 @@ public class CopManager implements BeanLifecycle {
 	 * cop within {@link #OVERDUE_VIEW_BLOCKS} of the eyes it is in, the suspect's and every other player's alike.
 	 */
 	private boolean recycles(CopNpc cop, CopGroup group, Player player, long now) {
+		if (group.isStandoff(now)) return false;
 		StuckSettings stuck = configProvider.getStuckSettings();
 		CopState      state = cop.getCurrentState();
 		LivingEntity  body  = cop.getEntity();
