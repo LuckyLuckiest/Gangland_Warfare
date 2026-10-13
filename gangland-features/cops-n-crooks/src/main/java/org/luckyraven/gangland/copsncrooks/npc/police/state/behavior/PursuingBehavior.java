@@ -88,7 +88,7 @@ public class PursuingBehavior implements CopBehavior {
 
 		// Rotation: only ticks spent stuck while nobody in the squad sees the target count toward giving up
 		// (an entity target has no shared squad, so the cop's own sight decides)
-		boolean seen       = squad != null ? squad.hasFreshSighting() : cop.canSee(target, alertRange);
+		boolean seen       = squad != null ? squad.hasFreshSighting() : perception.acquires(cop, target, alertRange);
 		int     stuckTicks = cop.isNavigationStuck() && !seen ? cop.getPursuitTicks() + 1 : 0;
 		cop.setPursuitTicks(stuckTicks);
 		if (stuckTicks >= maxPursuitTicks) {
@@ -150,7 +150,7 @@ public class PursuingBehavior implements CopBehavior {
 		if (CombatBehavior.holdsForFieldCare(cop, () -> shooter && retreat.takeCover(cop, target))) return;
 		if (shooter && retreat.takeCover(cop, target)) return;
 
-		cop.pursue(target, squad, alertRange);
+		cop.pursue(target, squad, perception.pursuitRange(cop, target, squad, alertRange));
 	}
 
 	@Override
