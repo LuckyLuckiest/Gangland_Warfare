@@ -7,6 +7,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.perch.OverwatchController;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
@@ -31,12 +32,17 @@ public class OverwatchModuleConfig {
 		                               levelOf(users));
 	}
 
-	/** TDD stub: reads the wanted level (0 when the player is unknown). */
+	/** Reads the wanted level; 0 when the player is unknown. */
 	static ToIntFunction<Player> levelOf(UserManager<Player> users) {
-		return p -> 0;
+		return p -> {
+			User<Player> user = users.getUser(p);
+			return user == null ? 0 : user.getWanted().getLevel();
+		};
 	}
 
 	@PostConstruct
 	public void installOverwatch() {
+		OverwatchController controller = container.getInstance(OverwatchController.class);
+		container.getInstance(CopManager.class).addAiTickHook(controller::tick);
 	}
 }
