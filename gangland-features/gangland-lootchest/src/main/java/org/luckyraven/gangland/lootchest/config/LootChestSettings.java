@@ -90,4 +90,9 @@ public class LootChestSettings implements LootChestSettingsProvider, FileInitial
 		return fileHandler.getFileConfiguration().getStringList("Rewards.Commands");
 	}
 
+	@Override
+	public CrackingAlarmSettings getCrackingAlarm() {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
 }
