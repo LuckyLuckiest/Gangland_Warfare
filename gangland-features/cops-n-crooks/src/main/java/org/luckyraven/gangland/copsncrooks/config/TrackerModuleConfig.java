@@ -4,22 +4,22 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.TrackerSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.TrackerTags;
-import org.luckyraven.gangland.core.user.UserManager;
-import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
-import org.luckyraven.gangland.copsncrooks.npc.police.config.TrackerSettings;
 import org.luckyraven.gangland.core.user.User;
-import org.luckyraven.keystone.util.ActionBarManager;
-import java.util.Map;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.util.ActionBarManager;
 
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 
