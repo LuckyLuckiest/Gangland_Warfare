@@ -12,11 +12,25 @@ import org.luckyraven.keystone.persistence.config.NodeReader;
  */
 public record TrespassSettings(boolean enabled, int repeatSeconds) {
 
-	/** TDD stub: neutral until the green chunk sets the shipped default (enabled, 60 s). */
-	public static final TrespassSettings DEFAULT = new TrespassSettings(false, 0);
+	/** The shipped {@code Wanted.Trespass}: enabled, one crime per region every 60 s. */
+	public static final TrespassSettings DEFAULT = new TrespassSettings(true, 60);
+
+	public TrespassSettings {
+		repeatSeconds = Math.max(0, repeatSeconds);
+	}
 
 	/** Reads the {@code Wanted} section; a null section, or a missing block or key, is its default. */
 	public static TrespassSettings parse(@Nullable NodeReader wanted) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (wanted == null) return DEFAULT;
+
+		NodeReader block = block(wanted, "Trespass");
+		if (block == null) return DEFAULT;
+
+		return new TrespassSettings(block.get("Enable").asBool().orDefault(DEFAULT.enabled()),
+		                            block.get("Repeat_Seconds").asInt().orDefault(DEFAULT.repeatSeconds()));
+	}
+
+	private static @Nullable NodeReader block(NodeReader parent, String key) {
+		return parent.get(key).asMapping().reader();
 	}
 }
