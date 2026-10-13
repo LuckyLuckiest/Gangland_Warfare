@@ -51,7 +51,7 @@ Read [migration-0.21.0.md](../migration-0.21.0.md) before you start the server. 
 - **Staff placement (T-803).** `/glw turf powerupnpc set` is refused outside the selected turf.
 - **Garrison panel (T-822, T-823).** The panel shows the reserve and the next wave, and the owner sees "Reserve full" at the cap.
 - **Owner alerts (T-820, T-821 partly, T-829).** Owners are told when the Quartermaster is attacked or killed and when a guard falls. The death alerts now fire in the live game; they used to look up the NPC body after it had despawned.
-- **Hold radius (T-824).** `Garrison.Hold_Radius` below 3 is raised to 3, so a held guard no longer ignores its attacker.
+- **Hold radius (T-824).** `Garrison.Hold_Radius` below 3 is raised to 3, and a non-finite value falls back to the default, so a held guard no longer ignores its attacker.
 - **Placement cost (T-810).** A non-finite `Placement_Cost` no longer breaks placement.
 - **Arrest alert (T-832).** Owners are alerted when a member is arrested on their turf (owner ruling).
 - **Hold leash (T-834).** Under Hold the Quartermaster fights back but stays within its hold radius instead of chasing out of sight (owner ruling).
@@ -66,7 +66,6 @@ Read [migration-0.21.0.md](../migration-0.21.0.md) before you start the server. 
 - T-809 wording nits: alias versus gang name in hub lines, `Paid $0` and `Cost $0`, and the gang tag does not refresh on a gang rename.
 - T-811 traders can stay unspawned until restart after a first-join database lock (`TraderManager` loads on the main thread).
 - T-821 guards do not engage a cop that hits the Quartermaster (the owner is told, but the guards do not answer).
-- T-824 a `.nan` `Hold_Radius` is not rejected.
 - T-804 residual: a database error thrown during placement, after the gang is charged, loses the price.
 - T-727 fight escrow is memory-only: a crash in the middle of a fight loses both stakes.
 - T-707 `Ranks.Minimum.Chat` and `gangland.gang.chat` are not enforced on gang and ally chat.

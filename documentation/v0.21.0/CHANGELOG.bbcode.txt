@@ -78,7 +78,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [*][B]Staff placement (T-803).[/B] [ICODE]/glw turf powerupnpc set[/ICODE] is refused outside the selected turf.
 [*][B]Garrison panel (T-822, T-823).[/B] The panel shows the reserve and the next wave, and the owner sees "Reserve full" at the cap.
 [*][B]Owner alerts (T-820, T-821 partly, T-829).[/B] Owners are told when the Quartermaster is attacked or killed and when a guard falls. The death alerts now fire in the live game; they used to look up the NPC body after it had despawned.
-[*][B]Hold radius (T-824).[/B] [ICODE]Garrison.Hold_Radius[/ICODE] below 3 is raised to 3, so a held guard no longer ignores its attacker.
+[*][B]Hold radius (T-824).[/B] [ICODE]Garrison.Hold_Radius[/ICODE] below 3 is raised to 3, and a non-finite value falls back to the default, so a held guard no longer ignores its attacker.
 [*][B]Placement cost (T-810).[/B] A non-finite [ICODE]Placement_Cost[/ICODE] no longer breaks placement.
 [*][B]Arrest alert (T-832).[/B] Owners are alerted when a member is arrested on their turf (owner ruling).
 [*][B]Hold leash (T-834).[/B] Under Hold the Quartermaster fights back but stays within its hold radius instead of chasing out of sight (owner ruling).
@@ -97,7 +97,6 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [*]T-809 wording nits: alias versus gang name in hub lines, [ICODE]Paid $0[/ICODE] and [ICODE]Cost $0[/ICODE], and the gang tag does not refresh on a gang rename.
 [*]T-811 traders can stay unspawned until restart after a first-join database lock ([ICODE]TraderManager[/ICODE] loads on the main thread).
 [*]T-821 guards do not engage a cop that hits the Quartermaster (the owner is told, but the guards do not answer).
-[*]T-824 a [ICODE].nan[/ICODE] [ICODE]Hold_Radius[/ICODE] is not rejected.
 [*]T-804 residual: a database error thrown during placement, after the gang is charged, loses the price.
 [*]T-727 fight escrow is memory-only: a crash in the middle of a fight loses both stakes.
 [*]T-707 [ICODE]Ranks.Minimum.Chat[/ICODE] and [ICODE]gangland.gang.chat[/ICODE] are not enforced on gang and ally chat.
