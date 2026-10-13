@@ -170,8 +170,21 @@ class BreakingNewsTest {
 		arcs.start(idA, WantedCause.CRIME, 5);
 
 		assertFalse(news.check(steve, 5, "STARS"));
+		arcs.markNews(idA);
 		assertFalse(news.closing(steve, arcs.arc(idA), "Busted"));
 		assertTrue(sent.isEmpty());
+	}
+
+	@Test
+	@DisplayName("a chase that opens at Min_Stars (level change fired before the arc existed) makes the news on the next AI tick")
+	void openedAtMinStars_newsOnNextAiTick() {
+		assertFalse(news.check(steve, 4, "STARS"));
+		arcs.start(idA, WantedCause.CRIME, 4);
+
+		news.onAiTick(steve, null);
+
+		assertEquals(1, sent.size());
+		assertTrue(arcs.arc(idA).newsSent());
 	}
 
 	@Test
