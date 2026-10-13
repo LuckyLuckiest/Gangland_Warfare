@@ -225,6 +225,9 @@ Cops:
          # Once-per-chase lines: dropping one loses it for the whole chase.
          - "Handoff"
          - "Post_Up"
+         # 0.20.0
+         - "Overwatch_Spotted"
+         - "Caller_911"
       # One squad never repeats the same kind of line within this many ticks.
       Cooldown_Ticks:
          Contact: 160
@@ -279,6 +282,13 @@ Cops:
          Post_Up: 100
          Eyes_On: 60
          Returning_To_Patrol: 1200
+         # 0.20.0
+         Caller_911: 100
+         Suspect_Description: 1200
+         Tracker_Tagged: 600
+         Tracker_Ping: 400
+         Overwatch_Spotted: 200
+         Patrol_Sighting: 400
       # Short click played to each listener with every line (SoundConfiguration shape).
       Sound:
          Name: BLOCK_NOTE_BLOCK_HAT
@@ -543,6 +553,8 @@ Cops:
          Cuff_Radius: 4.5
          Can_Use_Weapons: true
          Skip_Cuffing: true
+         # 0.20.0: ignore the darkness sight factor (Cops.Sight.Dark_Factor).
+         Ignore_Darkness: true
          Difficulty: HARD
          # Gun cadence: a fraction of the weapon's own fire rate (see the header). Only used with Can_Use_Weapons.
          Fire_Rate_Multiplier: 0.1
@@ -567,6 +579,8 @@ Cops:
          Cuff_Radius: 5.0
          Can_Use_Weapons: true
          Skip_Cuffing: true
+         # 0.20.0: ignore the darkness sight factor (Cops.Sight.Dark_Factor).
+         Ignore_Darkness: true
          Difficulty: DEADLY
          # Gun cadence: a fraction of the weapon's own fire rate (see the header). Only used with Can_Use_Weapons.
          Fire_Rate_Multiplier: 0.1
