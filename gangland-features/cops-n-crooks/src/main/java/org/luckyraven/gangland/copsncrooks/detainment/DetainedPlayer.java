@@ -52,6 +52,6 @@ public class DetainedPlayer {
 
 	/** The origin, {@link ArrestOrigin#CUFFED} when none was recorded. */
 	public ArrestOrigin originOrDefault() {
-		throw new UnsupportedOperationException("TDD stub");
+		return origin == null ? ArrestOrigin.CUFFED : origin; // 0.21.0
 	}
 }
