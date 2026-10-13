@@ -1,0 +1,103 @@
+package org.luckyraven.gangland.copsncrooks.wanted.config;
+
+import org.bukkit.plugin.java.JavaPlugin;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.persistence.config.ConfigParser;
+import org.luckyraven.keystone.persistence.config.ConfigReport;
+import org.luckyraven.keystone.persistence.config.MappingNode;
+import org.luckyraven.keystone.persistence.config.NodeReader;
+
+import java.io.StringReader;
+import java.nio.file.Path;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+
+/**
+ * Lane f2-config: the 0.20.0 {@code Wanted.Witnesses} and {@code Wanted.Trespass} blocks are parsed beside
+ * {@link ChaseConfig} (which gains no component, so 0.21.0 merges cleanly), and {@code Evading_Police} weighs 100.
+ */
+@DisplayName("ChaseConfig - 0.20.0 witnesses, trespass and Evading_Police")
+class ChaseConfig020Test {
+
+	private static NodeReader wanted(String yaml, ConfigReport report) {
+		NodeReader  file    = NodeReader.of(new ConfigParser().parse(Path.of("wanted.yml"), new StringReader(yaml), report)
+		                                                      .root(), report);
+		MappingNode section = file.get("Wanted").asMapping().orNull();
+		return section == null ? null : NodeReader.of(section, report);
+	}
+
+	@Test
+	@DisplayName("no Witnesses block, or no Wanted section: enabled, crimes [Car_Theft, Assault_Civilian]")
+	void witnesses_default() {
+		WitnessSettings expected = new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian"));
+
+		assertEquals(expected, WitnessSettings.parse(null));
+		assertEquals(expected, WitnessSettings.parse(wanted("Wanted:\n   Heat:\n      Enabled: true\n",
+		                                                    new ConfigReport())));
+		assertEquals(expected, WitnessSettings.DEFAULT);
+		// ChaseConfig keeps its five components: the new blocks are read beside it (merge safety with 0.21.0)
+		assertEquals(5, ChaseConfig.class.getRecordComponents().length);
+	}
+
+	@Test
+	@DisplayName("Witnesses reads Enable and Crimes; an empty Crimes list is honoured (nothing gated)")
+	void witnesses_values() {
+		ConfigReport report = new ConfigReport();
+
+		assertEquals(new WitnessSettings(false, List.of("Store_Robbery")),
+		             WitnessSettings.parse(wanted("Wanted:\n   Witnesses:\n      Enable: false\n      Crimes:\n"
+		                                          + "         - Store_Robbery\n", report)));
+		assertEquals(new WitnessSettings(true, List.of()),
+		             WitnessSettings.parse(wanted("Wanted:\n   Witnesses:\n      Crimes: []\n", report)));
+		assertTrue(report.issues().isEmpty(), () -> "unexpected issues: " + report.issues());
+	}
+
+	@Test
+	@DisplayName("Witnesses: a bad Enable keeps the default and warns")
+	void witnesses_badValueWarns() {
+		ConfigReport report = new ConfigReport();
+
+		WitnessSettings parsed = WitnessSettings.parse(wanted("Wanted:\n   Witnesses:\n      Enable: perhaps\n", report));
+
+		assertTrue(parsed.enabled());
+		assertFalse(report.issues().isEmpty());
+	}
+
+	@Test
+	@DisplayName("Trespass: default enabled, 60 s; values read; a repeat below 0 is clamped to 0")
+	void trespass_defaultAndValues() {
+		ConfigReport report = new ConfigReport();
+
+		assertEquals(new TrespassSettings(true, 60), TrespassSettings.parse(null));
+		assertEquals(new TrespassSettings(true, 60), TrespassSettings.DEFAULT);
+		assertEquals(new TrespassSettings(false, 30),
+		             TrespassSettings.parse(wanted("Wanted:\n   Trespass:\n      Enable: false\n"
+		                                           + "      Repeat_Seconds: 30\n", report)));
+		assertEquals(0, TrespassSettings.parse(wanted("Wanted:\n   Trespass:\n      Repeat_Seconds: -5\n", report))
+		                                .repeatSeconds());
+	}
+
+	@Test
+	@DisplayName("the loader exposes the blocks and they are the defaults before the first load")
+	void loader_exposesDefaultsBeforeLoad() {
+		ChaseConfigLoader loader = new ChaseConfigLoader(mock(JavaPlugin.class), mock(FileManager.class));
+
+		assertEquals(WitnessSettings.parse(null), loader.getWitnesses());
+		assertEquals(TrespassSettings.parse(null), loader.getTrespass());
+	}
+
+	@Test
+	@DisplayName("Evading_Police weighs 100 in the code default, so one star when seen (100 x 1.5 = 150 >= 100)")
+	void evadingPolice_weight100() {
+		assertEquals(100, HeatSettings.DEFAULT.weightOf("Evading_Police"));
+		assertEquals(100, ChaseConfig.DEFAULT.heat().weightOf("Evading_Police"));
+		assertNotNull(ChaseConfig.DEFAULT.heat().crimeWeights().get("Evading_Police"));
+	}
+}

@@ -94,3 +94,10 @@ Cuff:
    Released: "&aLiberaste a &e%target%&a de las esposas."
    Already_Cuffed: "&c¡Este jugador ya está esposado!"
    Not_Cuffed: "&c¡Este jugador no está esposado!"
+
+# 0.20.0
+Item:
+   Given: ""
+   Unknown: ""
+   Needs_Player: ""
+   No_Permission: ""

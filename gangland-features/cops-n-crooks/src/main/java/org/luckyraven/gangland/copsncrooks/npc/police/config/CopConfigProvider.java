@@ -354,4 +354,54 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	default @Nullable List<CopRole> getSquadComposition(int wantedLevel) {
 		return null;
 	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default PatrolSettings getPatrolSettings() {
+		return PatrolSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default WarningSettings getWarningSettings() {
+		return WarningSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default PullOverSettings getPullOverSettings() {
+		return PullOverSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default TrackerSettings getTrackerSettings() {
+		return TrackerSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default ScannerSettings getScannerSettings() {
+		return ScannerSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default SirenSettings getSirenSettings() {
+		return SirenSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default SightSettings getSightSettings() {
+		return SightSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default OverwatchSettings getOverwatchSettings() {
+		return OverwatchSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default ScannerMapSettings getScannerMapSettings() {
+		return ScannerMapSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block, {@code TDD stub} default until the provider parses it. */
+	default DisguiseSettings getDisguiseSettings() {
+		return DisguiseSettings.DEFAULT;
+	}
 }

@@ -52,7 +52,21 @@ public class WantedMessages extends LocalizedModuleYaml {
 		SHEET_EXTRA("Charge_Sheet.Extra_Time", "&7Unpaid &c%money_symbol%%amount% &7served as &c+%time%"),
 		PAPERWORK_FINE("Charge_Sheet.Paperwork", "&7Fine paid: &a%money_symbol%%paid% &8| &7Extra time: &c%time%"),
 		BRIBE_STAR_TAKEN("Bribe_Star.Taken", "&6You pocketed a police bribe star. &e-%stars% star(s)."),
-		BRIBE_STAR_SEEN("Bribe_Star.Seen", "&cNot with a cop watching.");
+		BRIBE_STAR_SEEN("Bribe_Star.Seen", "&cNot with a cop watching."),
+		// 0.20.0 (TDD stub: fallbacks are filled by the green chunk)
+		PATROL_PUT_AWAY("Patrol.Put_Away", ""),
+		PATROL_COMPLIED("Patrol.Complied", ""),
+		PATROL_PULL_OVER("Patrol.Pull_Over", ""),
+		PATROL_TICKET("Patrol.Ticket", ""),
+		PATROL_FLED("Patrol.Fled", ""),
+		TRACKER_TAGGED("Tracker.Tagged", ""),
+		TRACKER_HUD("Tracker.Hud", ""),
+		TRESPASS("Trespass", ""),
+		SUSPECT_UNKNOWN("Suspect.Unknown", ""),
+		SUSPECT_BARE("Suspect.Bare", ""),
+		SUSPECT_ON_FOOT("Suspect.On_Foot", ""),
+		SUSPECT_IN_CAR("Suspect.In_Car", ""),
+		SUSPECT_FORMAT("Suspect.Format", "");
 
 		public final String path;
 		public final String fallback;

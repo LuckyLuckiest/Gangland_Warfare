@@ -93,3 +93,10 @@ Cuff:
    Released: "&aReleased &f%target%&a from handcuffs."
    Already_Cuffed: "&cThis player is already cuffed!"
    Not_Cuffed: "&cThis player is not handcuffed!"
+
+# 0.20.0
+Item:
+   Given: ""
+   Unknown: ""
+   Needs_Player: ""
+   No_Permission: ""
