@@ -294,8 +294,10 @@ public class CopsNCrooksModuleConfig {
 	@Bean
 	public BreakFreeService breakFreeService(DetainmentService detainmentService, DetainmentCostsContract costs,
 	                                         DetainmentMessageContract messages, ReleasePipeline releasePipeline,
-	                                         DetainmentSoundContract sounds, CrimeService crimes) {
-		return new BreakFreeService(plugin, detainmentService, costs, messages, releasePipeline, sounds, crimes);
+	                                         DetainmentSoundContract sounds, CrimeService crimes,
+	                                         WantedMessages wantedMessages) {
+		return new BreakFreeService(plugin, detainmentService, costs, messages, releasePipeline, sounds, crimes,
+		                            wantedMessages, () -> java.util.concurrent.ThreadLocalRandom.current().nextDouble());
 	}
 
 	@Bean
