@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
 /**
@@ -35,6 +36,8 @@ import java.util.function.BiConsumer;
 @ListenerHandler
 public class CrackingAlarmListener implements Listener {
 
+	private static final AtomicBoolean WARNED = new AtomicBoolean();
+
 	private final LootChestSettingsProvider settings;
 	private final CrimeService              crimes;
 	private final BiConsumer<Location, String> alarm;
@@ -43,7 +46,10 @@ public class CrackingAlarmListener implements Listener {
 	public CrackingAlarmListener(LootChestSettingsProvider settings, CrimeService crimes) {
 		this(settings, crimes, (at, sound) -> {
 			// ponytail: a fresh SoundEffect per ring; cache one if alarms ever ring in a tight loop
-			new SoundEffect(SoundEffect.SoundType.VANILLA, sound, 1.0f, 1.0f).playAtLocation(at);
+			boolean played = new SoundEffect(SoundEffect.SoundType.VANILLA, sound, 1.0f, 1.0f).playAtLocation(at);
+			if (!played && WARNED.compareAndSet(false, true)) {
+				log.warn("Cracking alarm sound '{}' did not play; check Cracking_Alarm.Sound in the lootchest config", sound);
+			}
 		});
 	}
 
