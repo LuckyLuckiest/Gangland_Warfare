@@ -9,7 +9,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.perception.SightModel;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcSupport;
 
-/** A player's gunshot resets his {@link SightModel} factor for a few seconds (0.20.0 lane sight). TDD skeleton. */
+/** A player's gunshot resets his {@link SightModel} factor for a few seconds (0.20.0 lane sight). */
 @ListenerHandler
 public class SightShotListener implements Listener {
 
