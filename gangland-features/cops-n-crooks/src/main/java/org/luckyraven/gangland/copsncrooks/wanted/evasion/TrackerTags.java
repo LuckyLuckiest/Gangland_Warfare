@@ -109,7 +109,7 @@ public final class TrackerTags {
 		if (now >= expiry) {
 			pdc.remove(key);
 			state.nextPing = -1L;
-			log.info("TRACKER {} state=expired vehicle={}", player.getName(), vehicle.getEntityId());
+			log.debug("TRACKER {} state=expired vehicle={}", player.getName(), vehicle.getEntityId());
 			return;
 		}
 
@@ -124,7 +124,7 @@ public final class TrackerTags {
 			Location at = vehicle.getLocation();
 			group.getSquad().reportSighting(at);
 			radio.sayFromLeader(group, "Tracker_Ping", Map.of("place", Objects.toString(radio.placeOf(at), "")));
-			log.info("TRACKER {} state=ping vehicle={}", player.getName(), vehicle.getEntityId());
+			log.debug("TRACKER {} state=ping vehicle={}", player.getName(), vehicle.getEntityId());
 		}
 	}
 
@@ -146,9 +146,10 @@ public final class TrackerTags {
 			return;
 		}
 		pdc.set(key, PersistentDataType.LONG, now + s.expireSeconds() * 1000L);
+		state.seenMs = 0;
 		radio.sayFromLeader(group, "Tracker_Tagged");
 		notifier.tagged(player);
-		log.info("TRACKER {} state=tagged vehicle={}", player.getName(), vehicle.getEntityId());
+		log.debug("TRACKER {} state=tagged vehicle={}", player.getName(), vehicle.getEntityId());
 	}
 
 	/** Drops the per-player seen-time and ping state (wanted end, quit). Tags on entities just expire. */
