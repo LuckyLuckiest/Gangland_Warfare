@@ -9,6 +9,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.npc.RetreatSettings;
+import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
@@ -85,7 +86,8 @@ public class CombatBehavior implements CopBehavior {
 		// Keystone's squad pursuit: ranged cops work their post on the squad's fan while they see the target inside
 		// their firing band, everyone else closes in, routes around obstacles or searches from the last-known position.
 		// squadFor gives the group squad for the group's player and the group's shared squad against anyone else.
-		cop.pursue(target, cop.squadFor(target), alertRange);
+		NpcSquad squad = cop.squadFor(target);
+		cop.pursue(target, squad, perception.pursuitRange(cop, target, squad, alertRange));
 	}
 
 	@Override
