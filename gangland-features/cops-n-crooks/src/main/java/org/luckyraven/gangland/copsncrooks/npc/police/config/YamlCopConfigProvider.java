@@ -139,6 +139,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final PullOverSettings  pullOverSettings;
 	private final TrackerSettings   trackerSettings;
 	private final SirenSettings     sirenSettings;
+	private final ScannerSettings   scannerSettings;
+	private final SightSettings     sightSettings;
+	private final OverwatchSettings overwatchSettings;
+	private final ScannerMapSettings scannerMapSettings;
+	private final DisguiseSettings  disguiseSettings;
 
 	// Roles (phase H13): the composition per wanted level; empty with roles off
 	private final TreeMap<Integer, List<CopRole>> compositions = new TreeMap<>();
@@ -244,6 +249,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.pullOverSettings  = parsePullOverSettings(cops, report);
 		this.trackerSettings   = parseTrackerSettings(cops, report);
 		this.sirenSettings     = parseSirenSettings(cops, report);
+		this.scannerSettings     = parseScannerSettings(cops, report);
+		this.sightSettings       = parseSightSettings(cops, report);
+		this.overwatchSettings   = parseOverwatchSettings(cops, report);
+		this.scannerMapSettings  = parseScannerMapSettings(cops, report);
+		this.disguiseSettings    = parseDisguiseSettings(cops, report);
 
 		loadTiers(cops, report, itemParser);
 		loadRoles(rolesReader, report, itemParser);
@@ -535,6 +545,31 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public SirenSettings getSirenSettings() {
 		return sirenSettings;
+	}
+
+	@Override
+	public ScannerSettings getScannerSettings() {
+		return scannerSettings;
+	}
+
+	@Override
+	public SightSettings getSightSettings() {
+		return sightSettings;
+	}
+
+	@Override
+	public OverwatchSettings getOverwatchSettings() {
+		return overwatchSettings;
+	}
+
+	@Override
+	public ScannerMapSettings getScannerMapSettings() {
+		return scannerMapSettings;
+	}
+
+	@Override
+	public DisguiseSettings getDisguiseSettings() {
+		return disguiseSettings;
 	}
 
 	@Override
@@ -1186,6 +1221,109 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                         siren.get("Sound").asString().orDefault(defaults.sound()),
 		                         (float) siren.get("Volume").asDouble().min(0.0).orDefault(defaults.volume()),
 		                         (float) siren.get("Pitch").asDouble().min(0.5).orDefault(defaults.pitch()));
+	}
+
+	private ScannerSettings parseScannerSettings(@Nullable NodeReader cops, ConfigReport report) {
+		ScannerSettings defaults = ScannerSettings.DEFAULT;
+		MappingNode     section  = cops == null ? null : cops.get("Scanner").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader scanner = NodeReader.of(section, report);
+		MappingNode itemSection = scanner.get("Item").asMapping().orNull();
+		NodeReader  item        = itemSection == null ? null : NodeReader.of(itemSection, report);
+		List<String> lore = item == null ? null : item.get("Lore").asList().ofStrings().orNull();
+		return new ScannerSettings(scanner.get("Enable").asBool().orDefault(defaults.enabled()),
+		                           scanner.get("Range").asDouble().min(0.0).orDefault(defaults.range()),
+		                           item == null ? defaults.itemMaterial()
+		                                        : item.get("Material").asString().orDefault(defaults.itemMaterial()),
+		                           item == null ? defaults.itemName()
+		                                        : item.get("Name").asString().orDefault(defaults.itemName()),
+		                           lore != null ? lore : defaults.itemLore());
+	}
+
+	private SightSettings parseSightSettings(@Nullable NodeReader cops, ConfigReport report) {
+		SightSettings defaults = SightSettings.DEFAULT;
+		MappingNode   section  = cops == null ? null : cops.get("Sight").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader sight = NodeReader.of(section, report);
+		return new SightSettings(sight.get("Enable").asBool().orDefault(defaults.enabled()),
+		                         sight.get("Dark_Max_Level").asInt().min(0).orDefault(defaults.darkMaxLevel()),
+		                         sight.get("Dark_Factor").asDouble().min(0.0).max(1.0).orDefault(defaults.darkFactor()),
+		                         sight.get("Dim_Max_Level").asInt().min(0).orDefault(defaults.dimMaxLevel()),
+		                         sight.get("Dim_Factor").asDouble().min(0.0).max(1.0).orDefault(defaults.dimFactor()),
+		                         sight.get("Crowd_Factor").asDouble().min(0.0).max(1.0).orDefault(defaults.crowdFactor()),
+		                         sight.get("Crowd_Min_Civilians").asInt().min(0)
+		                              .orDefault(defaults.crowdMinCivilians()),
+		                         sight.get("Crowd_Radius").asDouble().min(0.0).orDefault(defaults.crowdRadius()),
+		                         sight.get("Crowd_Out_Of_Contact_Seconds").asInt().min(0)
+		                              .orDefault(defaults.crowdOutOfContactSeconds()),
+		                         sight.get("Sneak_Factor").asDouble().min(0.0).max(1.0).orDefault(defaults.sneakFactor()),
+		                         sight.get("Min_Factor").asDouble().min(0.0).max(1.0).orDefault(defaults.minFactor()),
+		                         sight.get("Shot_Reset_Seconds").asInt().min(0).orDefault(defaults.shotResetSeconds()));
+	}
+
+	private OverwatchSettings parseOverwatchSettings(@Nullable NodeReader cops, ConfigReport report) {
+		OverwatchSettings defaults = OverwatchSettings.DEFAULT;
+		MappingNode       section  = cops == null ? null : cops.get("Overwatch").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader overwatch = NodeReader.of(section, report);
+		double     ringMin   = overwatch.get("Ring_Min").asDouble().min(0.0).orDefault(defaults.ringMin());
+		double     ringMax   = overwatch.get("Ring_Max").asDouble().min(0.0).orDefault(defaults.ringMax());
+		if (ringMin > ringMax) {
+			report.add(Severity.WARNING, overwatch.mapping().location(), "Overwatch.Ring_Min",
+			           "Ring_Min " + ringMin + " is above Ring_Max " + ringMax + ", the ring keeps its default range",
+			           "config.range");
+			ringMin = defaults.ringMin();
+			ringMax = defaults.ringMax();
+		}
+		return new OverwatchSettings(overwatch.get("Enable").asBool().orDefault(defaults.enabled()),
+		                             overwatch.get("Min_Level").asInt().min(1).orDefault(defaults.minLevel()),
+		                             overwatch.get("Role").asString().orDefault(defaults.role()),
+		                             ringMin, ringMax,
+		                             overwatch.get("Columns").asInt().min(1).orDefault(defaults.columns()),
+		                             overwatch.get("Min_Height").asInt().min(0).orDefault(defaults.minHeight()),
+		                             overwatch.get("Sight_Range").asDouble().min(0.0).orDefault(defaults.sightRange()),
+		                             overwatch.get("Max_Failures").asInt().min(1).orDefault(defaults.maxFailures()),
+		                             overwatch.get("Reach_Seconds").asInt().min(0).orDefault(defaults.reachSeconds()),
+		                             overwatch.get("Max_Seconds").asInt().min(0).orDefault(defaults.maxSeconds()));
+	}
+
+	private ScannerMapSettings parseScannerMapSettings(@Nullable NodeReader cops, ConfigReport report) {
+		ScannerMapSettings defaults = ScannerMapSettings.DEFAULT;
+		MappingNode        section  = cops == null ? null : cops.get("Scanner_Map").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader scannerMap   = NodeReader.of(section, report);
+		MappingNode itemSection = scannerMap.get("Item").asMapping().orNull();
+		NodeReader  item        = itemSection == null ? null : NodeReader.of(itemSection, report);
+		List<String> lore = item == null ? null : item.get("Lore").asList().ofStrings().orNull();
+		return new ScannerMapSettings(scannerMap.get("Enable").asBool().orDefault(defaults.enabled()),
+		                              scannerMap.get("Blocks_Per_Pixel").asInt().min(1)
+		                                        .orDefault(defaults.blocksPerPixel()),
+		                              scannerMap.get("Refresh_Ticks").asInt().min(1).orDefault(defaults.refreshTicks()),
+		                              scannerMap.get("Show_Hideouts").asBool().orDefault(defaults.showHideouts()),
+		                              item == null ? defaults.itemName()
+		                                           : item.get("Name").asString().orDefault(defaults.itemName()),
+		                              lore != null ? lore : defaults.itemLore());
+	}
+
+	private DisguiseSettings parseDisguiseSettings(@Nullable NodeReader cops, ConfigReport report) {
+		DisguiseSettings defaults = DisguiseSettings.DEFAULT;
+		MappingNode      section  = cops == null ? null : cops.get("Disguise").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader disguise = NodeReader.of(section, report);
+		List<String> maskItems     = disguise.get("Mask_Items").asList().ofStrings().orNull();
+		List<String> maskWearables = disguise.get("Mask_Wearables").asList().ofStrings().orNull();
+		List<String> policeOutfit  = disguise.get("Police_Outfit").asList().ofStrings().orNull();
+		return new DisguiseSettings(disguise.get("Enable").asBool().orDefault(defaults.enabled()),
+		                            maskItems != null ? maskItems : defaults.maskItems(),
+		                            maskWearables != null ? maskWearables : defaults.maskWearables(),
+		                            policeOutfit != null ? policeOutfit : defaults.policeOutfit(),
+		                            disguise.get("Outfit_Max_Level").asInt().min(0).orDefault(defaults.outfitMaxLevel()),
+		                            disguise.get("Match_Needed").asInt().min(1).orDefault(defaults.matchNeeded()));
 	}
 
 	private ShotNoiseSettings parseShotNoiseSettings(@Nullable NodeReader cops, ConfigReport report) {
