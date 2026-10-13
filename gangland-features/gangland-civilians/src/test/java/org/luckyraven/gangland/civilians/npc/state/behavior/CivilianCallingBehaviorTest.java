@@ -11,6 +11,7 @@ import org.luckyraven.gangland.civilians.witness.WitnessTestKit;
 import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -125,5 +126,22 @@ class CivilianCallingBehaviorTest {
 		behavior.onExit(npc);
 
 		verify(npc, never()).transitionTo(any());
+	}
+
+	@Test
+	@DisplayName("leaving CALLING with the call still attached (alertFaction, an NPC attacker, player death) drops the call")
+	void exitWithCallAttachedDropsCall() {
+		CivilianNpc npc = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+		behavior.onEnter(npc);
+		int before = kit.transitions.size();
+
+		behavior.onExit(npc);
+
+		assertNull(npc.getWitnessCall());
+		assertTrue(kit.service.activeCalls().isEmpty());
+		assertEquals(before, kit.transitions.size());
+		assertTrue(kit.debugContains("CALL_CANCEL Bob crime=Car_Theft reason=lost"), kit.debug::toString);
+		verify(npc.getEntity()).setGlowing(false);
 	}
 }

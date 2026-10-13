@@ -30,6 +30,7 @@ import org.mockito.MockedStatic;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -157,7 +158,23 @@ class CivilianDamageListenerTest {
 		CivilianNpc    victim   = registered(kit.civilian(6, false), false, true);
 		new CivilianDamageListener(kit.civilians, service).onCivilianDamage(hit(kit.criminal, victim));
 
-		verify(service).onPlayerHitCivilian(kit.criminal, victim);
+		verify(service).onPlayerHitCivilian(kit.criminal, victim, false);
+	}
+
+
+	@Test
+	@DisplayName("a hit that kills the caller (health 4, damage 5) leaves the call attached for the death hand-over")
+	void lethalHitOnCallerLeavesCall() {
+		CivilianNpc caller = registered(kit.civilian(10, true), false, true);
+		when(caller.getEntity().getHealth()).thenReturn(4.0);
+		kit.witness("Car_Theft");
+
+		listener.onCivilianDamage(hit(kit.criminal, caller));
+
+		assertNotNull(caller.getWitnessCall());
+		assertEquals(CivilianState.CALLING, caller.getCurrentState());
+		assertEquals(1, kit.service.activeCalls().size());
+		verify(kit.crimes, never()).commit(any(), any(), any());
 	}
 
 	// ── helpers ──────────────────────────────────────────────────────────────

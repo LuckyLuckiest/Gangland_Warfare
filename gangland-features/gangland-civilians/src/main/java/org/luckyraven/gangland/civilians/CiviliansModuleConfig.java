@@ -140,4 +140,10 @@ public class CiviliansModuleConfig {
 	                                     CivilianMessages civilianMessages) {
 		throw new UnsupportedOperationException("TDD stub");
 	}
+
+	/** The bean's wiring, testable without a plugin: rules re-read from the loaded config on every call. */
+	static WitnessService witnessService(CivilianService civilianService, CrimeService crimeService,
+	                                     CivilianMessages civilianMessages, WitnessService.Hooks hooks) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
 }

@@ -46,6 +46,12 @@ public final class WitnessTestKit {
 	public final List<String>         notices = new ArrayList<>();
 	public final List<CivilianNpc>    all     = new ArrayList<>();
 
+	/** One {@code transitionTo} call as the npc saw it: the flee origin and the call at that very moment. */
+	public record Transition(CivilianNpc npc, CivilianState state, Location lastAttacker, WitnessCall call) {
+	}
+
+	public final List<Transition> transitions = new ArrayList<>();
+
 	public final World            world     = mock(World.class);
 	public final Player           criminal  = mock(Player.class);
 	public final UUID             criminalId = UUID.randomUUID();
@@ -76,17 +82,27 @@ public final class WitnessTestKit {
 		UUID           id     = UUID.randomUUID();
 		AtomicReference<CivilianState> state = new AtomicReference<>(CivilianState.IDLE);
 		AtomicReference<WitnessCall>   call  = new AtomicReference<>();
+		AtomicReference<Location>      lastAttacker = new AtomicReference<>();
 
 		when(entity.getUniqueId()).thenReturn(id);
 		when(entity.getWorld()).thenReturn(world);
 		when(entity.getLocation()).thenAnswer(invocation -> new Location(world, distance, 64, 0));
+		when(entity.getHealth()).thenReturn(20.0);
+		when(entity.getName()).thenReturn("Pedestrian");
 		when(npc.getEntity()).thenReturn(entity);
 		when(npc.isValid()).thenReturn(true);
 		when(npc.getCurrentState()).thenAnswer(invocation -> state.get());
 		doAnswer(invocation -> {
-			state.set(invocation.getArgument(0));
+			CivilianState next = invocation.getArgument(0);
+			state.set(next);
+			transitions.add(new Transition(npc, next, lastAttacker.get(), call.get()));
 			return null;
 		}).when(npc).transitionTo(any(CivilianState.class));
+		when(npc.getLastAttackerLocation()).thenAnswer(invocation -> lastAttacker.get());
+		doAnswer(invocation -> {
+			lastAttacker.set(invocation.getArgument(0));
+			return null;
+		}).when(npc).setLastAttackerLocation(any());
 		when(npc.getWitnessCall()).thenAnswer(invocation -> call.get());
 		doAnswer(invocation -> {
 			call.set(invocation.getArgument(0));
@@ -96,6 +112,15 @@ public final class WitnessTestKit {
 		all.add(npc);
 		if (sees) sighted.add(npc);
 		return npc;
+	}
+
+	/** The last transition of {@code npc} into {@code state}, or null. */
+	public Transition lastTransition(CivilianNpc npc, CivilianState state) {
+		Transition found = null;
+		for (Transition t : transitions) {
+			if (t.npc() == npc && t.state() == state) found = t;
+		}
+		return found;
 	}
 
 	public void advanceSeconds(double seconds) {

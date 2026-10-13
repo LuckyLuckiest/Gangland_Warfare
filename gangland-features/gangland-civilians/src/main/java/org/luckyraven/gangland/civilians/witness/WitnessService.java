@@ -3,6 +3,7 @@ package org.luckyraven.gangland.civilians.witness;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.crime.CrimeService;
@@ -39,6 +40,11 @@ public final class WitnessService {
 	/** Time, sight, aim, event bus, action-bar and debug sinks; replaced by fakes in tests. */
 	public record Hooks(LongSupplier clock, Sight sight, Aim aim, Consumer<Event> events,
 	                    BiConsumer<Player, String> notifier, Consumer<String> debug) {
+
+		/** The production hooks: wall clock, {@code npc.canSee}, {@link WitnessAim}, Bukkit events, action bar. */
+		public static Hooks live(JavaPlugin plugin) {
+			throw new UnsupportedOperationException("TDD stub");
+		}
 	}
 
 	public WitnessService(CivilianService civilians, CrimeService crimes, Supplier<WitnessRules> rules,
@@ -50,8 +56,25 @@ public final class WitnessService {
 		throw new UnsupportedOperationException("TDD stub");
 	}
 
-	/** A player hit a civilian: cancels that civilian's own call, and publishes Assault_Civilian (throttled). */
+	/** A player hit a civilian (not lethal): cancels that civilian's own call, and publishes Assault_Civilian (throttled). */
 	public void onPlayerHitCivilian(Player attacker, CivilianNpc victim) {
+		onPlayerHitCivilian(attacker, victim, false);
+	}
+
+	/**
+	 * A player hit a civilian. When {@code lethal} the hit kills it: the call stays attached for
+	 * {@link #onCallerDeath} (hand-over) and no Assault_Civilian is published (Kill_Civilian covers the kill).
+	 */
+	public void onPlayerHitCivilian(Player attacker, CivilianNpc victim, boolean lethal) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	/**
+	 * Forgets {@code npc}'s call because shipped code moved it out of CALLING behind the service's back (alertFaction,
+	 * an NPC attacker, player death): removes it from the map and the npc, logs CALL_CANCEL reason=lost, never
+	 * transitions.
+	 */
+	public void dropCall(CivilianNpc npc) {
 		throw new UnsupportedOperationException("TDD stub");
 	}
 

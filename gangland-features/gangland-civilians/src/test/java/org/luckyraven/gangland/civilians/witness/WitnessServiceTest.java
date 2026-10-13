@@ -163,7 +163,10 @@ class WitnessServiceTest {
 		assertEquals(CivilianState.FLEEING, caller.getCurrentState());
 		assertNull(caller.getWitnessCall());
 		assertTrue(kit.service.activeCalls().isEmpty());
-		assertTrue(kit.debugContains("CALL_IN Bob crime=Car_Theft"), kit.debug::toString);
+		assertTrue(kit.debugContains("CALL_IN Bob crime=Car_Theft caller=Pedestrian"), kit.debug::toString);
+		WitnessTestKit.Transition fled = kit.lastTransition(caller, CivilianState.FLEEING);
+		assertEquals(kit.at, fled.lastAttacker(), "flee origin is the criminal");
+		assertNull(fled.call(), "the call is already cleared at the FLEEING transition");
 	}
 
 	@Test
@@ -210,6 +213,9 @@ class WitnessServiceTest {
 		assertNull(caller.getWitnessCall());
 		assertTrue(kit.service.activeCalls().isEmpty());
 		assertTrue(kit.debugContains("CALL_CANCEL Bob crime=Car_Theft reason=hit"), kit.debug::toString);
+		WitnessTestKit.Transition fled = kit.lastTransition(caller, CivilianState.FLEEING);
+		assertEquals(kit.at, fled.lastAttacker(), "flee origin is the criminal");
+		assertNull(fled.call(), "the call is already cleared at the FLEEING transition");
 	}
 
 	@Test
@@ -230,6 +236,9 @@ class WitnessServiceTest {
 		assertEquals(0, kit.countEvents(CivilianCalledInEvent.class));
 		assertTrue(kit.service.activeCalls().isEmpty());
 		assertTrue(kit.debugContains("CALL_CANCEL Bob crime=Car_Theft reason=scared"), kit.debug::toString);
+		WitnessTestKit.Transition fled = kit.lastTransition(caller, CivilianState.FLEEING);
+		assertEquals(kit.at, fled.lastAttacker(), "flee origin is the criminal");
+		assertNull(fled.call(), "the call is already cleared at the FLEEING transition");
 	}
 
 	@Test
@@ -382,5 +391,58 @@ class WitnessServiceTest {
 
 		assertEquals(1, kit.witness("Car_Theft"));
 		assertSame(victim, victim.getWitnessCall().caller());
+	}
+
+	// ── lethal hit and orphaned calls (revision 1) ───────────────────────────
+
+	@Test
+	@DisplayName("a lethal hit on the caller keeps the call attached so the death hands it to a watcher (D-WIT-6)")
+	void lethalHitKeepsCallForHandover() {
+		CivilianNpc caller  = kit.civilian(10, true);
+		CivilianNpc watcher = kit.civilian(15, true);
+		kit.witness("Car_Theft");
+
+		kit.advanceSeconds(5);
+		kit.service.onPlayerHitCivilian(kit.criminal, caller, true);
+
+		assertEquals(CivilianState.CALLING, caller.getCurrentState());
+		assertSame(caller, caller.getWitnessCall().caller());
+		assertEquals(1, kit.service.activeCalls().size());
+		assertNull(kit.lastTransition(caller, CivilianState.FLEEING));
+
+		when(caller.isValid()).thenReturn(false);
+		kit.sighted.remove(caller);
+		kit.service.onCallerDeath(caller);
+
+		assertEquals(CivilianState.CALLING, watcher.getCurrentState());
+		assertSame(watcher, watcher.getWitnessCall().caller());
+		assertEquals(5000L, watcher.getWitnessCall().startedAtMillis());
+	}
+
+	@Test
+	@DisplayName("a lethal hit publishes no Assault_Civilian (Kill_Civilian covers the kill)")
+	void lethalHitPublishesNoAssault() {
+		CivilianNpc victim = kit.civilian(6, false);
+
+		kit.service.onPlayerHitCivilian(kit.criminal, victim, true);
+
+		verify(kit.crimes, never()).commit(any(), any(), any());
+		verify(kit.crimes, never()).commit(any(), any(), any(), anyBoolean(), anyInt());
+	}
+
+	@Test
+	@DisplayName("dropCall forgets a call the shipped code walked away from: gone from the map and the npc, no transition")
+	void dropCallNeverTransitions() {
+		CivilianNpc caller = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+		int before = kit.transitions.size();
+
+		kit.service.dropCall(caller);
+
+		assertNull(caller.getWitnessCall());
+		assertTrue(kit.service.activeCalls().isEmpty());
+		assertEquals(before, kit.transitions.size(), "dropCall must not transition");
+		assertEquals(CivilianState.CALLING, caller.getCurrentState());
+		assertTrue(kit.debugContains("CALL_CANCEL Bob crime=Car_Theft reason=lost"), kit.debug::toString);
 	}
 }

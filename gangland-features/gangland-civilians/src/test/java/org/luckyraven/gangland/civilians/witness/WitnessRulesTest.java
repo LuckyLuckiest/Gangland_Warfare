@@ -106,11 +106,19 @@ class WitnessRulesTest {
 				getClass().getClassLoader().getResourceAsStream("npc/civilians.yml"))) {
 			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
 		}
-		for (String key : new String[]{"Enable", "Range", "Call_Seconds", "Caller_Glow", "Scare_Range", "Scare_Angle",
-		                               "Report_Assault", "Assault_Repeat_Seconds"}) {
-			assertTrue(yaml.contains("\n   " + key + ": "), key);
-		}
 		assertTrue(yaml.contains("\nWitness:\n"));
+		// the keys must sit INSIDE the Witness block (up to the next top-level line), not merely somewhere in the file
+		String after = yaml.substring(yaml.indexOf("\nWitness:\n") + "\nWitness:\n".length());
+		java.util.regex.Matcher next = java.util.regex.Pattern.compile("(?m)^\\S").matcher(after);
+		String block = next.find() ? after.substring(0, next.start()) : after;
+		String[][] expected = {{"Enable", "true"}, {"Range", "24.0"}, {"Call_Seconds", "8"}, {"Caller_Glow", "true"},
+		                       {"Scare_Range", "16.0"}, {"Scare_Angle", "12.0"}, {"Report_Assault", "true"},
+		                       {"Assault_Repeat_Seconds", "10"}};
+		for (String[] pair : expected) {
+			assertTrue(java.util.regex.Pattern.compile("(?m)^   " + pair[0] + ": " + java.util.regex.Pattern.quote(pair[1])
+			                                            + "\\s*(#.*)?$").matcher(block).find(),
+			           () -> pair[0] + " = " + pair[1] + " inside the Witness block:\n" + block);
+		}
 		assertFalse(yaml.contains("Witness: {"));
 
 		ConfigReport    report = new ConfigReport();

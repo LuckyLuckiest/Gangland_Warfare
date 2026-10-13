@@ -81,7 +81,8 @@ class NineOneOneListenerTest {
 		order.verify(radio).sayFromLeader(eq(group), eq("Caller_911"), placeholders.capture());
 		assertEquals("Car_Theft", placeholders.getValue().get("crime"));
 		assertEquals("Docks", placeholders.getValue().get("place"));
-		assertEquals("Bob", placeholders.getValue().get("suspect"));
+		// %suspect% belongs to the CopRadio extras hook (disguise lane): a line-level value would leak the real name
+		assertEquals(java.util.Set.of("crime", "place"), placeholders.getValue().keySet());
 	}
 
 	@Test
