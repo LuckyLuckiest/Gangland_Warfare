@@ -35,7 +35,7 @@ public class IdleBehavior implements CopBehavior {
 		if (target == null) return;
 
 		NpcSquad squad = cop.squadFor(target);
-		boolean  sees  = cop.canSee(target, alertRange);
+		boolean  sees  = perception.acquires(cop, target, alertRange);
 		if (sees && squad != null) squad.reportSighting(target.getLocation());
 
 		if (sees || (squad != null && squad.hasFreshSighting())) {
