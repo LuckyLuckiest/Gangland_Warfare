@@ -19,3 +19,19 @@ Gadgets:
       Hard_Brake_Multiplier: 3.0
       # Fuel units consumed per tick while the car is moving.
       Fuel_Consume_Per_Tick: 1
+# Car events: CarMoveEvent cadence (ticks between events while the car moves).
+Car_Events:
+   # One CarMoveEvent every N ticks while the car is moving (minimum 1).
+   Move_Interval_Ticks: 4
+# Hotwire: start the engine of a car you do not own with a lockpick.
+Hotwire:
+   # Turn hotwiring off entirely (false = only owners and gang mates can mount).
+   Enable: true
+   # Seconds the hotwire takes before the engine starts.
+   Seconds: 6
+   # Maximum distance (blocks) from the car to start hotwiring.
+   Max_Distance: 3.0
+   # Consume the lockpick when the hotwire succeeds.
+   Consume_Lockpick: true
+   # Item id of the lockpick (an item from the item vocabulary).
+   Lockpick_Item: lockpick
