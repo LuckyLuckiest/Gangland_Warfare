@@ -36,25 +36,26 @@ public interface DetainmentCostsContract {
 
 	String getFallbackExitWaypoint();
 
-	// 0.21.0 (TDD stubs: the green step returns 1.0 / 1 / 0.0)
+	// 0.21.0: origin multipliers default to 1.0 (never dereferences the origin, so null is safe)
 	default double getSentenceMultiplier(ArrestOrigin origin) {
-		throw new UnsupportedOperationException("TDD stub");
+		return 1.0;
 	}
 
 	default double getBailMultiplier(ArrestOrigin origin) {
-		throw new UnsupportedOperationException("TDD stub");
+		return 1.0;
 	}
 
 	default double getFineMultiplier(ArrestOrigin origin) {
-		throw new UnsupportedOperationException("TDD stub");
+		return 1.0;
 	}
 
+	// 0.21.0: lockpick tap weight 1 and snap chance 0.0 keep today's break-free behaviour
 	default int getLockpickTapWeight() {
-		throw new UnsupportedOperationException("TDD stub");
+		return 1;
 	}
 
 	default double getLockpickSnapChance() {
-		throw new UnsupportedOperationException("TDD stub");
+		return 0.0;
 	}
 
 	default double computeHandcuffBribeCost(int wantedLevel) {
