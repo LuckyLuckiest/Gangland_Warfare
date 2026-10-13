@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.state.behavior;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
 import org.luckyraven.gangland.copsncrooks.events.police.DuringCuffingEvent;
@@ -126,7 +127,10 @@ public class CuffingBehavior implements CopBehavior {
 		boolean success = cop.attemptCuff(target);
 
 		if (success) {
-			var cuffedEvent = new CuffedEvent(cop, target, cuffRadius, maxAttempts);
+			CopGroup group = cop.getGroup();
+			ArrestOrigin origin = (group != null && target.getUniqueId().equals(group.getTargetPlayerId())
+			                       && group.isCeaseFire()) ? ArrestOrigin.SURRENDERED : ArrestOrigin.CUFFED;
+			var cuffedEvent = new CuffedEvent(cop, target, cuffRadius, maxAttempts, origin);
 			Bukkit.getPluginManager().callEvent(cuffedEvent);
 			// Transfer cuff-lock ownership to the GUARDING state without releasing:
 			// clear claimedPlayer so onExit's releaseLock() is a no-op, then stash the
