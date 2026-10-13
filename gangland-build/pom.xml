@@ -82,6 +82,7 @@
                             <exclude>org.luckyraven:gangland-npc-shops</exclude>
                             <exclude>org.luckyraven:gangland-lootchest</exclude>
                             <exclude>org.luckyraven:gangland-gang</exclude>
+                            <exclude>org.luckyraven:gangland-gang-fights</exclude>
                         </excludes>
                     </artifactSet>
                 </configuration>
@@ -160,6 +161,11 @@
                                     <artifactId>gangland-gang</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.luckyraven</groupId>
+                                    <artifactId>gangland-gang-fights</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -228,6 +234,12 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-gang</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-gang-fights</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>

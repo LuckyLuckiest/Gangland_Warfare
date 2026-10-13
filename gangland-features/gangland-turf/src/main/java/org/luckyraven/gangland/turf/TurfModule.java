@@ -2,6 +2,8 @@ package org.luckyraven.gangland.turf;
 
 import lombok.CustomLog;
 import org.luckyraven.gangland.turf.map.TurfMapConfig;
+import org.luckyraven.gangland.turf.map.web.TurfWebMapConfig;
+import org.luckyraven.gangland.turf.stat.TurfGangLinkConfig;
 import org.luckyraven.gangland.turf.placeholder.TurfHudConfig;
 import org.luckyraven.keystone.diagnostics.Diagnostics;
 import org.luckyraven.keystone.diagnostics.Fault;
@@ -29,6 +31,7 @@ import org.luckyraven.keystone.npc.NpcSupport;
  *     <li>{@code turf.command} - the {@code /glw turf} command tree.</li>
  *     <li>{@link TurfMapConfig} and {@link TurfHudConfig} - the 0.17.0 map and turf-HUD beans (empty until W1-M and
  *     W1-H add theirs); {@code turf.map} - the {@code /glw map} command tree.</li>
+ *     <li>{@link TurfWebMapConfig} (W3-W, dynmap layer) and {@link TurfGangLinkConfig} (W5-T, turfs-held stat), empty until those lanes.</li>
  *     <li>{@code turf.database} - the {@code Turf}/{@code ActiveTurfBuff}/{@code Garrison} repositories and their
  *     tables, scanned through the module loader.</li>
  * </ul>
@@ -49,6 +52,8 @@ public final class TurfModule implements KeystoneModule {
 		         .configuration(TurfModuleConfig.class)
 		         .configuration(TurfMapConfig.class)
 		         .configuration(TurfHudConfig.class)
+		         .configuration(TurfWebMapConfig.class)
+		         .configuration(TurfGangLinkConfig.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .listenerPackage(TASK_PACKAGE)
 		         .commandPackage(COMMAND_PACKAGE)

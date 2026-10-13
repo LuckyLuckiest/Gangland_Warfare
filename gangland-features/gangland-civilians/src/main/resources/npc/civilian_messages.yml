@@ -18,9 +18,12 @@ Spawner_List_Empty: "No civilian spawners are currently set."
 # Faction shouts (phase H12). Delivery tuning (Range, cooldowns, ...) lives in civilians.yml's own Shouts block;
 # this is only the shouted text. Every Lines key is a list; one line is picked at random. [] mutes that kind.
 # Placeholders: %unit% speaker, %member% addressed member, %target% suspect name, %distance%/%direction%/%side%
-# same as police radio, %faction% the shouter's faction, %count% allies recruited (Rally only).
+# same as police radio, %faction% the shouter's faction, %gang% the guard's gang tag (empty for street civilians), %count% allies recruited (Rally only).
 Shouts:
    Format: "&c[%faction%] &f%unit%&7: &f%line%"
+   # Said by a guard standing down after a held / lost turf. Plain lines, not pools.
+   Turf_Held: "Turf's ours. Back to your posts."
+   Turf_Lost: "We lost it. Fall back."
    Compass:
       - "north"
       - "north-east"
@@ -65,6 +68,9 @@ Shouts:
          - "They got %member%!"
       Leader_Down:
          - "Boss is down! %unit%, you lead!"
+      # A squad's commander (AI.Combat.Roles with Commander: true) fell: shouted once while the squad takes cover for 5 s.
+      Commander_Down:
+         - "The boss is down! Take cover!"
       # A badly hurt member breaks off to cover (AI.Combat.Retreat in civilians.yml).
       Fall_Back:
          - "I'm hit! Cover me!"

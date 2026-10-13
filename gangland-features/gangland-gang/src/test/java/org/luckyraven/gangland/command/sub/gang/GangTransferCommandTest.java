@@ -1,5 +1,9 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+import org.luckyraven.gangland.gang.support.MembershipKit;
+import org.luckyraven.gangland.gang.membership.GangLeadership;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -129,7 +133,10 @@ class GangTransferCommandTest {
 
 		JavaPlugin plugin = mock(JavaPlugin.class);
 		GangTransferCommand command = new GangTransferCommand(plugin, new Tree<>(), mock(Argument.class),
-		                                                      userManager, memberManager, gangManager, rankManager);
+		                                                      userManager, memberManager, gangManager, rankManager,
+		                                                      new MembershipKit(gangManager, memberManager, rankManager, userManager,
+		                                                                      mock(UserManager.class), mock(RepositoryRegistry.class),
+		                                                                      mock(GangMessages.class)).service);
 
 		OptionalArgument targetArgument = null;
 		ConfirmArgument  confirm        = null;

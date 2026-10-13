@@ -7,13 +7,15 @@ import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.config.TurfSettings;
+import org.luckyraven.gangland.turf.manager.TurfManager;
 
 import java.util.List;
 import java.util.Map;
 
 /**
  * Root of the {@code /glw map} command tree (0.17.0). The root sends the chat map (W1-M); the sub-commands are
- * {@code auto}, {@code hud} (W1-H), {@code text} and {@code legend}.
+ * {@code auto}, {@code hud} (W1-H), {@code text}, {@code legend}, {@code zoom} (W3-Z) and {@code border} (W3-V).
  */
 @CommandHandler
 public final class MapCommand extends Command {
@@ -21,12 +23,17 @@ public final class MapCommand extends Command {
 	private final MapPrefsService prefs;
 	private final TurfMessages    text;
 	private final TurfMapService  map;
+	private final TurfManager     turfs;
+	private final TurfSettings    settings;
 
-	public MapCommand(JavaPlugin plugin, MapPrefsService prefs, TurfMessages text, TurfMapService map) {
+	public MapCommand(JavaPlugin plugin, MapPrefsService prefs, TurfMessages text, TurfMapService map,
+	                  TurfManager turfs, TurfSettings settings) {
 		super(plugin, "map", true);
 		this.prefs = prefs;
 		this.text  = text;
 		this.map   = map;
+		this.turfs    = turfs;
+		this.settings = settings;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -50,7 +57,10 @@ public final class MapCommand extends Command {
 		MapHudCommand    hud    = new MapHudCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
 		MapTextCommand   txt    = new MapTextCommand(getPlugin(), getArgumentTree(), getArgument(), map);
 		MapLegendCommand legend = new MapLegendCommand(getPlugin(), getArgumentTree(), getArgument(), map);
-		getArgument().addAllSubArguments(List.of(auto, hud, txt, legend));
+		MapZoomCommand   zoom   = new MapZoomCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
+		MapBorderCommand border = new MapBorderCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, settings,
+		                                               text);
+		getArgument().addAllSubArguments(List.of(auto, hud, txt, legend, zoom, border));
 	}
 
 	@Override

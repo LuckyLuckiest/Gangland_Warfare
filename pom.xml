@@ -54,7 +54,7 @@
     </modules>
 
     <properties>
-        <revision>0.17.1</revision>
+        <revision>0.19.0</revision>
         <!-- Matches Keystone's release (17): the shaded jar must load on every JVM Keystone
              loads on, or the MC 1.16+ support floor is silently broken. release (not
              source/target) also validates against the Java 17 API, so building on a newer
@@ -149,6 +149,18 @@
         <repository>
             <id>mvn-wesjd-net</id>
             <url>https://mvn.wesjd.net/</url>
+        </repository>
+
+        <!-- dynmap-api (W3-W) -->
+        <repository>
+            <id>dynmap-repo</id>
+            <url>https://repo.mikeprimm.com/</url>
+        </repository>
+
+        <!-- worldguard-bukkit, worldedit-bukkit (W6-W) -->
+        <repository>
+            <id>enginehub-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
         </repository>
     </repositories>
 
@@ -287,6 +299,11 @@
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-gang</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-gang-fights</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

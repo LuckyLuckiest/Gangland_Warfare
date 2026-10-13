@@ -90,6 +90,18 @@ Map:
    Legend_Empty: "&7No gang in view."
    # Hover of the +N more entry. %list% = the entries not shown.
    Legend_More_Hover: "&7Not shown: %list%"
+   # /glw map zoom. %blocks% = blocks per map cell (8, 16, 32 or 64). Only the player who zooms sees the change.
+   Zoom_Set: "&7Map zoom: &f%blocks% &7blocks per cell."
+   # /glw map zoom in at 8 blocks per cell.
+   Zoom_Limit_In: "&7Closest zoom already: &f%blocks% &7blocks per cell."
+   # /glw map zoom out at 64 blocks per cell.
+   Zoom_Limit_Out: "&7Widest zoom already: &f%blocks% &7blocks per cell."
+   # /glw map zoom with no word or an unknown word. %blocks% = the zoom in effect.
+   Zoom_Usage: "&7Map zoom: &f%blocks% &7blocks per cell. Use &f/glw map zoom in &7or &fout&7."
+   # /glw map border. %turf% = turf name, %seconds% = how long the outline shows.
+   Border_Shown: "&7Showing the border of &f%turf% &7for &f%seconds%s &7(the part near you)."
+   # /glw map border with no turf under the player and none within %distance% blocks.
+   Border_None: "&7No turf within &f%distance% &7blocks."
 # end Map
 
 # ---------------- Hud: the action-bar turf line ----------------
@@ -219,6 +231,14 @@ Alerts:
    # To the new owners. %turf%.
    Taken: "&aYou took %turf%"
 # end Alerts
+
+# ---------------- Garrison: lines to the owners while their guards defend (W3-B) ----------------
+Garrison:
+   # To the owning gang's online members when a wave of guards takes its posts. %turf%, %count%.
+   Wave: "&7%count% guards took their posts at &f%turf%&7."
+   # To the owning gang's online members when guards go back to the reserve after the fight. %turf%, %count%.
+   Returned: "&7%count% guards back in the reserve at &f%turf%&7."
+# end Garrison
 
 # ---------------- Income: the payout line and the turf cap line (W2-N2) ----------------
 Income:
@@ -384,3 +404,19 @@ Rules:
    # duration, %idle% = Income.Idle_Hours as a duration, %max_mult% = Income.Max_Multiplier.
    Income: "&7A new turf pays &f%money_symbol%%amount%&7 every &f%interval%&7 while one of its owners was online in the last &f%idle%&7; boosts at most x&f%max_mult%&7."
 # end Rules
+
+# ---------------- Teleport_Guard: gang teleports and turf fights (0.19.0) ----------------
+Teleport_Guard:
+   # A gang teleport (safehouse, rally, gang waypoint) that starts inside a turf under attack. %turf% = that turf.
+   Source_Under_Attack: "&cYou cannot leave &f%turf% &cby teleport while it is under attack."
+   # The destination is inside a turf under attack or within Teleport_Guard.Buffer_Blocks (turf_rules.yml) of one.
+   Destination_Under_Attack: "&cYou cannot teleport into or next to &f%turf% &cwhile it is under attack."
+   # The destination is inside a turf owned by a gang that is neither yours nor allied.
+   Destination_Rival: "&cYou cannot teleport into &f%turf%&c: a rival gang holds it."
+   # The player's gang is owner or challenger in a running turf fight anywhere. %turf% = that turf.
+   Gang_In_Fight: "&cYour gang is in a turf fight at &f%turf%&c: gang teleports are off until it ends."
+   # /glw gang safehouse set inside a rival or contested turf.
+   Safehouse_Refused: "&cYou cannot set a safehouse inside &f%turf%&c."
+   # /glw turf create in a world where gangs are disabled (gang_rules.yml Worlds.Disabled, or Gang.Enable false).
+   Create_Gang_World_Disabled: "&cGangs are disabled in this world, so a turf here could never be held."
+# end Teleport_Guard

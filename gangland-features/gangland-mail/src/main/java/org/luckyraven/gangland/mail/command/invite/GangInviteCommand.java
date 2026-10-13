@@ -26,6 +26,8 @@ import org.luckyraven.gangland.mail.MailRules;
 import org.luckyraven.gangland.mail.MailStatus;
 import org.luckyraven.gangland.mail.MailType;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -47,11 +49,12 @@ public class GangInviteCommand extends SubArgument {
 	private final MailManager                mailManager;
 	private final MailRules                  rules;
 	private final MailMessages               messages;
+	private final GangMembershipService      membershipService;
 
 	public GangInviteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                         @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
 	                         GangManager gangManager, RankManager rankManager, MailManager mailManager, MailRules rules,
-	                         MailMessages messages) {
+	                         MailMessages messages, GangMembershipService membershipService) {
 		super(plugin, new String[]{"invite", "add"}, tree, parent);
 
 		this.plugin           = plugin;
@@ -65,6 +68,7 @@ public class GangInviteCommand extends SubArgument {
 		this.mailManager        = mailManager;
 		this.rules              = rules;
 		this.messages           = messages;
+		this.membershipService  = membershipService;
 
 		// Add the literal `cancel` SubArgument before the `<player>` OptionalArgument so the argument tree resolves
 		// `/glw gang invite cancel` to the cancel branch instead of treating "cancel" as a target player name.
@@ -81,7 +85,7 @@ public class GangInviteCommand extends SubArgument {
 	 */
 	public Argument gangAccept() {
 		return new GangInviteAcceptCommand(plugin, tree, gangArgumentParent, userManager, memberManager, gangManager,
-		                                   rankManager, mailManager, messages);
+		                                   rankManager, mailManager, messages, membershipService);
 	}
 
 	/**
@@ -143,7 +147,7 @@ public class GangInviteCommand extends SubArgument {
 			// GR-03: recruiting was open to every member, including the newest recruit.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.INVITE)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.INVITE));
 				return;
 			}
 

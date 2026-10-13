@@ -1,5 +1,8 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+import org.luckyraven.gangland.gang.support.MembershipKit;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -113,6 +116,7 @@ class GangJoinCommandTest {
 		player   = mock(Player.class);
 		when(player.getUniqueId()).thenReturn(playerId);
 		when(player.getName()).thenReturn("Rex");
+		bukkit.when(() -> Bukkit.getPlayer(playerId)).thenReturn(player);
 
 		user = user(false);
 		when(userManager.getUser(player)).thenReturn(user);
@@ -219,7 +223,7 @@ class GangJoinCommandTest {
 
 		nameArgument().executeArgument(player, new String[]{"gang", "join","Vipers"});
 
-		verify(player).sendMessage(messages.text("Social.No_Rank", "&cThis gang has no starting rank; ask an admin."));
+		verify(player).sendMessage(messages.text("Membership.No_Rank", "&cThis gang has no starting rank; ask an admin."));
 		verify(vipers, never()).addMember(any(User.class), any(Member.class), any(Rank.class));
 	}
 
@@ -234,7 +238,10 @@ class GangJoinCommandTest {
 
 	private Argument join() {
 		return new GangJoinCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), userManager,
-		                           memberManager, gangManager, rankManager, messages);
+		                           memberManager, gangManager, rankManager, messages,
+		                           new MembershipKit(gangManager, memberManager, rankManager, userManager,
+		                                             mock(UserManager.class), mock(RepositoryRegistry.class),
+		                                             messages).service);
 	}
 
 	private Argument nameArgument() {
@@ -243,6 +250,8 @@ class GangJoinCommandTest {
 
 	private Gang gang(String name, Gang.State state) {
 		Gang gang = mock(Gang.class);
+		when(gang.getId()).thenReturn(100 + gangs.size());
+		when(gangManager.getGang(100 + gangs.size())).thenReturn(gang);
 		when(gang.getName()).thenReturn(name);
 		when(gang.getDisplayNameString()).thenReturn(name);
 		when(gang.getState()).thenReturn(state);

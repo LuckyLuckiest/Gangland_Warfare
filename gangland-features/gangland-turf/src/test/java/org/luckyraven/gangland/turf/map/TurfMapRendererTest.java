@@ -94,7 +94,7 @@ class TurfMapRendererTest {
 		turfManager = mock(TurfManager.class);
 		service = new TurfMapService(turfManager, gangs, users,
 		                             mock(CaptureEligibility.class), mock(TurfMapSettings.class), turfSettings,
-		                             text, legacy, garrisons);
+		                             text, legacy, garrisons, new MapPrefsService());
 	}
 
 	@AfterEach
@@ -225,7 +225,7 @@ class TurfMapRendererTest {
 		gangs.register(gang(1, NOW, "Vipers"));
 		TurfMapService realService = new TurfMapService(mock(TurfManager.class), gangs, users, eligibility,
 		                                          mock(TurfMapSettings.class), mock(TurfSettings.class), real, legacy,
-		                                          garrisons);
+		                                          garrisons, new MapPrefsService());
 
 		String hover = realService.hoverText(viewer(UUID.randomUUID()), turf(7, null), null, NOW);
 

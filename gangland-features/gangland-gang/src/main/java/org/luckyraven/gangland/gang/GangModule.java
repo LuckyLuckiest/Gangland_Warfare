@@ -20,6 +20,10 @@ import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
  *     plus the {@code @Bean}-produced {@code GangMembershipInstaller} whose {@code @PostConstruct} wires the
  *     core-owned {@code GangMembership} holder (T-53, W55: not registered as its own {@code @Configuration}
  *     class — see its javadoc for why that broke boot with the module deployed).</li>
+ *     <li>The seven lane configurations ({@link GangMembershipConfig}, {@link GangLevelConfig},
+ *     {@link GangCombatConfig}, {@link GangSafehouseConfig}, {@link GangChatConfig}, {@link GangStatsConfig},
+ *     {@link GangUxConfig}) - the beans of the gang parity wave (0.19.0), one class per lane so the lanes edit
+ *     disjoint files.</li>
  *     <li>{@code gang.command.sub} - the {@code /glw gang} and {@code /glw rank} command trees (31 commands).</li>
  *     <li>{@code gang.listener} - {@code GangMembersDamageListener}.</li>
  *     <li>{@code gang.database} - the gang/rank/member repositories and their tables, scanned through the module
@@ -38,6 +42,13 @@ public final class GangModule implements KeystoneModule {
 	public void configure(ModuleRegistrar registrar) {
 		registrar.configuration(GangModuleFileConfig.class)
 		         .configuration(GangConfig.class)
+		         .configuration(GangMembershipConfig.class)
+		         .configuration(GangLevelConfig.class)
+		         .configuration(GangCombatConfig.class)
+		         .configuration(GangSafehouseConfig.class)
+		         .configuration(GangChatConfig.class)
+		         .configuration(GangStatsConfig.class)
+		         .configuration(GangUxConfig.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .commandPackage(GANG_COMMAND_PACKAGE)
 		         .commandPackage(RANK_COMMAND_PACKAGE)

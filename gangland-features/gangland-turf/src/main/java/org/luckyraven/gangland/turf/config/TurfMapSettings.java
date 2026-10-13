@@ -32,6 +32,21 @@ public class TurfMapSettings implements FileInitializer {
 	private int     hudIntervalSeconds;
 	@Getter
 	private int     hudPriority;
+	@Getter
+	private boolean webEnabled;
+	@Getter
+	private String  webLayerLabel;
+	@Getter
+	private double  webFillOpacity;
+	@Getter
+	private double  webLineOpacity;
+	@Getter
+	private int     webLineWeight;
+	/**
+	 * {@code Web.Unclaimed_Color} as 0xRRGGBB.
+	 */
+	@Getter
+	private int     webUnclaimedRgb;
 
 	public TurfMapSettings(FileManager fileManager) {
 		this.fileHandler = fileManager.getFile(FILE_NAME);
@@ -66,6 +81,21 @@ public class TurfMapSettings implements FileInitializer {
 		hudEnabled         = config.getBoolean("Hud.Enabled", true);
 		hudIntervalSeconds = Math.max(1, config.getInt("Hud.Interval_Seconds", 2));
 		hudPriority        = Math.min(100, Math.max(0, config.getInt("Hud.Priority", 9)));
+
+		webEnabled      = config.getBoolean("Web.Enabled", true);
+		webLayerLabel   = config.getString("Web.Layer_Label", "Turfs");
+		webFillOpacity  = Math.min(1.0, Math.max(0.0, config.getDouble("Web.Fill_Opacity", 0.25)));
+		webLineOpacity  = Math.min(1.0, Math.max(0.0, config.getDouble("Web.Line_Opacity", 0.8)));
+		webLineWeight   = Math.max(1, config.getInt("Web.Line_Weight", 2));
+		webUnclaimedRgb = parseRgb(config.getString("Web.Unclaimed_Color", "#AAAAAA"));
+	}
+
+	private static int parseRgb(String text) {
+		try {
+			return Integer.parseInt(text.trim().replaceFirst("^#", ""), 16) & 0xFFFFFF;
+		} catch (RuntimeException exception) {
+			return 0xAAAAAA;
+		}
 	}
 
 	@Override

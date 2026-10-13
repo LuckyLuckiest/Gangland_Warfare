@@ -1,9 +1,8 @@
 package org.luckyraven.gangland.command.sub.gang;
 
-import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.membership.GangMembershipService.Result;
 import org.luckyraven.gangland.gang.GangSettings;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -14,13 +13,8 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.keystone.util.TimeUtil;
-import org.luckyraven.gangland.events.gang.GangDeleteEvent;
-import org.luckyraven.gangland.gang.database.repositories.gang.GangAllianceRepository;
-import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.GangAlliance;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
@@ -28,20 +22,12 @@ import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
-import org.luckyraven.keystone.persistence.repository.IRepository;
-import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.util.TimeMessages;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import org.luckyraven.keystone.bean.Qualifier;
 import lombok.CustomLog;
@@ -52,34 +38,32 @@ class GangDeleteCommand extends SubArgument {
 	private final JavaPlugin                   gangland;
 	private final Tree<Argument>             tree;
 	private final UserManager<Player>        userManager;
-	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final MemberManager              memberManager;
 	private final GangManager                gangManager;
 	private final RankManager                rankManager;
-	private final RepositoryRegistry         repositoryRegistry;
-	private final GangMessages messages;
 
 	private final HashMap<User<Player>, AtomicReference<String>> deleteGangName;
 	private final HashMap<CommandSender, CountdownTimer>         deleteGangTimer;
 
 	private final ConfirmArgument confirmDelete;
 
+	private final GangMembershipService membershipService;
+
 	protected GangDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                            @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+	                            @Qualifier("online") UserManager<Player> userManager,
 	                            MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager, RepositoryRegistry repositoryRegistry,
-	                            GangMessages messages) {
+	                            RankManager rankManager,
+	                            GangMembershipService membershipService) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
+
+		this.membershipService = membershipService;
 
 		this.gangland           = gangland;
 		this.tree               = tree;
 		this.userManager        = userManager;
-		this.offlineUserManager = offlineUserManager;
 		this.memberManager      = memberManager;
 		this.gangManager        = gangManager;
 		this.rankManager        = rankManager;
-		this.repositoryRegistry = repositoryRegistry;
-		this.messages           = messages;
 
 		this.deleteGangName  = new HashMap<>();
 		this.deleteGangTimer = new HashMap<>();
@@ -186,135 +170,12 @@ class GangDeleteCommand extends SubArgument {
 				return;
 			}
 
-			// need to get all the users, even if they are not online,
-			// the periodical updates should take care of all the data save
-			// change the data directly from the database, and collect the online players ONLY!
-			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager::getUser);
-
-			Map<UUID, BigDecimal> payouts = payouts(gang.getEconomy().getAmount(), gang.getMembers(),
-			                                        player.getUniqueId());
-
-			IRepository<Member>                        memberRepository = repositoryRegistry.getRepository(Member.class);
-			IRepository<User<? extends OfflinePlayer>> userRepository   = repositoryRegistry.getGenericRepository(
-					User.class);
-
-			// Track online UUIDs so the offline loop below skips them
-			Set<UUID> onlineUuids = gangOnlineMembers.stream()
-					.map(u -> u.getUser().getUniqueId())
-					.collect(Collectors.toSet());
-
-			// change the online users gang id
-			String depositMoney = Messages.DEPOSIT_MONEY_PLAYER.toString();
-			for (User<Player> gangUser : gangOnlineMembers) {
-				Player currentPlayer = gangUser.getUser();
-				UUID   currentId     = currentPlayer.getUniqueId();
-				Member mem           = memberManager.getMember(currentId);
-
-				// T-279: the manager cache can miss an online member the gang still lists, and payouts() already
-				// reserved that member's share from gang.getMembers(); use the gang's own Member so the share is paid.
-				if (mem == null) {
-					mem = gang.getMembers().stream().filter(m -> m.getUuid().equals(currentId)).findFirst().orElse(null);
-				}
-
-				// Not in the gang's list either: nothing was reserved for it and there is nothing to reset — skip
-				// rather than NPE halfway through the disband (GR-01).
-				if (mem == null) continue;
-
-				BigDecimal amount = payouts.getOrDefault(currentPlayer.getUniqueId(), Currency.ZERO);
-
-				gang.getEconomy().withdrawAmount(amount);
-				gangUser.getEconomy().depositAmount(amount);
-
-				gang.removeMember(gangUser, mem);
-
-				// Persist the member reset (gang_id, contribution, rank cleared by removeMember)
-				memberRepository.save(mem);
-
-				// inform the online users
-				String kickedFromGang      = Messages.KICKED_FROM_GANG.toString();
-				String gangRemoved         = Messages.GANG_REMOVED.toString();
-				// GR-30: the confirm map entry can be gone; fall back to the gang's current name.
-				AtomicReference<String> confirmedName = deleteGangName.get(user);
-				String gangName = confirmedName != null && confirmedName.get() != null ? confirmedName.get() : gang.getName();
-				String gangRemovedReplace  = gangRemoved.replace("%gang%", gangName);
-				String depositMoneyReplace = depositMoney.replace("%amount%", Settings.formatAmount(amount));
-				gangUser.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);
+			Result result = membershipService.disband(gang.getId(), player.getUniqueId(), false);
+			if (!result.ok()) {
+				user.sendMessage(membershipService.text(result));
+				return;
 			}
 
-			// Pay out and reset every offline member through the same repository-cache path the online branch
-			// above already uses — not raw SQL against gangland-impl's UserTable/MemberTable, which the gang
-			// module cannot import (WS5 G1+G2+G3 gate: the module never depends on gangland-impl). Every existing
-			// gang member already has a User row, and PlayerBootstrapService hydrates every such row into
-			// offlineUserManager's cache at boot (and on /glw reload) before any command can run, so
-			// offlineUserManager.getUser(...) reliably finds it — the create() branch below is a defensive
-			// fallback, not the expected path.
-			//
-			// Deliberately synchronous, still on the calling thread (GR-02): this block mutates gang.getEconomy()
-			// and the member's rank/gang_id, and the gang row / in-memory gang are torn down a few lines below.
-			// Running it off-thread raced the disband and both duplicated and lost money. Disband is a rare,
-			// confirm-gated command, so a short main-thread loop is the right trade for a deterministic payout.
-			// Each offline User row is saved on the spot: a rejoin evicts the cached offline User before the next
-			// autosave, which would otherwise discard the payout.
-			for (Member mem : gang.getMembers()) {
-				if (onlineUuids.contains(mem.getUuid())) continue;
-
-				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(mem.getUuid());
-
-				User<OfflinePlayer> offlineUser = offlineUserManager.getUser(offlinePlayer);
-				// Not cached, or cached as a load-pending default (T-300, B3): load just this member's row, the path
-				// boot uses. Never loadAll, which rebuilds every player's User (Vault balance writes, wanted events).
-				if (offlineUser == null || offlineUser.isLoadPending()) {
-					boolean cached = offlineUser != null;
-					if (!cached) offlineUser = offlineUserManager.create(offlinePlayer);
-					// A failed read leaves defaults: load-pending keeps autosave and the save below off it.
-					if (!offlineUserManager.loadStored(offlineUser)) offlineUser.setLoadPending(true);
-					if (!cached) offlineUserManager.add(offlineUser);
-				}
-
-				BigDecimal amount = payouts.getOrDefault(mem.getUuid(), Currency.ZERO);
-
-				gang.getEconomy().withdrawAmount(amount);
-				offlineUser.getEconomy().depositAmount(amount);
-				if (offlineUser.isLoadPending()) {
-					log.warn("Disband payout of {} for {} was not saved: no stored row could be read",
-					         amount, mem.getUuid());
-				} else {
-					userRepository.save(offlineUser);
-				}
-
-				gang.removeMember(offlineUser, mem);
-
-				memberRepository.save(mem);
-			}
-
-			// return quarter of the gang creation fees
-			BigDecimal amount = GangSettings.getGangCreateFee()
-			                            .divide(BigDecimal.valueOf(4), Currency.SCALE, Currency.ROUNDING_MODE);
-
-			user.getEconomy().depositAmount(amount);
-			user.sendMessage(messages.text("Progression.Fee_Refund",
-			                               "&7Refunded a quarter of the creation fee: &a%money_symbol%%amount%",
-			                               "money_symbol", Settings.getMoneySymbol(),
-			                               "amount", Settings.formatAmount(amount)));
-
-			IRepository<Gang>         gangRepository         = repositoryRegistry.getRepository(Gang.class);
-			IRepository<GangAlliance> gangAllianceRepository = repositoryRegistry.getRepository(GangAlliance.class);
-
-			// Delete the gang row and all related alliance rows (both directions)
-			gangRepository.delete(gang);
-			if (gangAllianceRepository instanceof GangAllianceRepository allianceRepo) {
-				allianceRepo.deleteAllForGang(gang);
-			}
-
-			// Drop stale in-memory alliance refs on surviving allied gangs — without this,
-			// `ally.isAlly(deletedGang)` / `getAllyListString()` keep returning true until restart.
-			for (GangAlliance alliance : gang.getAllies()) {
-				Gang allyGang = gangManager.getGang(alliance.ally().getId());
-				if (allyGang != null) allyGang.removeAlly(gang);
-			}
-
-			gangManager.remove(gang);
-			Bukkit.getPluginManager().callEvent(new GangDeleteEvent(gang));
 			deleteGangName.remove(user);
 
 			CountdownTimer timer = deleteGangTimer.get(sender);
@@ -323,30 +184,6 @@ class GangDeleteCommand extends SubArgument {
 				deleteGangTimer.remove(sender);
 			}
 		});
-	}
-
-	/**
-	 * Splits the whole vault pro rata on each member's contribution, a negative contribution counting as zero. When
-	 * the total contribution is zero (D15) every member gets an equal share of the pool, rounded down to the currency
-	 * scale. The disbanding owner also takes whatever rounding leaves, so the shares sum to exactly {@code pool}.
-	 */
-	static Map<UUID, BigDecimal> payouts(BigDecimal pool, List<Member> members, UUID owner) {
-		double                total  = members.stream().mapToDouble(m -> Math.max(0, m.getContribution())).sum();
-		BigDecimal            equal  = members.isEmpty() ? Currency.ZERO :
-		                               pool.divide(BigDecimal.valueOf(members.size()), Currency.SCALE, RoundingMode.DOWN);
-		Map<UUID, BigDecimal> shares = new HashMap<>();
-		BigDecimal            left   = pool;
-
-		for (Member member : members) {
-			BigDecimal share = total > 0 ?
-			                   Currency.multiply(pool, Math.max(0, member.getContribution()) / total).min(left) :
-			                   equal;
-			shares.put(member.getUuid(), share);
-			left = left.subtract(share);
-		}
-
-		shares.merge(owner, left, BigDecimal::add);
-		return shares;
 	}
 
 }

@@ -133,6 +133,13 @@ public class GangMigrationRepository extends AbstractRepository<GangMigration> i
 		}
 	}
 
+	@Override
+	public synchronized void markDoneNow(String id) throws SQLException {
+		long now = System.currentTimeMillis();
+		tableBackend().upsert(new GangMigration(id, now));
+		doneAt.put(id, now);
+	}
+
 	/** One row per migration with the done_at it was stamped with; never re-stamped (T-250). */
 	synchronized List<GangMigration> rows() {
 		List<GangMigration> rows = new ArrayList<>();

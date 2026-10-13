@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import lombok.CustomLog;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.rank.Rank;
@@ -54,11 +55,16 @@ class GangCreateCommand extends SubArgument {
 	private final Supplier<Pattern>   namePattern;
 	private final GangMessages        gangMessages;
 
+	private final GangMembershipService membershipService;
+
 	protected GangCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                            RankManager rankManager, RepositoryRegistry repositoryRegistry, Supplier<Pattern> namePattern,
-	                            GangMessages gangMessages) {
+	                            GangMessages gangMessages,
+								GangMembershipService membershipService) {
 		super(gangland, "create", tree, parent);
+
+		this.membershipService = membershipService;
 
 		this.gangland           = gangland;
 		this.tree               = tree;
@@ -170,12 +176,21 @@ class GangCreateCommand extends SubArgument {
 
 			Gang gang = new Gang(id);
 
-			member.setGangJoinDateLong(Instant.now().toEpochMilli());
-			gang.addMember(user, member, tail);
 			gang.setName(createGangName.get(user).get());
 			gang.getEconomy().setAmount(GangSettings.getGangInitialBalance());
 
 			gangManager.add(gang);
+
+			// the creator takes the tail rank through the one membership path (fires GangCreatedEvent)
+			GangMembershipService.Result joined = membershipService.join(id, player.getUniqueId(),
+			                                                             GangMembershipService.JoinSource.CREATE);
+			if (!joined.ok()) {
+				gangManager.remove(gang);
+				user.getEconomy().depositAmount(GangSettings.getGangCreateFee());
+				user.sendMessage(membershipService.text(joined));
+				createGangName.remove(user);
+				return;
+			}
 
 			// Persist immediately so a reload before the next auto-save doesn't desync gang/member rows
 			IRepository<Gang>   gangRepository   = repositoryRegistry.getRepository(Gang.class);

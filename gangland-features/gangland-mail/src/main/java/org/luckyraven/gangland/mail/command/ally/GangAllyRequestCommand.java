@@ -11,6 +11,8 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.level.GangLimits;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.core.user.User;
@@ -39,9 +41,12 @@ public class GangAllyRequestCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
+	private final GangLimits          limits;
+	private final GangMessages        messages;
 
 	public GangAllyRequestCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
-	                       MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
+	                       MemberManager memberManager, GangManager gangManager, MailManager mailManager,
+	                      GangLimits limits, GangMessages messages) {
 		super(plugin, "request", tree, parent);
 
 		this.plugin      = plugin;
@@ -50,6 +55,8 @@ public class GangAllyRequestCommand extends SubArgument {
 		this.memberManager = memberManager;
 		this.gangManager   = gangManager;
 		this.mailManager   = mailManager;
+		this.limits        = limits;
+		this.messages      = messages;
 
 		this.addSubArgument(buildAllyId());
 	}
@@ -120,7 +127,7 @@ public class GangAllyRequestCommand extends SubArgument {
 			// GR-03: proposing an alliance bound the whole gang and was open to every member.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.ALLY)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.ALLY));
 				return;
 			}
 
@@ -149,6 +156,12 @@ public class GangAllyRequestCommand extends SubArgument {
 
 			if (receiving.isAlly(sending)) {
 				user.sendMessage(Messages.ALREADY_ALLIED_GANG.toString());
+				return;
+			}
+
+			Gang full = AllyCap.firstAtCap(limits, sending, receiving);
+			if (full != null) {
+				sender.sendMessage(AllyCap.refusal(limits, messages, full));
 				return;
 			}
 

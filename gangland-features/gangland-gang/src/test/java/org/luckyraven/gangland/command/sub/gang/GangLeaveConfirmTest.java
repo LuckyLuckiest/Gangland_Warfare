@@ -1,5 +1,10 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+import org.luckyraven.gangland.gang.support.MembershipKit;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.combat.CombatTag;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -90,6 +95,8 @@ class GangLeaveConfirmTest {
 		member = mock(Member.class);
 		when(member.getUuid()).thenReturn(uuid);
 		when(member.getRank()).thenReturn(memberRank);
+		when(member.getGangId()).thenReturn(5);
+		bukkit.when(() -> Bukkit.getPlayer(uuid)).thenReturn(player);
 
 		gang = mock(Gang.class);
 		UserManager<Player> userManager = mock(UserManager.class);
@@ -102,7 +109,10 @@ class GangLeaveConfirmTest {
 		when(rankManager.get(anyString())).thenReturn(mock(Rank.class));
 
 		leave = new GangLeaveCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), userManager,
-		                             memberManager, gangManager, rankManager);
+		                             memberManager, gangManager, rankManager,
+		                             new MembershipKit(gangManager, memberManager, rankManager, userManager,
+		                                               mock(UserManager.class), mock(RepositoryRegistry.class),
+		                                               mock(GangMessages.class)).service, new CombatTag());
 	}
 
 	@AfterEach

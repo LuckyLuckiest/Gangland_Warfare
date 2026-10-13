@@ -62,7 +62,7 @@ public class GangAllyRejectCommand extends SubArgument {
 
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.ALLY)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.ALLY));
 				return;
 			}
 
@@ -141,7 +141,7 @@ public class GangAllyRejectCommand extends SubArgument {
 			// GR-03: rejecting an alliance the leadership asked for was open to every member.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.ALLY)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.ALLY));
 				return;
 			}
 

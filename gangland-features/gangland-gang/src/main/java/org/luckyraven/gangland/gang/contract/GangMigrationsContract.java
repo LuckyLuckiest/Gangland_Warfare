@@ -2,6 +2,7 @@ package org.luckyraven.gangland.gang.contract;
 
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.function.Supplier;
 
@@ -37,6 +38,16 @@ public interface GangMigrationsContract {
 	 * @param id the migration id
 	 */
 	void markDone(String id);
+
+	/**
+	 * Records {@code id} as done and writes it synchronously, so it is on disk before the caller goes on (T-235).
+	 *
+	 * @param id the migration id
+	 * @throws SQLException when the write failed
+	 */
+	default void markDoneNow(String id) throws SQLException {
+		markDone(id);
+	}
 
 	/**
 	 * Saves the migrated {@code rows} to {@code repository} and marks {@code id} done. The default saves and marks at

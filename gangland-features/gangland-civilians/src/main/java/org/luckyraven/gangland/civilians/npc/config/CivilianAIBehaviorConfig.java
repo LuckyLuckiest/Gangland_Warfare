@@ -1,9 +1,12 @@
 package org.luckyraven.gangland.civilians.npc.config;
 
+import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
+
+import java.util.Map;
 
 /**
  * Per-type AI behavior configuration for a civilian NPC.
@@ -30,6 +33,8 @@ import org.luckyraven.keystone.npc.NpcMeleeProfile;
  * @param fireRateMultiplier gun cadence as a fraction of the weapon's own (player) fire rate
  * 		({@code Combat.Fire_Rate_Multiplier}); the NPC's Keystone fire-rate scale is its inverse.
  * @param retreat when a badly hurt member breaks off to cover ({@code Combat.Retreat}).
+ * @param roles the type's optional role overlay ({@code Combat.Roles.<Name>}), by role name; empty = every civilian of
+ * 		the type is a plain one ({@link NpcRole#NONE}).
  */
 public record CivilianAIBehaviorConfig(
 		boolean wanderEnabled,
@@ -46,7 +51,8 @@ public record CivilianAIBehaviorConfig(
 		TacticsConfig tactics,
 		NpcMeleeProfile melee,
 		double fireRateMultiplier,
-		RetreatSettings retreat
+		RetreatSettings retreat,
+		Map<String, NpcRole> roles
 ) {
 
 	/**
@@ -54,6 +60,17 @@ public record CivilianAIBehaviorConfig(
 	 * replaced on upgrade): fan posts on, a 120-degree arc, inside the decided civilian 100-140 band.
 	 */
 	public static final TacticsConfig DEFAULT_TACTICS = new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 120.0);
+
+	/** The 15-argument form, before the role overlay: no roles. */
+	public CivilianAIBehaviorConfig(boolean wanderEnabled, int wanderRange, boolean fleeEnabled, int fleeRange,
+	                                boolean combatEnabled, double attackDamage, double attackRange,
+	                                int attackIntervalTicks, NpcDifficulty difficulty, double alertRange,
+	                                int searchSeconds, TacticsConfig tactics, NpcMeleeProfile melee,
+	                                double fireRateMultiplier, RetreatSettings retreat) {
+		this(wanderEnabled, wanderRange, fleeEnabled, fleeRange, combatEnabled, attackDamage, attackRange,
+		     attackIntervalTicks, difficulty, alertRange, searchSeconds, tactics, melee, fireRateMultiplier, retreat,
+		     Map.of());
+	}
 
 	/** Legacy 11-argument constructor, kept for existing callers: {@link #DEFAULT_TACTICS}, a melee profile built from
 	 *  the attack interval and the documented civilian defaults (reach 3.0, approach 2.0, spread 0.15, edge 0.7), fire-rate

@@ -185,6 +185,8 @@ public class GameplayConfig {
 		loader.addExpectedFile(new FileHandler(gangland, "alliance_stat", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "gang_stat", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "gang_ranking", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "player_profile", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone_banking", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone_bounty", "inventory", ".yml"));

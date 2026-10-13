@@ -13,6 +13,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.gangland.events.teleportation.TeleportEvent;
 import org.luckyraven.gangland.file.configuration.Messages;
@@ -70,6 +71,12 @@ public class WaypointTeleport implements Listener {
 		if (userOnCooldown(user.getUser())) throw new IllegalTeleportException("Can't teleport on a cooldown");
 
 		CompletableFuture<TeleportResult> teleportResult = new CompletableFuture<>();
+
+		// LS-36: a downed player cannot start a warm-up; the caller sends its usual "unable to teleport" line
+		if (DownedPlayerRegistry.isDowned(user.getUser().getUniqueId())) {
+			teleportResult.complete(new TeleportResult(false, user, waypoint));
+			return teleportResult;
+		}
 
 		CountdownTimer timer = new CountdownTimer(plugin, waypoint.getTimer() == 0 ? 0L : 1L, waypoint.getTimer(), null,
 		                                          t -> {
@@ -160,6 +167,9 @@ public class WaypointTeleport implements Listener {
 	private void teleport(JavaPlugin plugin, User<Player> user, CompletableFuture<TeleportResult> teleportResult) {
 		World locWorld = Bukkit.getWorld(waypoint.getWorld());
 
+		// LS-35: whichever way the warm-up ends, its movement-cancel state ends with it
+		clearWarmUp(user.getUser());
+
 		// if locWorld was not valid
 		if (locWorld == null) {
 			TeleportResult result = new TeleportResult(false, user, waypoint);
@@ -206,12 +216,14 @@ public class WaypointTeleport implements Listener {
 			countdownTimer.start(false);
 		}
 
-		// remove the countdown timer when the player already teleports
-		countdownTimer.remove(player);
-
 		// successfully teleported
 		TeleportResult result = new TeleportResult(true, user, waypoint);
 		teleportResult.complete(result);
+	}
+
+	private static void clearWarmUp(Player player) {
+		countdownTimer.remove(player);
+		totalDistance.remove(player);
 	}
 
 	public record TeleportResult(boolean success, User<Player> playerUser, Waypoint waypoint) { }

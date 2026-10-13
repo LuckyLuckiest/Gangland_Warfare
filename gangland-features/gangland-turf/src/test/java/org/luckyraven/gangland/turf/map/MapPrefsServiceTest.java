@@ -53,6 +53,21 @@ class MapPrefsServiceTest {
 	}
 
 	@Test
+	@DisplayName("cell size: the default until set, then the player's own, forgotten on clear")
+	void cellBlocks_defaultThenStoredThenCleared() {
+		UUID bob = UUID.randomUUID();
+		prefs.setDefaultCellBlocks(32);
+		assertEquals(32, prefs.cellBlocks(alice));
+
+		prefs.setCellBlocks(alice, 8);
+		assertEquals(8, prefs.cellBlocks(alice));
+		assertEquals(32, prefs.cellBlocks(bob));
+
+		prefs.clear(alice);
+		assertEquals(32, prefs.cellBlocks(alice));
+	}
+
+	@Test
 	@DisplayName("autoViewers is a snapshot that later changes do not touch")
 	void autoViewersIsSnapshot() {
 		UUID bob = UUID.randomUUID();

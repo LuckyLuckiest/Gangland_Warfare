@@ -1,5 +1,9 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.events.gangs.GangMemberLeftEvent;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.membership.GangMembershipService.Result;
+import org.luckyraven.gangland.gang.combat.CombatTag;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -38,10 +42,18 @@ class GangLeaveCommand extends SubArgument {
 	private final ArgumentLock                       lock       = new ArgumentLock();
 	private final HashMap<CommandSender, BukkitTask> autoUnlock = new HashMap<>();
 
+	private final GangMembershipService membershipService;
+	private final CombatTag combatTag;
+
 	protected GangLeaveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                           @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                           RankManager rankManager) {
+	                           RankManager rankManager,
+								GangMembershipService membershipService,
+								CombatTag combatTag) {
 		super(gangland, "leave", tree, parent);
+
+		this.membershipService = membershipService;
+		this.combatTag = combatTag;
 
 		this.gangland      = gangland;
 		this.userManager   = userManager;
@@ -114,16 +126,15 @@ class GangLeaveCommand extends SubArgument {
 				return;
 			}
 
-			// anyone leaving will not get a piece of the pie, thus the contribution would not be counted
-			gang.removeMember(user, member);
-			user.sendMessage(Messages.GANG_LEAVE.toString());
-
-			// Notify the remaining online members. removeMember has already nulled the leaver's gang link, so
-			// getOnlineMembers naturally excludes them from the broadcast.
-			String broadcast = Messages.GANG_PLAYER_LEFT.toString().replace("%player%", player.getName());
-			for (User<Player> onUser : gang.getOnlineMembers(userManager::getUser)) {
-				onUser.sendMessage(broadcast);
+			// anyone leaving will not get a piece of the pie, thus the contribution would not be counted; the service
+			// refuses while combat-tagged and tells the others
+			Result result = membershipService.leave(player.getUniqueId(), GangMemberLeftEvent.Reason.LEFT);
+			if (!result.ok()) {
+				user.sendMessage(membershipService.text(result));
+				return;
 			}
+
+			user.sendMessage(Messages.GANG_LEAVE.toString());
 		};
 	}
 

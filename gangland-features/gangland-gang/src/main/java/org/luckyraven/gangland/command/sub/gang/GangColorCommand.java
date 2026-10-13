@@ -75,7 +75,7 @@ class GangColorCommand extends SubArgument {
 			// GR-03: the gang colour picker opened for every member.
 			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
 			                            GangPermissions.COLOR)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.COLOR));
 				return;
 			}
 

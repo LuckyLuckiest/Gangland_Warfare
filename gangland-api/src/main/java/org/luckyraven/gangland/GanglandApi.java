@@ -33,8 +33,10 @@ public interface GanglandApi {
 	 * {@code Waypoint.WaypointType.HOSPITAL}, {@code WantedCause.CONTACT} and the self-defence, contacts and hospital
 	 * settings (the hospital respawn shield included).
 	 * <p>2.4 adds {@code Messages.USER_DATA_LOAD_FAILED} (the "your data could not be loaded, please rejoin" kick text). It also adds the offline-cache API: {@code UserManager.loadStored}, {@code setStoredLoader}, {@code pruneIdle} and {@code Settings.getOfflineCacheMinutes}.
+	 * <p>2.5 is reserved for another release line and never used on this branch. 2.6 (Gang & Turf II) adds the
+	 * members listed in documentation/gangland-api.md, section Api 2.6.
 	 */
-	String VERSION = "2.4";
+	String VERSION = "2.6";
 
 	/**
 	 * The permission namespace and long command alias ({@code /gangland}).

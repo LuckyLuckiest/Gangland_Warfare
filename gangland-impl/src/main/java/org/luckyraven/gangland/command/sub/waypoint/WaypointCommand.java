@@ -84,7 +84,8 @@ public final class WaypointCommand extends Command {
 
 		Argument list = new WaypointListCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        waypointManager);
-		Argument info = new WaypointInfoCommand(getPlugin(), getArgumentTree(), getArgument(), waypointManager);
+		Argument info = new WaypointInfoCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
+				waypointManager);
 
 		Argument type = new WaypointTypeCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        waypointManager);

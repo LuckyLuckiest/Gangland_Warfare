@@ -340,6 +340,36 @@ class TurfCaptureNotifierTest {
 	}
 
 	@Test
+	@DisplayName("T-751: a repeat contest on the same turf by the same gang inside the quiet window tells the owners once")
+	void start_repeatContestSameAttacker_toldOnce() {
+		Player ownerPlayer = member(1, overworld, 10, 10);
+		member(2, overworld, 80, 50);
+		runtime.setChallengersInside(Map.of(2, 1));
+
+		for (int i = 0; i < 4; i++) {
+			notifier.onCaptureStart(new TurfCaptureStartEvent(turf, challenger));
+			clock.addAndGet(12_000L);
+		}
+
+		assertEquals(1, linesOf(ownerPlayer).stream().filter(line -> line.contains("under attack")).count());
+	}
+
+	@Test
+	@DisplayName("an abandoned contest ends the start quiet window so a fresh attack by the same gang alerts again")
+	void start_afterAbandoned_toldAgain() {
+		Player ownerPlayer = member(1, overworld, 10, 10);
+		member(2, overworld, 80, 50);
+		runtime.setChallengersInside(Map.of(2, 1));
+
+		notifier.onCaptureStart(new TurfCaptureStartEvent(turf, challenger));
+		notifier.onCaptureFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.ABANDONED, 2));
+		clock.addAndGet(75_000L);
+		notifier.onCaptureStart(new TurfCaptureStartEvent(turf, challenger));
+
+		assertEquals(2, linesOf(ownerPlayer).stream().filter(line -> line.contains("under attack")).count());
+	}
+
+	@Test
 	@DisplayName("a new start resets the half-guard and last-stand flags so a new contest can alert again")
 	void perContestFlagsReset() {
 		Player ownerPlayer = member(1, overworld, 10, 10);

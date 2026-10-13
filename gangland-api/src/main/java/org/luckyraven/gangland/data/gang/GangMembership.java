@@ -1,6 +1,12 @@
 package org.luckyraven.gangland.data.gang;
 
+import org.bukkit.Location;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -69,5 +75,68 @@ public final class GangMembership {
 	public Optional<String> nameOf(int gangId) {
 		GangMembershipView current = this.view;
 		return current == null ? Optional.empty() : current.nameOf(gangId);
+	}
+
+	/**
+	 * @return whether {@code attacker} may not hurt {@code victim} at {@code at}. Without a view, the pre-2.6
+	 * {@link #alliedOrSame(UUID, UUID)} rule (always {@code false} then).
+	 *
+	 * @since gangland-api 2.6
+	 */
+	public boolean pvpBlocked(UUID attacker, UUID victim, @Nullable Location at) {
+		GangMembershipView current = this.view;
+		if (current == null || attacker == null || victim == null) return false;
+
+		return current.pvpBlocked(attacker, victim, at);
+	}
+
+	/**
+	 * @return every real gang id; empty without a view.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	public Set<Integer> gangIds() {
+		GangMembershipView current = this.view;
+		return current == null ? Collections.emptySet() : current.gangIds();
+	}
+
+	/**
+	 * @return the id of the gang with this name, or {@code -1} (also without a view).
+	 *
+	 * @since gangland-api 2.6
+	 */
+	public int gangIdByName(String name) {
+		GangMembershipView current = this.view;
+		return current == null || name == null ? -1 : current.gangIdByName(name);
+	}
+
+	/**
+	 * @return the members of the gang; empty without a view.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	public List<UUID> membersOf(int gangId) {
+		GangMembershipView current = this.view;
+		return current == null ? Collections.emptyList() : current.membersOf(gangId);
+	}
+
+	/**
+	 * @return the gang's owner; empty without a view.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	public Optional<UUID> ownerOf(int gangId) {
+		GangMembershipView current = this.view;
+		return current == null ? Optional.empty() : current.ownerOf(gangId);
+	}
+
+	/**
+	 * @return the channel the player's chat goes to; {@link GangChatChannel#PUBLIC} without a view.
+	 *
+	 * @since gangland-api 2.6
+	 */
+	public GangChatChannel chatChannelOf(UUID player) {
+		GangMembershipView current = this.view;
+		return current == null || player == null ? GangChatChannel.PUBLIC : current.chatChannelOf(player);
 	}
 }

@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
 import org.luckyraven.gangland.bootstrap.ShutdownSequence;
 import org.luckyraven.gangland.bootstrap.ReloadPlugin;
+import org.luckyraven.gangland.hook.worldguard.WorldGuardHooks;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
 import org.luckyraven.keystone.papi.PapiExpansionAdapter;
@@ -53,6 +54,12 @@ public final class Gangland extends JavaPlugin {
 	public void onLoad() {
 		// disable HikariCP logs
 		disableAllLogs(HikariConfig.class);
+
+		// WorldGuard flags can only be registered before WorldGuard enables (GP-18)
+		if (WorldGuardHooks.present(Bukkit.getPluginManager()))
+		{
+			WorldGuardHooks.registerFlag();
+		}
 	}
 
 	@Override

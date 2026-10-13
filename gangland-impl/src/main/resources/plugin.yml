@@ -13,6 +13,8 @@ softdepend:
    - ViaVersion
    - Citizens
    - Bartizan
+   - dynmap
+   - WorldGuard
 author: LuckyRaven10
 description: ${project.description}
 
@@ -123,8 +125,19 @@ permissions:
    gangland.command.bank.menu:
       default: true
    # Owner ruling T-826 (0.17.1): open to everyone. /glw balance <player> stays behind gangland.command.balance.admin
-   # (checked inside the command); waypoint use nodes are registered open at load; the staff verbs stay op.
+   # (checked inside the command). The waypoint block below is T-827 (list, info, select, deselect open; the staff verbs stay op).
    gangland.command.bank.create:
+      default: true
+   # Owner ruling 2026-10-13: players may list, inspect, select and deselect waypoints; create/delete/edit verbs stay op.
+   gangland.command.waypoint:
+      default: true
+   gangland.command.waypoint.list:
+      default: true
+   gangland.command.waypoint.info:
+      default: true
+   gangland.command.waypoint.select:
+      default: true
+   gangland.command.waypoint.deselect:
       default: true
    gangland.command.balance:
       default: true
@@ -177,3 +190,186 @@ permissions:
          gangland.command.turf.buff: true
          gangland.command.turf.powerupnpc: true
          gangland.command.turf.rename: true
+   # gt2 (0.19.0): new player verbs (map zoom/border, gang parity verbs, gang fights) and the owner verbs whose
+   # rank gate (GangPermissions + gang_rules.yml Ranks.Minimum) now decides who may run them (CM-37, T-702).
+   gangland.command.map.zoom:
+      default: true
+   gangland.command.map.border:
+      default: true
+   gangland.command.gang.ally.pvp:
+      default: true
+   gangland.command.gang.chat.allies:
+      default: true
+   gangland.command.gang.upgrade:
+      default: true
+   gangland.command.gang.upgrade.confirm:
+      default: true
+   gangland.command.gang.safehouse:
+      default: true
+   gangland.command.gang.safehouse.set:
+      default: true
+   gangland.command.gang.safehouse.remove:
+      default: true
+   gangland.command.gang.safehouse.list:
+      default: true
+   gangland.command.gang.rally:
+      default: true
+   gangland.command.gang.rally.join:
+      default: true
+   gangland.command.gang.pvp:
+      default: true
+   gangland.command.gang.notice:
+      default: true
+   gangland.command.gang.ranking:
+      default: true
+   gangland.command.gang.profile:
+      default: true
+   gangland.command.gang.fight:
+      default: true
+   gangland.command.gang.fight.propose:
+      default: true
+   gangland.command.gang.fight.accept:
+      default: true
+   gangland.command.gang.fight.decline:
+      default: true
+   gangland.command.gang.fight.enlist:
+      default: true
+   gangland.command.gang.fight.drop:
+      default: true
+   gangland.command.gang.fight.info:
+      default: true
+   gangland.command.gang.fight.arenas:
+      default: true
+   gangland.command.gang.fight.stats:
+      default: true
+   gangland.inventory.player_profile:
+      default: true
+   gangland.inventory.gang_ranking:
+      default: true
+   # One parent for every player command (GP-09): negate it to take every /glw player verb from a group.
+   gangland.command.player:
+      default: true
+      children:
+         gangland.command.main: true
+         gangland.command.map: true
+         gangland.command.map.auto: true
+         gangland.command.map.hud: true
+         gangland.command.map.text: true
+         gangland.command.map.legend: true
+         gangland.command.turf: true
+         gangland.command.turf.info: true
+         gangland.command.turf.list: true
+         gangland.command.turf.rules: true
+         gangland.command.gang: true
+         gangland.command.gang.create: true
+         gangland.command.gang.leave: true
+         gangland.command.gang.list: true
+         gangland.command.gang.info: true
+         gangland.command.gang.members: true
+         gangland.command.gang.balance: true
+         gangland.command.gang.deposit: true
+         gangland.command.gang.withdraw: true
+         gangland.command.gang.invite: true
+         gangland.command.gang.invite.cancel: true
+         gangland.command.gang.accept: true
+         gangland.command.gang.decline: true
+         gangland.command.gang.kick: true
+         gangland.command.gang.promote: true
+         gangland.command.gang.demote: true
+         gangland.command.gang.chat: true
+         gangland.command.gang.join: true
+         gangland.command.gang.recruiting: true
+         gangland.command.gang.bounty: true
+         gangland.inventory.gang_stat: true
+         gangland.inventory.gang_info: true
+         gangland.inventory.alliance_stat: true
+         gangland.command.map.zoom: true
+         gangland.command.waypoint: true
+         gangland.command.waypoint.list: true
+         gangland.command.waypoint.info: true
+         gangland.command.waypoint.select: true
+         gangland.command.waypoint.deselect: true
+         gangland.command.map.border: true
+         gangland.command.gang.transfer: true
+         gangland.command.gang.delete: true
+         gangland.command.gang.rename: true
+         gangland.command.gang.description: true
+         gangland.command.gang.display: true
+         gangland.command.gang.color: true
+         gangland.command.gang.ally: true
+         gangland.command.gang.ally.request: true
+         gangland.command.gang.ally.accept: true
+         gangland.command.gang.ally.reject: true
+         gangland.command.gang.ally.pending: true
+         gangland.command.gang.ally.pending.cancel: true
+         gangland.command.gang.ally.abandon: true
+         gangland.command.gang.ally.pvp: true
+         gangland.command.gang.chat.allies: true
+         gangland.command.gang.upgrade: true
+         gangland.command.gang.upgrade.confirm: true
+         gangland.command.gang.safehouse: true
+         gangland.command.gang.safehouse.set: true
+         gangland.command.gang.safehouse.remove: true
+         gangland.command.gang.safehouse.list: true
+         gangland.command.gang.rally: true
+         gangland.command.gang.rally.join: true
+         gangland.command.gang.pvp: true
+         gangland.command.gang.notice: true
+         gangland.command.gang.ranking: true
+         gangland.command.gang.profile: true
+         gangland.command.gang.fight: true
+         gangland.command.gang.fight.propose: true
+         gangland.command.gang.fight.accept: true
+         gangland.command.gang.fight.decline: true
+         gangland.command.gang.fight.enlist: true
+         gangland.command.gang.fight.drop: true
+         gangland.command.gang.fight.info: true
+         gangland.command.gang.fight.arenas: true
+         gangland.command.gang.fight.stats: true
+         gangland.inventory.player_profile: true
+         gangland.inventory.gang_ranking: true
+         gangland.command.bank: true
+         gangland.command.bank.balance: true
+         gangland.command.bank.deposit: true
+         gangland.command.bank.withdraw: true
+         gangland.command.bank.menu: true
+         gangland.command.bank.create: true
+         gangland.command.balance: true
+         gangland.command.teleport: true
+         gangland.command.respawn: true
+         gangland.command.wanted: true
+         gangland.command.contact: true
+         gangland.command.filter: true
+         gangland.command.resource: true
+         gangland.command.car: true
+         gangland.command.car.list: true
+         gangland.command.car.info: true
+         gangland.command.grapple: true
+         gangland.command.jetpack: true
+   # Gang staff tools; never default true (a default-true gangland.gang.* node would bypass every rank gate).
+   gangland.admin.gang:
+      default: op
+      children:
+         gangland.admin.gang.spy: true
+         gangland.admin.gang.force_rank: true
+         gangland.gang.balance.others: true
+         gangland.gang.ranking.wealth: true
+         gangland.gang.fight.bypass_commands: true
+   # Arena staff tools (fights module).
+   gangland.arena.admin:
+      default: op
+      children:
+         gangland.command.arena: true
+         gangland.command.arena.create: true
+         gangland.command.arena.corner: true
+         gangland.command.arena.spawn: true
+         gangland.command.arena.exit: true
+         gangland.command.arena.size: true
+         gangland.command.arena.finish: true
+         gangland.command.arena.show: true
+         gangland.command.arena.list: true
+         gangland.command.arena.tp: true
+         gangland.command.arena.on: true
+         gangland.command.arena.off: true
+         gangland.command.arena.delete: true
+         gangland.command.arena.reload: true

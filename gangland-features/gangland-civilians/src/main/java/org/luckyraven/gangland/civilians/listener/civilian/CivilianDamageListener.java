@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.civilians.listener.civilian;
 
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -14,6 +15,7 @@ import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
@@ -94,6 +96,35 @@ public class CivilianDamageListener implements Listener {
 				}
 			}
 		}
+	}
+
+	/**
+	 * A guard whose role blocks takes {@code Block_Fraction} off a hit from inside its front cone.
+	 */
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onShieldHit(EntityDamageByEntityEvent event) {
+		CivilianNpc npc = civilianService.getNpc(event.getEntity().getUniqueId());
+		if (npc == null) return;
+		NpcRole role = npc.getRole();
+		if (role.blockFraction() <= 0) return;
+
+		// An arrow is judged by where its shooter stands, not where it lands
+		Entity damager = event.getDamager();
+		Entity source  = damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter
+		                 ? shooter : damager;
+
+		Location self = event.getEntity().getLocation();
+		Location from = source.getLocation();
+		double   dx   = from.getX() - self.getX();
+		double   dz   = from.getZ() - self.getZ();
+		double   length = Math.sqrt(dx * dx + dz * dz);
+		double   angle  = 0.0; // point blank: whatever is in the guard's face
+		if (length >= 1e-6) {
+			double yaw = Math.toRadians(self.getYaw());
+			double cos = (-Math.sin(yaw) * dx + Math.cos(yaw) * dz) / length;
+			angle = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, cos))));
+		}
+		if (role.blocks(angle)) event.setDamage(event.getDamage() * (1.0 - role.blockFraction()));
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)

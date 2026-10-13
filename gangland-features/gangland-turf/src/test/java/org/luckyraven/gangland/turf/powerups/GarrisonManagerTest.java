@@ -131,4 +131,20 @@ class GarrisonManagerTest {
 
 		assertEquals(0, manager.count(99));
 	}
+
+	@Test
+	@DisplayName("refund_addsBackCapped: survivors return to the reserve, never past Max_Reserve")
+	void refund_addsBackCapped() {
+		manager.add(1, 3);
+
+		assertEquals(2, manager.refund(1, 2, 12));
+		assertEquals(5, manager.count(1));
+
+		manager.add(1, 6);
+		assertEquals(1, manager.refund(1, 4, 12), "11 + 4 stops at 12");
+		assertEquals(12, manager.count(1));
+		assertEquals(0, manager.refund(1, 3, 12), "full reserve takes nothing");
+		assertEquals(0, manager.refund(1, 0, 12));
+		assertEquals(0, manager.refund(1, -2, 12));
+	}
 }

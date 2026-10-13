@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.keystone.npc.NpcDifficulty;
@@ -70,7 +71,7 @@ public record CopRole(
 ) {
 
 	/** The narrowest band a reach clamp leaves: the Keystone band must keep {@code min < max}. */
-	static final double MIN_BAND_WIDTH = 2.0;
+	static final double MIN_BAND_WIDTH = NpcRole.MIN_BAND_WIDTH;
 
 	public CopRole {
 		tierKits = Map.copyOf(tierKits);
@@ -87,6 +88,21 @@ public record CopRole(
 		     offHand == null ? Kit.EMPTY : new Kit(null, List.of(), null, null, null, null,
 		                                           new Gear(offHand.getType(), null, false)),
 		     Map.of());
+	}
+
+	/** The module-neutral part of this role (everything but the colour, symbol and kits). */
+	public NpcRole role() {
+		return new NpcRole(name, displayName, placement, rangedMin, rangedMax, healthMultiplier, leaderPriority,
+		                   strafeDegrees, fireRateScale, difficultyBonus, retreat, blockFraction, blockConeDegrees,
+		                   medic, commander);
+	}
+
+	/** A cop role built from the shared {@code role} plus the cops-only colour, symbol and kits. */
+	public static CopRole of(NpcRole role, String color, String symbol, Kit kit, Map<Integer, Kit> tierKits) {
+		return new CopRole(role.name(), role.displayName(), role.placement(), role.rangedMin(), role.rangedMax(),
+		                   role.healthMultiplier(), role.leaderPriority(), role.strafeDegrees(), role.fireRateScale(),
+		                   role.difficultyBonus(), role.retreat(), role.blockFraction(), role.blockConeDegrees(),
+		                   role.medic(), role.commander(), color, symbol, kit, tierKits);
 	}
 
 	/** {@code "&c\u271A Medic"}: the colour, the symbol and the word, the callsign's {@code %role%}. */
@@ -148,10 +164,7 @@ public record CopRole(
 	 * it. {@code null} when the role declares no band.
 	 */
 	public double @Nullable [] rangedBand(@Nullable Double reach) {
-		if (rangedMin == null || rangedMax == null) return null;
-		double max = reach != null ? Math.min(rangedMax, reach) : rangedMax;
-		double min = Math.max(0, Math.min(rangedMin, max - MIN_BAND_WIDTH));
-		return new double[]{min, max};
+		return role().rangedBand(reach);
 	}
 
 	/**

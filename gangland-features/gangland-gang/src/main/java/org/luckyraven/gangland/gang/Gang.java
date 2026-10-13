@@ -46,6 +46,11 @@ public class Gang {
 	 */
 	private long  lastMemberOnlineAt;
 	private State state;
+	/** The notice members see when they log in; {@code null} when none is set. */
+	@Nullable
+	private String  notice;
+	/** Whether members of this gang may hurt each other (the gang's own /glw gang pvp switch). */
+	private boolean friendlyFire;
 
 	public Gang(int id, List<Member> members, String name) {
 		this(id, members);

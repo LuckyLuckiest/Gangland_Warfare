@@ -1,0 +1,141 @@
+# +----------------------------+ #
+# | Gang fight module messages | #
+# +----------------------------+ #
+# Every value may use & colour codes and the %name% placeholders listed above it.
+# Each section is filled in by the feature that owns it.
+
+# ---------------- Challenge ----------------
+# Challenge, lobby and countdown texts. %gang% %a% %b% are gang names, %size% fighters per side, %bet% the stake,
+# %seconds% a wait, %arena% the arena name.
+Challenge:
+   No_Gang: "&cYou are not in a gang."
+   Unknown_Gang: "&cNo gang named %gang%."
+   Same_Gang: "&cYou cannot challenge your own gang."
+   Allied: "&cYou cannot challenge an allied gang."
+   Gang_Gone: "&cOne of the two gangs no longer exists."
+   Size_Range: "&cA fight needs %min% to %max% fighters per side."
+   Rank_Needed: "&cYour rank is not allowed to start or accept fights."
+   Bet_Invalid: "&cThat is not a valid bet."
+   Withdraw_Needed: "&cA fight with a bet needs a rank that may also withdraw from the gang bank."
+   Bet_Too_High: "&cThat bet is above the most a fight may stake."
+   Bet_Over_Bank: "&cThat bet is more than a gang bank may stake on one fight."
+   Ranked_Gang_Too_Young: "&c%gang% is too young a gang for a ranked fight."
+   Busy: "&cOne of the two gangs is already in a fight."
+   Cooldown: "&cWait %seconds% s before you challenge that gang again."
+   Sent: "&aChallenge sent to %gang%: %size% against %size%, bet %bet%."
+   Received: "&e%gang% challenges you to a %size% against %size% fight, bet %bet%. &f/glw gang fight accept %gang% &eor &f/glw gang fight decline &e(%seconds% s)."
+   Expired: "&7The fight challenge lapsed."
+   Declined: "&7%gang% declined the fight."
+   No_Proposal: "&cNo fight challenge is waiting for your gang."
+   No_Arena: "&cNo arena is free right now. Try again in a moment."
+   Escrow_Failed: "&cThe stakes could not be taken. The fight is off."
+   Lobby_Open: "&aFight %a% against %b% is open in %arena%. &f/glw gang fight enlist &ato join (%size% per side, bet %bet%, %seconds% s)."
+   Not_In_Fight: "&cYou are not in a fight."
+   Not_Open: "&cYour gang's fight is not taking fighters."
+   Already_Enlisted: "&cYou are already enlisted."
+   Side_Full: "&cYour side is full."
+   Enlisted: "&aYou are in for %side%: %count% of %size%."
+   Cannot_Drop: "&cYou can only drop out before the countdown."
+   Dropped: "&7You dropped out of the fight."
+   Tagged: "&cYou were in combat a moment ago. Wait for the tag to wear off."
+   Downed: "&cYou cannot fight while downed."
+   Wanted: "&cYou cannot fight while wanted."
+   Member_Too_Young: "&cYou must have been in your gang for %hours% hours to fight in a ranked fight."
+   No_Fight: "&7Your gang has no fight."
+   Info: "&e%a% vs %b% (%state%): %countA%/%countB% of %size%, bet %bet%, arena %arena%, ranked %ranked%."
+   Arenas_None: "&7There are no open arenas."
+   Arena_Free: "&a%arena% &7- free"
+   Arena_Busy: "&c%arena% &7- in use"
+   Dropped_Offline: "&7You went offline and were dropped from the fight."
+   Dropped_Tagged: "&cYou were tagged in combat and are out of the fight."
+   Dropped_Downed: "&cYou are downed and out of the fight."
+   Cancelled_Short: "&cThe fight is off: a side was short of fighters. Stakes are refunded."
+   Cancelled_Arena: "&cThe fight is off: its arena is gone. Stakes are refunded."
+   Cancelled_Teleport: "&cThe fight is off: fighters could not be moved in. Stakes are refunded."
+   Aborted: "&cThe fight was stopped. Stakes are refunded."
+   Countdown: "&eThe fight starts in %seconds% s."
+   Go: "&c&lFIGHT!"
+   Result_WIN_A: "&a%a% won the fight against %b%."
+   Result_WIN_B: "&a%b% won the fight against %a%."
+   Result_DRAW: "&eThe fight between %a% and %b% is a draw."
+# end Challenge
+
+# ---------------- Economy ----------------
+# Bet, escrow and payout texts.
+Economy:
+   Unavailable: "&cBets are unavailable right now."
+   Cannot_Afford_A: "&cThe challenging gang can no longer afford the bet."
+   Cannot_Afford_B: "&cThe challenged gang cannot afford the bet."
+   Bet_Too_High: "&cThat bet is above the server maximum."
+   Bet_Over_Percent: "&cA bet may not be more than a share of either gang bank."
+   Same_Address: "&cThe two gangs have fighters on the same connection, so this stake is refused."
+   Pair_Cap: "&cThese two gangs have already moved the daily limit between them."
+   Gang_Cap: "&cOne of the gangs has reached its daily bet winnings limit."
+   Ranked_Opponent_Too_Young: "&cThe other gang is too new for a ranked fight."
+   Ranked_Pair_Limit: "&cThese gangs have reached the daily ranked fight limit."
+   Ranked_Rematch_Cooldown: "&cThese gangs must wait before another ranked fight."
+# end Economy
+
+# ---------------- Stats ----------------
+# Fight stats and ranking texts. %gang% %wins% %losses% %draws% %wlr%
+Stats:
+   Header: "&6Fight record of &e%gang%"
+   Line: "&7Wins &a%wins% &7Losses &c%losses% &7Draws &e%draws% &7W/L &f%wlr%"
+   No_Gang: "&cYou are not in a gang. Name a gang: /glw gang fight stats <gang>."
+   Unknown_Gang: "&cNo gang has that name."
+# end Stats
+
+# ---------------- Guards ----------------
+# Arena rule and warning texts. %count% of %max% is the leave warning number, %arena% the arena name.
+Guards:
+   Command_Blocked: "&cCommands are disabled during a fight."
+   Stay_In: "&cYou cannot leave the arena during a fight."
+   Leave_Warning: "&cGet back in the arena! Warning %count% of %max%; the next time you leave you forfeit."
+   Left_Forfeit: "&cYou left the arena too often and forfeited the fight."
+   Teleport_Refused: "&cYou cannot teleport out of a fight."
+   Arena_Busy: "&cA fight is on in %arena%. Stay out until it is over."
+   Blocks_Protected: "&cYou cannot build or break blocks in an arena during a fight."
+   Vehicle_Refused: "&cYou cannot ride in an arena fight."
+   Ejected: "&7You were moved out of the arena %arena%."
+# end Guards
+
+# ---------------- Arenas ----------------
+# /glw arena texts. Placeholders: %name% %a% %b% %volume% %min% %side% %other% %world% %x% %y% %z% %n% %count% %seconds%.
+Arenas:
+   Players_Only: "&cOnly a player can build arenas."
+   Name_Invalid: "&cAn arena name is one word of letters, digits, - or _ (up to 24)."
+   Create_Exists: "&cThere is already an arena called %name%."
+   Created: "&aStarted arena %name%. Stand at a corner and run /glw arena corner twice, then spawn a, spawn b, exit and finish."
+   No_Draft: "&cStart one first with /glw arena create <name>."
+   Corner_Set: "&aCorner %n% set at %x% %y% %z%."
+   Size: "&aThe box is %x% x %y% x %z% blocks (%volume% in all)."
+   Size_Incomplete: "&cSet both corners first with /glw arena corner."
+   Spawn_Side_Invalid: "&cThe side is a or b."
+   Spawn_Added: "&aSpawn added for side %side% (%count% so far)."
+   Exit_Set: "&aExit set where you stand."
+   Finish_No_Corners: "&cSet both corners first with /glw arena corner."
+   Finish_World_Missing: "&cThe world %world% is not loaded."
+   Finish_Too_Small: "&cThe box has %volume% blocks, an arena needs at least %min%."
+   Finish_No_Spawn: "&cSide %side% has no spawn yet; stand inside the box and run /glw arena spawn."
+   Finish_Spawn_Outside: "&cA spawn of side %side% is outside the box."
+   Finish_No_Exit: "&cSet the exit first with /glw arena exit."
+   Finish_Exit_World: "&cThe world %world% of the exit is not loaded."
+   Finish_Overlap: "&cThe box overlaps the arena %other%."
+   Finish_Name_Taken: "&cThere is already an arena called %name%."
+   Saved: "&aArena %name% saved (%a% v %b% spawns). Place arenas outside turfs."
+   Save_Failed: "&cThe arena could not be written to arenas.yml; see the console."
+   Not_Found: "&cThere is no arena called %name%."
+   List_Header: "&6Arenas:"
+   List_Entry: "&e%name% &7(%state%, %world%, %a% v %b% spawns)"
+   List_Empty: "&7There are no arenas yet."
+   State_On: "&aon"
+   State_Off: "&coff"
+   Tp: "&aTeleported to the exit of %name%."
+   Tp_World_Missing: "&cThe world %world% is not loaded."
+   Enabled: "&aArena %name% is open for fights."
+   Disabled: "&aArena %name% is closed."
+   Deleted: "&aArena %name% deleted."
+   Reloaded: "&aArenas reloaded (%count% loaded)."
+   Show_Started: "&aOutlining the box for %seconds% seconds."
+   Show_Nothing: "&cName an arena, or finish both corners of your draft first."
+# end Arenas

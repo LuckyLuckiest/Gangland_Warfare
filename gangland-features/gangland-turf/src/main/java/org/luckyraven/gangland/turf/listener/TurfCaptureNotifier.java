@@ -89,6 +89,12 @@ public final class TurfCaptureNotifier implements Listener {
 		}
 
 		Gang challenger = event.getChallengerGang();
+		// T-751: a contest that keeps restarting on the same turf by the same gang tells the owners once per quiet window
+		long now = clock.getAsLong();
+		Long previous = lastOutcome.put(turfId + "|" + challenger.getId() + "|START", now);
+		if (previous != null && now - previous < OUTCOME_QUIET_MS) {
+			return;
+		}
 		int count = Math.max(1, challengerCount(turfId, challenger.getId()));
 		String direction = direction(turf, challenger);
 		String turfName = turf.getDisplayName();
@@ -188,6 +194,9 @@ public final class TurfCaptureNotifier implements Listener {
 			return;
 		}
 		Integer attackerId = event.getChallengerGangId();
+		if (reason == TurfCaptureFailedEvent.Reason.ABANDONED) {
+			lastOutcome.remove(turf.getId() + "|" + attackerId + "|START");
+		}
 		if (repeatedOutcome(turf.getId(), attackerId, reason)) {
 			return;
 		}

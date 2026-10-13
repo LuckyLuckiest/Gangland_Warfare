@@ -4,7 +4,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.gang.chat.GangChatChannel;
+import org.luckyraven.gangland.gang.chat.ChatChannels;
+import org.luckyraven.gangland.gang.chat.ChatSettings;
+import org.luckyraven.gangland.gang.chat.ChatSpyService;
+import org.luckyraven.gangland.gang.chat.GangChatToggles;
+import org.luckyraven.gangland.gang.combat.FriendlyFirePolicy;
+import org.luckyraven.gangland.gang.membership.MembershipQueries;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.database.repositories.meta.GangMigration;
 import org.luckyraven.gangland.gang.contract.GangMessageContract;
@@ -19,20 +24,28 @@ import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.placeholder.extension.PlaceholderContribution;
 import org.luckyraven.gangland.gang.command.debug.GangDebugContribution;
 import org.luckyraven.gangland.gang.command.option.GangOptionContribution;
+import org.luckyraven.gangland.gang.command.option.GangStaffVerbs;
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.purge.GangPurgeTask;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.gang.file.GangRules;
+import org.luckyraven.gangland.gang.level.GangLimits;
+import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
+import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.gang.file.GanglandGangMessages;
 import org.luckyraven.gangland.gang.file.GanglandGangPermissionBridge;
 import org.luckyraven.gangland.gang.file.GanglandGangSettings;
 import org.luckyraven.gangland.gang.file.GanglandRankLookup;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
+import org.luckyraven.gangland.gang.level.GangLevelTable;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.menu.GangMenuItemSourceContribution;
 import org.luckyraven.gangland.gang.placeholder.GangPlaceholderContribution;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.menu.filter.FilterApplier;
+import org.luckyraven.gangland.menu.filter.FilterRegistry;
 import org.luckyraven.gangland.menu.filter.FilterStore;
 import org.bukkit.entity.Player;
 import org.luckyraven.keystone.bean.Bean;
@@ -84,10 +97,17 @@ public final class GangConfig {
 		return rules;
 	}
 
+	/** Where gangs exist (GR-40): {@code Gang.Enable} plus {@code gang_rules.yml} {@code Worlds.Disabled}. */
+	@Bean
+	public GangWorldPolicy gangWorldPolicy(GangRules rules) {
+		return new GangWorldPolicy(rules);
+	}
+
 	@Bean
 	public GangMessages gangMessages(GangModuleFiles files, FileManager fileManager) {
 		GangMessages messages = new GangMessages(fileManager);
 		fileManager.registerInitializer(messages);
+		GangPermissions.bindMessages(messages);   // Ranks.Needs_Rank for GangPermissions.denial
 		return messages;
 	}
 
@@ -122,10 +142,10 @@ public final class GangConfig {
 		return (MemberRepositoryContract) registry.getRepository(Member.class);
 	}
 
-	/** Who has gang chat switched on (W2-P2 adds the delivery). */
+	/** Who has gang or ally chat switched on, and the delivery of both. */
 	@Bean
-	public GangChatChannel gangChatChannel() {
-		return new GangChatChannel();
+	public GangChatToggles gangChatChannel(ChatSpyService spy, GangLimits limits, ChatSettings settings) {
+		return new GangChatToggles(spy, limits, settings);
 	}
 
 	@Bean
@@ -136,9 +156,9 @@ public final class GangConfig {
 	@Bean
 	public GangManager gangManager(RepositoryRegistry repositoryRegistry,
 	                               GangAllianceRepositoryContract allianceRepository,
-	                               GangMigrationsContract migrations) {
+	                               GangMigrationsContract migrations, GangLevelTable levelTable) {
 		IRepository<Gang> gangRepository = repositoryRegistry.getRepository(Gang.class);
-		return new GangManager(gangRepository, allianceRepository, migrations);
+		return new GangManager(gangRepository, allianceRepository, migrations, levelTable);
 	}
 
 	/**
@@ -152,7 +172,9 @@ public final class GangConfig {
 	                               PermissionManager permissionManager, GangMigrationsContract migrations) {
 		GangPermissions.ALL.forEach(permissionManager::addPermission);
 
-		return new RankManager(repositoryRegistry, permissionRegistry, rules, migrations);
+		RankManager manager = new RankManager(repositoryRegistry, permissionRegistry, rules, migrations);
+		GangPermissions.bind(rules::getMinimumRanks, manager::getRankTree);
+		return manager;
 	}
 
 	/**
@@ -173,8 +195,12 @@ public final class GangConfig {
 	 */
 	@Bean
 	public PlaceholderContribution gangPlaceholderContribution(@Qualifier("online") UserManager<Player> userManager,
-	                                                           MemberManager memberManager, GangManager gangManager) {
-		return new GangPlaceholderContribution(userManager, memberManager, gangManager);
+	                                                           MemberManager memberManager, GangManager gangManager,
+	                                                           GangStatsService statsService,
+	                                                           GangSafehouseService safehouseService, GangLimits limits,
+	                                                           GangRules rules) {
+		return new GangPlaceholderContribution(userManager, memberManager, gangManager, statsService,
+		                                       safehouseService, limits, rules);
 	}
 
 	/**
@@ -185,8 +211,13 @@ public final class GangConfig {
 	public CommandContribution gangOptionContribution(JavaPlugin plugin,
 	                                                   @Qualifier("online") UserManager<Player> userManager,
 	                                                   MemberManager memberManager, GangManager gangManager,
-	                                                   RankManager rankManager) {
-		return new GangOptionContribution(plugin, userManager, memberManager, gangManager, rankManager);
+	                                                   RankManager rankManager, GangMembershipService membership,
+	                                                   GangSafehouseService safehouses, GangStatsService stats,
+	                                                   ChatSpyService spy, GangPurgeTask purge,
+	                                                   GangMessages messages) {
+		GangStaffVerbs staff = new GangStaffVerbs(gangManager, memberManager, membership, safehouses, stats, spy,
+		                                          purge, messages);
+		return new GangOptionContribution(plugin, userManager, memberManager, gangManager, rankManager, staff);
 	}
 
 	/**
@@ -207,8 +238,8 @@ public final class GangConfig {
 	 * once {@code FilterAdapter}/{@code FilterField}/{@code StandardFilterField} became api-hosted (W54 F1).
 	 */
 	@Bean
-	public GangFilterAdapter gangFilterAdapter() {
-		return new GangFilterAdapter();
+	public GangFilterAdapter gangFilterAdapter(GangStatsService statsService, FilterRegistry filterRegistry) {
+		return new GangFilterAdapter(statsService, filterRegistry);
 	}
 
 	@Bean
@@ -227,9 +258,10 @@ public final class GangConfig {
 	                                                              GangManager gangManager, FilterStore filterStore,
 	                                                              FilterApplier filterApplier,
 	                                                              GangFilterAdapter gangFilterAdapter,
-	                                                              MemberFilterAdapter memberFilterAdapter) {
+	                                                              MemberFilterAdapter memberFilterAdapter,
+	                                                              GangStatsService statsService) {
 		return new GangMenuItemSourceContribution(userManager, gangManager, filterStore, filterApplier,
-		                                          gangFilterAdapter, memberFilterAdapter);
+		                                          gangFilterAdapter, memberFilterAdapter, statsService);
 	}
 
 	/**
@@ -242,7 +274,9 @@ public final class GangConfig {
 	 */
 	@Bean
 	public GangMembershipInstaller gangMembershipInstaller(GangMembership gangMembership, MemberManager memberManager,
-	                                                        GangManager gangManager) {
-		return new GangMembershipInstaller(gangMembership, memberManager, gangManager);
+	                                                        GangManager gangManager, MembershipQueries queries,
+	                                                        FriendlyFirePolicy friendlyFire, ChatChannels chatChannels) {
+		return new GangMembershipInstaller(gangMembership, memberManager, gangManager, queries, friendlyFire,
+		                                   chatChannels);
 	}
 }

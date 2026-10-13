@@ -13,6 +13,8 @@ import org.luckyraven.gangland.command.data.InformationManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.config.TurfSettings;
+import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.message.MessageProvider;
 import org.mockito.MockedStatic;
@@ -70,7 +72,7 @@ class MapCommandTest {
 
 	private static MapCommand registeredMapCommand() {
 		MapCommand command = new MapCommand(mock(JavaPlugin.class), new MapPrefsService(), mock(TurfMessages.class),
-		                                    mock(TurfMapService.class));
+		                                    mock(TurfMapService.class), mock(TurfManager.class), mock(TurfSettings.class));
 		command.initializeArguments();
 		return command;
 	}
@@ -84,7 +86,7 @@ class MapCommandTest {
 	}
 
 	@Test
-	@DisplayName("the map root has exactly the auto, hud, text and legend sub-commands")
+	@DisplayName("the map root has exactly the auto, border, hud, legend, text and zoom sub-commands")
 	void childrenLabels() {
 		List<String> labels = new ArrayList<>();
 		for (Argument child : children(registeredMapCommand().getArgument())) {
@@ -93,7 +95,7 @@ class MapCommandTest {
 
 		// The tree does not promise an order, so compare sorted labels.
 		labels.sort(null);
-		assertEquals(List.of("auto", "hud", "legend", "text"), labels);
+		assertEquals(List.of("auto", "border", "hud", "legend", "text", "zoom"), labels);
 	}
 
 	@Test

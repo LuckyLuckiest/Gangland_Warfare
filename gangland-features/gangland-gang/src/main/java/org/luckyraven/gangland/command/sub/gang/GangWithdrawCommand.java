@@ -85,7 +85,7 @@ class GangWithdrawCommand extends SubArgument {
 
 			// GR-03: the vault was drainable by the lowest-ranked member in the gang.
 			if (!GangPermissions.allows(member, player, GangPermissions.WITHDRAW)) {
-				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				user.sendMessage(GangPermissions.refusal(GangPermissions.WITHDRAW));
 				return;
 			}
 

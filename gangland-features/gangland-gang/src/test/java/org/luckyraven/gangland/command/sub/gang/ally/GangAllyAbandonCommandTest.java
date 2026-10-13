@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 
@@ -97,6 +98,29 @@ class GangAllyAbandonCommandTest {
 		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
 
 		return player;
+	}
+
+	@Test
+	@DisplayName("byName: an ally is found by its plain name (any case), a duplicate by name:id, or by id")
+	void byName() {
+		Gang rats   = gang(3, "&cRats");
+		Gang rats2  = gang(4, "Rats");
+		Gang snakes = gang(5, "Snakes");
+
+		var map = GangAllyAbandonCommand.allyMap(List.of(snakes, rats, rats2));
+
+		assertEquals(snakes, GangAllyAbandonCommand.resolveAlly(map, "snakes"));
+		assertEquals(rats, GangAllyAbandonCommand.resolveAlly(map, "Rats:3"));
+		assertEquals(rats2, GangAllyAbandonCommand.resolveAlly(map, "4"));
+		assertNull(GangAllyAbandonCommand.resolveAlly(map, "Nobody"));
+		assertTrue(map.containsKey("Snakes"));
+	}
+
+	private static Gang gang(int id, String name) {
+		Gang gang = mock(Gang.class);
+		when(gang.getId()).thenReturn(id);
+		when(gang.getName()).thenReturn(name);
+		return gang;
 	}
 
 }

@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.membership.GangMembershipService;
+import org.luckyraven.gangland.gang.membership.GangMembershipService.Result;
 import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -42,10 +44,15 @@ final class GangJoinCommand extends SubArgument {
 	private final GangMessages        messages;
 	private final RankManager         rankManager;
 
+	private final GangMembershipService membershipService;
+
 	GangJoinCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                RankManager rankManager, GangMessages messages) {
+	                RankManager rankManager, GangMessages messages,
+								GangMembershipService membershipService) {
 		super(gangland, "join", tree, parent);
+
+		this.membershipService = membershipService;
 		this.gangland      = gangland;
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
@@ -99,30 +106,14 @@ final class GangJoinCommand extends SubArgument {
 			return;
 		}
 
-		Rank rank = rankManager.get(GangSettings.getGangRankHead());
-		if (rank == null) {
-			log.warn("Gang " + gang.getName() + " cannot be joined: no head rank named " +
-			         GangSettings.getGangRankHead());
-			sender.sendMessage(messages.text("Social.No_Rank", "&cThis gang has no starting rank; ask an admin."));
+		Result result = membershipService.join(gang.getId(), player.getUniqueId(), GangMembershipService.JoinSource.JOIN);
+		if (!result.ok()) {
+			sender.sendMessage(membershipService.text(result));
 			return;
 		}
 
-		Member member = memberManager.getMember(player.getUniqueId());
-		if (member == null) {
-			return;
-		}
-
-		String joined = Messages.GANG_PLAYER_JOINED.toString().replace("%player%", player.getName());
-		for (User<Player> onlineMember : gang.getOnlineMembers(userManager::getUser)) {
-			onlineMember.sendMessage(joined);
-		}
-
-		member.setGangJoinDateLong(Instant.now().toEpochMilli());
-		gang.addMember(user, member, rank);
 		sender.sendMessage(messages.text("Social.Joined", "&aYou joined %gang%.",
 		                                 "gang", gang.getDisplayNameString()));
-		// T-265: mail drops his other invites
-		Bukkit.getPluginManager().callEvent(new GangJoinEvent(gang, player));
 	}
 
 	/** A gang whose plain name matches {@code key} ignoring case; names only, never ids. */
