@@ -231,7 +231,7 @@ stop again when the cop dies, when the victim leaves or stops being protected, o
 
 **Guard orders.** Under Hold (Quartermaster hub, Guard Orders) the Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released. The order is saved per turf. The order resets to Defend whenever a turf changes hands (capture, admin, disband, inactivity): the garrison row is dropped with the old owner's stock (T-270). Deleting a turf drops it too.
 
-**Owner alerts.** Online members of the owning gang (not allies or rivals) get a chat line and an action-bar line when a cop hits one of them on the turf, a guard falls, an outsider hits the Quartermaster, or the Quartermaster is killed. Each kind is sent at most once per `Owner_Alerts.Cooldown_Seconds` (default 60) per turf; guard and Quartermaster deaths are told once per NPC. Cop-hit alerts need `Cop_Response.Enabled` to be `true`. Hold does not silence them.
+**Owner alerts.** Online members of the owning gang (not allies or rivals) get a chat line and an action-bar line when a cop hits or cuffs one of them on the turf, a guard falls, an outsider hits the Quartermaster, or the Quartermaster is killed. Each kind is sent at most once per `Owner_Alerts.Cooldown_Seconds` (default 60) per turf; guard and Quartermaster deaths are told once per NPC. Cop-hit alerts need `Cop_Response.Enabled` to be `true`. Hold does not silence them.
 
 ### Guard keys (`turf/turf_npcs.yml`)
 

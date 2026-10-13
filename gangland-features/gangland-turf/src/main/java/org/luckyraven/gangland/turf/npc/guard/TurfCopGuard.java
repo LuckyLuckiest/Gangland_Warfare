@@ -56,6 +56,8 @@ public final class TurfCopGuard implements BeanLifecycle {
 	private       IntPredicate              holding     = turfId -> false;
 	private       BiConsumer<Turf, Player>  protectedHit = (turf, victim) -> {
 	};
+	private       BiConsumer<Turf, Player>  arrest = (turf, victim) -> {
+	};
 	private       BukkitTask                tickTask;
 
 	/**
@@ -106,6 +108,23 @@ public final class TurfCopGuard implements BeanLifecycle {
 	 */
 	public void bindProtectedHit(BiConsumer<Turf, Player> protectedHit) {
 		this.protectedHit = protectedHit;
+	}
+
+	/**
+	 * T-832: called with each member of the turf's owning gang a cop has just cuffed on that turf.
+	 */
+	public void bindArrest(BiConsumer<Turf, Player> arrest) {
+		this.arrest = arrest;
+	}
+
+	/** Only the owning gang's own members count (not allies), and only while they stand on that turf. */
+	public void onPlayerArrested(Player victim) {
+		Turf turf = turfs.findAt(victim.getLocation());
+		if (turf == null || turf.isUnclaimed()) return;
+		User<Player> user = users.findByPlayer(victim);
+		Integer owner = turf.getOwnerGangId();
+		if (owner == null || user == null || !user.hasGang() || user.getGangId() != owner) return;
+		arrest.accept(turf, victim);
 	}
 
 	public void start() {

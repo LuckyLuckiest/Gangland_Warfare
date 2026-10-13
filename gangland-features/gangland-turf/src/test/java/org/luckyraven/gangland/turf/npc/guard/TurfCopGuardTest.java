@@ -617,6 +617,29 @@ class TurfCopGuardTest {
 		assertTrue(disabledCalls.isEmpty());
 	}
 
+	@Test
+	@DisplayName("T-832: cuffing an owner-gang member on the turf reports the arrest; allies, rivals and off-turf do not")
+	void arrest_reportedOnlyForOwnerMemberOnTheTurf() {
+		Location spot = loc(0);
+		Player   owner = victim(spot, UUID.randomUUID());
+		whenVictimOn(owner, spot, turf1, 1);
+		Player rival = victim(spot, UUID.randomUUID());
+		whenVictimOn(rival, spot, turf1, 3);
+		Location away   = loc(500);
+		Player   inAway = victim(away, UUID.randomUUID());
+		User<Player> member = user(1);
+		when(users.findByPlayer(inAway)).thenReturn(member);
+
+		List<String> calls = new ArrayList<>();
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.bindArrest((turf, hit) -> calls.add(turf.getId() + ":" + hit.getUniqueId()));
+		guard.onPlayerArrested(rival);
+		guard.onPlayerArrested(inAway);
+		assertTrue(calls.isEmpty());
+		guard.onPlayerArrested(owner);
+		assertEquals(List.of("1:" + owner.getUniqueId()), calls);
+	}
+
 	// ── fixtures ──────────────────────────────────────────────────────────────
 
 	private TurfCopGuard guard(CopGuardConfig config) {

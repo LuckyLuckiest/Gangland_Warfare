@@ -124,6 +124,21 @@ class TurfOwnerAlertsTest {
 	}
 
 	@Test
+	@DisplayName("T-832: an arrest reaches the owner members with turf and member named, on its own cooldown")
+	void arrested_reachesOwnersWithOwnCooldown() {
+		alerts.copHit(alpha, player("Cal"));
+		alerts.arrested(alpha, player("Cal"));
+		String expected = text.text("Alerts.Arrested", "x", "turf", "Alpha", "player", "Cal");
+		assertEquals(4, sent.size());
+		assertEquals(A + "|" + expected, sent.get(2));
+		assertTrue(expected.contains("Alpha") && expected.contains("Cal"));
+		alerts.arrested(alpha, player("Cal"));
+		assertEquals(4, sent.size());
+		alerts.arrested(unowned, player("Cal"));
+		assertEquals(4, sent.size());
+	}
+
+	@Test
 	@DisplayName("one line per turf per kind per cooldown")
 	void cooldown_perTurfPerKind() {
 		alerts.copHit(alpha, player("Cal"));

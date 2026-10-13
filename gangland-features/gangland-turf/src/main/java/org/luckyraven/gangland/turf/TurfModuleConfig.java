@@ -345,8 +345,13 @@ public final class TurfModuleConfig {
 
 	@Bean
 	public TurfPowerupManager turfPowerupManager(JavaPlugin plugin, TurfPowerupNpcRepository repository,
-	                                             TurfNpcsConfigLoader loader, CivilianSpawnManager spawnManager) {
-		return new TurfPowerupManager(plugin, repository, loader::getPowerupSettings, spawnManager);
+	                                             TurfNpcsConfigLoader loader, CivilianSpawnManager spawnManager,
+	                                             GarrisonManager garrisons) {
+		TurfPowerupManager manager = new TurfPowerupManager(plugin, repository, loader::getPowerupSettings,
+		                                                    spawnManager);
+		// T-834: Hold keeps the Quartermaster within Hold_Radius of its anchor
+		manager.bindHold(garrisons::holding, () -> loader.getDefenderConfig().holdRadius());
+		return manager;
 	}
 
 	@Bean
@@ -427,6 +432,7 @@ public final class TurfModuleConfig {
 	                                       TurfNpcsConfigLoader loader, TurfCopGuard guard) {
 		TurfOwnerAlerts alerts = new TurfOwnerAlerts(turfs, gangs, messages, loader::getOwnerAlertCooldownSeconds);
 		guard.bindProtectedHit(alerts::copHit);
+		guard.bindArrest(alerts::arrested);
 		return alerts;
 	}
 }

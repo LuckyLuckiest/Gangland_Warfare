@@ -23,7 +23,7 @@ import java.util.function.LongSupplier;
 
 /**
  * W7-E (D28=A): tells the owning gang's online members, by chat line and action bar, when a cop hits one of them on its
- * turf, one of its guards falls, or its Quartermaster is attacked or killed. At most one line per turf per kind per
+ * turf (or is arrested there), one of its guards falls, or its Quartermaster is attacked or killed. At most one line per turf per kind per
  * {@code Owner_Alerts.Cooldown_Seconds}; death lines are also told once per NPC. Never reaches allies or rivals. Main thread only.
  */
 @CustomLog
@@ -31,6 +31,7 @@ public final class TurfOwnerAlerts {
 
 	enum Kind {
 		COP_HIT,
+		ARRESTED,
 		GUARD_DOWN,
 		QUARTERMASTER_HIT,
 		QUARTERMASTER_DOWN
@@ -69,6 +70,12 @@ public final class TurfOwnerAlerts {
 		if (turf == null || victim == null) return;
 		send(turf, Kind.COP_HIT, text.text("Alerts.Cop_Hit", "&c%turf%: a cop is attacking &f%player%",
 		                                   "turf", turf.getDisplayName(), "player", victim.getName()));
+	}
+
+	public void arrested(Turf turf, Player victim) {
+		if (turf == null || victim == null) return;
+		send(turf, Kind.ARRESTED, text.text("Alerts.Arrested", "&c%turf%: &f%player% &cwas arrested",
+		                                    "turf", turf.getDisplayName(), "player", victim.getName()));
 	}
 
 	public void guardDown(int turfId, Object npc) {

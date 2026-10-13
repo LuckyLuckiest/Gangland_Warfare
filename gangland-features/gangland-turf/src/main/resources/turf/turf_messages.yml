@@ -233,6 +233,8 @@ Alerts:
    # To the owning gang's online members (chat and action bar) when a cop hits one of them on the turf, at most once per
    # turf_npcs.yml Owner_Alerts.Cooldown_Seconds. %turf%, %player% = the member who was hit.
    Cop_Hit: "&c%turf%: a cop is attacking &f%player%"
+   # Same channels and cooldown, when a cop cuffs a member of the owning gang on the turf. %turf%, %player% = the member.
+   Arrested: "&c%turf%: &f%player% &cwas arrested"
    # Same channels and cooldown, when one of the turf's guards is killed. %turf%.
    Guard_Down: "&c%turf%: one of your guards fell"
    # Same channels and cooldown, when anyone outside the owning gang and its allies hits the Quartermaster.
