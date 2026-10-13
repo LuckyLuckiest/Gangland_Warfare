@@ -480,4 +480,27 @@ class SurrenderServiceTest {
 		hit();
 		verifyNoInteractions(crimes);
 	}
+
+	@Test
+	@DisplayName("hit on a foreign cop inside the window: own group's cease-fire is cleared and stays cleared")
+	void hitOnForeignCopInsideWindow_clearsOwnCeaseFire() {
+		surrender();
+		clock.set(T0 + 1_000L);
+		hit();
+		service.tick(player, group);
+		assertFalse(group.isCeaseFire());
+		sneak(false);
+		service.tick(player, group);
+		assertFalse(group.isCeaseFire());
+	}
+
+	@Test
+	@DisplayName("hit on a foreign cop after the window: own group's cease-fire is cleared")
+	void hitOnForeignCopAfterWindow_clearsOwnCeaseFire() {
+		surrender();
+		clock.set(T0 + 11_000L);
+		hit();
+		service.tick(player, group);
+		assertFalse(group.isCeaseFire());
+	}
 }
