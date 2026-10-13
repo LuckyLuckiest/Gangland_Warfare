@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.breach;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
@@ -860,5 +861,65 @@ class BreachControllerTest {
 		advance(SECOND);
 		tick();
 		assertEquals(before + 3, totalPosts());
+	}
+
+	// ---- judge fix r1 ----
+
+	@Test
+	@DisplayName("the wanted level ending while stacked: stand down, no Breach, no flashbang")
+	void wantedEndBeforeGo_standsDownWithoutBreach() {
+		level.set(4);
+		Player clear = bystander(6, false);
+		when(world.getPlayers()).thenReturn(new ArrayList<>(List.of(clear)));
+		List<CopNpc> stack = stackThree();
+		for (CopNpc cop : stack) when(cop.getTargetPlayerId()).thenReturn(null);
+		arriveAll(stack);
+
+		advance(SECOND);
+		tick();
+
+		verify(radio, never()).sayFromLeader(group, "Breach");
+		verify(flashbang, never()).blind(any(), anyInt());
+		for (CopNpc cop : stack) assertEquals(CopState.RETURNING, stateOf(cop));
+		assertFalse(controller.isActive(playerId));
+	}
+
+	@Test
+	@DisplayName("a ray that only hits the door itself is clear (a door placed from inside has its panel on the near side)")
+	void rayHittingTheDoorItselfIsClear() {
+		level.set(4);
+		Player inside = bystander(6, false);
+		Block  panel  = mock(Block.class);
+		when(panel.getX()).thenReturn(4);
+		when(panel.getY()).thenReturn(65);
+		when(panel.getZ()).thenReturn(0);
+		RayTraceResult hit = mock(RayTraceResult.class);
+		when(hit.getHitBlock()).thenReturn(panel);
+		when(world.rayTraceBlocks(any(Location.class), any(Vector.class), anyDouble(), any(FluidCollisionMode.class),
+		                          anyBoolean())).thenReturn(hit);
+		when(world.getPlayers()).thenReturn(new ArrayList<>(List.of(inside)));
+		List<CopNpc> stack = stackThree();
+		arriveAll(stack);
+
+		advance(SECOND);
+		tick();
+
+		verify(flashbang).blind(inside, 40);
+	}
+
+	@Test
+	@DisplayName("Citizens player-type NPCs (the stack itself) are never flashed")
+	void npcPlayersAreNotFlashed() {
+		level.set(4);
+		Player npc = bystander(6, false);
+		when(npc.hasMetadata("NPC")).thenReturn(true);
+		when(world.getPlayers()).thenReturn(new ArrayList<>(List.of(npc)));
+		List<CopNpc> stack = stackThree();
+		arriveAll(stack);
+
+		advance(SECOND);
+		tick();
+
+		verify(flashbang, never()).blind(any(), anyInt());
 	}
 }
