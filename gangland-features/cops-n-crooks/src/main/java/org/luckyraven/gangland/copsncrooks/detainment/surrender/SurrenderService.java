@@ -32,7 +32,7 @@ import java.util.function.Supplier;
 public class SurrenderService {
 
 	private enum Reason {
-		GONE, CUFFED, STOOD_UP
+		GONE, CUFFED, STOOD_UP, RESISTED
 	}
 
 	private final Supplier<SurrenderSettings> settings;
@@ -43,8 +43,9 @@ public class SurrenderService {
 	private final Predicate<Player>           restrained;
 
 	private final Map<UUID, Long> surrenderedAt = new HashMap<>();
-	private final Set<UUID>       resisted      = new HashSet<>();
-	private final Set<UUID>       toldTooHot    = new HashSet<>();
+	private final Map<UUID, CopGroup> surrenderedTo = new HashMap<>();
+	private final Set<UUID>           resisted      = new HashSet<>();
+	private final Set<UUID>           toldTooHot    = new HashSet<>();
 
 	public SurrenderService(Supplier<SurrenderSettings> settings, CopRadio copRadio, WantedMessages messages,
 	                        CrimeService crimes, LongSupplier clock, Predicate<Player> restrained) {
@@ -87,7 +88,7 @@ public class SurrenderService {
 		if (level > config.maxStars()) {
 			if (surrenderedAt.remove(id) != null) {
 				group.setCeaseFire(false);
-				log.info("SURRENDER {} end reason={}", player.getName(), Reason.GONE);
+				log.debug("SURRENDER {} end reason={}", player.getName(), Reason.GONE);
 			}
 			if (toldTooHot.add(id)) player.sendMessage(messages.format(WantedMessages.Key.SURRENDER_TOO_HOT, Map.of()));
 			return;
@@ -95,10 +96,11 @@ public class SurrenderService {
 		if (resisted.contains(id) || surrenderedAt.containsKey(id) || !group.getSquad().hasFreshSighting()) return;
 
 		surrenderedAt.put(id, clock.getAsLong());
+		surrenderedTo.put(id, group);
 		if (id.equals(group.getTargetPlayerId())) group.setCeaseFire(true);
 		copRadio.sayFromLeader(group, "Surrender_Accepted");
 		player.sendMessage(messages.format(WantedMessages.Key.SURRENDER_ACCEPTED, Map.of()));
-		log.info("SURRENDER {} start level={}", player.getName(), level);
+		log.debug("SURRENDER {} start level={}", player.getName(), level);
 	}
 
 	/** Cop-attacked hook: a hit by a surrendered suspect; runs before the manager escalates the group. */
@@ -109,9 +111,9 @@ public class SurrenderService {
 		if (clock.getAsLong() - since <= settings.get().resistWindowSeconds() * 1000L) {
 			crimes.commit(attacker, Crimes.RESISTING_ARREST, attacker.getLocation());
 			attacker.sendMessage(messages.format(WantedMessages.Key.SURRENDER_RESISTED, Map.of()));
-			resisted.add(id);
-			endSurrender(attacker, null, Reason.GONE);
 		}
+		resisted.add(id);
+		endSurrender(attacker, surrenderedTo.get(id), Reason.RESISTED);
 	}
 
 	/** Quit hook: drops everything remembered about {@code id}. */
@@ -120,9 +122,10 @@ public class SurrenderService {
 
 	private void endSurrender(Player player, @Nullable CopGroup group, Reason reason) {
 		UUID id = player.getUniqueId();
+		surrenderedTo.remove(id);
 		if (surrenderedAt.remove(id) == null) return;
 		if (group != null && id.equals(group.getTargetPlayerId())) group.setCeaseFire(false);
-		log.info("SURRENDER {} end reason={}", player.getName(), reason);
+		log.debug("SURRENDER {} end reason={}", player.getName(), reason);
 	}
 
 	private static boolean poseHeld(Player player) {
