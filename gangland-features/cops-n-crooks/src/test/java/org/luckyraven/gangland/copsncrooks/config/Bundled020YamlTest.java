@@ -29,12 +29,15 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -111,6 +114,9 @@ class Bundled020YamlTest {
 		assertEquals(new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian")), WitnessSettings.parse(wanted));
 		assertEquals(new TrespassSettings(true, 60), TrespassSettings.parse(wanted));
 		assertEquals(100, ChaseConfig.parse(wanted, report).heat().weightOf("Evading_Police"));
+		assertEquals(Set.of("Enable", "Crimes"), keysOf(wanted, "Witnesses"));
+		assertEquals(Set.of("Enable", "Repeat_Seconds"), keysOf(wanted, "Trespass"));
+		assertTrue(keysOf(wanted, "Heat", "Crimes").contains("Evading_Police"), "Heat.Crimes lists Evading_Police");
 		assertEquals(ChaseConfig.DEFAULT, ChaseConfig.parse(wanted, report));
 		assertTrue(report.issues().isEmpty(), () -> "bundled wanted.yml has issues: " + report.issues());
 	}
@@ -135,6 +141,71 @@ class Bundled020YamlTest {
 		String wanted = resource("copsncrooks/wanted.yml");
 		assertTrue(wanted.contains("   Witnesses:") && wanted.contains("   Trespass:"));
 		assertTrue(wanted.contains("# 0.20.0"));
+	}
+
+	@Test
+	@DisplayName("bundled cops.yml ships exactly the spec keys per new block, each with a comment line above it")
+	void bundledCops_everyNewKeyShippedAndCommented() throws IOException {
+		Map<String, Set<String>> yamlKeys = new LinkedHashMap<>();
+		yamlKeys.put("Patrol", Set.of("Enable", "Cops_Per_Station", "Activation_Radius", "Despawn_Radius",
+		                              "Despawn_After_Seconds", "Beat_Radius", "Pause_Seconds_Min", "Pause_Seconds_Max",
+		                              "Tier", "Report_Wanted"));
+		yamlKeys.put("Warning", Set.of("Enable", "Range", "Seconds", "Repeat_Seconds"));
+		yamlKeys.put("Pull_Over", Set.of("Enable", "Range", "Speed_Limit", "Comply_Seconds", "Stop_Speed",
+		                                 "Stop_Hold_Seconds", "Ticket_Amount", "Repeat_Seconds"));
+		yamlKeys.put("Tracker", Set.of("Enable", "Min_Level", "Tag_Seconds", "Tag_Range", "Ping_Seconds",
+		                               "Expire_Seconds"));
+		yamlKeys.put("Scanner", Set.of("Enable", "Range", "Item"));
+		yamlKeys.put("Siren", Set.of("Enable", "Interval_Seconds", "Min_Distance", "Sound", "Volume", "Pitch"));
+		yamlKeys.put("Sight", Set.of("Enable", "Dark_Max_Level", "Dark_Factor", "Dim_Max_Level", "Dim_Factor",
+		                             "Crowd_Factor", "Crowd_Min_Civilians", "Crowd_Radius",
+		                             "Crowd_Out_Of_Contact_Seconds", "Sneak_Factor", "Min_Factor", "Shot_Reset_Seconds"));
+		yamlKeys.put("Overwatch", Set.of("Enable", "Min_Level", "Role", "Ring_Min", "Ring_Max", "Columns", "Min_Height",
+		                                 "Sight_Range", "Max_Failures", "Reach_Seconds", "Max_Seconds"));
+		yamlKeys.put("Scanner_Map", Set.of("Enable", "Blocks_Per_Pixel", "Refresh_Ticks", "Show_Hideouts", "Item"));
+		yamlKeys.put("Disguise", Set.of("Enable", "Mask_Items", "Mask_Wearables", "Police_Outfit", "Outfit_Max_Level",
+		                                "Match_Needed"));
+
+		String     cops   = resource("copsncrooks/cops.yml");
+		ConfigReport report = new ConfigReport();
+		NodeReader root   = NodeReader.of(new ConfigParser().parse(Path.of("cops.yml"), new StringReader(cops), report)
+		                                                    .root(), report);
+
+		for (Map.Entry<String, Set<String>> block : yamlKeys.entrySet()) {
+			assertEquals(block.getValue(), keysOf(root, "Cops", block.getKey()), "Cops." + block.getKey());
+		}
+		assertEquals(Set.of("Material", "Name", "Lore"), keysOf(root, "Cops", "Scanner", "Item"));
+		assertEquals(Set.of("Name", "Lore"), keysOf(root, "Cops", "Scanner_Map", "Item"));
+
+		List<String> lines = cops.lines().toList();
+		int          from  = -1;
+		for (int i = 0; i < lines.size() && from < 0; i++) {
+			if (lines.get(i).startsWith("   Patrol:")) from = i;
+		}
+		assertTrue(from > 0, "cops.yml has a Patrol block");
+		int marker = from - 1;
+		while (marker >= 0 && lines.get(marker).strip().startsWith("#") && !lines.get(marker).strip().equals("# 0.20.0")) {
+			marker--;
+		}
+		assertTrue(marker >= 0 && lines.get(marker).strip().equals("# 0.20.0"),
+		           "a '# 0.20.0' line sits directly above the appended blocks");
+		for (int i = marker + 1; i < lines.size(); i++) {
+			String line = lines.get(i);
+			if (!line.matches("\\s*[A-Z][A-Za-z0-9_]*:.*")) continue;
+			assertTrue(i > 0 && lines.get(i - 1).strip().startsWith("#"), "no comment above: " + line.strip());
+		}
+	}
+
+	private static Set<String> keysOf(NodeReader reader, String... path) {
+		NodeReader current = reader;
+		for (int i = 0; i < path.length - 1; i++) {
+			MappingNode mapping = current.get(path[i]).asMapping().orNull();
+			assertNotNull(mapping, "missing mapping " + path[i]);
+			current = NodeReader.of(mapping, new ConfigReport());
+		}
+		MappingNode last = current.get(path[path.length - 1]).asMapping().orNull();
+		assertNotNull(last, "missing mapping " + path[path.length - 1]);
+		return last.entries().keySet();
 	}
 
 	private static CopConfigProvider copsProvider(ConfigReport report) throws IOException {

@@ -3,13 +3,19 @@ package org.luckyraven.gangland.copsncrooks.wanted.config;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.testkit.PluginMocks;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.config.ConfigParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.keystone.persistence.config.MappingNode;
 import org.luckyraven.keystone.persistence.config.NodeReader;
 
+import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -67,7 +73,8 @@ class ChaseConfig020Test {
 		WitnessSettings parsed = WitnessSettings.parse(wanted("Wanted:\n   Witnesses:\n      Enable: perhaps\n", report));
 
 		assertTrue(parsed.enabled());
-		assertFalse(report.issues().isEmpty());
+		assertTrue(report.issues().stream().anyMatch(i -> i.path() != null && i.path().contains("Enable")),
+		           () -> "expected an issue at Enable, got " + report.issues());
 	}
 
 	@Test
@@ -91,6 +98,34 @@ class ChaseConfig020Test {
 
 		assertEquals(WitnessSettings.parse(null), loader.getWitnesses());
 		assertEquals(TrespassSettings.parse(null), loader.getTrespass());
+	}
+
+	@Test
+	@DisplayName("C2b: loadData reads Witnesses and Trespass from wanted.yml; clear() restores the defaults")
+	void loader_readsBlocksFromFile(@TempDir Path tempDir) throws IOException {
+		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
+		FileManager fileManager = new FileManager(plugin);
+		Files.writeString(tempDir.resolve("wanted.yml"), """
+				Wanted:
+				   Witnesses:
+				      Enable: false
+				      Crimes:
+				         - Store_Robbery
+				   Trespass:
+				      Repeat_Seconds: 30
+				""", StandardCharsets.UTF_8);
+		fileManager.addFile(new FileHandler(plugin, tempDir.resolve("wanted.yml").toFile()), false);
+		ChaseConfigLoader loader = new ChaseConfigLoader(plugin, fileManager);
+
+		loader.loadData(null, fileManager);
+
+		assertEquals(new WitnessSettings(false, List.of("Store_Robbery")), loader.getWitnesses());
+		assertEquals(new TrespassSettings(true, 30), loader.getTrespass());
+
+		loader.clear();
+
+		assertEquals(WitnessSettings.DEFAULT, loader.getWitnesses());
+		assertEquals(TrespassSettings.DEFAULT, loader.getTrespass());
 	}
 
 	@Test

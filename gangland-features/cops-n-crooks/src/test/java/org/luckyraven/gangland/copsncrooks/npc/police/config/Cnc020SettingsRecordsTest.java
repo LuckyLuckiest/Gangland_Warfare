@@ -17,23 +17,69 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class Cnc020SettingsRecordsTest {
 
 	@Test
-	@DisplayName("every DEFAULT equals the values in the spec (SPEC sections 4-10, brief yamlKeys)")
-	void defaults_equalSpec() {
+	@DisplayName("C1a defaults: Patrol, Warning and Pull_Over equal the spec values")
+	void defaults_patrolWarningPullOver() {
 		assertEquals(new PatrolSettings(true, 2, 64, 96, 30, 24, 3, 6, 1, true), PatrolSettings.DEFAULT);
 		assertEquals(new WarningSettings(true, 12.0, 5, 30), WarningSettings.DEFAULT);
 		assertEquals(new PullOverSettings(true, 24.0, 12.0, 6, 1.0, 2, 150.0, 120), PullOverSettings.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("C1b defaults: Tracker and Siren equal the spec values")
+	void defaults_trackerSiren() {
 		assertEquals(new TrackerSettings(true, 2, 4, 48.0, 6, 150), TrackerSettings.DEFAULT);
-		assertEquals(new ScannerSettings(true, 160.0, "CLOCK", "&9Police Scanner", List.of("&7Hear the police radio")),
-		             ScannerSettings.DEFAULT);
 		assertEquals(new SirenSettings(true, 5, 24.0, "BLOCK_NOTE_BLOCK_BELL", 3.0f, 1.0f), SirenSettings.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("C1c defaults: Sight and Overwatch equal the spec values")
+	void defaults_sightOverwatch() {
 		assertEquals(new SightSettings(true, 4, 0.4, 8, 0.7, 0.6, 3, 4.0, 2, 0.7, 0.25, 5), SightSettings.DEFAULT);
 		assertEquals(new OverwatchSettings(true, 4, "Marksman", 10.0, 20.0, 8, 4, 48.0, 3, 20, 120),
 		             OverwatchSettings.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("C1d defaults: Scanner, Scanner_Map and Disguise equal the spec values")
+	void defaults_scannerScannerMapDisguise() {
+		assertEquals(new ScannerSettings(true, 160.0, "CLOCK", "&9Police Scanner", List.of("&7Hear the police radio")),
+		             ScannerSettings.DEFAULT);
 		assertEquals(new ScannerMapSettings(true, 1, 10, true, "&9Scanner Map",
 		                                    List.of("&7Cops, search zone, hideouts")), ScannerMapSettings.DEFAULT);
 		assertEquals(new DisguiseSettings(true, List.of("CARVED_PUMPKIN", "PLAYER_HEAD", "ZOMBIE_HEAD",
 		                                                "SKELETON_SKULL", "CREEPER_HEAD"), List.of(),
 		                                  List.of("police_helmet", "police_vest"), 2, 2), DisguiseSettings.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("C1a warning: negative range, seconds and repeat clamp to 0")
+	void warning_clamps() {
+		WarningSettings w = new WarningSettings(true, -1.0, -1, -1);
+
+		assertEquals(0.0, w.range());
+		assertEquals(0, w.seconds());
+		assertEquals(0, w.repeatSeconds());
+	}
+
+	@Test
+	@DisplayName("C1b tracker: min level >= 1, the rest not negative")
+	void trackerSiren_clamps() {
+		TrackerSettings t = new TrackerSettings(true, 0, -1, -1.0, -1, -1);
+
+		assertEquals(1, t.minLevel());
+		assertEquals(0, t.tagSeconds());
+		assertEquals(0.0, t.tagRange());
+		assertEquals(0, t.pingSeconds());
+		assertEquals(0, t.expireSeconds());
+
+		SirenSettings s = new SirenSettings(true, 0, -1.0, null, -1f, 3.0f);
+
+		assertEquals(1, s.intervalSeconds());
+		assertEquals(0.0, s.minDistance());
+		assertEquals("", s.sound());
+		assertEquals(0f, s.volume());
+		assertEquals(2.0f, s.pitch());
+		assertEquals(0.5f, new SirenSettings(true, 5, 1.0, "x", 1f, 0.1f).pitch());
 	}
 
 	@Test

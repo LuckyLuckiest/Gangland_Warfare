@@ -192,7 +192,7 @@ class YamlCopConfigProvider020Test {
 		assertEquals(10.0, provider.getOverwatchSettings().ringMin());
 		assertEquals(20.0, provider.getOverwatchSettings().ringMax());
 		assertEquals(6, provider.getOverwatchSettings().columns());
-		assertFalse(report.issues().isEmpty(), "a ConfigReport warning is expected");
+		assertIssueAt(report, "Ring_Min");
 	}
 
 	@Test
@@ -204,7 +204,7 @@ class YamlCopConfigProvider020Test {
 
 		assertEquals(3, provider.getPatrolSettings().pauseSecondsMin());
 		assertEquals(6, provider.getPatrolSettings().pauseSecondsMax());
-		assertFalse(report.issues().isEmpty(), "a ConfigReport warning is expected");
+		assertIssueAt(report, "Pause_Seconds");
 	}
 
 	@Test
@@ -216,17 +216,19 @@ class YamlCopConfigProvider020Test {
 
 		assertEquals(4, provider.getTrackerSettings().tagSeconds());
 		assertEquals(3, provider.getTrackerSettings().minLevel());
-		assertFalse(report.issues().isEmpty());
+		assertIssueAt(report, "Tag_Seconds");
 	}
 
 	@Test
-	@DisplayName("an out-of-range value is clamped by the record and warns (Sight Dark_Factor 2.5 -> 1.0)")
+	@DisplayName("an out-of-range value keeps the default and reports config.range (Sight Dark_Factor 2.5 -> 0.4)")
 	void outOfRange_isClampedAndWarns() {
 		ConfigReport report = new ConfigReport();
 		CopConfigProvider provider = parse("Cops:\n   Sight:\n      Dark_Factor: 2.5\n" + TIERS, report);
 
-		assertEquals(1.0, provider.getSightSettings().darkFactor());
-		assertFalse(report.issues().isEmpty());
+		assertEquals(0.4, provider.getSightSettings().darkFactor());
+		assertTrue(report.issues().stream().anyMatch(i -> "config.range".equals(i.code()) && i.path() != null
+		                                                  && i.path().contains("Dark_Factor")),
+		           () -> "expected a config.range issue at Dark_Factor, got " + report.issues());
 	}
 
 	@Test
@@ -241,12 +243,18 @@ class YamlCopConfigProvider020Test {
 		CopConfigProvider bad = parse("Cops:\n   Tiers:\n      1:\n         Display_Name: \"x\"\n         Health: 20.0\n"
 		                              + "         Damage: 2.0\n         Ignore_Darkness: maybe\n", badReport);
 		assertFalse(bad.getTierConfig(1).ignoreDarkness());
-		assertFalse(badReport.issues().isEmpty());
+		assertIssueAt(badReport, "Ignore_Darkness");
 
 		// merge safety with 0.21.0: the pre-0.20 17-argument constructor still exists and means "false"
 		CopTierConfig old = new CopTierConfig(1, "x", 1, 1, 1, 1, false, false, List.of(), List.of(), null, null, null,
 		                                      null, null, null, 1.0);
 		assertFalse(old.ignoreDarkness());
+	}
+
+	/** A report issue whose path names the key (manual adds use "&lt;Block&gt;.&lt;Key&gt;", e.g. Overwatch.Ring_Min). */
+	private static void assertIssueAt(ConfigReport report, String key) {
+		assertTrue(report.issues().stream().anyMatch(i -> i.path() != null && i.path().contains(key)),
+		           () -> "expected an issue whose path contains " + key + ", got " + report.issues());
 	}
 
 	private static CopConfigProvider parse(String yaml, ConfigReport report) {
