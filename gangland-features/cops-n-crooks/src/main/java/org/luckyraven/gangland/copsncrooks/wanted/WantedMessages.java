@@ -52,7 +52,34 @@ public class WantedMessages extends LocalizedModuleYaml {
 		SHEET_EXTRA("Charge_Sheet.Extra_Time", "&7Unpaid &c%money_symbol%%amount% &7served as &c+%time%"),
 		PAPERWORK_FINE("Charge_Sheet.Paperwork", "&7Fine paid: &a%money_symbol%%paid% &8| &7Extra time: &c%time%"),
 		BRIBE_STAR_TAKEN("Bribe_Star.Taken", "&6You pocketed a police bribe star. &e-%stars% star(s)."),
-		BRIBE_STAR_SEEN("Bribe_Star.Seen", "&cNot with a cop watching.");
+		BRIBE_STAR_SEEN("Bribe_Star.Seen", "&cNot with a cop watching."),
+		// 0.21.0
+		SURRENDER_ACCEPTED("Surrender.Accepted", "&eHands where we can see them. &7The cops hold their fire, stay down."),
+		SURRENDER_RESISTED("Surrender.Resisted", "&cYou resisted arrest."),
+		SURRENDER_TOO_HOT("Surrender.Too_Hot", "&cAt this heat they are not taking you alive."),
+		BUSTED_TITLE("Busted.Title", "&c&lBUSTED"),
+		BUSTED_SUBTITLE("Busted.Subtitle", "&7A cop got the cuffs on you"),
+		LOCKPICK_SNAPPED("Lockpick.Snapped", "&7Your lockpick snapped."),
+		CREW_HEAT_SHARED("Crew_Heat.Shared", "&c%player%'s %crime% is on you too."),
+		RESCUE_PROGRESS("Rescue.Progress", "&eFreeing %player%... &f%seconds%s"),
+		RESCUE_FREED("Rescue.Freed", "&aYou broke %player% out. &cThe cops want you both."),
+		RESCUE_FREED_BY("Rescue.Freed_By", "&a%player% broke you out!"),
+		REPORT_HEADER("Pursuit_Report.Header", "&8&m-----&r &6&lPURSUIT REPORT &8&m-----"),
+		REPORT_ENDING("Pursuit_Report.Ending", "&7Ending: &f%ending%"),
+		REPORT_DURATION("Pursuit_Report.Duration", "&7Duration: &f%time%"),
+		REPORT_PEAK("Pursuit_Report.Peak", "&7Peak: %stars%"),
+		REPORT_COPS_DOWN("Pursuit_Report.Cops_Down", "&7Cops down: &f%count%"),
+		REPORT_BUSTS("Pursuit_Report.Busts", "&7Times cuffed: &f%count%"),
+		REPORT_COST("Pursuit_Report.Cost", "&7Cost to the city: &c%money_symbol%%amount%"),
+		ENDING_ESCAPED("Pursuit_Report.Endings.Escaped", "Escaped"),
+		ENDING_SURRENDERED("Pursuit_Report.Endings.Surrendered", "Surrendered"),
+		ENDING_BUSTED("Pursuit_Report.Endings.Busted", "Busted"),
+		ENDING_ARRESTED("Pursuit_Report.Endings.Arrested", "Arrested"),
+		ENDING_WASTED("Pursuit_Report.Endings.Wasted", "Wasted"),
+		ENDING_PAID_OFF("Pursuit_Report.Endings.Paid_Off", "Paid off"),
+		ENDING_CLEARED("Pursuit_Report.Endings.Cleared", "Cleared"),
+		NEWS_LIVE("Breaking_News.Live", "&4&lBREAKING &fPolice are chasing %player% across the city &c%stars%"),
+		NEWS_END("Breaking_News.End", "&4&lBREAKING &fThe %stars% &fchase of %player% is over: %ending%");
 
 		public final String path;
 		public final String fallback;
