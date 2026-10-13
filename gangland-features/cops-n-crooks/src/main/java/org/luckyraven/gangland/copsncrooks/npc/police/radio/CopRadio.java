@@ -627,7 +627,22 @@ public class CopRadio {
 		return words.isEmpty() ? "the area" : words.get(0);
 	}
 
-	private RadioVoice voice(CopGroup group) {
+	/** Who overhears a squad's lines beyond the radio range; default nobody (0.20.0 seam). */
+	public void setOverhearing(java.util.function.BiPredicate<Player, NpcSquad> overhearing) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	/** Extra placeholders merged under the voice's own ones (the voice's keys win); default none (0.20.0 seam). */
+	public void setExtraPlaceholders(java.util.function.Function<NpcSquad, Map<String, String>> extraPlaceholders) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	/** The overhearing hook; the voice delegates its {@code overhears} here once api 2.7 declares it. */
+	boolean overhears(Player player, NpcSquad squad) {
+		return false;
+	}
+
+	RadioVoice voice(CopGroup group) {
 		return new RadioVoice() {
 			@Override
 			public String callsign(AbstractNpc npc) {

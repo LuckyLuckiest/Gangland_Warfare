@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.state.behavior;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -16,10 +17,16 @@ import java.util.UUID;
  */
 public class IdleBehavior implements CopBehavior {
 
-	private final double alertRange;
+	private final double        alertRange;
+	private final CopPerception perception;
 
 	public IdleBehavior(double alertRange) {
+		this(alertRange, new CopPerception());
+	}
+
+	public IdleBehavior(double alertRange, CopPerception perception) {
 		this.alertRange = alertRange;
+		this.perception = perception;
 	}
 
 	@Override

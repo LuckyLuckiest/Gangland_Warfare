@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.state;
 import lombok.Getter;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.behavior.*;
 
@@ -24,10 +25,19 @@ public class CopBehaviorFactory {
 	private final CuffLockRegistry          cuffLockRegistry;
 	/** Whether a player is on the post-escape search; a searched player is never cuffed (0.16.1 T-187). */
 	private final Predicate<UUID>           searching;
+	/** Sight decisions for the idle, pursuing and combat behaviours (0.20.0 seam). */
+	private final CopPerception             perception;
 
 	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier,
 	                          DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry,
 	                          Predicate<UUID> searching) {
+		this(configProvider, spawnManagerSupplier, detainmentService, cuffLockRegistry, searching, new CopPerception());
+	}
+
+	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier,
+	                          DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry,
+	                          Predicate<UUID> searching, CopPerception perception) {
+		this.perception          = perception;
 		this.configProvider       = configProvider;
 		this.spawnManagerSupplier = spawnManagerSupplier;
 		this.detainmentService    = detainmentService;

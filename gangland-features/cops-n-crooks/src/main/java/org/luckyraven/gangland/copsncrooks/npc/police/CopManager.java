@@ -45,6 +45,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNullElse;
@@ -573,6 +574,15 @@ public class CopManager implements BeanLifecycle {
 	 */
 	public void addAiTickHook(BiConsumer<Player, @Nullable CopGroup> hook) {
 		aiTickHooks.add(hook);
+	}
+
+	/**
+	 * Registers a resolver for cops that belong to no {@link CopGroup} (beat cops): {@link #isCopNpc},
+	 * {@link #findCopByEntity} and {@link #findDyingCop} consult the group scan first, then the resolvers in order; the
+	 * first non-null wins and a throwing resolver is logged and skipped.
+	 */
+	public void addCopResolver(Function<Entity, @Nullable CopNpc> resolver) {
+		throw new UnsupportedOperationException("TDD stub");
 	}
 
 	/** Registers a hook run first thing when a player hits a cop; a hook that throws is logged and skipped. */

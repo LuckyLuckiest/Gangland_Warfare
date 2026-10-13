@@ -18,6 +18,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.station.Station;
@@ -338,6 +339,11 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 */
 	public void setSearchGuard(Predicate<UUID> searchGuard) {
 		this.searchGuard = searchGuard;
+	}
+
+	/** The sight decisions the cops' behaviours share (0.20.0 seam); read when the factories are rebuilt. */
+	public void setPerception(CopPerception perception) {
+		throw new UnsupportedOperationException("TDD stub");
 	}
 
 	private void rebuildFactories() {
