@@ -234,4 +234,19 @@ public final class ChaseArcs {
 		arc.pending = null;
 		return plan;
 	}
+
+	// 0.21.0: a cop the player killed on this chase; no-op without an arc.
+	public void copDown(UUID id) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	// 0.21.0: a cop cuffed the player on this chase; no-op without an arc.
+	public void bust(UUID id) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	// 0.21.0: the live headline went out for this chase; no-op without an arc.
+	public void markNews(UUID id) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
 }
