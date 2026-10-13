@@ -1,8 +1,13 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.radio;
 
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.ScannerSettings;
+import org.luckyraven.keystone.npc.AbstractNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSupport;
 
@@ -34,6 +39,49 @@ public class ScannerOverhearing implements BiPredicate<Player, NpcSquad> {
 
 	@Override
 	public boolean test(Player player, NpcSquad squad) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (isNpc.test(player)) {
+			return false;
+		}
+
+		ScannerSettings current = settings.get();
+		if (!current.enabled() || !holdsScanner(player)) {
+			return false;
+		}
+
+		World world = player.getWorld();
+		Location location = player.getLocation();
+		if (world == null || location == null) {
+			return false;
+		}
+
+		for (AbstractNpc member : squad.members()) {
+			LivingEntity entity = member.getEntity();
+			if (entity == null || entity.getWorld() != world) {
+				continue;
+			}
+			if (entity.getLocation().distance(location) <= current.range()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean holdsScanner(Player player) {
+		PlayerInventory inventory = player.getInventory();
+		if (inventory == null) {
+			return false;
+		}
+
+		ItemStack[] contents = inventory.getContents();
+		if (contents != null) {
+			for (ItemStack stack : contents) {
+				if (stack != null && isScanner.test(stack)) {
+					return true;
+				}
+			}
+		}
+
+		ItemStack offHand = inventory.getItemInOffHand();
+		return offHand != null && isScanner.test(offHand);
 	}
 }
