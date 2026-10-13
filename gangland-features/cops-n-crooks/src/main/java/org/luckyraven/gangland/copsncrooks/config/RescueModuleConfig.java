@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
@@ -31,13 +32,15 @@ public class RescueModuleConfig {
 		this.container = container;
 	}
 
-	/** TDD skeleton: the green chunk builds the service with {@code DetainmentSettings::getRescue}. */
+	/** Reads {@code Detainment.Rescue} live on every click, so a settings reload takes effect without a restart. */
 	@Bean
 	public RescueService rescueService(DetainmentSettings settings, CopManager copManager, DetainmentService detainment,
 	                                   CuffLockRegistry cuffLockRegistry, ReleasePipeline releasePipeline,
 	                                   GangMembership gangs, WantedStars wantedStars,
 	                                   @Qualifier("online") UserManager<Player> users, WantedMessages messages) {
-		throw new UnsupportedOperationException("TDD stub");
+		return new RescueService(settings::getRescue, copManager, detainment, cuffLockRegistry, releasePipeline,
+		                         gangs, wantedStars, users, messages, plugin, Bukkit::getPlayer,
+		                         System::currentTimeMillis);
 	}
 
 }
