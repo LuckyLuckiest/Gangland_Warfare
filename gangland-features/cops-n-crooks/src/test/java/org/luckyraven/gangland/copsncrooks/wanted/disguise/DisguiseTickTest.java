@@ -154,6 +154,35 @@ class DisguiseTickTest {
 	}
 
 	@Test
+	@DisplayName("forget drops the ticked squad so a finished chase's squad is not retained")
+	void forgetDropsTheSquad() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		when(squad.hasFreshSighting()).thenReturn(false);
+
+		tick.tick(wearer.player, group);
+		assertTrue(!tick.extras(squad).isEmpty());
+
+		tick.forget(wearer.id);
+
+		assertTrue(tick.extras(squad).isEmpty());
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("no group (chase ended) also drops the ticked squad")
+	void noGroupDropsTheSquad() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		when(squad.hasFreshSighting()).thenReturn(false);
+
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, null);
+
+		assertTrue(tick.extras(squad).isEmpty());
+	}
+
+	@Test
 	@DisplayName("no description known and nobody sees the player: nothing said")
 	void nothingToSay() {
 		when(squad.hasFreshSighting()).thenReturn(false);
