@@ -26,8 +26,10 @@ public record TrespassSettings(boolean enabled, int repeatSeconds) {
 		NodeReader block = block(wanted, "Trespass");
 		if (block == null) return DEFAULT;
 
-		return new TrespassSettings(block.get("Enable").asBool().orDefault(DEFAULT.enabled()),
-		                            block.get("Repeat_Seconds").asInt().orDefault(DEFAULT.repeatSeconds()));
+		int repeat = block.get("Repeat_Seconds").asInt().orDefault(DEFAULT.repeatSeconds());
+		// ponytail: second read only reports a negative value as config.range; the record clamps it to 0
+		block.get("Repeat_Seconds").asInt().min(0).orDefault(0);
+		return new TrespassSettings(block.get("Enable").asBool().orDefault(DEFAULT.enabled()), repeat);
 	}
 
 	private static @Nullable NodeReader block(NodeReader parent, String key) {
