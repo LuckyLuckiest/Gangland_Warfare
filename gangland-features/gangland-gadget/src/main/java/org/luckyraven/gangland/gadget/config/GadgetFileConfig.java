@@ -8,6 +8,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
+import org.luckyraven.gangland.gadget.car.theft.HotwireMessages;
 import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
 import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
@@ -123,5 +124,14 @@ public class GadgetFileConfig {
 		GrappleMessages messages = new GrappleMessages(fileManager);
 		fileManager.registerInitializer(messages);
 		return messages;
+	}
+
+	/**
+	 * Reads the hotwire strings from the same {@code gadget_messages.yml} the {@code jetpackMessages} bean registers;
+	 * the {@code jetpackMessages} parameter only fixes the bean order, as for {@link #grappleMessages}.
+	 */
+	@Bean
+	public HotwireMessages hotwireMessages(FileManager fileManager, JetpackMessages jetpackMessages) {
+		return new HotwireMessages(fileManager.getFile("gadget_messages"));
 	}
 }
