@@ -39,6 +39,11 @@ class PluginYmlPermissionsTest {
 			"gangland.command.turf.list",
 			"gangland.command.turf.rules",
 			"gangland.command.turf.quartermaster",
+			"gangland.command.waypoint",
+			"gangland.command.waypoint.list",
+			"gangland.command.waypoint.info",
+			"gangland.command.waypoint.select",
+			"gangland.command.waypoint.deselect",
 			"gangland.command.gang",
 			"gangland.command.gang.create",
 			"gangland.command.gang.leave",
@@ -180,9 +185,15 @@ class PluginYmlPermissionsTest {
 			"gangland.command.jetpack.give",
 			"gangland.command.balance.admin",
 			"gangland.command.teleport.cooldown_bypass",
-			"gangland.command.waypoint",
 			"gangland.command.waypoint.create",
 			"gangland.command.waypoint.delete",
+			"gangland.command.waypoint.type",
+			"gangland.command.waypoint.gangid",
+			"gangland.command.waypoint.timer",
+			"gangland.command.waypoint.cooldown",
+			"gangland.command.waypoint.shield",
+			"gangland.command.waypoint.cost",
+			"gangland.command.waypoint.radius",
 			"gangland.command.bank.resetcap");
 
 	private static Map<String, Object> permissions;

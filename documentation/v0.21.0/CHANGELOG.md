@@ -2,4 +2,4 @@
 
 ## Fixed
 
-- Includes the 0.17.1 fixes (T-307, T-279, T-825, T-826). The 0.21.0 player verbs `gangland.command.turf.quartermaster` and `gangland.command.gang.ally.*` default to true and are children of `gangland.command.player`, so negating that parent removes them too.
+- Includes the 0.17.1 fixes (T-307, T-279, T-825, T-826), the 0.19.0 release (Gang & Turf II) and the waypoint changes T-827 and T-828 (players may list, inspect, select and deselect waypoints). The 0.21.0 player verbs `gangland.command.turf.quartermaster` and `gangland.command.gang.ally.*` default to true and are children of `gangland.command.player`, so negating that parent removes them too.

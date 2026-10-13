@@ -53,40 +53,7 @@ class WaypointSelectCommand extends SubArgument {
 			// the id would be the second argument
 			String argId = optionalArgument.getActualValue(args[2], sender);
 
-			// verify if it was a number
-			int id;
-			try {
-				id = Integer.parseInt(argId);
-			} catch (NumberFormatException exception) {
-				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", argId));
-				return;
-			}
-
-			Waypoint waypoint = waypointManager.get(id);
-
-			// check if the waypoint exists
-			if (waypoint == null) {
-				sender.sendMessage(Messages.INVALID_WAYPOINT.toString());
-				return;
-			}
-
-			// add the waypoint to waypoint manager
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return;
-
-			// LS-01: selecting by id skipped the permission/gang filter the completer applies, and a selected
-			// waypoint is what a bare /glw teleport uses.
-			if (!WaypointAccess.canAccess(user, waypoint)) {
-				user.sendMessage(Messages.WARP_NO_PERM.toString());
-				return;
-			}
-
-			waypointManager.playerSelect(player, waypoint);
-
-			// inform the player
-			user.sendMessage(Messages.WAYPOINT_SELECTED.toString().replace("%waypoint%", waypoint.getName()));
+			select(userManager, waypointManager, (Player) sender, argId);
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -158,6 +125,42 @@ class WaypointSelectCommand extends SubArgument {
 		});
 
 		this.addSubArgument(select);
+	}
+
+	static void select(UserManager<Player> userManager, WaypointManager waypointManager, Player player, String argId) {
+		// T-828: a name (what the completer offers) or a numeric id
+		Waypoint waypoint = waypointManager.get(argId);
+
+		if (waypoint == null) {
+			try {
+				waypoint = waypointManager.get(Integer.parseInt(argId));
+			} catch (NumberFormatException ignored) {
+				// not an id either
+			}
+		}
+
+		// check if the waypoint exists
+		if (waypoint == null) {
+			player.sendMessage(Messages.INVALID_WAYPOINT.toString());
+			return;
+		}
+
+		// add the waypoint to waypoint manager
+		User<Player> user   = userManager.getUser(player);
+
+		if (user == null) return;
+
+		// LS-01: selecting by id skipped the permission/gang filter the completer applies, and a selected
+		// waypoint is what a bare /glw teleport uses.
+		if (!WaypointAccess.canAccess(user, waypoint)) {
+			user.sendMessage(Messages.WARP_NO_PERM.toString());
+			return;
+		}
+
+		waypointManager.playerSelect(player, waypoint);
+
+		// inform the player
+		user.sendMessage(Messages.WAYPOINT_SELECTED.toString().replace("%waypoint%", waypoint.getName()));
 	}
 
 }

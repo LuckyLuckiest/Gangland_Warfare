@@ -128,8 +128,19 @@ permissions:
    gangland.command.bank.menu:
       default: true
    # Owner ruling T-826 (0.17.1): open to everyone. /glw balance <player> stays behind gangland.command.balance.admin
-   # (checked inside the command); waypoint use nodes are registered open at load; the staff verbs stay op.
+   # (checked inside the command). The waypoint block below is T-827 (list, info, select, deselect open; the staff verbs stay op).
    gangland.command.bank.create:
+      default: true
+   # Owner ruling 2026-10-13: players may list, inspect, select and deselect waypoints; create/delete/edit verbs stay op.
+   gangland.command.waypoint:
+      default: true
+   gangland.command.waypoint.list:
+      default: true
+   gangland.command.waypoint.info:
+      default: true
+   gangland.command.waypoint.select:
+      default: true
+   gangland.command.waypoint.deselect:
       default: true
    gangland.command.balance:
       default: true
@@ -277,6 +288,11 @@ permissions:
          gangland.inventory.gang_info: true
          gangland.inventory.alliance_stat: true
          gangland.command.map.zoom: true
+         gangland.command.waypoint: true
+         gangland.command.waypoint.list: true
+         gangland.command.waypoint.info: true
+         gangland.command.waypoint.select: true
+         gangland.command.waypoint.deselect: true
          gangland.command.map.border: true
          gangland.command.gang.transfer: true
          gangland.command.gang.delete: true
