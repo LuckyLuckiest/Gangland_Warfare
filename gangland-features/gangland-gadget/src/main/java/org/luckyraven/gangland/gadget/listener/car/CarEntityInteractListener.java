@@ -61,7 +61,13 @@ public class CarEntityInteractListener implements Listener {
 
 		// GD-06: mounting and fuel-can refuelling never looked at who placed the car.
 		ParkedVehicle target = carService.getParkedVehicle(entityUUID);
-		if (target != null && !accessPolicy.canUse(player, target.getPlacerUUID())) {
+		if (target != null && !accessPolicy.canMount(player, target.getPlacerUUID(), entityUUID)) {
+			ItemStack held = player.getInventory().getItemInMainHand();
+			if (accessPolicy.canHotwire(player, target.getPlacerUUID()) && hotwire.isEnabled()
+			    && hotwire.isLockpick(held)) {
+				hotwire.start(player, clicked, target.getPlacerUUID(), target.getCar().getCarId());
+				return;
+			}
 			player.sendMessage(messages.noPermission());
 			return;
 		}
@@ -71,6 +77,12 @@ public class CarEntityInteractListener implements Listener {
 		if (Fuel.isFuelItem(heldItem)) {
 			String        heldFuelKey = Fuel.getFuelKey(heldItem);
 			ParkedVehicle parked      = carService.getParkedVehicle(entityUUID);
+
+			// A granted thief may mount but never refuel: refuel keeps canUse
+			if (target != null && !accessPolicy.canUse(player, target.getPlacerUUID())) {
+				player.sendMessage(messages.noPermission());
+				return;
+			}
 
 			if (parked != null) {
 				Car car = parked.getCar();
