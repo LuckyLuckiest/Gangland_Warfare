@@ -70,6 +70,9 @@ public class PursuitReportListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onLevelChange(WantedLevelChangeEvent event) {
+		if (event.getCause() == WantedCause.RESTORE || event.getNewLevel() == 0) {
+			return;
+		}
 		news.check(event.getPlayer(), event.getNewLevel(), "STARS");
 	}
 
