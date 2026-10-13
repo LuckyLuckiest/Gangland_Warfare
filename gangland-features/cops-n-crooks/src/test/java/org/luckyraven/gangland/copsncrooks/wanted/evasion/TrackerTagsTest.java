@@ -437,7 +437,8 @@ class TrackerTagsTest {
 	@Test
 	@DisplayName("one cop must be ranged AND see: a melee cop who sees plus a marksman who cannot tags nothing")
 	void meleeSeerWithBlindMarksmanDoesNotTag() {
-		when(group.getCops()).thenReturn(List.of(cop(ASSAULT, true), cop(MARKSMAN, false)));
+		List<CopNpc> cops = List.of(cop(ASSAULT, true), cop(MARKSMAN, false));
+		when(group.getCops()).thenReturn(cops);
 
 		tickEverySecond(10);
 
@@ -448,7 +449,8 @@ class TrackerTagsTest {
 	@Test
 	@DisplayName("any cop of the squad counts, not only the first: a blind melee cop then a marksman who sees tags")
 	void secondCopMarksmanTags() {
-		when(group.getCops()).thenReturn(List.of(cop(ASSAULT, false), cop(MARKSMAN, true)));
+		List<CopNpc> cops = List.of(cop(ASSAULT, false), cop(MARKSMAN, true));
+		when(group.getCops()).thenReturn(cops);
 
 		tickEverySecond(4);
 
