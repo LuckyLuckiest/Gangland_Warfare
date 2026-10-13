@@ -165,4 +165,29 @@ class WarningBehaviorTest {
 		behavior.onExit(cop);
 		verify(warnings).abandon(player.getUniqueId());
 	}
+
+	@Test
+	@DisplayName("the target cleared by CopNpc.tick before the behaviour runs still abandons the warned player")
+	void warnedIdClearedByTick_stillAbandons() {
+		java.util.UUID id = player.getUniqueId();
+		behavior.onEnter(cop);
+		cop.setTargetPlayerId(null);
+
+		behavior.tick(cop);
+
+		verify(warnings).abandon(id);
+		assertEquals(CopState.PATROL, cop.getCurrentState());
+	}
+
+	@Test
+	@DisplayName("a cop hit mid-warning (target swapped to the attacker) abandons the warned player on exit")
+	void attackedDuringWarning_abandonsWarnedPlayer() {
+		java.util.UUID id = player.getUniqueId();
+		behavior.onEnter(cop);
+		cop.setTargetPlayerId(java.util.UUID.randomUUID());
+
+		behavior.onExit(cop);
+
+		verify(warnings).abandon(id);
+	}
 }
