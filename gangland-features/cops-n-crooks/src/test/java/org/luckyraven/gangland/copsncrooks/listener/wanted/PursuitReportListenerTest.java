@@ -344,4 +344,28 @@ class PursuitReportListenerTest {
 
 		assertTrue(broadcasts.isEmpty());
 	}
+
+	@Test
+	@DisplayName("the RESTORE 0->N level change never makes news: the offline gap is not chase time (P-REPORT-3/4)")
+	void restoreLevelChange_offlineTimeDoesNotMakeNews() {
+		arcs.start(playerId, WantedCause.CRIME, 1);
+		clock.addAndGet(30_000L);
+		arcs.quit(playerId);
+		clock.addAndGet(120_000L);
+
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 0, 1, WantedCause.RESTORE));
+
+		assertTrue(broadcasts.isEmpty());
+	}
+
+	@Test
+	@DisplayName("the ending N->0 level change never makes live news as the chase ends")
+	void endingLevelChange_noLiveNewsAsChaseEnds() {
+		arcs.start(playerId, WantedCause.CRIME, 1);
+		clock.addAndGet(130_000L);
+
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 1, 0, WantedCause.EVASION));
+
+		assertTrue(broadcasts.isEmpty());
+	}
 }
