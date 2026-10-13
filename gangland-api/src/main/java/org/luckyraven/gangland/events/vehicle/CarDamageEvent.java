@@ -7,34 +7,43 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/** TDD stub: a gadget car took damage, cancellable (fired by gangland-gadget). */
+/** A gadget car took damage, cancellable (fired by gangland-gadget). The damager may be null. */
 public class CarDamageEvent extends Event implements Cancellable {
 
 	private static final HandlerList HANDLERS = new HandlerList();
 
+	private final Entity vehicle;
+	private final @Nullable Entity damager;
+	private final double damage;
+	private boolean cancelled;
+
 	public CarDamageEvent(Entity vehicle, @Nullable Entity damager, double damage) {
 		super(false);
+		this.vehicle = vehicle;
+		this.damager = damager;
+		this.damage = damage;
 	}
 
 	public Entity getVehicle() {
-		return null;
+		return vehicle;
 	}
 
 	public @Nullable Entity getDamager() {
-		return null;
+		return damager;
 	}
 
 	public double getDamage() {
-		return 0;
+		return damage;
 	}
 
 	@Override
 	public boolean isCancelled() {
-		return false;
+		return cancelled;
 	}
 
 	@Override
 	public void setCancelled(boolean cancel) {
+		this.cancelled = cancel;
 	}
 
 	public static HandlerList getHandlerList() {
@@ -43,7 +52,7 @@ public class CarDamageEvent extends Event implements Cancellable {
 
 	@Override
 	public @NotNull HandlerList getHandlers() {
-		throw new UnsupportedOperationException("TDD stub");
+		return HANDLERS;
 	}
 
 }

@@ -9,34 +9,43 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/** TDD stub: a player attempts to hotwire a gadget car, cancel = no hotwire (fired by gangland-gadget). */
+/** A player attempts to hotwire a gadget car, cancel = no hotwire (fired by gangland-gadget). The owner may be null. */
 public class CarTheftAttemptEvent extends Event implements Cancellable {
 
 	private static final HandlerList HANDLERS = new HandlerList();
 
+	private final Player thief;
+	private final Entity vehicle;
+	private final @Nullable UUID owner;
+	private boolean cancelled;
+
 	public CarTheftAttemptEvent(Player thief, Entity vehicle, @Nullable UUID owner) {
 		super(false);
+		this.thief = thief;
+		this.vehicle = vehicle;
+		this.owner = owner;
 	}
 
 	public Player getThief() {
-		return null;
+		return thief;
 	}
 
 	public Entity getVehicle() {
-		return null;
+		return vehicle;
 	}
 
 	public @Nullable UUID getOwner() {
-		return null;
+		return owner;
 	}
 
 	@Override
 	public boolean isCancelled() {
-		return false;
+		return cancelled;
 	}
 
 	@Override
 	public void setCancelled(boolean cancel) {
+		this.cancelled = cancel;
 	}
 
 	public static HandlerList getHandlerList() {
@@ -45,7 +54,7 @@ public class CarTheftAttemptEvent extends Event implements Cancellable {
 
 	@Override
 	public @NotNull HandlerList getHandlers() {
-		throw new UnsupportedOperationException("TDD stub");
+		return HANDLERS;
 	}
 
 }
