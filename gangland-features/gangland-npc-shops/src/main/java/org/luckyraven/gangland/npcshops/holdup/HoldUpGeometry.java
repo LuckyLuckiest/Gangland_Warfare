@@ -16,7 +16,14 @@ public final class HoldUpGeometry {
 	 */
 	public static boolean isAimed(Vector eyeDirection, Vector eye, Vector target, double range,
 	                              double angleDegrees) {
-		throw new UnsupportedOperationException("TDD stub");
+		Vector to = target.clone().subtract(eye);
+		if (to.lengthSquared() == 0 || eyeDirection.lengthSquared() == 0) {
+			return false;
+		}
+		if (to.length() > range) {
+			return false;
+		}
+		return Math.toDegrees(eyeDirection.angle(to)) <= angleDegrees;
 	}
 
 }
