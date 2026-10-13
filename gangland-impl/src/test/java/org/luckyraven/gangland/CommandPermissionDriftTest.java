@@ -44,7 +44,7 @@ class CommandPermissionDriftTest {
 			"gangland.command.bounty", "gangland.command.cuff", "gangland.command.uncuff",
 			"gangland.command.perm",
 			"gangland.command.waypoint.create", "gangland.command.waypoint.delete",
-			"gangland.command.waypoint.deselect", "gangland.command.waypoint.type",
+			"gangland.command.waypoint.type",
 			"gangland.command.waypoint.gangid", "gangland.command.waypoint.timer",
 			"gangland.command.waypoint.cooldown", "gangland.command.waypoint.shield",
 			"gangland.command.waypoint.cost", "gangland.command.waypoint.radius",

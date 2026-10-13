@@ -78,7 +78,8 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [*][B]Rank seed[/B] (T-235): the preset rank seed is written atomically or healed on boot.
 [*][B]Fight commands[/B] (CM-38, T-772): the fights command set and its help text are complete.
 [*][B]Guard kills[/B] (T-771): a guard kill does not mint cash.
-[*][B]Waypoints[/B] (T-827): [ICODE]/glw waypoint list[/ICODE], [ICODE]info[/ICODE] and [ICODE]select[/ICODE] are open to players; [ICODE]create[/ICODE], [ICODE]delete[/ICODE] and [ICODE]edit[/ICODE] stay staff.
+[*][B]Waypoints[/B] (T-827): [ICODE]/glw waypoint list[/ICODE], [ICODE]info[/ICODE], [ICODE]select[/ICODE] and [ICODE]deselect[/ICODE] are open to players ([ICODE]info[/ICODE] and [ICODE]select[/ICODE] only show waypoints the player can use); [ICODE]create[/ICODE], [ICODE]delete[/ICODE], [ICODE]type[/ICODE], [ICODE]gangid[/ICODE], [ICODE]timer[/ICODE], [ICODE]cooldown[/ICODE], [ICODE]shield[/ICODE], [ICODE]cost[/ICODE] and [ICODE]radius[/ICODE] stay staff.
+[*][B]Waypoint select by name[/B] (T-828): [ICODE]/glw waypoint select <name>[/ICODE] works, as tab-completion suggests; a numeric id still works.
 [*][B]Permissions[/B] (T-773): new parent nodes replace the flat command gates (see the migration page).
 [/LIST]
 

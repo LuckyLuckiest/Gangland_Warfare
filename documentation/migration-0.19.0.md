@@ -163,6 +163,12 @@ New verbs, grouped by where they live. The full help text is in each module's `c
 To add fights by hand, drop `gangland-gang-fights-<rev>.jar` into `plugins/Gangland_Warfare/modules/`, or run
 `/glw module install fights`. Restart the server after any module change.
 
+## New waypoint permission nodes
+
+Default true, and children of `gangland.command.player`: `gangland.command.waypoint`, `.list`, `.info`, `.select` and
+`.deselect`. `info` and `select` still show only waypoints the player can use (own gang or the waypoint's node). The
+staff verbs (`create`, `delete`, `type`, `gangid`, `timer`, `cooldown`, `shield`, `cost`, `radius`) stay op.
+
 ## Checklist
 
 1. Back up `plugins/Gangland_Warfare/`.

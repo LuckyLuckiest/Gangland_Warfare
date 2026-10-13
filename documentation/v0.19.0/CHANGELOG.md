@@ -75,7 +75,8 @@ behaviour change.
 - **Rank gates (T-235):** the seed rank preset is written atomically or healed on boot.
 - **Gang fights and commands (CM-38, T-772):** the fights command set and its help text are complete.
 - **Guards (T-771):** a guard kill does not mint cash.
-- **Waypoints (T-827):** `/glw waypoint list`, `info` and `select` are open to players; `create`, `delete` and `edit` stay staff.
+- **Waypoints (T-827):** `/glw waypoint list`, `info`, `select` and `deselect` are open to players (`info` and `select` only show waypoints the player can use); `create`, `delete`, `type`, `gangid`, `timer`, `cooldown`, `shield`, `cost` and `radius` stay staff (T-827).
+- **Waypoint select by name (T-828):** `/glw waypoint select <name>` works, as tab-completion suggests; a numeric id still works.
 - **Permissions (T-773):** new parent nodes replace the flat command gates (see the migration page).
 
 ## Known issues
