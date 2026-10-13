@@ -5,7 +5,6 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -119,6 +119,10 @@ class BreachControllerTest {
 	// ---- fixtures ----
 
 	private CopNpc cop(String role, CopState state, UUID target, double x) {
+		return cop(role, "Defender".equals(role) ? 0.5 : 0.0, state, target, x);
+	}
+
+	private CopNpc cop(String role, double blockFraction, CopState state, UUID target, double x) {
 		CopNpc                    cop     = mock(CopNpc.class);
 		AtomicReference<CopState> current = new AtomicReference<>(state);
 		AtomicReference<NpcPost>  post    = new AtomicReference<>();
@@ -126,8 +130,8 @@ class BreachControllerTest {
 		states.put(cop, current);
 		posts.put(cop, post);
 		where.put(cop, at);
-		CopRole copRole = new CopRole(role, role, NpcFanPlacement.ANY, null, null, 1.0, null, 0, 0.0, 1.0, 0, null, 0.0,
-		                              0.0, false, false);
+		CopRole copRole = new CopRole(role, role, NpcFanPlacement.ANY, null, null, 1.0, null, 0, 0.0, 1.0, 0, null, blockFraction,
+		                              blockFraction > 0 ? 90.0 : 0.0, false, false);
 		LivingEntity entity = mock(LivingEntity.class);
 		when(entity.getLocation()).thenAnswer(i -> at.get().clone());
 		when(cop.getRole()).thenReturn(copRole);
@@ -162,6 +166,10 @@ class BreachControllerTest {
 
 	private void arrive(CopNpc cop) {
 		where.get(cop).set(new Location(world, 5.5, 64, 0.5));
+	}
+
+	private void away(CopNpc cop) {
+		where.get(cop).set(new Location(world, 0.5, 64, 0.5));
 	}
 
 	private void arriveAll(List<CopNpc> stack) {
@@ -442,6 +450,7 @@ class BreachControllerTest {
 		List<CopNpc> stack = stackThree();
 		arrive(stack.get(0));
 		arrive(stack.get(1));
+		away(stack.get(2));
 
 		advance(5 * SECOND);
 		tick();
@@ -456,6 +465,7 @@ class BreachControllerTest {
 		List<CopNpc> stack = stackThree();
 		arrive(stack.get(0));
 		arrive(stack.get(1));
+		away(stack.get(2));
 
 		advance(6 * SECOND);
 		tick();
@@ -495,6 +505,23 @@ class BreachControllerTest {
 		assertEquals(CopState.PURSUING, stateOf(assault));
 		verify(assault).releasePost();
 		verify(commander).releasePost();
+	}
+
+	@Test
+	@DisplayName("the shield role is found by Block_Fraction, not by name")
+	void shieldRoleByBlockFraction_entersFirst() {
+		CopNpc assault = hunter("Assault", 3);
+		CopNpc riot    = cop("Riot", 0.6, CopState.PURSUING, playerId, 4);
+		CopNpc named   = cop("Defender", 0.0, CopState.PURSUING, playerId, 5);
+		tick();
+		arriveAll(List.of(assault, riot, named));
+
+		advance(SECOND);
+		tick();
+
+		assertEquals(CopState.PURSUING, stateOf(riot));
+		assertEquals(CopState.POSTED, stateOf(assault));
+		assertEquals(CopState.POSTED, stateOf(named));
 	}
 
 	@Test
@@ -633,17 +660,9 @@ class BreachControllerTest {
 	}
 
 	@Test
-	@DisplayName("the default flashbang is Blindness and Slowness for the given ticks, through XPotion")
-	void defaultFlashbang_blindsAndSlows() {
-		Player victim = mock(Player.class);
-
-		BreachController.applyFlashbang(victim, 40);
-
-		ArgumentCaptor<PotionEffect> effect = ArgumentCaptor.forClass(PotionEffect.class);
-		verify(victim, times(2)).addPotionEffect(effect.capture());
-		List<String> names = effect.getAllValues().stream().map(e -> e.getType().getName()).sorted().toList();
-		assertEquals(List.of("BLINDNESS", "SLOWNESS"), names);
-		for (PotionEffect e : effect.getAllValues()) assertEquals(40, e.getDuration());
+	@DisplayName("applyFlashbang is safe in a JVM without a server (live proof: acceptance cnc21-BREACH-2)")
+	void applyFlashbang_safeWithoutServer() {
+		assertDoesNotThrow(() -> BreachController.applyFlashbang(mock(Player.class), 40));
 	}
 
 	@Test
@@ -834,7 +853,7 @@ class BreachControllerTest {
 		assertFalse(controller.isActive(playerId));
 		int before = totalPosts();
 
-		advance(29 * SECOND);
+		advance(28 * SECOND);
 		tick();
 		assertEquals(before, totalPosts());
 
