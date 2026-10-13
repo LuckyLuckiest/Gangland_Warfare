@@ -146,7 +146,7 @@ class CopRadioMessagesTest {
 	void defaultsEnglishAndSpanish_haveParity() throws IOException {
 		String english = shipped("copsncrooks/cop_radio_messages.yml");
 		java.util.Set<String> keys = new java.util.TreeSet<>();
-		java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^ {3}([A-Z][A-Za-z_]+):\\s*$").matcher(
+		java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^ {3}([A-Z][A-Za-z0-9_]+):\\s*$").matcher(
 				english.substring(english.indexOf("\nLines:")));
 		while (m.find()) keys.add(m.group(1));
 		assertFalse(keys.isEmpty());
@@ -170,7 +170,7 @@ class CopRadioMessagesTest {
 
 	/** What each caller fills beyond the radio's own %unit%, %target%, %distance%, %direction%, %side%, %tier%, %level%. */
 	private static final Map<String, java.util.Set<String>> CALLER_EXTRAS = Map.ofEntries(
-			Map.entry("Push", java.util.Set.of("member")), Map.entry("Flank_Left", java.util.Set.of("member")),
+			Map.entry("Caller_911", java.util.Set.of("crime", "suspect")), Map.entry("Push", java.util.Set.of("member")), Map.entry("Flank_Left", java.util.Set.of("member")),
 			Map.entry("Flank_Right", java.util.Set.of("member")), Map.entry("Man_Down", java.util.Set.of("member")),
 			Map.entry("Leader_Down", java.util.Set.of("member")),
 			Map.entry("Commander_Down", java.util.Set.of("member")),
@@ -190,7 +190,8 @@ class CopRadioMessagesTest {
 			Map.entry("Commander_Orders_Basic", java.util.Set.of("role")),
 			Map.entry("Status_Check", java.util.Set.of("role")),
 			Map.entry("Dispatch_En_Route", java.util.Set.of("count", "station", "eta")),
-			Map.entry("Wipe_Refill", java.util.Set.of("eta")));
+			Map.entry("Wipe_Refill", java.util.Set.of("eta")),
+			Map.entry("Suspect_Description", java.util.Set.of("suspect")));
 
 	// %place% is supplied by every radio voice (Unknown_Place when no caller names one)
 	private static final java.util.Set<String> ALWAYS = java.util.Set.of("%unit%", "%target%", "%distance%",
@@ -202,7 +203,7 @@ class CopRadioMessagesTest {
 	void everyVariant_usesOnlyPlaceholdersItsCallerFills() throws IOException {
 		String english = shipped("copsncrooks/cop_radio_messages.yml");
 		java.util.Set<String> keys = new java.util.TreeSet<>();
-		java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^ {3}([A-Z][A-Za-z_]+):\\s*$").matcher(
+		java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^ {3}([A-Z][A-Za-z0-9_]+):\\s*$").matcher(
 				english.substring(english.indexOf("\nLines:")));
 		while (m.find()) keys.add(m.group(1));
 

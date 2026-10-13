@@ -70,6 +70,8 @@ Wanted:
          Trespass_Restricted: 300
          # Breaking out of jail
          Jailbreak: 450
+         # 0.20.0 fleeing a traffic stop (published by patrol pull-overs)
+         Evading_Police: 100
 
    # Losing the cops takes stars away.
    Evasion:
@@ -324,3 +326,19 @@ Wanted:
       Pickup_Radius: 1.5
       # The pickup's material
       Item: NETHER_STAR
+
+   # 0.20.0 witnesses: a civilian who sees one of these crimes calls it in (a 911 call)
+   Witnesses:
+      # false = no witnesses; only a cop who sees a crime reports it
+      Enable: true
+      # Crimes a witness calls in
+      Crimes:
+         - Car_Theft
+         - Assault_Civilian
+
+   # 0.20.0 trespass: repeat trespass in a restricted place adds heat
+   Trespass:
+      # false = trespass adds heat once only
+      Enable: true
+      # Seconds between repeat trespass heat
+      Repeat_Seconds: 60

@@ -93,3 +93,16 @@ Cuff:
    Released: "&aReleased &f%target%&a from handcuffs."
    Already_Cuffed: "&cThis player is already cuffed!"
    Not_Cuffed: "&cThis player is not handcuffed!"
+
+# 0.20.0
+Item:
+   # Placeholders: %item% (item id), %target% (receiving player).
+   Given: "&aGave &f%item%&a to &f%target%&a."
+   # Placeholders: %item% (the id typed), %items% (the valid item ids).
+   Unknown: "&cUnknown item &f%item%&c. Items: &f%items%"
+   # No placeholders.
+   Needs_Player: "&cThe console must name a player."
+   # Placeholders: %items% (the valid item ids).
+   Usage: "&cUsage: &f/glw cop item <item> [player]&c. Items: &f%items%"
+   # No placeholders.
+   No_Permission: "&cYou don't have permission to give cop items."

@@ -49,10 +49,15 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					// 0.16 dispatch, hand-off and perimeter lines
 					Map.entry("Dispatch_En_Route", 0L), Map.entry("Wipe_Refill", 0L), Map.entry("Handoff", 10000L),
 					Map.entry("Post_Up", 5000L), Map.entry("Eyes_On", 3000L),
-					Map.entry("Returning_To_Patrol", 60000L)),
+					Map.entry("Returning_To_Patrol", 60000L),
+					// 0.20.0 street-crime lines (milliseconds; cops.yml Cooldown_Ticks x50)
+					Map.entry("Caller_911", 5000L), Map.entry("Suspect_Description", 60000L),
+					Map.entry("Tracker_Tagged", 30000L), Map.entry("Tracker_Ping", 20000L),
+					Map.entry("Overwatch_Spotted", 10000L), Map.entry("Patrol_Sighting", 20000L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Commander_Down", "Backup", "Resisting", "Dispatch_Wanted",
 			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover", "Hit", "Patched_Up", "Marksman_Spotted",
-			      "Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up"),
+			      "Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up",
+			      "Overwatch_Spotted", "Caller_911"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
 
 	/**
@@ -353,5 +358,55 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	 */
 	default @Nullable List<CopRole> getSquadComposition(int wantedLevel) {
 		return null;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default PatrolSettings getPatrolSettings() {
+		return PatrolSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default WarningSettings getWarningSettings() {
+		return WarningSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default PullOverSettings getPullOverSettings() {
+		return PullOverSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default TrackerSettings getTrackerSettings() {
+		return TrackerSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default ScannerSettings getScannerSettings() {
+		return ScannerSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default SirenSettings getSirenSettings() {
+		return SirenSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default SightSettings getSightSettings() {
+		return SightSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default OverwatchSettings getOverwatchSettings() {
+		return OverwatchSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default ScannerMapSettings getScannerMapSettings() {
+		return ScannerMapSettings.DEFAULT;
+	}
+
+	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
+	default DisguiseSettings getDisguiseSettings() {
+		return DisguiseSettings.DEFAULT;
 	}
 }

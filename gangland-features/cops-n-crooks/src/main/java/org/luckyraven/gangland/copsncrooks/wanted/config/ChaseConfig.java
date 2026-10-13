@@ -43,6 +43,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		wantedRoot.get("Kill_Combo");
 		// Post_Escape (0.16.1) is read by PostEscapeSettings, loaded beside this config by ChaseConfigLoader
 		wantedRoot.get("Post_Escape");
+		// Witnesses and Trespass (0.20.0) are read by WitnessSettings/TrespassSettings, loaded beside this config
+		wantedRoot.get("Witnesses");
+		wantedRoot.get("Trespass");
 
 		ChaseConfig parsed = new ChaseConfig(heat(block(wantedRoot, "Heat", report)),
 		                                     evasion(block(wantedRoot, "Evasion", report), report),
