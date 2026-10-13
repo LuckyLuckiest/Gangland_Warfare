@@ -807,4 +807,56 @@ class CopRadioTest {
 		when(cop.isValid()).thenReturn(true);
 		return cop;
 	}
+
+	@Test
+	@DisplayName("0.20 seam: nobody overhears by default; the overhearing hook feeds the voice")
+	void overhearingHookFeedsVoice() {
+		Player anyone = player(1, 1);
+		NpcSquad squad = group.getSquad();
+		assertFalse(radio.overhears(anyone, squad), "default hook hears nobody");
+
+		radio.setOverhearing((p, s) -> true);
+
+		assertTrue(radio.overhears(anyone, squad));
+		assertTrue(radio.overhears(player(500, 500), new NpcSquad()));
+	}
+
+	@Test
+	@DisplayName("0.20 seam: the overhearing hook is asked with the player and the squad it was given")
+	void overhearingHookReceivesPlayerAndSquad() {
+		Player   anyone = player(1, 1);
+		NpcSquad squad  = group.getSquad();
+		radio.setOverhearing((p, s) -> p == anyone && s == squad);
+
+		assertTrue(radio.overhears(anyone, squad));
+		assertFalse(radio.overhears(player(2, 2), squad));
+	}
+
+	@Test
+	@DisplayName("0.20 seam: extra placeholders are merged under the voice's own: new keys appear, existing keys win")
+	void extraPlaceholdersMergeUnderExisting() {
+		radio.setExtraPlaceholders(s -> Map.of("zone", "Docks", "tier", "HACKED"));
+
+		Map<String, String> extras = radio.voice(group).extras(group.getSquad());
+
+		assertEquals("Docks", extras.get("zone"));
+		assertEquals(group.getTierName(), extras.get("tier"), "the existing tier key wins");
+		assertTrue(extras.containsKey("level") && extras.containsKey("place"));
+	}
+
+	@Test
+	@DisplayName("0.20 seam: with no extras hook the voice extras are exactly today's three keys")
+	void noExtrasHook_voiceExtrasUnchanged() {
+		Map<String, String> extras = radio.voice(group).extras(group.getSquad());
+
+		assertEquals(java.util.Set.of("tier", "level", "place"), extras.keySet());
+	}
+
+	@Test
+	@DisplayName("0.20 seam: an extras hook that returns null adds nothing")
+	void extrasHookReturningNull_addsNothing() {
+		radio.setExtraPlaceholders(s -> null);
+
+		assertEquals(java.util.Set.of("tier", "level", "place"), radio.voice(group).extras(group.getSquad()).keySet());
+	}
 }

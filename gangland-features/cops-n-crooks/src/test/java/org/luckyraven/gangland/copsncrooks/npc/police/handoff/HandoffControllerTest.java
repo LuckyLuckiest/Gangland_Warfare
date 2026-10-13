@@ -308,4 +308,24 @@ class HandoffControllerTest {
 
 		assertDoesNotThrow(() -> unloaded.tick(player, group));
 	}
+
+	@Test
+	@DisplayName("0.20 seam: an overwatch cop within range keeps the group engaged like a posted one: no hand-off")
+	void overwatchCopNeverHandedOff() {
+		cop(CopState.OVERWATCH, 10);
+		breakLeash(2, 6, 0);
+
+		assertNull(group.biasAt(clock[0]));
+		verify(radio, never()).sayFromLeader(any(), eq("Handoff"), any(), any());
+	}
+
+	@Test
+	@DisplayName("0.20 seam: an overwatch cop left behind beyond Pursuit.Max_Distance no longer holds the chase (pin: as POSTED)")
+	void overwatchLeftBehind_doesNotHoldTheChase() {
+		cop(CopState.OVERWATCH, 10);
+		breakLeash(2, 115, 0);
+
+		assertNotNull(group.biasAt(clock[0]));
+		verify(radio).sayFromLeader(eq(group), eq("Handoff"), any(), eq(player));
+	}
 }

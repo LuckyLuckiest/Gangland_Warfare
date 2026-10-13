@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.state.behavior;
 
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -87,5 +88,42 @@ class IdleBehaviorTest {
 
 		verify(cop, never()).transitionTo(any());
 		assertNull(squad.lastKnownLocation());
+	}
+
+	@Test
+	@DisplayName("0.20 seam: acquisition goes through CopPerception - a refusal means no pursuit although canSee is true")
+	void acquiresThroughPerception() {
+		when(cop.canSee(player, ALERT_RANGE)).thenReturn(true);
+		CopPerception perception = mock(CopPerception.class);
+		when(perception.acquires(cop, player, ALERT_RANGE)).thenReturn(false);
+
+		new IdleBehavior(ALERT_RANGE, perception).tick(cop);
+
+		verify(perception).acquires(cop, player, ALERT_RANGE);
+		verify(cop, never()).transitionTo(any());
+		assertNull(squad.lastKnownLocation());
+	}
+
+	@Test
+	@DisplayName("0.20 seam: an acquisition by perception reports the sighting and starts the pursuit")
+	void acquiredThroughPerception_reportsAndPursues() {
+		CopPerception perception = mock(CopPerception.class);
+		when(perception.acquires(cop, player, ALERT_RANGE)).thenReturn(true);
+
+		new IdleBehavior(ALERT_RANGE, perception).tick(cop);
+
+		assertEquals(new Location(world, 10, 64, 10), squad.lastKnownLocation());
+		verify(cop).transitionTo(CopState.PURSUING);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: a fresh squad sighting still starts the pursuit when perception refuses the lock-on")
+	void freshSquadSighting_stillPursuesWhenPerceptionRefuses() {
+		squad.reportSighting(new Location(world, 0, 64, 0));
+		CopPerception perception = mock(CopPerception.class);
+
+		new IdleBehavior(ALERT_RANGE, perception).tick(cop);
+
+		verify(cop).transitionTo(CopState.PURSUING);
 	}
 }

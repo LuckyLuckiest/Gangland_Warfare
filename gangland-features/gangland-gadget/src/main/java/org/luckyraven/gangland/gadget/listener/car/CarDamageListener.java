@@ -12,6 +12,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.luckyraven.gangland.events.vehicle.CarDamageEvent;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.file.configuration.Settings;
@@ -114,6 +115,7 @@ public class CarDamageListener implements Listener {
 				return;
 			}
 
+			accessPolicy.revoke(entityUUID);
 			carService.pickupCar(player, entityUUID);
 			return;
 		}
@@ -121,6 +123,7 @@ public class CarDamageListener implements Listener {
 		int fallback = Math.max(1, (int) Math.ceil(event.getDamage()));
 		int damage   = Settings.isBartizanAvailable() ? CarMeleeWeaponLookup.resolveMeleeDamage(player, fallback) :
 				fallback;
+		if (fireCarDamage(event.getVehicle(), player, damage)) return;
 		CarDamageMath.applyDamage(entityUUID, session, parked, damage, carService);
 	}
 
@@ -152,6 +155,18 @@ public class CarDamageListener implements Listener {
 		if (carDamageState.consumeRecentWeaponExplosionDamage(entityUUID)) return;
 
 		int damage = Math.max(1, (int) Math.ceil(event.getDamage()));
+		if (fireCarDamage(entity, null, damage)) return;
 		CarDamageMath.applyDamage(entityUUID, session, parked, damage, carService);
+	}
+
+	/**
+	 * Publishes the cancellable {@link CarDamageEvent} for damage about to be applied to a car.
+	 *
+	 * @return {@code true} when a listener cancelled it, so the caller skips the damage
+	 */
+	private boolean fireCarDamage(Entity vehicle, Entity damager, int damage) {
+		CarDamageEvent carDamage = new CarDamageEvent(vehicle, damager, damage);
+		Bukkit.getPluginManager().callEvent(carDamage);
+		return carDamage.isCancelled();
 	}
 }
