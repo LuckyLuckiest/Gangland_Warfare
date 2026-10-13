@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.breach.BreachController;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
@@ -31,7 +32,10 @@ public class BreachModuleConfig {
 	/** Feeds the controller from the cop AI tick and releases its stacks on reload/disable. */
 	@PostConstruct
 	public void installBreach() {
-		throw new UnsupportedOperationException("TDD stub");
+		CopManager       manager    = container.getInstance(CopManager.class);
+		BreachController controller = container.getInstance(BreachController.class);
+		manager.addAiTickHook(controller::tick);
+		manager.addShutdownHook(controller::endAll);
 	}
 
 }
