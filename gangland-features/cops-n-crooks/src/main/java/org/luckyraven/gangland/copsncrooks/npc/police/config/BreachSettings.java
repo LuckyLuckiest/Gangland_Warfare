@@ -9,6 +9,5 @@ public record BreachSettings(boolean enabled, int roofBlocks, int doorRadius, in
                              int entryGapTicks, int cooldownSeconds, int flashbangMinStars, double flashbangRadius,
                              int flashbangTicks) {
 
-	/** TDD stub: neutral zeros; the green phase sets the shipped cops.yml numbers. */
-	public static final BreachSettings DEFAULT = new BreachSettings(false, 0, 0, 0, 0, 0, 0, 0, 0.0, 0);
+	public static final BreachSettings DEFAULT = new BreachSettings(true, 2, 6, 3, 6, 20, 30, 4, 8.0, 40);
 }
