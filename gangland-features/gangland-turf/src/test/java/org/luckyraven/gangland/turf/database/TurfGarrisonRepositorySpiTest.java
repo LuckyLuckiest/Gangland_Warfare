@@ -72,7 +72,7 @@ class TurfGarrisonRepositorySpiTest {
 	}
 
 	@Test
-	@DisplayName("existingTableGainsHold_oldRowsReadDefend: a pre-0.21.0 table gets the column and its rows read as Defend")
+	@DisplayName("existingTableGainsHold_oldRowsReadDefend: a pre-0.19.0 table gets the column and its rows read as Defend")
 	void existingTableGainsHold_oldRowsReadDefend() throws SQLException {
 		backend.execute("DROP TABLE turf_garrison");
 		backend.execute("CREATE TABLE turf_garrison (turf_id INTEGER PRIMARY KEY, count INTEGER DEFAULT 0)");

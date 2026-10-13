@@ -475,7 +475,7 @@ Rules:
    Income: "&7A new turf pays &f%money_symbol%%amount%&7 every &f%interval%&7 while one of its owners was online in the last &f%idle%&7; boosts at most x&f%max_mult%&7."
 # end Rules
 
-# ---------------- Teleport_Guard: gang teleports and turf fights (0.19.0) ----------------
+# ---------------- Teleport_Guard: gang teleports and turf fights (0.18.0) ----------------
 Teleport_Guard:
    # A gang teleport (safehouse, rally, gang waypoint) that starts inside a turf under attack. %turf% = that turf.
    Source_Under_Attack: "&cYou cannot leave &f%turf% &cby teleport while it is under attack."

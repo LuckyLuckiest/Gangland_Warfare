@@ -36,7 +36,7 @@ class GangPermissionsTest {
 
 	@Test
 	@DisplayName("GR-03 / PLAN 15.4: ALL lists the gangland.gang.* nodes, gangland.turf.upgrade (W2-Q) and the "
-	             + "rank-carried nodes of the gang parity wave (0.19.0)")
+	             + "rank-carried nodes of the gang parity wave (0.18.0)")
 	void all_holdsTheRankNodes() {
 		assertEquals(List.of(GangPermissions.WITHDRAW, GangPermissions.DEPOSIT, GangPermissions.RENAME,
 		                     GangPermissions.DESCRIPTION, GangPermissions.DISPLAY, GangPermissions.COLOR,

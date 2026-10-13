@@ -225,7 +225,7 @@ placeholders).
 - [ ] Wake-up shield after a server restart; the turf cap refusal at a gang's cap; dormant income after 24 h; over-cap payout; multiplier cap. (Unit tests cover the last four; the restart and digest checks need a live server.)
 - [ ] `/glw turf rules` prints the five sentences with this server's numbers.
 
-## 0.19.0 Manual Checks (Guards, map zoom and border, dynmap)
+## 0.18.0 Manual Checks (Guards, map zoom and border, dynmap)
 
 - [ ] Two guard waves with Citizens: a capture on a turf with six guards in stock brings the first wave of three to its posts; after a guard falls a top-up follows after the cooldown; the owners get the `took their posts` line each time.
 - [ ] No stock spent without Citizens: on a server without Citizens, start a capture; `/glw turf garrison` on that turf shows the same count afterwards.

@@ -32,7 +32,7 @@ public class TurfGarrisonRepository extends AbstractRepository<Garrison> impleme
 		for (Object[] result : tableBackend().selectAll()) {
 			int turfId = ((Number) result[0]).intValue();
 			int count  = ((Number) result[1]).intValue();
-			// hold was added in 0.21.0: an older or shorter row reads as Defend
+			// hold was added in 0.19.0: an older or shorter row reads as Defend
 			boolean hold = result.length > 2 && flag(result[2]);
 			rows.add(new Garrison(turfId, count, hold));
 		}

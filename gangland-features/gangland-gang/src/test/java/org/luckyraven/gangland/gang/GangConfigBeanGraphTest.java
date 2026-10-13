@@ -132,7 +132,7 @@ class GangConfigBeanGraphTest {
 
 		factory.registerConfiguration(FixtureGangMembershipProducer.class);
 		factory.registerConfiguration(GangConfig.class);
-		// the seven lane configurations of the gang parity wave (0.19.0) produce the beans GangConfig consumes
+		// the seven lane configurations of the gang parity wave (0.18.0) produce the beans GangConfig consumes
 		factory.registerConfiguration(GangMembershipConfig.class);
 		factory.registerConfiguration(GangLevelConfig.class);
 		factory.registerConfiguration(GangCombatConfig.class);

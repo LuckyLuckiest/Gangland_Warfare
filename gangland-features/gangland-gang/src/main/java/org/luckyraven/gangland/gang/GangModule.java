@@ -22,7 +22,7 @@ import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
  *     class — see its javadoc for why that broke boot with the module deployed).</li>
  *     <li>The seven lane configurations ({@link GangMembershipConfig}, {@link GangLevelConfig},
  *     {@link GangCombatConfig}, {@link GangSafehouseConfig}, {@link GangChatConfig}, {@link GangStatsConfig},
- *     {@link GangUxConfig}) - the beans of the gang parity wave (0.19.0), one class per lane so the lanes edit
+ *     {@link GangUxConfig}) - the beans of the gang parity wave (0.18.0), one class per lane so the lanes edit
  *     disjoint files.</li>
  *     <li>{@code gang.command.sub} - the {@code /glw gang} and {@code /glw rank} command trees (31 commands).</li>
  *     <li>{@code gang.listener} - {@code GangMembersDamageListener}.</li>

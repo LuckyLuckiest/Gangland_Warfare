@@ -1,0 +1,106 @@
+[SIZE=7][B]0.18.0 Changelog - Gang & Turf II[/B][/SIZE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[I]Released internally as 0.19.0 before the 2026-10-13 renumbering.[/I]
+
+
+Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documentation/migration-0.18.0.md'][B]migration-0.18.0.md[/B][/URL] before you start the server. It lists every new key, node, table and behaviour change.
+
+[SIZE=6][B]Requires[/B][/SIZE]
+
+[LIST]
+[*][B]Keystone 1.15.3[/B] (as 0.17.0). Gangland refuses to start on an older Keystone.
+[*][B]Host_Api 2.6[/B] for [ICODE]gangland-gang[/ICODE], [ICODE]gangland-civilians[/ICODE], [ICODE]gangland-turf[/ICODE], [ICODE]cops-n-crooks[/ICODE] and [ICODE]gangland-gang-fights[/ICODE]. Update all jars together.
+[*][B]Optional:[/B] dynmap (turf layer) and WorldGuard ([ICODE]glw-gang-pvp[/ICODE] flag, after a full restart). Neither is required.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Turf[/B][/SIZE]
+
+[LIST]
+[*][B]Guards in waves.[/B] Guards come in waves of 3 (at most 6 standing). Survivors and unused guards return to the reserve.
+[*][B]Guard bounty, not cash.[/B] A rival who kills a guard gets half the guard price; guards drop no civilian cash.
+[*][B]Guard roles.[/B] [ICODE]Garrison.Composition[/ICODE] gives guards jobs: shields block half of a frontal hit, marksmen keep range, and the commander's death makes the rest take cover.
+[*][B]Local outlines.[/B] [ICODE]/glw turf show[/ICODE] and [ICODE]/glw map border[/ICODE] draw only the part within 40 blocks of you.
+[*][B]Map zoom.[/B] [ICODE]/glw map zoom in|out[/ICODE] sets your own zoom: 8, 16, 32 or 64 blocks per cell.
+[*][B]Teleport guard.[/B] Gang teleports are refused near turfs under attack, into rival turf and during a turf fight.
+[*][B]dynmap.[/B] Turfs appear on a Turfs layer when dynmap is installed.
+[*][B]Civilian shouts.[/B] Owners hear shouts when a turf is held or lost.
+[*][B]Turf create.[/B] Refused in worlds where gangs are disabled.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Gangs[/B][/SIZE]
+
+[LIST]
+[*][B]Levels cost money.[/B] A level needs held-turf XP and a bank fee: [ICODE]/glw gang upgrade[/ICODE], then [ICODE]/glw gang upgrade confirm[/ICODE]. Set every [ICODE]Cost[/ICODE] to [ICODE]0[/ICODE] to keep automatic levelling.
+[*][B]Caps are grow-only.[/B] Member, safehouse and ally caps apply to existing gangs without removing anything.
+[*][B]Ranks by minimum.[/B] [ICODE]Ranks.Minimum[/ICODE] grants a feature to a rank and every rank above it.
+[*][B]Safehouses and rally.[/B] [ICODE]/glw gang safehouse set|remove|list|<name>[/ICODE] and [ICODE]/glw gang rally [safehouse][/ICODE], with [ICODE]rally join[/ICODE].
+[*][B]Friendly fire rules.[/B] [ICODE]/glw gang pvp on|off[/ICODE] and [ICODE]/glw gang ally pvp <gang> on|off[/ICODE] (allies fight only when both sides turn it on). Your own arrows and splash potions hurt you again ([ICODE]Allow_Self_Damage[/ICODE]); harmful potions are blocked between friends by default.
+[*][B]Combat tag.[/B] A player hit by another gang is tagged for 15 seconds and cannot leave the gang or use a gang waypoint.
+[*][B]Chat.[/B] [ICODE]/glw gang chat allies[/ICODE] talks to your gang and its allies. Staff can spy on gang and ally chat. The public chat tag is off by default.
+[*][B]Notice.[/B] [ICODE]/glw gang notice <text|clear>[/ICODE] shows members a message when they log in.
+[*][B]Statistics.[/B] Kills, deaths and assists per member; [ICODE]/glw gang profile[/ICODE]; [ICODE]/glw gang ranking[/ICODE] by kills, kdr, assists, level, members, online, turfs or fight wins.
+[*][B]Bank privacy.[/B] Gang banks are private to the gang unless a player has [ICODE]gangland.gang.balance.others[/ICODE].
+[*][B]Display names.[/B] Any language and hex colours; names that look alike are refused.
+[*][B]Console.[/B] [ICODE]/glw gang list[/ICODE] and [ICODE]/glw gang info <gang>[/ICODE] run from the console. Staff tools live under [ICODE]/glw option gang[/ICODE], and every bank change is logged.
+[*][B]Purge.[/B] Off by default. [ICODE]/glw option gang purge preview[/ICODE] lists candidates before [ICODE]run[/ICODE].
+[*][B]Short labels.[/B] [ICODE]/gw[/ICODE], [ICODE]/gwc[/ICODE] and [ICODE]/gwa[/ICODE] when the gang module is installed.
+[*][B]Menus.[/B] New [ICODE]player_profile[/ICODE] and [ICODE]gang_ranking[/ICODE] menus.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Fights (new module)[/B][/SIZE]
+
+[LIST]
+[*][B]Module [ICODE]gangland-gang-fights[/ICODE][/B] (install id [ICODE]fights[/ICODE], needs [ICODE]gang[/ICODE]): challenge another gang to a fight of [ICODE]<size>[/ICODE] per side, with an optional bet that moves bank to bank.
+[*][B]Commands.[/B] [ICODE]/glw gang fight propose|accept|decline|enlist|drop|info|arenas|stats[/ICODE].
+[*][B]Arenas.[/B] Staff build arenas with [ICODE]/glw arena[/ICODE] (create, corner, spawn, exit, size, finish, show, list, tp, on, off, delete, reload). Arenas live in [ICODE]plugins/Gangland_Warfare/fight/arenas.yml[/ICODE].
+[*][B]Ranked fights[/B] feed fight stats (wins, losses, draws) and the gang ranking.
+[*][B]Command limit.[/B] During a fight a fighter may run only the fight verbs and [ICODE]Guards.Allowed_Commands[/ICODE].
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Fixes[/B][/SIZE]
+
+[LIST]
+[*][B]Includes the 0.17.1 fixes[/B] (T-307, T-279, T-825, T-826): non-op gang owners can disband and every online member is paid; newly declared player nodes (default true): [ICODE]gangland.command.bank[/ICODE] (and balance, deposit, withdraw, menu, create), balance, teleport, respawn, wanted, contact, filter, resource, car (list, info), grapple, jetpack. Staff verbs stay op-only.
+[*][B]Turf waves and bounty[/B] (TF-20, TF-35, TF-46): guard waves and the bounty-share rules replace the all-at-once spend and the cash drop.
+[*][B]Turf visuals[/B] (TF-43, TF-21): outlines and the map border draw only the part near you.
+[*][B]Turf civilian shouts[/B] (TF-47): held and lost shouts use the civilian messages file.
+[*][B]Friendly fire[/B] (GR-39, GR-40, GR-41, GR-15, CJ-43): own arrows and potions, world rules, fire and the ally switch are enforced as documented.
+[*][B]Waypoint teleports[/B] (LS-35, LS-36): a cancelled or world-missing warm-up clears its timer and distance.
+[*][B]Console verbs[/B] (T-227): staff gang list and info run from the console.
+[*][B]Gang levels[/B] (US-43, US-08, GP-10): a cancelled level-up changes nothing; the fee is taken before the level is claimed.
+[*][B]Rank seed[/B] (T-235): the preset rank seed is written atomically or healed on boot.
+[*][B]Fight commands[/B] (CM-38, T-772): the fights command set and its help text are complete.
+[*][B]Guard kills[/B] (T-771): a guard kill does not mint cash.
+[*][B]Waypoints[/B] (T-827): [ICODE]/glw waypoint list[/ICODE], [ICODE]info[/ICODE], [ICODE]select[/ICODE] and [ICODE]deselect[/ICODE] are open to players ([ICODE]info[/ICODE] and [ICODE]select[/ICODE] only show waypoints the player can use); [ICODE]create[/ICODE], [ICODE]delete[/ICODE], [ICODE]type[/ICODE], [ICODE]gangid[/ICODE], [ICODE]timer[/ICODE], [ICODE]cooldown[/ICODE], [ICODE]shield[/ICODE], [ICODE]cost[/ICODE] and [ICODE]radius[/ICODE] stay staff.
+[*][B]Waypoint select by name[/B] (T-828): [ICODE]/glw waypoint select <name>[/ICODE] works, as tab-completion suggests; a numeric id still works.
+[*][B]Permissions[/B] (T-773): new parent nodes replace the flat command gates (see the migration page).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Known issues[/B][/SIZE]
+
+[LIST]
+[*]T-727 fight escrow is memory-only: a crash in the middle of a fight loses both stakes.
+[*]T-707 [ICODE]Ranks.Minimum.Chat[/ICODE] and [ICODE]gangland.gang.chat[/ICODE] are not enforced on gang and ally chat.
+[*]T-708 rally join has no rank gate.
+[*]T-710 [ICODE]Ranks.Minimum[/ICODE] Upgrade=owner does not stop officers, who hold [ICODE]gangland.turf.upgrade[/ICODE] through the preset.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]API[/B][/SIZE]
+
+[LIST]
+[*][B]gangland-api 2.6[/B] (additive; no removal, rename or signature change): [ICODE]NpcRole[/ICODE] for NPC squads; [ICODE]GangMembershipView[/ICODE] defaults, [ICODE]GangChatChannel[/ICODE] and the [ICODE]events.gangs[/ICODE] events; [ICODE]PlaceholderContribution.resolveGlobal[/ICODE]; [ICODE]GanglandMoneyDropClassifier.installFirst(NpcMoneyDropSource)[/ICODE].
+[*] 2.4 is the 0.17.0 hardening (Messages.USER_DATA_LOAD_FAILED, offline-cache API); 2.5 is reserved and unused on this branch. Details in [ICODE]documentation/gangland-api.md[/ICODE].
+[/LIST]

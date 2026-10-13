@@ -1,86 +1,74 @@
-# 0.19.0 Changelog - Gang & Turf II
+# 0.19.0 Changelog - Gang & Turf III
 
 [← Back to Documentation Index](../README.md)
+> Released internally as 0.21.0 before the 2026-10-13 renumbering.
 
-Read [migration-0.19.0.md](../migration-0.19.0.md) before you start the server. It lists every new key, node, table and
-behaviour change.
+
+Read [migration-0.19.0.md](../migration-0.19.0.md) before you start the server. It lists every new key, node, table and behaviour change.
 
 ## Requires
 
-- **Keystone 1.15.3** (as 0.17.0). Gangland refuses to start on an older Keystone.
-- **Host_Api 2.6** for `gangland-gang`, `gangland-civilians`, `gangland-turf`, `cops-n-crooks` and `gangland-gang-fights`.
-  Update all jars together.
-- **Optional:** dynmap (turf layer) and WorldGuard (`glw-gang-pvp` flag, after a full restart). Neither is required.
+- **Keystone 1.15.3** (as 0.17.0 and 0.18.0). Gangland refuses to start on an older Keystone.
+- **gangland-api 2.6** (unchanged) and no module `Host_Api` change. Nothing new to install; update all jars together.
+- **Citizens** is needed for Quartermaster placement (without it the command refuses and charges nothing).
 
----
+## Quartermaster
 
-## Turf
+- **Place your own Quartermaster.** `/glw turf quartermaster` places or moves the Quartermaster where you stand, inside a turf your gang owns. It costs `Powerup_Npc.Placement_Cost` from the gang bank (default `5000.0`, `0` = free) and needs the rank that holds `gangland.turf.upgrade`. Allies cannot place it.
+- **Refusals name the owner.** A gangless player or a stranger is told which gang the Quartermaster serves and how to ally (`/glw gang ally request <id>`).
+- **Hub read-out.** The hub shows the guards on duty and who may spend (the owner buys, allies look).
+- **Gang tag.** A short gang tag (1 to 4 characters) is drawn above each Quartermaster. It refreshes on an owner change or respawn, not on a gang rename.
+- **Staff placement.** `/glw turf powerupnpc set` is refused unless the staff member stands inside the selected turf.
 
-- **Guards in waves.** Guards come in waves of 3 (at most 6 standing). Survivors and unused guards return to the reserve.
-- **Guard bounty, not cash.** A rival who kills a guard gets half the guard price; guards drop no civilian cash.
-- **Guard roles.** `Garrison.Composition` gives guards jobs: shields block half of a frontal hit, marksmen keep range, and the
-  commander's death makes the rest take cover.
-- **Outlines are local.** `/glw turf show` and `/glw map border` draw only the part within 40 blocks of you.
-- **Teleport guard.** Gang teleports are refused near turfs under attack, into rival turf and during a turf fight.
-- **Map zoom.** `/glw map zoom in|out` sets your own zoom: 8, 16, 32 or 64 blocks per cell.
-- **dynmap.** Turfs appear on a Turfs layer when dynmap is installed.
-- **Civilian shouts.** Owners hear shouts when a turf is held or lost.
-- **Turf create.** Refused in worlds where gangs are disabled.
+## Guards and alerts
+
+- **Guard Orders.** Slot 13 of the Quartermaster hub switches the turf between **Hold** and **Defend**. Hold keeps guards within `Garrison.Hold_Radius` (default `6.0`, minimum `3.0`) of their post and away from cops; the Quartermaster fights back when hit but stays within the hold radius (T-834). Defend is the default. Only the owning gang's upgrade rank can switch it; allies can look. The order is saved and resets to Defend when the turf changes hands.
+- **Owner alerts.** Online members of the owning gang get a chat line and an action bar when a cop hits a member on the turf, a cop arrests a member on the turf (T-832), a guard falls, an outsider hits the Quartermaster, or the Quartermaster is killed. A death is told once per NPC; each kind has a per-turf cooldown (`Owner_Alerts.Cooldown_Seconds`, default `60`). Allies and rivals hear nothing.
+- **Garrison panel.** Shows guards on duty, the reserve against the cap (`x/12`), the next wave, and "Reserve full" to the owner at the cap.
 
 ## Gangs
 
-- **Levels cost money.** A level needs held-turf XP and a bank fee: `/glw gang upgrade`, then `/glw gang upgrade confirm`.
-  Set every `Cost` to `0` to keep automatic levelling.
-- **Caps are grow-only.** Member, safehouse and ally caps apply to existing gangs without removing anything.
-- **Ranks by minimum.** `Ranks.Minimum` grants a feature to a rank and every rank above it.
-- **Safehouses and rally.** `/glw gang safehouse set|remove|list|<name>` and `/glw gang rally [safehouse]` with `join`.
-  Safehouses are a `gang_safehouse` table; the number you may hold grows with the gang level.
-- **Friendly fire rules.** `/glw gang pvp on|off` and `/glw gang ally pvp <gang> on|off` (works only when both sides turn it on).
-  Own arrows and splash potions hurt you again (`Allow_Self_Damage`). Harmful potions are blocked between friends by default.
-- **Combat tag.** Players hit by another gang are tagged for 15 seconds; a tagged player cannot leave the gang or use a gang
-  waypoint.
-- **Chat.** `/glw gang chat allies` talks to your gang and its allies. Staff can spy on gang and ally chat. The public chat
-  tag `{glw_gang}` is off by default.
-- **Notice.** `/glw gang notice <text|clear>` shows a message to members when they log in.
-- **Statistics.** Gang kills, deaths and assists per member; `/glw gang profile [player]`; `/glw gang ranking [stat]` by kills,
-  kdr, assists, level, members, online, turfs or fight wins.
-- **Bank privacy.** Gang banks are private to the gang unless a player has `gangland.gang.balance.others`.
-- **Display names.** Any language and hex colours; names that look alike are refused.
-- **Console.** `/glw gang list` and `/glw gang info <gang>` work from the console. Staff tools live under `/glw option gang`,
-  with every bank change logged.
-- **Purge.** Off by default. `/glw option gang purge preview` lists candidates before `run`.
-- **Short labels.** `/gw`, `/gwc` and `/gwa` when the gang module is installed.
-- **Menus.** New `player_profile` and `gang_ranking` menus.
+- **Allies for everyone.** Non-op players can use `/glw gang ally` again: seven `gangland.command.gang.ally*` nodes default to `true`. The gang rank still gates each command; `request`, `accept`, `reject` and `pending` need the `gangland-mail` module.
 
-## Fights (new module)
+## Config and permissions
 
-- **New module `gangland-gang-fights`** (install id `fights`, needs `gang`): challenge another gang to a fight of `<size>` per
-  side, with an optional bet that moves bank to bank.
-- **Commands.** `/glw gang fight propose|accept|decline|enlist|drop|info|arenas|stats`.
-- **Arenas.** Staff build arenas with `/glw arena create|corner|spawn|exit|size|finish|show|list|tp|on|off|delete|reload`.
-  Arenas live in `plugins/Gangland_Warfare/fight/arenas.yml`.
-- **Ranked fights** feed fight stats (wins, losses, draws) and the gang ranking.
-- **Command limit.** During a fight a fighter may run only the fight verbs and `Guards.Allowed_Commands`.
+- **New keys.** `turf/turf_npcs.yml`: `Powerup_Npc.Placement_Cost`, `Garrison.Hold_Radius`, `Owner_Alerts.Cooldown_Seconds`. `turf/turf_messages.yml`: the `Quartermaster.*` placement, hub, order and garrison keys and the five `Alerts.*` keys (full list in the migration page). `Quartermaster.Only_Owner_Or_Allies` is retired; copy any custom text into `Refuse_No_Gang` and `Refuse_Stranger`.
+- **New permissions.** `gangland.command.turf.quartermaster` and the seven `gangland.command.gang.ally*` nodes, all default `true` and children of `gangland.command.player` (negating that parent removes them too).
+- **Database.** `turf_garrison` gains a `hold` column at first boot. No SQL to run.
 
-## Fixes
+## Upgrade notes
 
-- **Includes the 0.17.1 fixes (T-307, T-279, T-825, T-826):** non-op gang owners can disband and every online member is paid; newly declared player nodes (default true): `gangland.command.bank` (+ `.balance`, `.deposit`, `.withdraw`, `.menu`, `.create`), `balance`, `teleport`, `respawn`, `wanted`, `contact`, `filter`, `resource`, `car` (+ `.list`, `.info`), `grapple`, `jetpack`. Staff verbs stay op-only.
-- **Turf waves and bounty (TF-20, TF-35, TF-46):** guard waves and the bounty-share rules replace the all-at-once spend and the cash drop.
-- **Turf visuals (TF-43, TF-21):** outlines and the map border draw only the part near you.
-- **Turf civilian shouts (TF-47):** held and lost shouts use the civilian messages file.
-- **Friendly fire (GR-39, GR-40, GR-41, GR-15, CJ-43):** own arrows and potions, world rules, fire and the ally switch are now enforced as documented.
-- **Waypoint teleports (LS-35, LS-36):** a cancelled or world-missing warm-up clears its timer and distance.
-- **Console verbs (T-227):** staff gang list and info run from the console.
-- **Gang levels (US-43, US-08, GP-10):** a cancelled level-up changes nothing; the fee is taken before the level is claimed.
-- **Rank gates (T-235):** the seed rank preset is written atomically or healed on boot.
-- **Gang fights and commands (CM-38, T-772):** the fights command set and its help text are complete.
-- **Guards (T-771):** a guard kill does not mint cash.
-- **Waypoints:** `/glw waypoint list`, `info`, `select` and `deselect` are open to players (`info` and `select` only show waypoints the player can use); `create`, `delete`, `type`, `gangid`, `timer`, `cooldown`, `shield`, `cost` and `radius` stay staff (T-827).
-- **Waypoint select by name (T-828):** `/glw waypoint select <name>` works, as tab-completion suggests; a numeric id still works.
-- **Permissions (T-773):** new parent nodes replace the flat command gates (see the migration page).
+- Read [migration-0.19.0.md](../migration-0.19.0.md) after [migration-0.17.0.md](../migration-0.17.0.md) and [migration-0.18.0.md](../migration-0.18.0.md).
+- `settings.yml` and the shipped menus regenerate on first boot; your previous copies are kept as `*-old.yml` so you can merge your edits back.
+- Existing `turf_npcs.yml` and `turf_messages.yml` are not rewritten. A missing key uses the shipped default, so copy a block into your file only to customise it.
+
+## Fixed
+
+- **Earlier fixes included.** The 0.17.1 fixes (T-307, T-279, T-825, T-826): non-op gang owners can disband and every online member is paid; the player command nodes for bank, balance, teleport, respawn, wanted, contact, filter, resource, car, grapple and jetpack default to true.
+- **Gang & Turf II included.** The whole 0.18.0 release (waves, levels, safehouses, friendly-fire rules, fights).
+- **Waypoints (T-827, T-828).** Players may list, inspect, select and deselect waypoints, and `/glw waypoint select <name>` works by name.
+- **Quartermaster naming and parity (T-800, T-801, T-802).** The tag, nameplate and owner-naming refusals work, and the fallback texts in code match the shipped YAML.
+- **Placement (T-804).** A placement that cannot spawn refunds the gang, tells the player, and no longer leaves a ghost Quartermaster that reappears after a restart.
+- **Ally commands (T-808).** Players can use `/glw gang ally` without being operators.
+- **Staff placement (T-803).** `/glw turf powerupnpc set` is refused outside the selected turf.
+- **Garrison panel (T-822, T-823).** The panel shows the reserve and the next wave, and the owner sees "Reserve full" at the cap.
+- **Owner alerts (T-820, T-821 partly, T-829).** Owners are told when the Quartermaster is attacked or killed and when a guard falls. The death alerts now fire in the live game; they used to look up the NPC body after it had despawned.
+- **Hold radius (T-824).** `Garrison.Hold_Radius` below 3 is raised to 3, and a non-finite value falls back to the default, so a held guard no longer ignores its attacker.
+- **Placement cost (T-810).** A non-finite `Placement_Cost` no longer breaks placement.
+- **Arrest alert (T-832).** Owners are alerted when a member is arrested on their turf (owner ruling).
+- **Hold leash (T-834).** Under Hold the Quartermaster fights back but stays within its hold radius instead of chasing out of sight (owner ruling).
+- **Cop protection (T-835).** Each Bartizan hit is now handled once by the turf cop-protection listener, not twice.
+- **Spawn log (T-833).** The turf-NPC restart log reports spawned and pending-for-chunk-load counts instead of a misleading `Spawned 0`.
 
 ## Known issues
 
+- T-805 a Quartermaster re-placed during a contest is never engaged.
+- T-806 a Quartermaster lost on chunk unload stays gone until restart.
+- T-807 the refusal hint names a `gangland-mail` command, which is absent without that module.
+- T-809 wording nits: alias versus gang name in hub lines, `Paid $0` and `Cost $0`, and the gang tag does not refresh on a gang rename.
+- T-811 traders can stay unspawned until restart after a first-join database lock (`TraderManager` loads on the main thread).
+- T-821 guards do not engage a cop that hits the Quartermaster (the owner is told, but the guards do not answer).
+- T-804 residual: a database error thrown during placement, after the gang is charged, loses the price.
 - T-727 fight escrow is memory-only: a crash in the middle of a fight loses both stakes.
 - T-707 `Ranks.Minimum.Chat` and `gangland.gang.chat` are not enforced on gang and ally chat.
 - T-708 rally join has no rank gate.
@@ -88,9 +76,4 @@ behaviour change.
 
 ## API
 
-- **`gangland-api` 2.6** (additive; no removal, rename or signature change):
-  - `NpcRole`: a role record for NPC squads (shield, marksman, commander behaviour).
-  - `GangMembershipView` defaults, `GangChatChannel`, and the `events.gangs` events.
-  - `PlaceholderContribution.resolveGlobal`.
-  - `GanglandMoneyDropClassifier.installFirst(NpcMoneyDropSource)`.
-- 2.4 is the 0.17.0 hardening (Messages.USER_DATA_LOAD_FAILED, offline-cache API); 2.5 is reserved and unused on this branch. Full details in [gangland-api.md](../gangland-api.md).
+- **`gangland-api` 2.6** is unchanged: no removal, rename or signature change, and no module `Host_Api` change.

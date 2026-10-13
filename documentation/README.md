@@ -10,7 +10,8 @@
 
 | Version                                 | Status  | Changelog                                                      |
 |-----------------------------------------|---------|----------------------------------------------------------------|
-| [v0.19.0](./v0.19.0/CHANGELOG.md)       | Current | Gang & Turf II: gang fights in arenas (new module), gang levels with fees, friendly-fire rules, safehouses, rally, guard waves, gang chat and stats (needs Keystone 1.15.3, Host_Api 2.6) |
+| [v0.19.0](./v0.19.0/CHANGELOG.md)       | Current | Gang & Turf III: see the changelog |
+| [v0.18.0](./v0.18.0/CHANGELOG.md)       | Stable  | Gang & Turf II: gang fights in arenas (new module), gang levels with fees, friendly-fire rules, safehouses, rally, guard waves, gang chat and stats (needs Keystone 1.15.3, Host_Api 2.6) |
 | [v0.17.1](./v0.17.1/CHANGELOG.md)       | Stable  | Permission patch: non-op gang owners can disband; rename, ally, bank, wanted, car, jetpack and other player verbs default to true (needs Keystone 1.15.3) |
 | [v0.17.0](./v0.17.0/CHANGELOG.md)       | Stable | Gang & Turf I: turf map and HUD, owners-online capture window, one capture bar, alerts anywhere, income rules and gang levels, Quartermaster prices, gang bounty, gang chat and recruiting (needs Keystone 1.15.3; 1.15.3 also flushes the database journal on a clean stop, so a stopped server's .db file is complete) |
 | [v0.16.1](./v0.16.1/CHANGELOG.md)       | Stable  | Cops N Crooks patch: post-escape search and bounty bar, turf defenders answer cops, command and radio text, tab completion (needs Keystone 1.15.1) |
@@ -73,7 +74,7 @@ In-depth technical documentation for developers working on the codebase.
 
 Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in
 [`bartizan-integration.md`](./bartizan-integration.md); server-owner migration notes are in
-[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts), and [`migration-0.16.1.md`](./migration-0.16.1.md) (0.16.1 Keystone 1.15.1, moved text keys, new keys), [`migration-0.17.0.md`](./migration-0.17.0.md) (0.16.1 to 0.17.0, Gang & Turf I), [`migration-0.19.0.md`](./migration-0.19.0.md) (0.17.0 to 0.19.0, Gang & Turf II), and [`migration-0.21.0.md`](./migration-0.21.0.md) (Gang & Turf III: owner Quartermaster placement, hub rows, gang tag, owner-naming refusal, ally permissions). Recoil is documented in
+[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts), and [`migration-0.16.1.md`](./migration-0.16.1.md) (0.16.1 Keystone 1.15.1, moved text keys, new keys), [`migration-0.17.0.md`](./migration-0.17.0.md) (0.16.1 to 0.17.0, Gang & Turf I), [`migration-0.18.0.md`](./migration-0.18.0.md) (0.17.0 to 0.18.0, Gang & Turf II), and [`migration-0.19.0.md`](./migration-0.19.0.md) (Gang & Turf III: owner Quartermaster placement, hub rows, gang tag, owner-naming refusal, ally permissions). Recoil is documented in
 [Version Compatibility](./developer/compatibility.md), now a Bartizan-side reflective packet call rather than an
 NMS adapter this repo ships.
 

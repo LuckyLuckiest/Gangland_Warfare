@@ -116,7 +116,7 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 		double contribution = num(result[v++]).doubleValue();
 		int    rankId       = num(result[v++]).intValue();
 		long   joinedGang   = num(result[v++]).longValue();
-		// columns added in 0.19.0: an older or shorter row reads as 0
+		// columns added in 0.18.0: an older or shorter row reads as 0
 		int kills   = result.length > v ? num(result[v]).intValue() : 0;
 		int deaths  = result.length > v + 1 ? num(result[v + 1]).intValue() : 0;
 		int assists = result.length > v + 2 ? num(result[v + 2]).intValue() : 0;

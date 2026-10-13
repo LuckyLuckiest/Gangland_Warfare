@@ -18,15 +18,15 @@ import java.util.List;
 public final class RankSeed {
 
 	/** Written before the first rank row; with {@link #COMPLETE} absent it means the seed was cut short (T-235). */
-	static final String STARTED  = "0.19.0-preset-seed-started";
-	static final String COMPLETE = "0.19.0-preset-seed-complete";
+	static final String STARTED  = "0.18.0-preset-seed-started";
+	static final String COMPLETE = "0.18.0-preset-seed-complete";
 
 	private RankSeed() {
 	}
 
 	/**
 	 * T-235: a seed that wrote ranks but not their preset permissions (crash, disk error) is pending on the next boot,
-	 * so it is finished then. An install seeded before 0.19.0 has no marker and is never pending.
+	 * so it is finished then. An install seeded before 0.18.0 has no marker and is never pending.
 	 */
 	public static boolean isPending(GangMigrationsContract migrations) {
 		return migrations.isDone(STARTED) && !migrations.isDone(COMPLETE);

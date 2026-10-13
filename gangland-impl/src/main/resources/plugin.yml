@@ -193,7 +193,7 @@ permissions:
          gangland.command.turf.buff: true
          gangland.command.turf.powerupnpc: true
          gangland.command.turf.rename: true
-   # gt2 (0.19.0): new player verbs (map zoom/border, gang parity verbs, gang fights) and the owner verbs whose
+   # gt2 (0.18.0): new player verbs (map zoom/border, gang parity verbs, gang fights) and the owner verbs whose
    # rank gate (GangPermissions + gang_rules.yml Ranks.Minimum) now decides who may run them (CM-37, T-702).
    gangland.command.map.zoom:
       default: true
