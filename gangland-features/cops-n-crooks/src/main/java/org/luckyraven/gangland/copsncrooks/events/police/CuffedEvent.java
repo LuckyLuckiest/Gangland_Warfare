@@ -23,7 +23,7 @@ public class CuffedEvent extends Event {
 	private final ArrestOrigin origin;
 
 	public CuffedEvent(CopNpc cop, Player target, double cuffRadius, int maxAttempts) {
-		this(cop, target, cuffRadius, maxAttempts, null); // TDD stub: the green step defaults CUFFED
+		this(cop, target, cuffRadius, maxAttempts, ArrestOrigin.CUFFED); // 0.21.0
 	}
 
 	public CuffedEvent(CopNpc cop, Player target, double cuffRadius, int maxAttempts, ArrestOrigin origin) {
@@ -31,7 +31,7 @@ public class CuffedEvent extends Event {
 		this.target      = target;
 		this.cuffRadius  = cuffRadius;
 		this.maxAttempts = maxAttempts;
-		this.origin      = origin;
+		this.origin      = origin == null ? ArrestOrigin.CUFFED : origin; // 0.21.0
 	}
 
 	public static HandlerList getHandlerList() {
