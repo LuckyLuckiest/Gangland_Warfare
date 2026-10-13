@@ -36,7 +36,7 @@ public interface GanglandApi {
 	 * <p>2.5 is reserved for another release line and never used on this branch. 2.6 (Gang & Turf II) adds the
 	 * members listed in documentation/gangland-api.md, section Api 2.6.
 	 */
-	String VERSION = "2.6";
+	String VERSION = "2.7";
 
 	/**
 	 * The permission namespace and long command alias ({@code /gangland}).
