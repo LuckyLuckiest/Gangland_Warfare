@@ -11,7 +11,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
@@ -27,6 +26,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.Dispatcher;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopSightlines;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.RadioCall;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
@@ -49,6 +49,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNullElse;
+import static org.luckyraven.gangland.copsncrooks.npc.police.perception.CopSightlines.inView;
 
 /**
  * Central manager for all cop NPCs. Handles spawning, AI ticking, and lifecycle management.
@@ -95,6 +96,8 @@ public class CopManager implements BeanLifecycle {
 	private final List<Runnable>                               shutdownHooks  = new CopyOnWriteArrayList<>();
 	/** Called first thing when a player hits a cop; see {@link #addCopAttackedHook}. */
 	private final List<BiConsumer<CopNpc, Player>>             copAttackedHooks = new CopyOnWriteArrayList<>();
+	/** Beat-cop resolvers, asked in order after the group scan; see {@link #addCopResolver}. */
+	private final List<Function<Entity, @Nullable CopNpc>>     copResolvers     = new CopyOnWriteArrayList<>();
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
 	                  CopLoader copLoader, NpcMarkManager markManager,
@@ -446,7 +449,7 @@ public class CopManager implements BeanLifecycle {
 				return true;
 			}
 		}
-		return false;
+		return resolveCop(entity) != null;
 	}
 
 	/**
@@ -464,7 +467,7 @@ public class CopManager implements BeanLifecycle {
 				return cop;
 			}
 		}
-		return null;
+		return resolveCop(entity);
 	}
 
 	/**
@@ -486,7 +489,7 @@ public class CopManager implements BeanLifecycle {
 				}
 			}
 		}
-		return null;
+		return resolveCop(entity);
 	}
 
 	/**
@@ -582,7 +585,19 @@ public class CopManager implements BeanLifecycle {
 	 * first non-null wins and a throwing resolver is logged and skipped.
 	 */
 	public void addCopResolver(Function<Entity, @Nullable CopNpc> resolver) {
-		throw new UnsupportedOperationException("TDD stub");
+		copResolvers.add(Objects.requireNonNull(resolver, "resolver"));
+	}
+
+	private @Nullable CopNpc resolveCop(Entity entity) {
+		for (Function<Entity, @Nullable CopNpc> resolver : copResolvers) {
+			try {
+				CopNpc cop = resolver.apply(entity);
+				if (cop != null) return cop;
+			} catch (RuntimeException exception) {
+				log.warn("cop resolver failed: " + exception);
+			}
+		}
+		return null;
 	}
 
 	/** Registers a hook run first thing when a player hits a cop; a hook that throws is logged and skipped. */
@@ -931,24 +946,13 @@ public class CopManager implements BeanLifecycle {
 		return true;
 	}
 
-	/** A real player other than {@code suspect} has {@code body} {@link #inView} within {@link #OVERDUE_VIEW_BLOCKS}. */
+	/** A real player other than {@code suspect} has {@code body} {@link CopSightlines#inView} within {@link #OVERDUE_VIEW_BLOCKS}. */
 	private static boolean inViewOfBystander(Location at, LivingEntity body, Player suspect) {
 		if (at.getWorld() == null) return false;
 		for (Player other : at.getWorld().getPlayers())
 			if (!other.equals(suspect) && !other.hasMetadata("NPC") && inView(other, body, OVERDUE_VIEW_BLOCKS))
 				return true;
 		return false;
-	}
-
-	/**
-	 * {@code body} is in front of {@code player}'s eyes (within 60 degrees of where he looks, up and down included)
-	 * with a clear line within {@code maxDistance}. A bare line of sight would keep every cop on a ledge above his head.
-	 */
-	private static boolean inView(Player player, LivingEntity body, double maxDistance) {
-		Location eye    = player.getEyeLocation();
-		Vector   toward = body.getLocation().toVector().add(new Vector(0, 1, 0)).subtract(eye.toVector());
-		if (toward.lengthSquared() > maxDistance * maxDistance) return false;
-		return eye.getDirection().angle(toward) < Math.PI / 3 && player.hasLineOfSight(body);
 	}
 
 	private static boolean isStrandedReturning(CopNpc cop, Player player, double maxDist) {
