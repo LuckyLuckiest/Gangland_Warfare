@@ -47,6 +47,7 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	private final DetainmentService  detainmentService;
 	private final CuffLockRegistry   cuffLockRegistry;
 	private volatile Predicate<UUID> searchGuard = id -> false;
+	private volatile CopPerception   perception  = new CopPerception();
 
 	CopNpcFactory             copNpcFactory; // package-private: tests swap in a mock
 	private CopConfigProvider configProvider;
@@ -343,7 +344,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	/** The sight decisions the cops' behaviours share (0.20.0 seam); read when the factories are rebuilt. */
 	public void setPerception(CopPerception perception) {
-		throw new UnsupportedOperationException("TDD stub");
+		this.perception = Objects.requireNonNull(perception, "perception");
+		rebuildFactories();
 	}
 
 	private void rebuildFactories() {
@@ -351,7 +353,7 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		this.configProvider = provider;
 
 		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> this, detainmentService,
-		                                                            cuffLockRegistry, id -> searchGuard.test(id));
+		                                                            cuffLockRegistry, id -> searchGuard.test(id), perception);
 		this.copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, markManager, bartizanNpcWeapons,
 		                                       downedTargetFilter);
 	}
