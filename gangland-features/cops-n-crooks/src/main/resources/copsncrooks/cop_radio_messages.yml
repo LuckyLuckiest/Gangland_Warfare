@@ -271,3 +271,32 @@ Lines:
    # The leader calls the squad back to patrol.
    Returning_To_Patrol:
       - "Units returning to patrol."
+# 0.21.0
+   # The suspect surrenders at gunpoint.
+   Surrender_Accepted:
+      - "He's giving up! Hold your fire, cuff him!"
+      - "Hands are up, he's surrendering!"
+   # A barricade is set; the squad takes a perimeter.
+   Standoff:
+      - "Barricade! Perimeter up, everyone to cover!"
+      - "He's holed up, set the perimeter!"
+   # The leader gives the suspect a countdown to come out.
+   Negotiate:
+      - "Suspect, come out with your hands where I can see them! %seconds% seconds!"
+      - "Talk to me! Step out in %seconds% seconds or we come in!"
+   # The barricade ends and the squad goes back on patrol.
+   Standoff_Over:
+      - "Standoff's over, back to patrol."
+      - "Barricade's down, all units stand down."
+   # The squad stacks on the door before a breach.
+   Stack_Up:
+      - "Stack up on the door! Shield, you're first!"
+      - "Stacking up, hold the door!"
+   # The breach goes in.
+   Breach:
+      - "Breach! Breach! Go, go, go!"
+      - "Breaching now, move in!"
+   # A flashbang is thrown before entry.
+   Flashbang:
+      - "Flashbang out! Eyes closed!"
+      - "Flash out, going in!"
