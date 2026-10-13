@@ -3,11 +3,9 @@ package org.luckyraven.gangland.copsncrooks.config;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -16,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 0.21.0 fnd-squad: the five feature lanes (surrender, rescue, standoff, breach, pursuit report) each own an empty
  * {@code @Configuration} that they fill with beans, so no lane edits {@code CopsNCrooksModule}. Here they are empty:
- * annotated, constructed from (JavaPlugin, DependencyContainer) like their siblings, and declaring no bean.
+ * annotated, constructed from (JavaPlugin, DependencyContainer) like their siblings (lanes add their own beans later).
  */
 @DisplayName("0.21.0 feature module configurations - empty @Configuration shells")
 class FeatureModuleConfigShapeTest {
@@ -38,14 +36,6 @@ class FeatureModuleConfigShapeTest {
 		for (Class<?> type : CONFIGS)
 			assertDoesNotThrow(() -> type.getConstructor(JavaPlugin.class, DependencyContainer.class),
 			                   type.getSimpleName() + " lacks a (JavaPlugin, DependencyContainer) constructor");
-	}
-
-	@Test
-	@DisplayName("each declares no @Bean method yet")
-	void declaresNoBeans() {
-		for (Class<?> type : CONFIGS)
-			for (Method method : type.getDeclaredMethods())
-				assertTrue(!method.isAnnotationPresent(Bean.class), type.getSimpleName() + "#" + method.getName());
 	}
 
 	@Test

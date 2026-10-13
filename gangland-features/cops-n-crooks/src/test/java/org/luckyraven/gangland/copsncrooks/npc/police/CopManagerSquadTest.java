@@ -426,6 +426,20 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("0.21.0 P-STAND-3: the group target hitting a cop through the alert path ends the cease-fire")
+	void groupTargetHitsCop_endsCeaseFire() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		CopNpc   cop   = fx.cop(CopState.PURSUING, 0, 0);
+		group.add(cop);
+		group.setCeaseFire(true);
+
+		manager.onCopAttackedAlert(cop, player);
+
+		assertFalse(group.isCeaseFire());
+	}
+
+	@Test
 	@DisplayName("wanted end: the leader stands the group down and the resisting alert is forgotten")
 	void wantedEnd_saysStandDown() {
 		manager.onWantedStart(player, wanted);

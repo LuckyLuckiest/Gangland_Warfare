@@ -328,12 +328,14 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 		return HandoffSettings.DEFAULT;
 	}
 
-	/** The barricade standoff ({@code Cops.Standoff}). */
+	/** The barricade standoff ({@code Cops.Standoff}). 0.21.0 */
+	// 0.21.0
 	default StandoffSettings getStandoffSettings() {
 		return StandoffSettings.DEFAULT;
 	}
 
-	/** The stack-up and breach ({@code Cops.Breach}). */
+	/** The stack-up and breach ({@code Cops.Breach}). 0.21.0 */
+	// 0.21.0
 	default BreachSettings getBreachSettings() {
 		return BreachSettings.DEFAULT;
 	}

@@ -848,8 +848,8 @@ class YamlCopConfigProviderTest {
 
 		assertEquals(45, provider.getStandoffSettings().timerSeconds());
 		assertEquals(5, provider.getStandoffSettings().postCount());
-		assertTrue(report.issues().stream().anyMatch(issue -> !"config.unknown_key".equals(issue.code())),
-		           () -> "expected a warning for Timer_Seconds: " + report.issues());
+		assertTrue(report.issues().stream().anyMatch(issue -> issue.toString().contains("Timer_Seconds")),
+		           () -> "expected a warning naming Timer_Seconds: " + report.issues());
 		assertTrue(report.issues().stream().noneMatch(issue -> "config.unknown_key".equals(issue.code())),
 		           () -> "unknown keys: " + report.issues());
 	}
