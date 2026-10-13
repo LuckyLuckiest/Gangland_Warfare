@@ -500,9 +500,15 @@ class BustedListenerTest {
 			return null;
 		}).when(bukkit.pluginManager()).callEvent(any());
 		hunter(1.0);
+		List<String> titles = new ArrayList<>();
+		chat.when(() -> ChatUtil.sendTitle(any(), any(), any())).thenAnswer(c -> {
+			titles.add(c.getArgument(1));
+			return null;
+		});
 
 		listener.onDamage(hit(9.0, DamageCause.ENTITY_ATTACK));
 
+		assertEquals("T", titles.get(titles.size() - 1), "BUSTED must be the last title, after CuffingListener's");
 		assertFalse(firedEvents().stream().anyMatch(PlayerDownedEvent.class::isInstance));
 		verify(detainment).handcuff(player, ArrestOrigin.BUSTED_DOWNED);
 		verify(transit).schedule(player);
