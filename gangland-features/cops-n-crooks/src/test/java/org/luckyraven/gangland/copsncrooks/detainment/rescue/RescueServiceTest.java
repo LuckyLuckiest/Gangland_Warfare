@@ -278,7 +278,7 @@ class RescueServiceTest {
 		clickAt(0);
 		clickAt(200);
 		clickAt(1000);
-		clickAt(2100);
+		clickAt(2000);
 
 		verify(messages, times(2)).format(WantedMessages.Key.RESCUE_PROGRESS, Map.of("player", "Alex", "seconds", "3"));
 		verify(messages).format(WantedMessages.Key.RESCUE_PROGRESS, Map.of("player", "Alex", "seconds", "2"));
