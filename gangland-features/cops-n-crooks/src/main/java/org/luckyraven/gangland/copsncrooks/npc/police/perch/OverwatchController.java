@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.perch;
 
 import lombok.CustomLog;
 import org.bukkit.Location;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
@@ -136,8 +137,13 @@ public class OverwatchController {
 		}
 		watch.cop.releasePost();
 		watch.cop.transitionTo(postsTo);
-		Location at = watch.cop.getEntity().getLocation();
-		log.debug("OVERWATCH {} state=end at={},{},{}", player.getName(), at.getX(), at.getY(), at.getZ());
+		LivingEntity self = watch.cop.getEntity();
+		if (self != null) {
+			Location at = self.getLocation();
+			log.debug("OVERWATCH {} state=end at={},{},{}", player.getName(), at.getX(), at.getY(), at.getZ());
+		} else {
+			log.debug("OVERWATCH {} state=end at=?", player.getName());
+		}
 	}
 
 	/** Per AI tick: walk to the perch, hold it, report a sighting, enforce Max_Seconds and the star floor. */
