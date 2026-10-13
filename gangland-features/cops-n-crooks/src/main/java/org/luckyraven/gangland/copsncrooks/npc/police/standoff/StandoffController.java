@@ -10,12 +10,15 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.StandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
+import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PostRing;
+import org.luckyraven.keystone.npc.NpcPost;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedStars;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +43,7 @@ public class StandoffController {
 		final CopGroup group;
 		long until;
 		long nextNegotiateAt;
+		final List<CopNpc> posts = new ArrayList<>();
 
 		State(CopGroup group, long until) {
 			this.group = group;
@@ -91,17 +95,36 @@ public class StandoffController {
 			if (st != null) end(id, "SURRENDER");
 			return;
 		}
-		if (st != null) {
-			return; // SO4/SO5: negotiate cadence, refill hold, timeout and the other end paths
-		}
 		StandoffSettings cfg = settings();
 		long             now = clock.getAsLong();
+		if (st != null) {
+			activeTick(st, cfg, now);
+			return;
+		}
 		if (!cfg.enabled() || group.isEmpty() || now < cooldownUntil.getOrDefault(id, 0L)) return;
 
 		List<CopNpc> hunting = hunting(group, id);
 		if (hunting.size() < 2) return;
 		String trigger = trigger(cfg, group, id, hunting, now);
 		if (trigger != null) start(player, group, cfg, hunting, trigger, now);
+	}
+
+	/** Keeps the refill held and radios the countdown. SO5: timeout star and the other end paths. */
+	private void activeTick(State st, StandoffSettings cfg, long now) {
+		if (now >= st.until) return; // SO5: timeout
+		holdRefill(st.group, now, st.until);
+		if (now >= st.nextNegotiateAt) {
+			long left = (st.until - now + 999) / 1000;
+			radio.sayFromLeader(st.group, "Negotiate", Map.of("seconds", String.valueOf(left)));
+			st.nextNegotiateAt += cfg.negotiateSeconds() * 1000L;
+		}
+	}
+
+	/** ponytail: rolling hold, a short step ahead of now, so the end paths need no cancel of a long hold. */
+	private static final long HOLD_STEP_MS = 5000L;
+
+	private static void holdRefill(CopGroup group, long now, long until) {
+		group.holdPendingUntil(Math.min(until, now + HOLD_STEP_MS));
 	}
 
 	private static List<CopNpc> hunting(CopGroup group, UUID id) {
@@ -147,6 +170,32 @@ public class StandoffController {
 	/** SO4 hook: flags, ring posts, radio, negotiate cadence and the refill hold. */
 	private void start(Player player, CopGroup group, StandoffSettings cfg, List<CopNpc> hunting, String trigger,
 	                   long now) {
+		long  until = now + cfg.timerSeconds() * 1000L;
+		UUID  id    = player.getUniqueId();
+		State st    = new State(group, until);
+		st.nextNegotiateAt = now;
+		active.put(id, st);
+		group.setStandoffUntil(until);
+		group.setFallBackUntil(until);
+		holdRefill(group, now, until);
+
+		Location centre = player.getLocation();
+		if (!perimeter.isActive(id) && centre != null && centre.getWorld() != null) post(st, cfg, hunting, centre);
+		radio.sayFromLeader(group, "Standoff");
+		log.debug("STANDOFF {} start trigger={}", player.getName(), trigger);
+		activeTick(st, cfg, now);
+	}
+
+	private static void post(State st, StandoffSettings cfg, List<CopNpc> hunting, Location centre) {
+		List<Location> spots = PostRing.find(centre, cfg.postRadius(), cfg.postCount(), cfg.postRadius());
+		List<CopNpc>   byDistance = new ArrayList<>(hunting);
+		byDistance.sort(Comparator.comparingDouble(c -> c.getEntity().getLocation().distanceSquared(centre)));
+		for (int i = 0; i < spots.size() && i < byDistance.size(); i++) {
+			CopNpc cop = byDistance.get(i);
+			cop.transitionTo(CopState.POSTED);
+			cop.holdPost(new NpcPost(spots.get(i), cfg.postRadius(), centre));
+			st.posts.add(cop);
+		}
 	}
 
 	private void end(UUID id, String reason) {
