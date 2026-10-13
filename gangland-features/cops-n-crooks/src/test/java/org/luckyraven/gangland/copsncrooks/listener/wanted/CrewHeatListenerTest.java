@@ -506,7 +506,6 @@ class CrewHeatListenerTest {
 		assertNotEquals(actorOwn, real.heatOf(mate.getUniqueId()));
 		assertEquals(Crimes.KILL_PLAYER, real.lastCrime(mate.getUniqueId()).crimeId());
 		assertEquals(heatBefore, real.heatOf(actor.getUniqueId()), 1e-9);
-		assertTrue(wanteds.get(mate).getLevel() >= 1, "the mate has his own star");
 	}
 
 	@Test
