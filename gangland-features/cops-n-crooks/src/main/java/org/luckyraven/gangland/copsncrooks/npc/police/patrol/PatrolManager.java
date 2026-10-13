@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.patrol;
 
+import lombok.CustomLog;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -8,12 +10,19 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.PatrolSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.copsncrooks.station.Station;
 import org.luckyraven.gangland.copsncrooks.station.StationRegistry;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
@@ -25,7 +34,19 @@ import java.util.function.Supplier;
  * {@code CopGroup}; {@code CopManager.addCopResolver(this::beatCopOf)} makes the cop listeners treat them as cops.
  * Spawned only through {@link CopSpawnManager#spawnAtLocation} (the factory sets the POLICE mark and SHOULD_SAVE false).
  */
+@CustomLog
 public class PatrolManager implements BeanLifecycle {
+
+	private final Supplier<PatrolSettings>                     settings;
+	private final StationRegistry                              stations;
+	private final CopSpawnManager                              spawner;
+	private final NpcMarkManager                               markManager;
+	private final Supplier<Collection<? extends Player>>       players;
+	private final Predicate<Entity>                            isNpc;
+	private final BooleanSupplier                              citizensAvailable;
+	private final LongSupplier                                 clock;
+	private final Map<Integer, List<CopNpc>>                   beats      = new LinkedHashMap<>();
+	private final Map<Integer, Long>                           emptySince = new LinkedHashMap<>();
 
 	/**
 	 * @param players the players that count as "near"
@@ -37,11 +58,87 @@ public class PatrolManager implements BeanLifecycle {
 	                     CopSpawnManager spawner, NpcMarkManager markManager, CopPerception perception,
 	                     Supplier<Collection<? extends Player>> players, Predicate<Entity> isNpc,
 	                     BooleanSupplier citizensAvailable, LongSupplier clock) {
+		this.settings          = settings;
+		this.stations          = stations;
+		this.spawner           = spawner;
+		this.markManager       = markManager;
+		this.players           = players;
+		this.isNpc             = isNpc;
+		this.citizensAvailable = citizensAvailable;
+		this.clock             = clock;
 	}
 
 	/** Spawn / keep / despawn the beat cops of every station (called every 20 ticks). */
 	public void manage() {
-		throw new UnsupportedOperationException("TDD stub");
+		PatrolSettings s = settings.get();
+		if (!s.enabled() || !citizensAvailable.getAsBoolean()) {
+			despawnAll();
+			return;
+		}
+		long        now  = clock.getAsLong();
+		Set<Integer> live = new HashSet<>();
+		for (Station station : stations.all()) {
+			Location anchor = station.getLocation();
+			if (anchor == null || anchor.getWorld() == null) {
+				continue;
+			}
+			int id = station.getId();
+			live.add(id);
+			double nearest = nearestPlayer(anchor);
+			List<CopNpc> cops = beats.computeIfAbsent(id, key -> new ArrayList<>());
+			cops.removeIf(cop -> {
+				if (cop.isValid()) {
+					return false;
+				}
+				destroy(cop);
+				return true;
+			});
+			if (nearest <= s.activationRadius()) {
+				emptySince.remove(id);
+				while (cops.size() < s.copsPerStation()) {
+					CopNpc cop = spawner.spawnAtLocation(anchor.clone(), s.tier());
+					if (cop == null) {
+						break;
+					}
+					cop.transitionTo(CopState.PATROL);
+					cops.add(cop);
+					log.debug("PATROL station={} cops={}", station.getName(), cops.size());
+				}
+			}
+			if (nearest <= s.despawnRadius()) {
+				emptySince.remove(id);
+			} else if (!cops.isEmpty()) {
+				Long since = emptySince.putIfAbsent(id, now);
+				if (since != null && now - since >= s.despawnAfterSeconds() * 1000L) {
+					cops.forEach(this::destroy);
+					cops.clear();
+					emptySince.remove(id);
+				}
+			}
+		}
+		beats.entrySet().removeIf(entry -> {
+			if (live.contains(entry.getKey())) {
+				return false;
+			}
+			entry.getValue().forEach(this::destroy);
+			emptySince.remove(entry.getKey());
+			return true;
+		});
+	}
+
+	private double nearestPlayer(Location anchor) {
+		double nearest = Double.MAX_VALUE;
+		for (Player player : players.get()) {
+			if (isNpc.test(player) || !player.isOnline() || !anchor.getWorld().equals(player.getWorld())) {
+				continue;
+			}
+			nearest = Math.min(nearest, anchor.distance(player.getLocation()));
+		}
+		return nearest;
+	}
+
+	private void destroy(CopNpc cop) {
+		cop.destroy(entity -> markManager.removeMark(entity));
 	}
 
 	/** One AI tick for every live beat cop (called every 10 ticks): resolves each cop's target and runs its behaviour. */
@@ -51,7 +148,9 @@ public class PatrolManager implements BeanLifecycle {
 
 	/** Every live beat cop, all stations. */
 	public List<CopNpc> beatCops() {
-		throw new UnsupportedOperationException("TDD stub");
+		List<CopNpc> all = new ArrayList<>();
+		beats.values().forEach(all::addAll);
+		return all;
 	}
 
 	/** The beat cop whose body is {@code entity}, or {@code null}: the {@code CopManager.addCopResolver} function. */
@@ -66,7 +165,9 @@ public class PatrolManager implements BeanLifecycle {
 
 	/** Despawns every beat cop through {@code markManager} and forgets them. */
 	public void despawnAll() {
-		throw new UnsupportedOperationException("TDD stub");
+		beats.values().forEach(cops -> cops.forEach(this::destroy));
+		beats.clear();
+		emptySince.clear();
 	}
 
 	/** Starts the repeating main-thread task. */
@@ -77,9 +178,11 @@ public class PatrolManager implements BeanLifecycle {
 	/** Stops the task and despawns every beat cop (never leave Citizens NPCs behind). */
 	@Override
 	public void onClear() {
+		despawnAll();
 	}
 
 	@Override
 	public void onShutdown() {
+		despawnAll();
 	}
 }
