@@ -73,6 +73,11 @@ public class CivilianMessages extends LocalizedModuleYaml implements RadioLines 
 		};
 	}
 
+	/** Action-bar line shown to a criminal when a witness starts calling 911 ({@code Witness_Calling}). */
+	public String witnessCalling() {
+		return "";
+	}
+
 	public String listEmpty() {
 		return command("List_Empty", "No civilians are currently active.");
 	}

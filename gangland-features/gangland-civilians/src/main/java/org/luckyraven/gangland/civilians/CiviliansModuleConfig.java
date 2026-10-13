@@ -14,6 +14,8 @@ import org.luckyraven.gangland.civilians.npc.entity.GanglandMarkDefaults;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpcFactory;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawner;
+import org.luckyraven.gangland.civilians.witness.WitnessService;
+import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.item.ItemParser;
@@ -127,5 +129,15 @@ public class CiviliansModuleConfig {
 	                                       CivilianNpcRegistry civilianNpcRegistry, CivilianMessages civilianMessages) {
 		return new CivilianService(plugin, civiliansLoader, npcMarkManager, civilianSettings, civilianNpcFactory,
 		                           civilianSpawnManager, civilianNpcRegistry, civilianMessages);
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------
+	// Witnesses and 911 calls (0.20.0)
+	// ---------------------------------------------------------------------------------------------------------------
+
+	@Bean
+	public WitnessService witnessService(CivilianService civilianService, CrimeService crimeService,
+	                                     CivilianMessages civilianMessages) {
+		throw new UnsupportedOperationException("TDD stub");
 	}
 }

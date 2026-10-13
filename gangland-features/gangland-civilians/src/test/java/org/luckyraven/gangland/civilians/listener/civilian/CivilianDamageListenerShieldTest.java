@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.gangland.civilians.witness.WitnessService;
 import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
 
@@ -27,7 +28,7 @@ class CivilianDamageListenerShieldTest {
 	                                                  null, 1.0, 0, null, 0.5, 90.0, false, false);
 
 	private final CivilianService        service  = mock(CivilianService.class);
-	private final CivilianDamageListener listener = new CivilianDamageListener(service);
+	private final CivilianDamageListener listener = new CivilianDamageListener(service, mock(WitnessService.class));
 	private final LivingEntity           victim   = mock(LivingEntity.class);
 
 	@Test

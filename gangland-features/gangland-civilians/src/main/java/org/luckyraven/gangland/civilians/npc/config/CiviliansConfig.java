@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.civilians.npc.config;
 
+import org.luckyraven.gangland.civilians.witness.WitnessRules;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Map;
  * @param aiEnabled whether civilian NPC AI ticking is active
  * @param aiTickRate game ticks between civilian AI evaluations
  * @param shouts faction-shout delivery tuning, from the top-level {@code Shouts:} block
+ * @param witness the top-level {@code Witness:} block (911 calls), 0.20.0
  */
 public record CiviliansConfig(
 		List<String> defaultCivilianEntities,
@@ -23,7 +25,8 @@ public record CiviliansConfig(
 		Map<String, CivilianGroupConfig> groups,
 		boolean aiEnabled,
 		int aiTickRate,
-		RadioSettings shouts
+		RadioSettings shouts,
+		WitnessRules witness
 ) {
 
 	/**
@@ -40,10 +43,19 @@ public record CiviliansConfig(
 					Map.entry("Rally", 6000L), Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L)),
 			java.util.Set.of("Contact", "Man_Down", "Leader_Down", "Rally", "Fall_Back", "In_Cover"), null, 1.0f, 1.0f);
 
+	/** Pre-0.20.0 7-argument constructor, kept for existing callers: defaults {@link #witness} to {@link WitnessRules#DEFAULT}. */
+	public CiviliansConfig(List<String> defaultCivilianEntities, List<String> defaultPoliceEntities,
+	                       Map<String, CivilianTypeConfig> types, Map<String, CivilianGroupConfig> groups,
+	                       boolean aiEnabled, int aiTickRate, RadioSettings shouts) {
+		this(defaultCivilianEntities, defaultPoliceEntities, types, groups, aiEnabled, aiTickRate, shouts,
+		     WitnessRules.DEFAULT);
+	}
+
 	/** Legacy 6-argument constructor, kept for existing callers: defaults {@link #shouts} to {@link #DEFAULT_SHOUTS}. */
 	public CiviliansConfig(List<String> defaultCivilianEntities, List<String> defaultPoliceEntities,
 	                       Map<String, CivilianTypeConfig> types, Map<String, CivilianGroupConfig> groups,
 	                       boolean aiEnabled, int aiTickRate) {
-		this(defaultCivilianEntities, defaultPoliceEntities, types, groups, aiEnabled, aiTickRate, DEFAULT_SHOUTS);
+		this(defaultCivilianEntities, defaultPoliceEntities, types, groups, aiEnabled, aiTickRate, DEFAULT_SHOUTS,
+		     WitnessRules.DEFAULT);
 	}
 }

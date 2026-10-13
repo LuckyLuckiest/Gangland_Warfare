@@ -1,0 +1,140 @@
+package org.luckyraven.gangland.civilians.witness;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.civilians.npc.config.CiviliansConfig;
+import org.luckyraven.gangland.civilians.npc.config.YamlCiviliansConfigProvider;
+import org.luckyraven.keystone.persistence.config.ConfigDocument;
+import org.luckyraven.keystone.persistence.config.ConfigParser;
+import org.luckyraven.keystone.persistence.config.ConfigReport;
+import org.luckyraven.keystone.persistence.config.NodeReader;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Objects;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@DisplayName("WitnessRules - the Witness block of npc/civilians.yml")
+class WitnessRulesTest {
+
+	private static final WitnessRules SHIPPED = new WitnessRules(true, 24.0, 8, true, 16.0, 12.0, true, 10);
+
+	@Test
+	@DisplayName("DEFAULT is the shipped block: on, 24 blocks, 8 s, glow, 16 blocks, 12 degrees, assault on, 10 s")
+	void defaultIsShipped() {
+		assertEquals(SHIPPED, WitnessRules.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("no Witness block, or no reader at all, is the default")
+	void missingBlockIsDefault() {
+		assertEquals(SHIPPED, WitnessRules.parse(null));
+		assertEquals(SHIPPED, parseRules("Default_Entities:\n   Civilian:\n      - \"VILLAGER\"\n", new ConfigReport()));
+	}
+
+	@Test
+	@DisplayName("every key of the block is read")
+	void valuesRead() {
+		WitnessRules rules = parseRules("""
+				Witness:
+				   Enable: false
+				   Range: 12.5
+				   Call_Seconds: 3
+				   Caller_Glow: false
+				   Scare_Range: 8.0
+				   Scare_Angle: 20.0
+				   Report_Assault: false
+				   Assault_Repeat_Seconds: 30
+				""", new ConfigReport());
+
+		assertEquals(new WitnessRules(false, 12.5, 3, false, 8.0, 20.0, false, 30), rules);
+	}
+
+	@Test
+	@DisplayName("a partly filled block keeps the default for the missing keys")
+	void partialBlockKeepsDefaults() {
+		WitnessRules rules = parseRules("""
+				Witness:
+				   Call_Seconds: 5
+				""", new ConfigReport());
+
+		assertEquals(new WitnessRules(true, 24.0, 5, true, 16.0, 12.0, true, 10), rules);
+	}
+
+	@Test
+	@DisplayName("a bad value keeps the default and is reported")
+	void badValueWarns() {
+		ConfigReport report = new ConfigReport();
+
+		WitnessRules rules = parseRules("""
+				Witness:
+				   Range: far
+				   Call_Seconds: soon
+				""", report);
+
+		assertEquals(SHIPPED, rules);
+		assertFalse(report.issues().isEmpty());
+	}
+
+	@Test
+	@DisplayName("the provider carries the block in CiviliansConfig.witness() and never flags it as an unknown key")
+	void providerExposesWitness() {
+		ConfigReport report = new ConfigReport();
+
+		CiviliansConfig config = provider("""
+				Witness:
+				   Call_Seconds: 4
+				""", report);
+
+		assertEquals(4, config.witness().callSeconds());
+		assertTrue(report.issues().stream().noneMatch(i -> "config.unknown_key".equals(i.code())),
+		           () -> report.issues().toString());
+	}
+
+	@Test
+	@DisplayName("the shipped civilians.yml declares the Witness block with the default values, block style")
+	void shippedFileDeclaresWitness() throws IOException {
+		String yaml;
+		try (InputStream in = Objects.requireNonNull(
+				getClass().getClassLoader().getResourceAsStream("npc/civilians.yml"))) {
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		for (String key : new String[]{"Enable", "Range", "Call_Seconds", "Caller_Glow", "Scare_Range", "Scare_Angle",
+		                               "Report_Assault", "Assault_Repeat_Seconds"}) {
+			assertTrue(yaml.contains("\n   " + key + ": "), key);
+		}
+		assertTrue(yaml.contains("\nWitness:\n"));
+		assertFalse(yaml.contains("Witness: {"));
+
+		ConfigReport    report = new ConfigReport();
+		CiviliansConfig config = provider(yaml, report);
+
+		assertEquals(SHIPPED, config.witness());
+		assertTrue(report.issues().stream().noneMatch(i -> "config.unknown_key".equals(i.code())),
+		           () -> report.issues().toString());
+	}
+
+	// ── helpers ──────────────────────────────────────────────────────────────
+
+	private static WitnessRules parseRules(String yaml, ConfigReport report) {
+		ConfigDocument document = new ConfigParser().parse(Path.of("civilians.yml"), reader(yaml), report);
+		return WitnessRules.parse(NodeReader.of(document.root(), report));
+	}
+
+	private static CiviliansConfig provider(String yaml, ConfigReport report) {
+		ConfigDocument document = new ConfigParser().parse(Path.of("civilians.yml"), reader(yaml), report);
+		return new YamlCiviliansConfigProvider(NodeReader.of(document.root(), report), report, true, 20, null)
+				.getConfig();
+	}
+
+	private static Reader reader(String yaml) {
+		return new StringReader(yaml);
+	}
+}
