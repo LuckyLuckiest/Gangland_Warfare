@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
 import org.bukkit.entity.Player;
+import java.util.function.ToIntFunction;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
@@ -27,7 +28,12 @@ public class OverwatchModuleConfig {
 	public OverwatchController overwatchController(CopLoader copLoader, CopManager copManager, CopRadio copRadio,
 	                                               @Qualifier("online") UserManager<Player> users) {
 		return new OverwatchController(copLoader::getLoadedProvider, copManager, copRadio, System::currentTimeMillis,
-		                               player -> 0);
+		                               levelOf(users));
+	}
+
+	/** TDD stub: reads the wanted level (0 when the player is unknown). */
+	static ToIntFunction<Player> levelOf(UserManager<Player> users) {
+		return p -> 0;
 	}
 
 	@PostConstruct

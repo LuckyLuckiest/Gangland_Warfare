@@ -7,12 +7,16 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.perch.OverwatchController;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.mockito.ArgumentCaptor;
 
 import java.util.Arrays;
 import java.util.function.BiConsumer;
+import java.util.function.ToIntFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -31,6 +35,26 @@ class OverwatchWiringTest {
 		                       .filter(m -> m.getReturnType() == OverwatchController.class).count();
 
 		assertEquals(1L, producers);
+	}
+
+	@Test
+	@DisplayName("levelOf reads the player's wanted level, 0 for an unknown player")
+	@SuppressWarnings("unchecked")
+	void levelOfReadsTheWantedLevel() {
+		UserManager<Player> users = mock(UserManager.class);
+		Player              p1    = mock(Player.class);
+		Player              p2    = mock(Player.class);
+		Wanted              w     = new Wanted(mock(JavaPlugin.class), 4, 5);
+		w.setLevel(4);
+		User<Player> user = mock(User.class);
+		when(user.getWanted()).thenReturn(w);
+		when(users.getUser(p1)).thenReturn(user);
+		when(users.getUser(p2)).thenReturn(null);
+
+		ToIntFunction<Player> levelOf = OverwatchModuleConfig.levelOf(users);
+
+		assertEquals(4, levelOf.applyAsInt(p1));
+		assertEquals(0, levelOf.applyAsInt(p2));
 	}
 
 	@Test

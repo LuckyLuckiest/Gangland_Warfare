@@ -303,6 +303,8 @@ class OverwatchControllerTest {
 	@Test
 	@DisplayName("3 perches never reached: he gives up after the third failure and goes back to the chase")
 	void unreachedPerchCountsFailureAndGivesUpAtThree() {
+		found = new java.util.ArrayList<>(perches);
+		found.add(new Location(world, 14, 71, 14));
 		CopNpc marksman = marksman();
 		controller.start(player, lastSeen, 4);
 
@@ -316,6 +318,7 @@ class OverwatchControllerTest {
 		assertEquals(CopState.PURSUING, stateOf(marksman));
 		verify(marksman).navigateTo(perches.get(1));
 		verify(marksman).navigateTo(perches.get(2));
+		verify(marksman, never()).navigateTo(found.get(3));
 		verify(marksman, never()).holdPost(any());
 	}
 
