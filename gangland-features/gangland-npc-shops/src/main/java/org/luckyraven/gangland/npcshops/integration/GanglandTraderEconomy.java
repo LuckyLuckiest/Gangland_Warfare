@@ -41,4 +41,15 @@ public final class GanglandTraderEconomy implements TraderEconomyContract {
 		}
 	}
 
+	@Override
+	public boolean deposit(Player player, BigDecimal amount) {
+		User<Player> user = userManager.getUser(player);
+		if (user == null) {
+			return false;
+		}
+
+		user.getEconomy().depositAmount(amount);
+		return true;
+	}
+
 }

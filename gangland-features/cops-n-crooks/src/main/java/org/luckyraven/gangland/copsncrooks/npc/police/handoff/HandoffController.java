@@ -109,7 +109,8 @@ public class HandoffController {
 			if (!cop.isValid()) continue;
 			if (state == CopState.PURSUING || state == CopState.COMBAT) return true;
 			Entity body = cop.getEntity();
-			if (state == CopState.POSTED && (body == null || !farFrom(body.getLocation(), player, maxDistance)))
+			if ((state == CopState.POSTED || state == CopState.OVERWATCH) &&
+			    (body == null || !farFrom(body.getLocation(), player, maxDistance)))
 				return true;
 		}
 		return false;

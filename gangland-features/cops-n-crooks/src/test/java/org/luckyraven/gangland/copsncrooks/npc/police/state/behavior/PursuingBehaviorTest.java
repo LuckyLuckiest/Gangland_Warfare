@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.state.behavior;
 
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -294,5 +295,93 @@ class PursuingBehaviorTest {
 		net.citizensnpcs.api.npc.NPC npc = mock(net.citizensnpcs.api.npc.NPC.class);
 		when(npc.getUniqueId()).thenReturn(UUID.randomUUID());
 		when(cop.getNpc()).thenReturn(npc);
+	}
+
+	private PursuingBehavior withPerception(CopPerception perception) {
+		return new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS, mock(DetainmentService.class),
+		                            cuffLocks, RetreatSettings.DEFAULT, now::get, id -> false, perception);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: with nothing registered cop.pursue gets Alert_Range, as before")
+	void pursueGetsPerceptionRange_nothingRegistered() {
+		withPerception(new CopPerception()).tick(cop);
+
+		verify(cop).pursue(player, squad, ALERT_RANGE);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: a registered sight factor scales the range handed to cop.pursue")
+	void pursueGetsPerceptionRange_factorScales() {
+		CopPerception perception = new CopPerception();
+		perception.addSightFactor((c, p) -> 0.5);
+
+		withPerception(perception).tick(cop);
+
+		verify(cop).pursue(player, squad, ALERT_RANGE * 0.5);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: a filtered-out player is pursued at range 0.0 once the squad sighting is stale")
+	void pursueGetsPerceptionRange_filteredStaleIsZero() {
+		CopPerception perception = new CopPerception();
+		perception.addLockOnFilter((c, p) -> false);
+
+		withPerception(perception).tick(cop);
+
+		verify(cop).pursue(player, squad, 0.0);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: a filtered-out player is still pursued at the scaled range while the squad sighting is fresh")
+	void pursueGetsPerceptionRange_filteredFreshKeepsRange() {
+		CopPerception perception = new CopPerception();
+		perception.addLockOnFilter((c, p) -> false);
+		squad.reportSighting(new Location(mock(World.class), 0, 64, 0));
+
+		withPerception(perception).tick(cop);
+
+		verify(cop).pursue(player, squad, ALERT_RANGE);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: the no-squad branch asks perception.acquires, so a stuck cop that acquires does not accrue stuck ticks")
+	void squadNullBranchUsesAcquires() {
+		when(cop.squadFor(player)).thenReturn(null);
+		when(cop.isNavigationStuck()).thenReturn(true);
+		CopPerception perception = mock(CopPerception.class);
+		when(perception.acquires(cop, player, ALERT_RANGE)).thenReturn(true);
+
+		withPerception(perception).tick(cop);
+
+		verify(perception).acquires(cop, player, ALERT_RANGE);
+		verify(cop).setPursuitTicks(0);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: the no-squad branch without acquisition counts the stuck tick (today's rule)")
+	void squadNullBranchNotAcquired_countsStuckTick() {
+		when(cop.squadFor(player)).thenReturn(null);
+		when(cop.isNavigationStuck()).thenReturn(true);
+		CopPerception perception = mock(CopPerception.class);
+
+		withPerception(perception).tick(cop);
+
+		verify(cop).setPursuitTicks(1);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: filters never stop a ranged cop firing at the player it is pursuing")
+	void filterNeverStopsFiring() {
+		when(cop.isRangedAttacker()).thenReturn(true);
+		when(cop.hasLineOfSight(player)).thenReturn(true);
+		when(cop.canAttack()).thenReturn(true);
+		when(cop.getTierConfig()).thenReturn(mock(CopTierConfig.class));
+		CopPerception perception = new CopPerception();
+		perception.addLockOnFilter((c, p) -> false);
+
+		withPerception(perception).tick(cop);
+
+		verify(cop).attack(player);
 	}
 }
