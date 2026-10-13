@@ -66,6 +66,26 @@ public final class HoldUpService implements BeanLifecycle {
 		throw new UnsupportedOperationException("TDD stub");
 	}
 
+	@Override
+	public void onPreClear() {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	@Override
+	public void onClear() {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	@Override
+	public void onShutdown() {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
 	public boolean hasSession(UUID playerId) {
 		return false;
 	}

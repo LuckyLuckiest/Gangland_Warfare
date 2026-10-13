@@ -371,6 +371,35 @@ class HoldUpServiceTest {
 	}
 
 	@Test
+	@DisplayName("managed reload (onPreClear, onClear, onInitialize(false)) re-reads the settings and drops sessions")
+	void managedReloadReReadsAndClears() {
+		run(0, 2000);
+		assertTrue(service.hasSession(PLAYER));
+		settings = new HoldUpSettings(true, 6.0, 10.0, 3, 3, 0.2, 2, 200.0, 600.0, 300, FILLING, DONE, ABORTED,
+		                              CLOSED);
+		service.onPreClear();
+		service.onClear();
+		assertFalse(service.hasSession(PLAYER));
+		service.onInitialize(false);
+
+		run(2250, 6000); // fresh hold starts at 3250 and fills at 6250 under the re-read 3 s settings
+		verify(payout, never()).pay(any());
+		run(6250, 6250);
+		verify(payout, times(1)).pay(player);
+	}
+
+	@Test
+	@DisplayName("after switching trader the new target needs its own fresh one-second hold")
+	void traderSwitchNeedsAFreshSecond() {
+		run(0, 4750);
+		aimedTarget = traderB;
+		run(5000, 5750);
+		assertFalse(service.hasSession(PLAYER), "stale aim time must not start B at once");
+		run(6000, 6000);
+		assertTrue(service.hasSession(PLAYER));
+	}
+
+	@Test
 	@DisplayName("the done message carries the take")
 	void doneMessageCarriesTheTake() {
 		run(0, 11000);

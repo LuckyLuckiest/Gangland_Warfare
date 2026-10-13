@@ -103,6 +103,18 @@ class TraderAimResolverTest {
 	}
 
 	@Test
+	@DisplayName("nearest wins when the near trader is listed first")
+	void nearestWinsNearFirst() {
+		add(ID_B, "Near", 0, 2, world, true, false, true);
+		add(ID_A, "Far", 0, 5, world, true, false, true);
+
+		HoldUpTarget target = resolver.resolve(player, settings);
+
+		assertNotNull(target);
+		assertEquals(ID_B, target.traderId());
+	}
+
+	@Test
 	@DisplayName("a trader beyond Range is not a target")
 	void outOfRange() {
 		add(ID_A, "Clerk", 0, 9, world, true, false, true);
