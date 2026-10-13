@@ -468,3 +468,27 @@ Groups:
       Members:
          pedestrian: 4
          trader: 1
+
+# +---------+ #
+# | Witness | #
+# +---------+ #
+#
+# Witnesses and 911 calls (0.20.0). A civilian that sees a crime within Range calls it in; the call takes Call_Seconds
+# to connect. Read by WitnessRules; a missing key keeps the default shown here.
+Witness:
+   # Set to false to disable witness reporting entirely.
+   Enable: true
+   # Civilians within this many blocks of a crime can witness it (blocks).
+   Range: 24.0
+   # Seconds a witness spends dialling before the 911 call connects.
+   Call_Seconds: 8
+   # Glow the calling civilian so responding cops can find them.
+   Caller_Glow: true
+   # Civilians within this many blocks of the player are scared off instead of calling (blocks).
+   Scare_Range: 16.0
+   # Field of view, in degrees, a civilian needs to see the player for the scare check.
+   Scare_Angle: 12.0
+   # Whether an assault counts as a reportable crime.
+   Report_Assault: true
+   # Seconds before the same witness can report another assault on the same player.
+   Assault_Repeat_Seconds: 10
