@@ -58,6 +58,10 @@ public class CopGroup {
 	/** The suspect resisted (escaped cuffing too often, or hit a cop): every cop, old and new, fights. */
 	private boolean combatAlert;
 	private boolean resistingPending;
+	/** 0.21.0: the group holds fire and cuffs instead of fighting; the target's hit on a cop ends it. */
+	private boolean ceaseFire;
+	/** 0.21.0: radio-clock ms until which stuck cops are not recycled; 0 when no standoff. */
+	private long    standoffUntil;
 
 	private long backupUntil;
 	private long backupReadyAt;
@@ -207,8 +211,27 @@ public class CopGroup {
 	/** The suspect {@code targetId} resisted this group: it fights from now on, and says so once. */
 	public void escalate(UUID targetId) {
 		if (!targetPlayerId.equals(targetId)) return;
+		ceaseFire = false;
 		if (!combatAlert) resistingPending = true;
 		combatAlert = true;
+	}
+
+	/** Holds fire on the target until {@link #escalate}. Not the Stand_Down radio line, not {@code CopManager.stoodDown}. */
+	public boolean isCeaseFire() {
+		return ceaseFire;
+	}
+
+	/** Holds fire on the target until {@link #escalate}. Not the Stand_Down radio line, not {@code CopManager.stoodDown}. */
+	public void setCeaseFire(boolean ceaseFire) {
+		this.ceaseFire = ceaseFire;
+	}
+
+	public void setStandoffUntil(long until) {
+		this.standoffUntil = until;
+	}
+
+	public boolean isStandoff(long now) {
+		return now < standoffUntil;
 	}
 
 	/** {@code true} once after an {@link #escalate}. */
@@ -237,6 +260,8 @@ public class CopGroup {
 	public void clearCombatAlert() {
 		combatAlert      = false;
 		resistingPending = false;
+		ceaseFire        = false;
+		standoffUntil    = 0L;
 		cuffFailures.clear();
 	}
 

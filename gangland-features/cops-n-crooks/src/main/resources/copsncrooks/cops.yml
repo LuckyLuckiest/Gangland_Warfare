@@ -24,7 +24,7 @@
 #   Speed:          Movement speed multiplier (1.0 = default walk speed)
 #   Cuff_Radius:    Distance in blocks within which the cop can cuff a player
 #   Can_Use_Weapons: Whether the cop draws from its Weapon_Pool instead of melee
-#   Skip_Cuffing:   If true, the cop arrests the player instantly without a cuffing animation
+#   Skip_Cuffing:   If true, the tier goes straight to combat instead of playing the cuffing animation
 #   Weapon_Pool:    List of items the cop may equip; one is chosen at random on spawn.
 #                   Accepts vanilla materials (IRON_SWORD), custom weapons (weapon:<id>),
 #                   or items with extra data (LEATHER_HELMET{color=blue})
@@ -463,6 +463,53 @@ Cops:
             - RIGHT_ARM
             - LEFT_LEG
             - RIGHT_LEG
+   # 0.21.0: cops surround a suspect they cannot reach (or who drops Man_Down_Count cops fast) instead of feeding officers in; every key optional
+   Standoff:
+      # Cops surround a suspect they cannot reach instead of feeding officers in
+      Enabled: true
+      # Countdown before the next tier comes in
+      Timer_Seconds: 45
+      # Gap between Negotiate radio lines
+      Negotiate_Seconds: 15
+      # Most hunting cops unable to reach him this long starts a standoff
+      Unreachable_Seconds: 10
+      # This many cops killed...
+      Man_Down_Count: 2
+      # ...within this many seconds...
+      Man_Down_Window_Seconds: 30
+      # ...within this many blocks of each other starts a standoff
+      Spot_Radius: 8.0
+      # Cops posted in a ring around the suspect; the rest take cover
+      Post_Count: 4
+      # Ring radius in blocks
+      Post_Radius: 12.0
+      # Stars added when the countdown runs out
+      Stars_On_Timeout: 1
+      # Minimum gap between standoffs for one suspect
+      Cooldown_Seconds: 60
+   # 0.21.0: cops stack up at a door and breach an indoor suspect instead of walking in one by one; no block is ever broken; every key optional
+   Breach:
+      # Cops stack up at a door and breach instead of walking in one by one
+      Enabled: true
+      # Suspect counts as indoors with more than this many blocks of roof above him
+      Roof_Blocks: 2
+      # Door search radius around the last-known spot
+      Door_Radius: 6
+      # Cops in the stack
+      Stack_Size: 3
+      # Go when the stack is full or after this long
+      Stack_Wait_Seconds: 6
+      # Gap between officers going through the door
+      Entry_Gap_Ticks: 20
+      # Minimum gap between breaches for one squad
+      Cooldown_Seconds: 30
+      Flashbang:
+         # Wanted level from which a flashbang goes in first
+         Min_Stars: 4
+         # Players this close to the door with a clear line to it are blinded
+         Radius: 8.0
+         # Blindness and Slowness duration
+         Ticks: 40
    Tiers:
       1:
          Display_Name: "&9Officer"

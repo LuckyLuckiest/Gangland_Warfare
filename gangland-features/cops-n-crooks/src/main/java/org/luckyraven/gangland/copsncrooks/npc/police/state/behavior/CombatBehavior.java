@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -47,6 +48,12 @@ public class CombatBehavior implements CopBehavior {
 		// Restrained check only applies to players
 		if (target instanceof Player player && detainmentService.isRestrained(player)) {
 			cop.transitionTo(CopState.RETURNING);
+			return;
+		}
+
+		// Cease-fire (standoff) gate: runs before any sight check or attack.
+		if (target instanceof Player && ceaseFire(cop)) {
+			cop.transitionTo(CopState.PURSUING);
 			return;
 		}
 
@@ -111,5 +118,11 @@ public class CombatBehavior implements CopBehavior {
 		}
 		LivingEntity entity = cop.getTargetEntity();
 		return (entity != null && entity.isValid() && !entity.isDead()) ? entity : null;
+	}
+
+	private static boolean ceaseFire(CopNpc cop) {
+		UUID     id    = cop.getTargetPlayerId();
+		CopGroup group = cop.getGroup();
+		return id != null && group != null && group.isCeaseFire() && id.equals(group.getTargetPlayerId());
 	}
 }

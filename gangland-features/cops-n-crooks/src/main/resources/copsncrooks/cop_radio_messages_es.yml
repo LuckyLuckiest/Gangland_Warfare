@@ -205,3 +205,25 @@ Lines:
       - "Sospechoso a la vista cerca de %place%, avanza al %direction%."
    Returning_To_Patrol:
       - "Unidades volviendo a patrullar."
+# 0.21.0
+   Surrender_Accepted:
+      - "¡Se rinde! ¡Alto el fuego, espósenlo!"
+      - "¡Manos arriba, se está entregando!"
+   Standoff:
+      - "¡Barricada! ¡Perímetro armado, todos a cubierto!"
+      - "Se atrincheró, ¡pongan el perímetro!"
+   Negotiate:
+      - "¡Sospechoso, salga con las manos donde pueda verlas! ¡%seconds% segundos!"
+      - "¡Háblame! ¡Sal en %seconds% segundos o entramos!"
+   Standoff_Over:
+      - "Se acabó el enfrentamiento, de vuelta a patrullar."
+      - "La barricada cayó, todas las unidades bajen la guardia."
+   Stack_Up:
+      - "¡Formen en la puerta! ¡Escudo, usted primero!"
+      - "Formando en la puerta, ¡sostengan!"
+   Breach:
+      - "¡Entrada! ¡Entrada! ¡Vamos, vamos, vamos!"
+      - "Entrando ahora, ¡avancen!"
+   Flashbang:
+      - "¡Granada aturdidora! ¡Ojos cerrados!"
+      - "¡Flash afuera, entramos!"

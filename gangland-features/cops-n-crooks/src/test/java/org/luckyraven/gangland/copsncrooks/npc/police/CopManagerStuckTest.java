@@ -345,6 +345,35 @@ class CopManagerStuckTest {
 	}
 
 	@Test
+	@DisplayName("0.21.0: a standoff suppresses recycling of a stranded cop; the same cop is recycled once it ends")
+	void standoff_suppressesRecycle() {
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000); // behind him, past Recycle_Seconds
+		group.setStandoffUntil(fx.clock[0] + 60_000);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.getCops().contains(stuck), "standoff: a cop that cannot reach him is kept");
+		verify(stuck, never()).destroy(any());
+
+		group.setStandoffUntil(fx.clock[0]); // window closed (half open)
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(stuck), "standoff over: recycled as before");
+		verify(stuck).destroy(any());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a standoff keeps an overdue (twice Recycle_Seconds) stranded cop too")
+	void standoff_suppressesOverdueRecycle() {
+		CopNpc stuck = stranded(CopState.COMBAT, 10, 64, 0, 600_000);
+		group.setStandoffUntil(fx.clock[0] + 1);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.getCops().contains(stuck));
+	}
+
+	@Test
 	@DisplayName("a POSTED cop is never recycled, however long it has been stranded (characterization pin)")
 	void postedCop_isNeverRecycled() {
 		CopNpc posted = stranded(CopState.POSTED, 10, 64, 0, 600_000);
