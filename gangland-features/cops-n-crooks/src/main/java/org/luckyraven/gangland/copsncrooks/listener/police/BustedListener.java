@@ -10,11 +10,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
-import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
-import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
+import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
 import org.luckyraven.gangland.copsncrooks.integration.detainment.DetainmentSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -44,9 +44,9 @@ public class BustedListener implements Listener {
 	/** getNearbyEntities bound; ponytail: covers the widest shipped Cuff_Radius (5.0), the exact per-cop check follows. */
 	static final double SEARCH_BOUND = 6.0;
 
-	/** Causes that are never a bust, by name: KILL only exists on 1.20.3+ and the compile API is 1.16.5. */
 	private static final int DEFAULT_MAX_ATTEMPTS = 3;
 
+	/** Causes that are never a bust, by name: KILL only exists on 1.20.3+ and the compile API is 1.16.5. */
 	private static final Set<String> SKIP_CAUSES = Set.of("VOID", "SUICIDE", "KILL");
 
 	private final CopManager             copManager;
