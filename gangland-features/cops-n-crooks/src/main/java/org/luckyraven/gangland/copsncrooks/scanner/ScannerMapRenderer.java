@@ -1,9 +1,13 @@
 package org.luckyraven.gangland.copsncrooks.scanner;
 
+import lombok.CustomLog;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.map.MapCursor;
+import org.bukkit.map.MapCursorCollection;
+import org.bukkit.map.MapPalette;
 import org.bukkit.map.MapCanvas;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
@@ -18,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
@@ -29,6 +35,7 @@ import java.util.function.Supplier;
  *
  * @since 0.20.0
  */
+@CustomLog
 public class ScannerMapRenderer extends MapRenderer {
 
 	/** Canvas side in pixels. */
@@ -49,9 +56,34 @@ public class ScannerMapRenderer extends MapRenderer {
 
 	}
 
+	private static final long   NEVER       = Long.MIN_VALUE / 2;
+	private static final long   DEBUG_TICKS = 100;
+	private static final byte   RED         = MapPalette.matchColor(255, 0, 0);
+
+	/** Per-player throttle clocks and the circle pixels currently on the canvas. */
+	private static final class State {
+
+		long        lastBuildTick = NEVER;
+		long        lastDebugTick = NEVER;
+		List<int[]> drawn         = List.of();
+	}
+
+	private final Supplier<ScannerMapSettings> settings;
+	private final SearchZoneCache              cache;
+	private final CopManager                   copManager;
+	private final AdminRegionRegistry          regions;
+	private final LongSupplier                 nowTicks;
+	private final Map<UUID, State>             states = new ConcurrentHashMap<>();
+	private       Consumer<String>             debugSink = log::info;
+
 	public ScannerMapRenderer(Supplier<ScannerMapSettings> settings, SearchZoneCache cache, CopManager copManager,
 	                          AdminRegionRegistry regions, LongSupplier nowTicks) {
 		super(true);
+		this.settings   = settings;
+		this.cache      = cache;
+		this.copManager = copManager;
+		this.regions    = regions;
+		this.nowTicks   = nowTicks;
 	}
 
 	/** Pointers and circle for a map centred on {@code centre}; locations in another or no world are dropped. */
@@ -146,16 +178,52 @@ public class ScannerMapRenderer extends MapRenderer {
 
 	/** Redirects the throttled debug line (default: the module log). */
 	public void onDebug(Consumer<String> sink) {
-		throw new UnsupportedOperationException("TDD stub");
+		this.debugSink = sink;
 	}
 
 	/** Forgets the throttle and drawn-pixel state of {@code playerId} (quit). */
 	public void forget(UUID playerId) {
-		throw new UnsupportedOperationException("TDD stub");
+		states.remove(playerId);
 	}
 
 	@Override
 	public void render(MapView map, MapCanvas canvas, Player player) {
-		throw new UnsupportedOperationException("TDD stub");
+		ScannerMapSettings config = settings.get();
+		World              world  = player.getWorld();
+		if (!config.enabled() || world == null) {
+			return;
+		}
+		long  now   = nowTicks.getAsLong();
+		State state = states.computeIfAbsent(player.getUniqueId(), id -> new State());
+		if (now - state.lastBuildTick < config.refreshTicks()) {
+			return;
+		}
+		state.lastBuildTick = now;
+
+		Location       centre   = player.getLocation();
+		List<Location> cops     = copLocations(copManager.getCopsForPlayer(player.getUniqueId()));
+		List<Location> hideouts = config.showHideouts() ? hideoutCentres(regions.withTag("hideout"), world) : List.of();
+		SearchZoneCache.Zone zone = cache.get(player.getUniqueId());
+		MapSnapshot snapshot = build(centre, cops, zone, hideouts, config.blocksPerPixel());
+
+		MapCursorCollection cursors = new MapCursorCollection();
+		for (Pointer pointer : snapshot.pointers()) {
+			MapCursor.Type type = pointer.kind() == Kind.COP ? MapCursor.Type.BLUE_POINTER : MapCursor.Type.GREEN_POINTER;
+			cursors.addCursor(new MapCursor(pointer.x(), pointer.y(), pointer.direction(), type, true));
+		}
+		canvas.setCursors(cursors);
+
+		for (int[] pixel : state.drawn) {
+			canvas.setPixel(pixel[0], pixel[1], (byte) 0);
+		}
+		for (int[] pixel : snapshot.circlePixels()) {
+			canvas.setPixel(pixel[0], pixel[1], RED);
+		}
+		state.drawn = snapshot.circlePixels();
+
+		if (now - state.lastDebugTick >= DEBUG_TICKS) {
+			state.lastDebugTick = now;
+			debugSink.accept(debugLine(player.getName(), cops.size(), !snapshot.circlePixels().isEmpty(), hideouts.size()));
+		}
 	}
 }
