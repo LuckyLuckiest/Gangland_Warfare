@@ -33,6 +33,8 @@ import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
 import org.luckyraven.gangland.copsncrooks.integration.config.GanglandDetainmentMessages;
 import org.luckyraven.gangland.copsncrooks.integration.detainment.*;
 import org.luckyraven.gangland.copsncrooks.jail.*;
+import org.luckyraven.gangland.copsncrooks.item.CopsItemVocabulary;
+import org.luckyraven.gangland.copsncrooks.item.CopsItems;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
@@ -329,6 +331,18 @@ public class CopsNCrooksModuleConfig {
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();
 		return loader;
+	}
+
+	/** Police Scanner and Scanner Map; reads the cop config per call, so a reload is seen on the next item. */
+	@Bean
+	public CopsItems copsItems(JavaPlugin plugin, CopLoader copLoader) {
+		return new CopsItems(plugin, copLoader::getLoadedProvider);
+	}
+
+	/** Publishes {@code copsncrooks:} on the ServicesManager; CONFIG runs before the vocabulary install. */
+	@Bean
+	public CopsItemVocabulary copsItemVocabulary(JavaPlugin plugin, CopsItems items) {
+		return CopsItemVocabulary.publish(plugin, items);
 	}
 
 	@Bean
