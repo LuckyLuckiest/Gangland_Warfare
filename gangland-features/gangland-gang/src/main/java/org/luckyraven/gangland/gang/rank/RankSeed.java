@@ -17,9 +17,13 @@ import java.util.List;
 @CustomLog
 public final class RankSeed {
 
-	/** Written before the first rank row; with {@link #COMPLETE} absent it means the seed was cut short (T-235). */
-	static final String STARTED  = "0.18.0-preset-seed-started";
-	static final String COMPLETE = "0.18.0-preset-seed-complete";
+	/**
+	 * Written before the first rank row; with {@link #COMPLETE} absent it means the seed was cut short (T-235). Stored ids:
+	 * they keep the label Gang & Turf II was first built under (0.19.0, before the 2026-10-13 renumbering), so a database
+	 * seeded by that build stays seeded.
+	 */
+	static final String STARTED  = "0.19.0-preset-seed-started";
+	static final String COMPLETE = "0.19.0-preset-seed-complete";
 
 	private RankSeed() {
 	}

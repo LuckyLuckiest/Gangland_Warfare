@@ -10,7 +10,7 @@
 
 | Version                                 | Status  | Changelog                                                      |
 |-----------------------------------------|---------|----------------------------------------------------------------|
-| [v0.19.0](./v0.19.0/CHANGELOG.md)       | Current | Gang & Turf III: see the changelog |
+| [v0.19.0](./v0.19.0/CHANGELOG.md)       | Current | Gang & Turf III: player-placed Quartermaster, guard orders Defend/Hold, owner alerts for attacks, deaths and arrests |
 | [v0.18.0](./v0.18.0/CHANGELOG.md)       | Stable  | Gang & Turf II: gang fights in arenas (new module), gang levels with fees, friendly-fire rules, safehouses, rally, guard waves, gang chat and stats (needs Keystone 1.15.3, Host_Api 2.6) |
 | [v0.17.1](./v0.17.1/CHANGELOG.md)       | Stable  | Permission patch: non-op gang owners can disband; rename, ally, bank, wanted, car, jetpack and other player verbs default to true (needs Keystone 1.15.3) |
 | [v0.17.0](./v0.17.0/CHANGELOG.md)       | Stable | Gang & Turf I: turf map and HUD, owners-online capture window, one capture bar, alerts anywhere, income rules and gang levels, Quartermaster prices, gang bounty, gang chat and recruiting (needs Keystone 1.15.3; 1.15.3 also flushes the database journal on a clean stop, so a stopped server's .db file is complete) |

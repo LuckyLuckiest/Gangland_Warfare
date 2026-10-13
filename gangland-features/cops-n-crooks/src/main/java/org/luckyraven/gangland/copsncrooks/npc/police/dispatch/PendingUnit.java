@@ -18,7 +18,7 @@ import org.luckyraven.gangland.copsncrooks.station.Station;
 public record PendingUnit(@Nullable CopRole role, int tier, long arriveAt, @Nullable Station station,
                           @Nullable SpawnBias bias) {
 
-	/** It left a station; the 0.20 mounted-unit flag reads this. */
+	/** It left a station; the planned mounted-unit flag reads this. */
 	public boolean fromStation() {
 		return station != null;
 	}
