@@ -11,7 +11,9 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.gangland.civilians.events.CivilianCalledInEvent;
 import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.crime.Crimes;
 import org.luckyraven.keystone.util.ActionBarManager;
 
 import java.util.ArrayList;
@@ -69,6 +71,9 @@ public final class WitnessService {
 	private record Victim(UUID victimId, long atMillis) {
 	}
 
+	private record AssaultKey(UUID attacker, UUID victim) {
+	}
+
 	private static final long VICTIM_EXCLUSION_MILLIS = 2000L;
 
 	private final CivilianService        civilians;
@@ -78,6 +83,7 @@ public final class WitnessService {
 	private final Hooks                  hooks;
 	private final Map<UUID, WitnessCall> calls      = new LinkedHashMap<>();
 	private final Map<UUID, Victim>      lastVictim = new HashMap<>();
+	private final Map<AssaultKey, Long>  lastAssault = new HashMap<>();
 
 	public WitnessService(CivilianService civilians, CrimeService crimes, Supplier<WitnessRules> rules,
 	                      Supplier<String> callingMessage, Hooks hooks) {
@@ -151,7 +157,24 @@ public final class WitnessService {
 	 * {@link #onCallerDeath} (hand-over) and no Assault_Civilian is published (Kill_Civilian covers the kill).
 	 */
 	public void onPlayerHitCivilian(Player attacker, CivilianNpc victim, boolean lethal) {
-		throw new UnsupportedOperationException("TDD stub");
+		long now = hooks.clock().getAsLong();
+		LivingEntity entity = victim.getEntity();
+		if (entity == null) return;
+
+		if (!lethal && victim.getWitnessCall() != null) cancelCall(victim, CancelReason.HIT);
+
+		UUID victimId = entity.getUniqueId();
+		lastVictim.put(attacker.getUniqueId(), new Victim(victimId, now));
+
+		WitnessRules rules = this.rules.get();
+		if (lethal || !rules.reportAssault()) return;
+
+		AssaultKey key  = new AssaultKey(attacker.getUniqueId(), victimId);
+		Long       last = lastAssault.get(key);
+		if (last != null && now - last < rules.assaultRepeatSeconds() * 1000L) return;
+
+		lastAssault.put(key, now);
+		crimes.commit(attacker, Crimes.ASSAULT_CIVILIAN, entity.getLocation());
 	}
 
 	/**
@@ -160,27 +183,100 @@ public final class WitnessService {
 	 * transitions.
 	 */
 	public void dropCall(CivilianNpc npc) {
-		throw new UnsupportedOperationException("TDD stub");
+		WitnessCall call = npc.getWitnessCall();
+		if (call == null) return;
+
+		detach(call);
+		logCancel(call, CancelReason.LOST);
 	}
 
 	/** One AI tick of a calling civilian: scare poll, then landing when Call_Seconds have passed. */
 	public void tickCaller(CivilianNpc caller) {
-		throw new UnsupportedOperationException("TDD stub");
+		WitnessCall call = caller.getWitnessCall();
+		if (call == null) return;
+
+		WitnessRules rules = this.rules.get();
+		if (!call.criminal().isOnline()) {
+			cancelCall(caller, CancelReason.LOGOUT);
+			return;
+		}
+		if (!caller.isValid()) {
+			cancelCall(caller, CancelReason.LOST);
+			return;
+		}
+		if (hooks.aim().aimsAt(call.criminal(), caller, rules.scareRange(), rules.scareAngle())) {
+			cancelCall(caller, CancelReason.SCARED);
+			return;
+		}
+		if (hooks.clock().getAsLong() - call.startedAtMillis() < rules.callSeconds() * 1000L) return;
+
+		detach(call);
+		hooks.events().accept(new CivilianCalledInEvent(call.criminal(), call.crimeId(), call.at(), caller.getEntity()));
+		hooks.debug().accept("CALL_IN " + call.criminal().getName() + " crime=" + call.crimeId() + " caller="
+				                     + caller.getEntity().getName());
+		flee(caller, call);
 	}
 
 	/** Ends {@code caller}'s call without a report; HIT and SCARED send the caller fleeing. */
 	public void cancelCall(CivilianNpc caller, CancelReason reason) {
-		throw new UnsupportedOperationException("TDD stub");
+		WitnessCall call = caller.getWitnessCall();
+		if (call == null) return;
+
+		detach(call);
+		logCancel(call, reason);
+		if (reason == CancelReason.HIT || reason == CancelReason.SCARED) {
+			flee(caller, call);
+		} else if (reason == CancelReason.LOGOUT && caller.isValid()) {
+			caller.transitionTo(CivilianState.IDLE);
+		}
 	}
 
 	/** The caller died: the next watcher that still sees the criminal starts a full new call, else the call is lost. */
 	public void onCallerDeath(CivilianNpc caller) {
-		throw new UnsupportedOperationException("TDD stub");
+		WitnessCall call = caller.getWitnessCall();
+		if (call == null) return;
+
+		detach(call);
+		Player criminal = call.criminal();
+		if (criminal.isOnline()) {
+			double range = rules.get().range();
+			List<CivilianNpc> watchers = new ArrayList<>(call.watchers());
+			for (CivilianNpc watcher : watchers) {
+				if (!watcher.isValid() || watcher.getEntity() == null) continue;
+				if (!hooks.sight().sees(watcher, criminal, range)) continue;
+
+				List<CivilianNpc> rest = new ArrayList<>(watchers);
+				rest.remove(watcher);
+				startCall(criminal, call.crimeId(), call.at(), watcher, rest, call.victimId());
+				return;
+			}
+		}
+		logCancel(call, CancelReason.KILLED);
 	}
 
 	/** The criminal left the server: every call about them is cancelled. */
 	public void onCriminalQuit(UUID criminalId) {
-		throw new UnsupportedOperationException("TDD stub");
+		for (WitnessCall call : activeCalls()) {
+			if (call.criminal().getUniqueId().equals(criminalId)) cancelCall(call.caller(), CancelReason.LOGOUT);
+		}
+	}
+
+	/** Removes the call from the map and from its caller. */
+	private void detach(WitnessCall call) {
+		LivingEntity entity = call.caller().getEntity();
+		if (entity != null) calls.remove(entity.getUniqueId());
+		call.caller().setWitnessCall(null);
+	}
+
+	private void logCancel(WitnessCall call, CancelReason reason) {
+		hooks.debug().accept("CALL_CANCEL " + call.criminal().getName() + " crime=" + call.crimeId() + " reason="
+				                     + reason.debugName());
+	}
+
+	/** Sends the caller fleeing from the criminal; the call is already detached. */
+	private void flee(CivilianNpc caller, WitnessCall call) {
+		caller.setLastAttackerLocation(call.criminal().getLocation());
+		caller.transitionTo(CivilianState.FLEEING);
 	}
 
 	/** Every running call (snapshot). */
