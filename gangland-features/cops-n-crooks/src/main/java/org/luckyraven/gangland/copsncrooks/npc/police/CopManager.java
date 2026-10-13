@@ -671,6 +671,8 @@ public class CopManager implements BeanLifecycle {
 		if (wantedLevel <= 0) {
 			if (!targetingManager.isSearching(playerId)) {
 				stopSpawnTask(playerId);
+				CopGroup decayed = groups.get(playerId);
+				if (decayed != null) decayed.setLevel(0);
 				return;
 			}
 			// A post-escape search keeps a squad at the lowest tier until it runs out (0.16.1 T-187)
