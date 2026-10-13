@@ -1,12 +1,23 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.breach;
 
+import lombok.CustomLog;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.BreachSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.keystone.npc.NpcPost;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.LongSupplier;
@@ -20,7 +31,10 @@ import java.util.function.Supplier;
  *
  * @since 0.21.0
  */
+@CustomLog
 public class BreachController {
+
+	private static final long SCAN_INTERVAL_MS = 1000L;
 
 	/** What the controller reads from the world; the production one is built on {@link DoorFinder}. */
 	public interface Surroundings {
@@ -43,6 +57,28 @@ public class BreachController {
 	private final Surroundings                surroundings;
 	private final Flashbang                   flashbang;
 
+	private final Map<UUID, Breach> active        = new HashMap<>();
+	private final Map<UUID, Long>   lastScan      = new HashMap<>();
+	private final Map<UUID, Long>   cooldownUntil = new HashMap<>();
+
+	/** One running stack; the go, entry and abort logic (later chunks) advance it. */
+	private static final class Breach {
+
+		final Location      door;
+		final Location      cell;
+		final List<CopNpc>  stack;
+		final long          startedAt;
+		final Location      lastKnownAtStart;
+
+		Breach(Location door, Location cell, List<CopNpc> stack, long startedAt, Location lastKnownAtStart) {
+			this.door             = door;
+			this.cell             = cell;
+			this.stack            = stack;
+			this.startedAt        = startedAt;
+			this.lastKnownAtStart = lastKnownAtStart;
+		}
+	}
+
 	public BreachController(Supplier<CopConfigProvider> provider, CopRadio radio, LongSupplier clock) {
 		this(provider, radio, clock, worldSurroundings(), BreachController::applyFlashbang);
 	}
@@ -58,16 +94,72 @@ public class BreachController {
 
 	/** Per cop AI tick: advances this player's breach, or (at most once a second) looks for one to start. */
 	public void tick(Player player, @Nullable CopGroup group) {
-		throw new UnsupportedOperationException("TDD stub");
+		UUID id = player.getUniqueId();
+		// ponytail: an active breach is advanced by the go/entry/abort chunks; until then it only blocks a restart
+		if (active.containsKey(id)) return;
+		if (group == null) return;
+		CopConfigProvider cfg      = provider.get();
+		BreachSettings    settings = cfg != null && cfg.getBreachSettings() != null ? cfg.getBreachSettings()
+		                                                                           : BreachSettings.DEFAULT;
+		if (!settings.enabled()) return;
+		long now = clock.getAsLong();
+		Long last = lastScan.get(id);
+		if (last != null && now - last < SCAN_INTERVAL_MS) return;
+		lastScan.put(id, now);
+		if (group.isStandoff(now)) return;
+		if (now < cooldownUntil.getOrDefault(id, 0L)) return;
+
+		Location lastKnown = group.getSquad().lastKnownLocation();
+		if (lastKnown == null || lastKnown.getWorld() == null) return;
+		if (!surroundings.indoors(lastKnown, settings.roofBlocks())) return;
+		Optional<DoorFinder.Door> door = surroundings.doorNear(lastKnown, settings.doorRadius());
+		if (door.isEmpty()) return;
+
+		Location cell    = door.get().stackCell();
+		List<CopNpc> stack = draft(group, id, cell, settings.stackSize());
+		if (stack.isEmpty()) return;
+		NpcPost post = new NpcPost(cell, 1.5, door.get().door());
+		for (CopNpc cop : stack) {
+			// leave the chase state first: its exit stops navigation, which would cancel the post walk
+			cop.transitionTo(CopState.POSTED);
+			cop.holdPost(post);
+		}
+		active.put(id, new Breach(door.get().door(), cell, stack, now, lastKnown.clone()));
+		radio.sayFromLeader(group, "Stack_Up");
+		log.debug("BREACH {} stack={}", player.getName(), stack.size());
+	}
+
+	/** Up to {@code size} live cops hunting {@code playerId}, nearest the stack cell first. */
+	private static List<CopNpc> draft(CopGroup group, UUID playerId, Location cell, int size) {
+		World world = cell.getWorld();
+		List<CopNpc> hunters = new ArrayList<>();
+		synchronized (group.getCops()) {
+			for (CopNpc cop : group.getCops()) {
+				CopState state = cop.getCurrentState();
+				if (!cop.isValid() || !playerId.equals(cop.getTargetPlayerId())) continue;
+				if (state != CopState.PURSUING && state != CopState.COMBAT) continue;
+				if (cop.getEntity() == null || cop.getEntity().getLocation().getWorld() != world) continue;
+				hunters.add(cop);
+			}
+		}
+		hunters.sort(Comparator.comparingDouble(c -> c.getEntity().getLocation().distanceSquared(cell)));
+		return new ArrayList<>(hunters.subList(0, Math.min(size, hunters.size())));
 	}
 
 	public boolean isActive(UUID playerId) {
-		return false;
+		return active.containsKey(playerId);
 	}
 
-	/** Releases every stack (reload, disable). */
+	/** Releases every stack (reload, disable); no cooldown. */
 	public void endAll() {
-		throw new UnsupportedOperationException("TDD stub");
+		for (Breach breach : active.values()) {
+			for (CopNpc cop : breach.stack) {
+				if (cop.getCurrentState() != CopState.POSTED) continue;
+				cop.releasePost();
+				cop.transitionTo(CopState.PURSUING);
+			}
+		}
+		active.clear();
 	}
 
 	/** Blindness and Slowness for {@code ticks} through XPotion. */
