@@ -13,6 +13,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContr
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.crime.Crimes;
+import lombok.CustomLog;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.keystone.util.ChatUtil;
@@ -28,6 +29,7 @@ import java.util.function.Predicate;
  * the configured threshold the release pipeline fires. Unlike bribe-the-cop this does NOT clear wanted, so cops will
  * re-engage on the next AI tick — the idea is a tense, risky escape instead of a clean exit.
  */
+@CustomLog
 public class BreakFreeService implements BeanLifecycle {
 
 	private static final long PROMPT_TICK_PERIOD = 20L; // push the prompt once per second
@@ -77,8 +79,17 @@ public class BreakFreeService implements BeanLifecycle {
 		if (now - counter.lastTapMs > resetWindowMs) {
 			counter.taps = 0;
 		}
-		counter.taps++;
+		boolean pick   = pickFinder.test(player);
+		int     weight = pick ? Math.max(1, costs.getLockpickTapWeight()) : 1;
+		counter.taps += weight;
 		counter.lastTapMs = now;
+
+		boolean snapped = false;
+		if (pick && random.getAsDouble() < costs.getLockpickSnapChance()) {
+			snapped = pickConsumer.test(player);
+			if (snapped) player.sendMessage(wantedMessages.format(WantedMessages.Key.LOCKPICK_SNAPPED, Map.of()));
+		}
+		log.debug("LOCKPICK {} weight={} snapped={}", player.getName(), weight, snapped);
 
 		if (counter.taps >= required) {
 			counters.remove(player.getUniqueId());
@@ -90,7 +101,7 @@ public class BreakFreeService implements BeanLifecycle {
 		}
 
 		ActionBarManager.send(plugin, player,
-		                      messages.breakFreeProgressActionBar(counter.taps, required), 40L);
+		                      messages.breakFreeProgressActionBar(Math.min(counter.taps, required), required), 40L);
 	}
 
 	public void reset(UUID playerId) {
