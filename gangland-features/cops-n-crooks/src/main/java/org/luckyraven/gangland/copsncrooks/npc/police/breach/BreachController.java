@@ -5,6 +5,7 @@ import lombok.CustomLog;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.Nullable;
@@ -17,6 +18,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.keystone.npc.NpcPost;
 
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -108,7 +110,7 @@ public class BreachController {
 		BreachSettings settings = settings();
 		Breach         running  = active.get(id);
 		if (running != null) {
-			if (group != null) advance(id, running, group, settings);
+			if (group != null) advance(id, player.getName(), running, group, settings);
 			else abort(id, running, settings);
 			return;
 		}
@@ -120,6 +122,8 @@ public class BreachController {
 		lastScan.put(id, now);
 		if (group.isStandoff(now)) return;
 		if (now < cooldownUntil.getOrDefault(id, 0L)) return;
+		lastScan.values().removeIf(t -> now - t > 60_000L);
+		cooldownUntil.values().removeIf(t -> t < now);
 
 		Location lastKnown = group.getSquad().lastKnownLocation();
 		if (lastKnown == null || lastKnown.getWorld() == null) return;
@@ -138,7 +142,8 @@ public class BreachController {
 		}
 		active.put(id, new Breach(door.get().door(), cell, stack, now, lastKnown.clone()));
 		radio.sayFromLeader(group, "Stack_Up");
-		log.debug("BREACH {} stack={}", player.getName(), stack.size());
+		log.debug("BREACH {} stack size={} door={},{},{}", player.getName(), stack.size(),
+		          door.get().door().getBlockX(), door.get().door().getBlockY(), door.get().door().getBlockZ());
 	}
 
 	private BreachSettings settings() {
@@ -147,11 +152,19 @@ public class BreachController {
 	}
 
 	/** Waits for the go, then releases the stack one entrant per Entry_Gap_Ticks; the last release starts the cooldown. */
-	private void advance(UUID id, Breach breach, CopGroup group, BreachSettings settings) {
+	private void advance(UUID id, String name, Breach breach, CopGroup group, BreachSettings settings) {
 		long now = clock.getAsLong();
 		if (breach.goAt < 0) {
 			breach.stack.removeIf(cop -> !cop.isValid() || cop.getCurrentState() != CopState.POSTED);
 			if (breach.stack.isEmpty()) {
+				active.remove(id);
+				return;
+			}
+			if (breach.stack.stream().noneMatch(c -> id.equals(c.getTargetPlayerId()))) {
+				for (CopNpc c : breach.stack) {
+					c.releasePost();
+					c.transitionTo(CopState.RETURNING);
+				}
 				active.remove(id);
 				return;
 			}
@@ -172,6 +185,7 @@ public class BreachController {
 				throwFlashbang(breach.door, settings);
 				radio.sayFromLeader(group, "Flashbang");
 			}
+			log.debug("BREACH {} go flashbang={}", name, group.getLevel() >= settings.flashbangMinStars());
 		}
 		long gapMs = settings.entryGapTicks() * 50L;
 		while (breach.next < breach.order.size() && now >= breach.goAt + breach.next * gapMs) {
@@ -204,14 +218,22 @@ public class BreachController {
 		if (world == null) return;
 		Location centre = door.clone().add(0.5, 0.5, 0.5);
 		for (Player target : world.getPlayers()) {
+			if (target.hasMetadata("NPC")) continue;
 			if (!target.isOnline() || target.getWorld() != world) continue;
 			if (target.getLocation().distance(centre) > settings.flashbangRadius()) continue;
 			Location eye = target.getEyeLocation();
 			Vector   to  = centre.toVector().subtract(eye.toVector());
 			double   len = to.length();
-			if (len > 0 && world.rayTraceBlocks(eye, to.normalize(), len, FluidCollisionMode.NEVER, true) != null) continue;
+			RayTraceResult hit = len > 0 ? world.rayTraceBlocks(eye, to.normalize(), len, FluidCollisionMode.NEVER, true) : null;
+			if (hit != null && !isDoor(hit.getHitBlock(), door)) continue;
 			flashbang.blind(target, settings.flashbangTicks());
 		}
+	}
+
+	/** True when the ray's first block is the door itself (its panel at the door's or the cell-side upper block). */
+	static boolean isDoor(Block b, Location door) {
+		return b != null && b.getX() == door.getBlockX() && b.getZ() == door.getBlockZ()
+		       && (b.getY() == door.getBlockY() || b.getY() == door.getBlockY() + 1);
 	}
 
 	private static boolean allArrived(Breach breach) {
@@ -281,9 +303,8 @@ public class BreachController {
 	/** Blindness and Slowness for {@code ticks} through XPotion. */
 	static void applyFlashbang(Player player, int ticks) {
 		for (XPotion potion : new XPotion[]{XPotion.BLINDNESS, XPotion.SLOWNESS}) {
-			XPotion.of(potion.name())
-			       .map(XPotion::getPotionEffectType)
-			       .ifPresent(type -> player.addPotionEffect(new PotionEffect(type, ticks, 0)));
+			Optional.ofNullable(potion.getPotionEffectType())
+			        .ifPresent(type -> player.addPotionEffect(new PotionEffect(type, ticks, 0)));
 		}
 	}
 
