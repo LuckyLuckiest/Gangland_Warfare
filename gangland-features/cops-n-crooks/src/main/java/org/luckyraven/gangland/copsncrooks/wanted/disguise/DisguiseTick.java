@@ -7,9 +7,12 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.keystone.npc.NpcSquad;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /** The AI tick hook: keeps the description current while seen and radios it once per change (0.20.0 lane disguise). */
@@ -22,6 +25,7 @@ public class DisguiseTick {
 	private final CopRadio                          radio;
 	private final Map<UUID, SuspectDescription>     spoken  = new ConcurrentHashMap<>();
 	private final Map<NpcSquad, UUID>               ticked  = new ConcurrentHashMap<>();
+	private final List<Consumer<UUID>>              forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, CopRadio radio) {
 		this.settings     = settings;
@@ -58,10 +62,16 @@ public class DisguiseTick {
 		}
 	}
 
+	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */
+	public void onForget(Consumer<UUID> hook) {
+		forgetHooks.add(hook);
+	}
+
 	/** Forgets the line spoken for {@code playerId}: the chase ended, so the next chase says it again. */
 	public void forget(UUID playerId) {
 		spoken.remove(playerId);
 		ticked.values().removeIf(playerId::equals);
+		forgetHooks.forEach(hook -> hook.accept(playerId));
 	}
 
 	/** The {@code %suspect%} placeholder for {@code squad}; empty when unknown. */

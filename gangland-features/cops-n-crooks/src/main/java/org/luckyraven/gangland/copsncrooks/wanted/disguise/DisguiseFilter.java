@@ -59,6 +59,11 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		return allows(cop, player);
 	}
 
+	/** Forgets the last logged state for {@code id}: the chase ended. */
+	public void forget(UUID id) {
+		lastState.remove(id);
+	}
+
 	/** Logs the state only when it changes for this player, then returns {@code allowed}. */
 	private boolean report(Player player, String state, boolean allowed) {
 		String previous = lastState.put(player.getUniqueId(), state);

@@ -94,9 +94,11 @@ public class DisguiseModuleConfig {
 	/** Registers the lock-on filter, the AI tick hook and the {@code %suspect%} extras. */
 	@PostConstruct
 	public void installDisguise() {
-		container.getInstance(CopPerception.class).addLockOnFilter(container.getInstance(DisguiseFilter.class));
+		DisguiseFilter filter = container.getInstance(DisguiseFilter.class);
+		container.getInstance(CopPerception.class).addLockOnFilter(filter);
 
 		DisguiseTick tick = container.getInstance(DisguiseTick.class);
+		tick.onForget(filter::forget);
 		container.getInstance(CopManager.class).addAiTickHook(tick::tick);
 		container.getInstance(CopRadio.class).setExtraPlaceholders(tick::extras);
 	}
