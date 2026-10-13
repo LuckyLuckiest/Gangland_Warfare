@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.events.vehicle.CarExitEvent;
+import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarService;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleRegistry;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleSession;
@@ -38,6 +39,7 @@ class CarDismountListenerExitEventTest {
 
 	private BukkitStatics       bukkit;
 	private final List<Event>   fired = new ArrayList<>();
+	private final List<String>  trace = new ArrayList<>();
 	private CarService          carService;
 	private VehicleRegistry     registry;
 	private CarDismountListener listener;
@@ -49,12 +51,17 @@ class CarDismountListenerExitEventTest {
 		bukkit = BukkitStatics.install();
 		doAnswer(invocation -> {
 			fired.add(invocation.getArgument(0));
+			trace.add("event");
 			return null;
 		}).when(bukkit.pluginManager()).callEvent(any(Event.class));
 
 		carService = mock(CarService.class);
 		registry   = mock(VehicleRegistry.class);
 		when(carService.getVehicleRegistry()).thenReturn(registry);
+		doAnswer(invocation -> {
+			trace.add("park");
+			return null;
+		}).when(carService).parkCar(any(UUID.class));
 		when(carService.getPlugin()).thenReturn(mock(JavaPlugin.class));
 		listener = new CarDismountListener(carService);
 
@@ -75,6 +82,14 @@ class CarDismountListenerExitEventTest {
 		return event;
 	}
 
+	private VehicleSession session() {
+		Car car = mock(Car.class);
+		when(car.getCarId()).thenReturn("sedan");
+		VehicleSession session = mock(VehicleSession.class);
+		when(session.getCar()).thenReturn(car);
+		return session;
+	}
+
 	private Minecart cart() {
 		Minecart cart = mock(Minecart.class);
 		when(cart.getUniqueId()).thenReturn(carUuid);
@@ -86,7 +101,8 @@ class CarDismountListenerExitEventTest {
 	@DisplayName("sneakingDismountFiresCarExitParkedAfterParking")
 	void sneakingDismountFiresCarExitParkedAfterParking() {
 		Minecart cart = cart();
-		when(registry.getByEntity(carUuid)).thenReturn(mock(VehicleSession.class));
+		VehicleSession session = session();
+		when(registry.getByEntity(carUuid)).thenReturn(session);
 		when(player.isSneaking()).thenReturn(true);
 
 		listener.onDismount(exitFrom(cart));
@@ -97,13 +113,15 @@ class CarDismountListenerExitEventTest {
 		assertSame(cart, event.getVehicle());
 		assertTrue(event.isParked());
 		verify(carService).parkCar(carUuid);
+		assertEquals(List.of("park", "event"), trace, "parked before the event is published");
 	}
 
 	@Test
 	@DisplayName("cancelledDismountFiresNothing: not sneaking, alive, not downed -> physics eject is cancelled")
 	void cancelledDismountFiresNothing() {
 		Minecart cart = cart();
-		when(registry.getByEntity(carUuid)).thenReturn(mock(VehicleSession.class));
+		VehicleSession session = session();
+		when(registry.getByEntity(carUuid)).thenReturn(session);
 		when(player.isSneaking()).thenReturn(false);
 		when(player.isDead()).thenReturn(false);
 
@@ -129,7 +147,8 @@ class CarDismountListenerExitEventTest {
 	@DisplayName("deathDismountStillFiresOnce: a dead driver is let out and counts as one exit")
 	void deathDismountStillFiresOnce() {
 		Minecart cart = cart();
-		when(registry.getByEntity(carUuid)).thenReturn(mock(VehicleSession.class));
+		VehicleSession session = session();
+		when(registry.getByEntity(carUuid)).thenReturn(session);
 		when(player.isSneaking()).thenReturn(false);
 		when(player.isDead()).thenReturn(true);
 
