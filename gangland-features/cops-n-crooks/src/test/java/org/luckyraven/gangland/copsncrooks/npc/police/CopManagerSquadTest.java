@@ -886,4 +886,16 @@ class CopManagerSquadTest {
 		assertTrue(group.isFallingBack(fx.clock[0]));
 		verify(fx.radio, never()).sayFromLeaderLater(any(), eq("Regroup_Push"), anyInt(), any());
 	}
+
+	@Test
+	@DisplayName("T-371: a chase that ends without a death (wanted level 0, not searching) zeroes the group's level")
+	void chaseEndedByDecay_zeroesGroupLevel() {
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		assertEquals(2, manager.groupFor(playerId).getLevel());
+
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+
+		assertEquals(0, manager.groupFor(playerId).getLevel());
+	}
 }

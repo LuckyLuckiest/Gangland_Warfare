@@ -503,4 +503,65 @@ class SurrenderServiceTest {
 		service.tick(player, group);
 		assertFalse(group.isCeaseFire());
 	}
+
+	@Test
+	@DisplayName("T-370: the too-hot line is said again after a chase ended at zero stars with the group still known")
+	void tooHot_saidAgainAfterLevelZero() {
+		group.setLevel(4);
+		service.tick(player, group);
+		group.setLevel(0);
+		service.tick(player, group);
+		group.setLevel(4);
+
+		service.tick(player, group);
+
+		verify(messages, times(2)).format(eq(WantedMessages.Key.SURRENDER_TOO_HOT), anyMap());
+	}
+
+	@Test
+	@DisplayName("T-370: the too-hot line is said again after the pose was dropped and the chase restarted via level zero")
+	void tooHot_saidAgainAfterEscapeThenPoseRetaken() {
+		group.setLevel(4);
+		service.tick(player, group);
+		group.setLevel(0);
+		sneak(false);
+		service.tick(player, group);
+		sneak(true);
+		group.setLevel(4);
+
+		service.tick(player, group);
+
+		verify(messages, times(2)).format(eq(WantedMessages.Key.SURRENDER_TOO_HOT), anyMap());
+	}
+
+	@Test
+	@DisplayName("quit: forget() drops the surrender and the resisted/too-hot memory of that player")
+	void forget_prunesAllState() {
+		surrender();
+		service.forget(playerId);
+		clock.set(T0 + 1_000L);
+		hit();
+		verifyNoInteractions(crimes);
+
+		group.setLevel(4);
+		service.tick(player, group);
+		service.forget(playerId);
+		service.tick(player, group);
+		verify(messages, times(2)).format(eq(WantedMessages.Key.SURRENDER_TOO_HOT), anyMap());
+	}
+
+	@Test
+	@DisplayName("quit: forget() clears the resisted mark so a rejoin can surrender again")
+	void forget_clearsResisted() {
+		group.setLevel(2);
+		surrender();
+		clock.set(T0 + 1_000L);
+		hit();
+		service.forget(playerId);
+		group.setCeaseFire(false);
+
+		service.tick(player, group);
+
+		assertTrue(group.isCeaseFire());
+	}
 }

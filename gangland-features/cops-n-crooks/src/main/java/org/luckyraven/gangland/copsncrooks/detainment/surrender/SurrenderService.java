@@ -114,6 +114,10 @@ public class SurrenderService {
 		}
 	}
 
+	/** Quit hook: drops everything remembered about {@code id}. */
+	public void forget(UUID id) {
+	}
+
 	private void endSurrender(Player player, @Nullable CopGroup group, Reason reason) {
 		UUID id = player.getUniqueId();
 		if (surrenderedAt.remove(id) == null) return;
