@@ -130,6 +130,7 @@ public class BustedListener implements Listener {
 			cop.setGuardedPlayerId(id);
 			cop.transitionTo(CopState.GUARDING);
 		}
+		if (cop.getGroup() != null) cop.getGroup().resetCuffFailures(id);
 
 		// Last on purpose: CuffingListener sends CUFFED inside callEvent above, BUSTED must be what stays on screen.
 		ChatUtil.sendTitle(player, wantedMessages.format(WantedMessages.Key.BUSTED_TITLE, Map.of()),
