@@ -1,12 +1,17 @@
 package org.luckyraven.gangland.copsncrooks.listener.police;
 
+import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
 import org.luckyraven.gangland.copsncrooks.integration.detainment.DetainmentSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
@@ -19,14 +24,20 @@ import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcSupport;
+import org.luckyraven.keystone.util.ChatUtil;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 /**
  * 0.21.0 "Busted or wasted": a lethal hit on a wanted player next to a hunting cop of his own squad becomes an arrest.
- * TDD stub: behaviour lands in the green chunks.
+ * <p>Ordering contract: this runs at HIGH with ignoreCancelled and cancels the hit, so core
+ * {@code CustomPlayerDeathListener.onEntityDamage} (HIGHEST + ignoreCancelled) skips it and never downs the player;
+ * {@code PlayerDeathListener} bills only on {@code PlayerDownedEvent}, which a bust never fires. The BUSTED title is
+ * sent after {@code callEvent} and the guard handoff because CuffingListener sends CUFFED inside the event.
  */
+@CustomLog
 @ListenerHandler
 public class BustedListener implements Listener {
 
@@ -34,6 +45,8 @@ public class BustedListener implements Listener {
 	static final double SEARCH_BOUND = 6.0;
 
 	/** Causes that are never a bust, by name: KILL only exists on 1.20.3+ and the compile API is 1.16.5. */
+	private static final int DEFAULT_MAX_ATTEMPTS = 3;
+
 	private static final Set<String> SKIP_CAUSES = Set.of("VOID", "SUICIDE", "KILL");
 
 	private final CopManager             copManager;
@@ -104,7 +117,24 @@ public class BustedListener implements Listener {
 	}
 
 	private void bust(EntityDamageEvent event, Player player, CopNpc cop, int level) {
-		throw new UnsupportedOperationException("TDD stub");
+		UUID id = player.getUniqueId();
+		event.setCancelled(true);
+
+		CopConfigProvider provider    = copLoader.getLoadedProvider();
+		int               maxAttempts = provider != null ? provider.getMaxCuffAttempts() : DEFAULT_MAX_ATTEMPTS;
+		Bukkit.getPluginManager().callEvent(new CuffedEvent(cop, player, cop.getTierConfig().cuffRadius(), maxAttempts,
+		                                                    ArrestOrigin.BUSTED_DOWNED));
+
+		cuffLockRegistry.forceRelease(id);
+		if (cuffLockRegistry.tryAcquire(id, cop.getNpc().getUniqueId())) {
+			cop.setGuardedPlayerId(id);
+			cop.transitionTo(CopState.GUARDING);
+		}
+
+		// Last on purpose: CuffingListener sends CUFFED inside callEvent above, BUSTED must be what stays on screen.
+		ChatUtil.sendTitle(player, wantedMessages.format(WantedMessages.Key.BUSTED_TITLE, Map.of()),
+		                   wantedMessages.format(WantedMessages.Key.BUSTED_SUBTITLE, Map.of()));
+		log.debug("BUSTED " + player.getName() + " cop=" + cop.getNpc().getUniqueId() + " level=" + level);
 	}
 
 }
