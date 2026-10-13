@@ -53,20 +53,20 @@ public class WantedMessages extends LocalizedModuleYaml {
 		PAPERWORK_FINE("Charge_Sheet.Paperwork", "&7Fine paid: &a%money_symbol%%paid% &8| &7Extra time: &c%time%"),
 		BRIBE_STAR_TAKEN("Bribe_Star.Taken", "&6You pocketed a police bribe star. &e-%stars% star(s)."),
 		BRIBE_STAR_SEEN("Bribe_Star.Seen", "&cNot with a cop watching."),
-		// 0.20.0 (TDD stub: fallbacks are filled by the green chunk)
-		PATROL_PUT_AWAY("Patrol.Put_Away", ""),
-		PATROL_COMPLIED("Patrol.Complied", ""),
-		PATROL_PULL_OVER("Patrol.Pull_Over", ""),
-		PATROL_TICKET("Patrol.Ticket", ""),
-		PATROL_FLED("Patrol.Fled", ""),
-		TRACKER_TAGGED("Tracker.Tagged", ""),
-		TRACKER_HUD("Tracker.Hud", ""),
-		TRESPASS("Trespass", ""),
-		SUSPECT_UNKNOWN("Suspect.Unknown", ""),
-		SUSPECT_BARE("Suspect.Bare", ""),
-		SUSPECT_ON_FOOT("Suspect.On_Foot", ""),
-		SUSPECT_IN_CAR("Suspect.In_Car", ""),
-		SUSPECT_FORMAT("Suspect.Format", "");
+		// 0.20.0
+		PATROL_PUT_AWAY("Patrol.Put_Away", "&eBeat cop: &fPut that away! &7(%seconds%s)"),
+		PATROL_COMPLIED("Patrol.Complied", "&aThanks, carry on."),
+		PATROL_PULL_OVER("Patrol.Pull_Over", "&cBeat cop: &fPull over! Stop within %seconds%s"),
+		PATROL_TICKET("Patrol.Ticket", "&7Ticket: &c%money_symbol%%amount%"),
+		PATROL_FLED("Patrol.Fled", "&cYou fled a traffic stop!"),
+		TRACKER_TAGGED("Tracker.Tagged", "&cYour car has been tagged. Ditch it."),
+		TRACKER_HUD("Tracker.Hud", "&cTagged &7%seconds%s"),
+		TRESPASS("Trespass", "&cRestricted area!"),
+		SUSPECT_UNKNOWN("Suspect.Unknown", "unknown suspect"),
+		SUSPECT_BARE("Suspect.Bare", "suspect"),
+		SUSPECT_ON_FOOT("Suspect.On_Foot", "on foot"),
+		SUSPECT_IN_CAR("Suspect.In_Car", "in a car"),
+		SUSPECT_FORMAT("Suspect.Format", "%who%%mask%, %chest%, %vehicle%");
 
 		public final String path;
 		public final String fallback;

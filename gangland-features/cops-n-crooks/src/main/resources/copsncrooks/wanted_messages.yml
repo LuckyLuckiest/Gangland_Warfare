@@ -100,3 +100,37 @@ Crimes:
    Spotted: "Spotted by the cops"
    # The star card's text when no crime is on record, for example a sign or an admin raise
    Unknown_Crime: "Reported crime"
+
+# 0.20.0
+# Patrol stops: a beat cop's warnings during a traffic stop; %seconds% is the seconds left to comply
+Patrol:
+   # The cop tells you to put a weapon away; %seconds% is the time to comply
+   Put_Away: "&eBeat cop: &fPut that away! &7(%seconds%s)"
+   # You complied in time
+   Complied: "&aThanks, carry on."
+   # The cop orders a stop; %seconds% is the seconds you have to stop
+   Pull_Over: "&cBeat cop: &fPull over! Stop within %seconds%s"
+   # The ticket; %money_symbol% and %amount% are the fine
+   Ticket: "&7Ticket: &c%money_symbol%%amount%"
+   # You ran from a traffic stop
+   Fled: "&cYou fled a traffic stop!"
+# Trackers: a car tagged by a cop; %seconds% is the seconds left on the tag
+Tracker:
+   # The car was tagged
+   Tagged: "&cYour car has been tagged. Ditch it."
+   # The tag countdown on the HUD; %seconds% is the seconds left
+   Hud: "&cTagged &7%seconds%s"
+# Trespass: the line shown when you enter a restricted area
+Trespass: "&cRestricted area!"
+# Suspect: the words a cop's description of a suspect is built from
+Suspect:
+   # No description known
+   Unknown: "unknown suspect"
+   # The bare word for a suspect
+   Bare: "suspect"
+   # The suspect is on foot
+   On_Foot: "on foot"
+   # The suspect is in a car
+   In_Car: "in a car"
+   # The whole description; %who% is the word for the suspect, %mask% the mask, %chest% the chest, %vehicle% the vehicle
+   Format: "%who%%mask%, %chest%, %vehicle%"
