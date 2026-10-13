@@ -37,7 +37,8 @@ class CopItemCommand extends SubArgument {
 
 	CopItemCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CopsItems items,
 	               CommandMessages messages) {
-		super(plugin, "item", tree, parent, PERMISSION);
+		super(plugin, "item", tree, parent);
+		setPermission(PERMISSION);
 
 		this.plugin   = plugin;
 		this.tree     = tree;
