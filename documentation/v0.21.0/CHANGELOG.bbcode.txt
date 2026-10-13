@@ -49,7 +49,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [SIZE=6][B]Config and permissions[/B][/SIZE]
 
 [LIST]
-[*][B]New keys.[/B] [ICODE]turf/turf_npcs.yml[/ICODE]: [ICODE]Powerup_Npc.Placement_Cost[/ICODE], [ICODE]Garrison.Hold_Radius[/ICODE], [ICODE]Owner_Alerts.Cooldown_Seconds[/ICODE]. [ICODE]turf/turf_messages.yml[/ICODE]: the [ICODE]Quartermaster.*[/ICODE] placement, hub, order and garrison keys and the four [ICODE]Alerts.*[/ICODE] keys (full list in the migration page). [ICODE]Quartermaster.Only_Owner_Or_Allies[/ICODE] is retired; copy any custom text into [ICODE]Refuse_No_Gang[/ICODE] and [ICODE]Refuse_Stranger[/ICODE].
+[*][B]New keys.[/B] [ICODE]turf/turf_npcs.yml[/ICODE]: [ICODE]Powerup_Npc.Placement_Cost[/ICODE], [ICODE]Garrison.Hold_Radius[/ICODE], [ICODE]Owner_Alerts.Cooldown_Seconds[/ICODE]. [ICODE]turf/turf_messages.yml[/ICODE]: the [ICODE]Quartermaster.*[/ICODE] placement, hub, order and garrison keys and the five [ICODE]Alerts.*[/ICODE] keys (full list in the migration page). [ICODE]Quartermaster.Only_Owner_Or_Allies[/ICODE] is retired; copy any custom text into [ICODE]Refuse_No_Gang[/ICODE] and [ICODE]Refuse_Stranger[/ICODE].
 [*][B]New permissions.[/B] [ICODE]gangland.command.turf.quartermaster[/ICODE] and the seven [ICODE]gangland.command.gang.ally*[/ICODE] nodes, all default [ICODE]true[/ICODE] and children of [ICODE]gangland.command.player[/ICODE] (negating that parent removes them too).
 [*][B]Database.[/B] [ICODE]turf_garrison[/ICODE] gains a [ICODE]hold[/ICODE] column at first boot. No SQL to run.
 [/LIST]

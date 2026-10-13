@@ -30,7 +30,7 @@ Read [migration-0.21.0.md](../migration-0.21.0.md) before you start the server. 
 
 ## Config and permissions
 
-- **New keys.** `turf/turf_npcs.yml`: `Powerup_Npc.Placement_Cost`, `Garrison.Hold_Radius`, `Owner_Alerts.Cooldown_Seconds`. `turf/turf_messages.yml`: the `Quartermaster.*` placement, hub, order and garrison keys and the four `Alerts.*` keys (full list in the migration page). `Quartermaster.Only_Owner_Or_Allies` is retired; copy any custom text into `Refuse_No_Gang` and `Refuse_Stranger`.
+- **New keys.** `turf/turf_npcs.yml`: `Powerup_Npc.Placement_Cost`, `Garrison.Hold_Radius`, `Owner_Alerts.Cooldown_Seconds`. `turf/turf_messages.yml`: the `Quartermaster.*` placement, hub, order and garrison keys and the five `Alerts.*` keys (full list in the migration page). `Quartermaster.Only_Owner_Or_Allies` is retired; copy any custom text into `Refuse_No_Gang` and `Refuse_Stranger`.
 - **New permissions.** `gangland.command.turf.quartermaster` and the seven `gangland.command.gang.ally*` nodes, all default `true` and children of `gangland.command.player` (negating that parent removes them too).
 - **Database.** `turf_garrison` gains a `hold` column at first boot. No SQL to run.
 
