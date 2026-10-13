@@ -10,7 +10,11 @@ import org.luckyraven.gangland.gadget.car.access.CarAccessPolicy;
 import org.luckyraven.gangland.gadget.car.access.GanglandCarGangs;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
+import org.luckyraven.gangland.gadget.car.theft.HotwireMessages;
+import org.luckyraven.gangland.gadget.car.theft.HotwireService;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleRegistry;
+import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.item.unique.UniqueItemUtil;
 import org.luckyraven.gangland.gadget.contract.GanglandCarMessages;
 import org.luckyraven.gangland.gadget.item.CarConverter;
 import org.luckyraven.gangland.gadget.item.CarItemRefresher;
@@ -129,6 +133,13 @@ public class GadgetModuleConfig {
 	@Bean
 	public GrappleService grappleService() {
 		return new GrappleService(plugin);
+	}
+
+	@Bean
+	public HotwireService hotwireService(CarAccessPolicy carAccessPolicy, CrimeService crimeService,
+	                                     GadgetPhysicsConfig gadgetPhysicsConfig, HotwireMessages hotwireMessages) {
+		return new HotwireService(plugin, carAccessPolicy, crimeService, gadgetPhysicsConfig, hotwireMessages,
+		                          UniqueItemUtil::getUniqueItemKey);
 	}
 
 	@Bean
