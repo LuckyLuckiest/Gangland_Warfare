@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.standoff;
 
 import lombok.CustomLog;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
@@ -111,7 +112,7 @@ public class StandoffController {
 		prune(id, cfg, now);
 		if (!cfg.enabled() || group.isEmpty() || now < cooldownUntil.getOrDefault(id, 0L)) return;
 
-		List<CopNpc> hunting = hunting(group, id);
+		List<CopNpc> hunting = hunting(group, id, player.getLocation());
 		if (hunting.size() < 2) return;
 		String trigger = trigger(cfg, group, id, hunting, now);
 		if (trigger != null) start(player, group, cfg, hunting, trigger, now);
@@ -138,12 +139,14 @@ public class StandoffController {
 		group.holdPendingUntil(Math.min(until, now + HOLD_STEP_MS));
 	}
 
-	private static List<CopNpc> hunting(CopGroup group, UUID id) {
+	private static List<CopNpc> hunting(CopGroup group, UUID id, @Nullable Location at) {
 		List<CopNpc> hunting = new ArrayList<>();
+		World        world   = at == null ? null : at.getWorld();
 		for (CopNpc cop : group.getCops()) {
 			if (cop == null || !cop.isValid()) continue;
 			CopState state = cop.getCurrentState();
 			if (state != CopState.PURSUING && state != CopState.COMBAT) continue;
+			if (world != null && !world.equals(cop.getEntity().getLocation().getWorld())) continue;
 			if (id.equals(cop.getTargetPlayerId())) hunting.add(cop);
 		}
 		return hunting;
