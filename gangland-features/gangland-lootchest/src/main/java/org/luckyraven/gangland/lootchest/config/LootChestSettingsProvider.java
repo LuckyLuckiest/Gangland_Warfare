@@ -61,7 +61,7 @@ public interface LootChestSettingsProvider {
 	 * @since 0.20.0
 	 */
 	default CrackingAlarmSettings getCrackingAlarm() {
-		throw new UnsupportedOperationException("TDD stub");
+		return CrackingAlarmSettings.DEFAULT;
 	}
 
 }

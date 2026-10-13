@@ -6,8 +6,10 @@ import org.luckyraven.keystone.persistence.FileInitializer;
 import org.luckyraven.keystone.persistence.FileManager;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * {@link LootChestSettingsProvider} implementation backed by the module's own
@@ -92,7 +94,15 @@ public class LootChestSettings implements LootChestSettingsProvider, FileInitial
 
 	@Override
 	public CrackingAlarmSettings getCrackingAlarm() {
-		throw new UnsupportedOperationException("TDD stub");
+		var cfg = fileHandler.getFileConfiguration();
+
+		boolean enabled = cfg.getBoolean("Cracking_Alarm.Enable", true);
+		Set<String> tiers = cfg.isList("Cracking_Alarm.Tiers")
+				? new HashSet<>(cfg.getStringList("Cracking_Alarm.Tiers"))
+				: CrackingAlarmSettings.DEFAULT.tiers();
+		String sound = cfg.getString("Cracking_Alarm.Sound", CrackingAlarmSettings.DEFAULT.sound());
+
+		return new CrackingAlarmSettings(enabled, tiers, sound);
 	}
 
 }
