@@ -7,10 +7,10 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.function.Function;
 
 /**
@@ -23,7 +23,9 @@ public class ScannerMapView {
 
 	private final ScannerMapRenderer          renderer;
 	private final Function<World, MapView>    mapFactory;
-	private final Map<World, MapView>         views = new HashMap<>();
+	// ponytail: WeakHashMap lets unloaded worlds be collected. Caveat: a MapView's getWorld() references its world, so the
+	// entry only clears once the view is unreachable too. Upgrade path: a Bukkit world-unload listener that drops the entry.
+	private final Map<World, MapView>         views = new WeakHashMap<>();
 
 	public ScannerMapView(ScannerMapRenderer renderer, Function<World, MapView> mapFactory) {
 		this.renderer   = renderer;
