@@ -12,10 +12,17 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 
 import java.util.UUID;
 
-/** The {@code WARNING} state (0.20.0 lane patrol): faces the warned player and holds until the warning is decided. Never attacks. Without services (the bare factory path, tests) it does nothing. */
+/**
+ * The {@code WARNING} state (0.20.0 lane patrol).
+ * <p>
+ * Faces the warned player and holds until the warning is decided. Never attacks. Without services (the bare factory
+ * path, tests) it does nothing.
+ */
 public class WarningBehavior implements CopBehavior {
 
 	private final @Nullable PatrolServices services;
+	/** The player this warning was opened for, captured on enter so the open warning survives a cleared target. */
+	private @Nullable UUID warned;
 
 	public WarningBehavior() {
 		this(null);
@@ -38,6 +45,7 @@ public class WarningBehavior implements CopBehavior {
 
 		UUID id = cop.getTargetPlayerId();
 		if (id == null) {
+			abandonWarned();
 			finish(cop);
 			return;
 		}
@@ -63,20 +71,22 @@ public class WarningBehavior implements CopBehavior {
 	@Override
 	public void onEnter(CopNpc cop) {
 		if (services != null) {
+			warned = cop.getTargetPlayerId();
 			cop.stopNavigation();
 		}
 	}
 
 	@Override
 	public void onExit(CopNpc cop) {
-		if (services == null) {
-			return;
-		}
+		abandonWarned();
+	}
 
-		UUID id = cop.getTargetPlayerId();
-		if (id != null) {
-			services.warnings().abandon(id);
+	/** Abandons the warning opened on enter, if still open; every exit path routes here. */
+	private void abandonWarned() {
+		if (services != null && warned != null) {
+			services.warnings().abandon(warned);
 		}
+		warned = null;
 	}
 
 	private void finish(CopNpc cop) {
