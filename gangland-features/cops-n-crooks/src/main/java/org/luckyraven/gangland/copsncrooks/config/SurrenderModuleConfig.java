@@ -4,6 +4,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.detainment.surrender.SurrenderService;
 import org.luckyraven.gangland.copsncrooks.integration.detainment.DetainmentSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.crime.CrimeService;
@@ -29,11 +30,16 @@ public class SurrenderModuleConfig {
 	@Bean
 	public SurrenderService surrenderService(DetainmentSettings settings, CopRadio copRadio, WantedMessages messages,
 	                                         CrimeService crimes, DetainmentService detainment) {
-		throw new UnsupportedOperationException("TDD stub");
+		return new SurrenderService(settings::getSurrender, copRadio, messages, crimes, System::currentTimeMillis,
+		                            detainment::isRestrained);
 	}
 
 	@PostConstruct
 	public void registerHooks() {
-		throw new UnsupportedOperationException("TDD stub");
+		CopManager       manager = container.getInstance(CopManager.class);
+		SurrenderService service = container.getInstance(SurrenderService.class);
+
+		manager.addAiTickHook(service::tick);
+		manager.addCopAttackedHook(service::onCopAttacked);
 	}
 }
