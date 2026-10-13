@@ -78,6 +78,8 @@ public class SurrenderService {
 		int level = group.getLevel();
 		if (level <= 0) {
 			endSurrender(player, group, Reason.GONE);
+			resisted.remove(id);
+			toldTooHot.remove(id);
 			return;
 		}
 		if (!poseHeld(player)) {
@@ -118,6 +120,10 @@ public class SurrenderService {
 
 	/** Quit hook: drops everything remembered about {@code id}. */
 	public void forget(UUID id) {
+		surrenderedAt.remove(id);
+		surrenderedTo.remove(id);
+		resisted.remove(id);
+		toldTooHot.remove(id);
 	}
 
 	private void endSurrender(Player player, @Nullable CopGroup group, Reason reason) {
