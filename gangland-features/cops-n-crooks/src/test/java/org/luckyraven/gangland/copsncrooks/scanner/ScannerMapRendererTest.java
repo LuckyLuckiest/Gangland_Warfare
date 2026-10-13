@@ -391,6 +391,24 @@ class ScannerMapRendererTest {
 	}
 
 	@Test
+	@DisplayName("Enable switched to false on reload erases the drawn circle and the cursors")
+	void disabledOnReloadClearsCanvas() {
+		renderFixture();
+		when(copManager.getCopsForPlayer(playerId)).thenReturn(List.of());
+		searching(30);
+		renderer.render(mock(MapView.class), canvas, player);
+
+		settings.set(new ScannerMapSettings(false, 1, 10, true, "n", List.of()));
+		ticks.set(10);
+		renderer.render(mock(MapView.class), canvas, player);
+
+		verify(canvas).setPixel(94, 64, (byte) 0);
+		ArgumentCaptor<MapCursorCollection> captor = ArgumentCaptor.forClass(MapCursorCollection.class);
+		verify(canvas, times(2)).setCursors(captor.capture());
+		assertEquals(0, captor.getValue().size());
+	}
+
+	@Test
 	@DisplayName("Enable false draws nothing and reads no cops")
 	void disabledDrawsNothing() {
 		renderFixture();
