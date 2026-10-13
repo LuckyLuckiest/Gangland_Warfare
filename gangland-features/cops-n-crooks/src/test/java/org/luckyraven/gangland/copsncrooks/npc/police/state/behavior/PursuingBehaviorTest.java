@@ -374,7 +374,7 @@ class PursuingBehaviorTest {
 	@DisplayName("0.20 seam: filters never stop a ranged cop firing at the player it is pursuing")
 	void filterNeverStopsFiring() {
 		when(cop.isRangedAttacker()).thenReturn(true);
-		when(cop.hasLineOfSight((LivingEntity) player)).thenReturn(true);
+		when(cop.hasLineOfSight(player)).thenReturn(true);
 		when(cop.canAttack()).thenReturn(true);
 		when(cop.getTierConfig()).thenReturn(mock(CopTierConfig.class));
 		CopPerception perception = new CopPerception();
