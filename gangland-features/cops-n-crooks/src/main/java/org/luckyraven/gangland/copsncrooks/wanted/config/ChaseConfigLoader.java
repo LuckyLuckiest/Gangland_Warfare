@@ -98,6 +98,8 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		loaded     = ChaseConfig.parse(wanted, report);
 		killCombo  = KillComboSettings.read(MovedSetting.of(handler, fileManager, CopsNCrooksYamlConfig.MODULE_ID));
 		postEscape = PostEscapeSettings.parse(wanted);
+		witnesses  = WitnessSettings.parse(wanted);
+		trespass   = TrespassSettings.parse(wanted);
 
 		if (!report.isEmpty()) report.log(log);
 
