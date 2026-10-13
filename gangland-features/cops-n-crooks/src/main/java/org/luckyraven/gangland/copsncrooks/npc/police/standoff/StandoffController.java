@@ -15,6 +15,7 @@ import org.luckyraven.keystone.npc.NpcPost;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -40,12 +41,14 @@ public class StandoffController {
 	/** Per running standoff. SO4 fills posts and cadence. */
 	private static final class State {
 
+		final Player   player;
 		final CopGroup group;
 		long until;
 		long nextNegotiateAt;
 		final List<CopNpc> posts = new ArrayList<>();
 
-		State(CopGroup group, long until) {
+		State(Player player, CopGroup group, long until) {
+			this.player = player;
 			this.group = group;
 			this.until = until;
 		}
@@ -98,9 +101,14 @@ public class StandoffController {
 		StandoffSettings cfg = settings();
 		long             now = clock.getAsLong();
 		if (st != null) {
+			if (group != st.group || !group.isStandoff(st.until - 1) || !cfg.enabled()) {
+				end(id, "GONE");
+				return;
+			}
 			activeTick(st, cfg, now);
 			return;
 		}
+		prune(id, cfg, now);
 		if (!cfg.enabled() || group.isEmpty() || now < cooldownUntil.getOrDefault(id, 0L)) return;
 
 		List<CopNpc> hunting = hunting(group, id);
@@ -111,7 +119,10 @@ public class StandoffController {
 
 	/** Keeps the refill held and radios the countdown. SO5: timeout star and the other end paths. */
 	private void activeTick(State st, StandoffSettings cfg, long now) {
-		if (now >= st.until) return; // SO5: timeout
+		if (now >= st.until) {
+			timeout(st, cfg);
+			return;
+		}
 		holdRefill(st.group, now, st.until);
 		if (now >= st.nextNegotiateAt) {
 			long left = (st.until - now + 999) / 1000;
@@ -172,7 +183,7 @@ public class StandoffController {
 	                   long now) {
 		long  until = now + cfg.timerSeconds() * 1000L;
 		UUID  id    = player.getUniqueId();
-		State st    = new State(group, until);
+		State st    = new State(player, group, until);
 		st.nextNegotiateAt = now;
 		active.put(id, st);
 		group.setStandoffUntil(until);
@@ -198,9 +209,35 @@ public class StandoffController {
 		}
 	}
 
+	private void timeout(State st, StandoffSettings cfg) {
+		radio.sayFromLeader(st.group, "Standoff_Over");
+		var user = users.getUser(st.player);
+		if (user != null && cfg.starsOnTimeout() > 0) stars.raise(user, cfg.starsOnTimeout(), WantedCause.CRIME);
+		end(st.player.getUniqueId(), "TIMEOUT");
+	}
+
+	private void prune(UUID id, StandoffSettings cfg, long now) {
+		Long until = cooldownUntil.get(id);
+		if (until != null && now >= until) cooldownUntil.remove(id);
+		Deque<Casualty> dead = casualties.get(id);
+		if (dead == null) return;
+		dead.removeIf(c -> now - c.at() > cfg.manDownWindowSeconds() * 1000L);
+		if (dead.isEmpty()) casualties.remove(id);
+	}
+
 	private void end(UUID id, String reason) {
-		active.remove(id);
+		State st = active.remove(id);
+		if (st == null) return;
+		for (CopNpc cop : st.posts) {
+			if (cop == null || !cop.isValid() || cop.getCurrentState() != CopState.POSTED) continue;
+			cop.releasePost();
+			cop.transitionTo(CopState.PURSUING);
+		}
+		st.group.setStandoffUntil(0L);
+		st.group.setFallBackUntil(0L);
 		casualties.remove(id);
+		cooldownUntil.put(id, clock.getAsLong() + settings().cooldownSeconds() * 1000L);
+		log.debug("STANDOFF {} end reason={}", id, reason);
 	}
 
 	/** Cop-attacked hook: the suspect hit a cop, so his standoff ends (ESCALATE). */
