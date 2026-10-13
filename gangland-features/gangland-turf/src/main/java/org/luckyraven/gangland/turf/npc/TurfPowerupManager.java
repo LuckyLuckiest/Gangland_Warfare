@@ -7,6 +7,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
+import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.turf.listener.powerups.TurfPowerupChunkLoadListener;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
@@ -18,6 +20,8 @@ import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
+import java.util.function.IntPredicate;
 import java.util.function.Supplier;
 
 /**
@@ -37,6 +41,12 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	/** Runs after every successful spawn (W7-C nameplate line). */
 	private Consumer<TurfPowerupNpc> spawnHook = npc -> {
 	};
+
+	private static final long HOLD_PERIOD = 5L;
+
+	private BukkitTask    holdTask;
+	private IntPredicate  holding    = turfId -> false;
+	private DoubleSupplier holdRadius = () -> 6.0;
 
 	private final Map<Integer, TurfPowerupNpc>    byTurfId = new HashMap<>();
 	/**
@@ -59,12 +69,23 @@ public final class TurfPowerupManager implements BeanLifecycle {
 
 	@Override
 	public void onInitialize(boolean firstLoad) {
+		if (holdTask == null) {
+			holdTask = Bukkit.getScheduler().runTaskTimer(plugin, this::holdTick, HOLD_PERIOD, HOLD_PERIOD);
+		}
 		// Defer spawn so worlds + the civilian service are fully online before Citizens drops the NPCs in.
 		Bukkit.getScheduler().runTaskLater(plugin, this::spawnAllFromRepository, 60L);
 	}
 
+	private void stopHoldTask() {
+		if (holdTask != null) {
+			holdTask.cancel();
+			holdTask = null;
+		}
+	}
+
 	@Override
 	public void onPreClear() {
+		stopHoldTask();
 		despawnAll();
 	}
 
@@ -76,9 +97,39 @@ public final class TurfPowerupManager implements BeanLifecycle {
 
 	@Override
 	public void onShutdown() {
+		stopHoldTask();
 		despawnAll();
 		byTurfId.clear();
 		pending.clear();
+	}
+
+	/**
+	 * T-834: while {@code holding} says a turf is on the Hold order its Quartermaster still fights back (the civilian
+	 * damage listener) but is walked home whenever it strays further than {@code radius} blocks from its anchor.
+	 */
+	public void bindHold(IntPredicate holding, DoubleSupplier radius) {
+		this.holding    = holding;
+		this.holdRadius = radius;
+	}
+
+	void holdTick() {
+		double radius = holdRadius.getAsDouble();
+		for (Map.Entry<Integer, TurfPowerupNpc> entry : byTurfId.entrySet()) {
+			TurfPowerupNpc qm = entry.getValue();
+			if (!holding.test(entry.getKey()) || !qm.isAlive()) continue;
+			Entity body = qm.getCivilian().getEntity();
+			Location anchor = qm.getData().getSpawnLocation();
+			if (body == null || anchor.getWorld() == null || !anchor.getWorld().equals(body.getWorld())) continue;
+			Location at = body.getLocation();
+			double dx = at.getX() - anchor.getX();
+			double dz = at.getZ() - anchor.getZ();
+			if (dx * dx + dz * dz <= radius * radius) continue;
+			CivilianNpc civilian = qm.getCivilian();
+			civilian.setTargetPlayerId(null);
+			civilian.setTargetEntity(null);
+			if (civilian.getCurrentState() == CivilianState.COMBAT) civilian.transitionTo(CivilianState.IDLE);
+			civilian.navigateTo(anchor);
+		}
 	}
 
 	public void setSpawnHook(Consumer<TurfPowerupNpc> spawnHook) {
@@ -223,7 +274,8 @@ public final class TurfPowerupManager implements BeanLifecycle {
 		for (TurfPowerupData data : repository.loadAll()) {
 			if (spawn(data) != null) spawned++;
 		}
-		log.debug("Spawned {} turf-powerup NPC(s) from repository", spawned);
+		log.debug("Spawned {} turf-powerup NPC(s) from repository, {} waiting for their chunk to load", spawned,
+		          pending.size());
 	}
 
 	private void despawnAll() {

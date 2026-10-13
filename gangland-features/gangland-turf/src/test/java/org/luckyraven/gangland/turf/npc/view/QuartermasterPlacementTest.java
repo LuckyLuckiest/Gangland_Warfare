@@ -111,6 +111,15 @@ class QuartermasterPlacementTest {
 	}
 
 	@Test
+	@DisplayName("T-810: a non-finite Placement_Cost prices at the 5000 default instead of throwing")
+	void price_nonFiniteCost_fallsBackToDefault() {
+		cost = Double.NaN;
+		assertEquals(new java.math.BigDecimal("5000"), placement.price());
+		cost = Double.POSITIVE_INFINITY;
+		assertEquals(new java.math.BigDecimal("5000"), placement.price());
+	}
+
+	@Test
 	@DisplayName("denyKey: no Citizens")
 	void denyKey_noCitizens() {
 		citizens = false;

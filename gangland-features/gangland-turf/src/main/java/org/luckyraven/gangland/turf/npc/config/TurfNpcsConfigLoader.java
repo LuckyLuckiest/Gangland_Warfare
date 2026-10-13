@@ -68,6 +68,11 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		}
 	}
 
+	/** A non-finite cost (.nan, .inf) falls back to the default instead of poisoning the price. */
+	private static double placementCost(double raw) {
+		return Double.isFinite(raw) ? Math.max(0.0, raw) : 5000.0;
+	}
+
 	public void load() {
 		ConfigReport report = new ConfigReport();
 		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
@@ -79,7 +84,7 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 					pr.get("Type_Id").asString().orDefault("quartermaster"),
 					radius(pr),
 					pr.get("Display_Name").asString().orDefault("Quartermaster"),
-					Math.max(0.0, pr.get("Placement_Cost").asDouble().orDefault(5000.0)));
+					placementCost(pr.get("Placement_Cost").asDouble().orDefault(5000.0)));
 		} else {
 			powerupSettings = new TurfPowerupSettings("quartermaster", 32.0, "Quartermaster", 5000.0);
 		}
@@ -107,9 +112,10 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		                                : gr.get("Recycle_Seconds").asInt().min(0)
 		                                    .orDefault(TurfDefenderConfig.DEFAULT_RECYCLE_SECONDS);
 
-		double holdRadius = gr == null ? TurfDefenderConfig.DEFAULT_HOLD_RADIUS
-		                               : Math.max(3.0, gr.get("Hold_Radius").asDouble()
-		                                                .orDefault(TurfDefenderConfig.DEFAULT_HOLD_RADIUS));
+		double holdRaw = gr == null ? TurfDefenderConfig.DEFAULT_HOLD_RADIUS
+		                            : gr.get("Hold_Radius").asDouble().orDefault(TurfDefenderConfig.DEFAULT_HOLD_RADIUS);
+		// .nan / .inf would pass Math.max straight through
+		double holdRadius = Double.isFinite(holdRaw) ? Math.max(3.0, holdRaw) : TurfDefenderConfig.DEFAULT_HOLD_RADIUS;
 
 		// absent = the shipped composition; present (even empty) = exactly what the file says
 		GarrisonComposition composition = gr != null && gr.has("Composition")

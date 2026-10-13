@@ -104,6 +104,19 @@ class TurfNpcsConfigLoaderTest {
 		assertEquals(3.0, loader(handler).getDefenderConfig().holdRadius());
 	}
 
+	private static final String NL = System.lineSeparator();
+
+	@Test
+	@DisplayName("T-810: .nan Placement_Cost and .nan Hold_Radius fall back to their defaults")
+	void nonFiniteValues_fallBackToDefaults() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Powerup_Npc:" + NL + "   Placement_Cost: .nan" + NL
+		                                                      + "Garrison:" + NL + "   Hold_Radius: .nan" + NL));
+		TurfNpcsConfigLoader loader = loader(handler);
+		assertEquals(5000.0, loader.getPowerupSettings().placementCost());
+		assertEquals(6.0, loader.getDefenderConfig().holdRadius());
+	}
+
 	@Test
 	@DisplayName("W7-E: Owner_Alerts.Cooldown_Seconds is read, defaults to 60, clamps at 0 and reloads")
 	void ownerAlertCooldown_readDefaultAndClamp() throws Exception {

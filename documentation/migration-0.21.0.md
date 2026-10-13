@@ -80,7 +80,7 @@ The new config key is `Powerup_Npc.Placement_Cost` in `turf/turf_npcs.yml` (defa
 ### 1. Owner alerts
 
 - Who hears: online members of the owning gang, by chat line and action bar. Allies and rivals get none of these.
-- Four triggers: a cop hits a player the turf protects (`Alerts.Cop_Hit`), a guard falls (`Alerts.Guard_Down`), someone
+- Five triggers: a cop hits a player the turf protects (`Alerts.Cop_Hit`), a cop cuffs a member of the owning gang on the turf (`Alerts.Arrested`, owners only, T-832), a guard falls (`Alerts.Guard_Down`), someone
   outside the owning gang and its allies hits the Quartermaster (`Alerts.Quartermaster_Hit`), the Quartermaster is killed
   (`Alerts.Quartermaster_Down`).
 - Cooldown: `Owner_Alerts.Cooldown_Seconds` in `turf/turf_npcs.yml` (default `60`), per turf and per kind. `0` = every time.
@@ -94,7 +94,7 @@ The new config key is `Powerup_Npc.Placement_Cost` in `turf/turf_npcs.yml` (defa
 - Who may click: the owning gang's rank that holds `gangland.turf.upgrade` (the top rank always may). Allies can look, not switch.
 - Defend is the default and is today's behaviour: guards chase attackers and turn on cops.
 - Hold: guards keep within `Garrison.Hold_Radius` (`6.0`) of their post. They pick only attackers that close and walk back when
-  they stray further. The Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released.
+  they stray further. The Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released. The Quartermaster still hits back at whoever hits it, but is walked home whenever it strays past `Hold_Radius` of its spot (T-834).
 - The order is saved to the database, so it survives a restart.
 - The order resets to Defend whenever a turf changes hands (capture, admin, disband, inactivity): the garrison row is dropped with the old owner's stock (T-270). Deleting a turf drops it too.
 
@@ -125,6 +125,7 @@ key copy its block into your file.
 | `turf_npcs.yml` `Owner_Alerts.Cooldown_Seconds` | `60` | Seconds before the same owner alert for the same turf is sent again. `0` = every time. |
 | `turf_npcs.yml` `Garrison.Hold_Radius` | `6.0` | Blocks around its post a guard keeps to while the order is Hold. Minimum `3.0`. |
 | `Alerts.Cop_Hit` | `&c%turf%: a cop is attacking &f%player%` | Owner alert: a cop hits a member on the turf. |
+| `Alerts.Arrested` | `&c%turf%: &f%player% &cwas arrested` | Owner alert: a cop cuffs a member of the owning gang on the turf. |
 | `Alerts.Guard_Down` | `&c%turf%: one of your guards fell` | Owner alert: a guard is killed. |
 | `Alerts.Quartermaster_Hit` | `&c%turf%: &f%attacker% &cis attacking your Quartermaster` | Owner alert: an outsider hits the Quartermaster. |
 | `Alerts.Quartermaster_Down` | `&c%turf%: your Quartermaster was killed` | Owner alert: the Quartermaster is killed. |

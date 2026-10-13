@@ -222,7 +222,10 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 	}
 
 	BigDecimal price() {
-		return BigDecimal.valueOf(Math.max(0.0, settings.get().placementCost())).setScale(0, RoundingMode.HALF_UP);
+		double cost = settings.get().placementCost();
+		// T-810: BigDecimal.valueOf throws on NaN/Infinity; fall back to the shipped default
+		return BigDecimal.valueOf(Double.isFinite(cost) ? Math.max(0.0, cost) : 5000.0)
+		                 .setScale(0, RoundingMode.HALF_UP);
 	}
 
 	private String npcName() {
