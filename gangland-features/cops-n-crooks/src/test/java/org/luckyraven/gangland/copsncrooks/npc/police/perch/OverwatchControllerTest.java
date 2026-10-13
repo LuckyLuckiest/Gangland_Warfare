@@ -267,7 +267,9 @@ class OverwatchControllerTest {
 		verify(marksman).holdPost(post.capture());
 		assertEquals(perches.get(0).getX(), post.getValue().anchor().getX(), 1.0E-6);
 		assertEquals(perches.get(0).getY(), post.getValue().anchor().getY(), 1.0E-6);
-		assertSame(lastSeen, post.getValue().watch());
+		assertEquals(lastSeen.getX(), post.getValue().watch().getX(), 1.0E-6);
+		assertEquals(lastSeen.getY(), post.getValue().watch().getY(), 1.0E-6);
+		assertEquals(lastSeen.getZ(), post.getValue().watch().getZ(), 1.0E-6);
 		assertEquals(CopState.OVERWATCH, stateOf(marksman));
 	}
 
