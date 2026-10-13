@@ -8,6 +8,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.potion.PotionEffectType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
@@ -308,6 +309,18 @@ class SightModelTest {
 		assertEquals(1.0, factor(), EPS);
 
 		when(player.isGlowing()).thenReturn(false);
+		assertEquals(0.4, factor(), EPS);
+	}
+
+	@Test
+	@DisplayName("glowingEffectResets: the GLOWING potion effect (spectral arrow, /effect) -> 1.0; without it 0.4")
+	void glowingEffectResets() {
+		light(2);
+		when(player.isGlowing()).thenReturn(false);
+		when(player.hasPotionEffect(PotionEffectType.GLOWING)).thenReturn(true);
+		assertEquals(1.0, factor(), EPS);
+
+		when(player.hasPotionEffect(PotionEffectType.GLOWING)).thenReturn(false);
 		assertEquals(0.4, factor(), EPS);
 	}
 
