@@ -62,6 +62,17 @@ class CopItemCommandTest {
 	}
 
 	@Test
+	@DisplayName("the node permission is exactly gangland.cop.item, not a suffix of the parent permission")
+	void nodePermissionIsGanglandCopItem() {
+		Argument parent = mock(Argument.class);
+		when(parent.getPermission()).thenReturn("gangland.command.cop");
+
+		CopItemCommand built = new CopItemCommand(mock(JavaPlugin.class), new Tree<>(), parent, items, messages);
+
+		org.junit.jupiter.api.Assertions.assertEquals("gangland.cop.item", built.getPermission());
+	}
+
+	@Test
 	@DisplayName("the console names an online player: that player's inventory receives the marked scanner")
 	void givesNamedItem() {
 		CommandSender console = sender(false, true);
