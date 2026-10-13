@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BreachSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -69,6 +70,9 @@ public class BreachController {
 		final List<CopNpc>  stack;
 		final long          startedAt;
 		final Location      lastKnownAtStart;
+		long                goAt = -1L;
+		List<CopNpc>        order;
+		int                 next;
 
 		Breach(Location door, Location cell, List<CopNpc> stack, long startedAt, Location lastKnownAtStart) {
 			this.door             = door;
@@ -95,12 +99,13 @@ public class BreachController {
 	/** Per cop AI tick: advances this player's breach, or (at most once a second) looks for one to start. */
 	public void tick(Player player, @Nullable CopGroup group) {
 		UUID id = player.getUniqueId();
-		// ponytail: an active breach is advanced by the go/entry/abort chunks; until then it only blocks a restart
-		if (active.containsKey(id)) return;
+		BreachSettings settings = settings();
+		Breach         running  = active.get(id);
+		if (running != null) {
+			if (group != null) advance(id, running, group, settings);
+			return;
+		}
 		if (group == null) return;
-		CopConfigProvider cfg      = provider.get();
-		BreachSettings    settings = cfg != null && cfg.getBreachSettings() != null ? cfg.getBreachSettings()
-		                                                                           : BreachSettings.DEFAULT;
 		if (!settings.enabled()) return;
 		long now = clock.getAsLong();
 		Long last = lastScan.get(id);
@@ -127,6 +132,66 @@ public class BreachController {
 		active.put(id, new Breach(door.get().door(), cell, stack, now, lastKnown.clone()));
 		radio.sayFromLeader(group, "Stack_Up");
 		log.debug("BREACH {} stack={}", player.getName(), stack.size());
+	}
+
+	private BreachSettings settings() {
+		CopConfigProvider cfg = provider.get();
+		return cfg != null && cfg.getBreachSettings() != null ? cfg.getBreachSettings() : BreachSettings.DEFAULT;
+	}
+
+	/** Waits for the go, then releases the stack one entrant per Entry_Gap_Ticks; the last release starts the cooldown. */
+	private void advance(UUID id, Breach breach, CopGroup group, BreachSettings settings) {
+		long now = clock.getAsLong();
+		if (breach.goAt < 0) {
+			boolean waited = now - breach.startedAt >= settings.stackWaitSeconds() * 1000L;
+			if (!waited && !allArrived(breach)) return;
+			breach.goAt  = now;
+			breach.order = entryOrder(breach.stack, group);
+			radio.sayFromLeader(group, "Breach");
+		}
+		long gapMs = settings.entryGapTicks() * 50L;
+		while (breach.next < breach.order.size() && now >= breach.goAt + breach.next * gapMs) {
+			CopNpc cop = breach.order.get(breach.next++);
+			if (cop.isValid() && cop.getCurrentState() == CopState.POSTED) {
+				cop.releasePost();
+				cop.transitionTo(CopState.PURSUING);
+			}
+		}
+		if (breach.next >= breach.order.size()) {
+			active.remove(id);
+			cooldownUntil.put(id, now + settings.cooldownSeconds() * 1000L);
+		}
+	}
+
+	private static boolean allArrived(Breach breach) {
+		for (CopNpc cop : breach.stack) {
+			if (!cop.isValid() || cop.getCurrentState() != CopState.POSTED) continue;
+			NpcPost post = cop.getPost();
+			if (post == null || cop.getEntity() == null || !post.arrived(cop.getEntity().getLocation())) return false;
+		}
+		return true;
+	}
+
+	/** The shield role (by Block_Fraction, not name) first, else the squad leader, else draft order; then the rest. */
+	private static List<CopNpc> entryOrder(List<CopNpc> stack, CopGroup group) {
+		CopNpc first = null;
+		for (CopNpc cop : stack) {
+			CopRole role = cop.getRole();
+			if (role != null && !role.commander() && !role.medic() && role.blockFraction() > 0) {
+				first = cop;
+				break;
+			}
+		}
+		if (first == null) {
+			for (CopNpc cop : stack) {
+				if (cop == group.getSquad().leader()) first = cop;
+			}
+		}
+		if (first == null) first = stack.get(0);
+		List<CopNpc> order = new ArrayList<>(stack);
+		order.remove(first);
+		order.add(0, first);
+		return order;
 	}
 
 	/** Up to {@code size} live cops hunting {@code playerId}, nearest the stack cell first. */
