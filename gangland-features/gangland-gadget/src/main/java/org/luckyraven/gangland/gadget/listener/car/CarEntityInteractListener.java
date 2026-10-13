@@ -16,6 +16,7 @@ import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarService;
 import org.luckyraven.gangland.gadget.car.access.CarAccessPolicy;
 import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
+import org.luckyraven.gangland.gadget.car.theft.HotwireService;
 import org.luckyraven.gangland.gadget.car.vehicle.ParkedVehicle;
 import org.luckyraven.gangland.item.fuel.Fuel;
 import org.luckyraven.gangland.item.fuel.FuelBar;
@@ -27,15 +28,17 @@ import java.util.UUID;
  * intentionally ignored — pickup is handled by shift + left-click via {@link CarDamageListener}.
  */
 @ListenerHandler
-@AutowireTarget({CarService.class, CarMessageContract.class, CarAccessPolicy.class})
+@AutowireTarget({CarService.class, CarMessageContract.class, CarAccessPolicy.class, HotwireService.class})
 public class CarEntityInteractListener implements Listener {
 
 	private final CarService         carService;
 	private final CarMessageContract messages;
 	private final CarAccessPolicy    accessPolicy;
+	private final HotwireService     hotwire;
 
 	public CarEntityInteractListener(CarService carService, CarMessageContract messages,
-	                                 CarAccessPolicy accessPolicy) {
+	                                 CarAccessPolicy accessPolicy, HotwireService hotwire) {
+		this.hotwire      = hotwire;
 		this.carService   = carService;
 		this.messages     = messages;
 		this.accessPolicy = accessPolicy;

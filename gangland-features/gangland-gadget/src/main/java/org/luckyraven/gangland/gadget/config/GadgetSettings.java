@@ -24,6 +24,14 @@ public class GadgetSettings implements GadgetPhysicsConfig, FileInitializer {
 	private double carHardBrakeMultiplier = 3.0;
 	private int    carFuelConsumePerTick  = 1;
 
+	// TDD skeleton: neutral values until the green chunk reads the YAML
+	private int     carMoveIntervalTicks   = 0;
+	private boolean hotwireEnabled         = false;
+	private int     hotwireSeconds         = 0;
+	private double  hotwireMaxDistance     = 0;
+	private boolean hotwireConsumeLockpick = false;
+	private String  hotwireLockpickItem    = null;
+
 	public GadgetSettings(FileHandler fileHandler, FileManager fileManager) {
 		this.fileHandler = fileHandler;
 		this.fileManager = fileManager;
@@ -95,6 +103,36 @@ public class GadgetSettings implements GadgetPhysicsConfig, FileInitializer {
 	@Override
 	public int getCarFuelConsumePerTick() {
 		return carFuelConsumePerTick;
+	}
+
+	@Override
+	public int getCarMoveIntervalTicks() {
+		return carMoveIntervalTicks;
+	}
+
+	@Override
+	public boolean isHotwireEnabled() {
+		return hotwireEnabled;
+	}
+
+	@Override
+	public int getHotwireSeconds() {
+		return hotwireSeconds;
+	}
+
+	@Override
+	public double getHotwireMaxDistance() {
+		return hotwireMaxDistance;
+	}
+
+	@Override
+	public boolean isHotwireConsumeLockpick() {
+		return hotwireConsumeLockpick;
+	}
+
+	@Override
+	public String getHotwireLockpickItem() {
+		return hotwireLockpickItem;
 	}
 
 }

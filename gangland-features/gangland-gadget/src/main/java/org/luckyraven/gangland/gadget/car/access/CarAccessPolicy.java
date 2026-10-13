@@ -53,4 +53,40 @@ public final class CarAccessPolicy {
 		return gangs != null && gangs.sharesGang(playerUuid, placer);
 	}
 
+	/**
+	 * @return {@code true} when the player may not use the car but it has a recorded owner, i.e. a lockpick may try it
+	 */
+	public boolean canHotwire(@Nullable Player player, @Nullable UUID placer) {
+		return false; // TDD stub
+	}
+
+	/**
+	 * Mounting and driving: {@link #canUse} or a hotwire grant on this car. Refuel and pickup keep {@link #canUse}.
+	 */
+	public boolean canMount(@Nullable Player player, @Nullable UUID placer, UUID carEntityId) {
+		return false; // TDD stub
+	}
+
+	/**
+	 * Lets the thief mount and drive the car until restart or {@link #revoke}. Ownership never changes.
+	 */
+	public void grant(UUID carEntityId, UUID thief) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	/**
+	 * Drops a hotwire grant (the car was picked up).
+	 */
+	public void revoke(UUID carEntityId) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	/**
+	 * @return the thief holding a hotwire grant on this car, or {@code null}
+	 */
+	@Nullable
+	public UUID grantedTo(UUID carEntityId) {
+		return null; // TDD stub
+	}
+
 }

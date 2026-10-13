@@ -60,6 +60,10 @@ public class VehicleSession {
 	 */
 	@Setter
 	private       Location            lastKnownLocation;
+	/**
+	 * Scales the speed {@link VehicleMovementTask} applies to the entity (clamped 0..2, default 1.0).
+	 */
+	private       double              speedMultiplier = 0.0; // TDD skeleton: the green chunk makes the default 1.0
 
 	// WASD input state — written by VehicleInputInterceptor (Netty IO thread), read by VehicleMovementTask (main thread)
 	private volatile boolean inputForward;
@@ -93,6 +97,10 @@ public class VehicleSession {
 
 	public void damage(int amount) {
 		currentDurability = Math.max(0, currentDurability - amount);
+	}
+
+	public void setSpeedMultiplier(double multiplier) {
+		throw new UnsupportedOperationException("TDD stub");
 	}
 
 	public boolean hasFuel() {
