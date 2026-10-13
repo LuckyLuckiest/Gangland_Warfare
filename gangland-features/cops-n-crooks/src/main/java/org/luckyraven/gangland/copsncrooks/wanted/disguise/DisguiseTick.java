@@ -34,6 +34,7 @@ public class DisguiseTick {
 
 		if (group == null) {
 			spoken.remove(id);
+			ticked.values().removeIf(id::equals);
 			return;
 		}
 		if (!settings.get().enabled()) {
@@ -60,6 +61,7 @@ public class DisguiseTick {
 	/** Forgets the line spoken for {@code playerId}: the chase ended, so the next chase says it again. */
 	public void forget(UUID playerId) {
 		spoken.remove(playerId);
+		ticked.values().removeIf(playerId::equals);
 	}
 
 	/** The {@code %suspect%} placeholder for {@code squad}; empty when unknown. */
