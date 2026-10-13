@@ -74,7 +74,7 @@ public class ScannerMapRenderer extends MapRenderer {
 	private final AdminRegionRegistry          regions;
 	private final LongSupplier                 nowTicks;
 	private final Map<UUID, State>             states = new ConcurrentHashMap<>();
-	private       Consumer<String>             debugSink = log::info;
+	private       Consumer<String>             debugSink = log::debug;
 
 	public ScannerMapRenderer(Supplier<ScannerMapSettings> settings, SearchZoneCache cache, CopManager copManager,
 	                          AdminRegionRegistry regions, LongSupplier nowTicks) {
