@@ -39,6 +39,7 @@ public record HeatSettings(boolean enabled, List<Integer> starThresholds, double
 		crimes.put("Store_Robbery", 200);
 		crimes.put("Trespass_Restricted", 300);
 		crimes.put("Jailbreak", 450);
+		crimes.put("Evading_Police", 100);
 		return Map.copyOf(crimes);
 	}
 

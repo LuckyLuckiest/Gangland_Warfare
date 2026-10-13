@@ -190,7 +190,8 @@ class CopRadioMessagesTest {
 			Map.entry("Commander_Orders_Basic", java.util.Set.of("role")),
 			Map.entry("Status_Check", java.util.Set.of("role")),
 			Map.entry("Dispatch_En_Route", java.util.Set.of("count", "station", "eta")),
-			Map.entry("Wipe_Refill", java.util.Set.of("eta")));
+			Map.entry("Wipe_Refill", java.util.Set.of("eta")),
+			Map.entry("Suspect_Description", java.util.Set.of("suspect")));
 
 	// %place% is supplied by every radio voice (Unknown_Place when no caller names one)
 	private static final java.util.Set<String> ALWAYS = java.util.Set.of("%unit%", "%target%", "%distance%",
