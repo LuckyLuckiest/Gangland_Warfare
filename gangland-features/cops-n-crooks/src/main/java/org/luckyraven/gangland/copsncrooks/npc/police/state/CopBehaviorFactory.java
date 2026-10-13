@@ -94,8 +94,8 @@ public class CopBehaviorFactory {
 		                                                        configProvider.getStuckSettings()));
 
 		behaviors.put(CopState.POSTED, new PostedBehavior());
-		behaviors.put(CopState.PATROL, new PatrolBehavior());
-		behaviors.put(CopState.WARNING, new WarningBehavior());
+		behaviors.put(CopState.PATROL, new PatrolBehavior(patrolServices));
+		behaviors.put(CopState.WARNING, new WarningBehavior(patrolServices));
 		behaviors.put(CopState.OVERWATCH, new OverwatchBehavior());
 
 		return behaviors;

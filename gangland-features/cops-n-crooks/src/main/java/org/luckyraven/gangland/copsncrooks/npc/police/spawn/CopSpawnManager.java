@@ -49,6 +49,7 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	private final CuffLockRegistry   cuffLockRegistry;
 	private volatile Predicate<UUID> searchGuard = id -> false;
 	private volatile CopPerception   perception  = new CopPerception();
+	private volatile PatrolServices  patrolServices;
 
 	CopNpcFactory             copNpcFactory; // package-private: tests swap in a mock
 	private CopConfigProvider configProvider;
@@ -351,7 +352,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	/** The beat cops' services (0.20.0 lane patrol); read when the factories are rebuilt. */
 	public void setPatrolServices(PatrolServices patrolServices) {
-		throw new UnsupportedOperationException("TDD stub");
+		this.patrolServices = Objects.requireNonNull(patrolServices, "patrolServices");
+		rebuildFactories();
 	}
 
 	private void rebuildFactories() {
@@ -359,7 +361,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		this.configProvider = provider;
 
 		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> this, detainmentService,
-		                                                            cuffLockRegistry, id -> searchGuard.test(id), perception);
+		                                                            cuffLockRegistry, id -> searchGuard.test(id), perception,
+		                                                            patrolServices);
 		this.copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, markManager, bartizanNpcWeapons,
 		                                       downedTargetFilter);
 	}
