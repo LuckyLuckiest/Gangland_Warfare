@@ -969,4 +969,32 @@ class StandoffControllerTest {
 
 		assertEquals(1, starts());
 	}
+
+	@Test
+	@DisplayName("a suspect who left the squad's world starts no standoff and nothing throws")
+	void crossWorld_noStart() {
+		Location other = new Location(flatWorld(), 0, 64, 0);
+		when(player.getLocation()).thenReturn(other);
+		hunters(3, 3);
+
+		assertDoesNotThrow(() -> tickAt(0));
+
+		assertEquals(0, starts());
+		assertFalse(controller.isActive(playerId));
+	}
+
+	@Test
+	@DisplayName("forget(id) drops a running standoff without a cooldown, so the next chase can start one")
+	void forget_dropsStateWithoutCooldown() throws Exception {
+		hunters(3, 3);
+		tickAt(0);
+		assertTrue(controller.isActive(playerId));
+
+		controller.getClass().getMethod("forget", UUID.class).invoke(controller, playerId);
+
+		assertFalse(controller.isActive(playerId));
+		long before = starts();
+		tickAt(1 * SEC);
+		assertEquals(before + 1, starts());
+	}
 }
