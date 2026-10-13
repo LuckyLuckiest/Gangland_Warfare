@@ -91,7 +91,7 @@ public class CrackingAlarmListener implements Listener {
 		if (at.getWorld() != null) {
 			alarm.accept(at, cfg.sound());
 		}
-		log.debug("CRACK_ALARM {} tier={}", session.getSessionId(), tier.id());
+		log.debug("CRACK_ALARM {} tier={}", player.getName(), tier.id());
 	}
 
 }
