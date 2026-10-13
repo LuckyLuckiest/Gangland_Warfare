@@ -511,4 +511,14 @@ class OverwatchControllerTest {
 		verify(marksman, never()).navigateTo(any());
 		verify(marksman, never()).releasePost();
 	}
+
+	@Test
+	@DisplayName("end() with a despawned Marksman (null entity) does not throw")
+	void endWithDespawnedMarksmanDoesNotThrow() {
+		CopNpc marksman = perched();
+		when(marksman.getEntity()).thenReturn(null);
+		when(marksman.isValid()).thenReturn(false);
+		org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> controller.end(player, CopState.RETURNING));
+		assertFalse(controller.isActive(playerId));
+	}
 }
