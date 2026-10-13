@@ -235,18 +235,21 @@ public final class ChaseArcs {
 		return plan;
 	}
 
-	// 0.21.0: a cop the player killed on this chase; no-op without an arc.
+	/** A cop the player killed on this chase; no-op without an arc. */
 	public void copDown(UUID id) {
-		throw new UnsupportedOperationException("TDD stub");
+		ChaseArc arc = arcs.get(id);
+		if (arc != null) arc.copsDown++;
 	}
 
-	// 0.21.0: a cop cuffed the player on this chase; no-op without an arc.
+	/** A cop cuffed the player on this chase; no-op without an arc. */
 	public void bust(UUID id) {
-		throw new UnsupportedOperationException("TDD stub");
+		ChaseArc arc = arcs.get(id);
+		if (arc != null) arc.busts++;
 	}
 
-	// 0.21.0: the live headline went out for this chase; no-op without an arc.
+	/** The live headline went out for this chase; no-op without an arc. */
 	public void markNews(UUID id) {
-		throw new UnsupportedOperationException("TDD stub");
+		ChaseArc arc = arcs.get(id);
+		if (arc != null) arc.newsSent = true;
 	}
 }
