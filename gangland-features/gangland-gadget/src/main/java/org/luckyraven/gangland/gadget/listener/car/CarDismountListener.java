@@ -10,6 +10,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.vehicle.VehicleExitEvent;
+import lombok.CustomLog;
+import org.luckyraven.gangland.events.vehicle.CarExitEvent;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
@@ -25,6 +27,7 @@ import org.luckyraven.gangland.gadget.car.vehicle.VehicleSession;
  * {@code Vehicle}s, and the dismount event lives in {@code org.spigotmc} on the 1.16.5 compile floor but in
  * {@code org.bukkit} from 1.20.3 — no single class name compiles against the floor and loads on both.
  */
+@CustomLog
 @ListenerHandler
 @AutowireTarget({CarService.class})
 public class CarDismountListener implements Listener {
@@ -55,7 +58,10 @@ public class CarDismountListener implements Listener {
 		// Capture safe exit location before any entity manipulation
 		Location safeExit = findSafeExitLocation(vehicle.getLocation());
 
+		String type = session.getCar().getCarId();
 		carService.parkCar(vehicle.getUniqueId());
+		Bukkit.getPluginManager().callEvent(new CarExitEvent(player, vehicle, true));
+		log.debug("CAR_EVENT exit {} car={}", player.getName(), type);
 
 		// Teleport one tick later so the dismount packet is fully processed first
 		Bukkit.getScheduler().runTaskLater(carService.getPlugin(), () -> {
