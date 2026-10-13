@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.detainment.bail;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainedPlayer;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
@@ -31,7 +32,9 @@ public class BailService {
 		int wanted = detained == null || detained.getWantedAtArrest() == null ?
 		             0 :
 		             detained.getWantedAtArrest();
-		return costs.computeBailCost(wanted);
+		// 0.21.0: no row -> CUFFED -> unscaled
+		ArrestOrigin origin = detained == null ? ArrestOrigin.CUFFED : detained.originOrDefault();
+		return costs.computeBailCost(wanted) * costs.getBailMultiplier(origin);
 	}
 
 	public BailResult tryPayBail(Player player) {

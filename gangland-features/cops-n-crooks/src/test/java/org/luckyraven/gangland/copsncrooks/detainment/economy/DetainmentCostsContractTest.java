@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.detainment.economy;
 
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -141,4 +142,23 @@ class DetainmentCostsContractTest {
 		assertEquals(60, costs.computeSentenceSeconds(-3));
 	}
 
+	@Test
+	@DisplayName("0.21.0: an implementation that ignores origins prices every origin at 1.0, tap weight 1, snap chance 0")
+	void defaultMultipliers_areOne() {
+		for (ArrestOrigin origin : ArrestOrigin.values()) {
+			assertEquals(1.0, costs.getSentenceMultiplier(origin), origin.name());
+			assertEquals(1.0, costs.getBailMultiplier(origin), origin.name());
+			assertEquals(1.0, costs.getFineMultiplier(origin), origin.name());
+		}
+		assertEquals(1, costs.getLockpickTapWeight());
+		assertEquals(0.0, costs.getLockpickSnapChance());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a null origin is priced like any other (the default does not dereference it)")
+	void defaultMultipliers_nullOrigin() {
+		assertEquals(1.0, costs.getSentenceMultiplier(null));
+		assertEquals(1.0, costs.getBailMultiplier(null));
+		assertEquals(1.0, costs.getFineMultiplier(null));
+	}
 }

@@ -43,6 +43,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		wantedRoot.get("Kill_Combo");
 		// Post_Escape (0.16.1) is read by PostEscapeSettings, loaded beside this config by ChaseConfigLoader
 		wantedRoot.get("Post_Escape");
+		// Crew_Heat and Pursuit_Report (0.21.0) are read by CrewHeatSettings / PursuitReportSettings, loaded beside this config by ChaseConfigLoader
+		wantedRoot.get("Crew_Heat");
+		wantedRoot.get("Pursuit_Report");
 
 		ChaseConfig parsed = new ChaseConfig(heat(block(wantedRoot, "Heat", report)),
 		                                     evasion(block(wantedRoot, "Evasion", report), report),

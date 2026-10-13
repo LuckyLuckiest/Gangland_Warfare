@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainedPlayer;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
@@ -91,12 +92,18 @@ public class JailIntakeService {
 		if (detained != null) {
 			detained.setTransitExpiresAt(null);
 			detained.setWantedAtArrest(wantedLevel);
+			// 0.21.0: the arrest origin scales the sentence, the fine and the bail
+			ArrestOrigin origin = detained.originOrDefault();
+			double sentenceMult = costs.getSentenceMultiplier(origin);
 			// a death-commit already paid the hospital bill, so it gets no sheet
-			int extraSeconds = deathCommit ? 0 : chargeSheet(player, detained, wantedLevel, crimes);
-			long sentenceExpiresAt = System.currentTimeMillis() +
-			                         (costs.computeSentenceSeconds(wantedLevel) + extraSeconds) * 1000L;
+			int extraSeconds = deathCommit ? 0 : chargeSheet(player, detained, wantedLevel, crimes, origin);
+			long sentenceSeconds = Math.round(costs.computeSentenceSeconds(wantedLevel) * sentenceMult) + extraSeconds;
+			long sentenceExpiresAt = System.currentTimeMillis() + sentenceSeconds * 1000L;
 			detained.setSentenceExpiresAt(sentenceExpiresAt);
 			detainmentRegistry.save(detained);
+			log.debug("INTAKE {} origin={} wanted={} sentence={}s fine={} bail={}", player.getName(), origin,
+			          wantedLevel, sentenceSeconds, detained.getFinePaid(),
+			          costs.computeBailCost(wantedLevel) * costs.getBailMultiplier(origin));
 		}
 
 		// A searched player is at zero stars, so the clear above fires no wanted end: this event ends the chase (T-187)
@@ -111,12 +118,13 @@ public class JailIntakeService {
 	 *
 	 * @return the extra jail seconds for the part the wallet could not cover
 	 */
-	private int chargeSheet(Player player, DetainedPlayer detained, int wantedLevel, List<CrimeRecord> crimes) {
+	private int chargeSheet(Player player, DetainedPlayer detained, int wantedLevel, List<CrimeRecord> crimes,
+	                        ArrestOrigin origin) {
 		ChargeSheetSettings sheet = chase.get().chargeSheet();
 		// nothing to charge: an admin throw of a player with no stars and no crimes is not a bust
 		if (!sheet.enabled() || (wantedLevel <= 0 && crimes.isEmpty())) return 0;
 
-		double fine = sheet.fineFor(wantedLevel);
+		double fine = sheet.fineFor(wantedLevel) * costs.getFineMultiplier(origin);
 		if (fine <= 0) return 0;
 
 		double pay  = Math.floor(Math.min(economy.getBalance(player), fine) * 100) / 100;

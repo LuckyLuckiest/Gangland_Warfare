@@ -45,6 +45,14 @@ public class DetainmentRegistry implements BeanLifecycle {
 	}
 
 	public void setState(UUID playerId, DetainmentState state) {
+		setState(playerId, state, null);
+	}
+
+	/**
+	 * 0.21.0: records the arrest origin in the same save that creates or moves the row. A null origin leaves an existing
+	 * origin alone.
+	 */
+	public void setState(UUID playerId, DetainmentState state, @Nullable ArrestOrigin origin) {
 		if (state == DetainmentState.NORMAL) {
 			DetainedPlayer removed = detainedPlayers.remove(playerId);
 			if (removed != null) {
@@ -60,6 +68,7 @@ public class DetainmentRegistry implements BeanLifecycle {
 			Integer jailId = state == DetainmentState.JAILED ? resolvedJailId : null;
 
 			detainedPlayer = new DetainedPlayer(playerId, jailId, state);
+			if (origin != null) detainedPlayer.setOrigin(origin);
 
 			detainedPlayers.put(playerId, detainedPlayer);
 			detainmentRepository.save(detainedPlayer);
@@ -70,6 +79,7 @@ public class DetainmentRegistry implements BeanLifecycle {
 			detainedPlayer.setJailId(resolvedJailId);
 		}
 
+		if (origin != null) detainedPlayer.setOrigin(origin);
 		detainedPlayer.setState(state);
 		detainmentRepository.save(detainedPlayer);
 	}
