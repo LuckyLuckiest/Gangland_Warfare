@@ -325,7 +325,8 @@ class ScannerMapRendererTest {
 	@DisplayName("render draws one blue pointer per squad cop")
 	void renderDrawsBlueCops() {
 		renderFixture();
-		when(copManager.getCopsForPlayer(playerId)).thenReturn(List.of(copAt(10, 0), copAt(-10, 0)));
+		List<CopNpc> squad = List.of(copAt(10, 0), copAt(-10, 0));
+		when(copManager.getCopsForPlayer(playerId)).thenReturn(squad);
 
 		renderer.render(mock(MapView.class), canvas, player);
 
@@ -448,7 +449,8 @@ class ScannerMapRendererTest {
 	@DisplayName("the SCANNER_MAP debug line is throttled to one per player per 5 seconds (100 ticks)")
 	void debugThrottled() {
 		renderFixture();
-		when(copManager.getCopsForPlayer(playerId)).thenReturn(List.of(copAt(5, 5)));
+		List<CopNpc> squad = List.of(copAt(5, 5));
+		when(copManager.getCopsForPlayer(playerId)).thenReturn(squad);
 
 		renderer.render(mock(MapView.class), canvas, player);
 		ticks.set(20);
