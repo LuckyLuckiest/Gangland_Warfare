@@ -6,25 +6,32 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-/** TDD stub: a player entered a gadget car (fired by gangland-gadget). */
+/** A player entered a gadget car (fired by gangland-gadget). Synchronous, not cancellable. */
 public class CarEnterEvent extends Event {
 
 	private static final HandlerList HANDLERS = new HandlerList();
 
+	private final Player player;
+	private final Entity vehicle;
+	private final String carType;
+
 	public CarEnterEvent(Player player, Entity vehicle, String carType) {
 		super(false);
+		this.player = player;
+		this.vehicle = vehicle;
+		this.carType = carType;
 	}
 
 	public Player getPlayer() {
-		return null;
+		return player;
 	}
 
 	public Entity getVehicle() {
-		return null;
+		return vehicle;
 	}
 
 	public String getCarType() {
-		return null;
+		return carType;
 	}
 
 	public static HandlerList getHandlerList() {
@@ -33,7 +40,7 @@ public class CarEnterEvent extends Event {
 
 	@Override
 	public @NotNull HandlerList getHandlers() {
-		throw new UnsupportedOperationException("TDD stub");
+		return HANDLERS;
 	}
 
 }
