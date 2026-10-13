@@ -438,6 +438,20 @@ class BustedListenerTest {
 	}
 
 	@Test
+	@DisplayName("a bust restarts the squad's cuff-failure count like a normal cuff (P-BUST-5 parity)")
+	void bust_resetsSquadCuffFailures() {
+		CopNpc cop = hunter(1.0);
+		cop.getGroup().recordCuffFailure(victimId, 3);
+		cop.getGroup().recordCuffFailure(victimId, 3);
+
+		listener.onDamage(hit(9.0, DamageCause.ENTITY_ATTACK));
+
+		// count restarted: two more failures must not reach max 3
+		assertFalse(cop.getGroup().recordCuffFailure(victimId, 3));
+		assertFalse(cop.getGroup().recordCuffFailure(victimId, 3));
+	}
+
+	@Test
 	@DisplayName("a missing loaded cop provider falls back to 3 cuff attempts on the event")
 	void providerMissing_defaultsAttempts() {
 		when(copLoader.getLoadedProvider()).thenReturn(null);
