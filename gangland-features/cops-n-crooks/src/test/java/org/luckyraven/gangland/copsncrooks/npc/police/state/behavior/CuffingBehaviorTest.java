@@ -7,17 +7,22 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.ArgumentCaptor;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -66,6 +71,41 @@ class CuffingBehaviorTest {
 	@AfterEach
 	void tearDown() {
 		bukkit.close();
+	}
+
+	private CuffedEvent cuffAndCapture() {
+		when(cop.distanceTo(player)).thenReturn(1.0);
+		when(cop.hasLineOfSight(player)).thenReturn(true);
+		when(cop.attemptCuff(player)).thenReturn(true);
+		behavior.onEnter(cop);
+		for (int i = 0; i < 3; i++) behavior.tick(cop);
+
+		ArgumentCaptor<org.bukkit.event.Event> captor = ArgumentCaptor.forClass(org.bukkit.event.Event.class);
+		verify(bukkit.pluginManager(), atLeastOnce()).callEvent(captor.capture());
+		return captor.getAllValues().stream().filter(CuffedEvent.class::isInstance).map(CuffedEvent.class::cast)
+		                            .findFirst().orElseThrow();
+	}
+
+	@Test
+	@DisplayName("0.21.0: a cuff while the group holds fire on this target is a SURRENDERED arrest")
+	void cuffWhileCeaseFire_firesSurrenderedOrigin() {
+		group.setCeaseFire(true);
+
+		assertEquals(ArrestOrigin.SURRENDERED, cuffAndCapture().getOrigin());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a cuff without cease-fire is a plain CUFFED arrest")
+	void cuffWithoutCeaseFire_firesCuffedOrigin() {
+		assertEquals(ArrestOrigin.CUFFED, cuffAndCapture().getOrigin());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a cop without a group cuffs as CUFFED")
+	void cuffWithoutGroup_firesCuffedOrigin() {
+		when(cop.getGroup()).thenReturn(null);
+
+		assertEquals(ArrestOrigin.CUFFED, cuffAndCapture().getOrigin());
 	}
 
 	@Test
