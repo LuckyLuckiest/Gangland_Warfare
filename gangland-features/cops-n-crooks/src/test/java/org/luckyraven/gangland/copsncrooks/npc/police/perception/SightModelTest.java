@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -369,12 +370,24 @@ class SightModelTest {
 		factor();
 		assertEquals(List.of("SIGHT Bob factor=0.40 light=2 crowd=1.00 sneak=1.00"), debug);
 
+		Player al   = mock(Player.class);
+		UUID   alId = UUID.randomUUID();
+		when(al.getUniqueId()).thenReturn(alId);
+		when(al.getName()).thenReturn("Al");
+		when(al.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+		when(al.getEyeLocation()).thenReturn(eyes);
+		when(al.getInventory()).thenReturn(inventory);
+		when(manager.groupOf(alId)).thenReturn(null);
+		model.factor(cop, al);
+		assertEquals(2, debug.size());
+		assertTrue(debug.get(1).startsWith("SIGHT Al "));
+
 		now.addAndGet(4_999L);
 		factor();
-		assertEquals(1, debug.size());
+		assertEquals(2, debug.size());
 
 		now.addAndGet(2L);
 		factor();
-		assertEquals(2, debug.size());
+		assertEquals(3, debug.size());
 	}
 }

@@ -4,12 +4,14 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.bartizan.api.event.WeaponShootEvent;
 import org.luckyraven.bartizan.api.weapon.Weapon;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.SightModel;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -21,8 +23,14 @@ import static org.mockito.Mockito.verifyNoInteractions;
 @DisplayName("SightShotListener - a player's gunshot resets his sight factor")
 class SightShotListenerTest {
 
+	private final BukkitStatics     bukkit   = BukkitStatics.install(); // NpcSupport.isNpc reads the plugin manager
 	private final SightModel        model    = mock(SightModel.class);
 	private final SightShotListener listener = new SightShotListener(model);
+
+	@AfterEach
+	void tearDown() {
+		bukkit.close();
+	}
 
 	private WeaponShootEvent shot(LivingEntity who) {
 		return new WeaponShootEvent(mock(Weapon.class), who);
