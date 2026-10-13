@@ -78,6 +78,7 @@ public class CommandMessages extends LocalizedModuleYaml {
 		ITEM_GIVEN("Item.Given", "&aGave &f%item%&a to &f%target%&a.", Style.COMMAND),
 		ITEM_UNKNOWN("Item.Unknown", "&cUnknown item &f%item%&c. Items: &f%items%", Style.ERROR),
 		ITEM_NEEDS_PLAYER("Item.Needs_Player", "&cThe console must name a player.", Style.ERROR),
+		ITEM_USAGE("Item.Usage", "&cUsage: &f/glw cop item <item> [player]&c. Items: &f%items%", Style.ERROR),
 		ITEM_NO_PERMISSION("Item.No_Permission", "&cYou don't have permission to give cop items.", Style.ERROR);
 
 		public final String path;

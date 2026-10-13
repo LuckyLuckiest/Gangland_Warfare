@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.item;
 
+import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
@@ -110,7 +111,8 @@ public class CopsItems {
 
 	/** The configured material, or {@link Material#CLOCK} when the name is missing or unknown to this server. */
 	private static Material materialOf(@Nullable String name) {
-		Material material = name == null ? null : Material.getMaterial(name.toUpperCase(Locale.ROOT));
+		Material material = name == null ? null : XMaterial.matchXMaterial(name.toUpperCase(Locale.ROOT))
+		                                                          .map(XMaterial::parseMaterial).orElse(null);
 		return material == null ? Material.CLOCK : material;
 	}
 }
