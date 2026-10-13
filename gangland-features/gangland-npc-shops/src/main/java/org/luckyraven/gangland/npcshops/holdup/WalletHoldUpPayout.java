@@ -22,7 +22,13 @@ public final class WalletHoldUpPayout implements HoldUpPayout {
 
 	@Override
 	public BigDecimal pay(Player player) {
-		throw new UnsupportedOperationException("TDD stub");
+		HoldUpSettings s = settings.get();
+		long min = Math.round(s.takeMin() * 100);
+		long max = Math.round(s.takeMax() * 100);
+		// ponytail: uniform over whole cents; no weighting, no streak bonus.
+		long cents = Math.min(max, min + (long) (random.getAsDouble() * (max - min + 1)));
+		BigDecimal amount = BigDecimal.valueOf(cents, 2);
+		return economy.deposit(player, amount) ? amount : BigDecimal.ZERO;
 	}
 
 }
