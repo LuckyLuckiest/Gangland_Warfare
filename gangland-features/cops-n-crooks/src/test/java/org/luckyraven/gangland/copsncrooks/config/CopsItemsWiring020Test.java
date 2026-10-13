@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Lane f2-config (chunk C12): {@link CopsNCrooksModuleConfig} declares a {@link CopsItems} bean and a
@@ -43,6 +44,7 @@ class CopsItemsWiring020Test {
 	void setUp() {
 		bukkit    = BukkitStatics.install();
 		plugin    = mock(JavaPlugin.class);
+		when(plugin.getName()).thenReturn("gangland");
 		copLoader = mock(CopLoader.class);
 		config    = new CopsNCrooksModuleConfig(plugin, new DependencyContainer());
 	}
