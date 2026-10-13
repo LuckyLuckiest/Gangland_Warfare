@@ -31,8 +31,9 @@ public interface RadioVoice {
 	}
 
 	/**
-	 * Whether {@code listener} overhears {@code squad}'s lines beyond the ordinary ranges. A player who overhears is
-	 * delivered the line from any distance; the squad and player gaps still apply.
+	 * Whether {@code listener} overhears {@code squad}'s lines beyond the ordinary ranges. The voice owns its own
+	 * range and item checks; an overhearing player is delivered the line only within the speaker's world, and the
+	 * squad and player gaps still apply.
 	 *
 	 * @since 2.7
 	 */

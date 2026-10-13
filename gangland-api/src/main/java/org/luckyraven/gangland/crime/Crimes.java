@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.crime;
 
 /**
- * Crime ids for the 0.15 publishers. Ids are plain strings so a new crime needs no api bump; these constants match the
+ * Crime ids for the 0.15 publishers and (2.7) the 0.20.0 street crimes. Ids are plain strings so a new crime needs no api bump; these constants match the
  * shipped heat weight table.
  */
 public final class Crimes {
