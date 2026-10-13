@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.state;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -95,5 +98,33 @@ class CopBehaviorFactoryTest {
 
 		verify(perception).acquires(cop, player, ALERT_RANGE);
 		verify(cop, never()).transitionTo(any());
+	}
+
+	@Test
+	@DisplayName("the perception handed to the factory reaches the pursuing and combat behaviours (pursuit range)")
+	void factoryPassesPerceptionToPursuingAndCombat() {
+		when(provider.getCuffRadius()).thenReturn(2.0);
+		when(provider.getPursuitMaxDistance()).thenReturn(100.0);
+		when(provider.getPursuitMaxTicks()).thenReturn(600);
+		when(provider.getCombatRange()).thenReturn(20.0);
+		UUID   playerId = UUID.randomUUID();
+		Player player   = mock(Player.class);
+		when(player.isValid()).thenReturn(true);
+		bukkit.statics().when(() -> Bukkit.getPlayer(playerId)).thenReturn(player);
+		NpcSquad squad = new NpcSquad();
+		CopNpc   cop   = mock(CopNpc.class);
+		when(cop.getTargetPlayerId()).thenReturn(playerId);
+		when(cop.squadFor(player)).thenReturn(squad);
+		when(cop.distanceTo((LivingEntity) player)).thenReturn(10.0);
+		CopPerception perception = mock(CopPerception.class);
+		CopBehaviorFactory factory = new CopBehaviorFactory(provider, () -> mock(CopSpawnManager.class),
+		                                                    mock(DetainmentService.class), new CuffLockRegistry(),
+		                                                    id -> false, perception);
+		Map<CopState, CopBehavior> behaviors = factory.createBehaviors();
+
+		behaviors.get(CopState.PURSUING).tick(cop);
+		behaviors.get(CopState.COMBAT).tick(cop);
+
+		verify(perception, times(2)).pursuitRange(eq(cop), eq((LivingEntity) player), any(), eq(ALERT_RANGE));
 	}
 }
