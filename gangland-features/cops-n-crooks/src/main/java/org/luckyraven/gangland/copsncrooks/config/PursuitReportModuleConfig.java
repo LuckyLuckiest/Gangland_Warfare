@@ -1,6 +1,9 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
@@ -26,11 +29,16 @@ public class PursuitReportModuleConfig {
 
 	@Bean
 	public BreakingNews breakingNews(ChaseArcs arcs, ChaseConfigLoader config, WantedMessages messages) {
-		throw new UnsupportedOperationException("TDD stub");
+		return new BreakingNews(arcs, config, messages, line -> {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(line);
+			}
+		});
 	}
 
 	@PostConstruct
 	public void installNews() {
-		throw new UnsupportedOperationException("TDD stub");
+		BreakingNews news = container.getInstance(BreakingNews.class);
+		container.getInstance(CopManager.class).addAiTickHook(news::onAiTick);
 	}
 }
