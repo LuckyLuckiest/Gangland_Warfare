@@ -39,7 +39,12 @@ public final class BreakingNews {
 		this.broadcast = broadcast;
 	}
 
-	/** Sends the live headline when every condition holds; true when it went out. */
+	/**
+	 * Sends the live headline when every condition holds; true when it went out.
+	 * <p>
+	 * The {@code reason} argument is currently ignored: the debug log reports the trigger computed here ({@code STARS} or
+	 * {@code TIME}), not the caller's value. Kept so call sites stay unchanged; no behaviour depends on it.
+	 */
 	public boolean check(Player player, int level, String reason) {
 		PursuitReportSettings settings = config.getPursuitReport();
 		ChaseArc              arc      = arcs.arc(player.getUniqueId());
