@@ -16,6 +16,7 @@ import org.luckyraven.gangland.lootchest.data.LootTier;
 import org.luckyraven.gangland.lootchest.events.cracking.LootChestCrackingEndEvent;
 import org.luckyraven.gangland.lootchest.events.cracking.LootChestCrackingFailureEvent;
 import org.luckyraven.gangland.lootchest.events.cracking.LootChestCrackingSuccessEvent;
+import org.luckyraven.keystone.bean.autowire.Autowired;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.sound.SoundEffect;
 
@@ -43,6 +44,7 @@ public class CrackingAlarmListener implements Listener {
 	private final BiConsumer<Location, String> alarm;
 	private final Set<UUID>                 alarmed = ConcurrentHashMap.newKeySet();
 
+	@Autowired
 	public CrackingAlarmListener(LootChestSettingsProvider settings, CrimeService crimes) {
 		this(settings, crimes, (at, sound) -> {
 			// ponytail: a fresh SoundEffect per ring; cache one if alarms ever ring in a tight loop

@@ -19,6 +19,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.trespass.TrespassTracker;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.crime.Crimes;
 import org.luckyraven.gangland.data.region.PlaceRegion;
+import org.luckyraven.keystone.bean.autowire.Autowired;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 import java.util.HashMap;
@@ -39,6 +40,7 @@ public class TrespassListener implements Listener {
 	/** Permission that exempts a player from trespass crimes. */
 	public static final String BYPASS_PERMISSION = "gangland.cop.trespass.bypass";
 
+	@Autowired
 	public TrespassListener(AdminRegionRegistry regions, TrespassTracker tracker, DetainmentService detainment,
 	                        CrimeService crimes, ChaseConfigLoader config, WantedMessages messages) {
 		this(regions, tracker, detainment, crimes, config, messages, System::currentTimeMillis);
