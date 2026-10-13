@@ -6,6 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
+import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.witness.WitnessService;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
@@ -17,16 +18,22 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 @ListenerHandler
 public class WitnessListener implements Listener {
 
+	private final CivilianService civilians;
+	private final WitnessService  witnesses;
+
 	public WitnessListener(CivilianService civilians, WitnessService witnesses) {
+		this.civilians = civilians;
+		this.witnesses = witnesses;
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onCivilianDeath(EntityDeathEvent event) {
-		throw new UnsupportedOperationException("TDD stub");
+		CivilianNpc npc = civilians.getNpc(event.getEntity().getUniqueId());
+		if (npc != null && npc.getWitnessCall() != null) witnesses.onCallerDeath(npc);
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onQuit(PlayerQuitEvent event) {
-		throw new UnsupportedOperationException("TDD stub");
+		witnesses.onCriminalQuit(event.getPlayer().getUniqueId());
 	}
 }

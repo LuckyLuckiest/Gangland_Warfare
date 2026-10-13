@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.civilians.npc.state;
 
 import org.luckyraven.gangland.civilians.npc.CivilianState;
+import org.luckyraven.gangland.civilians.npc.state.behavior.CivilianCallingBehavior;
 import org.luckyraven.gangland.civilians.npc.state.behavior.CivilianCombatBehavior;
 import org.luckyraven.gangland.civilians.npc.state.behavior.CivilianFleeBehavior;
 import org.luckyraven.gangland.civilians.npc.state.behavior.CivilianIdleBehavior;
@@ -30,6 +31,7 @@ public class CivilianBehaviorFactory {
 		map.put(CivilianState.WANDERING, new CivilianWanderBehavior(softLeashRadius));
 		map.put(CivilianState.FLEEING, new CivilianFleeBehavior());
 		map.put(CivilianState.COMBAT, new CivilianCombatBehavior());
+		map.put(CivilianState.CALLING, new CivilianCallingBehavior());
 		return map;
 	}
 }

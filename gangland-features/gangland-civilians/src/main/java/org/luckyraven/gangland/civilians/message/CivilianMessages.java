@@ -75,7 +75,7 @@ public class CivilianMessages extends LocalizedModuleYaml implements RadioLines 
 
 	/** Action-bar line shown to a criminal when a witness starts calling 911 ({@code Witness_Calling}). */
 	public String witnessCalling() {
-		return "";
+		return color("Witness_Calling", "&cA witness is calling 911! Stop them!");
 	}
 
 	public String listEmpty() {

@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.civilians.witness.WitnessRules;
 import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
@@ -56,9 +57,10 @@ public class YamlCiviliansConfigProvider {
 		Map<String, CivilianTypeConfig>  types  = loadTypes(reader, report, itemParser);
 		Map<String, CivilianGroupConfig> groups = loadGroups(reader, report);
 		RadioSettings                    shouts = loadShouts(reader, report);
+		WitnessRules                     witness = WitnessRules.parse(reader);
 
 		this.config = new CiviliansConfig(defaultCivilian, defaultPolice, types, groups, aiEnabled, aiTickRate,
-		                                  shouts);
+		                                  shouts, witness);
 	}
 
 	// ── Loaders ───────────────────────────────────────────────────────────────
