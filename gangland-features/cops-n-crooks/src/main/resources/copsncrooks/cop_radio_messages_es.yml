@@ -207,7 +207,7 @@ Lines:
       - "Unidades volviendo a patrullar."
 # 0.21.0
    Surrender_Accepted:
-      - "¡Se rinde! ¡Alto el fuego, esposenlo!"
+      - "¡Se rinde! ¡Alto el fuego, espósenlo!"
       - "¡Manos arriba, se está entregando!"
    Standoff:
       - "¡Barricada! ¡Perímetro armado, todos a cubierto!"

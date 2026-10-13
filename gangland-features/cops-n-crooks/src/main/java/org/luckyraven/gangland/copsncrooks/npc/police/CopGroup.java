@@ -216,10 +216,12 @@ public class CopGroup {
 		combatAlert = true;
 	}
 
+	/** Holds fire on the target until {@link #escalate}. Not the Stand_Down radio line, not {@code CopManager.stoodDown}. */
 	public boolean isCeaseFire() {
 		return ceaseFire;
 	}
 
+	/** Holds fire on the target until {@link #escalate}. Not the Stand_Down radio line, not {@code CopManager.stoodDown}. */
 	public void setCeaseFire(boolean ceaseFire) {
 		this.ceaseFire = ceaseFire;
 	}

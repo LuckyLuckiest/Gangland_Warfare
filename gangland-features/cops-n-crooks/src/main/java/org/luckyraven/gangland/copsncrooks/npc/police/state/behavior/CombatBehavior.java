@@ -121,7 +121,7 @@ public class CombatBehavior implements CopBehavior {
 	}
 
 	private static boolean ceaseFire(CopNpc cop) {
-		UUID  id    = cop.getTargetPlayerId();
+		UUID     id    = cop.getTargetPlayerId();
 		CopGroup group = cop.getGroup();
 		return id != null && group != null && group.isCeaseFire() && id.equals(group.getTargetPlayerId());
 	}
