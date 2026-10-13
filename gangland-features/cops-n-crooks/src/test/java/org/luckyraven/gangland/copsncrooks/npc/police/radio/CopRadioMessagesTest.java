@@ -190,7 +190,8 @@ class CopRadioMessagesTest {
 			Map.entry("Commander_Orders_Basic", java.util.Set.of("role")),
 			Map.entry("Status_Check", java.util.Set.of("role")),
 			Map.entry("Dispatch_En_Route", java.util.Set.of("count", "station", "eta")),
-			Map.entry("Wipe_Refill", java.util.Set.of("eta")));
+			Map.entry("Wipe_Refill", java.util.Set.of("eta")),
+			Map.entry("Negotiate", java.util.Set.of("seconds")));
 
 	// %place% is supplied by every radio voice (Unknown_Place when no caller names one)
 	private static final java.util.Set<String> ALWAYS = java.util.Set.of("%unit%", "%target%", "%distance%",
@@ -279,6 +280,83 @@ class CopRadioMessagesTest {
 	void unknownPlace_fallsBackToTheArea() throws IOException {
 		assertEquals(List.of("the area"), build("Lines: {}\n").lines("Unknown_Place"));
 		assertEquals(List.of("la zona"), build("Unknown_Place: \"la zona\"\n").lines("Unknown_Place"));
+	}
+
+	// ---- 0.21.0 fnd-squad: the seven stand-off / breach lines ----
+
+	private static final List<String> LINES_0_21 = List.of("Surrender_Accepted", "Standoff", "Negotiate", "Standoff_Over",
+	                                                        "Stack_Up", "Breach", "Flashbang");
+
+	@Test
+	@DisplayName("0.21.0: each new key resolves to a non-empty list from the shipped English and Spanish files")
+	void newLinesPresent() throws IOException {
+		CopRadioMessages english = build(shipped("copsncrooks/cop_radio_messages.yml"));
+		initializeSettingsLanguage("es");
+		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
+		FileManager fileManager = new FileManager(plugin);
+		writeFile(fileManager, plugin, "cop_radio_messages.yml", shipped("copsncrooks/cop_radio_messages.yml"));
+		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("copsncrooks/cop_radio_messages_es.yml"));
+		CopRadioMessages spanish = new CopRadioMessages(fileManager);
+
+		for (String key : LINES_0_21) {
+			assertFalse(english.lines(key).isEmpty(), "English " + key);
+			assertFalse(spanish.lines(key).isEmpty(), "Spanish " + key);
+			assertNotEquals(english.lines(key), spanish.lines(key), "Spanish must be translated: " + key);
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.0 T-138: with no yaml keys at all (and with a pre-0.21 file), each new key is spoken from DEFAULT_LINES")
+	void newLinesDefaultWithoutYaml() throws IOException {
+		CopRadioMessages noKeys = build("Lines: {}\n");
+		CopRadioMessages old    = build("""
+				Lines:
+				   Contact:
+				      - "Contact!"
+				   Resisting:
+				      - "Suspect is resisting!"
+				""");
+
+		for (String key : LINES_0_21) {
+			assertFalse(noKeys.lines(key).isEmpty(), "no code default for " + key);
+			assertFalse(old.lines(key).isEmpty(), "pre-0.21 file: no code default for " + key);
+			assertEquals(noKeys.lines(key), old.lines(key), key);
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.0: Negotiate carries %seconds% in the default, English and Spanish; the other six name no %member% or %seconds%")
+	void negotiate_usesSeconds_othersUseNothingExtra() throws IOException {
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages english  = build(shipped("copsncrooks/cop_radio_messages.yml"));
+		CopRadioMessages spanish  = build(shipped("copsncrooks/cop_radio_messages_es.yml"));
+
+		for (CopRadioMessages source : List.of(fallback, english, spanish)) {
+			assertTrue(source.lines("Negotiate").stream().allMatch(line -> line.contains("%seconds%")),
+			           "every Negotiate variant shows the countdown");
+			for (String key : LINES_0_21) {
+				if (key.equals("Negotiate")) continue;
+				assertTrue(source.lines(key).stream().noneMatch(line -> line.contains("%member%") || line.contains("%seconds%")),
+				           key);
+				assertFalse(source.lines(key).isEmpty(), key);
+			}
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.0: the seven keys are appended at the end of Lines in both shipped files under a '# 0.21.0' comment")
+	void newLines_appendedAtEndOfBothFiles() throws IOException {
+		for (String resource : List.of("copsncrooks/cop_radio_messages.yml", "copsncrooks/cop_radio_messages_es.yml")) {
+			String yaml = shipped(resource);
+			int    mark = yaml.indexOf("# 0.21.0");
+			assertTrue(mark > 0, resource + " has no '# 0.21.0' comment");
+			int previous = mark;
+			for (String key : LINES_0_21) {
+				int at = yaml.indexOf("\n   " + key + ":");
+				assertTrue(at > previous, resource + ": " + key + " must follow the previous 0.21.0 key, after the comment");
+				previous = at;
+			}
+		}
 	}
 
 	private static java.util.Set<String> placeholders(List<String> pool) {

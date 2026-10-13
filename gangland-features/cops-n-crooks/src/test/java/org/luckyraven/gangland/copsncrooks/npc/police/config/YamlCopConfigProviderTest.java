@@ -706,6 +706,163 @@ class YamlCopConfigProviderTest {
 		assertEquals(0L, provider.getRadioSettings().cooldownFor("Wipe_Refill"));
 	}
 
+	// ---- 0.21.0 fnd-squad: Cops.Standoff / Cops.Breach ----
+
+	private static final StandoffSettings SHIPPED_STANDOFF = new StandoffSettings(true, 45, 15, 10, 2, 30, 8.0, 4, 12.0,
+	                                                                              1, 60);
+	private static final BreachSettings   SHIPPED_BREACH   = new BreachSettings(true, 2, 6, 3, 6, 20, 30, 4, 8.0, 40);
+
+	private static String shippedCopsYml() throws IOException {
+		try (InputStream in = Objects.requireNonNull(
+				YamlCopConfigProviderTest.class.getClassLoader().getResourceAsStream("copsncrooks/cops.yml"))) {
+			return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.0: the DEFAULT constants carry the shipped numbers (45/15/10/2/30/8/4/12/1/60 and 2/6/3/6/20/30/4/8/40)")
+	void standoffAndBreach_defaultConstants() {
+		assertEquals(SHIPPED_STANDOFF, StandoffSettings.DEFAULT);
+		assertEquals(SHIPPED_BREACH, BreachSettings.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("0.21.0: the bundled cops.yml declares Standoff and Breach, equals DEFAULT, no unknown keys")
+	void standoffAndBreachDefaults() throws IOException {
+		String yaml = shippedCopsYml();
+		for (String block : List.of("   Standoff:", "   Breach:", "      Flashbang:"))
+			assertTrue(yaml.contains(block), block + " must be declared");
+
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = parse(yaml, report);
+
+		assertTrue(report.issues().stream().noneMatch(issue -> "config.unknown_key".equals(issue.code())),
+		           () -> "unknown keys: " + report.issues());
+		assertEquals(SHIPPED_STANDOFF, provider.getStandoffSettings());
+		assertEquals(SHIPPED_BREACH, provider.getBreachSettings());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a cops.yml without the blocks (an upgraded server) gets the shipped numbers")
+	void missingStandoffAndBreach_areDefault() {
+		CopConfigProvider provider = parse("Cops:\n" + TIER_BLOCK);
+
+		assertEquals(SHIPPED_STANDOFF, provider.getStandoffSettings());
+		assertEquals(SHIPPED_BREACH, provider.getBreachSettings());
+	}
+
+	@Test
+	@DisplayName("0.21.0: Cops.Standoff and Cops.Breach (with Flashbang) parse key by key")
+	void standoffAndBreach_parsed() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Standoff:
+				      Enabled: false
+				      Timer_Seconds: 30
+				      Negotiate_Seconds: 5
+				      Unreachable_Seconds: 7
+				      Man_Down_Count: 3
+				      Man_Down_Window_Seconds: 20
+				      Spot_Radius: 6.5
+				      Post_Count: 6
+				      Post_Radius: 15.0
+				      Stars_On_Timeout: 2
+				      Cooldown_Seconds: 90
+				   Breach:
+				      Enabled: false
+				      Roof_Blocks: 3
+				      Door_Radius: 9
+				      Stack_Size: 4
+				      Stack_Wait_Seconds: 8
+				      Entry_Gap_Ticks: 10
+				      Cooldown_Seconds: 45
+				      Flashbang:
+				         Min_Stars: 5
+				         Radius: 10.5
+				         Ticks: 60
+				""" + TIER_BLOCK);
+
+		assertEquals(new StandoffSettings(false, 30, 5, 7, 3, 20, 6.5, 6, 15.0, 2, 90), provider.getStandoffSettings());
+		assertEquals(new BreachSettings(false, 3, 9, 4, 8, 10, 45, 5, 10.5, 60), provider.getBreachSettings());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a partly written block keeps the default for every key it leaves out")
+	void partialBlock_keepsOtherDefaults() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Standoff:
+				      Timer_Seconds: 20
+				   Breach:
+				      Flashbang:
+				         Min_Stars: 3
+				""" + TIER_BLOCK);
+
+		assertEquals(new StandoffSettings(true, 20, 15, 10, 2, 30, 8.0, 4, 12.0, 1, 60), provider.getStandoffSettings());
+		assertEquals(new BreachSettings(true, 2, 6, 3, 6, 20, 30, 3, 8.0, 40), provider.getBreachSettings());
+	}
+
+	@Test
+	@DisplayName("0.21.0: nonsense numbers are clamped to sane minimums (counts and durations >= 1, ring >= 2, stars >= 0)")
+	void standoffAndBreach_clamped() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Standoff:
+				      Timer_Seconds: -5
+				      Negotiate_Seconds: 0
+				      Unreachable_Seconds: 0
+				      Man_Down_Count: 0
+				      Man_Down_Window_Seconds: -1
+				      Spot_Radius: -3.0
+				      Post_Count: 0
+				      Post_Radius: 0.5
+				      Stars_On_Timeout: -2
+				      Cooldown_Seconds: -10
+				   Breach:
+				      Roof_Blocks: -1
+				      Door_Radius: 0
+				      Stack_Size: 0
+				      Stack_Wait_Seconds: -4
+				      Entry_Gap_Ticks: 0
+				      Cooldown_Seconds: -1
+				      Flashbang:
+				         Min_Stars: 0
+				         Radius: -1.0
+				         Ticks: 0
+				""" + TIER_BLOCK);
+
+		assertEquals(new StandoffSettings(true, 1, 1, 1, 1, 1, 1.0, 1, 2.0, 0, 0), provider.getStandoffSettings());
+		assertEquals(new BreachSettings(true, 0, 1, 1, 0, 1, 0, 1, 1.0, 1), provider.getBreachSettings());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a bad number keeps that key's default with a warning, no unknown-key report for the new blocks")
+	void standoffBadNumber_defaultsAndWarns() {
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Standoff:
+				      Timer_Seconds: soon
+				      Post_Count: 5
+				""" + TIER_BLOCK, report);
+
+		assertEquals(45, provider.getStandoffSettings().timerSeconds());
+		assertEquals(5, provider.getStandoffSettings().postCount());
+		assertTrue(report.issues().stream().anyMatch(issue -> !"config.unknown_key".equals(issue.code())),
+		           () -> "expected a warning for Timer_Seconds: " + report.issues());
+		assertTrue(report.issues().stream().noneMatch(issue -> "config.unknown_key".equals(issue.code())),
+		           () -> "unknown keys: " + report.issues());
+	}
+
+	@Test
+	@DisplayName("0.21.0 T-355: the Skip_Cuffing doc no longer claims an instant arrest; it says the tier goes straight to combat")
+	void skipCuffingDoc_isTruthful() throws IOException {
+		String yaml = shippedCopsYml();
+
+		assertFalse(yaml.contains("arrests the player instantly"), "T-355: the old wrong doc is still there");
+		assertTrue(yaml.contains("goes straight to combat"), "T-355: the corrected doc is missing");
+	}
+
 	@Test
 	@DisplayName("the dispatch lines are priority in the bundled list and the code default")
 	void dispatchLines_arePriorityInBundledAndDefault() throws IOException {

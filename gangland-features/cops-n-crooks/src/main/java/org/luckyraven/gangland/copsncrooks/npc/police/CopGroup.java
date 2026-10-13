@@ -211,6 +211,23 @@ public class CopGroup {
 		combatAlert = true;
 	}
 
+	/** TDD stub (0.21.0): per-target cease-fire flag. */
+	public boolean isCeaseFire() {
+		return false;
+	}
+
+	public void setCeaseFire(boolean ceaseFire) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	public void setStandoffUntil(long until) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	public boolean isStandoff(long now) {
+		return false;
+	}
+
 	/** {@code true} once after an {@link #escalate}. */
 	public boolean pollResisting() {
 		boolean pending = resistingPending;

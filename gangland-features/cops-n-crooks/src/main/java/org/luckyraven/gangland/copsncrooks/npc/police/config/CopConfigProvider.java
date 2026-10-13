@@ -328,6 +328,16 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 		return HandoffSettings.DEFAULT;
 	}
 
+	/** The barricade standoff ({@code Cops.Standoff}). */
+	default StandoffSettings getStandoffSettings() {
+		return StandoffSettings.DEFAULT;
+	}
+
+	/** The stack-up and breach ({@code Cops.Breach}). */
+	default BreachSettings getBreachSettings() {
+		return BreachSettings.DEFAULT;
+	}
+
 	/** The containment perimeter around an out-of-sight suspect ({@code Cops.Perimeter}). */
 	default PerimeterSettings getPerimeterSettings() {
 		return PerimeterSettings.DEFAULT;

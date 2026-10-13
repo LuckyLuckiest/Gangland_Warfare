@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.state.behavior;
 
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -274,6 +276,86 @@ class CombatBehaviorTest {
 		verify(cop).pauseNavigation();
 		verify(cop, never()).pursue(any(), any(), anyDouble());
 		verify(cop, never()).takeCover(any(), anyDouble(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a cease-fire group never attacks its target; the cop goes back to PURSUING")
+	void ceaseFire_noAttack_goesPursuing() {
+		targetAt(2.0);
+		groupFor(cop.getTargetPlayerId(), true);
+
+		behavior.tick(cop);
+
+		verify(cop, never()).attack(any(Player.class));
+		verify(cop, never()).attackEntity(any());
+		verify(cop, never()).pursue(any(), any(), anyDouble());
+		verify(cop).transitionTo(CopState.PURSUING);
+	}
+
+	@Test
+	@DisplayName("0.21.0: a ranged cop in sight of a cease-fire target still holds fire")
+	void ceaseFire_rangedCopHoldsFire() {
+		targetAt(10.0);
+		when(cop.isRangedAttacker()).thenReturn(true);
+		groupFor(cop.getTargetPlayerId(), true);
+
+		behavior.tick(cop);
+
+		verify(cop, never()).attack(any(Player.class));
+		verify(cop).transitionTo(CopState.PURSUING);
+	}
+
+	@Test
+	@DisplayName("0.21.0: cease-fire for another suspect's group does not stop this cop attacking its own target")
+	void ceaseFireOtherTarget_stillAttacks() {
+		Player player = targetAt(2.0);
+		groupFor(UUID.randomUUID(), true);
+
+		behavior.tick(cop);
+
+		verify(cop).attack(player);
+		verify(cop, never()).transitionTo(CopState.PURSUING);
+	}
+
+	@Test
+	@DisplayName("0.21.0: a group that is not cease-fire attacks as before (flag off, and no group at all)")
+	void noCeaseFire_attacksAsBefore() {
+		Player player = targetAt(2.0);
+		groupFor(cop.getTargetPlayerId(), false);
+
+		behavior.tick(cop);
+
+		verify(cop).attack(player);
+
+		when(cop.getGroup()).thenReturn(null);
+		behavior.tick(cop);
+
+		verify(cop, times(2)).attack(player);
+	}
+
+	@Test
+	@DisplayName("0.21.0: cease-fire does not hold an entity target's fire (hostile civilian NPC)")
+	void ceaseFire_doesNotAffectEntityTargets() {
+		LivingEntity civilian = mock(LivingEntity.class);
+		when(civilian.isValid()).thenReturn(true);
+		when(cop.getTargetEntity()).thenReturn(civilian);
+		when(cop.squadFor(civilian)).thenReturn(new NpcSquad());
+		when(cop.distanceTo(civilian)).thenReturn(2.0);
+		when(cop.canAttack()).thenReturn(true);
+		when(cop.hasLineOfSight(civilian)).thenReturn(true);
+		groupFor(UUID.randomUUID(), true);
+
+		behavior.tick(cop);
+
+		verify(cop).attackEntity(civilian);
+	}
+
+	private CopGroup groupFor(UUID targetId, boolean ceaseFire) {
+		CopGroup group = mock(CopGroup.class);
+		when(group.getTargetPlayerId()).thenReturn(targetId);
+		when(group.isCeaseFire()).thenReturn(ceaseFire);
+		when(cop.getGroup()).thenReturn(group);
+		return group;
 	}
 
 	private Player targetAt(double distance) {
