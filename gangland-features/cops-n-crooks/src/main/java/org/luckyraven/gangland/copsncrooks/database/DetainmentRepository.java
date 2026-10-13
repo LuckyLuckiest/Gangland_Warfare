@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.database;
 
 import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainedPlayer;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentState;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
@@ -74,13 +75,10 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 			                                                                   "wanted_at_arrest INTEGER, " +
 			                                                                   "fine_paid REAL, " +
 			                                                                   "fine_extra_seconds INTEGER, " +
+			                                                                   "origin_type VARCHAR(255), " +
 			                                                                   "PRIMARY KEY (player_uuid), " +
 			                                                                   "FOREIGN KEY (jail_id) REFERENCES jail(id))",
-			                                                                   "player_uuid", "jail_id", "state",
-			                                                                   "transit_expires_at",
-			                                                                   "sentence_expires_at",
-			                                                                   "wanted_at_arrest", "fine_paid",
-			                                                                   "fine_extra_seconds");
+			                                                                   sqliteCopyColumns(conn));
 			case DatabaseHandler.MYSQL -> migrateMysql(conn);
 		}
 
@@ -119,7 +117,8 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 			Object  rawSentence = v < result.length ? result[v++] : null;
 			Object  rawWanted   = v < result.length ? result[v++] : null;
 			Object  rawFine     = v < result.length ? result[v++] : null;
-			Object  rawExtra    = v < result.length ? result[v] : null;
+			Object  rawExtra    = v < result.length ? result[v++] : null;
+			Object  rawOrigin   = v < result.length ? result[v] : null;
 			Long    transitAt   = rawTransit == null ? null : ((Number) rawTransit).longValue();
 			Long    sentenceAt  = rawSentence == null ? null : ((Number) rawSentence).longValue();
 			Integer wantedLevel = rawWanted == null ? null : ((Number) rawWanted).intValue();
@@ -127,6 +126,14 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 			DetainedPlayer row = new DetainedPlayer(uuid, jailId, state, transitAt, sentenceAt, wantedLevel);
 			row.setFinePaid(rawFine == null ? null : ((Number) rawFine).doubleValue());
 			row.setFineExtraSeconds(rawExtra == null ? null : ((Number) rawExtra).intValue());
+
+			if (rawOrigin != null) {
+				try {
+					row.setOrigin(ArrestOrigin.valueOf(String.valueOf(rawOrigin)));
+				} catch (IllegalArgumentException ignored) {
+				}
+			}
+
 			detained.add(row);
 		}
 
@@ -146,6 +153,22 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 	@Override
 	protected void doDelete(DetainedPlayer data) throws SQLException {
 		tableBackend().delete("player_uuid = ?", data.getPlayerId().toString());
+	}
+
+	/** Columns the SQLite rebuild copies; origin_type only when the old table already has it (0.21.0, T-357). */
+	private String[] sqliteCopyColumns(Connection conn) throws SQLException {
+		List<String> columns = new ArrayList<>(List.of("player_uuid", "jail_id", "state", "transit_expires_at",
+		                                               "sentence_expires_at", "wanted_at_arrest", "fine_paid",
+		                                               "fine_extra_seconds"));
+
+		try (Statement stmt = conn.createStatement();
+		     java.sql.ResultSet rs = stmt.executeQuery("PRAGMA table_info('" + detainmentTable.getName() + "')")) {
+			while (rs.next()) {
+				if ("origin_type".equalsIgnoreCase(rs.getString("name"))) columns.add("origin_type");
+			}
+		}
+
+		return columns.toArray(new String[0]);
 	}
 
 	/**
