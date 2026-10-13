@@ -10,10 +10,10 @@ import org.luckyraven.keystone.economy.EconomyHandler;
 
 import java.math.BigDecimal;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DisplayName("GanglandTraderEconomy.deposit - the wallet credit behind the hold-up payout")
@@ -28,13 +28,14 @@ class GanglandTraderEconomyDepositTest {
 	@SuppressWarnings("unchecked")
 	void deposits() {
 		User<Player>   user    = mock(User.class);
-		EconomyHandler economy = mock(EconomyHandler.class);
+		EconomyHandler economy = new EconomyHandler(null);
+		economy.setAmount(BigDecimal.ZERO);
 		when(users.getUser(player)).thenReturn(user);
 		when(user.getEconomy()).thenReturn(economy);
 
 		assertTrue(new GanglandTraderEconomy(users).deposit(player, new BigDecimal("345.67")));
 
-		verify(economy).depositAmount(new BigDecimal("345.67"));
+		assertEquals(0, economy.getAmount().compareTo(new BigDecimal("345.67")));
 	}
 
 	@Test

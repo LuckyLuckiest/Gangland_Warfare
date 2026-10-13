@@ -9,8 +9,8 @@ import org.luckyraven.keystone.bean.BeanLifecycle;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -25,7 +25,7 @@ public final class HoldUpService implements BeanLifecycle {
 	private final Supplier<HoldUpSettings>               loader;
 	private final Supplier<Collection<? extends Player>> players;
 	private final Predicate<Player>                      weaponHeld;
-	private final Function<Player, HoldUpTarget>         aimResolver;
+	private final BiFunction<Player, HoldUpSettings, HoldUpTarget> aimResolver;
 	private final MoodService                            mood;
 	private final CrimeService                           crimes;
 	private final HoldUpPayout                           payout;
@@ -35,7 +35,7 @@ public final class HoldUpService implements BeanLifecycle {
 
 	public HoldUpService(JavaPlugin plugin, Supplier<HoldUpSettings> loader,
 	                     Supplier<Collection<? extends Player>> players, Predicate<Player> weaponHeld,
-	                     Function<Player, HoldUpTarget> aimResolver, MoodService mood, CrimeService crimes,
+	                     BiFunction<Player, HoldUpSettings, HoldUpTarget> aimResolver, MoodService mood, CrimeService crimes,
 	                     HoldUpPayout payout, LongSupplier clockMillis, BiConsumer<Player, String> actionBar,
 	                     Consumer<String> debug) {
 		this.plugin      = plugin;

@@ -119,13 +119,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Test only: EconomyHandler (keystone-hooks) names Vault's Economy, so mocking it in the hold-up deposit
-             test needs the class on the classpath. Not shipped; the host jar provides it at runtime. -->
-        <dependency>
-            <groupId>com.github.MilkBowl</groupId>
-            <artifactId>VaultAPI</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <!-- Shared test fixtures (testsupport.CitizensBlindScan / ConfigurationConstructorScan) -->
         <dependency>

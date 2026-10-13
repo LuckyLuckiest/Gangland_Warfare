@@ -123,6 +123,25 @@ class HoldUpSettingsTest {
 	}
 
 	@Test
+	@DisplayName("every shipped Hold_Up key line is preceded by a comment line")
+	void everyHoldUpKeyHasAComment() throws IOException {
+		List<String> lines = shippedYaml().lines().toList();
+		int          start = lines.indexOf("Hold_Up:");
+		assertTrue(start >= 0, "Hold_Up: block missing");
+		for (int i = start + 1; i < lines.size(); i++) {
+			String line = lines.get(i);
+			if (!line.startsWith(" ")) {
+				break; // next top-level key
+			}
+			String t = line.trim();
+			if (t.isEmpty() || t.startsWith("#") || t.equals("Messages:")) {
+				continue;
+			}
+			assertTrue(lines.get(i - 1).trim().startsWith("#"), "no comment above: " + t);
+		}
+	}
+
+	@Test
 	@DisplayName("the shipped file loads to exactly the in-code defaults")
 	void shippedFileEqualsDefaults() throws IOException {
 		assertEquals(HoldUpSettings.defaults(), HoldUpSettings.load(handler(shippedYaml())));

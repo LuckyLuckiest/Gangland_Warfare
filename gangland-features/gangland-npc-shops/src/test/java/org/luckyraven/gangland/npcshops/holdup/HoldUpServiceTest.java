@@ -115,7 +115,7 @@ class HoldUpServiceTest {
 	private HoldUpService newService(Supplier<HoldUpSettings> loader) {
 		Supplier<Collection<? extends Player>> online = () -> listedWindow.test(clock.get()) ? List.of(player)
 		                                                                                    : List.of();
-		return new HoldUpService(null, loader, online, p -> weaponWindow.test(clock.get()), p -> {
+		return new HoldUpService(null, loader, online, p -> weaponWindow.test(clock.get()), (p, st) -> {
 			resolverCalls.incrementAndGet();
 			return aimWindow.test(clock.get()) ? aimedTarget : null;
 		}, mood, crimes, payout, clock::get, actionBar, debugLines::add);
@@ -172,6 +172,20 @@ class HoldUpServiceTest {
 		verify(crimes, times(1)).commit(any(), anyString(), any(), anyBoolean(), anyInt());
 		verify(payout, never()).pay(any());
 		assertFalse(service.hasSession(PLAYER));
+	}
+
+	@Test
+	@DisplayName("a disliked trader held for the full 10 s still pays: alarm at 4 s, take at 10 s, no Closed refusal")
+	void dislikedFullHoldStillPays() {
+		when(mood.getMood(TRADER_A, PLAYER)).thenReturn(0.1D);
+
+		run(0, 10750);
+		verify(player, never()).sendMessage(contains(CLOSED));
+		verify(crimes, times(1)).commit(player, Crimes.STORE_ROBBERY, locA, false, 1);
+
+		run(11000, 11000);
+		verify(payout, times(1)).pay(player);
+		verify(crimes, times(1)).commit(any(), anyString(), any(), anyBoolean(), anyInt());
 	}
 
 	@Test
@@ -331,9 +345,11 @@ class HoldUpServiceTest {
 	@DisplayName("reload applies new settings to the next poll")
 	void reloadPicksUpNewSettings() {
 		settings = new HoldUpSettings(true, 6.0, 10.0, 3, 3, 0.2, 2, 200.0, 600.0, 300, FILLING, DONE, ABORTED,
-		                              CLOSED);
+		                              CLOSED); // swapped in WITHOUT reload: the service must keep its cached copy
+		run(0, 4000); // not reloaded yet: the cached 10 s settings still apply
+		verify(payout, never()).pay(any());
 		service.reload();
-		run(0, 4000); // session starts 1000, fill 3 s -> done at 4000
+		run(4250, 4250); // cached 3 s settings: the live session (started 1000) is already past 3 s
 		verify(payout, times(1)).pay(player);
 	}
 
@@ -365,7 +381,8 @@ class HoldUpServiceTest {
 	@DisplayName("the action bar shows the filling text while a session runs")
 	void actionBarShowsFilling() {
 		run(0, 3000);
-		verify(actionBar, org.mockito.Mockito.atLeastOnce()).accept(eq(player), contains("Filling"));
+		verify(actionBar, org.mockito.Mockito.atLeastOnce()).accept(eq(player), contains("Filling 8s"));
+		verify(actionBar, never()).accept(any(), contains("{seconds}"));
 	}
 
 	@Test
