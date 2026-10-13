@@ -8,6 +8,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffectType;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
@@ -15,7 +16,6 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.SightSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 
-import java.util.ArrayList;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +26,6 @@ import java.util.function.Supplier;
 /**
  * Darkness and crowds hide you (0.20.0, {@code Cops.Sight}): one {@link CopPerception.SightFactor} scaling every
  * cop's alert range by light level, civilian crowd and sneaking; gunfire, fire and glowing reset it to 1.
- * TDD skeleton: behaviour arrives with the green chunks.
  */
 @CustomLog
 public class SightModel implements CopPerception.SightFactor {
@@ -51,7 +50,7 @@ public class SightModel implements CopPerception.SightFactor {
 		this.clock      = clock;
 	}
 
-	/** Where the throttled {@code SIGHT} debug lines go (default: nowhere). */
+	/** Where the throttled {@code SIGHT} debug lines go (default: log.debug). */
 	public void setDebugSink(Consumer<String> sink) {
 		this.debugSink = sink;
 	}
@@ -65,8 +64,11 @@ public class SightModel implements CopPerception.SightFactor {
 		UUID id  = target.getUniqueId();
 		long now = clock.getAsLong();
 		Long shot = lastShot.get(id);
+		if (shot != null && now - shot >= s.shotResetSeconds() * 1000L) {
+			lastShot.remove(id, shot);
+		}
 		if ((shot != null && now - shot < s.shotResetSeconds() * 1000L) || target.getFireTicks() > 0
-		    || target.isGlowing()) {
+		    || target.isGlowing() || target.hasPotionEffect(PotionEffectType.GLOWING)) {
 			return 1.0;
 		}
 
@@ -123,7 +125,7 @@ public class SightModel implements CopPerception.SightFactor {
 		Location here  = target.getLocation();
 		double   r2    = s.crowdRadius() * s.crowdRadius();
 		int      count = 0;
-		for (CivilianNpc npc : new ArrayList<>(civilians.getActiveNpcs())) {
+		for (CivilianNpc npc : civilians.getActiveNpcs()) {
 			Entity entity = npc.isValid() ? npc.getEntity() : null;
 			if (entity == null) {
 				continue;
