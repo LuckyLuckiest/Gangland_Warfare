@@ -10,6 +10,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.OverwatchSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.keystone.npc.NpcPost;
 
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 
@@ -141,7 +142,75 @@ public class OverwatchController {
 
 	/** Per AI tick: walk to the perch, hold it, report a sighting, enforce Max_Seconds and the star floor. */
 	public void tick(Player player, @Nullable CopGroup group) {
-		throw new UnsupportedOperationException("TDD stub");
+		UUID  id    = player.getUniqueId();
+		Watch watch = active.get(id);
+		if (watch == null) {
+			return;
+		}
+		CopNpc cop = watch.cop;
+		if (!cop.isValid() || cop.getCurrentState() != CopState.OVERWATCH) {
+			// dead, or forced out of OVERWATCH by someone else: his new state is not ours to touch
+			active.remove(id);
+			return;
+		}
+		if (group == null) {
+			active.remove(id);
+			cop.releasePost();
+			cop.transitionTo(CopState.RETURNING);
+			return;
+		}
+
+		OverwatchSettings settings = provider.get().getOverwatchSettings();
+		if (levelOf.applyAsInt(player) < settings.minLevel()) {
+			end(player, CopState.PURSUING);
+			return;
+		}
+		long now = clock.getAsLong();
+		if (now - watch.startedAt >= settings.maxSeconds() * 1000L) {
+			end(player, CopState.PURSUING);
+			spent.add(id);
+			return;
+		}
+
+		if (!watch.posted) {
+			Location perch = watch.perches.get(watch.index);
+			if (reached(cop, perch)) {
+				cop.holdPost(new NpcPost(perch, REACH_RADIUS, watch.lastKnown));
+				watch.posted = true;
+				log.debug("OVERWATCH {} state=perch at={},{},{}", player.getName(), perch.getX(), perch.getY(),
+				          perch.getZ());
+			} else if (cop.millisUnreachable() >= UNREACHABLE_MILLIS ||
+			           now - watch.perchStartedAt >= settings.reachSeconds() * 1000L) {
+				watch.failures++;
+				if (watch.failures >= settings.maxFailures() || watch.index + 1 >= watch.perches.size()) {
+					active.remove(id);
+					spent.add(id);
+					cop.transitionTo(CopState.PURSUING);
+					log.debug("OVERWATCH {} state=give_up failures={}", player.getName(), watch.failures);
+					return;
+				}
+				watch.index++;
+				watch.perchStartedAt = now;
+				cop.navigateTo(watch.perches.get(watch.index));
+			}
+		}
+
+		if (watch.posted && cop.canSee(player, settings.sightRange())) {
+			Location seen = player.getLocation();
+			Location from = cop.getEntity().getLocation();
+			group.getSquad().reportSighting(seen);
+			boolean said = copRadio.sayAs(group, cop, "Overwatch_Spotted", Map.of(
+					"distance", Math.round(from.distance(seen)) + " blocks",
+					"direction", copRadio.compassWord(from, seen)));
+			if (said) {
+				log.debug("OVERWATCH {} state=spotted", player.getName());
+			}
+		}
+	}
+
+	private static boolean reached(CopNpc cop, Location perch) {
+		Location at = cop.getEntity().getLocation();
+		return Objects.equals(at.getWorld(), perch.getWorld()) && at.distance(perch) <= REACH_RADIUS;
 	}
 
 	public boolean isActive(UUID playerId) {
