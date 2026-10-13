@@ -30,6 +30,7 @@ import org.luckyraven.keystone.util.ChatUtil;
 import java.util.*;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntConsumer;
+import java.util.function.IntPredicate;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -75,6 +76,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	private final Set<String>        unknownRoles = new HashSet<>();
 	private       BukkitTask          tickTask;
 	private       BooleanSupplier     citizens = NpcSupport::available;
+	private       IntPredicate        holding  = turfId -> false;
 
 	public TurfDefenderDeployer(JavaPlugin plugin,
 	                            CivilianService civilianService,
@@ -106,6 +108,11 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		killed.clear();
 		numberByNpc.clear();
 		recycledAt.clear();
+	}
+
+	/** W7-F: whether a turf's guards are on the Hold order; unbound, every turf defends. */
+	public void bindHolding(IntPredicate holding) {
+		this.holding = holding;
 	}
 
 	/** Test seam: whether Citizens counts as available. */
@@ -218,6 +225,11 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	public int findOwningTurfId(Entity entity) {
 		if (entity == null) return -1;
 		return turfByEntity.getOrDefault(entity.getUniqueId(), -1);
+	}
+
+	/** Turf of a tracked guard by NPC, or -1; unlike {@link #findOwningTurfId} it needs no live body. */
+	public int turfOf(CivilianNpc npc) {
+		return turfByNpc.getOrDefault(npc, -1);
 	}
 
 	/**
@@ -337,10 +349,12 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 
 			Set<UUID> challengerIds = group.challengerMembers.get();
 			double radiusSquared = group.targetingRadius * group.targetingRadius;
+			boolean hold = garrison != null && holding.test(entry.getKey());
 			for (TrackedDefender d : group.defenders) {
 				if (garrison != null && leash(d.npc, garrison)) continue;
+				if (hold && holdToPost(d.npc, garrison)) continue;
 				if (challengerIds == null || challengerIds.isEmpty()) continue;
-				retarget(d.npc, challengerIds, radiusSquared, garrison);
+				retarget(d.npc, challengerIds, radiusSquared, garrison, hold);
 			}
 		}
 	}
@@ -522,6 +536,26 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		return true;
 	}
 
+	/**
+	 * Hold order (W7-F): a guard further than the hold radius from its nearest post drops its target and walks back.
+	 * Returns true when it did (the guard must not pick a new target this tick).
+	 */
+	private boolean holdToPost(CivilianNpc npc, TurfGarrison garrison) {
+		LivingEntity entity = npc.getEntity();
+		if (entity == null || garrison.posts == null) return false;
+		Location at   = entity.getLocation();
+		Post     post = GarrisonPosts.nearest(garrison.posts, at.getX(), at.getZ());
+		if (post == null || GarrisonPosts.withinHold(post, at.getX(), at.getZ(), garrison.config.holdRadius())) {
+			return false;
+		}
+		npc.setTargetPlayerId(null);
+		if (npc.getCurrentState() == CivilianState.COMBAT) {
+			npc.transitionTo(CivilianState.IDLE);
+		}
+		walkToPost(npc, at, garrison);
+		return true;
+	}
+
 	/** A survivor of a finished contest: no target, back to the nearest post. */
 	private void standDownOne(CivilianNpc npc, TurfGarrison garrison) {
 		LivingEntity entity = npc.getEntity();
@@ -562,8 +596,15 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		}
 	}
 
-	private void retarget(CivilianNpc npc, Set<UUID> challengerIds, double radiusSquared, TurfGarrison garrison) {
+	private void retarget(CivilianNpc npc, Set<UUID> challengerIds, double radiusSquared, TurfGarrison garrison,
+	                      boolean hold) {
 		if (npc.getEntity() == null) return;
+		// Hold: only attackers near this guard's own post are fair game
+		Post holdPost = null;
+		if (hold && garrison.posts != null) {
+			Location guardAt = npc.getEntity().getLocation();
+			holdPost = GarrisonPosts.nearest(garrison.posts, guardAt.getX(), guardAt.getZ());
+		}
 		Player closest     = null;
 		double closestDist = radiusSquared;
 		for (Player player : npc.getEntity().getWorld().getPlayers()) {
@@ -572,6 +613,10 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			Location at = player.getLocation();
 			if (garrison != null && !GarrisonPosts.withinLeash(at.getX(), at.getZ(), garrison.region,
 			                                                   garrison.config.leashMargin())) {
+				continue;
+			}
+			if (holdPost != null && !GarrisonPosts.withinHold(holdPost, at.getX(), at.getZ(),
+			                                                  garrison.config.holdRadius())) {
 				continue;
 			}
 			double dist = at.distanceSquared(npc.getEntity().getLocation());

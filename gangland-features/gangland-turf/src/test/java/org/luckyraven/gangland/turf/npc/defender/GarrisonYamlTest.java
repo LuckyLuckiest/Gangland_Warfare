@@ -36,6 +36,8 @@ class GarrisonYamlTest {
 		assertEquals(0.5, config.bountyShare());
 		assertEquals(12, config.recycleSeconds());
 		assertEquals("turf_defender", config.typeId());
+		assertEquals(6.0, config.holdRadius());
+		assertEquals(60, loader.getOwnerAlertCooldownSeconds());
 	}
 
 	@Test
@@ -48,6 +50,7 @@ class GarrisonYamlTest {
 		assertEquals(5, loader.getDefenderConfig().waveSize());
 		assertEquals(6, loader.getDefenderConfig().maxAlive());
 		assertEquals(16, loader.getDefenderConfig().leashMargin());
+		assertEquals(6.0, loader.getDefenderConfig().holdRadius());
 	}
 
 	@Test

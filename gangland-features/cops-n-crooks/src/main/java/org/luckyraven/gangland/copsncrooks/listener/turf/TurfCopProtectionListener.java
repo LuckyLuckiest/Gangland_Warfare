@@ -9,7 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
+import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
@@ -21,7 +21,8 @@ import java.util.UUID;
 /**
  * Hands a player that a cop NPC damaged to the turf defenders: the cop hit is forwarded to {@link TurfCopGuard}, which
  * decides whether the victim is protected (standing on a turf owned by their gang, or an allied gang when enabled).
- * Covers the melee/projectile path and the Bartizan raytrace path so a gun shot counts the same as a punch.
+ * Covers the melee/projectile path; a Bartizan gun shot raises the same damage event, so it counts like a punch (T-835:
+ * a second WeaponRaytraceImpactEvent handler ran the guard twice per hit).
  *
  * <p>Kept in cops-n-crooks because it is the only place that can recognise a cop ({@link CopManager#isCopNpc}); the turf
  * module never imports cops-n-crooks types.
@@ -50,15 +51,13 @@ public final class TurfCopProtectionListener implements Listener {
 		guard.onCopHitPlayer(cop, victim);
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onWeaponImpact(WeaponRaytraceImpactEvent event) {
-		if (!(event.getHitEntity() instanceof Player victim)) return;
-		if (NpcSupport.isNpc(victim)) return;
+	/** T-832: the cuffing is the arrest; the turf module tells the owners if the target is one of them on their turf. */
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onCuffed(CuffedEvent event) {
+		Player target = event.getTarget();
+		if (target == null || NpcSupport.isNpc(target)) return;
 
-		Entity shooter = event.getShooter();
-		if (!(shooter instanceof LivingEntity cop) || !copManager.isCopNpc(cop)) return;
-
-		guard.onCopHitPlayer(cop, victim);
+		guard.onPlayerArrested(target);
 	}
 
 	/**

@@ -18,11 +18,12 @@ package org.luckyraven.gangland.turf.npc.defender;
  * @param bountyShare share of a guard's price paid to a rival who kills it ({@code Garrison.Bounty_Share}, 0 = off)
  * @param recycleSeconds unreachable and unseen for this long and a guard reappears at another post
  * 		({@code Garrison.Recycle_Seconds}, 0 = off)
+ * @param holdRadius blocks around its post a guard keeps to under the Hold order ({@code Garrison.Hold_Radius})
  */
 public record TurfDefenderConfig(String typeId, double targetingRadius, int lifespanSeconds, int waveSize,
                                  int maxAlive, int waveCooldownSeconds, int standDownSeconds, int leashMargin,
                                  GarrisonComposition composition, double bountyShare,
-                                 int recycleSeconds) {
+                                 int recycleSeconds, double holdRadius) {
 
 	public static final int DEFAULT_WAVE_SIZE = 3;
 	public static final int DEFAULT_MAX_ALIVE = 6;
@@ -31,6 +32,15 @@ public record TurfDefenderConfig(String typeId, double targetingRadius, int life
 	public static final int DEFAULT_LEASH_MARGIN = 16;
 	public static final double DEFAULT_BOUNTY_SHARE = 0.5;
 	public static final int DEFAULT_RECYCLE_SECONDS = 12;
+	public static final double DEFAULT_HOLD_RADIUS = 6.0;
+
+	/** Without a hold radius: the shipped default. */
+	public TurfDefenderConfig(String typeId, double targetingRadius, int lifespanSeconds, int waveSize, int maxAlive,
+	                          int waveCooldownSeconds, int standDownSeconds, int leashMargin,
+	                          GarrisonComposition composition, double bountyShare, int recycleSeconds) {
+		this(typeId, targetingRadius, lifespanSeconds, waveSize, maxAlive, waveCooldownSeconds, standDownSeconds,
+		     leashMargin, composition, bountyShare, recycleSeconds, DEFAULT_HOLD_RADIUS);
+	}
 
 	/** Without a bounty share or recycle time: the shipped defaults. */
 	public TurfDefenderConfig(String typeId, double targetingRadius, int lifespanSeconds, int waveSize, int maxAlive,

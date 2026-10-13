@@ -25,6 +25,7 @@ import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -490,6 +491,153 @@ class TurfCopGuardTest {
 
 			verify(task).cancel();
 		}
+	}
+
+	// ── W7-E / W7-F seams: guard orders and owner alerts ─────────────────────
+
+	@Test
+	@DisplayName("W7-F hold: no NPC of a holding turf answers the cop")
+	void holdOrder_noNpcAnswersTheCop() throws Exception {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       victim = victim(spot, UUID.randomUUID());
+		whenVictimOn(victim, spot, turf1, 1);
+
+		CivilianNpc quartermaster = npcAt(5, true);
+		CivilianNpc defender      = npcAt(10, true);
+		wirePowerupsAndDefenders(1, List.of(quartermaster), List.of(defender));
+
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.bindHolding(id -> id == 1);
+		guard.onCopHitPlayer(cop, victim);
+
+		verify(quartermaster, never()).addEntityTargetToFront(cop);
+		verify(defender, never()).addEntityTargetToFront(cop);
+		assertEquals(0, engagementCount(guard));
+	}
+
+	@Test
+	@DisplayName("W7-F hold: a turf that is not holding still defends")
+	void holdOrder_otherTurfStillDefends() {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       victim = victim(spot, UUID.randomUUID());
+		whenVictimOn(victim, spot, turf1, 1);
+
+		CivilianNpc defender = npcAt(5, true);
+		wirePowerupsAndDefenders(1, List.of(), List.of(defender));
+
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.bindHolding(id -> id == 2);
+		guard.onCopHitPlayer(cop, victim);
+
+		verify(defender).addEntityTargetToFront(cop);
+	}
+
+	@Test
+	@DisplayName("W7-F hold set mid-fight: the next tick releases the cop")
+	void holdOrder_setMidFight_releasesOnTick() throws Exception {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       victim = victim(spot, UUID.randomUUID());
+		whenVictimOn(victim, spot, turf1, 1);
+
+		CivilianNpc defender = npcAt(5, true);
+		wirePowerupsAndDefenders(1, List.of(), List.of(defender));
+
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.onCopHitPlayer(cop, victim);
+		assertEquals(1, engagementCount(guard), "precondition: the hit opens one engagement");
+
+		guard.bindHolding(id -> true);
+		guard.tick();
+
+		verify(defender).removeEntityTarget(cop);
+		assertEquals(0, engagementCount(guard));
+	}
+
+	@Test
+	@DisplayName("W7-E: a protected hit reports the turf and the victim once")
+	void protectedHit_reportedOnceWithTurfAndVictim() {
+		LivingEntity cop      = living(0);
+		Location     spot     = loc(0);
+		UUID         victimId = UUID.randomUUID();
+		Player       victim   = victim(spot, victimId);
+		whenVictimOn(victim, spot, turf1, 1);
+
+		List<String> calls = new ArrayList<>();
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.bindProtectedHit((turf, hit) -> calls.add(turf.getId() + ":" + hit.getUniqueId()));
+		guard.onCopHitPlayer(cop, victim);
+
+		assertEquals(List.of("1:" + victimId), calls);
+	}
+
+	@Test
+	@DisplayName("W7-E: a protected hit is reported even while the turf holds")
+	void protectedHit_reportedEvenUnderHold() {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       victim = victim(spot, UUID.randomUUID());
+		whenVictimOn(victim, spot, turf1, 1);
+
+		CivilianNpc defender = npcAt(5, true);
+		wirePowerupsAndDefenders(1, List.of(), List.of(defender));
+
+		List<String> calls = new ArrayList<>();
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.bindHolding(id -> true);
+		guard.bindProtectedHit((turf, hit) -> calls.add("hit"));
+		guard.onCopHitPlayer(cop, victim);
+
+		assertEquals(1, calls.size());
+		verify(defender, never()).addEntityTargetToFront(cop);
+	}
+
+	@Test
+	@DisplayName("W7-E: no owner alert for a challenger victim or while the guard is disabled")
+	void protectedHit_notReportedForUnprotectedOrDisabled() {
+		LivingEntity cop  = living(0);
+		Location     spot = loc(0);
+
+		Player challenger = victim(spot, UUID.randomUUID());
+		whenVictimOn(challenger, spot, turf1, 3);
+		List<String> challengerCalls = new ArrayList<>();
+		TurfCopGuard challengerGuard = guard(enabledConfig());
+		challengerGuard.bindProtectedHit((turf, hit) -> challengerCalls.add("hit"));
+		challengerGuard.onCopHitPlayer(cop, challenger);
+		assertTrue(challengerCalls.isEmpty());
+
+		Player owner = victim(spot, UUID.randomUUID());
+		whenVictimOn(owner, spot, turf1, 1);
+		List<String> disabledCalls = new ArrayList<>();
+		TurfCopGuard disabledGuard = guard(new CopGuardConfig(false, 32.0, true));
+		disabledGuard.bindProtectedHit((turf, hit) -> disabledCalls.add("hit"));
+		disabledGuard.onCopHitPlayer(cop, owner);
+		assertTrue(disabledCalls.isEmpty());
+	}
+
+	@Test
+	@DisplayName("T-832: cuffing an owner-gang member on the turf reports the arrest; allies, rivals and off-turf do not")
+	void arrest_reportedOnlyForOwnerMemberOnTheTurf() {
+		Location spot = loc(0);
+		Player   owner = victim(spot, UUID.randomUUID());
+		whenVictimOn(owner, spot, turf1, 1);
+		Player rival = victim(spot, UUID.randomUUID());
+		whenVictimOn(rival, spot, turf1, 3);
+		Location away   = loc(500);
+		Player   inAway = victim(away, UUID.randomUUID());
+		User<Player> member = user(1);
+		when(users.findByPlayer(inAway)).thenReturn(member);
+
+		List<String> calls = new ArrayList<>();
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.bindArrest((turf, hit) -> calls.add(turf.getId() + ":" + hit.getUniqueId()));
+		guard.onPlayerArrested(rival);
+		guard.onPlayerArrested(inAway);
+		assertTrue(calls.isEmpty());
+		guard.onPlayerArrested(owner);
+		assertEquals(List.of("1:" + owner.getUniqueId()), calls);
 	}
 
 	// ── fixtures ──────────────────────────────────────────────────────────────

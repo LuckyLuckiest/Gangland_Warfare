@@ -437,6 +437,92 @@ class TurfDefenderDeployerTest {
 		}
 	}
 
+	// ---- W7-F: Hold / Defend order ----
+
+	private static final GarrisonPosts.Post POST = new GarrisonPosts.Post(2.5, 65.0, 2.5);
+
+	private static org.bukkit.entity.Player playerAt(World world, UUID id, double x, double z) {
+		org.bukkit.entity.Player player = mock(org.bukkit.entity.Player.class);
+		when(player.getUniqueId()).thenReturn(id);
+		when(player.getLocation()).thenReturn(new org.bukkit.Location(world, x, 65.0, z));
+		return player;
+	}
+
+	/** Runs one tick with a guard at (guardX, guardZ) and the given challengers; returns the guard. */
+	private static CivilianNpc tickHoldFixture(java.util.function.IntPredicate binding, double guardX, double guardZ,
+	                                           World world, Map<UUID, double[]> challengers) {
+		TurfDefenderDeployer deployer = newDeployer();
+		deployer.setCitizensAvailable(() -> true);
+		if (binding != null) {
+			deployer.bindHolding(binding);
+		}
+		CivilianNpc guard = liveNpc();
+		LivingEntity body = mock(LivingEntity.class);
+		when(body.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(body.getWorld()).thenReturn(world);
+		when(body.getLocation()).thenReturn(new org.bukkit.Location(world, guardX, 65.0, guardZ));
+		when(guard.getEntity()).thenReturn(body);
+		List<org.bukkit.entity.Player> players = new ArrayList<>();
+		for (Map.Entry<UUID, double[]> c : challengers.entrySet()) {
+			players.add(playerAt(world, c.getKey(), c.getValue()[0], c.getValue()[1]));
+		}
+		when(world.getPlayers()).thenReturn(players);
+		TurfGarrison garrison = new TurfGarrison(1, new CuboidRegion("world", 0, 0, 20, 20),
+				new TurfDefenderConfig("turf_defender", 32.0, 600, 3, 6, 20, 0, 16), "VIP", () -> 0, n -> n, n -> {
+		});
+		garrison.posts = List.of(POST);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(() -> Bukkit.getWorld("world")).thenReturn(world);
+			deployer.startGarrison(garrison, () -> challengers.keySet(), () -> 600);
+			deployer.track(1, guard, System.currentTimeMillis(), () -> 600);
+			deployer.tick();
+		}
+		return guard;
+	}
+
+	@Test
+	@DisplayName("hold_guardFarFromPost_walksBackAndDropsTarget: Hold sends a guard 20 blocks from its post home and does not target")
+	void hold_guardFarFromPost_walksBackAndDropsTarget() {
+		World world = mock(World.class);
+		UUID  id    = UUID.randomUUID();
+
+		CivilianNpc guard = tickHoldFixture(turfId -> true, 18.5, 18.5, world, Map.of(id, new double[]{19.5, 18.5}));
+
+		verify(guard).setTargetPlayerId(null);
+		verify(guard).navigateTo(new org.bukkit.Location(world, POST.x(), POST.y(), POST.z()));
+		verify(guard, org.mockito.Mockito.never()).setTargetPlayerId(id);
+	}
+
+	@Test
+	@DisplayName("hold_targetsOnlyNearPost: at its post a guard takes the attacker 4 blocks away, not the one 12 blocks away")
+	void hold_targetsOnlyNearPost() {
+		UUID near = UUID.randomUUID();
+		UUID far  = UUID.randomUUID();
+
+		CivilianNpc both = tickHoldFixture(turfId -> true, POST.x(), POST.z(), mock(World.class),
+				Map.of(near, new double[]{6.5, 2.5}, far, new double[]{14.5, 2.5}));
+		verify(both).setTargetPlayerId(near);
+
+		CivilianNpc onlyFar = tickHoldFixture(turfId -> true, POST.x(), POST.z(), mock(World.class),
+				Map.of(far, new double[]{14.5, 2.5}));
+		verify(onlyFar, org.mockito.Mockito.never()).setTargetPlayerId(org.mockito.ArgumentMatchers.any());
+	}
+
+	@Test
+	@DisplayName("defend_unchanged: the same far-attacker fixture without Hold still targets it")
+	void defend_unchanged() {
+		UUID far = UUID.randomUUID();
+
+		CivilianNpc unbound = tickHoldFixture(null, POST.x(), POST.z(), mock(World.class),
+				Map.of(far, new double[]{14.5, 2.5}));
+		verify(unbound).setTargetPlayerId(far);
+
+		CivilianNpc defending = tickHoldFixture(turfId -> false, POST.x(), POST.z(), mock(World.class),
+				Map.of(far, new double[]{14.5, 2.5}));
+		verify(defending).setTargetPlayerId(far);
+	}
+
 	private static CivilianNpc liveNpc() {
 		CivilianNpc npc = mock(CivilianNpc.class);
 		when(npc.isValid()).thenReturn(true);

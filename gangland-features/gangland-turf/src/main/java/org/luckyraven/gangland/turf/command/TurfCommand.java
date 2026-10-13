@@ -32,6 +32,7 @@ import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.listener.GangDisplayNameResolver;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.view.QuartermasterPlacement;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
@@ -50,8 +51,11 @@ import java.util.Set;
 @CommandHandler
 public final class TurfCommand extends Command {
 
-	/** Verbs a player without {@code gangland.turf.admin} may run; every other turf verb is admin only (TF-30). */
-	private static final Set<String> PLAYER_VERBS = Set.of("info", "list", "rules");
+	/**
+	 * Verbs a player without {@code gangland.turf.admin} may run; every other turf verb is admin only (TF-30).
+	 * {@code quartermaster} is the owner-placement player verb (W7-B, D29=B).
+	 */
+	private static final Set<String> PLAYER_VERBS = Set.of("info", "list", "rules", "quartermaster");
 	private static final int         HELP_BREAKS  = 7;
 
 	private final TurfManager          turfs;
@@ -76,6 +80,7 @@ public final class TurfCommand extends Command {
 	private final CaptureEligibility   eligibility;
 	private final TurfRules            rules;
 	private final TurfEventBuffer      events;
+	private final QuartermasterPlacement placement;
 	private final GangWorldPolicy      worldPolicy;
 
 	public TurfCommand(JavaPlugin plugin,
@@ -96,6 +101,7 @@ public final class TurfCommand extends Command {
 	                   CaptureEligibility eligibility,
 	                   TurfRules rules,
 	                   TurfEventBuffer events,
+	                   QuartermasterPlacement placement,
 	                   GangWorldPolicy worldPolicy) {
 		super(plugin, "turf", false);
 
@@ -116,6 +122,7 @@ public final class TurfCommand extends Command {
 		this.eligibility     = eligibility;
 		this.rules           = rules;
 		this.events          = events;
+		this.placement       = placement;
 		this.worldPolicy     = worldPolicy;
 
 		var list = getCommands().entrySet()
@@ -209,6 +216,10 @@ public final class TurfCommand extends Command {
 		TurfPowerupNpcCommand powerupNpc = new TurfPowerupNpcCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                             turfs, selections, messages, text, powerupNpcs);
 
+		TurfQuartermasterCommand quartermaster = new TurfQuartermasterCommand(getPlugin(), getArgumentTree(),
+		                                                                      getArgument(), turfs, messages,
+		                                                                      placement);
+
 		List<Argument> arguments = new ArrayList<>();
 		arguments.add(wand);
 		arguments.add(pos1);
@@ -228,6 +239,7 @@ public final class TurfCommand extends Command {
 		arguments.add(garrison);
 		arguments.add(buff);
 		arguments.add(powerupNpc);
+		arguments.add(quartermaster);
 
 		// anything else a module hangs under /glw turf comes from installed modules (powerupnpc moved off this
 		// path in group I — it is added directly above now that both it and TurfPowerupManager live in this module)

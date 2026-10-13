@@ -16,7 +16,7 @@
 # | Turf NPC Settings | #
 # +-------------------+ #
 # Per-NPC-type knobs for the turf system's Citizens-backed NPCs:
-#   - Powerup_Npc — the per-turf Quartermaster admins place via /glw turf powerupnpc set <turf>
+#   - Powerup_Npc — the per-turf Quartermaster: staff place it with /glw turf powerupnpc set, the owning gang with /glw turf quartermaster
 #   - Defender    — deploy-side knobs only. Defender NPCs ARE civilian NPCs (defined in civilians.yml under
 #                   the type id below). Their model, health, equipment, damage, AI tuning, etc. all live there.
 #                   This section only controls how the deployer routes them: which type to spawn, how far they
@@ -29,11 +29,14 @@ Powerup_Npc:
    # to it. While the turf is being contested, TurfPowerupNpc.engage() flips this NPC into COMBAT and points
    # its target at the closest attacker; on capture-end it pacifies back to IDLE.
    Type_Id: quartermaster
-   # Name shown over the Quartermaster and in its panel titles. Changing it renames Quartermasters placed after a
-   # restart; existing ones keep the name they were placed with.
+   # Quartermaster name used in its panel titles and chat lines (%npc%). The name over its head comes from civilians.yml
+   # (the type above); the owning gang's tag is drawn on a line above it (turf_messages.yml Quartermaster.Nameplate_Tag).
    Display_Name: "Quartermaster"
    # Blocks from the Quartermaster within which a contest target (an attacker) is picked up. Minimum 1.0.
    Targeting_Radius: 32.0
+   # Price the owning gang pays from its gang bank to place (or move) its Quartermaster with /glw turf quartermaster.
+   # Staff placing it with /glw turf powerupnpc set pay nothing. 0 = free. Minimum 0.
+   Placement_Cost: 5000.0
 # Cop response (T-189): while a cop NPC hits a player standing on a turf their gang protects, the turf's
 # Quartermaster and garrison defenders within range of the cop turn on it. They never start a fight with a cop on
 # their own, and they stop again when the cop dies, the victim leaves or stops being protected, or the cop moves
@@ -45,6 +48,12 @@ Cop_Response:
    Targeting_Radius: 32.0
    # Also protect members of gangs allied with the turf owner, not only the owner's own members.
    Include_Allies: true
+# Owner alerts (W7-E): a chat line and an action-bar line to the owning gang's online members when a cop attacks
+# one of them on the turf, a guard falls, or the Quartermaster is attacked or killed. Allies and rivals never get them.
+# Texts: turf_messages.yml Alerts.Cop_Hit, Arrested, Guard_Down, Quartermaster_Hit, Quartermaster_Down.
+Owner_Alerts:
+   # Seconds before the same alert for the same turf is sent again. 0 = every time. Minimum 0.
+   Cooldown_Seconds: 60
 Defender:
    # civilians.yml type id to spawn for each garrisoned defender. The type's combat behaviour, equipment, and
    # stats are fully owned by civilians.yml.
@@ -84,4 +93,7 @@ Garrison:
    # A guard that cannot reach anyone for this many seconds, with no attacker looking at it, reappears at another post
    # (0 turns it off). The garrison's stock is unchanged.
    Recycle_Seconds: 12
+   # Blocks around its post a guard keeps to while the owning gang's order is Hold (Quartermaster hub, Guard Orders):
+   # it picks only attackers this close to the post and walks back when it strays further. Minimum 3.0.
+   Hold_Radius: 6.0
 # end Garrison

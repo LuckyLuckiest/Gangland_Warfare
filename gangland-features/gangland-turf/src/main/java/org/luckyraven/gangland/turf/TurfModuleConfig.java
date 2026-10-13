@@ -37,6 +37,7 @@ import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
 import org.luckyraven.gangland.turf.manager.TurfManager;
+import org.luckyraven.gangland.turf.npc.QuartermasterNameplate;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
@@ -45,7 +46,10 @@ import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderMoneyDropSource;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
+import org.luckyraven.gangland.turf.npc.guard.TurfOwnerAlerts;
 import org.luckyraven.gangland.turf.npc.view.QuartermasterAccess;
+import org.luckyraven.gangland.turf.npc.view.QuartermasterPlacement;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupBuffCatalogueView;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupFlow;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupGarrisonView;
@@ -306,8 +310,10 @@ public final class TurfModuleConfig {
 
 	@Bean
 	public TurfDefenderDeployer turfDefenderDeployer(JavaPlugin plugin, CivilianService civilianService,
-	                                                 CivilianSpawnManager spawnManager) {
+	                                                 CivilianSpawnManager spawnManager, GarrisonManager garrisons) {
 		TurfDefenderDeployer deployer = new TurfDefenderDeployer(plugin, civilianService, spawnManager);
+		// W7-F: per-turf Hold/Defend order (D26=A)
+		deployer.bindHolding(garrisons::holding);
 		deployer.start();
 		return deployer;
 	}
@@ -327,17 +333,31 @@ public final class TurfModuleConfig {
 	@Bean
 	public TurfCopGuard turfCopGuard(JavaPlugin plugin, TurfManager turfs, UserLookupContract users,
 	                                 GangMembership membership, TurfPowerupManager powerups,
-	                                 TurfDefenderDeployer defenders, TurfNpcsConfigLoader loader) {
+	                                 TurfDefenderDeployer defenders, TurfNpcsConfigLoader loader,
+	                                 GarrisonManager garrisons) {
 		TurfCopGuard guard = new TurfCopGuard(plugin, turfs, users, membership, powerups, defenders,
 		                                      loader::getCopGuardConfig);
+		// W7-F: per-turf Hold/Defend order (D26=A)
+		guard.bindHolding(garrisons::holding);
 		guard.start();
 		return guard;
 	}
 
 	@Bean
 	public TurfPowerupManager turfPowerupManager(JavaPlugin plugin, TurfPowerupNpcRepository repository,
-	                                             TurfNpcsConfigLoader loader, CivilianSpawnManager spawnManager) {
-		return new TurfPowerupManager(plugin, repository, loader::getPowerupSettings, spawnManager);
+	                                             TurfNpcsConfigLoader loader, CivilianSpawnManager spawnManager,
+	                                             GarrisonManager garrisons) {
+		TurfPowerupManager manager = new TurfPowerupManager(plugin, repository, loader::getPowerupSettings,
+		                                                    spawnManager);
+		// T-834: Hold keeps the Quartermaster within Hold_Radius of its anchor
+		manager.bindHold(garrisons::holding, () -> loader.getDefenderConfig().holdRadius());
+		return manager;
+	}
+
+	@Bean
+	public QuartermasterNameplate quartermasterNameplate(TurfManager turfs, GangLookupContract gangs,
+	                                                     TurfPowerupManager npcs, TurfMessages messages) {
+		return new QuartermasterNameplate(turfs, gangs, npcs, messages);
 	}
 
 	@Bean
@@ -349,9 +369,23 @@ public final class TurfModuleConfig {
 	@Bean
 	public TurfPowerupMenuView turfPowerupMenuView(@SuppressWarnings("unused") Settings settings,
 	                                               GarrisonManager garrisons, ActiveBuffManager buffs,
+	                                               TurfDefenderDeployer defenders, QuartermasterAccess access,
 	                                               TurfMessages messages) {
-		return new TurfPowerupMenuView(garrisons, buffs, messages,
+		// W7-F: the access check also gates the Guard Orders click
+		return new TurfPowerupMenuView(garrisons, buffs, defenders::aliveCount, access, messages,
 		                               Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+	}
+
+	@Bean
+	public QuartermasterPlacement quartermasterPlacement(@SuppressWarnings("unused") Settings settings,
+	                                                     JavaPlugin plugin, InventoryService inventoryService,
+	                                                     TurfManager turfs, GangLookupContract gangs,
+	                                                     UserLookupContract users, QuartermasterAccess access,
+	                                                     TurfPowerupManager npcs, TurfMessages messages,
+	                                                     TurfNpcsConfigLoader loader) {
+		return new QuartermasterPlacement(plugin, inventoryService, turfs, gangs, users, access, npcs, messages,
+		                                  loader::getPowerupSettings, NpcSupport::available,
+		                                  Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
 	@Bean
@@ -370,9 +404,10 @@ public final class TurfModuleConfig {
 	                                                       GarrisonManager garrisons, PowerupRegistry registry,
 	                                                       ActiveBuffManager buffs, QuartermasterAccess access,
 	                                                       TurfRules rules, TurfDefenderDeployer defenders,
-	                                                       TurfMessages messages) {
+	                                                       TurfNpcsConfigLoader loader, TurfMessages messages) {
 		return new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules, defenders::aliveCount,
-		                                   messages, Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+		                                   loader::getDefenderConfig, messages,
+		                                   Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
 	@Bean
@@ -389,5 +424,15 @@ public final class TurfModuleConfig {
 	                                                       TurfNpcsConfigLoader loader) {
 		return new TurfPowerupOpenContractImpl(flow, turfs, npcs, gangs, users, messages,
 		                                       loader::getPowerupSettings);
+	}
+
+	// W7-E (D28=A): owner alerts; the cop-hit hook comes from TurfCopGuard
+	@Bean
+	public TurfOwnerAlerts turfOwnerAlerts(TurfManager turfs, GangLookupContract gangs, TurfMessages messages,
+	                                       TurfNpcsConfigLoader loader, TurfCopGuard guard) {
+		TurfOwnerAlerts alerts = new TurfOwnerAlerts(turfs, gangs, messages, loader::getOwnerAlertCooldownSeconds);
+		guard.bindProtectedHit(alerts::copHit);
+		guard.bindArrest(alerts::arrested);
+		return alerts;
 	}
 }

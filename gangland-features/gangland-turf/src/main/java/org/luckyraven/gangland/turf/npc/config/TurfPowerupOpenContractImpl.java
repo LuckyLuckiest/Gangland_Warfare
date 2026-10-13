@@ -8,6 +8,7 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.gangland.turf.listener.GangDisplayNameResolver;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
@@ -46,14 +47,24 @@ public final class TurfPowerupOpenContractImpl implements TurfPowerupOpenContrac
 			                                 "&cThis turf has no owner — nothing to manage here yet."));
 			return;
 		}
-		User<Player> user = users.findByPlayer(viewer);
-		if (user == null || !user.hasGang()) {
-			viewer.sendMessage(onlyOwnerOrAllies());
+		Gang ownerGang = gangs.findById(ownerId);
+		if (ownerGang == null) {
+			viewer.sendMessage(messages.text("Quartermaster.Gang_Missing",
+			                                 "&cGang record missing — contact an admin."));
 			return;
 		}
-		Gang ownerGang  = gangs.findById(ownerId);
+		String owner = GangDisplayNameResolver.resolve(ownerGang);
+		String name  = qmName(turfId);
+
+		User<Player> user = users.findByPlayer(viewer);
+		if (user == null || !user.hasGang()) {
+			viewer.sendMessage(messages.text("Quartermaster.Refuse_No_Gang",
+			                                 "&cThis %npc% serves &e%owner%&c. Join a gang, then ally with them: &f/glw gang ally request %owner_id%",
+			                                 "npc", name, "owner", owner, "owner_id", ownerId));
+			return;
+		}
 		Gang viewerGang = gangs.findById(user.getGangId());
-		if (ownerGang == null || viewerGang == null) {
+		if (viewerGang == null) {
 			viewer.sendMessage(messages.text("Quartermaster.Gang_Missing",
 			                                 "&cGang record missing — contact an admin."));
 			return;
@@ -63,20 +74,19 @@ public final class TurfPowerupOpenContractImpl implements TurfPowerupOpenContrac
 		boolean isOwner = user.getGangId() == ownerId;
 		boolean isAlly  = !isOwner && viewerGang.isAlly(ownerGang);
 		if (!isOwner && !isAlly) {
-			viewer.sendMessage(onlyOwnerOrAllies());
+			viewer.sendMessage(messages.text("Quartermaster.Refuse_Stranger",
+			                                 "&cThis %npc% serves &e%owner%&c. Ally with them to use it: &f/glw gang ally request %owner_id%",
+			                                 "npc", name, "owner", owner, "owner_id", ownerId));
 			return;
 		}
-
-		TurfPowerupNpc qm = npcs.get(turfId);
-		String name = qm != null && qm.getData().getDisplayName() != null
-		              ? qm.getData().getDisplayName()
-		              : settings.get().displayName();
 
 		flow.start(viewer, turf, ownerGang, viewerGang, name);
 	}
 
-	private String onlyOwnerOrAllies() {
-		return messages.text("Quartermaster.Only_Owner_Or_Allies",
-		                     "&cOnly members of the owning gang or its allies can use this NPC.");
+	private String qmName(int turfId) {
+		TurfPowerupNpc qm = npcs.get(turfId);
+		return qm != null && qm.getData().getDisplayName() != null
+		       ? qm.getData().getDisplayName()
+		       : settings.get().displayName();
 	}
 }

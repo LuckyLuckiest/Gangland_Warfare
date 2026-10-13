@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.turf.npc.guard;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -23,7 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.function.IntPredicate;
 import java.util.function.Supplier;
 
 /**
@@ -31,10 +34,12 @@ import java.util.function.Supplier;
  * turf owner's gang, plus allied gangs when {@code Include_Allies} is on). The cops-n-crooks listener forwards each cop
  * hit to {@link #onCopHitPlayer}; the NPCs on that turf that are hostile and within {@code Targeting_Radius} of the cop
  * get the cop pushed to the front of their entity-target queue. A 5-tick task releases them again when the cop dies,
- * the victim leaves or stops being protected, or the cop moves out of an NPC's range.
+ * the victim leaves or stops being protected, or the cop moves out of an NPC's range. A turf whose owner ordered
+ * Hold (W7-F) answers no cop; every protected hit is reported to the owner-alert hook (W7-E).
  *
  * <p>Main-thread only: the engagement map is touched from listeners and the sync task.
  */
+@CustomLog
 public final class TurfCopGuard implements BeanLifecycle {
 
 	private static final long TICK_PERIOD = 5L;
@@ -48,6 +53,11 @@ public final class TurfCopGuard implements BeanLifecycle {
 	private final Supplier<CopGuardConfig>  config;
 	private final Map<UUID, Engagement>     engagements = new HashMap<>();
 	private       CopTargetLookup           copTargets  = cop -> null;
+	private       IntPredicate              holding     = turfId -> false;
+	private       BiConsumer<Turf, Player>  protectedHit = (turf, victim) -> {
+	};
+	private       BiConsumer<Turf, Player>  arrest = (turf, victim) -> {
+	};
 	private       BukkitTask                tickTask;
 
 	/**
@@ -82,6 +92,39 @@ public final class TurfCopGuard implements BeanLifecycle {
 	 */
 	public void bindCopTargets(CopTargetLookup lookup) {
 		this.copTargets = lookup;
+	}
+
+	/**
+	 * W7-F: the per-turf guard order. A turf for which {@code holding} is true answers no cop: its Quartermaster and
+	 * guards stay on their posts. Until bound every turf defends.
+	 */
+	public void bindHolding(IntPredicate holding) {
+		this.holding = holding;
+	}
+
+	/**
+	 * W7-E: called once per cop hit on a player the turf protects, before the hold check, so the owners hear of the
+	 * attack whatever the order.
+	 */
+	public void bindProtectedHit(BiConsumer<Turf, Player> protectedHit) {
+		this.protectedHit = protectedHit;
+	}
+
+	/**
+	 * T-832: called with each member of the turf's owning gang a cop has just cuffed on that turf.
+	 */
+	public void bindArrest(BiConsumer<Turf, Player> arrest) {
+		this.arrest = arrest;
+	}
+
+	/** Only the owning gang's own members count (not allies), and only while they stand on that turf. */
+	public void onPlayerArrested(Player victim) {
+		Turf turf = turfs.findAt(victim.getLocation());
+		if (turf == null || turf.isUnclaimed()) return;
+		User<Player> user = users.findByPlayer(victim);
+		Integer owner = turf.getOwnerGangId();
+		if (owner == null || user == null || !user.hasGang() || user.getGangId() != owner) return;
+		arrest.accept(turf, victim);
 	}
 
 	public void start() {
@@ -120,14 +163,28 @@ public final class TurfCopGuard implements BeanLifecycle {
 			return;
 		}
 
+		protectedHit.accept(turf, victim);
+		if (holding.test(turf.getId())) {
+			// W7-F hold: the turf's NPCs stay on their posts; drop any engagement this cop still has
+			if (previous != null) {
+				engagements.remove(cop.getUniqueId());
+				release(previous);
+			}
+			log.debug("Turf {} holds: no answer to cop {}", turf.getId(), cop.getName());
+			return;
+		}
+
 		if (previous != null && previous.turfId() != turf.getId()) release(previous);
 
 		engagements.put(cop.getUniqueId(), new Engagement(cop, turf.getId(), victim));
+		int answered = 0;
 		for (CivilianNpc npc : npcsOf(turf.getId())) {
 			if (!npc.isHostile() || distance(npc, cop) > cfg.radius()) continue;
 			npc.addEntityTargetToFront(cop);
 			engageCombat(npc);
+			answered++;
 		}
+		log.debug("Turf {}: {} NPC(s) answer cop {}", turf.getId(), answered, cop.getName());
 	}
 
 	/**
@@ -141,6 +198,11 @@ public final class TurfCopGuard implements BeanLifecycle {
 			Player       victim   = engagement.victim();
 
 			if (!cop.isValid() || cop.isDead() || !cop.getWorld().equals(victim.getWorld())) {
+				release(engagement);
+				it.remove();
+				continue;
+			}
+			if (holding.test(engagement.turfId())) {
 				release(engagement);
 				it.remove();
 				continue;

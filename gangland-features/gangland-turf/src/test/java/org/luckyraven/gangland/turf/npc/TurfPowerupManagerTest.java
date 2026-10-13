@@ -2,9 +2,12 @@ package org.luckyraven.gangland.turf.npc;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.civilians.npc.CivilianState;
+import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 import org.luckyraven.keystone.persistence.repository.IRepository;
@@ -12,6 +15,7 @@ import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -114,6 +118,47 @@ class TurfPowerupManagerTest {
 		}
 
 		verify(repository).save(argThat(data -> "Boss".equals(data.getDisplayName())));
+	}
+
+	@Test
+	@DisplayName("T-834: under Hold a Quartermaster past Hold_Radius drops its target and walks home; inside it is left alone")
+	void holdTick_leashesAHeldQuartermaster() throws Exception {
+		TurfPowerupManager manager = new TurfPowerupManager(mock(JavaPlugin.class), mock(IRepository.class),
+		                                                    () -> new TurfPowerupSettings("quartermaster", 32.0),
+		                                                    mock(CivilianSpawnManager.class));
+		World world = mock(World.class);
+		Location anchor = new Location(world, 0, 64, 0);
+		CivilianNpc far  = qmAt(manager, 1, anchor, new Location(world, 10, 64, 0));
+		CivilianNpc near = qmAt(manager, 2, anchor, new Location(world, 4, 64, 0));
+		CivilianNpc free = qmAt(manager, 3, anchor, new Location(world, 40, 64, 0));
+		manager.bindHold(id -> id != 3, () -> 6.0);
+
+		manager.holdTick();
+
+		verify(far).setTargetPlayerId(null);
+		verify(far).setTargetEntity(null);
+		verify(far).transitionTo(CivilianState.IDLE);
+		verify(far).navigateTo(anchor);
+		verify(near, never()).setTargetPlayerId(any());
+		verify(near, never()).navigateTo(any());
+		verify(free, never()).navigateTo(any());
+	}
+
+	private static CivilianNpc qmAt(TurfPowerupManager manager, int turfId, Location anchor, Location at)
+			throws Exception {
+		CivilianNpc civilian = mock(CivilianNpc.class);
+		LivingEntity body = mock(LivingEntity.class);
+		when(body.getLocation()).thenReturn(at);
+		when(body.getWorld()).thenReturn(anchor.getWorld());
+		when(civilian.getEntity()).thenReturn(body);
+		when(civilian.isValid()).thenReturn(true);
+		when(civilian.getCurrentState()).thenReturn(CivilianState.COMBAT);
+		TurfPowerupNpc qm = new TurfPowerupNpc(mock(JavaPlugin.class), new TurfPowerupData(turfId, anchor, null),
+		                                       civilian);
+		Field field = TurfPowerupManager.class.getDeclaredField("byTurfId");
+		field.setAccessible(true);
+		((Map<Integer, TurfPowerupNpc>) field.get(manager)).put(turfId, qm);
+		return civilian;
 	}
 
 	@SuppressWarnings("unchecked")

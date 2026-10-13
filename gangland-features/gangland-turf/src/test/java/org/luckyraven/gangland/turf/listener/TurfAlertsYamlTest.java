@@ -37,7 +37,11 @@ class TurfAlertsYamlTest {
 			"Alerts.Attack_Failed",
 			"Alerts.Stalled",
 			"Alerts.Lost",
-			"Alerts.Taken"
+			"Alerts.Taken",
+			"Alerts.Cop_Hit",
+			"Alerts.Guard_Down",
+			"Alerts.Quartermaster_Hit",
+			"Alerts.Quartermaster_Down"
 	};
 
 	@TempDir(cleanup = CleanupMode.NEVER)

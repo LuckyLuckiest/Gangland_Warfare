@@ -68,6 +68,74 @@ class TurfNpcsConfigLoaderTest {
 		assertEquals("Quartermaster", loader(handler).getPowerupSettings().displayName());
 	}
 
+	@Test
+	@DisplayName("W7-B: Powerup_Npc.Placement_Cost is read, defaults to 5000 and is clamped at 0 (D29=B)")
+	void placementCost_readAndDefault() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Powerup_Npc:\n   Placement_Cost: 2500\n"));
+		assertEquals(2500.0, loader(handler).getPowerupSettings().placementCost());
+
+		when(handler.getParsedDocument()).thenReturn(document("Powerup_Npc:\n   Display_Name: Boss\n"));
+		assertEquals(5000.0, loader(handler).getPowerupSettings().placementCost());
+
+		when(handler.getParsedDocument()).thenReturn(document("Powerup_Npc:\n   Placement_Cost: -5\n"));
+		assertEquals(0.0, loader(handler).getPowerupSettings().placementCost());
+	}
+
+	@Test
+	@DisplayName("W7-F: Garrison.Hold_Radius is read, defaults to 6 and is clamped to at least 3 blocks")
+	void holdRadius_readDefaultAndClamp() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Garrison:\n   Hold_Radius: 9.5\n"));
+		assertEquals(9.5, loader(handler).getDefenderConfig().holdRadius());
+
+		when(handler.getParsedDocument()).thenReturn(document(COP_ENABLED));
+		assertEquals(6.0, loader(handler).getDefenderConfig().holdRadius());
+
+		when(handler.getParsedDocument()).thenReturn(document("Garrison:\n   Hold_Radius: 0.2\n"));
+		assertEquals(3.0, loader(handler).getDefenderConfig().holdRadius());
+	}
+
+	@Test
+	@DisplayName("T-824: Hold_Radius 1.0 loads as 3.0, above the deployer's at-post threshold (2 blocks)")
+	void holdRadius_belowAtPostThreshold_clampsToThree() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Garrison:\n   Hold_Radius: 1.0\n"));
+		assertEquals(3.0, loader(handler).getDefenderConfig().holdRadius());
+	}
+
+	private static final String NL = System.lineSeparator();
+
+	@Test
+	@DisplayName("T-810: .nan Placement_Cost and .nan Hold_Radius fall back to their defaults")
+	void nonFiniteValues_fallBackToDefaults() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Powerup_Npc:" + NL + "   Placement_Cost: .nan" + NL
+		                                                      + "Garrison:" + NL + "   Hold_Radius: .nan" + NL));
+		TurfNpcsConfigLoader loader = loader(handler);
+		assertEquals(5000.0, loader.getPowerupSettings().placementCost());
+		assertEquals(6.0, loader.getDefenderConfig().holdRadius());
+	}
+
+	@Test
+	@DisplayName("W7-E: Owner_Alerts.Cooldown_Seconds is read, defaults to 60, clamps at 0 and reloads")
+	void ownerAlertCooldown_readDefaultAndClamp() throws Exception {
+		FileHandler handler = mock(FileHandler.class);
+		when(handler.getParsedDocument()).thenReturn(document("Owner_Alerts:\n   Cooldown_Seconds: 15\n"));
+		TurfNpcsConfigLoader loader = loader(handler);
+		assertEquals(15, loader.getOwnerAlertCooldownSeconds());
+
+		when(handler.getParsedDocument()).thenReturn(document("Owner_Alerts:\n   Cooldown_Seconds: 30\n"));
+		loader.onInitialize(false);
+		assertEquals(30, loader.getOwnerAlertCooldownSeconds());
+
+		when(handler.getParsedDocument()).thenReturn(document(COP_ENABLED));
+		assertEquals(60, loader(handler).getOwnerAlertCooldownSeconds());
+
+		when(handler.getParsedDocument()).thenReturn(document("Owner_Alerts:\n   Cooldown_Seconds: -5\n"));
+		assertEquals(0, loader(handler).getOwnerAlertCooldownSeconds());
+	}
+
 	private static TurfNpcsConfigLoader loader(FileHandler handler) {
 		FileManager fileManager = mock(FileManager.class);
 		when(fileManager.getFile("turf_npcs")).thenReturn(handler);

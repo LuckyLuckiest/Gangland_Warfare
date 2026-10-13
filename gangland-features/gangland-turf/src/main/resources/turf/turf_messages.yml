@@ -230,6 +230,18 @@ Alerts:
    Lost: "&c%turf% lost to %gang%"
    # To the new owners. %turf%.
    Taken: "&aYou took %turf%"
+   # To the owning gang's online members (chat and action bar) when a cop hits one of them on the turf, at most once per
+   # turf_npcs.yml Owner_Alerts.Cooldown_Seconds. %turf%, %player% = the member who was hit.
+   Cop_Hit: "&c%turf%: a cop is attacking &f%player%"
+   # Same channels and cooldown, when a cop cuffs a member of the owning gang on the turf. %turf%, %player% = the member.
+   Arrested: "&c%turf%: &f%player% &cwas arrested"
+   # Same channels and cooldown, when one of the turf's guards is killed. %turf%.
+   Guard_Down: "&c%turf%: one of your guards fell"
+   # Same channels and cooldown, when anyone outside the owning gang and its allies hits the Quartermaster.
+   # %turf%, %attacker% = their name.
+   Quartermaster_Hit: "&c%turf%: &f%attacker% &cis attacking your Quartermaster"
+   # Same channels and cooldown, when the Quartermaster is killed. %turf%.
+   Quartermaster_Down: "&c%turf%: your Quartermaster was killed"
 # end Alerts
 
 # ---------------- Garrison: lines to the owners while their guards defend (W3-B) ----------------
@@ -315,6 +327,34 @@ Quartermaster:
    Menu_Garrison_Lore_3: "&7and fight attackers on this turf."
    # Garrison button lore, line 4. %count% = guards in reserve.
    Menu_Garrison_Stock: "&7Current stock: &f%count%"
+   # Menu line: this turf's guards alive in the field right now. %count% = guard count.
+   Menu_On_Duty: "&7Guards on duty: &f%count%"
+   # Menu line for the owning gang's members (allies see Menu_Spend_Ally).
+   Menu_Spend_Owner: "&aYour gang buys here."
+   # Menu line for an allied viewer. %gang% = owner gang name.
+   Menu_Spend_Ally: "&7Only &e%gang% &7buys here; allies can look."
+   # Placement menu title (/glw turf quartermaster). %npc% = turf_npcs.yml Powerup_Npc.Display_Name.
+   Place_Title: "&8&l[&6&lPlace %npc%&8&l]"
+   # Placement button name when the turf has no Quartermaster yet. %npc% = the Quartermaster's name.
+   Place_Name: "&a&lPlace the %npc% here"
+   # Placement button name when the turf already has one (it moves). %npc% = the Quartermaster's name.
+   Place_Move_Name: "&a&lMove the %npc% here"
+   # Placement button lore: the turf. %turf% = turf name.
+   Place_Lore_Turf: "&7Turf: &f%turf%"
+   # Placement button lore: the price (turf_npcs.yml Powerup_Npc.Placement_Cost). %money% = the price.
+   Place_Lore_Cost: "&7Cost: &6%money% &7from the gang bank"
+   # Placement button lore, last line.
+   Place_Lore_Click: "&aClick to place it where you stand."
+   # Chat after a placement. %npc%, %turf%, %money% = name, turf, price paid.
+   Placed: "&aThe %npc% now stands here on &f%turf%&a. Paid &6%money%&a."
+   # Chat when the player's gang does not own the turf (allies included). %turf%, %npc%.
+   Place_Not_Owner: "&cOnly the gang that owns %turf% can place its %npc%."
+   # Chat when Citizens is missing; nothing is charged. %npc% = the Quartermaster's name.
+   Place_No_Citizens: "&cThe %npc% needs the Citizens plugin, which this server does not have."
+   # Chat when the player left the turf before clicking. %turf%, %npc%.
+   Place_Outside: "&cStand inside %turf% to place its %npc%."
+   # Chat when place() could not spawn the Quartermaster (bad Type_Id, Citizens spawn cancelled). Nothing is charged. %npc% = its name.
+   Place_Failed: "&cThe %npc% could not be placed here. Your gang was not charged."
    # Catalogue item lore: the effect. %effect% = Effect_Type, %magnitude% = Magnitude.
    Buffs_Effect: "&7Effect: &f%effect% &7x&f%magnitude%"
    # Catalogue item lore: the duration. %seconds% = Duration_Seconds.
@@ -363,10 +403,40 @@ Quartermaster:
    Not_Allied: "&cYour gang is no longer allied with the owning gang."
    # Chat when the turf has no owner yet (open contract).
    No_Owner: "&cThis turf has no owner — nothing to manage here yet."
-   # Chat for a player who is in no gang that owns or allies the turf (open contract).
-   Only_Owner_Or_Allies: "&cOnly members of the owning gang or its allies can use this NPC."
+   # Chat for a player in no gang who right-clicks the Quartermaster (open contract). %npc% = its name,
+   # %owner% = the owning gang's full name, %owner_id% = that gang's id (what /glw gang ally request takes).
+   Refuse_No_Gang: "&cThis %npc% serves &e%owner%&c. Join a gang, then ally with them: &f/glw gang ally request %owner_id%"
+   # Chat for a player whose gang neither owns nor allies the turf (open contract). Same placeholders.
+   Refuse_Stranger: "&cThis %npc% serves &e%owner%&c. Ally with them to use it: &f/glw gang ally request %owner_id%"
+   # Line drawn above the Quartermaster's nameplate naming the owning gang (D27). %tag% = the gang's 1-4
+   # character short code. Over 16 characters without colours it falls back to [%tag%]; unowned turfs show no line.
+   Nameplate_Tag: "&8[&e%tag%&8]"
    # Chat when a gang record is missing (open contract).
    Gang_Missing: "&cGang record missing — contact an admin."
+   # Hub line: the turf's guard order (W7-F). %order% = Order_Hold or Order_Defend.
+   Menu_Order: "&7Guard order: %order%"
+   # The order words used in %order%. Hold: guards keep to their posts and answer no cop.
+   Order_Hold: "&eHold"
+   # Defend: guards chase attackers on the turf and turn on cops (the default).
+   Order_Defend: "&cDefend"
+   # Guard Orders button on the hub.
+   Order_Name: "&e&lGuard Orders"
+   # Guard Orders lore: what Hold does.
+   Order_Lore_Hold: "&7Hold: guards stay by their posts and leave cops alone."
+   # Guard Orders lore: what Defend does.
+   Order_Lore_Defend: "&7Defend: guards chase attackers and turn on cops."
+   # Guard Orders lore for the owning gang. %order% = the order a click switches to.
+   Order_Click: "&aClick to switch to %order%&a."
+   # Chat after the order changed. %turf%, %order%.
+   Order_Set: "&aGuards on &f%turf%&a now: %order%"
+   # Garrison panel (W7-H): guards alive on the turf now. %count%.
+   Garrison_On_Duty: "&7On duty: &f%count%"
+   # Stock plus guards on duty against the cap. %count%, %max% = turf_rules.yml Garrison.Max_Reserve.
+   Garrison_Reserve: "&7Reserve: &f%count%&7/&f%max% &8(stock and on duty)"
+   # Guards the next wave sends from the reserve (already paid for). %count%.
+   Garrison_Next_Wave: "&7Next wave: up to &f%count% &7guards, no extra cost"
+   # Buy button lore when stock plus guards on duty reach the cap. %max%.
+   Garrison_Buy_Full: "&cReserve full: &f%max% &cguards."
 # end Quartermaster
 
 # ---------------- Rules: /glw turf rules (W2-E1) ----------------

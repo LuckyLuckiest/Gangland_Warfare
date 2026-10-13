@@ -69,7 +69,11 @@
 	},
 	"turf_powerupnpc": {
 		"usage": "/glw turf powerupnpc <set|remove>",
-		"description": "Place (at your current location) or remove the per-turf Quartermaster NPC for your active-selection turf."
+		"description": "Place (where you stand, inside your active-selection turf) or remove the per-turf Quartermaster NPC for your active-selection turf."
+	},
+	"turf_quartermaster": {
+		"usage": "/glw turf quartermaster",
+		"description": "Place or move your gang's Quartermaster where you stand, inside a turf your gang owns. Costs Powerup_Npc.Placement_Cost from the gang bank."
 	},
 	"turf_rename": {
 		"usage": "/glw turf rename <name>",

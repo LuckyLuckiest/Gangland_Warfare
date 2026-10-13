@@ -34,6 +34,7 @@ import java.util.Objects;
 public final class TurfNpcsConfigLoader implements BeanLifecycle {
 
 	private static final String FILE_NAME = "turf_npcs";
+	public static final int DEFAULT_OWNER_ALERT_COOLDOWN_SECONDS = 60;
 
 	private final FileHandler fileHandler;
 
@@ -43,6 +44,8 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 	private TurfDefenderConfig  defenderConfig;
 	@Getter
 	private CopGuardConfig      copGuardConfig;
+	@Getter
+	private int                 ownerAlertCooldownSeconds = DEFAULT_OWNER_ALERT_COOLDOWN_SECONDS;
 
 	public TurfNpcsConfigLoader(FileManager fileManager) {
 		try {
@@ -65,6 +68,11 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		}
 	}
 
+	/** A non-finite cost (.nan, .inf) falls back to the default instead of poisoning the price. */
+	private static double placementCost(double raw) {
+		return Double.isFinite(raw) ? Math.max(0.0, raw) : 5000.0;
+	}
+
 	public void load() {
 		ConfigReport report = new ConfigReport();
 		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
@@ -75,9 +83,10 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 			powerupSettings = new TurfPowerupSettings(
 					pr.get("Type_Id").asString().orDefault("quartermaster"),
 					radius(pr),
-					pr.get("Display_Name").asString().orDefault("Quartermaster"));
+					pr.get("Display_Name").asString().orDefault("Quartermaster"),
+					placementCost(pr.get("Placement_Cost").asDouble().orDefault(5000.0)));
 		} else {
-			powerupSettings = new TurfPowerupSettings("quartermaster", 32.0, "Quartermaster");
+			powerupSettings = new TurfPowerupSettings("quartermaster", 32.0, "Quartermaster", 5000.0);
 		}
 
 		MappingNode garNode = root.get("Garrison").asMapping().orNull();
@@ -103,6 +112,11 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		                                : gr.get("Recycle_Seconds").asInt().min(0)
 		                                    .orDefault(TurfDefenderConfig.DEFAULT_RECYCLE_SECONDS);
 
+		double holdRaw = gr == null ? TurfDefenderConfig.DEFAULT_HOLD_RADIUS
+		                            : gr.get("Hold_Radius").asDouble().orDefault(TurfDefenderConfig.DEFAULT_HOLD_RADIUS);
+		// .nan / .inf would pass Math.max straight through
+		double holdRadius = Double.isFinite(holdRaw) ? Math.max(3.0, holdRaw) : TurfDefenderConfig.DEFAULT_HOLD_RADIUS;
+
 		// absent = the shipped composition; present (even empty) = exactly what the file says
 		GarrisonComposition composition = gr != null && gr.has("Composition")
 		                                  ? GarrisonComposition.parse(gr.get("Composition").asList().ofStrings().orEmpty(),
@@ -117,11 +131,11 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 					dr.get("Targeting_Radius").asDouble().min(1.0).orDefault(32.0),
 					dr.get("Lifespan_Seconds").asInt().min(1).orDefault(600),
 					waveSize, maxAlive, waveCooldown, standDown, leashMargin, composition, bountyShare,
-					recycleSeconds);
+					recycleSeconds, holdRadius);
 		} else {
 			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, 600, waveSize, maxAlive, waveCooldown,
 			                                        standDown, leashMargin, composition, bountyShare,
-			                                        recycleSeconds);
+			                                        recycleSeconds, holdRadius);
 		}
 
 		MappingNode copNode = root.get("Cop_Response").asMapping().orNull();
@@ -134,6 +148,12 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		} else {
 			copGuardConfig = new CopGuardConfig(true, 32.0, true);
 		}
+
+		MappingNode alertNode = root.get("Owner_Alerts").asMapping().orNull();
+		ownerAlertCooldownSeconds = alertNode == null ? DEFAULT_OWNER_ALERT_COOLDOWN_SECONDS
+		                                              : Math.max(0, NodeReader.of(alertNode, report).get("Cooldown_Seconds")
+		                                                                 .asInt()
+		                                                                 .orDefault(DEFAULT_OWNER_ALERT_COOLDOWN_SECONDS));
 
 		if (!report.isEmpty()) report.log(log);
 	}

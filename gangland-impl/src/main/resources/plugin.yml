@@ -47,6 +47,8 @@ permissions:
       default: true
    gangland.command.turf.rules:
       default: true
+   gangland.command.turf.quartermaster:
+      default: true
    gangland.command.gang:
       default: true
    gangland.command.gang.create:
@@ -68,6 +70,21 @@ permissions:
    gangland.command.gang.invite:
       default: true
    gangland.command.gang.invite.cancel:
+      default: true
+   # Alliance subcommands: every player may run them; the gang rank still gates each command (GangPermissions.ALLY).
+   gangland.command.gang.ally:
+      default: true
+   gangland.command.gang.ally.request:
+      default: true
+   gangland.command.gang.ally.accept:
+      default: true
+   gangland.command.gang.ally.reject:
+      default: true
+   gangland.command.gang.ally.pending:
+      default: true
+   gangland.command.gang.ally.pending.cancel:
+      default: true
+   gangland.command.gang.ally.abandon:
       default: true
    gangland.command.gang.accept:
       default: true
@@ -99,20 +116,6 @@ permissions:
    gangland.command.gang.display:
       default: true
    gangland.command.gang.description:
-      default: true
-   gangland.command.gang.ally:
-      default: true
-   gangland.command.gang.ally.abandon:
-      default: true
-   gangland.command.gang.ally.request:
-      default: true
-   gangland.command.gang.ally.accept:
-      default: true
-   gangland.command.gang.ally.reject:
-      default: true
-   gangland.command.gang.ally.pending:
-      default: true
-   gangland.command.gang.ally.pending.cancel:
       default: true
    gangland.command.bank:
       default: true
@@ -260,6 +263,7 @@ permissions:
          gangland.command.turf.info: true
          gangland.command.turf.list: true
          gangland.command.turf.rules: true
+         gangland.command.turf.quartermaster: true
          gangland.command.gang: true
          gangland.command.gang.create: true
          gangland.command.gang.leave: true

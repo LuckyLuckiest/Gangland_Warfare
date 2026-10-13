@@ -87,6 +87,11 @@ public final class GarrisonPosts {
 		return bestHidden != null ? new Choice(bestHidden, true) : new Choice(bestAny, false);
 	}
 
+	/** Hold order: whether a point is within {@code radius} blocks of the post, horizontal distance only. */
+	public static boolean withinHold(Post post, double x, double z, double radius) {
+		return Math.hypot(post.x() - x, post.z() - z) <= radius;
+	}
+
 	/** The post closest to a point. */
 	public static Post nearest(List<Post> posts, double x, double z) {
 		Post   best     = null;

@@ -1,6 +1,8 @@
 package org.luckyraven.gangland.turf.npc.view;
 
 import org.bukkit.entity.Player;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,12 +15,21 @@ import org.luckyraven.gangland.turf.powerups.EffectType;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 import org.luckyraven.keystone.economy.EconomyHandler;
+import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
+import org.luckyraven.gangland.turf.contract.TurfMessageContract;
+import org.luckyraven.gangland.turf.support.TurfTextFixture;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.IntUnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -50,6 +61,10 @@ class TurfPowerupGarrisonViewTest {
 	private TurfPowerupFlowSession    session;
 	private TurfPowerupGarrisonView   view;
 	private TurfMessages              messages;
+	private AtomicReference<TurfDefenderConfig> waves;
+
+	@TempDir(cleanup = CleanupMode.NEVER)
+	Path tempDir;
 
 	@BeforeEach
 	void setUp() {
@@ -77,8 +92,10 @@ class TurfPowerupGarrisonViewTest {
 
 		messages = mock(TurfMessages.class);
 		when(messages.text(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+		when(messages.text(anyString(), anyString(), any(Object[].class))).thenAnswer(invocation -> invocation.getArgument(0));
+		waves = new AtomicReference<>(new TurfDefenderConfig("turf_defender", 32.0, 600));
 		view = new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules,
-		                                   aliveGuards, messages, "STONE", "&7");
+		                                   aliveGuards, waves::get, messages, "STONE", "&7");
 	}
 
 	@Test
@@ -212,6 +229,98 @@ class TurfPowerupGarrisonViewTest {
 
 		assertEquals(QuartermasterAccess.ALLIES_LOOK, view.clickLine(allySession, true));
 		assertEquals("Quartermaster.Garrison_Buy_Click", view.clickLine(session, true));
+	}
+
+	@Test
+	@DisplayName("the next wave is capped by Wave_Size, the stock and Max_Alive minus guards on duty (W7-H)")
+	void nextWave_cappedByWaveStockAndMaxAlive() {
+		TurfDefenderConfig config = new TurfDefenderConfig("turf_defender", 32.0, 600, 3, 6, 20, 8, 16);
+
+		assertEquals(1, TurfPowerupGarrisonView.nextWave(1, 0, config));
+		assertEquals(3, TurfPowerupGarrisonView.nextWave(10, 0, config));
+		assertEquals(1, TurfPowerupGarrisonView.nextWave(10, 5, config));
+		assertEquals(0, TurfPowerupGarrisonView.nextWave(10, 6, config));
+		assertEquals(0, TurfPowerupGarrisonView.nextWave(0, 0, config));
+	}
+
+	@Test
+	@DisplayName("the info lore shows guards on duty, the reserve against the cap and the next wave (T-822)")
+	void infoLore_showsOnDutyReserveAndNextWave() {
+		when(garrisons.count(TURF_ID)).thenReturn(4);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(2);
+		when(rules.getMaxReserve()).thenReturn(12);
+
+		List<String> lore = view.infoLore(session.getTurf(), session.getOwnerGang());
+
+		assertTrue(lore.contains("Quartermaster.Garrison_On_Duty"));
+		assertTrue(lore.contains("Quartermaster.Garrison_Reserve"));
+		assertTrue(lore.contains("Quartermaster.Garrison_Next_Wave"));
+		verify(messages).text(eq("Quartermaster.Garrison_Reserve"), anyString(), eq("count"), eq(6), eq("max"), eq(12));
+		verify(messages).text(eq("Quartermaster.Garrison_Next_Wave"), anyString(), eq("count"), eq(3));
+	}
+
+	@Test
+	@DisplayName("the next-wave line reads the live turf_npcs.yml Garrison knobs, not a snapshot (W7-H)")
+	void infoLore_readsLiveConfig() {
+		when(garrisons.count(TURF_ID)).thenReturn(4);
+		waves.set(new TurfDefenderConfig("turf_defender", 32.0, 600, 1, 6, 20, 8, 16));
+
+		view.infoLore(session.getTurf(), session.getOwnerGang());
+
+		verify(messages).text(eq("Quartermaster.Garrison_Next_Wave"), anyString(), eq("count"), eq(1));
+	}
+
+	@Test
+	@DisplayName("a full reserve tells the owner the cap instead of Click to add (T-823)")
+	void buyLine_fullReserve_ownerSeesFull() {
+		when(garrisons.count(TURF_ID)).thenReturn(10);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(2);
+
+		assertEquals("Quartermaster.Garrison_Buy_Full", view.buyLine(session, true));
+	}
+
+	@Test
+	@DisplayName("a reserve under the cap keeps the click line (T-823)")
+	void buyLine_underCap_ownerSeesClick() {
+		when(garrisons.count(TURF_ID)).thenReturn(3);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(0);
+
+		assertEquals("Quartermaster.Garrison_Buy_Click", view.buyLine(session, true));
+	}
+
+	@Test
+	@DisplayName("an ally keeps the look-only line even on a full reserve (T-823, D25=B)")
+	void buyLine_fullReserve_allyStillLookOnly() {
+		Gang owner = mock(Gang.class);
+		when(owner.getId()).thenReturn(1);
+		Gang ally = mock(Gang.class);
+		when(ally.getId()).thenReturn(2);
+		TurfPowerupFlowSession allySession =
+				new TurfPowerupFlowSession(session.getTurf(), owner, ally, "Quartermaster");
+		when(garrisons.count(TURF_ID)).thenReturn(12);
+
+		assertEquals(QuartermasterAccess.ALLIES_LOOK, view.buyLine(allySession, true));
+	}
+
+	@Test
+	@DisplayName("the view's fallback literals equal the shipped turf_messages.yml lines (W7-H)")
+	void fallbacksEqualShippedYaml() throws Exception {
+		try (var settings = TurfTextFixture.stubMoneySymbol()) {
+			TurfMessageContract legacy = mock(TurfMessageContract.class);
+			Path shippedDir = Files.createDirectories(tempDir.resolve("shipped"));
+			Path emptyDir = Files.createDirectories(tempDir.resolve("empty"));
+			TurfMessages shipped = TurfTextFixture.messages(shippedDir, legacy);
+			TurfMessages empty = TurfTextFixture.emptyMessages(emptyDir, legacy);
+			String[][] keys = {
+					{"Quartermaster.Garrison_On_Duty", "&7On duty: &f%count%"},
+					{"Quartermaster.Garrison_Reserve", "&7Reserve: &f%count%&7/&f%max% &8(stock and on duty)"},
+					{"Quartermaster.Garrison_Next_Wave", "&7Next wave: up to &f%count% &7guards, no extra cost"},
+					{"Quartermaster.Garrison_Buy_Full", "&cReserve full: &f%max% &cguards."}
+			};
+			for (String[] key : keys) {
+				assertEquals(empty.text(key[0], key[1]), shipped.text(key[0], key[1]), key[0]);
+			}
+		}
 	}
 
 	/** The real EconomyHandler keeps the balance, so the bank paid exactly {@code price} when it dropped by that much. */
