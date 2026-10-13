@@ -101,6 +101,14 @@
             <artifactId>XSeries</artifactId>
         </dependency>
 
+        <!-- Bartizan (weapons plugin) API - provided and SOFT: npc-shops has no Plugins: entry in module.yml. Only
+             holdup.BartizanAim names a Bartizan type; hold-ups are inert when Bartizan is absent. -->
+        <dependency>
+            <groupId>org.luckyraven.bartizan</groupId>
+            <artifactId>bartizan-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- The host API — the only host artifact a runtime module compiles against, so the compiler enforces
              the contract. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/ by
              Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every api class resolves
@@ -110,6 +118,7 @@
             <artifactId>gangland-api</artifactId>
             <scope>provided</scope>
         </dependency>
+
 
         <!-- Shared test fixtures (testsupport.CitizensBlindScan / ConfigurationConstructorScan) -->
         <dependency>

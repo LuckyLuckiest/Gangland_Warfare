@@ -5,6 +5,15 @@ import org.luckyraven.gangland.copsncrooks.config.ChaseModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksFileConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
+import org.luckyraven.gangland.copsncrooks.config.CrimeSourcesModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.WitnessModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.DisguiseModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.PatrolModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.TrackerModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.ScannerModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.SightModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.OverwatchModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.ScannerMapModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
@@ -24,6 +33,8 @@ import org.luckyraven.keystone.npc.NpcSupport;
  * {@code TurfNpcsModuleConfig} was folded into {@code gangland-turf}'s {@code TurfModuleConfig} (group I).
  * 0.15.0 adds {@code ChaseModuleConfig}, {@code HeatModuleConfig} and {@code EvasionModuleConfig} (the chase);
  * 0.16.0 adds {@code RegistryModuleConfig} (stations, admin regions, setup points).
+ * 0.20.0 adds the nine lane seam configurations (crime sources, witness, disguise, patrol, tracker, scanner,
+ * sight, overwatch, scanner map) as empty skeletons, one per lane file.
  */
 @CustomLog
 public final class CopsNCrooksModule implements KeystoneModule {
@@ -41,6 +52,15 @@ public final class CopsNCrooksModule implements KeystoneModule {
 		         .configuration(HeatModuleConfig.class)
 		         .configuration(EvasionModuleConfig.class)
 		         .configuration(RegistryModuleConfig.class)
+		         .configuration(CrimeSourcesModuleConfig.class)
+		         .configuration(WitnessModuleConfig.class)
+		         .configuration(DisguiseModuleConfig.class)
+		         .configuration(PatrolModuleConfig.class)
+		         .configuration(TrackerModuleConfig.class)
+		         .configuration(ScannerModuleConfig.class)
+		         .configuration(SightModuleConfig.class)
+		         .configuration(OverwatchModuleConfig.class)
+		         .configuration(ScannerMapModuleConfig.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .commandPackage(COMMAND_PACKAGE)
 		         .repositoryPackage(REPOSITORY_PACKAGE);

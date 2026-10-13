@@ -43,6 +43,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.Dispatcher;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.handoff.HandoffController;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawner;
@@ -351,16 +352,24 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	@Bean
+	public CopPerception copPerception() {
+		return new CopPerception();
+	}
+
+	@Bean
 	public CopSpawnManager copSpawnManager(CopLoader copLoader,
 	                                       NpcMarkManager markManager,
 	                                       BartizanNpcWeapons bartizanNpcWeapons,
 	                                       DownedTargetFilter downedTargetFilter,
 	                                       RepositoryRegistry repositoryRegistry,
 	                                       DetainmentService detainmentService,
-	                                       CuffLockRegistry cuffLockRegistry) {
+	                                       CuffLockRegistry cuffLockRegistry,
+	                                       CopPerception copPerception) {
 		IRepository<CopSpawner> repo = repositoryRegistry.getRepository(CopSpawner.class);
-		return new CopSpawnManager(plugin, copLoader, markManager, bartizanNpcWeapons, downedTargetFilter, repo,
-		                           detainmentService, cuffLockRegistry);
+		CopSpawnManager manager = new CopSpawnManager(plugin, copLoader, markManager, bartizanNpcWeapons,
+		                                              downedTargetFilter, repo, detainmentService, cuffLockRegistry);
+		manager.setPerception(copPerception);
+		return manager;
 	}
 
 	@Bean

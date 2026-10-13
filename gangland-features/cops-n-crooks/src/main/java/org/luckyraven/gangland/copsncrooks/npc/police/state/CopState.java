@@ -11,5 +11,11 @@ public enum CopState {
 	COMBAT,
 	RETURNING,
 	/** Holding a perimeter post ({@code Cops.Perimeter}, 0.16.0): watching for the suspect, never cuffing. */
-	POSTED
+	POSTED,
+	/** Walking a beat (0.20.0 lane patrol): scanning for crime, never cuffing. */
+	PATROL,
+	/** Warning a suspect before acting (0.20.0 lane patrol). */
+	WARNING,
+	/** Watching from a vantage point (0.20.0 lane overwatch); counts as engaged for the hand-off. */
+	OVERWATCH
 }

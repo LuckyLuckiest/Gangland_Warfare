@@ -68,6 +68,8 @@ public class CopRadio {
 	private final RadioLines                  lines;
 	/** Inert until the module config hands over the core's holder bean ({@link #setPlaceNames}). */
 	private       PlaceNames                  places = new PlaceNames();
+	private       java.util.function.BiPredicate<Player, NpcSquad>          overhearing       = (p, s) -> false;
+	private       java.util.function.Function<NpcSquad, Map<String, String>> extraPlaceholders = s -> null;
 
 	public CopRadio(JavaPlugin plugin, CopLoader copLoader, CopRadioMessages messages) {
 		this(copLoader::getLoadedProvider, messages, System::currentTimeMillis,
@@ -627,7 +629,22 @@ public class CopRadio {
 		return words.isEmpty() ? "the area" : words.get(0);
 	}
 
-	private RadioVoice voice(CopGroup group) {
+	/** Who overhears a squad's lines beyond the radio range; default nobody (0.20.0 seam). */
+	public void setOverhearing(java.util.function.BiPredicate<Player, NpcSquad> overhearing) {
+		this.overhearing = overhearing != null ? overhearing : (p, s) -> false;
+	}
+
+	/** Extra placeholders merged under the voice's own ones (the voice's keys win); default none (0.20.0 seam). */
+	public void setExtraPlaceholders(java.util.function.Function<NpcSquad, Map<String, String>> extraPlaceholders) {
+		this.extraPlaceholders = extraPlaceholders != null ? extraPlaceholders : s -> null;
+	}
+
+	/** The overhearing hook; the voice delegates its {@code overhears} here once api 2.7 declares it. */
+	boolean overhears(Player player, NpcSquad squad) {
+		return overhearing.test(player, squad);
+	}
+
+	RadioVoice voice(CopGroup group) {
 		return new RadioVoice() {
 			@Override
 			public String callsign(AbstractNpc npc) {
@@ -644,11 +661,19 @@ public class CopRadio {
 				return entity instanceof LivingEntity living ? living : null;
 			}
 
+			public boolean overhears(Player player, NpcSquad squad) {
+				return CopRadio.this.overhears(player, squad);
+			}
+
 			@Override
 			public Map<String, String> extras(NpcSquad squad) {
-				// last-known, never the live position of the suspect
-				return Map.of("tier", group.getTierName(), "level", String.valueOf(group.getLevel()), "place",
-				              placeOf(group.getSquad().lastKnownLocation()));
+				Map<String, String> merged = new HashMap<>();
+				Map<String, String> hooked = extraPlaceholders.apply(squad);
+				if (hooked != null) merged.putAll(hooked);
+				// last-known, never the live position of the suspect; the voice's own keys win
+				merged.putAll(Map.of("tier", group.getTierName(), "level", String.valueOf(group.getLevel()), "place",
+				                     placeOf(group.getSquad().lastKnownLocation())));
+				return merged;
 			}
 		};
 	}

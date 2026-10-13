@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gadget.config;
 
+import org.bukkit.configuration.file.FileConfiguration;
 import org.luckyraven.gangland.file.configuration.MovedSetting;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileInitializer;
@@ -23,6 +24,13 @@ public class GadgetSettings implements GadgetPhysicsConfig, FileInitializer {
 	private double carReverseSpeedRatio   = 0.5;
 	private double carHardBrakeMultiplier = 3.0;
 	private int    carFuelConsumePerTick  = 1;
+
+	private int     carMoveIntervalTicks   = 4;
+	private boolean hotwireEnabled         = true;
+	private int     hotwireSeconds         = 6;
+	private double  hotwireMaxDistance     = 3.0;
+	private boolean hotwireConsumeLockpick = true;
+	private String  hotwireLockpickItem    = "lockpick";
 
 	public GadgetSettings(FileHandler fileHandler, FileManager fileManager) {
 		this.fileHandler = fileHandler;
@@ -55,6 +63,15 @@ public class GadgetSettings implements GadgetPhysicsConfig, FileInitializer {
 		                                         "Gadgets.Car.Hard_Brake_Multiplier", 3.0);
 		carFuelConsumePerTick  = moved.getInt("Gadgets.Car.Fuel_Consume_Per_Tick",
 		                                      "Gadgets.Car.Fuel_Consume_Per_Tick", 1);
+
+		// 0.20.0 keys: no legacy settings.yml fallback, a file without them keeps the code defaults.
+		FileConfiguration module = fileHandler.getFileConfiguration();
+		carMoveIntervalTicks   = module.getInt("Car_Events.Move_Interval_Ticks", 4);
+		hotwireEnabled         = module.getBoolean("Hotwire.Enable", true);
+		hotwireSeconds         = module.getInt("Hotwire.Seconds", 6);
+		hotwireMaxDistance     = module.getDouble("Hotwire.Max_Distance", 3.0);
+		hotwireConsumeLockpick = module.getBoolean("Hotwire.Consume_Lockpick", true);
+		hotwireLockpickItem    = module.getString("Hotwire.Lockpick_Item", "lockpick");
 	}
 
 	@Override
@@ -95,6 +112,36 @@ public class GadgetSettings implements GadgetPhysicsConfig, FileInitializer {
 	@Override
 	public int getCarFuelConsumePerTick() {
 		return carFuelConsumePerTick;
+	}
+
+	@Override
+	public int getCarMoveIntervalTicks() {
+		return carMoveIntervalTicks;
+	}
+
+	@Override
+	public boolean isHotwireEnabled() {
+		return hotwireEnabled;
+	}
+
+	@Override
+	public int getHotwireSeconds() {
+		return hotwireSeconds;
+	}
+
+	@Override
+	public double getHotwireMaxDistance() {
+		return hotwireMaxDistance;
+	}
+
+	@Override
+	public boolean isHotwireConsumeLockpick() {
+		return hotwireConsumeLockpick;
+	}
+
+	@Override
+	public String getHotwireLockpickItem() {
+		return hotwireLockpickItem;
 	}
 
 }
