@@ -1,9 +1,17 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.breach;
 
 import org.bukkit.Location;
+import org.bukkit.Tag;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Bisected;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Directional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -35,17 +43,85 @@ public final class DoorFinder {
 	private DoorFinder() {
 	}
 
+	private record Candidate(int x, int y, int z, int distance, Probe probe) {
+	}
+
 	public static Optional<Door> find(Location suspect, int radius, BlockLookup lookup) {
-		throw new UnsupportedOperationException("TDD stub");
+		World world = suspect.getWorld();
+		if (world == null) {
+			return Optional.empty();
+		}
+
+		int sx = suspect.getBlockX();
+		int sy = suspect.getBlockY();
+		int sz = suspect.getBlockZ();
+
+		List<Candidate> doors = new ArrayList<>();
+		for (int dx = -radius; dx <= radius; dx++) {
+			for (int dy = -radius; dy <= radius; dy++) {
+				for (int dz = -radius; dz <= radius; dz++) {
+					int x = sx + dx;
+					int y = sy + dy;
+					int z = sz + dz;
+					Probe probe = lookup.at(x, y, z);
+					if (probe.lowerDoor()) {
+						doors.add(new Candidate(x, y, z, dx * dx + dy * dy + dz * dz, probe));
+					}
+				}
+			}
+		}
+		doors.sort(Comparator.comparingInt(Candidate::distance));
+
+		for (Candidate door : doors) {
+			int[] cell = stackCell(door, sx, sz);
+			if (cell == null) {
+				continue;
+			}
+			int cx = cell[0];
+			int cy = door.y();
+			int cz = cell[1];
+			boolean clear = lookup.at(cx, cy, cz).passable() && lookup.at(cx, cy + 1, cz).passable();
+			boolean floor = lookup.at(cx, cy - 1, cz).solid();
+			if (clear && floor) {
+				return Optional.of(new Door(new Location(world, door.x(), door.y(), door.z()),
+				                            new Location(world, cx, cy, cz)));
+			}
+		}
+		return Optional.empty();
+	}
+
+	/**
+	 * The cell one block beyond the door on the side away from the suspect, along the door's axis; {@code null} when
+	 * the door does not face a cardinal direction.
+	 */
+	private static int[] stackCell(Candidate door, int sx, int sz) {
+		return switch (door.probe().facing()) {
+			case EAST, WEST -> new int[]{door.x() + (door.x() >= sx ? 1 : -1), door.z()};
+			case NORTH, SOUTH -> new int[]{door.x(), door.z() + (door.z() >= sz ? 1 : -1)};
+			default -> null;
+		};
 	}
 
 	/** {@code true} when the highest block above the suspect is more than {@code roofBlocks} over his feet. */
 	public static boolean indoors(Location suspect, int roofBlocks) {
-		throw new UnsupportedOperationException("TDD stub");
+		World world = suspect.getWorld();
+		if (world == null) {
+			return false;
+		}
+		int highest = world.getHighestBlockYAt(suspect.getBlockX(), suspect.getBlockZ());
+		return highest - suspect.getBlockY() > roofBlocks;
 	}
 
 	/** A lookup over {@code world}'s blocks (Tag.DOORS, Bisected half, Directional facing, isPassable, isSolid). */
 	public static BlockLookup worldLookup(World world) {
-		throw new UnsupportedOperationException("TDD stub");
+		return (x, y, z) -> {
+			Block block = world.getBlockAt(x, y, z);
+			BlockData data = block.getBlockData();
+			boolean lowerDoor = Tag.DOORS.isTagged(block.getType())
+			                    && data instanceof Bisected bisected
+			                    && bisected.getHalf() == Bisected.Half.BOTTOM;
+			BlockFace facing = data instanceof Directional directional ? directional.getFacing() : BlockFace.SELF;
+			return new Probe(lowerDoor, facing, block.isPassable(), block.getType().isSolid());
+		};
 	}
 }
