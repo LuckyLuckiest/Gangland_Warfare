@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.config;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
@@ -33,11 +34,15 @@ public class StandoffModuleConfig {
 	public StandoffController standoffController(CopLoader copLoader, CopRadio copRadio, PerimeterController perimeter,
 	                                             WantedStars wantedStars, @Qualifier("online") UserManager<Player> users,
 	                                             DetainmentService detainment) {
-		throw new UnsupportedOperationException("TDD stub");
+		return new StandoffController(copLoader::getLoadedProvider, copRadio, perimeter, wantedStars, users,
+		                              detainment::isHandcuffed, copRadio::now);
 	}
 
 	@PostConstruct
 	public void installStandoff() {
-		throw new UnsupportedOperationException("TDD stub");
+		StandoffController controller = container.getInstance(StandoffController.class);
+		CopManager         manager    = container.getInstance(CopManager.class);
+		manager.addAiTickHook(controller::tick);
+		manager.addCopAttackedHook(controller::onCopAttacked);
 	}
 }
