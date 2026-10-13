@@ -290,7 +290,7 @@ class ScannerMapRendererTest {
 	private void renderFixture() {
 		cache      = new SearchZoneCache();
 		copManager = mock(CopManager.class);
-		regions    = new AdminRegionRegistry(new FakeRepository<>());
+		regions    = org.mockito.Mockito.spy(new AdminRegionRegistry(new FakeRepository<>()));
 		renderer   = new ScannerMapRenderer(settings::get, cache, copManager, regions, ticks::get);
 		renderer.onDebug(debug::add);
 		player = mock(Player.class);
@@ -359,6 +359,7 @@ class ScannerMapRendererTest {
 		renderer.render(mock(MapView.class), canvas, player);
 
 		assertEquals(0, cursors().size());
+		verify(regions, never()).withTag(any());
 	}
 
 	@Test
