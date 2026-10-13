@@ -74,6 +74,11 @@ public class DetainmentRegistry implements BeanLifecycle {
 		detainmentRepository.save(detainedPlayer);
 	}
 
+	/** 0.21.0: {@link #setState(UUID, DetainmentState)} that also records how the arrest happened. */
+	public void setState(UUID playerId, DetainmentState state, @Nullable ArrestOrigin origin) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
 	@Nullable
 	public Jail findEmptyJail() {
 		for (Jail jail : jailRegistry.getCells()) {

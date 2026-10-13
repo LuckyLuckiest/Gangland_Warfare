@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.detainment.economy;
 
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
+
 /**
  * Thin contract exposing detainment cost / timing knobs to cops-n-crooks without a direct import of {@code Settings}
  * from gangland-impl.
@@ -33,6 +35,27 @@ public interface DetainmentCostsContract {
 	int getBreakFreeResetWindowTicks();
 
 	String getFallbackExitWaypoint();
+
+	// 0.21.0 (TDD stubs: the green step returns 1.0 / 1 / 0.0)
+	default double getSentenceMultiplier(ArrestOrigin origin) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	default double getBailMultiplier(ArrestOrigin origin) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	default double getFineMultiplier(ArrestOrigin origin) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	default int getLockpickTapWeight() {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	default double getLockpickSnapChance() {
+		throw new UnsupportedOperationException("TDD stub");
+	}
 
 	default double computeHandcuffBribeCost(int wantedLevel) {
 		return getHandcuffBribeBaseCost() + Math.max(0, wantedLevel) * getHandcuffBribePerLevel();

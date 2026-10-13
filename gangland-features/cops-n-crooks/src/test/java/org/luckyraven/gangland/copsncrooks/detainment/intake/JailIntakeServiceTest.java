@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainedPlayer;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
@@ -84,6 +85,8 @@ class JailIntakeServiceTest {
 	private       Player              player;
 	private       JailIntakeService   intake;
 	private       int                 level   = 2;
+	private       ArrestOrigin        rowOrigin;
+	private       DetainmentCostsContract costs;
 
 	/** Colouring a line reads {@code Settings.moneySymbol}, which only a loaded settings.yml sets. */
 	@BeforeAll
@@ -116,15 +119,22 @@ class JailIntakeServiceTest {
 		registry = new DetainmentRegistry(mock(IRepository.class), jails);
 
 		DetainmentService service = mock(DetainmentService.class);
-		doAnswer(inv -> registry.getDetainedPlayers().put(ID, new DetainedPlayer(ID, 1, DetainmentState.JAILED)))
-				.when(service).jail(eq(player), eq(1));
+		doAnswer(inv -> {
+			DetainedPlayer jailed = new DetainedPlayer(ID, 1, DetainmentState.JAILED);
+			jailed.setOrigin(rowOrigin);
+			return registry.getDetainedPlayers().put(ID, jailed);
+		}).when(service).jail(eq(player), eq(1));
 
 		wanted = mock(WantedClearContract.class);
 		when(wanted.getWantedLevel(ID)).thenAnswer(inv -> level);
 
-		DetainmentCostsContract costs = mock(DetainmentCostsContract.class);
+		costs = mock(DetainmentCostsContract.class);
 		// 120 s base + 90 s a star: 300 s at two stars (the Done-when 180 + 120)
 		when(costs.computeSentenceSeconds(any(int.class))).thenAnswer(inv -> 120 + 90 * (int) inv.getArgument(0));
+		// 0.21.0: a mocked contract answers 0.0 for the origin multipliers; the shipped ones are 1.0 except SURRENDERED
+		when(costs.getSentenceMultiplier(any())).thenReturn(1.0);
+		when(costs.getFineMultiplier(any())).thenReturn(1.0);
+		when(costs.getBailMultiplier(any())).thenReturn(1.0);
 
 		ledger = mock(HeatLedger.class);
 		when(ledger.chaseCrimes(ID)).thenAnswer(inv -> List.copyOf(crimes));
@@ -364,5 +374,92 @@ class JailIntakeServiceTest {
 		public double getBalance(Player player) {
 			return balance;
 		}
+	}
+
+	// ---- 0.21.0 fnd-origin: the origin multipliers (P-ORIGIN-3) ----
+
+	@Test
+	@DisplayName("SURRENDERED halves the sentence and the fine; the extra seconds come from the halved shortfall only")
+	void sentenceAndFineScaledByOrigin() {
+		rowOrigin = ArrestOrigin.SURRENDERED;
+		when(costs.getSentenceMultiplier(ArrestOrigin.SURRENDERED)).thenReturn(0.5);
+		when(costs.getFineMultiplier(ArrestOrigin.SURRENDERED)).thenReturn(0.5);
+		economy.balance = 100;
+
+		intake.admit(player);
+
+		// fine 700 x 0.5 = 350; wallet pays 100; unpaid 250 -> ceil(250 x 0.1) = 25 s; sentence round(300 x 0.5) + 25
+		assertEquals(100.0, row().getFinePaid());
+		assertEquals(25, row().getFineExtraSeconds());
+		assertEquals(175, sentenceSeconds());
+	}
+
+	@Test
+	@DisplayName("a rich SURRENDERED player pays the halved fine in full and serves the halved sentence")
+	void surrendered_richPlayer_paysHalfTheFine() {
+		rowOrigin = ArrestOrigin.SURRENDERED;
+		when(costs.getSentenceMultiplier(ArrestOrigin.SURRENDERED)).thenReturn(0.5);
+		when(costs.getFineMultiplier(ArrestOrigin.SURRENDERED)).thenReturn(0.5);
+		economy.balance = 5000;
+
+		intake.admit(player);
+
+		assertEquals(350.0, row().getFinePaid());
+		assertEquals(0, row().getFineExtraSeconds());
+		assertEquals(150, sentenceSeconds());
+	}
+
+	@Test
+	@DisplayName("a legacy row (null origin) is priced as CUFFED: the 0.19 numbers, multipliers asked for CUFFED")
+	void cuffedOrigin_unchangedPrices() {
+		rowOrigin = null;
+		when(costs.getSentenceMultiplier(ArrestOrigin.SURRENDERED)).thenReturn(0.5);
+		economy.balance = 5000;
+
+		intake.admit(player);
+
+		assertEquals(700.0, row().getFinePaid());
+		assertEquals(300, sentenceSeconds());
+		verify(costs).getSentenceMultiplier(ArrestOrigin.CUFFED);
+		verify(costs).getFineMultiplier(ArrestOrigin.CUFFED);
+	}
+
+	@Test
+	@DisplayName("BUSTED_DOWNED is priced at 1.0 like a cuff")
+	void bustedOrigin_unchangedPrices() {
+		rowOrigin = ArrestOrigin.BUSTED_DOWNED;
+		economy.balance = 5000;
+
+		intake.admit(player);
+
+		assertEquals(700.0, row().getFinePaid());
+		assertEquals(300, sentenceSeconds());
+	}
+
+	@Test
+	@DisplayName("a death-commit with SURRENDERED still gets no sheet, and its sentence is scaled")
+	void deathCommit_surrendered_noSheet_sentenceScaled() {
+		rowOrigin = ArrestOrigin.SURRENDERED;
+		when(costs.getSentenceMultiplier(ArrestOrigin.SURRENDERED)).thenReturn(0.5);
+		economy.balance = 5000;
+
+		intake.admit(player, true);
+
+		assertNull(row().getFinePaid());
+		assertEquals(5000, economy.balance);
+		assertEquals(150, sentenceSeconds());
+	}
+
+	@Test
+	@DisplayName("a zero multiplier shortens the sentence to the extra seconds alone and never goes negative")
+	void zeroMultiplier_isNotNegative() {
+		rowOrigin = ArrestOrigin.SURRENDERED;
+		when(costs.getSentenceMultiplier(ArrestOrigin.SURRENDERED)).thenReturn(0.0);
+		when(costs.getFineMultiplier(ArrestOrigin.SURRENDERED)).thenReturn(0.0);
+
+		intake.admit(player);
+
+		assertEquals(0, sentenceSeconds());
+		assertNull(row().getFinePaid(), "a zero fine charges nothing");
 	}
 }

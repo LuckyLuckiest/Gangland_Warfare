@@ -33,6 +33,8 @@ public class DetainedPlayer {
 	private       Double          finePaid;
 	/** Jail seconds added for the unpaid part of the fine. Null like {@link #finePaid}. */
 	private       Integer         fineExtraSeconds;
+	/** How the arrest happened; null on rows written before 0.21.0 (read as CUFFED). */
+	private       ArrestOrigin    origin;
 
 	public DetainedPlayer(UUID playerId, Integer jailId, DetainmentState state) {
 		this(playerId, jailId, state, null, null, null);
@@ -46,5 +48,10 @@ public class DetainedPlayer {
 		this.transitExpiresAt  = transitExpiresAt;
 		this.sentenceExpiresAt = sentenceExpiresAt;
 		this.wantedAtArrest    = wantedAtArrest;
+	}
+
+	/** The origin, {@link ArrestOrigin#CUFFED} when none was recorded. */
+	public ArrestOrigin originOrDefault() {
+		throw new UnsupportedOperationException("TDD stub");
 	}
 }

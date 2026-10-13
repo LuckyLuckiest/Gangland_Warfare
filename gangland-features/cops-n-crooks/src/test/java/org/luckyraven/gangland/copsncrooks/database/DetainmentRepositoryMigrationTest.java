@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.database;
 
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -228,5 +230,75 @@ class DetainmentRepositoryMigrationTest {
 				new DetainmentRepository(PluginMocks.plugin(tempDir), handler, backend);
 
 		assertDoesNotThrow(disconnected::migrateSchema);
+	}
+
+	// ---- 0.21.0 fnd-origin: T-357, the SQLite rebuild keeps origin_type ----
+
+	private static final String LEGACY_WITH_ORIGIN_DDL = LEGACY_DETAINMENT_DDL.replace(
+			"fine_extra_seconds INTEGER, ", "fine_extra_seconds INTEGER, origin_type VARCHAR(255), ");
+
+	private boolean tableHasColumn(String column) throws SQLException {
+		try (Statement stmt = legacyConnection.createStatement();
+		     java.sql.ResultSet rs = stmt.executeQuery("PRAGMA table_info('detainment')")) {
+			while (rs.next()) {
+				if (column.equalsIgnoreCase(rs.getString("name"))) return true;
+			}
+		}
+		return false;
+	}
+
+	@Test
+	@DisplayName("T-357: the SQLite rebuild keeps a value held in origin_type and still drops UNIQUE(jail_id)")
+	void sqliteRebuild_keepsOriginColumn() throws SQLException {
+		try (Statement stmt = legacyConnection.createStatement()) {
+			stmt.execute(LEGACY_WITH_ORIGIN_DDL);
+			stmt.execute("INSERT INTO detainment (player_uuid, jail_id, state, sentence_expires_at, wanted_at_arrest, " +
+			             "origin_type) VALUES ('" + ALICE + "', 1, 'JAILED', 5000, 3, 'SURRENDERED')");
+		}
+
+		repository.migrateSchema();
+
+		assertFalse(jailIdStillUnique(), "jail_id must no longer be unique");
+		DetainedPlayer loaded = repository.loadAll().iterator().next();
+		assertEquals(ArrestOrigin.SURRENDERED, loaded.getOrigin());
+		assertEquals(5_000L, loaded.getSentenceExpiresAt());
+		assertEquals(3, loaded.getWantedAtArrest());
+	}
+
+	@Test
+	@DisplayName("T-357: a legacy table that never had origin_type migrates without error and gains the column")
+	void sqliteRebuild_legacyWithoutOrigin_stillMigrates() throws SQLException {
+		createLegacyTable();
+		insertLegacyRow(ALICE, 1, 5_000L, 3);
+
+		assertDoesNotThrow(() -> repository.migrateSchema());
+
+		assertFalse(jailIdStillUnique());
+		assertTrue(tableHasColumn("origin_type"), "the rebuilt table must carry origin_type for later saves");
+		DetainedPlayer old = repository.loadAll().iterator().next();
+		assertNull(old.getOrigin(), "an old row has no origin");
+		assertEquals(ArrestOrigin.CUFFED, old.originOrDefault());
+
+		DetainedPlayer fresh = new DetainedPlayer(BOB, 1, DetainmentState.HANDCUFFED);
+		fresh.setOrigin(ArrestOrigin.BUSTED_DOWNED);
+		repository.save(fresh);
+		DetainedPlayer bob = repository.loadAll().stream().filter(row -> BOB.equals(row.getPlayerId())).findFirst()
+		                               .orElseThrow();
+		assertEquals(ArrestOrigin.BUSTED_DOWNED, bob.getOrigin());
+	}
+
+	@Test
+	@DisplayName("T-357: the rebuild of a table with origin_type is idempotent")
+	void sqliteRebuild_withOrigin_runTwice() throws SQLException {
+		try (Statement stmt = legacyConnection.createStatement()) {
+			stmt.execute(LEGACY_WITH_ORIGIN_DDL);
+			stmt.execute("INSERT INTO detainment (player_uuid, jail_id, state, origin_type) VALUES ('" + ALICE +
+			             "', 1, 'JAILED', 'SURRENDERED')");
+		}
+
+		repository.migrateSchema();
+		assertDoesNotThrow(() -> repository.migrateSchema());
+
+		assertEquals(ArrestOrigin.SURRENDERED, repository.loadAll().iterator().next().getOrigin());
 	}
 }

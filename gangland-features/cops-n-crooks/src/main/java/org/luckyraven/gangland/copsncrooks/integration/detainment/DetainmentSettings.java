@@ -3,6 +3,8 @@ package org.luckyraven.gangland.copsncrooks.integration.detainment;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
+import org.luckyraven.gangland.copsncrooks.detainment.settings.RescueSettings;
+import org.luckyraven.gangland.copsncrooks.detainment.settings.SurrenderSettings;
 import org.luckyraven.gangland.file.configuration.MovedSetting;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -49,6 +51,13 @@ public final class DetainmentSettings implements FileInitializer {
 	private String bribeFailSound = "ENTITY_VILLAGER_NO";
 	private String transitCommitSound = "BLOCK_IRON_DOOR_CLOSE";
 	private String sentenceCompleteSound = "BLOCK_BELL_USE";
+
+	// 0.21.0 (TDD stubs: neutral values until the green step reads detainment.yml)
+	private SurrenderSettings surrender = new SurrenderSettings(false, 0, 0.0, 0.0, 0.0, 0);
+	private boolean           bustedEnabled;
+	private int               lockpickTapWeight;
+	private double            lockpickSnapChance;
+	private RescueSettings    rescue = new RescueSettings(false, 0, 0);
 
 	public DetainmentSettings(FileManager fileManager) {
 		this.fileManager = fileManager;

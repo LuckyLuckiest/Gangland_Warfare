@@ -71,6 +71,11 @@ public class DetainmentService {
 		ActionBarManager.send(plugin, player, messages.handcuffedActionBar(), 40L);
 	}
 
+	/** 0.21.0: {@link #handcuff(Player)} that records how the arrest happened. */
+	public void handcuff(Player player, ArrestOrigin origin) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
 	public void jail(Player player, int jailId) {
 		jailService.detainPlayer(jailId, player.getUniqueId());
 		setState(player, DetainmentState.JAILED);

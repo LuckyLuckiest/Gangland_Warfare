@@ -32,6 +32,8 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 	private volatile ChaseConfig       loaded    = ChaseConfig.DEFAULT;
 	private volatile KillComboSettings killCombo = KillComboSettings.DEFAULT;
 	private volatile PostEscapeSettings postEscape = PostEscapeSettings.DEFAULT;
+	private volatile CrewHeatSettings      crewHeat      = CrewHeatSettings.DEFAULT;
+	private volatile PursuitReportSettings pursuitReport = PursuitReportSettings.DEFAULT;
 
 	public ChaseConfigLoader(JavaPlugin plugin, FileManager fileManager) {
 		super(plugin, false, null, fileManager);
@@ -52,11 +54,23 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		return postEscape;
 	}
 
+	/** The current {@code Wanted.Crew_Heat}, never null. @since 0.21.0 */
+	public CrewHeatSettings getCrewHeat() {
+		return crewHeat;
+	}
+
+	/** The current {@code Wanted.Pursuit_Report}, never null. @since 0.21.0 */
+	public PursuitReportSettings getPursuitReport() {
+		return pursuitReport;
+	}
+
 	@Override
 	public void clear() {
 		loaded     = ChaseConfig.DEFAULT;
 		killCombo  = KillComboSettings.DEFAULT;
 		postEscape = PostEscapeSettings.DEFAULT;
+		crewHeat      = CrewHeatSettings.DEFAULT;
+		pursuitReport = PursuitReportSettings.DEFAULT;
 	}
 
 	@Override
