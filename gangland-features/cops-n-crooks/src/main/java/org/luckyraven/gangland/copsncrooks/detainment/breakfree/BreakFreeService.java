@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.copsncrooks.detainment.breakfree;
 
-import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -12,7 +11,9 @@ import org.luckyraven.gangland.copsncrooks.detainment.release.ReleasePipeline;
 import org.luckyraven.gangland.copsncrooks.detainment.release.ReleaseReason;
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
 import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.crime.Crimes;
+import lombok.CustomLog;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.keystone.util.ChatUtil;
@@ -20,13 +21,15 @@ import org.luckyraven.keystone.util.ChatUtil;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.DoubleSupplier;
+import java.util.function.Predicate;
 
 /**
  * Break-free minigame. While HANDCUFFED a player can spam the Sneak key to fill a tap counter; once the counter reaches
  * the configured threshold the release pipeline fires. Unlike bribe-the-cop this does NOT clear wanted, so cops will
  * re-engage on the next AI tick — the idea is a tense, risky escape instead of a clean exit.
  */
-@RequiredArgsConstructor
+@CustomLog
 public class BreakFreeService implements BeanLifecycle {
 
 	private static final long PROMPT_TICK_PERIOD = 20L; // push the prompt once per second
@@ -38,10 +41,31 @@ public class BreakFreeService implements BeanLifecycle {
 	private final ReleasePipeline           releasePipeline;
 	private final DetainmentSoundContract   sounds;
 	private final CrimeService              crimes;
+	private final WantedMessages            wantedMessages;
+	private final DoubleSupplier            random;
+
+	/** 0.21.0 seams so tests need no NBT: does the player hold a pick / remove one. */
+	Predicate<Player> pickFinder   = Lockpicks::has;
+	Predicate<Player> pickConsumer = Lockpicks::consumeOne;
 
 	private final Map<UUID, Counter> counters = new ConcurrentHashMap<>();
 
 	private BukkitTask promptTask;
+
+	public BreakFreeService(JavaPlugin plugin, DetainmentService detainmentService, DetainmentCostsContract costs,
+	                        DetainmentMessageContract messages, ReleasePipeline releasePipeline,
+	                        DetainmentSoundContract sounds, CrimeService crimes, WantedMessages wantedMessages,
+	                        DoubleSupplier random) {
+		this.plugin            = plugin;
+		this.detainmentService = detainmentService;
+		this.costs             = costs;
+		this.messages          = messages;
+		this.releasePipeline   = releasePipeline;
+		this.sounds            = sounds;
+		this.crimes            = crimes;
+		this.wantedMessages    = wantedMessages;
+		this.random            = random;
+	}
 
 	public void registerTap(Player player) {
 		if (player == null) return;
@@ -55,8 +79,17 @@ public class BreakFreeService implements BeanLifecycle {
 		if (now - counter.lastTapMs > resetWindowMs) {
 			counter.taps = 0;
 		}
-		counter.taps++;
+		boolean pick   = pickFinder.test(player);
+		int     weight = pick ? Math.max(1, costs.getLockpickTapWeight()) : 1;
+		counter.taps += weight;
 		counter.lastTapMs = now;
+
+		boolean snapped = false;
+		if (pick && random.getAsDouble() < costs.getLockpickSnapChance()) {
+			snapped = pickConsumer.test(player);
+			if (snapped) player.sendMessage(wantedMessages.format(WantedMessages.Key.LOCKPICK_SNAPPED, Map.of()));
+		}
+		log.debug("LOCKPICK {} weight={} snapped={}", player.getName(), weight, snapped);
 
 		if (counter.taps >= required) {
 			counters.remove(player.getUniqueId());
@@ -68,7 +101,7 @@ public class BreakFreeService implements BeanLifecycle {
 		}
 
 		ActionBarManager.send(plugin, player,
-		                      messages.breakFreeProgressActionBar(counter.taps, required), 40L);
+		                      messages.breakFreeProgressActionBar(Math.min(counter.taps, required), required), 40L);
 	}
 
 	public void reset(UUID playerId) {
