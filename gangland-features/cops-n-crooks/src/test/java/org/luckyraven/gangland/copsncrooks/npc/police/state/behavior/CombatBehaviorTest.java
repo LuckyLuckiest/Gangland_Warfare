@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.state.behavior;
 
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -287,5 +288,72 @@ class CombatBehaviorTest {
 		when(cop.canAttack()).thenReturn(true);
 		when(cop.hasLineOfSight((LivingEntity) player)).thenReturn(true);
 		return player;
+	}
+
+	private Player combatPlayer(NpcSquad squad) {
+		UUID   playerId = UUID.randomUUID();
+		Player player   = mock(Player.class);
+		when(player.isValid()).thenReturn(true);
+		bukkit.statics().when(() -> Bukkit.getPlayer(playerId)).thenReturn(player);
+		when(cop.getTargetPlayerId()).thenReturn(playerId);
+		when(cop.squadFor(player)).thenReturn(squad);
+		when(cop.distanceTo((LivingEntity) player)).thenReturn(2.0);
+		when(cop.canAttack()).thenReturn(true);
+		when(cop.hasLineOfSight((LivingEntity) player)).thenReturn(true);
+		return player;
+	}
+
+	@Test
+	@DisplayName("0.20 seam: with nothing registered the pursue range is Alert_Range (T-109 pin: Alert_Range gates sight only)")
+	void pursueGetsPerceptionRange_nothingRegistered() {
+		NpcSquad squad  = new NpcSquad();
+		Player   player = combatPlayer(squad);
+
+		new CombatBehavior(COMBAT_RANGE, ALERT_RANGE, mock(DetainmentService.class), RetreatSettings.DEFAULT,
+		                   new CopPerception()).tick(cop);
+
+		verify(cop).pursue(player, squad, ALERT_RANGE);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: a registered sight factor scales the range handed to cop.pursue")
+	void pursueGetsPerceptionRange_factorScales() {
+		NpcSquad squad  = new NpcSquad();
+		Player   player = combatPlayer(squad);
+		CopPerception perception = new CopPerception();
+		perception.addSightFactor((c, p) -> 0.5);
+
+		new CombatBehavior(COMBAT_RANGE, ALERT_RANGE, mock(DetainmentService.class), RetreatSettings.DEFAULT,
+		                   perception).tick(cop);
+
+		verify(cop).pursue(player, squad, ALERT_RANGE * 0.5);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: a filtered-out player with a stale squad is pursued with range 0.0")
+	void pursueGetsPerceptionRange_filteredStaleSquadIsZero() {
+		NpcSquad squad  = new NpcSquad();
+		Player   player = combatPlayer(squad);
+		CopPerception perception = new CopPerception();
+		perception.addLockOnFilter((c, p) -> false);
+
+		new CombatBehavior(COMBAT_RANGE, ALERT_RANGE, mock(DetainmentService.class), RetreatSettings.DEFAULT,
+		                   perception).tick(cop);
+
+		verify(cop).pursue(player, squad, 0.0);
+	}
+
+	@Test
+	@DisplayName("0.20 seam: lock-on filters never stop a cop firing at a target it is already fighting")
+	void filterNeverStopsFiring() {
+		NpcSquad squad  = new NpcSquad();
+		Player   player = combatPlayer(squad);
+		CopPerception perception = new CopPerception();
+		perception.addLockOnFilter((c, p) -> false);
+
+		new CombatBehavior(COMBAT_RANGE, ALERT_RANGE, mock(DetainmentService.class), RetreatSettings.DEFAULT,
+		                   perception).tick(cop);
+
+		verify(cop).attack(player);
 	}
 }
