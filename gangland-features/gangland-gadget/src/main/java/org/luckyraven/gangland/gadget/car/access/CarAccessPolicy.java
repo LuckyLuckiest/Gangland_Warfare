@@ -3,7 +3,9 @@ package org.luckyraven.gangland.gadget.car.access;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Decides who may mount, refuel or pick up a placed car.
@@ -22,6 +24,9 @@ import java.util.UUID;
  *   <li>{@link #BYPASS_PERMISSION} is the staff override.</li>
  * </ul>
  *
+ * <p>Hotwire (0.20.0): a lockpick thief who fails {@link #canUse} may hotwire the car; the session grant
+ * ({@link #grant}) lets the thief mount and drive it, but never pick it up or refuel it.
+ *
  * <p>Observation #6 (gadgets-cars-fuel-jetpack.md), docket GD-06.
  */
 public final class CarAccessPolicy {
@@ -30,6 +35,7 @@ public final class CarAccessPolicy {
 	public static final String BYPASS_PERMISSION = "gangland.cars.bypass";
 
 	private final CarGangContract gangs;
+	private final Map<UUID, UUID> grants = new ConcurrentHashMap<>(); // carEntityId -> thief
 
 	public CarAccessPolicy(CarGangContract gangs) {
 		this.gangs = gangs;
@@ -57,28 +63,29 @@ public final class CarAccessPolicy {
 	 * @return {@code true} when the player may not use the car but it has a recorded owner, i.e. a lockpick may try it
 	 */
 	public boolean canHotwire(@Nullable Player player, @Nullable UUID placer) {
-		return false; // TDD stub
+		return player != null && placer != null && !canUse(player, placer);
 	}
 
 	/**
 	 * Mounting and driving: {@link #canUse} or a hotwire grant on this car. Refuel and pickup keep {@link #canUse}.
 	 */
 	public boolean canMount(@Nullable Player player, @Nullable UUID placer, UUID carEntityId) {
-		return false; // TDD stub
+		if (canUse(player, placer)) return true;
+		return player != null && player.getUniqueId().equals(grants.get(carEntityId));
 	}
 
 	/**
 	 * Lets the thief mount and drive the car until restart or {@link #revoke}. Ownership never changes.
 	 */
 	public void grant(UUID carEntityId, UUID thief) {
-		throw new UnsupportedOperationException("TDD stub");
+		grants.put(carEntityId, thief);
 	}
 
 	/**
 	 * Drops a hotwire grant (the car was picked up).
 	 */
 	public void revoke(UUID carEntityId) {
-		throw new UnsupportedOperationException("TDD stub");
+		grants.remove(carEntityId);
 	}
 
 	/**
@@ -86,7 +93,7 @@ public final class CarAccessPolicy {
 	 */
 	@Nullable
 	public UUID grantedTo(UUID carEntityId) {
-		return null; // TDD stub
+		return grants.get(carEntityId);
 	}
 
 }
