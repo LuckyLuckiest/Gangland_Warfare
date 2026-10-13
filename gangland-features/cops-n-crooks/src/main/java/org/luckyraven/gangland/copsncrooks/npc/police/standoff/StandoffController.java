@@ -231,6 +231,13 @@ public class StandoffController {
 	private void end(UUID id, String reason) {
 		State st = active.remove(id);
 		if (st == null) return;
+		release(st);
+		casualties.remove(id);
+		cooldownUntil.put(id, clock.getAsLong() + settings().cooldownSeconds() * 1000L);
+		log.debug("STANDOFF {} end outcome={}", st.player.getName(), reason);
+	}
+
+	private static void release(State st) {
 		for (CopNpc cop : st.posts) {
 			if (cop == null || !cop.isValid() || cop.getCurrentState() != CopState.POSTED) continue;
 			cop.releasePost();
@@ -238,9 +245,14 @@ public class StandoffController {
 		}
 		st.group.setStandoffUntil(0L);
 		st.group.setFallBackUntil(0L);
+	}
+
+	/** Quit or logout: drops the suspect's standoff state with no cooldown, so his next chase can start one at once. */
+	public void forget(UUID id) {
+		State st = active.remove(id);
+		if (st != null) release(st);
 		casualties.remove(id);
-		cooldownUntil.put(id, clock.getAsLong() + settings().cooldownSeconds() * 1000L);
-		log.debug("STANDOFF {} end outcome={}", st.player.getName(), reason);
+		cooldownUntil.remove(id);
 	}
 
 	/** Cop-attacked hook: the suspect hit a cop, so his standoff ends (ESCALATE). */
