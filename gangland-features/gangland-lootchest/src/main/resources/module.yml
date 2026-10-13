@@ -3,5 +3,5 @@ Id: lootchest
 Name: Gangland Loot Chests
 Version: ${project.version}
 Main: org.luckyraven.gangland.lootchest.LootChestModule
-Host_Api: 2.0
+Host_Api: 2.7
 Artifact: org.luckyraven:gangland-lootchest

@@ -10,6 +10,15 @@ import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
 import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.ScannerMapModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.OverwatchModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.SightModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.ScannerModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.TrackerModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.PatrolModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.DisguiseModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.WitnessModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.CrimeSourcesModuleConfig;
 import org.luckyraven.gangland.copsncrooks.database.DetainmentRepository;
 import org.luckyraven.gangland.copsncrooks.listener.detainment.CopListener;
 import org.luckyraven.keystone.module.ModuleRegistrations;
@@ -34,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CopsNCrooksModuleTest {
 
 	@Test
-	@DisplayName("configure registers the seven configuration classes and the three packages")
+	@DisplayName("configure registers the sixteen configuration classes (nine 0.20 lane seams appended) and the three packages")
 	void configure_declaresConfigsAndPackages() {
 		ModuleRegistrations registrations = new ModuleRegistrations();
 
@@ -42,7 +51,10 @@ class CopsNCrooksModuleTest {
 
 		assertEquals(List.of(CopsNCrooksYamlConfig.class, CopsNCrooksFileConfig.class,
 				CopsNCrooksModuleConfig.class, ChaseModuleConfig.class, HeatModuleConfig.class,
-				EvasionModuleConfig.class, RegistryModuleConfig.class), registrations.configurations());
+				EvasionModuleConfig.class, RegistryModuleConfig.class, CrimeSourcesModuleConfig.class,
+				WitnessModuleConfig.class, DisguiseModuleConfig.class, PatrolModuleConfig.class,
+				TrackerModuleConfig.class, ScannerModuleConfig.class, SightModuleConfig.class,
+				OverwatchModuleConfig.class, ScannerMapModuleConfig.class), registrations.configurations());
 		assertEquals(List.of(CopsNCrooksModule.LISTENER_PACKAGE), registrations.listenerPackages());
 		assertEquals(List.of(CopsNCrooksModule.COMMAND_PACKAGE), registrations.commandPackages());
 		assertEquals(List.of(CopsNCrooksModule.REPOSITORY_PACKAGE), registrations.repositoryPackages());

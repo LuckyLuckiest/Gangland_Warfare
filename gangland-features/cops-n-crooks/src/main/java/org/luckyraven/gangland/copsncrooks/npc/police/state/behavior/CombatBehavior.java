@@ -5,9 +5,11 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.npc.RetreatSettings;
+import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
@@ -22,18 +24,30 @@ public class CombatBehavior implements CopBehavior {
 	private final double            alertRange;
 	private final DetainmentService detainmentService;
 	private final CopRetreat        retreat;
+	private final CopPerception     perception;
 
 	public CombatBehavior(double combatRange, double alertRange, DetainmentService detainmentService,
 	                      RetreatSettings retreat) {
-		this(combatRange, alertRange, detainmentService, retreat, System::currentTimeMillis);
+		this(combatRange, alertRange, detainmentService, retreat, System::currentTimeMillis, new CopPerception());
+	}
+
+	public CombatBehavior(double combatRange, double alertRange, DetainmentService detainmentService,
+	                      RetreatSettings retreat, CopPerception perception) {
+		this(combatRange, alertRange, detainmentService, retreat, System::currentTimeMillis, perception);
 	}
 
 	CombatBehavior(double combatRange, double alertRange, DetainmentService detainmentService, RetreatSettings retreat,
 	               LongSupplier clock) {
+		this(combatRange, alertRange, detainmentService, retreat, clock, new CopPerception());
+	}
+
+	CombatBehavior(double combatRange, double alertRange, DetainmentService detainmentService, RetreatSettings retreat,
+	               LongSupplier clock, CopPerception perception) {
 		this.combatRange       = combatRange;
 		this.alertRange        = alertRange;
 		this.detainmentService = detainmentService;
 		this.retreat           = new CopRetreat(retreat, clock);
+		this.perception        = perception;
 	}
 
 	@Override
@@ -72,7 +86,8 @@ public class CombatBehavior implements CopBehavior {
 		// Keystone's squad pursuit: ranged cops work their post on the squad's fan while they see the target inside
 		// their firing band, everyone else closes in, routes around obstacles or searches from the last-known position.
 		// squadFor gives the group squad for the group's player and the group's shared squad against anyone else.
-		cop.pursue(target, cop.squadFor(target), alertRange);
+		NpcSquad squad = cop.squadFor(target);
+		cop.pursue(target, squad, perception.pursuitRange(cop, target, squad, alertRange));
 	}
 
 	@Override

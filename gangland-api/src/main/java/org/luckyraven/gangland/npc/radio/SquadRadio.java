@@ -215,7 +215,8 @@ public final class SquadRadio {
 			boolean heard = withinRange(player.getLocation(), origin, cfg.range()) ||
 			                (addresseeLoc != null && withinRange(player.getLocation(), addresseeLoc, cfg.range())) ||
 			                (hunted instanceof Player && player.equals(hunted) &&
-			                 withinRange(player.getLocation(), origin, cfg.targetRange()));
+			                 withinRange(player.getLocation(), origin, cfg.targetRange())) ||
+			                voice.overhears(player, squad);
 			if (!heard) continue;
 
 			if (!priority && !bypassPlayerGap) {

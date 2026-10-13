@@ -1,11 +1,13 @@
 package org.luckyraven.gangland.gadget.car.vehicle;
 
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.luckyraven.gangland.events.vehicle.CarMoveEvent;
 import org.luckyraven.keystone.util.ParticleUtil;
 import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarService;
@@ -32,6 +34,8 @@ public class VehicleMovementTask extends BukkitRunnable {
 	@Getter
 	private double currentSpeed;
 	private float  currentYaw;
+	private int      movingTicks;
+	private Location lastEventLocation;
 
 	public VehicleMovementTask(VehicleSession session, CarService carService, GadgetPhysicsConfig physicsConfig) {
 		this.session       = session;
@@ -101,7 +105,7 @@ public class VehicleMovementTask extends BukkitRunnable {
 		if (left) currentYaw -= (float) car.getTurnSpeed();
 		if (right) currentYaw += (float) car.getTurnSpeed();
 
-		entity.updateMovement(currentSpeed, currentYaw);
+		entity.updateMovement(appliedSpeed(currentSpeed), currentYaw);
 		entity.setFacing(currentYaw);
 		ParticleUtil.spawnBurnoutSmoke(entity.getLocation(), currentYaw);
 
@@ -166,8 +170,13 @@ public class VehicleMovementTask extends BukkitRunnable {
 	 * displays.
 	 */
 	private void finalizeTick(VehicleEntity entity, Car car) {
-		entity.updateMovement(currentSpeed, currentYaw);
+		double applied = appliedSpeed(currentSpeed);
+		entity.updateMovement(applied, currentYaw);
 		if (Math.abs(currentSpeed) > 0.001) {
+			movingTicks++;
+			int interval = Math.max(1, physicsConfig.getCarMoveIntervalTicks());
+			if (movingTicks % interval == 0) fireMove(entity, applied);
+
 			ExhaustSide side = session.getExhaustSide();
 
 			ParticleUtil.spawnCarExhaust(entity.getLocation(), currentYaw,
@@ -183,6 +192,28 @@ public class VehicleMovementTask extends BukkitRunnable {
 		}
 
 		session.updateDisplays(buildFuelDisplay(car));
+	}
+
+	/**
+	 * Speed actually applied to the entity: the driver's stored speed scaled by the session multiplier. The stored speed
+	 * itself stays unscaled so the HUD keeps the driver intent.
+	 */
+	private double appliedSpeed(double speed) {
+		return speed * session.getSpeedMultiplier();
+	}
+
+	/**
+	 * Fires a {@link CarMoveEvent} with the applied speed in blocks per second (blocks per tick x 20). The "from" point is
+	 * where the car was at the previous event, or the current point for the first one.
+	 */
+	private void fireMove(VehicleEntity entity, double applied) {
+		Location to = entity.getLocation();
+		if (to == null || to.getWorld() == null) return;
+
+		Location from = lastEventLocation != null ? lastEventLocation : to;
+		Bukkit.getPluginManager().callEvent(new CarMoveEvent(session.getDriver(), entity.getBukkitEntity(), from, to,
+		                                                     Math.abs(applied) * 20.0));
+		lastEventLocation = to.clone();
 	}
 
 	/**

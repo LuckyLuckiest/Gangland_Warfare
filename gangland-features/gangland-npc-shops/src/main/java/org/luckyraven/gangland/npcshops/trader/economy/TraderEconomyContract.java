@@ -12,6 +12,13 @@ public interface TraderEconomyContract {
 
 	TipResult tryTip(Player player, BigDecimal amount);
 
+	/**
+	 * Credits the player's wallet.
+	 *
+	 * @return false when the player has no account loaded or the economy refused
+	 */
+	boolean deposit(Player player, BigDecimal amount);
+
 	enum TipResult {
 		SUCCESS,
 		INSUFFICIENT_FUNDS,
