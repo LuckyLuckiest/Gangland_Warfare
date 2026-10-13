@@ -3,24 +3,28 @@ package org.luckyraven.gangland.copsncrooks.listener.turf;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
+import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.mockito.MockedStatic;
 
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
  * Red tests for T-189 (0.16.1): a cop NPC that damages a player hands that player to {@link TurfCopGuard}. Covers
- * the melee path ({@link EntityDamageByEntityEvent}), the projectile-with-cop-shooter path, the Bartizan raytrace path
- * ({@link WeaponRaytraceImpactEvent}), and the ignore rules for non-cop attackers and NPC victims.
+ * the melee path ({@link EntityDamageByEntityEvent}), the projectile-with-cop-shooter path, and the ignore rules for non-cop attackers and NPC victims.
  */
 @DisplayName("TurfCopProtectionListener — cop hits on players reach the turf guard (T-189)")
 class TurfCopProtectionListenerTest {
@@ -113,19 +117,25 @@ class TurfCopProtectionListenerTest {
 	}
 
 	@Test
-	@DisplayName("raytrace: a Bartizan weapon impact from a cop on a player calls the guard")
-	void raytrace_copShooter_callsGuard() {
-		LivingEntity cop    = mock(LivingEntity.class);
-		Player       victim = mock(Player.class);
-		when(copManager.isCopNpc(cop)).thenReturn(true);
+	@DisplayName("T-835: a Bartizan hit is not handled twice - only the damage event reaches the guard")
+	void raytraceImpact_hasNoHandler() {
+		boolean handlesImpact = Arrays.stream(TurfCopProtectionListener.class.getDeclaredMethods())
+		                              .filter(m -> m.isAnnotationPresent(EventHandler.class))
+		                              .anyMatch(m -> m.getParameterTypes()[0] == WeaponRaytraceImpactEvent.class);
 
-		WeaponRaytraceImpactEvent event = mock(WeaponRaytraceImpactEvent.class);
-		when(event.getShooter()).thenReturn(cop);
-		when(event.getHitEntity()).thenReturn(victim);
+		assertFalse(handlesImpact, "Bartizan raises EntityDamageByEntityEvent for the same hit");
+	}
 
-		listener.onWeaponImpact(event);
+	@Test
+	@DisplayName("T-832: a successful cuffing hands the target to the guard as an arrest")
+	void cuffed_reportsArrestToGuard() {
+		Player target = mock(Player.class);
+		CuffedEvent event = mock(CuffedEvent.class);
+		when(event.getTarget()).thenReturn(target);
 
-		verify(guard).onCopHitPlayer(cop, victim);
+		listener.onCuffed(event);
+
+		verify(guard).onPlayerArrested(target);
 	}
 
 	@Test
