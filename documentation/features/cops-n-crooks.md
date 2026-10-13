@@ -732,6 +732,30 @@ These are accepted for 0.16 and are the next cards, not bugs to report:
 
 ---
 
+## Patrols, warnings and pull-overs (0.20.0)
+
+Beat cops walk the streets between calls. They are groupless: each one belongs to a station, not a squad, so
+they are not dispatched as a squad and they fight back like any other cop (`Assault_Cop` and `Kill_Cop` apply).
+
+- **Beats at stations.** Each station keeps `Cops.Patrol.Cops_Per_Station` patrol cops (default 2). A player within
+  `Cops.Patrol.Activation_Radius` (64 blocks) wakes a station's patrol. Patrol cops walk up to
+  `Cops.Patrol.Beat_Radius` (24 blocks) from the station, pausing `Pause_Seconds_Min` to `Pause_Seconds_Max` at each
+  beat point. They despawn after `Despawn_After_Seconds` idle, or once no player is within `Despawn_Radius` (96 blocks).
+  Tier comes from `Cops.Patrol.Tier` (1 = Officer).
+- **Sighting a crime.** With `Cops.Patrol.Report_Wanted: true` a patrol cop who sees a crime reports it as a wanted
+  call; the radio line is `Patrol_Sighting`.
+- **Brandish warning** (`Cops.Warning`). A cop within `Range` (12 blocks) of a player holding a weapon tells the player
+  to put it away (`Wanted_Messages` `Patrol.Put_Away`, time left `%seconds%`). Complying in time sends `Patrol.Complied`;
+  the same player is warned again only after `Repeat_Seconds` (30). Cops never attack from the warning state.
+- **Pull-over** (`Cops.Pull_Over`). A cop within `Range` (24 blocks) signals a driver whose speed is above
+  `Speed_Limit` (12 blocks per second) to stop (`Patrol.Pull_Over`). The driver has `Comply_Seconds` (6) to slow below
+  `Stop_Speed` (1.0) and hold it for `Stop_Hold_Seconds` (2). A completed stop charges `Ticket_Amount` (150.0) from the
+  wallet only (`Patrol.Ticket`); the same driver is not pulled over again for `Repeat_Seconds` (120).
+- **Evading_Police.** A driver who runs from a traffic stop gets `Patrol.Fled` and the `Evading_Police` wanted reason
+  (`wanted.yml`, 100 points) is published.
+- **Turn it off.** `Cops.Patrol.Enable: false` stops the beats; cops then only answer calls. Warnings and pull-overs
+  are switched separately with `Cops.Warning.Enable` and `Cops.Pull_Over.Enable`.
+
 ## API
 
 The main entry point for the cops system is `CopService`, accessible from the plugin context.
