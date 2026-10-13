@@ -13,7 +13,10 @@ import java.util.function.Predicate;
  */
 public final class WitnessAim implements WitnessService.Aim {
 
+	private final Predicate<Player> armed;
+
 	public WitnessAim(Predicate<Player> armed) {
+		this.armed = armed;
 	}
 
 	@Override

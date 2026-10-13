@@ -1,5 +1,9 @@
 package org.luckyraven.gangland.civilians.witness;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -9,9 +13,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.civilians.events.CivilianCalledInEvent;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.keystone.logging.Logger;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.mockito.MockedStatic;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -39,6 +48,43 @@ class WitnessServiceHooksLiveTest {
 	@DisplayName("aim is the geometric WitnessAim")
 	void aimIsWitnessAim() {
 		assertInstanceOf(WitnessAim.class, WitnessService.Hooks.live(plugin).aim());
+	}
+
+	@Test
+	@DisplayName("the aim is built over BartizanArmed, so a held Bartizan weapon is what arms the criminal")
+	void aimIsBuiltWithBartizanArmed() throws Exception {
+		java.lang.reflect.Field field = WitnessAim.class.getDeclaredField("armed");
+		field.setAccessible(true);
+
+		assertInstanceOf(BartizanArmed.class, field.get(WitnessService.Hooks.live(plugin).aim()));
+	}
+
+	@Test
+	@DisplayName("the debug sink writes the line at DEBUG level on the WitnessService logger")
+	void debugSinkLogsAtDebug() {
+		List<String> lines = new ArrayList<>();
+		AbstractAppender capture = new AbstractAppender("witness-debug-capture", null, null, true) {
+			@Override
+			public void append(LogEvent event) {
+				if (event.getLevel() == Level.DEBUG) {
+					lines.add(event.getMessage().getFormattedMessage());
+				}
+			}
+		};
+		capture.start();
+		org.apache.logging.log4j.core.Logger logger = (org.apache.logging.log4j.core.Logger) Logger.getLogger(WitnessService.class);
+		Level saved = logger.getLevel();
+		Configurator.setLevel(logger.getName(), Level.DEBUG);
+		logger.addAppender(capture);
+		try {
+			WitnessService.Hooks.live(plugin).debug().accept("WITNESS Bob crime=Car_Theft callers=1");
+		} finally {
+			logger.removeAppender(capture);
+			Configurator.setLevel(logger.getName(), saved);
+			capture.stop();
+		}
+
+		assertEquals(List.of("WITNESS Bob crime=Car_Theft callers=1"), lines);
 	}
 
 	@Test

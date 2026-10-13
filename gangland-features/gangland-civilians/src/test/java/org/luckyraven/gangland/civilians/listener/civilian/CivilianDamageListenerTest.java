@@ -177,6 +177,20 @@ class CivilianDamageListenerTest {
 		verify(kit.crimes, never()).commit(any(), any(), any());
 	}
 
+	@Test
+	@DisplayName("a lethal hit on a HOSTILE caller keeps the call and still rallies its faction (no 0.19 regression)")
+	void hostileLethalHitOnCallerStillAlertsFaction() {
+		CivilianNpc caller = registered(kit.civilian(10, true), true, true);
+		when(caller.getEntity().getHealth()).thenReturn(4.0);
+		kit.witness("Car_Theft");
+
+		listener.onCivilianDamage(hit(kit.criminal, caller));
+
+		verify(kit.civilians).alertFaction(caller, kit.criminal, true);
+		assertEquals(CivilianState.CALLING, caller.getCurrentState());
+		assertNotNull(caller.getWitnessCall());
+	}
+
 	// ── helpers ──────────────────────────────────────────────────────────────
 
 	private CivilianNpc registered(CivilianNpc npc, boolean hostile, boolean fleeEnabled) {
