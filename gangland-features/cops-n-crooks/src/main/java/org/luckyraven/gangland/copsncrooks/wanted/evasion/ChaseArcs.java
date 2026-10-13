@@ -234,4 +234,22 @@ public final class ChaseArcs {
 		arc.pending = null;
 		return plan;
 	}
+
+	/** A cop the player killed on this chase; no-op without an arc. */
+	public void copDown(UUID id) {
+		ChaseArc arc = arcs.get(id);
+		if (arc != null) arc.copsDown++;
+	}
+
+	/** A cop cuffed the player on this chase; no-op without an arc. */
+	public void bust(UUID id) {
+		ChaseArc arc = arcs.get(id);
+		if (arc != null) arc.busts++;
+	}
+
+	/** The live headline went out for this chase; no-op without an arc. */
+	public void markNews(UUID id) {
+		ChaseArc arc = arcs.get(id);
+		if (arc != null) arc.newsSent = true;
+	}
 }

@@ -29,6 +29,12 @@ public final class ChaseArc {
 	boolean                     searched;
 	/** A contact or bribe star took stars off mid-chase: the peak no longer says what was escaped. */
 	boolean                     boughtDown;
+	/** Cops this player killed on the chase (0.21.0 pursuit report). */
+	int                         copsDown;
+	/** Times a cop cuffed him on the chase (0.21.0). */
+	int                         busts;
+	/** The live breaking-news headline went out for this chase (0.21.0). */
+	boolean                     newsSent;
 	@Nullable AutoDrop.DropPlan pending;
 
 	ChaseArc(WantedCause startCause) {
@@ -64,5 +70,20 @@ public final class ChaseArc {
 	/** Every offline gap the restores shifted out of this chase, summed. */
 	public long offlineTotal() {
 		return offlineTotal;
+	}
+
+	// 0.21.0
+	public int copsDown() {
+		return copsDown;
+	}
+
+	// 0.21.0
+	public int busts() {
+		return busts;
+	}
+
+	// 0.21.0
+	public boolean newsSent() {
+		return newsSent;
 	}
 }

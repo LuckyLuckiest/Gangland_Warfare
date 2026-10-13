@@ -359,4 +359,70 @@ class ChaseArcsTest {
 		assertEquals(6 * MIN, arcs.offlineTotalMs(id));
 		assertEquals(6 * MIN, arcs.arc(id).offlineTotal());
 	}
+
+	@Test
+	@DisplayName("copDown, bust and markNews count on the arc; copDown and bust add up, markNews sets the flag")
+	void reportCounters_countOnTheArc() {
+		arcs.start(id, WantedCause.CRIME, 3);
+
+		arcs.copDown(id);
+		arcs.copDown(id);
+		arcs.bust(id);
+		arcs.markNews(id);
+
+		assertEquals(2, arcs.arc(id).copsDown());
+		assertEquals(1, arcs.arc(id).busts());
+		assertTrue(arcs.arc(id).newsSent());
+	}
+
+	@Test
+	@DisplayName("a fresh arc has zero counters and no news")
+	void reportCounters_startAtZero() {
+		arcs.start(id, WantedCause.CRIME, 1);
+
+		assertEquals(0, arcs.arc(id).copsDown());
+		assertEquals(0, arcs.arc(id).busts());
+		assertFalse(arcs.arc(id).newsSent());
+	}
+
+	@Test
+	@DisplayName("copDown, bust and markNews without an arc are no-ops")
+	void reportCounters_withoutArc_noOp() {
+		arcs.copDown(id);
+		arcs.bust(id);
+		arcs.markNews(id);
+
+		assertFalse(arcs.has(id));
+	}
+
+	@Test
+	@DisplayName("a quit and restore keeps the counters and the news flag")
+	void reportCounters_surviveRestore() {
+		arcs.start(id, WantedCause.CRIME, 4);
+		arcs.copDown(id);
+		arcs.bust(id);
+		arcs.markNews(id);
+
+		arcs.quit(id);
+		clock.addAndGet(MIN);
+		arcs.restore(id);
+
+		assertEquals(1, arcs.arc(id).copsDown());
+		assertEquals(1, arcs.arc(id).busts());
+		assertTrue(arcs.arc(id).newsSent());
+	}
+
+	@Test
+	@DisplayName("a new chase after end starts its counters from zero")
+	void reportCounters_resetOnNewChase() {
+		arcs.start(id, WantedCause.CRIME, 4);
+		arcs.copDown(id);
+		arcs.markNews(id);
+		arcs.end(id, false);
+
+		arcs.start(id, WantedCause.CRIME, 1);
+
+		assertEquals(0, arcs.arc(id).copsDown());
+		assertFalse(arcs.arc(id).newsSent());
+	}
 }
