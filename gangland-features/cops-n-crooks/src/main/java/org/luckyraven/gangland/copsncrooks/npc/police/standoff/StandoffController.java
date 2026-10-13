@@ -7,15 +7,15 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StandoffSettings;
-import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PostRing;
-import org.luckyraven.keystone.npc.NpcPost;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.core.user.UserManager;
-import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.keystone.npc.NpcPost;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -31,14 +31,14 @@ import java.util.function.Supplier;
 
 /**
  * The barricade standoff (0.21.0): when the squad cannot reach a suspect it posts a ring, takes cover, holds the refill,
- * negotiates on the radio and raises a star at the timeout. TDD skeleton: no behaviour yet.
+ * negotiates on the radio and raises a star at the timeout.
  *
  * @since 0.21.0
  */
 @CustomLog
 public class StandoffController {
 
-	/** Per running standoff. SO4 fills posts and cadence. */
+	/** Per running standoff. */
 	private static final class State {
 
 		final Player   player;
@@ -117,7 +117,7 @@ public class StandoffController {
 		if (trigger != null) start(player, group, cfg, hunting, trigger, now);
 	}
 
-	/** Keeps the refill held and radios the countdown. SO5: timeout star and the other end paths. */
+	/** Keeps the refill held and radios the countdown. */
 	private void activeTick(State st, StandoffSettings cfg, long now) {
 		if (now >= st.until) {
 			timeout(st, cfg);
@@ -178,7 +178,7 @@ public class StandoffController {
 		}
 	}
 
-	/** SO4 hook: flags, ring posts, radio, negotiate cadence and the refill hold. */
+	/** Flags, ring posts, radio, negotiate cadence and the refill hold. */
 	private void start(Player player, CopGroup group, StandoffSettings cfg, List<CopNpc> hunting, String trigger,
 	                   long now) {
 		long  until = now + cfg.timerSeconds() * 1000L;
@@ -237,7 +237,7 @@ public class StandoffController {
 		st.group.setFallBackUntil(0L);
 		casualties.remove(id);
 		cooldownUntil.put(id, clock.getAsLong() + settings().cooldownSeconds() * 1000L);
-		log.debug("STANDOFF {} end reason={}", id, reason);
+		log.debug("STANDOFF {} end outcome={}", st.player.getName(), reason);
 	}
 
 	/** Cop-attacked hook: the suspect hit a cop, so his standoff ends (ESCALATE). */
