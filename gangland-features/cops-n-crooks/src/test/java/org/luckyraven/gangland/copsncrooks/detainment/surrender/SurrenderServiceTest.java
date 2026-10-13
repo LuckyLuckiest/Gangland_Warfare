@@ -329,7 +329,7 @@ class SurrenderServiceTest {
 
 		hit();
 
-		verify(crimes, never()).commit(any(), anyString(), any());
+		verifyNoInteractions(crimes);
 		verify(messages, never()).format(eq(WantedMessages.Key.SURRENDER_RESISTED), anyMap());
 	}
 
@@ -440,7 +440,7 @@ class SurrenderServiceTest {
 	}
 
 	@Test
-	@DisplayName("sightings lost after surrendering do not end it and do not repeat the radio call")
+	@DisplayName("a second tick while still posed does not end it and does not repeat the radio call")
 	void secondTickDoesNotRepeat() {
 		surrender();
 
@@ -448,5 +448,36 @@ class SurrenderServiceTest {
 
 		assertTrue(group.isCeaseFire());
 		verify(radio, times(1)).sayFromLeader(group, "Surrender_Accepted");
+	}
+
+	@Test
+	@DisplayName("P-SURR-6: the too-hot line is said once per chase even when the player toggles crouch")
+	void tooHot_onceAcrossCrouchToggles() {
+		group.setLevel(4);
+
+		service.tick(player, group);
+		sneak(false);
+		service.tick(player, group);
+		sneak(true);
+		service.tick(player, group);
+
+		verify(messages, times(1)).format(eq(WantedMessages.Key.SURRENDER_TOO_HOT), anyMap());
+		assertFalse(group.isCeaseFire());
+	}
+
+	@Test
+	@DisplayName("P-SURR-6: stars rising above Max_Stars while surrendered end it, with the too-hot line once")
+	void starsRiseAboveMax_whileSurrendered_endsIt() {
+		group.setLevel(2);
+		surrender();
+		group.setLevel(4);
+
+		service.tick(player, group);
+
+		assertFalse(group.isCeaseFire());
+		verify(messages, times(1)).format(eq(WantedMessages.Key.SURRENDER_TOO_HOT), anyMap());
+		clock.set(T0 + 1_000L);
+		hit();
+		verifyNoInteractions(crimes);
 	}
 }

@@ -95,6 +95,16 @@ class CuffingBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("0.21.0: cease-fire on a group whose target is another player is still a CUFFED arrest")
+	void cuffWhileCeaseFireOnOtherTarget_firesCuffedOrigin() {
+		CopGroup other = new CopGroup(UUID.randomUUID());
+		other.setCeaseFire(true);
+		when(cop.getGroup()).thenReturn(other);
+
+		assertEquals(ArrestOrigin.CUFFED, cuffAndCapture().getOrigin());
+	}
+
+	@Test
 	@DisplayName("0.21.0: a cuff without cease-fire is a plain CUFFED arrest")
 	void cuffWithoutCeaseFire_firesCuffedOrigin() {
 		assertEquals(ArrestOrigin.CUFFED, cuffAndCapture().getOrigin());

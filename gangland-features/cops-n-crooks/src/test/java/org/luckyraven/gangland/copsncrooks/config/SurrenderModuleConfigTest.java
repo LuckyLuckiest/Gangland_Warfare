@@ -23,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -62,6 +63,40 @@ class SurrenderModuleConfigTest {
 		                                                 mock(CrimeService.class), mock(DetainmentService.class));
 
 		assertNotNull(built);
+	}
+
+	@Test
+	@DisplayName("the bean reads the live settings supplier and the detainment restrained check")
+	void bean_readsSettingsLiveAndRestrained() {
+		DetainmentSettings settings = mock(DetainmentSettings.class);
+		when(settings.getSurrender()).thenReturn(new SurrenderSettings(false, 3, 0.5, 0.5, 0.75, 10));
+		DetainmentService detainment = mock(DetainmentService.class);
+		CopRadio          radio      = mock(CopRadio.class);
+		WantedMessages    messages   = mock(WantedMessages.class);
+		SurrenderService  built      = config.surrenderService(settings, radio, messages, mock(CrimeService.class),
+		                                                       detainment);
+		UUID id = UUID.randomUUID();
+		Player player = mock(Player.class);
+		org.bukkit.inventory.PlayerInventory inv = mock(org.bukkit.inventory.PlayerInventory.class);
+		when(player.getUniqueId()).thenReturn(id);
+		when(player.getInventory()).thenReturn(inv);
+		when(player.isSneaking()).thenReturn(true);
+		when(player.getLocation()).thenReturn(mock(org.bukkit.Location.class));
+		CopGroup group = new CopGroup(id);
+		group.setLevel(2);
+		group.getSquad().reportSighting(player.getLocation());
+
+		built.tick(player, group);
+		assertFalse(group.isCeaseFire(), "disabled in the first read");
+
+		when(settings.getSurrender()).thenReturn(new SurrenderSettings(true, 3, 0.5, 0.5, 0.75, 10));
+		when(detainment.isRestrained(player)).thenReturn(true);
+		built.tick(player, group);
+		assertFalse(group.isCeaseFire(), "restrained check wired to DetainmentService");
+
+		when(detainment.isRestrained(player)).thenReturn(false);
+		built.tick(player, group);
+		assertTrue(group.isCeaseFire(), "settings re-read on every tick");
 	}
 
 	@Test
