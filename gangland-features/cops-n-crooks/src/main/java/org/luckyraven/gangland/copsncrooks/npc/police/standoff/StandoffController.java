@@ -6,12 +6,20 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.StandoffSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedStars;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
@@ -26,27 +34,137 @@ import java.util.function.Supplier;
 @CustomLog
 public class StandoffController {
 
+	/** Per running standoff. SO4 fills posts and cadence. */
+	private static final class State {
+
+		final CopGroup group;
+		long until;
+		long nextNegotiateAt;
+
+		State(CopGroup group, long until) {
+			this.group = group;
+			this.until = until;
+		}
+	}
+
+	private record Casualty(long at, Location where) {}
+
+	private final Supplier<CopConfigProvider> provider;
+	private final CopRadio                    radio;
+	private final PerimeterController         perimeter;
+	private final WantedStars                 stars;
+	private final UserManager<Player>         users;
+	private final Predicate<Player>           restrained;
+	private final LongSupplier                clock;
+
+	private final Map<UUID, State>           active        = new HashMap<>();
+	private final Map<UUID, Deque<Casualty>> casualties    = new HashMap<>();
+	private final Map<UUID, Long>            cooldownUntil = new HashMap<>();
+
 	public StandoffController(Supplier<CopConfigProvider> provider, CopRadio radio, PerimeterController perimeter,
 	                          WantedStars stars, UserManager<Player> users, Predicate<Player> restrained,
 	                          LongSupplier clock) {
+		this.provider = provider;
+		this.radio = radio;
+		this.perimeter = perimeter;
+		this.stars = stars;
+		this.users = users;
+		this.restrained = restrained;
+		this.clock = clock;
+	}
+
+	private StandoffSettings settings() {
+		CopConfigProvider p = provider == null ? null : provider.get();
+		StandoffSettings  s = p == null ? null : p.getStandoffSettings();
+		return s == null ? StandoffSettings.DEFAULT : s;
 	}
 
 	/** AI tick hook: starts, runs (negotiate, timeout) or ends the suspect's standoff. */
 	public void tick(Player player, @Nullable CopGroup group) {
-		throw new UnsupportedOperationException("TDD stub");
+		UUID  id = player.getUniqueId();
+		State st = active.get(id);
+		if (group == null) {
+			if (st != null) end(id, "GONE");
+			return;
+		}
+		if (restrained.test(player) || group.isCeaseFire()) {
+			if (st != null) end(id, "SURRENDER");
+			return;
+		}
+		if (st != null) {
+			return; // SO4/SO5: negotiate cadence, refill hold, timeout and the other end paths
+		}
+		StandoffSettings cfg = settings();
+		long             now = clock.getAsLong();
+		if (!cfg.enabled() || group.isEmpty() || now < cooldownUntil.getOrDefault(id, 0L)) return;
+
+		List<CopNpc> hunting = hunting(group, id);
+		if (hunting.size() < 2) return;
+		String trigger = trigger(cfg, group, id, hunting, now);
+		if (trigger != null) start(player, group, cfg, hunting, trigger, now);
+	}
+
+	private static List<CopNpc> hunting(CopGroup group, UUID id) {
+		List<CopNpc> hunting = new ArrayList<>();
+		for (CopNpc cop : group.getCops()) {
+			if (cop == null || !cop.isValid()) continue;
+			CopState state = cop.getCurrentState();
+			if (state != CopState.PURSUING && state != CopState.COMBAT) continue;
+			if (id.equals(cop.getTargetPlayerId())) hunting.add(cop);
+		}
+		return hunting;
+	}
+
+	@Nullable
+	private String trigger(StandoffSettings cfg, CopGroup group, UUID id, List<CopNpc> hunting, long now) {
+		long stuck = 0;
+		for (CopNpc cop : hunting)
+			if (cop.millisUnreachable() >= cfg.unreachableSeconds() * 1000L) stuck++;
+		if (stuck * 2 > hunting.size()) return "UNREACHABLE";
+
+		if (group.getSquad().hasFreshSighting())
+			for (CopNpc cop : hunting)
+				if (cop.isNavigationHopeless()) return "NO_ROUTE";
+
+		Deque<Casualty> dead = casualties.get(id);
+		if (dead != null && !dead.isEmpty()) {
+			Casualty last = dead.peekLast();
+			long     near = dead.stream().filter(c -> now - c.at() <= cfg.manDownWindowSeconds() * 1000L &&
+			                                           sameSpot(c.where(), last.where(), cfg.spotRadius())).count();
+			if (near >= cfg.manDownCount()) return "MAN_DOWN";
+		}
+		return null;
+	}
+
+	private static boolean sameSpot(Location a, Location b, double radius) {
+		try {
+			return a.getWorld() != null && a.getWorld().equals(b.getWorld()) && a.distanceSquared(b) <= radius * radius;
+		} catch (IllegalArgumentException unloaded) { // Location.getWorld throws once its world is unloaded
+			return false;
+		}
+	}
+
+	/** SO4 hook: flags, ring posts, radio, negotiate cadence and the refill hold. */
+	private void start(Player player, CopGroup group, StandoffSettings cfg, List<CopNpc> hunting, String trigger,
+	                   long now) {
+	}
+
+	private void end(UUID id, String reason) {
+		active.remove(id);
+		casualties.remove(id);
 	}
 
 	/** Cop-attacked hook: the suspect hit a cop, so his standoff ends (ESCALATE). */
 	public void onCopAttacked(CopNpc cop, Player attacker) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (active.containsKey(attacker.getUniqueId())) end(attacker.getUniqueId(), "ESCALATE");
 	}
 
 	/** A cop of the suspect's squad died at {@code where}; feeds the man-down trigger. */
 	public void recordCasualty(UUID suspectId, Location where) {
-		throw new UnsupportedOperationException("TDD stub");
+		casualties.computeIfAbsent(suspectId, k -> new ArrayDeque<>()).addLast(new Casualty(clock.getAsLong(), where));
 	}
 
 	public boolean isActive(UUID suspectId) {
-		return false;
+		return active.containsKey(suspectId);
 	}
 }
