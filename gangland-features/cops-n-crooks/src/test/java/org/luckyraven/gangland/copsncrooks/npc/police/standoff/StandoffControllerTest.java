@@ -88,6 +88,8 @@ class StandoffControllerTest {
 	private final CopConfigProvider   provider   = mock(CopConfigProvider.class);
 	private final AtomicLong          clock      = new AtomicLong(T0);
 	private final AtomicBoolean       restrained = new AtomicBoolean();
+	private final AtomicBoolean       ceaseFire  = new AtomicBoolean();
+	private final AtomicLong          standoffUntil = new AtomicLong();
 	private final List<CopNpc>        cops       = new ArrayList<>();
 	private final Map<CopNpc, AtomicReference<CopState>> states = new HashMap<>();
 
@@ -101,6 +103,12 @@ class StandoffControllerTest {
 		when(group.getCops()).thenReturn(cops);
 		when(group.getSquad()).thenReturn(squad);
 		when(group.getTargetPlayerId()).thenReturn(playerId);
+		when(group.isCeaseFire()).thenAnswer(i -> ceaseFire.get());
+		doAnswer(i -> {
+			standoffUntil.set(i.getArgument(0));
+			return null;
+		}).when(group).setStandoffUntil(anyLong());
+		when(group.isStandoff(anyLong())).thenAnswer(i -> (long) i.getArgument(0) < standoffUntil.get());
 		when(provider.getStandoffSettings()).thenAnswer(i -> settings);
 		when(users.getUser(player)).thenReturn(user);
 		controller = new StandoffController(() -> provider, radio, perimeter, stars, users, p -> restrained.get(),
@@ -185,7 +193,21 @@ class StandoffControllerTest {
 	private void assertTimersZeroed() {
 		verify(group).setStandoffUntil(0L);
 		verify(group).setFallBackUntil(0L);
-		verify(group).holdPendingUntil(0L);
+	}
+
+	/** The argument of the newest holdPendingUntil call, 0 when there was none. */
+	private long lastHold() {
+		long last = 0L;
+		for (var i : mockingDetails(group).getInvocations())
+			if (i.getMethod().getName().equals("holdPendingUntil"))
+				last = i.getArgument(0);
+		return last;
+	}
+
+	private long holdsAboveZero() {
+		return mockingDetails(group).getInvocations().stream()
+		                            .filter(i -> i.getMethod().getName().equals("holdPendingUntil") &&
+		                                         (long) i.getArgument(0) > 0L).count();
 	}
 
 	private void startViaUnreachable() {
@@ -253,7 +275,7 @@ class StandoffControllerTest {
 		long until = now() + 45 * SEC;
 		verify(group).setStandoffUntil(until);
 		verify(group).setFallBackUntil(until);
-		verify(group).holdPendingUntil(until);
+		assertTrue(now() < lastHold() && lastHold() <= until, "rolling hold " + lastHold());
 		verify(radio).sayFromLeader(group, "Standoff");
 		assertTrue(controller.isActive(playerId));
 	}
@@ -653,6 +675,91 @@ class StandoffControllerTest {
 		for (Constructor<?> ctor : StandoffController.class.getDeclaredConstructors())
 			for (Class<?> type : ctor.getParameterTypes())
 				assertNotEquals(EvasionClock.class, type);
+	}
+
+	@Test
+	@DisplayName("crouching (cease-fire pose) during it ends it as SURRENDER: no star, no Standoff_Over, still none at 45 s")
+	void surrenderPose_endsSurrender() {
+		List<CopNpc> hunters = hunters(3, 3);
+		tickAt(0);
+		ceaseFire.set(true);
+
+		tickAt(5 * SEC);
+
+		for (CopNpc cop : hunters)
+			assertEquals(CopState.PURSUING, stateOf(cop));
+		assertTimersZeroed();
+		verify(stars, never()).raise(any(), anyInt(), any());
+		verify(radio, never()).sayFromLeader(group, "Standoff_Over");
+		assertFalse(controller.isActive(playerId));
+
+		tickAt(45 * SEC);
+		verify(stars, never()).raise(any(), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("a suspect already crouching never starts one")
+	void surrenderPose_noStart() {
+		ceaseFire.set(true);
+		hunters(3, 3);
+
+		tickAt(0);
+
+		assertEquals(0, starts());
+	}
+
+	@Test
+	@DisplayName("the chase ended it (clearCombatAlert zeroed the window): GONE, posts released, no star, not even at 45 s")
+	void chaseClearedMidStandoff_endsGoneWithoutStar() {
+		List<CopNpc> hunters = hunters(3, 3);
+		tickAt(0);
+		standoffUntil.set(0L);
+
+		tickAt(5 * SEC);
+
+		assertFalse(controller.isActive(playerId));
+		for (CopNpc cop : hunters)
+			assertEquals(CopState.PURSUING, stateOf(cop));
+		verify(group).setFallBackUntil(0L);
+
+		tickAt(45 * SEC);
+		verify(stars, never()).raise(any(), anyInt(), any());
+		verify(radio, never()).sayFromLeader(group, "Standoff_Over");
+	}
+
+	@Test
+	@DisplayName("a different group for the same suspect (rejoin, new chase) ends the stale standoff without a star")
+	void newGroup_endsStaleStandoffWithoutStar() {
+		startViaUnreachable();
+		CopGroup fresh = mock(CopGroup.class);
+		when(fresh.getTargetPlayerId()).thenReturn(playerId);
+
+		clock.set(T0 + 100 * SEC);
+		controller.tick(player, fresh);
+
+		verify(stars, never()).raise(any(), anyInt(), any());
+		assertFalse(controller.isActive(playerId));
+		verify(group).setStandoffUntil(0L);
+	}
+
+	@Test
+	@DisplayName("the refill hold rolls: always ahead of now, never past the timeout, and an early end stops renewing it")
+	void refillHeldWhileActiveThenFreed() {
+		List<CopNpc> hunters = hunters(3, 3);
+		tickAt(0);
+
+		tickAt(30 * SEC);
+		assertTrue(lastHold() > T0 + 30 * SEC, "hold at 30 s " + lastHold());
+
+		tickAt(44 * SEC);
+		assertTrue(lastHold() > T0 + 44 * SEC && lastHold() <= T0 + 45 * SEC, "hold at 44 s " + lastHold());
+
+		long before = holdsAboveZero();
+		clock.set(T0 + 44_500L);
+		controller.onCopAttacked(hunters.get(0), player);
+		controller.tick(player, group);
+
+		assertEquals(before, holdsAboveZero());
 	}
 
 	@Test
