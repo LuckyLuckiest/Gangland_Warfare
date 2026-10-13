@@ -65,13 +65,13 @@ class PursuitReportSettingsTest {
 	void overrides_areRead() {
 		String yaml = "Wanted:\n"
 		              + "   Pursuit_Report:\n"
-		              + "      Enabled: false\n"
+		              + "      Enable: false\n"
 		              + "      Min_Peak_Stars: 3\n"
 		              + "      City_Cost:\n"
 		              + "         Per_Cop_Down: 100.0\n"
 		              + "         Per_Heat: 2.5\n"
 		              + "      Breaking_News:\n"
-		              + "         Enabled: false\n"
+		              + "         Enable: false\n"
 		              + "         Min_Stars: 5\n"
 		              + "         Min_Seconds: 60\n"
 		              + "         Cooldown_Seconds: 30\n";

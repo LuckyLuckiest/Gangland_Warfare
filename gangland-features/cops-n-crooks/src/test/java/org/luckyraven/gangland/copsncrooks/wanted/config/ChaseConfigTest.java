@@ -640,18 +640,18 @@ class ChaseConfigTest {
 		String yaml = """
 				Wanted:
 				   Crew_Heat:
-				      Enabled: true
+				      Enable: true
 				      Radius: 16.0
 				      Exclude_Crimes:
 				         - Evading_Police
 				   Pursuit_Report:
-				      Enabled: true
+				      Enable: true
 				      Min_Peak_Stars: 1
 				      City_Cost:
 				         Per_Cop_Down: 2500.0
 				         Per_Heat: 10.0
 				      Breaking_News:
-				         Enabled: true
+				         Enable: true
 				         Min_Stars: 4
 				         Min_Seconds: 120
 				         Cooldown_Seconds: 300

@@ -15,8 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 0.21.0 fnd-origin (P-ORIGIN-1): the registry writes the arrest origin in the SAME save that creates or moves the row.
- * (DetainmentService.handcuff cannot be unit-tested: ActionBarManager needs a live server; CuffingListenerOriginTest
- * covers the call, the smoke covers the visuals.)
+ * (DetainmentServiceOriginTest covers the service on top of this registry.)
  */
 @DisplayName("DetainmentRegistry - the arrest origin")
 class DetainmentRegistryOriginTest {

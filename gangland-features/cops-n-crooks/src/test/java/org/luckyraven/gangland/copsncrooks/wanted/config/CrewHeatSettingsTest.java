@@ -68,7 +68,7 @@ class CrewHeatSettingsTest {
 	void overrides_areRead() {
 		String yaml = "Wanted:\n"
 		              + "   Crew_Heat:\n"
-		              + "      Enabled: false\n"
+		              + "      Enable: false\n"
 		              + "      Radius: 8.5\n"
 		              + "      Exclude_Crimes:\n"
 		              + "         - Kill_Cop\n"
