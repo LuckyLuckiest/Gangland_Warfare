@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.integration.detainment;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
 import org.luckyraven.gangland.copsncrooks.detainment.settings.RescueSettings;
 import org.luckyraven.gangland.copsncrooks.detainment.settings.SurrenderSettings;
@@ -52,12 +53,12 @@ public final class DetainmentSettings implements FileInitializer {
 	private String transitCommitSound = "BLOCK_IRON_DOOR_CLOSE";
 	private String sentenceCompleteSound = "BLOCK_BELL_USE";
 
-	// 0.21.0 (TDD stubs: neutral values until the green step reads detainment.yml)
-	private SurrenderSettings surrender = new SurrenderSettings(false, 0, 0.0, 0.0, 0.0, 0);
-	private boolean           bustedEnabled;
-	private int               lockpickTapWeight;
-	private double            lockpickSnapChance;
-	private RescueSettings    rescue = new RescueSettings(false, 0, 0);
+	// 0.21.0: read straight from detainment.yml (never settings.yml), clamped in initialize()
+	private SurrenderSettings surrender = new SurrenderSettings(true, 3, 0.5, 0.5, 0.75, 10);
+	private boolean           bustedEnabled = true;
+	private int               lockpickTapWeight = 2;
+	private double            lockpickSnapChance = 0.05;
+	private RescueSettings    rescue = new RescueSettings(true, 3, 1);
 
 	public DetainmentSettings(FileManager fileManager) {
 		this.fileManager = fileManager;
@@ -108,6 +109,21 @@ public final class DetainmentSettings implements FileInitializer {
 		                                    "BLOCK_IRON_DOOR_CLOSE");
 		sentenceCompleteSound = m.getString(SOUNDS + "Sentence_Complete", SOUNDS + "Sentence_Complete",
 		                                    "BLOCK_BELL_USE");
+
+		// 0.21.0: the new keys never lived in settings.yml, so they are read directly from detainment.yml
+		FileConfiguration cfg = fileHandler.getFileConfiguration();
+		surrender = new SurrenderSettings(cfg.getBoolean(path("Surrender.Enabled"), true),
+		                                  Math.max(0, cfg.getInt(path("Surrender.Max_Stars"), 3)),
+		                                  Math.max(0.0, cfg.getDouble(path("Surrender.Sentence_Multiplier"), 0.5)),
+		                                  Math.max(0.0, cfg.getDouble(path("Surrender.Fine_Multiplier"), 0.5)),
+		                                  Math.max(0.0, cfg.getDouble(path("Surrender.Bail_Multiplier"), 0.75)),
+		                                  Math.max(0, cfg.getInt(path("Surrender.Resist_Window_Seconds"), 10)));
+		bustedEnabled = cfg.getBoolean(path("Busted.Enabled"), true);
+		lockpickTapWeight = Math.max(1, cfg.getInt(path("Break_Free.Lockpick.Tap_Weight"), 2));
+		lockpickSnapChance = Math.min(1.0, Math.max(0.0, cfg.getDouble(path("Break_Free.Lockpick.Snap_Chance"), 0.05)));
+		rescue = new RescueSettings(cfg.getBoolean(path("Rescue.Enabled"), true),
+		                            Math.max(0, cfg.getInt(path("Rescue.Hold_Seconds"), 3)),
+		                            Math.max(0, cfg.getInt(path("Rescue.Stars"), 1)));
 	}
 
 	/** detainment.yml keeps the settings.yml path, so the module path and the legacy path are the same. */
