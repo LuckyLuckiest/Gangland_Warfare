@@ -51,6 +51,10 @@
 		"usage": "/glw cop list [player]",
 		"description": "Shows the players being chased by cops. The player is optional: with one, shows that player's cops."
 	},
+	"cop_item": {
+		"usage": "/glw cop item <police_scanner|scanner_map> [player]",
+		"description": "Gives a Police Scanner or a Scanner Map to yourself or the named online player."
+	},
 	"cop_spawner_set": {
 		"usage": "/glw cop spawner set",
 		"description": "Sets a cop spawner at your current location."
