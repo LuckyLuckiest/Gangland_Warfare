@@ -28,4 +28,9 @@ public interface RadioVoice {
 	default Map<String, String> extras(NpcSquad squad) {
 		return Map.of();
 	}
+
+	/** TDD stub for 2.7: whether {@code listener} overhears this squad's lines beyond the ordinary ranges. */
+	default boolean overhears(org.bukkit.entity.Player listener, NpcSquad squad) {
+		return false;
+	}
 }

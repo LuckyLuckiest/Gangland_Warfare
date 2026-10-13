@@ -13,6 +13,13 @@ public final class Crimes {
 	public static final String ASSAULT_CIVILIAN = "Assault_Civilian";
 	public static final String RESISTING_ARREST = "Resisting_Arrest";
 
+	public static final String BRANDISH_NEAR_COP = "";
+	public static final String CAR_THEFT = "";
+	public static final String SAFE_CRACKING = "";
+	public static final String STORE_ROBBERY = "";
+	public static final String TRESPASS_RESTRICTED = "";
+	public static final String EVADING_POLICE = "";
+
 	private Crimes() {
 	}
 
