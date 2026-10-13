@@ -96,7 +96,11 @@ Cuff:
 
 # 0.20.0
 Item:
-   Given: ""
-   Unknown: ""
-   Needs_Player: ""
-   No_Permission: ""
+   # Placeholders: %item% (item id), %target% (receiving player).
+   Given: "&aGave &f%item%&a to &f%target%&a."
+   # Placeholders: %item% (the id typed), %items% (the valid item ids).
+   Unknown: "&cUnknown item &f%item%&c. Items: &f%items%"
+   # No placeholders.
+   Needs_Player: "&cThe console must name a player."
+   # No placeholders.
+   No_Permission: "&cYou don't have permission to give cop items."

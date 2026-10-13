@@ -97,7 +97,11 @@ Cuff:
 
 # 0.20.0
 Item:
-   Given: ""
-   Unknown: ""
-   Needs_Player: ""
-   No_Permission: ""
+   # Placeholders: %item% (item id), %target% (receiving player).
+   Given: "&aDiste &f%item%&a a &f%target%&a."
+   # Placeholders: %item% (the id typed), %items% (the valid item ids).
+   Unknown: "&cObjeto desconocido &f%item%&c. Objetos: &f%items%"
+   # No placeholders.
+   Needs_Player: "&cLa consola debe indicar un jugador."
+   # No placeholders.
+   No_Permission: "&cNo tienes permiso para dar objetos de policía."

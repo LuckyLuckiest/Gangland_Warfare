@@ -75,10 +75,10 @@ public class CommandMessages extends LocalizedModuleYaml {
 		CUFF_ALREADY_CUFFED("Cuff.Already_Cuffed", "&cThis player is already cuffed!", Style.ERROR),
 		CUFF_NOT_CUFFED("Cuff.Not_Cuffed", "&cThis player is not handcuffed!", Style.ERROR),
 		// 0.20.0 /glw cop item (TDD stub: fallbacks and YAML text are filled by the green chunk)
-		ITEM_GIVEN("Item.Given", "", Style.COMMAND),
-		ITEM_UNKNOWN("Item.Unknown", "", Style.ERROR),
-		ITEM_NEEDS_PLAYER("Item.Needs_Player", "", Style.ERROR),
-		ITEM_NO_PERMISSION("Item.No_Permission", "", Style.ERROR);
+		ITEM_GIVEN("Item.Given", "&aGave &f%item%&a to &f%target%&a.", Style.COMMAND),
+		ITEM_UNKNOWN("Item.Unknown", "&cUnknown item &f%item%&c. Items: &f%items%", Style.ERROR),
+		ITEM_NEEDS_PLAYER("Item.Needs_Player", "&cThe console must name a player.", Style.ERROR),
+		ITEM_NO_PERMISSION("Item.No_Permission", "&cYou don't have permission to give cop items.", Style.ERROR);
 
 		public final String path;
 		public final String fallback;
