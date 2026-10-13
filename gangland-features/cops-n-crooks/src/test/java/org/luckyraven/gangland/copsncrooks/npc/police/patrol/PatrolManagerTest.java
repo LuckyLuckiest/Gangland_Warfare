@@ -171,6 +171,7 @@ class PatrolManagerTest {
 
 		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
 		assertEquals(2, manager.beatCops().size());
+		verify(spawned.get(0)).destroy(any());
 	}
 
 	@Test
@@ -362,6 +363,18 @@ class PatrolManagerTest {
 	}
 
 	@Test
+	@DisplayName("a dying beat cop (invalid, before the next aiTick) still resolves through beatCopOf for findDyingCop")
+	void dyingCopStillResolves() {
+		online.add(fx.player(1, 1));
+		manager.manage();
+		CopNpc beat = spawned.get(0);
+		Entity body = beat.getEntity();
+		PatrolFixture.kill(beat);
+
+		assertSame(beat, manager.beatCopOf(body));
+	}
+
+	@Test
 	@DisplayName("a hit beat cop stays in COMBAT while its attacker is around")
 	void hitBeatCopKeepsFightingWhileTargetAround() {
 		Player attacker = fx.player(2, 2);
@@ -458,6 +471,7 @@ class PatrolManagerTest {
 
 		assertEquals(1, manager.beatCops().size());
 		verify(gone, never()).tick(any());
+		verify(gone).destroy(any());
 		manager.manage();
 		assertEquals(2, manager.beatCops().size());
 	}

@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -29,8 +31,21 @@ import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
+import org.luckyraven.bartizan.api.BartizanApi;
+import org.luckyraven.bartizan.api.weapon.WeaponCatalog;
+import org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolFixture;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.copsncrooks.station.Station;
+import org.luckyraven.keystone.npc.NpcSupport;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicesManager;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -39,6 +54,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -159,5 +178,130 @@ class PatrolWiringTest {
 		when(patrol.beatCopOf(entity)).thenReturn(beat);
 		assertSame(beat, resolver.getValue().apply(entity));
 		verify(patrol).beatCopOf(any());
+	}
+
+	// ---- the lambdas that make the feature work (a "p -> false" bean must fail these) ----
+
+	@SuppressWarnings("unchecked")
+	private void bartizan(PatrolFixture fx, Player holder, boolean pluginEnabled, boolean weapon) {
+		PluginManager pm = mock(PluginManager.class);
+		when(pm.isPluginEnabled("Bartizan")).thenReturn(pluginEnabled);
+		fx.bukkit.statics().when(Bukkit::getPluginManager).thenReturn(pm);
+		ServicesManager services = mock(ServicesManager.class);
+		RegisteredServiceProvider<BartizanApi> registration = mock(RegisteredServiceProvider.class);
+		BartizanApi     api       = mock(BartizanApi.class);
+		WeaponCatalog   weapons   = mock(WeaponCatalog.class);
+		ItemStack       held      = mock(ItemStack.class);
+		PlayerInventory inventory = mock(PlayerInventory.class);
+		when(inventory.getItemInMainHand()).thenReturn(held);
+		when(holder.getInventory()).thenReturn(inventory);
+		when(weapons.isWeapon(held)).thenReturn(weapon);
+		when(api.weapons()).thenReturn(weapons);
+		when(registration.getProvider()).thenReturn(api);
+		when(services.getRegistration(BartizanApi.class)).thenReturn(registration);
+		fx.bukkit.statics().when(Bukkit::getServicesManager).thenReturn(services);
+	}
+
+	@Test
+	@DisplayName("brandishWarnings' holding predicate is Bartizan enabled AND a weapon in the main hand (P-PAT-2)")
+	void brandishWarnings_holdingPredicate() {
+		try (PatrolFixture fx = new PatrolFixture()) {
+			Player player = fx.player(0, 0);
+			bartizan(fx, player, true, true);
+			BrandishWarnings warnings = config.brandishWarnings(loader, mock(CrimeService.class),
+			                                                    PatrolFixture.messages());
+			assertTrue(warnings.holding(player));
+
+			bartizan(fx, player, false, true);
+			assertFalse(warnings.holding(player), "plugin disabled means not holding");
+
+			bartizan(fx, player, true, false);
+			assertFalse(warnings.holding(player), "another item is not a weapon");
+		}
+	}
+
+	private PatrolManager managerFor(PatrolFixture fx, CopSpawnManager spawner) {
+		Station station = mock(Station.class);
+		when(station.getId()).thenReturn(1);
+		when(station.getName()).thenReturn("Central");
+		when(station.getLocation()).thenReturn(new Location(fx.world, 0, 64, 0));
+		StationRegistry stations = mock(StationRegistry.class);
+		when(stations.all()).thenReturn(List.of(station));
+		return config.patrolManager(loader, stations, spawner, mock(NpcMarkManager.class), new CopPerception());
+	}
+
+	private CopSpawnManager spawner(PatrolFixture fx) {
+		CopSpawnManager spawner = mock(CopSpawnManager.class);
+		when(spawner.spawnAtLocation(any(), anyInt()))
+				.thenAnswer(inv -> fx.cop(CopState.IDLE, 0, 0, inv.getArgument(0)));
+		return spawner;
+	}
+
+	@Test
+	@DisplayName("patrolManager reads the online players, NpcSupport.isNpc and Settings.isCitizensAvailable")
+	void patrolManager_lambdas() {
+		try (PatrolFixture fx = new PatrolFixture(); MockedStatic<NpcSupport> npcs = mockStatic(NpcSupport.class)) {
+			Player near = fx.player(10, 0);
+			fx.bukkit.statics().when(Bukkit::getOnlinePlayers).thenAnswer(inv -> List.of(near));
+
+			npcs.when(NpcSupport::available).thenReturn(true);
+			npcs.when(() -> NpcSupport.isNpc(any(Entity.class))).thenReturn(false);
+			CopSpawnManager spawner = spawner(fx);
+			managerFor(fx, spawner).manage();
+			verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+
+			npcs.when(NpcSupport::available).thenReturn(false);
+			CopSpawnManager noCitizens = spawner(fx);
+			managerFor(fx, noCitizens).manage();
+			verify(noCitizens, never()).spawnAtLocation(any(), anyInt());
+
+			npcs.when(NpcSupport::available).thenReturn(true);
+			npcs.when(() -> NpcSupport.isNpc(any(Entity.class))).thenReturn(true);
+			CopSpawnManager npcOnly = spawner(fx);
+			managerFor(fx, npcOnly).manage();
+			verify(npcOnly, never()).spawnAtLocation(any(), anyInt());
+		}
+	}
+
+	@Test
+	@DisplayName("pullOverTracker looks the driver up online and charges the ticket through the economy contract")
+	void pullOverTracker_lambdas() {
+		try (PatrolFixture fx = new PatrolFixture()) {
+			Player player = fx.player(0, 0);
+			UUID   id     = player.getUniqueId();
+			when(provider.getPullOverSettings()).thenReturn(new PullOverSettings(true, 24, 12, 6, 1.0, 0, 150, 120));
+			DetainmentEconomyContract economy = mock(DetainmentEconomyContract.class);
+			when(economy.getBalance(player)).thenReturn(1000.0);
+			when(economy.tryCharge(player, 150.0)).thenReturn(DetainmentEconomyContract.ChargeResult.SUCCESS);
+			PullOverTracker tracker = config.pullOverTracker(loader, mock(CrimeService.class), economy,
+			                                                 PatrolFixture.messages());
+
+			assertTrue(tracker.order(player, 15));
+			tracker.onSpeed(id, 0);
+			tracker.tick();
+
+			verify(economy).tryCharge(player, 150.0);
+			assertFalse(tracker.isOrdered(id), "the ticket closes the order");
+		}
+	}
+
+	@Test
+	@DisplayName("patrolServices' players and isNpc are the online players and NpcSupport.isNpc")
+	void patrolServices_playersAndIsNpc() {
+		try (PatrolFixture fx = new PatrolFixture(); MockedStatic<NpcSupport> npcs = mockStatic(NpcSupport.class)) {
+			Player       online = fx.player(1, 1);
+			List<Player> list   = List.of(online);
+			fx.bukkit.statics().when(Bukkit::getOnlinePlayers).thenAnswer(inv -> list);
+			Entity npc = mock(Entity.class);
+			npcs.when(() -> NpcSupport.isNpc(npc)).thenReturn(true);
+
+			PatrolServices services = config.patrolServices(loader, new CopPerception(), mock(TargetingManager.class),
+			                                                mock(CopManager.class), mock(BrandishWarnings.class),
+			                                                mock(CopRadio.class));
+
+			assertSame(list, services.players().get());
+			assertTrue(services.isNpc().test(npc));
+			assertFalse(services.isNpc().test(online));
+		}
 	}
 }

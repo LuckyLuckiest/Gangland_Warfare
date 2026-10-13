@@ -77,6 +77,7 @@ class PatrolBehaviorTest {
 		perception      = new CopPerception();
 		warnings        = mock(BrandishWarnings.class);
 		radio           = mock(CopRadio.class);
+		when(radio.placeOf(any())).thenReturn("Downtown");
 		wanted          = new HashSet<>();
 		groups          = new HashMap<>();
 		online          = new ArrayList<>();
@@ -205,7 +206,8 @@ class PatrolBehaviorTest {
 		behavior.tick(cop);
 
 		assertEquals(fx.at(5, 0), squad.lastKnownLocation());
-		verify(radio, times(1)).sayFromLeader(group, "Patrol_Sighting");
+		verify(radio, times(1)).sayAs(group, cop, "Patrol_Sighting", java.util.Map.of("place", "Downtown"));
+		verify(radio, never()).sayFromLeader(any(), anyString());
 	}
 
 	@Test
@@ -216,6 +218,7 @@ class PatrolBehaviorTest {
 
 		behavior.tick(cop);
 
+		verify(radio, never()).sayAs(any(), any(), anyString(), any());
 		verify(radio, never()).sayFromLeader(any(), anyString());
 		verify(cop, never()).transitionTo(any());
 	}
