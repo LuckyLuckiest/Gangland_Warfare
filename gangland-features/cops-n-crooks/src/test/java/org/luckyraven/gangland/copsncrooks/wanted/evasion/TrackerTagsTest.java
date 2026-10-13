@@ -456,4 +456,28 @@ class TrackerTagsTest {
 
 		assertEquals(T0 + 4 * SEC + 150 * SEC, pdcA.get(KEY));
 	}
+
+	@Test
+	@DisplayName("P-TRK-1: after a tag expires the car needs a fresh 4 s of sight before it is tagged again")
+	void expiredTagNeedsFreshFourSeconds() {
+		tickEverySecond(4);
+		verify(radio, times(1)).sayFromLeader(group, "Tracker_Tagged");
+
+		now[0] = T0 + 155 * SEC;
+		tags.tick(player, group);
+		assertFalse(pdcA.containsKey(KEY));
+
+		now[0] += SEC;
+		tags.tick(player, group);
+		assertNull(pdcA.get(KEY));
+		verify(radio, times(1)).sayFromLeader(group, "Tracker_Tagged");
+
+		for (int i = 0; i < 3; i++) {
+			now[0] += SEC;
+			tags.tick(player, group);
+		}
+		assertTrue(pdcA.get(KEY) instanceof Long);
+		verify(radio, times(2)).sayFromLeader(group, "Tracker_Tagged");
+		verify(notifier, times(2)).tagged(player);
+	}
 }
