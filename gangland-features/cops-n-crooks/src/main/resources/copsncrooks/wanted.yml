@@ -324,3 +324,38 @@ Wanted:
       Pickup_Radius: 1.5
       # The pickup's material
       Item: NETHER_STAR
+
+   # 0.21.0: crimes are shared with your gang mates and allies near the crime (the crew heat)
+   Crew_Heat:
+      # false = no crew heat
+      Enable: true
+      # Blocks from the crime spot
+      Radius: 16.0
+      # Crime ids never shared with the crew. Ids unknown to this build are ignored silently
+      Exclude_Crimes:
+         - Trespass_Restricted
+         - Evading_Police
+         - Brandish_Near_Cop
+
+   # 0.21.0: a rundown sent to the suspect when a chase ends
+   Pursuit_Report:
+      # false = no pursuit report
+      Enable: true
+      # Chases that never reached this many stars get no report
+      Min_Peak_Stars: 1
+      # Cost to the city of the chase
+      City_Cost:
+         # Cost to the city per cop killed
+         Per_Cop_Down: 2500.0
+         # Cost to the city per point of chase heat
+         Per_Heat: 10.0
+      # Server-wide headline for big chases
+      Breaking_News:
+         # false = no headlines
+         Enable: true
+         # A chase reaching this many stars makes the news
+         Min_Stars: 4
+         # Or one lasting this many seconds
+         Min_Seconds: 120
+         # Minimum gap between live headlines server-wide
+         Cooldown_Seconds: 300
