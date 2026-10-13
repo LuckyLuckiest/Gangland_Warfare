@@ -61,27 +61,31 @@ public class CopBehaviorFactory {
 		// Convert game-tick cooldown to AI-tick iterations so the countdown completes in the correct wall time.
 		int cuffAiTicks = Math.max(1, configProvider.getCuffCooldownTicks() / aiTickRate);
 
-		behaviors.put(CopState.IDLE, new IdleBehavior(configProvider.getAlertRange()));
+		behaviors.put(CopState.IDLE, new IdleBehavior(configProvider.getAlertRange(), perception));
 		behaviors.put(CopState.PURSUING, new PursuingBehavior(configProvider.getCuffRadius(),
 		                                                      configProvider.getAlertRange(),
 		                                                      configProvider.getPursuitMaxDistance(),
 		                                                      configProvider.getPursuitMaxTicks(),
 		                                                      detainmentService, cuffLockRegistry,
 		                                                      configProvider.getRetreatSettings(),
-		                                                      System::currentTimeMillis, searching));
+		                                                      System::currentTimeMillis, searching, perception));
 		behaviors.put(CopState.CUFFING,
 		              new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
 		                                  cuffAiTicks, aiTickRate, cuffLockRegistry, detainmentService, searching));
 		behaviors.put(CopState.GUARDING,
 		              new GuardingBehavior(configProvider.getGuardRadius(), cuffLockRegistry, detainmentService));
 		behaviors.put(CopState.COMBAT, new CombatBehavior(configProvider.getCombatRange(), configProvider.getAlertRange(),
-		                                                  detainmentService, configProvider.getRetreatSettings()));
+		                                                  detainmentService, configProvider.getRetreatSettings(),
+		                                                  perception));
 		behaviors.put(CopState.RETURNING, new ReturningBehavior(spawnManagerSupplier.get(), detainmentService,
 		                                                        configProvider.getMaxReturnTicks(),
 		                                                        configProvider.getStationArrivalDistance(),
 		                                                        configProvider.getStuckSettings()));
 
 		behaviors.put(CopState.POSTED, new PostedBehavior());
+		behaviors.put(CopState.PATROL, new PatrolBehavior());
+		behaviors.put(CopState.WARNING, new WarningBehavior());
+		behaviors.put(CopState.OVERWATCH, new OverwatchBehavior());
 
 		return behaviors;
 	}
