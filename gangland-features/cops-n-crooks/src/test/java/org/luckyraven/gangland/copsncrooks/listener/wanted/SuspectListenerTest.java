@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
+import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescription;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescriptions;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /** P-DIS-1 / P-DIS-4: crimes snapshot the suspect description and blow the police outfit; a chase end forgets them. */
@@ -45,6 +47,7 @@ class SuspectListenerTest {
 	private SuspectDescriptions descriptions;
 	private PoliceOutfit        outfit;
 	private SuspectListener     listener;
+	private DisguiseTick        tick;
 
 	@BeforeEach
 	void setUp() {
@@ -67,7 +70,8 @@ class SuspectListenerTest {
 		WearableKeys keys = item -> item == helmet ? "police_helmet" : item == chest ? "police_vest" : null;
 		descriptions = new SuspectDescriptions(() -> DisguiseSettings.DEFAULT, keys, messages);
 		outfit       = new PoliceOutfit(() -> DisguiseSettings.DEFAULT, keys);
-		listener     = new SuspectListener(descriptions, outfit);
+		tick         = mock(DisguiseTick.class);
+		listener     = new SuspectListener(descriptions, outfit, tick);
 	}
 
 	private CrimeCommittedEvent crime(boolean cancelled) {
@@ -140,6 +144,7 @@ class SuspectListenerTest {
 		listener.onChaseEnd(end);
 
 		assertNull(descriptions.latest(id));
+		verify(tick).forget(id);
 		assertTrue(outfit.hides(player, 1), "the next chase starts with an unblown outfit");
 	}
 }

@@ -139,6 +139,21 @@ class DisguiseTickTest {
 	}
 
 	@Test
+	@DisplayName("a chase end (forget) lets a repeat offender in the same clothes hear the line again")
+	void chaseEndForgetsTheSpokenLine() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		when(squad.hasFreshSighting()).thenReturn(true);
+
+		tick.tick(wearer.player, group);
+		tick.forget(wearer.id);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		tick.tick(wearer.player, group);
+
+		verify(radio, times(2)).sayFromLeader(group, LINE);
+	}
+
+	@Test
 	@DisplayName("no description known and nobody sees the player: nothing said")
 	void nothingToSay() {
 		when(squad.hasFreshSighting()).thenReturn(false);

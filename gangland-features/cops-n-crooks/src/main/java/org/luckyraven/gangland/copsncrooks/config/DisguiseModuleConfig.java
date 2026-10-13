@@ -20,7 +20,10 @@ import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 
 /** Beans of the masks, outfits and disguises (0.20.0 lane disguise). */
 @Configuration
@@ -34,6 +37,16 @@ public class DisguiseModuleConfig {
 
 	/** The live {@code Cops.Disguise} settings (the shipped defaults until the cop config has loaded). */
 	static Supplier<DisguiseSettings> settingsOf(CopLoader copLoader) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	/** The wanted level of a player; 0 when the user or its wanted record is unknown. */
+	static ToIntFunction<Player> levelOf(UserManager<Player> users) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	/** Whether the player's squad has a fresh sighting; false when no squad chases them. */
+	static Predicate<Player> freshSightingOf(CopManager copManager) {
 		throw new UnsupportedOperationException("TDD stub");
 	}
 

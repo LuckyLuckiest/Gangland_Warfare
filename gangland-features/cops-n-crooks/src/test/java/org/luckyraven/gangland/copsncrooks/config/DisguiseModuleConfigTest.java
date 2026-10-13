@@ -15,6 +15,9 @@ import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFilter;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
@@ -98,6 +101,50 @@ class DisguiseModuleConfigTest {
 		when(provider.getDisguiseSettings()).thenReturn(null);
 
 		assertSame(DisguiseSettings.DEFAULT, DisguiseModuleConfig.settingsOf(loader).get());
+	}
+
+	@Test
+	@DisplayName("levelOf: 0 for an unknown user or a missing wanted record, else the wanted level")
+	@SuppressWarnings("unchecked")
+	void levelOfReadsTheWantedLevel() {
+		UserManager<Player> users = mock(UserManager.class);
+		Player player = mock(Player.class);
+		var level = DisguiseModuleConfig.levelOf(users);
+
+		when(users.getUser(player)).thenReturn(null);
+		assertEquals(0, level.applyAsInt(player));
+
+		User<Player> user = mock(User.class);
+		when(users.getUser(player)).thenReturn(user);
+		when(user.getWanted()).thenReturn(null);
+		assertEquals(0, level.applyAsInt(player));
+
+		Wanted wanted = mock(Wanted.class);
+		when(wanted.getLevel()).thenReturn(3);
+		when(user.getWanted()).thenReturn(wanted);
+		assertEquals(3, level.applyAsInt(player));
+	}
+
+	@Test
+	@DisplayName("freshSightingOf: false without a squad, else whether the squad has a fresh sighting")
+	void freshSightingFollowsTheSquad() {
+		Player player = mock(Player.class);
+		java.util.UUID id = java.util.UUID.randomUUID();
+		when(player.getUniqueId()).thenReturn(id);
+		var fresh = DisguiseModuleConfig.freshSightingOf(manager);
+
+		when(manager.groupOf(id)).thenReturn(null);
+		assertFalse(fresh.test(player));
+
+		CopGroup group = mock(CopGroup.class);
+		NpcSquad squad = mock(NpcSquad.class);
+		when(group.getSquad()).thenReturn(squad);
+		when(manager.groupOf(id)).thenReturn(group);
+		when(squad.hasFreshSighting()).thenReturn(true);
+		assertTrue(fresh.test(player));
+
+		when(squad.hasFreshSighting()).thenReturn(false);
+		assertFalse(fresh.test(player));
 	}
 
 	@Test
