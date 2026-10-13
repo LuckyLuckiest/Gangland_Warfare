@@ -81,10 +81,15 @@ class CopItemCommand extends SubArgument {
 			}
 		}
 
-		ItemStack stack = itemId == null ? null : items.create(itemId);
+		if (itemId == null) {
+			sender.sendMessage(messages.format(CommandMessages.Key.ITEM_USAGE, Map.of("items", String.join(", ", CopsItems.ids()))));
+			return;
+		}
+
+		ItemStack stack = items.create(itemId);
 		if (stack == null) {
 			sender.sendMessage(messages.format(CommandMessages.Key.ITEM_UNKNOWN,
-			                                   Map.of("item", itemId == null ? "" : itemId,
+			                                   Map.of("item", itemId,
 			                                          "items", String.join(", ", CopsItems.ids()))));
 			return;
 		}

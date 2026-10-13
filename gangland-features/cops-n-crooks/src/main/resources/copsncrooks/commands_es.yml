@@ -103,5 +103,7 @@ Item:
    Unknown: "&cObjeto desconocido &f%item%&c. Objetos: &f%items%"
    # No placeholders.
    Needs_Player: "&cLa consola debe indicar un jugador."
+   # Placeholders: %items% (the valid item ids).
+   Usage: "&cUso: &f/glw cop item <objeto> [jugador]&c. Objetos: &f%items%"
    # No placeholders.
    No_Permission: "&cNo tienes permiso para dar objetos de policía."
