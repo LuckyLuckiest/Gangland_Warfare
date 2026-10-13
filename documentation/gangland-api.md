@@ -111,7 +111,7 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
 `2.3` line and still load unchanged (same major, module minor `<=` host minor). A `2.4` module does not load on a 0.16.x
 core (`module.host.incompatible`).
 
-## Api 2.6 (0.19.0)
+## Api 2.6 (0.18.0)
 
 `GanglandApi.VERSION` is `"2.6"`. Within the major, the contract is unchanged: only additions. Version `2.4` is the 0.17.0 hardening (previous section); `2.5` is reserved for another release and not used on the Gang & Turf II branch. A module built against `2.6` needs a host at
 `2.6` or newer.

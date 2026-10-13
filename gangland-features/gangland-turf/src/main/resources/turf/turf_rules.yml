@@ -78,7 +78,7 @@ Garrison:
    Max_Reserve: 12
 # end Garrison
 
-# ---------------- Teleport_Guard: gang teleports near turf fights (0.19.0) ----------------
+# ---------------- Teleport_Guard: gang teleports near turf fights (0.18.0) ----------------
 Teleport_Guard:
    # A gang teleport (safehouse, rally, gang waypoint) may not land within this many blocks of a turf under attack.
    Buffer_Blocks: 48

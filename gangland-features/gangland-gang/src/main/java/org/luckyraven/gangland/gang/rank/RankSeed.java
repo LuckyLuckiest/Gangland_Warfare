@@ -26,7 +26,7 @@ public final class RankSeed {
 
 	/**
 	 * T-235: a seed that wrote ranks but not their preset permissions (crash, disk error) is pending on the next boot,
-	 * so it is finished then. An install seeded before 0.19.0 has no marker and is never pending.
+	 * so it is finished then. An install seeded before 0.18.0 has no marker and is never pending.
 	 */
 	public static boolean isPending(GangMigrationsContract migrations) {
 		return migrations.isDone(STARTED) && !migrations.isDone(COMPLETE);

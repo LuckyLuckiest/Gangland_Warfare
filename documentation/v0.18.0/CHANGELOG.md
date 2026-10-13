@@ -1,8 +1,10 @@
-# 0.19.0 Changelog - Gang & Turf II
+# 0.18.0 Changelog - Gang & Turf II
 
 [← Back to Documentation Index](../README.md)
+> Released internally as 0.19.0 before the 2026-10-13 renumbering.
 
-Read [migration-0.19.0.md](../migration-0.19.0.md) before you start the server. It lists every new key, node, table and
+
+Read [migration-0.18.0.md](../migration-0.18.0.md) before you start the server. It lists every new key, node, table and
 behaviour change.
 
 ## Requires

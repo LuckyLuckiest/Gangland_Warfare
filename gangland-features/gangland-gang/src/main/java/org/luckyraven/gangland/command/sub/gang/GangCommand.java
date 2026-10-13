@@ -70,7 +70,7 @@ public final class GangCommand extends Command {
 	private final GangMessages               gangMessages;
 	private final GangChatToggles           chatChannel;
 
-	// seams of the gang parity wave (0.19.0): the lanes fill their bodies, the command only passes them on
+	// seams of the gang parity wave (0.18.0): the lanes fill their bodies, the command only passes them on
 	private final GangWorldPolicy        worldPolicy;
 	private final GangMembershipService  membershipService;
 	private final GangDisbandService     disbandService;

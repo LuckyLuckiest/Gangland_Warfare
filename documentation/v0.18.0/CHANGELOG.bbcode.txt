@@ -1,8 +1,10 @@
-[SIZE=7][B]0.19.0 Changelog - Gang & Turf II[/B][/SIZE]
+[SIZE=7][B]0.18.0 Changelog - Gang & Turf II[/B][/SIZE]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[I]Released internally as 0.19.0 before the 2026-10-13 renumbering.[/I]
 
-Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documentation/migration-0.19.0.md'][B]migration-0.19.0.md[/B][/URL] before you start the server. It lists every new key, node, table and behaviour change.
+
+Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documentation/migration-0.18.0.md'][B]migration-0.18.0.md[/B][/URL] before you start the server. It lists every new key, node, table and behaviour change.
 
 [SIZE=6][B]Requires[/B][/SIZE]
 

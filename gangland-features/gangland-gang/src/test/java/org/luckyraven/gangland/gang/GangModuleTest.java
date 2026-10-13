@@ -29,7 +29,7 @@ class GangModuleTest {
 
 		// GangMembershipInstaller is no longer its own @Configuration class (T-53, W55) — it's a @Bean produced
 		// inside GangConfig now. GangModuleFileConfig (0.17.0) registers the module's own YAML files first, then
-		// GangConfig, then the seven lane configurations of the gang parity wave (0.19.0), in this order.
+		// GangConfig, then the seven lane configurations of the gang parity wave (0.18.0), in this order.
 		assertEquals(List.of(GangModuleFileConfig.class, GangConfig.class, GangMembershipConfig.class,
 		                     GangLevelConfig.class, GangCombatConfig.class, GangSafehouseConfig.class,
 		                     GangChatConfig.class, GangStatsConfig.class, GangUxConfig.class),

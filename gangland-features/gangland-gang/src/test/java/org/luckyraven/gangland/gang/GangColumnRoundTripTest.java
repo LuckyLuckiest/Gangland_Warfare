@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 /**
- * The 0.19.0 entity columns survive a save and a load through a real SQLite {@code TableBackend}: {@code gang.notice},
+ * The 0.18.0 entity columns survive a save and a load through a real SQLite {@code TableBackend}: {@code gang.notice},
  * {@code gang.friendly_fire}, {@code gang_ally.friendly_fire} and {@code member.kills/deaths/assists}. Defaults keep
  * today's behaviour (no notice, friendly fire off, zero stats).
  */

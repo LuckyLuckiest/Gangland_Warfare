@@ -1,18 +1,18 @@
-# Migrating a server to Gangland 0.19.0 (Gang & Turf II)
+# Migrating a server to Gangland 0.18.0 (Gang & Turf II)
 
 [← Back to Documentation Index](./README.md)
 
-This guide covers the upgrade from 0.17.0 to 0.19.0. A server still on 0.16.x applies [the 0.17.0 notes](./migration-0.17.0.md) first (data-safety fixes, offline cache, migrations after commit, Keystone 1.15.3), then this page. It lists what changes on disk, in the database and in play, in the
+This guide covers the upgrade from 0.17.0 to 0.18.0. A server still on 0.16.x applies [the 0.17.0 notes](./migration-0.17.0.md) first (data-safety fixes, offline cache, migrations after commit, Keystone 1.15.3), then this page. It lists what changes on disk, in the database and in play, in the
 order you meet it. Read the whole page before you start the server on the new jars.
 
 ## Before you update
 
-- **Update every jar together.** `gangland_warfare-0.19.0.jar` and every module jar in `plugins/Gangland_Warfare/modules/`
+- **Update every jar together.** `gangland_warfare-0.18.0.jar` and every module jar in `plugins/Gangland_Warfare/modules/`
   come from the same build. Keep one revision on the server.
-- **Mail and gang together.** The 0.19.0 `mail` module calls `GangPermissions.refusal`. A pre-0.19 `gang` jar has no such
+- **Mail and gang together.** The 0.18.0 `mail` module calls `GangPermissions.refusal`. A pre-0.18 `gang` jar has no such
   method, so the first refused ally or invite throws `NoSuchMethodError`. Replace the `gang` and `mail` jars in the same restart.
 - **Host_Api 2.6.** Five modules now declare `Host_Api: 2.6`: `gang`, `civilians`, `turf`, `copsncrooks` and `fights`.
-  Each needs a 0.19.0 host. `gadget`, `npcshops`, `mail`, `lootchest` and `healthbars` keep their older Host_Api lines.
+  Each needs a 0.18.0 host. `gadget`, `npcshops`, `mail`, `lootchest` and `healthbars` keep their older Host_Api lines.
 - **Keystone 1.15.3** (the `keystone.version` in the root `pom.xml`). Nothing else needs a new dependency.
 - **Optional plugins.** `dynmap` and `WorldGuard` are optional soft dependencies. Neither is required (see Optional plugins).
 - **Back up** `plugins/Gangland_Warfare/` before the first boot. The first boot adds columns and tables and refreshes some
@@ -172,7 +172,7 @@ staff verbs (`create`, `delete`, `type`, `gangid`, `timer`, `cooldown`, `shield`
 ## Checklist
 
 1. Back up `plugins/Gangland_Warfare/`.
-2. Install Keystone 1.15.3 and the 0.19.0 core jar, and every module jar of the same revision.
+2. Install Keystone 1.15.3 and the 0.18.0 core jar, and every module jar of the same revision.
 3. Start the server once and read the console for `module.*` and `Config_Version` lines.
 4. Copy new `gang_rules.yml` and `turf_npcs.yml` sections into your files if you want to change the defaults.
 5. Set each level's `Cost` (or `0`), choose `Ranks.Minimum`, and set `Friendly_Fire` to your pvp rules.

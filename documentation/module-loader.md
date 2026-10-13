@@ -49,8 +49,8 @@ lifted automatically the moment civilians went soft. Full story: `documentation/
 | civilians — civilian NPCs, `NpcMarkManager`/`CombatEligibility`/target-filter seams cops and turf inject | `gangland-civilians` | **new runtime module, 0.9.0** (split out of cops-n-crooks); Bartizan **soft** since 0.9.2 (WS7 G5b — no `Plugins:` entry; unarmed hostiles without it), `Host_Api: 1.1` |
 | npc-shops — trader/banker NPC shops (moved out of cops-n-crooks) | `gangland-npc-shops` | **new runtime module, 0.9.0** — no `Depends:`/`Plugins:` |
 | cops-n-crooks — cops, jails, detainment (civilians and turf-NPC powerups moved out in 0.9.0) | `cops-n-crooks` | runtime module since 0.8.4; `Depends: [turf, civilians]`, `Plugins: [Bartizan]` since 0.9.0 — the only module still hard-coupled after 0.9.2 |
-| gang — gangs, ranks, levels, safehouses, friendly fire, gang chat; (0.19.0) gang fights are a separate module below | `gangland-gang` | runtime module since 0.10.0; `Host_Api: 2.6` (0.19.0) |
-| fights — gang fights in arenas (challenge, bets, guards, arena editor, fight stats) | `gangland-gang-fights` | **new runtime module, 0.19.0**; install id `fights`; `Depends: [gang]`; `Host_Api: 2.6` |
+| gang — gangs, ranks, levels, safehouses, friendly fire, gang chat; (0.18.0) gang fights are a separate module below | `gangland-gang` | runtime module since 0.10.0; `Host_Api: 2.6` (0.18.0) |
+| fights — gang fights in arenas (challenge, bets, guards, arena editor, fight stats) | `gangland-gang-fights` | **new runtime module, 0.18.0**; install id `fights`; `Depends: [gang]`; `Host_Api: 2.6` |
 | gadget — cars (`/glw car`), jetpacks (`/glw jetpack`, gadget-owned item since 0.9.2, `items/jetpacks.yml`), and (WS8) the grappling hook (`/glw grapple`, cooldown-only, `items/grapples.yml`) | `gangland-gadget` | runtime module since 0.8.4; Bartizan **soft** since 0.9.2 (WS7 G5 — no `Plugins:` entry; vanilla car-punch damage without it), `Host_Api: 1.1` |
 
 Weapons, ammunition, wearables and the projectile system left the repo entirely in 0.9.0 for the standalone
@@ -94,15 +94,15 @@ module that uses a newer surface than an older core offers needs the higher line
 | Module | id | `Host_Api` | Why that line |
 |---|---|---|---|
 | `cops-n-crooks` | `copsncrooks` | `2.6` | `RegionProvider`/`PlaceNames`, `WantedCause.CONTACT`, the moved settings; `Depends: [turf, civilians]`, `Plugins: [Bartizan]` |
-| `gangland-turf` | `turf` | `2.6` | `TurfRegionProvider` (`RegionProvider`, `PlaceNames`), `NpcRole` (0.19.0), `GanglandMoneyDropClassifier.installFirst`; `Depends: [civilians]` |
-| `gangland-civilians` | `civilians` | `2.6` | `MovedSetting`, `NpcRole` (0.19.0) |
+| `gangland-turf` | `turf` | `2.6` | `TurfRegionProvider` (`RegionProvider`, `PlaceNames`), `NpcRole` (0.18.0), `GanglandMoneyDropClassifier.installFirst`; `Depends: [civilians]` |
+| `gangland-civilians` | `civilians` | `2.6` | `MovedSetting`, `NpcRole` (0.18.0) |
 | `gangland-gadget` | `gadget` | `2.2` | `MovedSetting` |
-| `gangland-gang` | `gang` | `2.6` | `MovedSetting`, `GangMembershipView` defaults, `GangChatChannel`, `events.gangs` (0.19.0) |
-| `gangland-gang-fights` | `fights` | `2.6` | `Depends: [gang]`; first release 0.19.0 |
+| `gangland-gang` | `gang` | `2.6` | `MovedSetting`, `GangMembershipView` defaults, `GangChatChannel`, `events.gangs` (0.18.0) |
+| `gangland-gang-fights` | `fights` | `2.6` | `Depends: [gang]`; first release 0.18.0 |
 | `gangland-npc-shops` | `npcshops` | `2.2` | `MovedSetting` |
 | `gangland-mail` | `mail` | `2.0` | nothing newer |
-| `gangland-lootchest` | `lootchest` | `2.0` | nothing newer; install id `lootchest` (`/glw module install lootchest`, 0.19.0) |
-| `gangland-healthbars` | `healthbars` | `2.0` | nothing newer; install id `healthbars` (`/glw module install healthbars`, 0.19.0; needs Citizens) |
+| `gangland-lootchest` | `lootchest` | `2.0` | nothing newer; install id `lootchest` (`/glw module install lootchest`, 0.18.0) |
+| `gangland-healthbars` | `healthbars` | `2.0` | nothing newer; install id `healthbars` (`/glw module install healthbars`, 0.18.0; needs Citizens) |
 
 A `2.3` module (cops, turf) does **not** load on a 0.15.x core (`module.host.incompatible`): upgrade the core jar with them.
 Gangland 0.16.0 itself needs **Keystone 1.15.0 or newer** and disables itself with one console line on an older jar

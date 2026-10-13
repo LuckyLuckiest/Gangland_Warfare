@@ -69,7 +69,7 @@ public class GangRepository extends AbstractRepository<Gang> implements LoadOutc
 		long   created            = num(result[v++]).longValue();
 		long   lastMemberOnlineAt = num(result[v++]).longValue();
 		String state              = text(result[v++], "INVITE");
-		// columns added in 0.19.0: an older or shorter row reads as the defaults
+		// columns added in 0.18.0: an older or shorter row reads as the defaults
 		String  notice            = result.length > v && result[v] != null ? String.valueOf(result[v]) : null;
 		boolean friendlyFire      = result.length > v + 1 && flag(result[v + 1]);
 

@@ -125,7 +125,7 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 
 	/** One alliance row, ids and timestamp read through {@link Number}; a SQL NULL reads as 0 (T-199). */
 	public static AllianceRow fromRow(Object[] result) {
-		// friendly_fire was added in 0.19.0: an older or shorter row reads as false
+		// friendly_fire was added in 0.18.0: an older or shorter row reads as false
 		return new AllianceRow(GangRepository.num(result[0]).intValue(), GangRepository.num(result[1]).intValue(),
 		                       GangRepository.num(result[2]).longValue(),
 		                       result.length > 3 && GangRepository.flag(result[3]));
