@@ -190,7 +190,17 @@ public class ScannerMapRenderer extends MapRenderer {
 	public void render(MapView map, MapCanvas canvas, Player player) {
 		ScannerMapSettings config = settings.get();
 		World              world  = player.getWorld();
-		if (!config.enabled() || world == null) {
+		if (world == null) {
+			return;
+		}
+		if (!config.enabled()) {
+			State drawn = states.remove(player.getUniqueId());
+			if (drawn != null) {
+				canvas.setCursors(new MapCursorCollection());
+				for (int[] pixel : drawn.drawn) {
+					canvas.setPixel(pixel[0], pixel[1], (byte) 0);
+				}
+			}
 			return;
 		}
 		long  now   = nowTicks.getAsLong();
