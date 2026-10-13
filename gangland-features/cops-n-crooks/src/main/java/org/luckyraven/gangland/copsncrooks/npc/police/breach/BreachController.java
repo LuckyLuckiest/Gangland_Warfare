@@ -40,7 +40,8 @@ import java.util.function.Supplier;
 @CustomLog
 public class BreachController {
 
-	private static final long SCAN_INTERVAL_MS = 1000L;
+	private static final long   SCAN_INTERVAL_MS = 1000L;
+	private static final double ABORT_DISTANCE   = 8.0;
 
 	/** What the controller reads from the world; the production one is built on {@link DoorFinder}. */
 	public interface Surroundings {
@@ -108,6 +109,7 @@ public class BreachController {
 		Breach         running  = active.get(id);
 		if (running != null) {
 			if (group != null) advance(id, running, group, settings);
+			else abort(id, running, settings);
 			return;
 		}
 		if (group == null) return;
@@ -148,6 +150,19 @@ public class BreachController {
 	private void advance(UUID id, Breach breach, CopGroup group, BreachSettings settings) {
 		long now = clock.getAsLong();
 		if (breach.goAt < 0) {
+			breach.stack.removeIf(cop -> !cop.isValid() || cop.getCurrentState() != CopState.POSTED);
+			if (breach.stack.isEmpty()) {
+				active.remove(id);
+				return;
+			}
+			Location lastKnown = group.getSquad().lastKnownLocation();
+			boolean moved = lastKnown != null && lastKnown.getWorld() == breach.lastKnownAtStart.getWorld()
+			                && lastKnown.distance(breach.lastKnownAtStart) > ABORT_DISTANCE;
+			boolean outdoors = lastKnown != null && !surroundings.indoors(lastKnown, settings.roofBlocks());
+			if (moved || outdoors || group.isStandoff(now)) {
+				abort(id, breach, settings);
+				return;
+			}
 			boolean waited = now - breach.startedAt >= settings.stackWaitSeconds() * 1000L;
 			if (!waited && !allArrived(breach)) return;
 			breach.goAt  = now;
@@ -170,6 +185,17 @@ public class BreachController {
 			active.remove(id);
 			cooldownUntil.put(id, now + settings.cooldownSeconds() * 1000L);
 		}
+	}
+
+	/** Releases whoever is still posted to the chase and starts the cooldown. */
+	private void abort(UUID id, Breach breach, BreachSettings settings) {
+		for (CopNpc cop : breach.stack) {
+			if (cop.getCurrentState() != CopState.POSTED) continue;
+			cop.releasePost();
+			cop.transitionTo(CopState.PURSUING);
+		}
+		active.remove(id);
+		cooldownUntil.put(id, clock.getAsLong() + settings.cooldownSeconds() * 1000L);
 	}
 
 	/** Flashes every online player within the radius of the door who has an unobstructed line to its centre. */
