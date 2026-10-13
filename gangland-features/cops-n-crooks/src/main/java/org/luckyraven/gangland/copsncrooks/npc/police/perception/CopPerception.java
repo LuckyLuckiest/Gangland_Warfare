@@ -7,6 +7,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiPredicate;
 
@@ -28,31 +29,48 @@ public class CopPerception {
 	private final List<BiPredicate<CopNpc, Player>> filters = new CopyOnWriteArrayList<>();
 
 	public void addSightFactor(SightFactor factor) {
-		throw new UnsupportedOperationException("TDD stub");
+		factors.add(Objects.requireNonNull(factor, "factor"));
 	}
 
 	public void addLockOnFilter(BiPredicate<CopNpc, Player> filter) {
-		throw new UnsupportedOperationException("TDD stub");
+		filters.add(Objects.requireNonNull(filter, "filter"));
 	}
 
 	/** {@code base} times the product of every factor; a non-player target gets {@code base}. */
 	public double rangeFor(CopNpc cop, LivingEntity target, double base) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (!(target instanceof Player player)) {
+			return base;
+		}
+
+		double range = base;
+		for (SightFactor factor : factors) {
+			range *= factor.factor(cop, player);
+		}
+		return range;
 	}
 
 	/** {@code cop.canSee(target, rangeFor(...))}. */
 	public boolean sees(CopNpc cop, LivingEntity target, double base) {
-		throw new UnsupportedOperationException("TDD stub");
+		return cop.canSee(target, rangeFor(cop, target, base));
 	}
 
 	/** Every lock-on filter allows this cop to pick this player up; non-players are always allowed. */
 	public boolean allowsLockOn(CopNpc cop, LivingEntity target) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (!(target instanceof Player player)) {
+			return true;
+		}
+
+		for (BiPredicate<CopNpc, Player> filter : filters) {
+			if (!filter.test(cop, player)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/** {@link #allowsLockOn} and {@link #sees}. */
 	public boolean acquires(CopNpc cop, LivingEntity target, double base) {
-		throw new UnsupportedOperationException("TDD stub");
+		return allowsLockOn(cop, target) && sees(cop, target, base);
 	}
 
 	/**
@@ -60,6 +78,12 @@ public class CopPerception {
 	 * a filtered-out player stays visible only while {@code squad} has a fresh sighting, otherwise 0.
 	 */
 	public double pursuitRange(CopNpc cop, LivingEntity target, @Nullable NpcSquad squad, double base) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (!(target instanceof Player)) {
+			return base;
+		}
+		if (allowsLockOn(cop, target)) {
+			return rangeFor(cop, target, base);
+		}
+		return squad != null && squad.hasFreshSighting() ? rangeFor(cop, target, base) : 0.0;
 	}
 }
