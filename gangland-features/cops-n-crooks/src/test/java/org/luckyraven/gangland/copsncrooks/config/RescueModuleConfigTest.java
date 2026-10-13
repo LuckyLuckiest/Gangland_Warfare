@@ -41,7 +41,9 @@ class RescueModuleConfigTest {
 				mock(UserManager.class), mock(WantedMessages.class));
 
 		assertNotNull(service);
+		org.mockito.Mockito.verify(settings, org.mockito.Mockito.never()).getRescue();
 		service.onClick(mock(Player.class), mock(Entity.class));
+		org.mockito.Mockito.verify(settings, org.mockito.Mockito.atLeastOnce()).getRescue();
 		verifyNoInteractions(copManager);
 	}
 }

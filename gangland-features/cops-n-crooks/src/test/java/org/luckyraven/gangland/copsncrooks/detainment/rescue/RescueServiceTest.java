@@ -234,6 +234,34 @@ class RescueServiceTest {
 	}
 
 	@Test
+	@DisplayName("a guard that leaves GUARDING during the release is not pushed into PURSUING (free() re-check)")
+	void guardLeavesGuardingDuringRelease_isLeftAlone() {
+		java.util.concurrent.atomic.AtomicBoolean released = new java.util.concurrent.atomic.AtomicBoolean();
+		when(cop.getCurrentState()).thenAnswer(i -> released.get() ? CopState.RETURNING : CopState.GUARDING);
+		org.mockito.Mockito.doAnswer(i -> {
+			released.set(true);
+			return null;
+		}).when(pipeline).release(any(), any());
+
+		clickEvery200(0, 3000);
+
+		verify(pipeline).release(prisoner, ReleaseReason.RESCUED);
+		verify(cop, never()).transitionTo(any());
+	}
+
+	@Test
+	@DisplayName("a user the manager does not know is skipped for stars; the other side still gains and the rescue completes")
+	void unknownUser_skippedForStars() {
+		when(users.getUser(rescuer)).thenReturn(null);
+
+		clickEvery200(0, 3000);
+
+		verify(pipeline).release(prisoner, ReleaseReason.RESCUED);
+		verify(stars).raise(prisonerUser, 1, WantedCause.CRIME);
+		verify(stars, times(1)).raise(any(), anyInt(), any());
+	}
+
+	@Test
 	@DisplayName("the rescuer sees RESCUE_FREED and the prisoner RESCUE_FREED_BY")
 	void messagesBoth() {
 		clickEvery200(0, 3000);
@@ -252,8 +280,8 @@ class RescueServiceTest {
 		clickAt(1000);
 		clickAt(2100);
 
-		verify(messages).format(WantedMessages.Key.RESCUE_PROGRESS, Map.of("player", "Alex", "seconds", "3"));
-		verify(messages, times(2)).format(WantedMessages.Key.RESCUE_PROGRESS, Map.of("player", "Alex", "seconds", "2"));
+		verify(messages, times(2)).format(WantedMessages.Key.RESCUE_PROGRESS, Map.of("player", "Alex", "seconds", "3"));
+		verify(messages).format(WantedMessages.Key.RESCUE_PROGRESS, Map.of("player", "Alex", "seconds", "2"));
 		verify(messages).format(WantedMessages.Key.RESCUE_PROGRESS, Map.of("player", "Alex", "seconds", "1"));
 		bar.verify(() -> ActionBarManager.send(any(JavaPlugin.class), eq(rescuer), eq("msg"), anyLong()), times(4));
 	}
@@ -406,6 +434,7 @@ class RescueServiceTest {
 		UUID   otherId     = UUID.randomUUID();
 		Player other       = mock(Player.class);
 		when(other.getUniqueId()).thenReturn(otherId);
+		when(other.getName()).thenReturn("Bo");
 		when(copManager.findCopByEntity(otherEntity)).thenReturn(otherCop);
 		when(otherCop.isValid()).thenReturn(true);
 		when(otherCop.getCurrentState()).thenReturn(CopState.GUARDING);
