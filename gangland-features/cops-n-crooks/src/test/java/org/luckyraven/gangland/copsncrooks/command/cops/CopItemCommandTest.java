@@ -114,9 +114,21 @@ class CopItemCommandTest {
 		Player        bob     = onlinePlayer("Bob");
 
 		command.give(console, "jetpack", "Bob");
+
+		verify(console).sendMessage("ITEM_UNKNOWN");
+		verify(bob.getInventory(), never()).addItem(any(ItemStack[].class));
+	}
+
+	@Test
+	@DisplayName("a missing item id is answered with the usage text (ITEM_USAGE), never Item.Unknown with an empty %item%")
+	void missingItemId_answersUsage() {
+		CommandSender console = sender(false, true);
+		Player        bob     = onlinePlayer("Bob");
+
 		command.give(console, null, "Bob");
 
-		verify(console, org.mockito.Mockito.times(2)).sendMessage("ITEM_UNKNOWN");
+		verify(console).sendMessage("ITEM_USAGE");
+		verify(console, never()).sendMessage("ITEM_UNKNOWN");
 		verify(bob.getInventory(), never()).addItem(any(ItemStack[].class));
 	}
 

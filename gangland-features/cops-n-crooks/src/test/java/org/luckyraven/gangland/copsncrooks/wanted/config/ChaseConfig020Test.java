@@ -92,6 +92,17 @@ class ChaseConfig020Test {
 	}
 
 	@Test
+	@DisplayName("Trespass: a negative Repeat_Seconds is reported as a range issue at the key")
+	void trespass_negativeRepeatWarns() {
+		ConfigReport report = new ConfigReport();
+
+		TrespassSettings.parse(wanted("Wanted:\n   Trespass:\n      Repeat_Seconds: -5\n", report));
+
+		assertTrue(report.issues().stream().anyMatch(i -> i.path() != null && i.path().contains("Repeat_Seconds")),
+		           () -> "expected a range issue at Repeat_Seconds, got " + report.issues());
+	}
+
+	@Test
 	@DisplayName("the loader exposes the blocks and they are the defaults before the first load")
 	void loader_exposesDefaultsBeforeLoad() {
 		ChaseConfigLoader loader = new ChaseConfigLoader(mock(JavaPlugin.class), mock(FileManager.class));

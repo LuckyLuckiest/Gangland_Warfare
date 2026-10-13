@@ -129,6 +129,14 @@ class CopsItemsTest {
 	}
 
 	@Test
+	@DisplayName("a legacy material name resolves through XMaterial (SULPHUR is GUNPOWDER), not the CLOCK fallback")
+	void legacyMaterial_resolvesViaXMaterial() {
+		config.set(provider(new ScannerSettings(true, 160.0, "SULPHUR", "&9X", List.of()), ScannerMapSettings.DEFAULT));
+
+		assertEquals(Material.GUNPOWDER, items.create("police_scanner").getType());
+	}
+
+	@Test
 	@DisplayName("a material the server does not know falls back to CLOCK instead of failing")
 	void badMaterial_fallsBackToClock() {
 		config.set(provider(new ScannerSettings(true, 160.0, "NOT_A_MATERIAL", "&9X", List.of()),
