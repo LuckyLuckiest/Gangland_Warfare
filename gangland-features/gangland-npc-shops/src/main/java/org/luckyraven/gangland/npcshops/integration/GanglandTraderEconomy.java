@@ -41,4 +41,9 @@ public final class GanglandTraderEconomy implements TraderEconomyContract {
 		}
 	}
 
+	@Override
+	public boolean deposit(Player player, BigDecimal amount) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
 }
