@@ -26,6 +26,11 @@ Detainment:
       Taps_Required: 25
       # Ticks of inactivity that reset the counter back to zero (20 ticks = 1 second).
       Reset_Window_Ticks: 40
+      # 0.21.0: each sneak tap counts this much while a lockpick is in the inventory.
+      Lockpick:
+         Tap_Weight: 2
+         # 0.21.0: chance per weighted tap that one lockpick breaks (0.0 - 1.0).
+         Snap_Chance: 0.05
    # While handcuffed, right-clicking the guarding cop opens a small GUI with a
    # "Bribe" button. Cost is debited from the player's balance; no money item
    # needs to be in hand. The money.yml variation closest to the cost is shown
@@ -76,3 +81,29 @@ Detainment:
       Transit_Commit: BLOCK_IRON_DOOR_CLOSE
       # The sentence is served.
       Sentence_Complete: BLOCK_BELL_USE
+   # 0.21.0: crouch with empty hands (or a white banner) while the cops see you to surrender.
+   Surrender:
+      # Turns the surrender on or off.
+      Enabled: true
+      # Highest wanted level you can surrender at; tiers 4 and 5 skip cuffing by default.
+      Max_Stars: 3
+      # Sentence scale for a surrender.
+      Sentence_Multiplier: 0.5
+      # Charge-sheet fine scale for a surrender.
+      Fine_Multiplier: 0.5
+      # Bail scale for a surrender.
+      Bail_Multiplier: 0.75
+      # Hitting a cop this soon after surrendering adds Resisting_Arrest.
+      Resist_Window_Seconds: 10
+   # 0.21.0: a lethal hit with a cop within its Cuff_Radius arrests instead of downing (downed mode only).
+   Busted:
+      # Turns the busted arrest on or off.
+      Enabled: true
+   # 0.21.0: a crew mate can free a cuffed player by holding right-click on the guarding cop.
+   Rescue:
+      # Turns the rescue on or off.
+      Enabled: true
+      # How long the right-click must be held.
+      Hold_Seconds: 3
+      # Stars added to both the rescuer and the prisoner.
+      Stars: 1
