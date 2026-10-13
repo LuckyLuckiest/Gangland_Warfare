@@ -163,6 +163,8 @@ public class OverwatchController {
 			active.remove(id);
 			cop.releasePost();
 			cop.transitionTo(CopState.RETURNING);
+			Location at = cop.getEntity().getLocation();
+			log.debug("OVERWATCH {} state=end at={},{},{}", player.getName(), at.getX(), at.getY(), at.getZ());
 			return;
 		}
 
@@ -192,7 +194,9 @@ public class OverwatchController {
 					active.remove(id);
 					spent.add(id);
 					cop.transitionTo(CopState.PURSUING);
-					log.debug("OVERWATCH {} state=give_up failures={}", player.getName(), watch.failures);
+					Location loc = cop.getEntity().getLocation();
+					log.debug("OVERWATCH {} state=give_up at={},{},{} failures={}", player.getName(), loc.getX(),
+					          loc.getY(), loc.getZ(), watch.failures);
 					return;
 				}
 				watch.index++;
@@ -209,7 +213,8 @@ public class OverwatchController {
 					"distance", Math.round(from.distance(seen)) + " blocks",
 					"direction", copRadio.compassWord(from, seen)));
 			if (said) {
-				log.debug("OVERWATCH {} state=spotted", player.getName());
+				log.debug("OVERWATCH {} state=spotted at={},{},{}", player.getName(), from.getX(), from.getY(),
+					          from.getZ());
 			}
 		}
 	}
