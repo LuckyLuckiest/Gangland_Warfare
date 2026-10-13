@@ -1,10 +1,13 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.patrol;
 
 import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.PatrolSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
@@ -23,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
@@ -37,6 +41,9 @@ import java.util.function.Supplier;
 @CustomLog
 public class PatrolManager implements BeanLifecycle {
 
+	private final JavaPlugin                                   plugin;
+	private final CopPerception                                perception;
+	private       BukkitTask                                   task;
 	private final Supplier<PatrolSettings>                     settings;
 	private final StationRegistry                              stations;
 	private final CopSpawnManager                              spawner;
@@ -58,6 +65,8 @@ public class PatrolManager implements BeanLifecycle {
 	                     CopSpawnManager spawner, NpcMarkManager markManager, CopPerception perception,
 	                     Supplier<Collection<? extends Player>> players, Predicate<Entity> isNpc,
 	                     BooleanSupplier citizensAvailable, LongSupplier clock) {
+		this.plugin            = plugin;
+		this.perception        = perception;
 		this.settings          = settings;
 		this.stations          = stations;
 		this.spawner           = spawner;
@@ -143,7 +152,31 @@ public class PatrolManager implements BeanLifecycle {
 
 	/** One AI tick for every live beat cop (called every 10 ticks): resolves each cop's target and runs its behaviour. */
 	public void aiTick() {
-		throw new UnsupportedOperationException("TDD stub");
+		for (CopNpc cop : beatCops()) {
+			if (!cop.isValid()) {
+				destroy(cop);
+				beats.values().forEach(list -> list.remove(cop));
+				continue;
+			}
+			UUID   id     = cop.getTargetPlayerId();
+			Player target = id == null ? null : Bukkit.getPlayer(id);
+			boolean live  = target != null && target.isOnline() && !target.isDead();
+			CopState state = cop.getCurrentState();
+			if (state == CopState.COMBAT && live) {
+				cop.tick(target);
+			} else if (state == CopState.WARNING) {
+				cop.tick(live ? target : null);
+			} else if (state == CopState.PATROL) {
+				cop.tick(null);
+			} else {
+				cop.setCombatForced(false);
+				if (state == CopState.COMBAT) {
+					cop.setTargetPlayerId(null);
+				}
+				cop.transitionTo(CopState.PATROL);
+				cop.tick(null);
+			}
+		}
 	}
 
 	/** Every live beat cop, all stations. */
@@ -155,12 +188,26 @@ public class PatrolManager implements BeanLifecycle {
 
 	/** The beat cop whose body is {@code entity}, or {@code null}: the {@code CopManager.addCopResolver} function. */
 	public @Nullable CopNpc beatCopOf(@Nullable Entity entity) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (entity == null) {
+			return null;
+		}
+		for (CopNpc cop : beatCops()) {
+			Entity body = cop.getEntity();
+			if (body != null && (body == entity || body.getUniqueId().equals(entity.getUniqueId()))) {
+				return cop;
+			}
+		}
+		return null;
 	}
 
 	/** Whether some live beat cop within {@code range} of {@code player} acquires them (darkness and disguise apply). */
 	public boolean beatCopSees(Player player, double range) {
-		throw new UnsupportedOperationException("TDD stub");
+		for (CopNpc cop : beatCops()) {
+			if (cop.isValid() && cop.distanceTo(player) <= range && perception.acquires(cop, player, range)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** Despawns every beat cop through {@code markManager} and forgets them. */
@@ -173,16 +220,33 @@ public class PatrolManager implements BeanLifecycle {
 	/** Starts the repeating main-thread task. */
 	@Override
 	public void onInitialize(boolean firstLoad) {
+		cancelTask();
+		int[] runs = {0};
+		task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+			aiTick();
+			if (++runs[0] % 2 == 0) {
+				manage();
+			}
+		}, 20L, 10L);
+	}
+
+	private void cancelTask() {
+		if (task != null) {
+			task.cancel();
+			task = null;
+		}
 	}
 
 	/** Stops the task and despawns every beat cop (never leave Citizens NPCs behind). */
 	@Override
 	public void onClear() {
+		cancelTask();
 		despawnAll();
 	}
 
 	@Override
 	public void onShutdown() {
+		cancelTask();
 		despawnAll();
 	}
 }
