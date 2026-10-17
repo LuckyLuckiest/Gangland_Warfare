@@ -23,7 +23,7 @@ public class DisguiseTick {
 	private final Supplier<DisguiseSettings>        settings;
 	private final SuspectDescriptions               descriptions;
 	private final CopRadio                          radio;
-	private final Map<UUID, SuspectDescription>     spoken  = new ConcurrentHashMap<>();
+	private final Map<UUID, String>                 spoken  = new ConcurrentHashMap<>();
 	private final Map<NpcSquad, UUID>               ticked  = new ConcurrentHashMap<>();
 	private final List<Consumer<UUID>>              forgetHooks = new CopyOnWriteArrayList<>();
 
@@ -54,11 +54,15 @@ public class DisguiseTick {
 		}
 
 		SuspectDescription latest = descriptions.latest(id);
-		if (latest == null || latest.equals(spoken.get(id))) {
+		if (latest == null) {
+			return;
+		}
+		String text = descriptions.format(latest);
+		if (text.equals(spoken.get(id))) {
 			return;
 		}
 		if (radio.sayFromLeader(group, LINE)) {
-			spoken.put(id, latest);
+			spoken.put(id, text);
 		}
 	}
 
