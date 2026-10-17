@@ -83,12 +83,12 @@ public class CrackingAlarmListener implements Listener {
 			return;
 		}
 
-		LootTier tier = session.getTier();
-		if (tier == null || !cfg.tiers().contains(tier.id().toLowerCase(Locale.ROOT))) {
+		LootChestData chest = session.getChestData();
+		String matched = matchedAlarmId(cfg, chest, session.getTier());
+		if (matched == null) {
 			return;
 		}
 
-		LootChestData chest = session.getChestData();
 		Location at = chest == null ? null : chest.getLocation();
 		if (at == null || !alarmed.add(session.getSessionId())) {
 			return;
@@ -99,7 +99,18 @@ public class CrackingAlarmListener implements Listener {
 		if (at.getWorld() != null) {
 			alarm.accept(at, cfg.sound());
 		}
-		log.debug("CRACK_ALARM {} tier={}", player.getName(), tier.id());
+		log.debug("CRACK_ALARM {} matched={}", player.getName(), matched);
+	}
+
+	private static String matchedAlarmId(CrackingAlarmSettings cfg, LootChestData chest, LootTier tier) {
+		String lootTable = chest == null ? null : chest.getLootTableId();
+		if (lootTable != null && cfg.tiers().contains(lootTable.toLowerCase(Locale.ROOT))) {
+			return lootTable;
+		}
+		if (tier != null && cfg.tiers().contains(tier.id().toLowerCase(Locale.ROOT))) {
+			return tier.id();
+		}
+		return null;
 	}
 
 }
