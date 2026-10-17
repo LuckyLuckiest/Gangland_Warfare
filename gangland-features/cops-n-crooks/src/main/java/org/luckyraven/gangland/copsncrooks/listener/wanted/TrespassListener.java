@@ -10,6 +10,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.place.AdminRegionRegistry;
@@ -87,6 +88,15 @@ public class TrespassListener implements Listener {
 		handle(event.getPlayer(), to);
 	}
 
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onRespawn(PlayerRespawnEvent event) {
+		Location to = event.getRespawnLocation();
+		if (to == null || to.getWorld() == null) return;
+
+		// seed the inside set without charging: a respawn is not a walk into the region
+		tracker.entered(event.getPlayer().getUniqueId(), restrictedIds(to).keySet());
+	}
+
 	@EventHandler
 	public void onQuit(PlayerQuitEvent event) {
 		tracker.clear(event.getPlayer().getUniqueId());
@@ -96,10 +106,7 @@ public class TrespassListener implements Listener {
 		World world = to.getWorld();
 		if (world == null) return;
 
-		Map<String, String> ids = new HashMap<>();
-		for (PlaceRegion region : regions.regionsAt(to)) {
-			if (region.hasTag(PlaceRegion.TAG_RESTRICTED)) ids.put(region.id(), region.name());
-		}
+		Map<String, String> ids = restrictedIds(to);
 
 		// always track, so a player released while inside is not charged for an entry they were exempt for
 		Set<String> entered = tracker.entered(player.getUniqueId(), ids.keySet());
@@ -113,6 +120,15 @@ public class TrespassListener implements Listener {
 			player.sendMessage(messages.format(WantedMessages.Key.TRESPASS, Map.of()));
 			log.debug("TRESPASS {} region={}", player.getName(), ids.get(id));
 		}
+	}
+
+	/** Restricted-tagged regions at {@code at}, region id to name. */
+	private Map<String, String> restrictedIds(Location at) {
+		Map<String, String> ids = new HashMap<>();
+		for (PlaceRegion region : regions.regionsAt(at)) {
+			if (region.hasTag(PlaceRegion.TAG_RESTRICTED)) ids.put(region.id(), region.name());
+		}
+		return ids;
 	}
 
 	private boolean exempt(Player player) {
