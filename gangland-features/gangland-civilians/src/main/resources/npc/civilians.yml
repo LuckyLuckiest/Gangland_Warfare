@@ -482,13 +482,13 @@ Witness:
    Range: 24.0
    # Seconds a witness spends dialling before the 911 call connects.
    Call_Seconds: 8
-   # Glow the calling civilian so responding cops can find them.
+   # Glow the calling civilian so a criminal can find them.
    Caller_Glow: true
-   # Civilians within this many blocks of the player are scared off instead of calling (blocks).
+   # A caller is scared off when the criminal aims a weapon within this many blocks (blocks).
    Scare_Range: 16.0
-   # Field of view, in degrees, a civilian needs to see the player for the scare check.
+   # Aim cone, in degrees, counted as aiming at the caller.
    Scare_Angle: 12.0
    # Whether an assault counts as a reportable crime.
    Report_Assault: true
-   # Seconds before the same witness can report another assault on the same player.
+   # Window, in seconds, per attacker and civilian before another assault is reported.
    Assault_Repeat_Seconds: 10
