@@ -22,6 +22,7 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Lane f2-config: the six 0.20.0 radio lines exist as code defaults (an existing server keeps its old
@@ -35,7 +36,7 @@ class CopRadioMessages020Test {
 			"Suspect_Description", "Suspect is %suspect%.",
 			"Tracker_Tagged", "Tracker's on the car. Dispatch has his position.",
 			"Tracker_Ping", "Tracker ping, he's at %place%.",
-			"Overwatch_Spotted", "Overwatch, eyes on. He's %distance% out, %direction%.",
+			"Overwatch_Spotted", "Overwatch, eyes on. He's %distance% blocks out, %direction%.",
 			"Patrol_Sighting", "Patrol here, I see the suspect at %place%.");
 
 	@TempDir
@@ -76,6 +77,8 @@ class CopRadioMessages020Test {
 				             entry.getKey() + " " + placeholder);
 			}
 		}
+
+		assertTrue(String.join(" ", es.getStringList("Lines.Overwatch_Spotted")).contains("bloques"));
 	}
 
 	private YamlConfiguration shipped(String resource) throws IOException {
