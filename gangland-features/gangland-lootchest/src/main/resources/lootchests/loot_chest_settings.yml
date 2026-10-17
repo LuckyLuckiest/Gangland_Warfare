@@ -30,7 +30,7 @@ Rewards:
 Cracking_Alarm:
    # Whether cracking a chest of a listed tier rings the alarm and adds heat.
    Enable: true
-   # The chest tiers that ring the alarm when cracked.
+   # The loot table (or tier) ids that ring the alarm when cracked.
    Tiers:
       - police_armory
       - military_vault
