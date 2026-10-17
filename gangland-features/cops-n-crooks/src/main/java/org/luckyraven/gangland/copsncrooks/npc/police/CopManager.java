@@ -198,6 +198,7 @@ public class CopManager implements BeanLifecycle {
 		if (group != null) {
 			group.clearCombatAlert();
 			group.clearPending();
+			group.setLevel(0);
 			pendingCalls.removeIf(call -> call.group() == group);
 		}
 		if (group == null || group.isEmpty()) {
