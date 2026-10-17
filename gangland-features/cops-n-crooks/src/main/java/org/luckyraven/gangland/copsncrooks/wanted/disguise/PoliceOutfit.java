@@ -12,10 +12,12 @@ import org.luckyraven.bartizan.api.wearable.Wearable;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /** The police outfit: worn, and "blown" by a crime committed in it until it comes off (0.20.0 lane disguise). */
 public class PoliceOutfit {
@@ -31,7 +33,9 @@ public class PoliceOutfit {
 
 	/** Every configured outfit key is on the helmet or chest slot of {@code player}. */
 	public boolean worn(Player player) {
-		Set<String> required = Set.copyOf(settings.get().policeOutfit());
+		Set<String> required = settings.get().policeOutfit().stream()
+		                               .map(key -> key.toLowerCase(Locale.ROOT))
+		                               .collect(Collectors.toSet());
 		if (required.isEmpty()) {
 			return false;
 		}
@@ -71,7 +75,7 @@ public class PoliceOutfit {
 	private void addKey(Set<String> present, @Nullable ItemStack item) {
 		String key = keys.keyOf(item);
 		if (key != null) {
-			present.add(key);
+			present.add(key.toLowerCase(Locale.ROOT));
 		}
 	}
 
