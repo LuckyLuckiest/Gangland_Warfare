@@ -35,7 +35,7 @@ class CopRadioMessages020Test {
 			"Suspect_Description", "Suspect is %suspect%.",
 			"Tracker_Tagged", "Tracker's on the car. Dispatch has his position.",
 			"Tracker_Ping", "Tracker ping, he's at %place%.",
-			"Overwatch_Spotted", "Overwatch, eyes on. He's %distance% out, %direction%.",
+			"Overwatch_Spotted", "Overwatch, eyes on. He's %distance% blocks out, %direction%.",
 			"Patrol_Sighting", "Patrol here, I see the suspect at %place%.");
 
 	@TempDir

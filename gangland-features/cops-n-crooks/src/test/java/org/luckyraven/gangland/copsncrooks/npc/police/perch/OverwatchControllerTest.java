@@ -352,7 +352,7 @@ class OverwatchControllerTest {
 		@SuppressWarnings({"unchecked", "rawtypes"})
 		ArgumentCaptor<Map<String, String>> extra = (ArgumentCaptor) ArgumentCaptor.forClass(Map.class);
 		verify(radio).sayAs(eq(group), eq(marksman), eq("Overwatch_Spotted"), extra.capture());
-		assertEquals("30 blocks", extra.getValue().get("distance"));
+		assertEquals("30", extra.getValue().get("distance"));
 		assertEquals("north", extra.getValue().get("direction"));
 		assertEquals(CopState.OVERWATCH, stateOf(marksman));
 		assertTrue(controller.isActive(playerId));
