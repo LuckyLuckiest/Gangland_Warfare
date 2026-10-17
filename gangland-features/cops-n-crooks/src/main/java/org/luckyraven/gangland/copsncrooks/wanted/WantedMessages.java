@@ -66,6 +66,7 @@ public class WantedMessages extends LocalizedModuleYaml {
 		SUSPECT_BARE("Suspect.Bare", "suspect"),
 		SUSPECT_ON_FOOT("Suspect.On_Foot", "on foot"),
 		SUSPECT_IN_CAR("Suspect.In_Car", "in a car"),
+		SUSPECT_MASK("Suspect.Mask", "in a %head%"),
 		SUSPECT_FORMAT("Suspect.Format", "%who%%mask%, %chest%, %vehicle%");
 
 		public final String path;
