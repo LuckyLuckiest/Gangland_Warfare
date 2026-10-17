@@ -173,6 +173,7 @@ public final class WitnessService {
 		Long       last = lastAssault.get(key);
 		if (last != null && now - last < rules.assaultRepeatSeconds() * 1000L) return;
 
+		lastAssault.values().removeIf(t -> now - t >= rules.assaultRepeatSeconds() * 1000L);
 		lastAssault.put(key, now);
 		crimes.commit(attacker, Crimes.ASSAULT_CIVILIAN, entity.getLocation());
 	}
@@ -263,8 +264,7 @@ public final class WitnessService {
 
 	/** Removes the call from the map and from its caller. */
 	private void detach(WitnessCall call) {
-		LivingEntity entity = call.caller().getEntity();
-		if (entity != null) calls.remove(entity.getUniqueId());
+		calls.values().remove(call);
 		call.caller().setWitnessCall(null);
 	}
 
