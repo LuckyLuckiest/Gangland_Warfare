@@ -132,5 +132,7 @@ Suspect:
    On_Foot: "on foot"
    # The suspect is in a car
    In_Car: "in a car"
+   # The mask part of a masked suspect; %head% is what is on the head
+   Mask: "in a %head%"
    # The whole description; %who% is the word for the suspect, %mask% the mask, %chest% the chest, %vehicle% the vehicle
    Format: "%who%%mask%, %chest%, %vehicle%"

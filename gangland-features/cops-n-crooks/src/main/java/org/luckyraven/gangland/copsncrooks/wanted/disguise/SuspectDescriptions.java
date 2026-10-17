@@ -76,15 +76,17 @@ public class SuspectDescriptions {
 
 	/** The radio text, e.g. {@code unknown suspect in a carved pumpkin, red jacket, on foot}. */
 	public String format(SuspectDescription description) {
-		StringBuilder line = new StringBuilder(text(description.masked() ? WantedMessages.Key.SUSPECT_UNKNOWN
-		                                                                  : WantedMessages.Key.SUSPECT_BARE));
+		String who  = text(description.masked() ? WantedMessages.Key.SUSPECT_UNKNOWN : WantedMessages.Key.SUSPECT_BARE);
+		String mask = description.masked()
+		              ? " " + messages.format(WantedMessages.Key.SUSPECT_MASK, Map.of("head", description.head())) : "";
+		String vehicle = text(description.inCar() ? WantedMessages.Key.SUSPECT_IN_CAR
+		                                          : WantedMessages.Key.SUSPECT_ON_FOOT);
+		String line = messages.format(WantedMessages.Key.SUSPECT_FORMAT, Map.of("who", who, "mask", mask,
+		                                                                        "chest", description.chest(),
+		                                                                        "vehicle", vehicle));
 
-		if (description.masked()) line.append(" in a ").append(description.head());
-		if (!description.chest().isEmpty()) line.append(", ").append(description.chest());
-		line.append(", ").append(text(description.inCar() ? WantedMessages.Key.SUSPECT_IN_CAR
-		                                                  : WantedMessages.Key.SUSPECT_ON_FOOT));
-
-		return line.toString();
+		// an empty chest leaves ", , " behind
+		return description.chest().isEmpty() ? line.replace(", , ", ", ") : line;
 	}
 
 	public void store(UUID playerId, SuspectDescription description) {
