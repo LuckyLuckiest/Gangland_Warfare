@@ -14,6 +14,8 @@ Spawner_Type_Set: "&aGenerador de civiles &e%type%&a colocado en tu ubicación."
 Spawner_Group_Set: "&aGenerador de grupo &e%group%&a colocado en tu ubicación."
 Spawner_List_Header: "Generadores de civiles:"
 Spawner_List_Empty: "No hay generadores de civiles colocados actualmente."
+# Action-bar line a criminal sees when a witness starts calling 911.
+Witness_Calling: "&c¡Un testigo está llamando al 911! ¡Deténlo!"
 
 # Gritos de facción (fase H12). Mismas claves que civilian_messages.yml (inglés); si falta una, se usa el inglés.
 Shouts:
