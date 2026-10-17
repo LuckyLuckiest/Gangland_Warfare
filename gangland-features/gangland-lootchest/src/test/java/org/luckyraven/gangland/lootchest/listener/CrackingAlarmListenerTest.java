@@ -221,4 +221,16 @@ class CrackingAlarmListenerTest {
 		assertEquals(EventPriority.MONITOR, success.priority());
 		assertEquals(EventPriority.MONITOR, failure.priority());
 	}
+
+	@Test
+	@DisplayName("D-CRM-4: the alarm matches the chest's loot table id even when the tier id is a shipped tier (rare)")
+	void lootTableIdMatchesWhenTierDiffers() {
+		tier("rare");
+		when(chest.getLootTableId()).thenReturn("Police_Armory");
+
+		success();
+
+		verify(crimes).commit(player, Crimes.SAFE_CRACKING, chestAt, false, 1);
+		assertEquals(1, rings);
+	}
 }
