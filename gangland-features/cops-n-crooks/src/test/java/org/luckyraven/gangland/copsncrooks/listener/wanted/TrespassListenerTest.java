@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.junit.jupiter.api.BeforeEach;
@@ -284,5 +285,16 @@ class TrespassListenerTest {
 
 		assertTrue(move.ignoreCancelled());
 		assertTrue(teleport.ignoreCancelled());
+	}
+
+	@Test
+	@DisplayName("a respawn inside a restricted region is tracked silently: the first block move there is not an entry")
+	void respawnInsideDoesNotChargeOnFirstMove() throws Exception {
+		TrespassListener.class.getMethod("onRespawn", PlayerRespawnEvent.class)
+		                      .invoke(listener, new PlayerRespawnEvent(player, inside, false));
+
+		move(inside, inside2);
+
+		verifyNoCrime();
 	}
 }
