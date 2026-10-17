@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.copsncrooks.listener.wanted;
 
-import lombok.CustomLog;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,7 +20,6 @@ import java.util.Map;
  *
  * @since 0.20.0
  */
-@CustomLog
 @ListenerHandler
 public class NineOneOneListener implements Listener {
 
@@ -49,9 +47,8 @@ public class NineOneOneListener implements Listener {
 		if (group == null) return;
 
 		group.getSquad().reportSighting(event.getAt());
-		String place = placeNames.locate(event.getAt()).orElse("the area");
+		String place = placeNames.locate(event.getAt()).orElseGet(() -> copRadio.placeOf(event.getAt()));
+		if (place == null || place.isBlank()) place = "the area";
 		copRadio.sayFromLeader(group, "Caller_911", Map.of("crime", event.getCrimeId(), "place", place));
-		log.debug("CALL_IN {} crime={} caller={}", criminal.getName(), event.getCrimeId(),
-		          event.getCaller().getName());
 	}
 }
