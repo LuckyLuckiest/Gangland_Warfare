@@ -55,4 +55,13 @@ public interface LootChestSettingsProvider {
 		return 10;
 	}
 
+	/**
+	 * The {@code Cracking_Alarm} block: which cracked chests ring the alarm and add heat. Never null.
+	 *
+	 * @since 0.20.0
+	 */
+	default CrackingAlarmSettings getCrackingAlarm() {
+		return CrackingAlarmSettings.DEFAULT;
+	}
+
 }
