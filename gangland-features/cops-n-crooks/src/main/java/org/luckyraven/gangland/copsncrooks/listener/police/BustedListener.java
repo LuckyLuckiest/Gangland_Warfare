@@ -102,7 +102,7 @@ public class BustedListener implements Listener {
 		for (Entity entity : player.getNearbyEntities(SEARCH_BOUND, SEARCH_BOUND, SEARCH_BOUND)) {
 			CopNpc cop = copManager.findCopByEntity(entity);
 			if (cop == null || !cop.isValid()) continue;
-			if (cop.getGroup() == null || !id.equals(cop.getGroup().getTargetPlayerId())) continue;
+			if (cop.getGroup() == null || !id.equals(cop.getGroup().getTargetPlayerId()) || !id.equals(cop.getTargetPlayerId())) continue;
 
 			CopState state = cop.getCurrentState();
 			if (state != CopState.PURSUING && state != CopState.COMBAT) continue;
