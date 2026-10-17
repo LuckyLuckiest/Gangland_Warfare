@@ -216,8 +216,8 @@ Lines:
       - "¡Sospechoso, salga con las manos donde pueda verlas! ¡%seconds% segundos!"
       - "¡Háblame! ¡Sal en %seconds% segundos o entramos!"
    Standoff_Over:
-      - "Se acabó el enfrentamiento, de vuelta a patrullar."
-      - "La barricada cayó, todas las unidades bajen la guardia."
+      - "¡Se acabó el tiempo, entramos con estilo!"
+      - "¡La barricada cayó, todas las unidades avanzan con estilo!"
    Stack_Up:
       - "¡Formen en la puerta! ¡Escudo, usted primero!"
       - "Formando en la puerta, ¡sostengan!"

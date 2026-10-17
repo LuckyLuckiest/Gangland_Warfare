@@ -284,10 +284,10 @@ Lines:
    Negotiate:
       - "Suspect, come out with your hands where I can see them! %seconds% seconds!"
       - "Talk to me! Step out in %seconds% seconds or we come in!"
-   # The barricade ends and the squad goes back on patrol.
+   # The barricade ends and the squad moves in.
    Standoff_Over:
-      - "Standoff's over, back to patrol."
-      - "Barricade's down, all units stand down."
+      - "Time's up, we're going in style!"
+      - "Barricade's down, all units moving in with style!"
    # The squad stacks on the door before a breach.
    Stack_Up:
       - "Stack up on the door! Shield, you're first!"
