@@ -285,7 +285,7 @@ Lines:
       - "Tracker ping, he's at %place%."
    # 0.20.0: an overwatch marksman spots the suspect.
    Overwatch_Spotted:
-      - "Overwatch, eyes on. He's %distance% out, %direction%."
+      - "Overwatch, eyes on. He's %distance% blocks out, %direction%."
    # 0.20.0: a patrol cop sights the suspect.
    Patrol_Sighting:
       - "Patrol here, I see the suspect at %place%."

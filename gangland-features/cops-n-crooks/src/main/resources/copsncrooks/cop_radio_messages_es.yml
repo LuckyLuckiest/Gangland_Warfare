@@ -219,7 +219,7 @@ Lines:
       - "Señal del rastreador, está en %place%."
    # 0.20.0: un tirador de vigilancia localiza al sospechoso.
    Overwatch_Spotted:
-      - "Vigilancia, a la vista. Está a %distance%, %direction%."
+      - "Vigilancia, a la vista. Está a %distance% bloques, %direction%."
    # 0.20.0: un policía de patrulla avista al sospechoso.
    Patrol_Sighting:
       - "Patrulla aquí, veo al sospechoso en %place%."

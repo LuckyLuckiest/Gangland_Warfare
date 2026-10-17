@@ -22,6 +22,7 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Lane f2-config: the six 0.20.0 radio lines exist as code defaults (an existing server keeps its old
@@ -76,6 +77,8 @@ class CopRadioMessages020Test {
 				             entry.getKey() + " " + placeholder);
 			}
 		}
+
+		assertTrue(String.join(" ", es.getStringList("Lines.Overwatch_Spotted")).contains("bloques"));
 	}
 
 	private YamlConfiguration shipped(String resource) throws IOException {
