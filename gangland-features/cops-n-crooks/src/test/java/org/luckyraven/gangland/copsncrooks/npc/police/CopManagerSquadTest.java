@@ -529,6 +529,20 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("T-371/T-370: a non-death wanted end (bribe) zeroes the surviving group's level")
+	void bribeWantedEnd_zeroesGroupLevel() {
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+		assertEquals(2, group.getLevel());
+
+		manager.onWantedEnd(player, WantedCause.BRIBE);
+
+		assertEquals(0, group.getLevel());
+	}
+
+	@Test
 	@DisplayName("with Post_Escape off an escape is the 0.16.0 stand-down: Stand_Down once, the cops walk home")
 	void evasionWantedEnd_withEscapeOff_standsDown_andWalksHome() {
 		manager.setEscapePredicate(cause -> false);

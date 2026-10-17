@@ -306,6 +306,25 @@ class CopRadioMessagesTest {
 	}
 
 	@Test
+	@DisplayName("T-362 P-STOFF-5: Standoff_Over fires at timeout while the squad moves in, so no line says patrol or stand down")
+	void standoffOver_doesNotPromiseStandDown() throws IOException {
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages english = build(shipped("copsncrooks/cop_radio_messages.yml"));
+		for (String line : concat(fallback.lines("Standoff_Over"), english.lines("Standoff_Over"))) {
+			String lower = line.toLowerCase();
+			assertFalse(lower.contains("patrol") || lower.contains("stand down"), line);
+		}
+		assertFalse(shipped("copsncrooks/cop_radio_messages_es.yml").contains("de vuelta a patrullar"));
+		assertFalse(shipped("copsncrooks/cop_radio_messages_es.yml").contains("bajen la guardia"));
+	}
+
+	private static List<String> concat(List<String> a, List<String> b) {
+		List<String> all = new java.util.ArrayList<>(a);
+		all.addAll(b);
+		return all;
+	}
+
+	@Test
 	@DisplayName("0.21.0 T-138: with no yaml keys at all (and with a pre-0.21 file), each new key is spoken from DEFAULT_LINES")
 	void newLinesDefaultWithoutYaml() throws IOException {
 		CopRadioMessages noKeys = build("Lines: {}\n");

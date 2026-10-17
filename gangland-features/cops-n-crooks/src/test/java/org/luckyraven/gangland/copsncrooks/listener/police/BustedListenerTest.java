@@ -147,6 +147,7 @@ class BustedListenerTest {
 		when(cop.isValid()).thenReturn(true);
 		when(cop.getCurrentState()).thenReturn(state);
 		when(cop.getGroup()).thenReturn(groupTarget == null ? null : new CopGroup(groupTarget));
+		when(cop.getTargetPlayerId()).thenReturn(groupTarget);
 		when(cop.distanceTo(player)).thenReturn(distance);
 		when(tier.cuffRadius()).thenReturn(RADIUS);
 		when(cop.getTierConfig()).thenReturn(tier);
@@ -386,6 +387,19 @@ class BustedListenerTest {
 			cop(state, 1.0, victimId);
 			assertNotBusted(hit(9.0, DamageCause.ENTITY_ATTACK));
 		}
+	}
+
+	@Test
+	@DisplayName("P-BUST-1/4: a squad cop retargeted to a crew mate (or with no target) never busts the suspect")
+	void retargetedCop_notBusted() {
+		CopNpc retargeted = hunter(1.0);
+		when(retargeted.getTargetPlayerId()).thenReturn(UUID.randomUUID());
+		assertNotBusted(hit(9.0, DamageCause.ENTITY_ATTACK));
+
+		nearby.clear();
+		CopNpc untargeted = hunter(1.0);
+		when(untargeted.getTargetPlayerId()).thenReturn(null);
+		assertNotBusted(hit(9.0, DamageCause.ENTITY_ATTACK));
 	}
 
 	@Test
