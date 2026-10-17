@@ -210,7 +210,7 @@ public class OverwatchController {
 			Location from = cop.getEntity().getLocation();
 			group.getSquad().reportSighting(seen);
 			boolean said = copRadio.sayAs(group, cop, "Overwatch_Spotted", Map.of(
-					"distance", Math.round(from.distance(seen)) + " blocks",
+					"distance", String.valueOf(Math.round(from.distance(seen))),
 					"direction", copRadio.compassWord(from, seen)));
 			if (said) {
 				log.debug("OVERWATCH {} state=spotted at={},{},{}", player.getName(), from.getX(), from.getY(),
