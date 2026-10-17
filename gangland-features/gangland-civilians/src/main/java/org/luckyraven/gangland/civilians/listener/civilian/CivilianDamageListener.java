@@ -59,14 +59,18 @@ public class CivilianDamageListener implements Listener {
 		}
 
 		if (playerAttacker != null) {
+			boolean lethal   = damaged instanceof LivingEntity le && le.getHealth() - event.getFinalDamage() <= 0;
+			boolean keepCall = lethal && npc.getWitnessCall() != null;
+			witnessService.onPlayerHitCivilian(playerAttacker, npc, lethal);
+
 			if (npc.isHostile() && ai.combatEnabled()) {
 				npc.setTargetPlayerId(playerAttacker.getUniqueId());
-				if (npc.getCurrentState() != CivilianState.COMBAT) {
+				if (!keepCall && npc.getCurrentState() != CivilianState.COMBAT) {
 					npc.transitionTo(CivilianState.COMBAT);
 				}
 				civilianService.alertFaction(npc, playerAttacker, true);
 			} else if (!npc.isHostile() && ai.fleeEnabled()) {
-				if (npc.getCurrentState() != CivilianState.FLEEING) {
+				if (!keepCall && npc.getCurrentState() != CivilianState.FLEEING) {
 					npc.setLastAttackerLocation(playerAttacker.getLocation().clone());
 					npc.transitionTo(CivilianState.FLEEING);
 				}
