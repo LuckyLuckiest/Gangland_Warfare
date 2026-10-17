@@ -132,4 +132,18 @@ class NineOneOneListenerTest {
 		verify(crimes, never()).commit(any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(),
 		                               org.mockito.ArgumentMatchers.anyInt());
 	}
+
+	@Test
+	@DisplayName("judge-fix r1: no named place uses the localized CopRadio.placeOf word, not hard-coded English")
+	void unnamedPlaceUsesRadioUnknownPlace() {
+		when(places.locate(any())).thenReturn(Optional.empty());
+		when(radio.placeOf(any())).thenReturn("la zona");
+
+		listener.onCalledIn(call("Car_Theft"));
+
+		@SuppressWarnings("unchecked")
+		ArgumentCaptor<Map<String, String>> placeholders = ArgumentCaptor.forClass(Map.class);
+		verify(radio).sayFromLeader(eq(group), eq("Caller_911"), placeholders.capture());
+		assertEquals("la zona", placeholders.getValue().get("place"));
+	}
 }

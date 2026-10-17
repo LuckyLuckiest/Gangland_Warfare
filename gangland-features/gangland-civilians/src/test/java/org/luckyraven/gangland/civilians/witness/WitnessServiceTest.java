@@ -445,4 +445,17 @@ class WitnessServiceTest {
 		assertEquals(CivilianState.CALLING, caller.getCurrentState());
 		assertTrue(kit.debugContains("CALL_CANCEL Bob crime=Car_Theft reason=lost"), kit.debug::toString);
 	}
+
+	@Test
+	@DisplayName("judge-fix r1: a caller whose entity is gone does not leave its call behind when the criminal quits")
+	void destroyedCallerCallRemovedOnQuit() {
+		CivilianNpc caller = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+		when(caller.getEntity()).thenReturn(null);
+
+		kit.service.onCriminalQuit(kit.criminalId);
+
+		assertTrue(kit.service.activeCalls().isEmpty());
+		assertTrue(kit.debugContains("CALL_CANCEL Bob crime=Car_Theft reason=logout"), kit.debug::toString);
+	}
 }
