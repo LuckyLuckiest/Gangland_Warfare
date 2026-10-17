@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescription;
@@ -46,5 +47,10 @@ public class SuspectListener implements Listener {
 		descriptions.clear(player.getUniqueId());
 		outfit.clear(player.getUniqueId());
 		tick.forget(player.getUniqueId());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onQuit(PlayerQuitEvent event) {
+		tick.forget(event.getPlayer().getUniqueId());
 	}
 }
