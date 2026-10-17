@@ -155,4 +155,14 @@ class PoliceOutfitTest {
 		assertDoesNotThrow(() -> keys.keyOf(plain));
 		assertNull(keys.keyOf(plain));
 	}
+
+	@Test
+	@DisplayName("Police_Outfit keys match case-insensitively, like Mask_Wearables")
+	void outfitKeysIgnoreCase() {
+		dress();
+		DisguiseSettings mixed = new DisguiseSettings(true, DisguiseSettings.DEFAULT.maskItems(), List.of(),
+		                                              List.of("Police_Helmet", "POLICE_VEST"), 2, 2);
+
+		assertTrue(outfit(mixed).worn(wearer.player));
+	}
 }

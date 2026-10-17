@@ -147,4 +147,18 @@ class SuspectListenerTest {
 		verify(tick).forget(id);
 		assertTrue(outfit.hides(player, 1), "the next chase starts with an unblown outfit");
 	}
+
+	@Test
+	@DisplayName("a player quitting while wanted drops the tick's squad at MONITOR")
+	void quitForgetsTheSquad() throws Exception {
+		java.lang.reflect.Method method = SuspectListener.class.getMethod("onQuit",
+		                                                                  org.bukkit.event.player.PlayerQuitEvent.class);
+		assertEquals(EventPriority.MONITOR, method.getAnnotation(EventHandler.class).priority());
+		org.bukkit.event.player.PlayerQuitEvent quit = mock(org.bukkit.event.player.PlayerQuitEvent.class);
+		when(quit.getPlayer()).thenReturn(player);
+
+		method.invoke(listener, quit);
+
+		verify(tick).forget(id);
+	}
 }

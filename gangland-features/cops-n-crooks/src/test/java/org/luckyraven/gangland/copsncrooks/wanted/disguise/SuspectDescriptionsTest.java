@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 /** P-DIS-1 / P-DIS-2 / P-DIS-3: describing a player, comparing two looks, and the words the radio speaks. */
 @DisplayName("SuspectDescriptions - describe, match and format")
@@ -182,5 +183,17 @@ class SuspectDescriptionsTest {
 
 		store.clear(wearer.id);
 		assertNull(store.latest(wearer.id));
+	}
+
+	@Test
+	@DisplayName("format honours the configured Suspect.Format template")
+	void formatHonoursTemplate() {
+		org.luckyraven.gangland.copsncrooks.wanted.WantedMessages messages = DisguiseFixtures.words();
+		when(messages.format(org.mockito.ArgumentMatchers.eq(
+				org.luckyraven.gangland.copsncrooks.wanted.WantedMessages.Key.SUSPECT_FORMAT),
+		                     org.mockito.ArgumentMatchers.anyMap())).thenReturn("TEMPLATE");
+		SuspectDescriptions subject = new SuspectDescriptions(() -> DisguiseSettings.DEFAULT, item -> null, messages);
+
+		assertTrue(subject.format(new SuspectDescription("", "red jacket", "", false, false)).contains("TEMPLATE"));
 	}
 }

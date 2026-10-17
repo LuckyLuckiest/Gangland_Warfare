@@ -217,4 +217,18 @@ class DisguiseTickTest {
 		assertEquals("unknown suspect in a carved pumpkin, red jacket, on foot", tick.extras(squad).get("suspect"));
 		assertTrue(tick.extras(mock(NpcSquad.class)).isEmpty());
 	}
+
+	@Test
+	@DisplayName("swapping the held item alone does not re-radio an identical description")
+	void weaponSwapAloneSaysNothing() {
+		wearer.leatherChest(Color.RED).hand(null);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		when(squad.hasFreshSighting()).thenReturn(true);
+
+		tick.tick(wearer.player, group);
+		wearer.hand(Material.DIAMOND_SWORD);
+		tick.tick(wearer.player, group);
+
+		verify(radio, times(1)).sayFromLeader(group, LINE);
+	}
 }
