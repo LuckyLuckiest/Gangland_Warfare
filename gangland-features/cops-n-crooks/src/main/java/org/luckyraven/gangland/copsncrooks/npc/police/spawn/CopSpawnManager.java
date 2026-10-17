@@ -18,6 +18,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.station.Station;
@@ -46,6 +47,7 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	private final DetainmentService  detainmentService;
 	private final CuffLockRegistry   cuffLockRegistry;
 	private volatile Predicate<UUID> searchGuard = id -> false;
+	private volatile CopPerception   perception  = new CopPerception();
 
 	CopNpcFactory             copNpcFactory; // package-private: tests swap in a mock
 	private CopConfigProvider configProvider;
@@ -340,12 +342,18 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		this.searchGuard = searchGuard;
 	}
 
+	/** The sight decisions the cops' behaviours share (0.20.0 seam); read when the factories are rebuilt. */
+	public void setPerception(CopPerception perception) {
+		this.perception = Objects.requireNonNull(perception, "perception");
+		rebuildFactories();
+	}
+
 	private void rebuildFactories() {
 		CopConfigProvider provider = copLoader.getLoadedProvider();
 		this.configProvider = provider;
 
 		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> this, detainmentService,
-		                                                            cuffLockRegistry, id -> searchGuard.test(id));
+		                                                            cuffLockRegistry, id -> searchGuard.test(id), perception);
 		this.copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, markManager, bartizanNpcWeapons,
 		                                       downedTargetFilter);
 	}

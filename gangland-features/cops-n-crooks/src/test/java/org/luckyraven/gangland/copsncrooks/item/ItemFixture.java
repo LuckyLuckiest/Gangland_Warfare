@@ -38,6 +38,8 @@ final class ItemFixture implements AutoCloseable {
 		// ItemStack.setItemMeta asks the factory for the (possibly changed) material: echo the one it has
 		when(factory.updateMaterial(any(ItemMeta.class), any(Material.class))).thenAnswer(invocation -> invocation.getArgument(1));
 		bukkit.statics().when(Bukkit::getItemFactory).thenReturn(factory);
+		bukkit.statics().when(Bukkit::getBukkitVersion).thenReturn("1.16.5-R0.1-SNAPSHOT");
+		bukkit.statics().when(Bukkit::getVersion).thenReturn("git-Spigot-abc-def (MC: 1.16.5)");
 	}
 
 	BukkitStatics bukkit() {

@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.npc.radio;
 
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.npc.AbstractNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -27,5 +28,16 @@ public interface RadioVoice {
 	 */
 	default Map<String, String> extras(NpcSquad squad) {
 		return Map.of();
+	}
+
+	/**
+	 * Whether {@code listener} overhears {@code squad}'s lines beyond the ordinary ranges. The voice owns its own
+	 * range and item checks; an overhearing player is delivered the line only within the speaker's world, and the
+	 * squad and player gaps still apply.
+	 *
+	 * @since 2.7
+	 */
+	default boolean overhears(Player listener, NpcSquad squad) {
+		return false;
 	}
 }

@@ -21,13 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Every shipped module.yml declares a Host_Api the host satisfies (same major, minor at most the host's), and the
- * modules that use members added in the current api line declare exactly that line (gt2, api 2.6).
+ * modules that use members added in the current api line declare exactly that line (0.20.0, api 2.7).
  */
-@DisplayName("module.yml Host_Api - at most GanglandApi.VERSION; the 2.6 readers carry 2.6")
+@DisplayName("module.yml Host_Api - at most GanglandApi.VERSION; the 2.7 readers carry 2.7")
 class HostApiConsistencyTest {
 
-	/** Module ids that read gangland-api members added in the current VERSION. W6-K added "fights". */
-	static final Set<String> ON_CURRENT = Set.of("gang", "civilians", "turf", "copsncrooks", "fights");
+	/** Module ids that read gangland-api members added in the current VERSION (0.20.0: the 2.7 readers). */
+	static final Set<String> ON_CURRENT = Set.of("copsncrooks", "gadget", "npcshops", "lootchest");
 
 	private static List<Map<String, Object>> descriptors() throws IOException {
 		List<Map<String, Object>> out = new ArrayList<>();
