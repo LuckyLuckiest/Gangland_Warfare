@@ -104,7 +104,8 @@ class WitnessRulesTest {
 		String yaml;
 		try (InputStream in = Objects.requireNonNull(
 				getClass().getClassLoader().getResourceAsStream("npc/civilians.yml"))) {
-			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+			// normalise CRLF: a Windows autocrlf checkout must not break the "\nWitness:\n" anchors
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n", "\n");
 		}
 		assertTrue(yaml.contains("\nWitness:\n"));
 		// the keys must sit INSIDE the Witness block (up to the next top-level line), not merely somewhere in the file
