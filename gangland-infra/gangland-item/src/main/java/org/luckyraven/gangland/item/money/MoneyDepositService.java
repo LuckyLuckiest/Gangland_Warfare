@@ -81,7 +81,8 @@ public interface MoneyDepositService {
 	 * @since 2.7
 	 */
 	default boolean depositPickup(Player player, double amount, String variationId) {
-		throw new UnsupportedOperationException("TDD stub");
+		deposit(player, amount, variationId);
+		return true;
 	}
 
 }

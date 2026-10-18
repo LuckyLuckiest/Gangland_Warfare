@@ -50,9 +50,10 @@ public class MoneyPickupListener implements Listener {
 		String variationId = MoneyItemUtil.readVariationId(stack);
 
 		event.setCancelled(true);
-		event.getItem().remove();
 
-		depositService.deposit(player, total, variationId);
+		if (!depositService.depositPickup(player, total, variationId)) return;
+
+		event.getItem().remove();
 		playPickupSound(player, variationId);
 	}
 
