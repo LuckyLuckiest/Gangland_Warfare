@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.radio;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -53,6 +54,7 @@ import java.util.regex.Pattern;
  * down, a backup request) into {@link RadioCall}s the {@code CopManager} answers with nearby responders. That NPC
  * hearing never depends on a player being in range.
  */
+@CustomLog
 public class CopRadio {
 
 	/** A call nearby cops answer: {@code squad} of {@code group} needs help at {@code origin}. */
@@ -676,7 +678,9 @@ public class CopRadio {
 				LivingEntity target = hunted(squad);
 				if (!(target instanceof Player hunter)) return false;
 
-				return lookout.test(hearer, hunter);
+				boolean relayed = lookout.test(hearer, hunter);
+				if (relayed) log.debug("LOOKOUT {} -> {}", hearer.getName(), hunter.getName());
+				return relayed;
 			}
 
 			@Override
