@@ -223,3 +223,6 @@ Lines:
    # 0.20.0: un policía de patrulla avista al sospechoso.
    Patrol_Sighting:
       - "Patrulla aquí, veo al sospechoso en %place%."
+
+# 0.20.0: formato de una línea que un compañero de banda te transmite; %name% es el vigía y %line% la línea.
+Lookout_Format: "&8[Vigía %name%] &r%line%"

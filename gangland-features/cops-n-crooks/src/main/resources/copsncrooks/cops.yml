@@ -789,3 +789,7 @@ Cops:
       Outfit_Max_Level: 2
       # Number of disguise pieces that must match to pass as a cop.
       Match_Needed: 2
+   # Lookout: a gang mate who is not wanted relays the police radio he hears.
+   Lookout:
+      # 0.20.0: false turns the lookout relay off; gang mates then stop relaying police radio.
+      Enable: true
