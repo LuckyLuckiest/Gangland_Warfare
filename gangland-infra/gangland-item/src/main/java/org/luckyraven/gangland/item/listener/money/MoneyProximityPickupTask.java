@@ -102,9 +102,9 @@ public class MoneyProximityPickupTask extends BukkitRunnable {
 			int    total       = perItem * stack.getAmount();
 			String variationId = MoneyItemUtil.readVariationId(stack);
 
-			item.remove();
+			if (!depositService.depositPickup(player, total, variationId)) continue;
 
-			depositService.deposit(player, total, variationId);
+			item.remove();
 			playPickupSound(player, variationId);
 		}
 	}
