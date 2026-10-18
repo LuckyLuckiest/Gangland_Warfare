@@ -224,5 +224,5 @@ Lines:
    Patrol_Sighting:
       - "Patrulla aquí, veo al sospechoso en %place%."
 
-# 0.20.0: formato de una línea de vigilancia transmitida al escuadrón; %name% es el sospechoso y %line% el aviso.
+# 0.20.0: formato de una línea que un compañero de banda te transmite; %name% es el vigía y %line% la línea.
 Lookout_Format: "&8[Vigía %name%] &r%line%"

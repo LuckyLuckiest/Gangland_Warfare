@@ -290,5 +290,5 @@ Lines:
    Patrol_Sighting:
       - "Patrol here, I see the suspect at %place%."
 
-# 0.20.0: format of a lookout line relayed to the squad; %name% is the suspect and %line% the call.
+# 0.20.0: format of a line a gang mate relays to you; %name% is the lookout and %line% the line.
 Lookout_Format: "&8[Lookout %name%] &r%line%"
