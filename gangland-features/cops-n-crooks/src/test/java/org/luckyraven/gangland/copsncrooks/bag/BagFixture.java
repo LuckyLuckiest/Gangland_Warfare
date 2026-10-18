@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -55,7 +56,8 @@ public final class BagFixture implements BagEnv {
 	public final List<Player>          stars      = new ArrayList<>();
 	public final Deque<Runnable>       tasks      = new ArrayDeque<>();
 
-	public Predicate<ItemStack> hot = item -> true;
+	public Predicate<ItemStack>   hot  = item -> true;
+	public ToIntFunction<ItemStack> bill = item -> 100;
 	public long                 day = 10L;
 	public long                 now = 1_000_000L;
 	public BagSettings          settings = BagSettings.DEFAULT;
@@ -79,7 +81,7 @@ public final class BagFixture implements BagEnv {
 		service = new BagService(bags, () -> settings, messages, this);
 	}
 
-	private static void primeMoneySymbol() {
+	static void primeMoneySymbol() {
 		try {
 			Field field = Settings.class.getDeclaredField("moneySymbol");
 			field.setAccessible(true);
@@ -189,10 +191,16 @@ public final class BagFixture implements BagEnv {
 	@Override
 	public void raiseHotStar(Player player) {
 		stars.add(player);
+		levels.merge(player.getUniqueId(), 1, Integer::sum); // a raise really lifts the level
 	}
 
 	@Override
 	public boolean isHotMoney(ItemStack item) {
 		return hot.test(item);
+	}
+
+	@Override
+	public int billValue(ItemStack item) {
+		return bill.applyAsInt(item);
 	}
 }

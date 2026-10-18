@@ -44,4 +44,7 @@ public interface BagEnv {
 
 	/** A money item carrying the hot tag. */
 	boolean isHotMoney(ItemStack item);
+
+	/** Dollars one bill of this money item is worth ({@code MoneyItemUtil.readAmount}). */
+	int billValue(ItemStack item);
 }

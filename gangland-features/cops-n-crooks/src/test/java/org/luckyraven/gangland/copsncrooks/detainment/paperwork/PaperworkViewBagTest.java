@@ -81,4 +81,14 @@ class PaperworkViewBagTest {
 
 		assertEquals(List.of("base"), lore(null));
 	}
+
+	@Test
+	@DisplayName("render has one lore path: the old infoLore overload is gone and the one left takes the player id first")
+	void oldOverloadIsGone() {
+		List<java.lang.reflect.Method> lores = java.util.Arrays.stream(PaperworkView.class.getDeclaredMethods())
+		                                                       .filter(m -> m.getName().equals("infoLore")).toList();
+
+		assertEquals(1, lores.size(), "a second infoLore lets render skip the bag line");
+		assertEquals(UUID.class, lores.get(0).getParameterTypes()[0]);
+	}
 }

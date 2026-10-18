@@ -5,6 +5,7 @@ import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +41,8 @@ class BagSpillTest {
 
 	private final List<Integer> made = new ArrayList<>();
 	private       BagSpill      spill;
-	private final List<ItemMeta> metas = new ArrayList<>();
+	private final List<ItemMeta>  metas  = new ArrayList<>();
+	private final List<ItemStack> stacks = new ArrayList<>();
 
 	@BeforeEach
 	void setUp() {
@@ -52,6 +54,7 @@ class BagSpillTest {
 			when(meta.getPersistentDataContainer()).thenReturn(mock(PersistentDataContainer.class));
 			when(stack.getItemMeta()).thenReturn(meta);
 			metas.add(meta);
+			stacks.add(stack);
 			return stack;
 		});
 	}
@@ -80,13 +83,22 @@ class BagSpillTest {
 	@Test
 	@DisplayName("every built stack is made for its share and tagged hot")
 	void builtStacksAreTaggedHot() {
-		List<ItemStack> stacks = spill.build(new BigDecimal("1003.75"), 4);
+		List<ItemStack> built = spill.build(new BigDecimal("1003.75"), 4);
 
-		assertEquals(4, stacks.size());
+		assertEquals(4, built.size());
 		assertEquals(List.of(250, 250, 250, 253), made);
-		for (ItemMeta meta : metas) {
-			verify(meta.getPersistentDataContainer()).set(any(), any(), any());
+		for (int i = 0; i < metas.size(); i++) {
+			ItemMeta meta = metas.get(i);
+			verify(meta.getPersistentDataContainer()).set(BagSpill.KEY, PersistentDataType.BYTE, (byte) 1);
+			// a real getItemMeta is a copy: the tag is lost unless the meta is written back
+			verify(stacks.get(i)).setItemMeta(meta);
 		}
+	}
+
+	@Test
+	@DisplayName("the hot tag is the cops-owned key copsncrooks:hot_cash, not the plugin's namespace")
+	void keyIsCopsOwned() {
+		assertEquals("copsncrooks:hot_cash", BagSpill.KEY.toString());
 	}
 
 	@Test
@@ -103,6 +115,15 @@ class BagSpillTest {
 		when(untagged.getItemMeta()).thenReturn(meta);
 
 		assertFalse(spill.isHot(untagged));
+
+		ItemStack tagged     = mock(ItemStack.class);
+		ItemMeta  taggedMeta = mock(ItemMeta.class);
+		PersistentDataContainer pdc = mock(PersistentDataContainer.class);
+		when(pdc.has(BagSpill.KEY, PersistentDataType.BYTE)).thenReturn(true);
+		when(taggedMeta.getPersistentDataContainer()).thenReturn(pdc);
+		when(tagged.getItemMeta()).thenReturn(taggedMeta);
+
+		assertTrue(spill.isHot(tagged));
 	}
 
 	@Test

@@ -4,6 +4,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.copsncrooks.bag.BagEnv;
 import org.luckyraven.gangland.copsncrooks.bag.BagService;
@@ -42,6 +44,21 @@ public class BagListener implements Listener {
 	/** NORMAL, before the core HIGH pickup listener; never cancels. */
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onPickup(EntityPickupItemEvent event) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	/** LOWEST: a hopper never launders a spilled hot bill (C-40). */
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onHopperPickup(InventoryPickupItemEvent event) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
+	/**
+	 * LOW, before the core HIGH redeem; no ignoreCancelled because air clicks are pre-cancelled. A held hot bill is
+	 * routed through the bag instead of the wallet (C-40).
+	 */
+	@EventHandler(priority = EventPriority.LOW)
+	public void onRedeem(PlayerInteractEvent event) {
 		throw new UnsupportedOperationException("TDD stub");
 	}
 }

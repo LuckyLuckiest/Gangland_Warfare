@@ -1,11 +1,20 @@
 package org.luckyraven.gangland.copsncrooks.listener.bag;
 
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -33,6 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.luckyraven.gangland.copsncrooks.bag.BagFixture.bd;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -307,5 +318,164 @@ class BagListenerTest {
 
 		assertEquals(EventPriority.NORMAL, handler.priority());
 		assertTrue(handler.ignoreCancelled());
+	}
+
+	// C-40: hoppers and the held-bill redeem
+
+	private InventoryPickupItemEvent hopperPickup() {
+		Item item = mock(Item.class);
+		when(item.getItemStack()).thenReturn(mock(ItemStack.class));
+		return new InventoryPickupItemEvent(mock(Inventory.class), item);
+	}
+
+	@Test
+	@DisplayName("C-40: a hopper pulling a hot bill is cancelled, so the spilled bag cannot be laundered")
+	void hopperPickupOfHotBillIsCancelled() {
+		InventoryPickupItemEvent event = hopperPickup();
+
+		listener.onHopperPickup(event);
+
+		assertTrue(event.isCancelled());
+	}
+
+	@Test
+	@DisplayName("C-40: a hopper pulling a plain item or a plain bill is left alone")
+	void plainBillHopperPickupNotCancelled() {
+		fx.hot = item -> false;
+		InventoryPickupItemEvent event = hopperPickup();
+
+		listener.onHopperPickup(event);
+
+		assertFalse(event.isCancelled());
+	}
+
+	@Test
+	@DisplayName("C-40: the hopper handler is LOWEST and ignores cancelled events")
+	void hopperHandlerShape() {
+		EventHandler handler = handlersTaking(InventoryPickupItemEvent.class).get(0).getAnnotation(EventHandler.class);
+
+		assertEquals(EventPriority.LOWEST, handler.priority());
+		assertTrue(handler.ignoreCancelled());
+	}
+
+	private final PlayerInventory hand = mock(PlayerInventory.class);
+
+	private ItemStack held;
+	private ItemStack snapshot;
+
+	/** A held stack of three bills; the snapshot is what clone() returns. */
+	private PlayerInteractEvent redeem(Action action, EquipmentSlot slot) {
+		held     = mock(ItemStack.class);
+		snapshot = mock(ItemStack.class);
+		when(held.clone()).thenReturn(snapshot);
+		when(snapshot.getAmount()).thenReturn(3);
+		when(runner.getInventory()).thenReturn(hand);
+		// RIGHT_CLICK_BLOCK with a block starts uncancelled, so a cancel is observable
+		return new PlayerInteractEvent(runner, action, held, mock(Block.class), BlockFace.UP, slot);
+	}
+
+	@Test
+	@DisplayName("C-40: an unwanted player redeeming a hot bill earns the star first, bags the bill and keeps two")
+	void hotRedeemByUnwantedStarsAndBags() {
+		fx.level(runner, 0);
+		PlayerInteractEvent event = redeem(Action.RIGHT_CLICK_BLOCK, EquipmentSlot.HAND);
+
+		listener.onRedeem(event);
+
+		assertEquals(List.of(runner), fx.stars);
+		assertEquals(0, bd("100").compareTo(fx.bag(runner)), "the star came first, so the bill is bagged");
+		assertEquals(0, bd("0").compareTo(fx.walletOf(runner)));
+		verify(held).setType(Material.AIR);
+		assertTrue(event.isCancelled());
+		verify(snapshot).setAmount(2);
+		verify(hand).setItemInMainHand(snapshot);
+		assertTrue(fx.debug.contains("BAG Runner hot star"), fx.debug.toString());
+		assertTrue(fx.chat.contains(fx.line(org.luckyraven.gangland.copsncrooks.wanted.WantedMessages.Key.BAG_HOT)),
+		           fx.chat.toString());
+	}
+
+	@Test
+	@DisplayName("C-40: redeeming the last bill leaves an empty hand; a wanted player earns no star")
+	void hotRedeemWhileWantedLastBill() {
+		fx.level(runner, 2);
+		PlayerInteractEvent event = redeem(Action.RIGHT_CLICK_AIR, EquipmentSlot.HAND);
+		when(snapshot.getAmount()).thenReturn(1);
+
+		listener.onRedeem(event);
+
+		assertTrue(fx.stars.isEmpty());
+		assertEquals(0, bd("100").compareTo(fx.bag(runner)));
+		verify(hand).setItemInMainHand(null);
+	}
+
+	@Test
+	@DisplayName("C-40: a full bag keeps the bill: the hand goes back to the unchanged stack, nothing is paid")
+	void hotRedeemFullKeepsTheBill() {
+		fx.level(runner, 2);
+		fx.settings = new org.luckyraven.gangland.copsncrooks.bag.BagSettings(true, 0.35, 100, 15000, 4, "medium", true,
+		                                                                      40);
+		fx.service.take(runner, bd("100"), "pickup");
+		PlayerInteractEvent event = redeem(Action.RIGHT_CLICK_BLOCK, EquipmentSlot.HAND);
+
+		listener.onRedeem(event);
+
+		assertEquals(0, bd("100").compareTo(fx.bag(runner)), "bag unchanged");
+		assertEquals(0, bd("0").compareTo(fx.walletOf(runner)), "wallet unchanged");
+		verify(snapshot, never()).setAmount(org.mockito.ArgumentMatchers.anyInt());
+		verify(hand).setItemInMainHand(snapshot);
+	}
+
+	@Test
+	@DisplayName("C-40: with the bag switched off a hot bill still pays the wallet, one bill less in hand")
+	void hotRedeemBagOffPaysWallet() {
+		fx.level(runner, 2);
+		fx.settings = new org.luckyraven.gangland.copsncrooks.bag.BagSettings(false, 0.35, 5000, 15000, 4, "medium",
+		                                                                      true, 40);
+		PlayerInteractEvent event = redeem(Action.RIGHT_CLICK_BLOCK, EquipmentSlot.HAND);
+
+		listener.onRedeem(event);
+
+		assertEquals(0, bd("100").compareTo(fx.walletOf(runner)));
+		assertEquals(0, bd("0").compareTo(fx.bag(runner)));
+		verify(snapshot).setAmount(2);
+		verify(hand).setItemInMainHand(snapshot);
+	}
+
+	@Test
+	@DisplayName("C-40: a plain bill, the off hand, a left click or an empty hand is left to the core redeem")
+	void plainOrOffHandRedeemUntouched() {
+		fx.level(runner, 0);
+		fx.hot = item -> false;
+		PlayerInteractEvent plain = redeem(Action.RIGHT_CLICK_BLOCK, EquipmentSlot.HAND);
+		listener.onRedeem(plain);
+		verify(held, never()).setType(org.mockito.ArgumentMatchers.any(Material.class));
+		assertFalse(plain.isCancelled());
+
+		fx.hot = item -> true;
+		PlayerInteractEvent offHand = redeem(Action.RIGHT_CLICK_BLOCK, EquipmentSlot.OFF_HAND);
+		listener.onRedeem(offHand);
+		verify(held, never()).setType(org.mockito.ArgumentMatchers.any(Material.class));
+		assertFalse(offHand.isCancelled());
+
+		PlayerInteractEvent left = redeem(Action.LEFT_CLICK_BLOCK, EquipmentSlot.HAND);
+		listener.onRedeem(left);
+		verify(held, never()).setType(org.mockito.ArgumentMatchers.any(Material.class));
+		assertFalse(left.isCancelled());
+
+		PlayerInteractEvent empty = new PlayerInteractEvent(runner, Action.RIGHT_CLICK_AIR, null, null, BlockFace.UP,
+		                                                    EquipmentSlot.HAND);
+		listener.onRedeem(empty);
+
+		assertTrue(fx.stars.isEmpty());
+		assertEquals(0, bd("0").compareTo(fx.bag(runner)));
+	}
+
+	@Test
+	@DisplayName("C-40: the redeem handler is LOW and does NOT ignore cancelled events (air clicks are pre-cancelled)")
+	void redeemHandlerShape() {
+		EventHandler handler = handlersTaking(PlayerInteractEvent.class).get(0).getAnnotation(EventHandler.class);
+
+		assertEquals(EventPriority.LOW, handler.priority());
+		assertFalse(handler.ignoreCancelled());
 	}
 }

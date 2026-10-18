@@ -29,6 +29,16 @@ class HotCashBagsTest {
 	}
 
 	@Test
+	@DisplayName("reading an unknown player does not create a row (the HUD reads every online player)")
+	void readsDoNotCreateRows() {
+		bags.amount(RUNNER);
+		bags.seized(RUNNER);
+		bags.chaseTaken(RUNNER);
+
+		assertTrue(bags.all().isEmpty(), bags.all().toString());
+	}
+
+	@Test
 	@DisplayName("a player with no row has an empty bag")
 	void unknownPlayerIsEmpty() {
 		same("0", bags.amount(RUNNER));

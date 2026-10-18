@@ -283,6 +283,16 @@ class BagServiceTest {
 	}
 
 	@Test
+	@DisplayName("payouts round DOWN to the cent: 37.50 at the 65% cut is 24.37, never 24.38")
+	void fenceRoundsDownToCents() {
+		fill("37.50");
+
+		assertTrue(fx.service.fence(runner));
+
+		assertEquals(0, bd("24.37").compareTo(fx.walletOf(runner)), fx.walletOf(runner).toPlainString());
+	}
+
+	@Test
 	@DisplayName("P-FENCE-1: the fence pays bag x 0.65 now, empties the bag, leaves the stars and keeps the chase count")
 	void fenceCutsAndKeepsStars() {
 		fill("1000");

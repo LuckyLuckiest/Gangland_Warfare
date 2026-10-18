@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.bag;
 
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,6 +17,9 @@ import java.util.function.IntFunction;
  * @since 0.20.0
  */
 public final class BagSpill {
+
+	/** The cops-owned PDC key of a hot bill: {@code copsncrooks:hot_cash}. */
+	public static final NamespacedKey KEY = new NamespacedKey("copsncrooks", "hot_cash");
 
 	/**
 	 * @param plugin     owner of the PDC key
