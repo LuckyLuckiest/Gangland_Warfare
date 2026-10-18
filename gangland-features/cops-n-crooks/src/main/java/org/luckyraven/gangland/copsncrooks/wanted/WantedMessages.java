@@ -67,7 +67,24 @@ public class WantedMessages extends LocalizedModuleYaml {
 		SUSPECT_ON_FOOT("Suspect.On_Foot", "on foot"),
 		SUSPECT_IN_CAR("Suspect.In_Car", "in a car"),
 		SUSPECT_MASK("Suspect.Mask", "in a %head%"),
-		SUSPECT_FORMAT("Suspect.Format", "%who%%mask%, %chest%, %vehicle%");
+		SUSPECT_FORMAT("Suspect.Format", "%who%%mask%, %chest%, %vehicle%"),
+		// 0.20.0 hot-cash bag and fence
+		BAG_HUD("Bag.Hud", "&6Bag: &a%money_symbol%%amount%"),
+		BAG_FULL("Bag.Full", "&cYour bag is full."),
+		BAG_BANKED("Bag.Banked", "&aYou got away: &f%money_symbol%%amount% &afrom your bag is clean."),
+		BAG_OVER_CAP("Bag.Over_Cap",
+		             "&7Over today's limit: the fence took &f%money_symbol%%cut% &7of &f%money_symbol%%rest%&7."),
+		BAG_CONVERTED("Bag.Converted",
+		              "&7Chase over: the fence turned your bag of &f%money_symbol%%bag% &7into &a%money_symbol%%amount%&7."),
+		BAG_SEIZED("Bag.Seized", "&cBag seized: &f%money_symbol%%amount%"),
+		BAG_PAPERWORK("Bag.Paperwork", "&7Bag seized: &c%money_symbol%%amount%"),
+		BAG_SPILLED("Bag.Spilled", "&cYour bag spilled: &f%money_symbol%%amount% &cis on the street."),
+		BAG_HOT("Bag.Hot", "&cHot cash! The cops want you now."),
+		BAG_BRIBE("Bag.Bribe",
+		          "&7Paid &f%money_symbol%%bag% &7from your bag and &f%money_symbol%%wallet% &7from your wallet."),
+		FENCE_DONE("Fence.Done", "&aThe fence paid &f%money_symbol%%amount% &afor your bag of &f%money_symbol%%bag%&a."),
+		FENCE_EMPTY("Fence.Empty", "&7Your bag is empty."),
+		FENCE_CUFFED("Fence.Cuffed", "&cNot while you are in cuffs.");
 
 		public final String path;
 		public final String fallback;

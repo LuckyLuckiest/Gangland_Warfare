@@ -33,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToDoubleFunction;
 
 /**
  * Orchestrates the transition from HANDCUFFED → JAILED: picks a jail, seizes the inventory, zeros wanted, gives
@@ -56,6 +57,14 @@ public class JailIntakeService {
 	private final ChaseConfigLoader       chase;
 	private final HeatLedger              ledger;
 	private final WantedMessages          messages;
+
+	/** 0.20.0: takes the bag at intake (installed by BagModuleConfig); null = no bag. */
+	private ToDoubleFunction<Player> bagSeizure;
+
+	/** @since 0.20.0 */
+	public void setBagSeizure(ToDoubleFunction<Player> bagSeizure) {
+		this.bagSeizure = bagSeizure;
+	}
 
 	public boolean admit(Player player) {
 		// a downed player (the transit timer fired mid-down) pays the ward bill on undown, so he gets no sheet either

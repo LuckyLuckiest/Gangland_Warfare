@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.wanted.config;
 
 import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.copsncrooks.bag.BagSettings;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
 import org.luckyraven.gangland.file.configuration.MovedSetting;
 import org.luckyraven.keystone.exception.PluginException;
@@ -34,6 +35,7 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 	private volatile PostEscapeSettings postEscape = PostEscapeSettings.DEFAULT;
 	private volatile WitnessSettings  witnesses  = WitnessSettings.DEFAULT;
 	private volatile TrespassSettings  trespass   = TrespassSettings.DEFAULT;
+	private volatile BagSettings       bag        = BagSettings.DEFAULT;
 
 	public ChaseConfigLoader(JavaPlugin plugin, FileManager fileManager) {
 		super(plugin, false, null, fileManager);
@@ -62,6 +64,11 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 	/** The current {@code Wanted.Trespass}, never null. @since 0.20.0 */
 	public TrespassSettings getTrespass() {
 		return trespass;
+	}
+
+	/** The current {@code Wanted.Bag}, never null. @since 0.20.0 */
+	public BagSettings getBag() {
+		return bag;
 	}
 
 	@Override

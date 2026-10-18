@@ -31,6 +31,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * Three-row menu opened when a jailed player right-clicks their Jail Paperwork item. Bail / Bribe / Sentence release
@@ -57,6 +59,14 @@ public final class PaperworkView {
 	private final MoneyIconProvider         moneyIconProvider;
 	private final DetainmentMessageContract messages;
 	private final WantedMessages            wantedMessages;
+
+	/** 0.20.0: the seized-bag lore line for a player id (installed by BagModuleConfig); null = none. */
+	private Function<UUID, String> bagLine;
+
+	/** @since 0.20.0 */
+	public void setBagLine(Function<UUID, String> bagLine) {
+		this.bagLine = bagLine;
+	}
 
 	private static String formatMoney(double amount) {
 		return String.format("%,.2f", amount);
@@ -139,6 +149,12 @@ public final class PaperworkView {
 		String fine = detained == null ? null : fineLine(wantedMessages, detained);
 		if (fine != null) lore.add(fine);
 		return lore;
+	}
+
+	/** 0.20.0: {@link #infoLore(DetainedPlayer, int, long, double)} plus the seized-bag line of {@code playerId}. */
+	List<String> infoLore(UUID playerId, @Nullable DetainedPlayer detained, int wantedAtArrest, long remainingSec,
+	                      double balance) {
+		throw new UnsupportedOperationException("TDD stub");
 	}
 
 	private void handleBailResult(Player player, BailResult result) {

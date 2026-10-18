@@ -17,6 +17,8 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 
+import org.luckyraven.gangland.copsncrooks.bag.BagFunding;
+
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -39,6 +41,14 @@ public class BribeService {
 	private final ReleasePipeline           releasePipeline;
 	private final CuffLockRegistry          cuffLockRegistry;
 	private final DetainmentSoundContract   sounds;
+
+	/** 0.20.0: the bag a bribe draws from first (installed by BagModuleConfig); null = wallet only. */
+	private BagFunding bagFunding;
+
+	/** @since 0.20.0 */
+	public void setBagFunding(BagFunding bagFunding) {
+		this.bagFunding = bagFunding;
+	}
 
 	// ── Handcuff bribe ───────────────────────────────────────────────────────
 
