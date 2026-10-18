@@ -26,7 +26,8 @@ public class HotCashBagTable extends Table<BagEntry> {
 
 	@Override
 	public Object[] getData(BagEntry data) {
-		throw new UnsupportedOperationException("TDD stub");
+		return new Object[]{data.player().toString(), data.amount().doubleValue(), data.chaseTaken().doubleValue(),
+		                    data.bankedDay(), data.bankedToday().doubleValue(), data.seized().doubleValue()};
 	}
 
 	@Override
