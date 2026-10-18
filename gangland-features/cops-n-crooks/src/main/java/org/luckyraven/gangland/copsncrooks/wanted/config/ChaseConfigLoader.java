@@ -78,6 +78,7 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		postEscape = PostEscapeSettings.DEFAULT;
 		witnesses  = WitnessSettings.DEFAULT;
 		trespass   = TrespassSettings.DEFAULT;
+		bag        = BagSettings.DEFAULT;
 	}
 
 	@Override
@@ -107,6 +108,8 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		postEscape = PostEscapeSettings.parse(wanted);
 		witnesses  = WitnessSettings.parse(wanted);
 		trespass   = TrespassSettings.parse(wanted);
+		// 0.20.0: Wanted.Bag (hot-cash bag)
+		bag        = BagSettings.parse(wanted);
 
 		if (!report.isEmpty()) report.log(log);
 
