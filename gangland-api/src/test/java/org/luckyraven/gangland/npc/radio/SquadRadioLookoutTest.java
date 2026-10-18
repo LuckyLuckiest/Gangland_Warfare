@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.npc.AbstractNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.mockito.ArgumentCaptor;
@@ -301,6 +302,58 @@ class SquadRadioLookoutTest {
 		say(radio(), lookoutVoice(hunted), squadOf(m), m, "Contact");
 
 		assertEquals(List.of(mate), asked);
+		assertEquals(List.of(RELAY_PREFIX + "[RADIO] UNIT: Contact!"), received(hunted, 1));
+	}
+
+	@Test
+	@DisplayName("a relay starts the hunted player's gap: a non-priority line right after, with him inside Target_Range, is not delivered")
+	void relayStartsHuntedGap() {
+		AbstractNpc m    = member();
+		Player      mate = player("Mate", 5);
+		relayers.add(mate);
+		when(world.getPlayers()).thenReturn(List.of(mate, hunted));
+		SquadRadio radio = radio();
+		RadioVoice voice = lookoutVoice(hunted);
+		NpcSquad   squad = squadOf(m);
+
+		assertTrue(say(radio, voice, squad, m, "Contact"));
+		verify(hunted, times(1)).sendMessage(anyString());
+
+		clock.addAndGet(100);
+		when(hunted.getLocation()).thenReturn(new Location(world, 30, 64, 0));
+		say(radio, voice, squad, m, "Reloading");
+
+		verify(hunted, times(1)).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("the relay text is colour-translated: a '&8[Lookout %name%] &r%line%' pool arrives with no raw & codes")
+	void relayIsColoured() {
+		pools.put("Lookout_Format", List.of("&8[Lookout %name%] &r%line%"));
+		AbstractNpc m    = member();
+		Player      mate = player("Mate", 5);
+		relayers.add(mate);
+		when(world.getPlayers()).thenReturn(List.of(mate, hunted));
+
+		say(radio(), lookoutVoice(hunted), squadOf(m), m, "Contact");
+
+		List<String> got = received(hunted, 1);
+		assertEquals(GanglandChatUtil.color("&8[Lookout Mate] &r[RADIO] UNIT: Contact!"), got.get(0));
+		assertFalse(got.get(0).contains("&8"), "no raw colour code");
+	}
+
+	@Test
+	@DisplayName("a hunted player in another world still gets the relay (he is not in the speaker world's player list)")
+	void crossWorldHuntedStillRelayed() {
+		AbstractNpc m     = member();
+		Player      mate  = player("Mate", 5);
+		World       other = mock(World.class);
+		relayers.add(mate);
+		when(hunted.getLocation()).thenReturn(new Location(other, 5, 64, 0));
+		when(world.getPlayers()).thenReturn(List.of(mate));
+
+		assertTrue(say(radio(), lookoutVoice(hunted), squadOf(m), m, "Contact"));
+
 		assertEquals(List.of(RELAY_PREFIX + "[RADIO] UNIT: Contact!"), received(hunted, 1));
 	}
 }

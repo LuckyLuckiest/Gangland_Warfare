@@ -139,7 +139,7 @@ class LookoutModuleConfigTest {
 		String yaml;
 		try (InputStream in = Objects.requireNonNull(
 				getClass().getClassLoader().getResourceAsStream("copsncrooks/cops.yml"))) {
-			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n", "\n");
 		}
 		int lookout = yaml.indexOf("\n   Lookout:\n");
 		assertTrue(lookout > 0, "Cops.Lookout block missing");
