@@ -70,6 +70,7 @@ public class CopRadio {
 	private       PlaceNames                  places = new PlaceNames();
 	private       java.util.function.BiPredicate<Player, NpcSquad>          overhearing       = (p, s) -> false;
 	private       java.util.function.Function<NpcSquad, Map<String, String>> extraPlaceholders = s -> null;
+	private       java.util.function.BiPredicate<Player, Player>              lookout           = (h, t) -> false;
 
 	public CopRadio(JavaPlugin plugin, CopLoader copLoader, CopRadioMessages messages) {
 		this(copLoader::getLoadedProvider, messages, System::currentTimeMillis,
@@ -641,7 +642,7 @@ public class CopRadio {
 
 	/** Who relays a heard line to the hunted player (hearer, hunted); default nobody (0.20.0 lookout). */
 	public void setLookout(java.util.function.BiPredicate<Player, Player> lookout) {
-		throw new UnsupportedOperationException("TDD stub");
+		this.lookout = lookout != null ? lookout : (h, t) -> false;
 	}
 
 	/** The overhearing hook; the voice delegates its {@code overhears} here once api 2.7 declares it. */
@@ -668,6 +669,14 @@ public class CopRadio {
 
 			public boolean overhears(Player player, NpcSquad squad) {
 				return CopRadio.this.overhears(player, squad);
+			}
+
+			@Override
+			public boolean relaysTo(Player hearer, NpcSquad squad) {
+				LivingEntity target = hunted(squad);
+				if (!(target instanceof Player hunter)) return false;
+
+				return lookout.test(hearer, hunter);
 			}
 
 			@Override

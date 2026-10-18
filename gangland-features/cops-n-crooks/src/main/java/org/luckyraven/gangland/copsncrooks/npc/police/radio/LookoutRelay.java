@@ -25,6 +25,9 @@ public class LookoutRelay implements BiPredicate<Player, Player> {
 
 	@Override
 	public boolean test(Player hearer, Player hunted) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (!enabled.getAsBoolean() || hearer.equals(hunted) || wantedLevel.applyAsInt(hearer) != 0) return false;
+
+		int gang = gangs.gangIdOf(hearer.getUniqueId());
+		return gang != -1 && gang == gangs.gangIdOf(hunted.getUniqueId());
 	}
 }

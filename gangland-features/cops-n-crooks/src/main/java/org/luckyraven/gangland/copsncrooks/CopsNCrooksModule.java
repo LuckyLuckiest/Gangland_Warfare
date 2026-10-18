@@ -14,6 +14,7 @@ import org.luckyraven.gangland.copsncrooks.config.ScannerModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.SightModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.OverwatchModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.ScannerMapModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.LookoutModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
@@ -61,6 +62,7 @@ public final class CopsNCrooksModule implements KeystoneModule {
 		         .configuration(SightModuleConfig.class)
 		         .configuration(OverwatchModuleConfig.class)
 		         .configuration(ScannerMapModuleConfig.class)
+		         .configuration(LookoutModuleConfig.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .commandPackage(COMMAND_PACKAGE)
 		         .repositoryPackage(REPOSITORY_PACKAGE);

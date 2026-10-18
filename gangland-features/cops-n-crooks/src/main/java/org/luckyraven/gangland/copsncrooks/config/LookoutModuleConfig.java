@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.config;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.LookoutRelay;
@@ -26,11 +27,15 @@ public class LookoutModuleConfig {
 	@Bean
 	public LookoutRelay lookoutRelay(CopLoader copLoader, @Qualifier("online") UserManager<Player> users,
 	                                 GangMembership gangMembership) {
-		throw new UnsupportedOperationException("TDD stub");
+		// a missing provider (cops.yml not loaded yet) keeps the lookout on, like the shipped default
+		return new LookoutRelay(() -> {
+			CopConfigProvider provider = copLoader.getLoadedProvider();
+			return provider == null || provider.isLookoutEnabled();
+		}, DisguiseModuleConfig.levelOf(users), gangMembership);
 	}
 
 	@PostConstruct
 	public void installLookout() {
-		throw new UnsupportedOperationException("TDD stub");
+		container.getInstance(CopRadio.class).setLookout(container.getInstance(LookoutRelay.class));
 	}
 }
