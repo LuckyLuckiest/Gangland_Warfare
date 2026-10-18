@@ -289,3 +289,6 @@ Lines:
    # 0.20.0: a patrol cop sights the suspect.
    Patrol_Sighting:
       - "Patrol here, I see the suspect at %place%."
+
+# 0.20.0: format of a lookout line relayed to the squad; %name% is the suspect and %line% the call.
+Lookout_Format: "&8[Lookout %name%] &r%line%"

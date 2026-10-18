@@ -27,6 +27,7 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 	private static final List<String> DEFAULT_SIDES           = List.of("front", "left", "right", "back");
 	private static final List<String> DEFAULT_UNKNOWN_PLACE   = List.of("the area");
 	private static final List<String> DEFAULT_SPEAKER_NAME    = List.of("{rank} {role} &f{name} &7#{number}");
+	private static final List<String> DEFAULT_LOOKOUT_FORMAT  = List.of("&8[Lookout %name%] &r%line%");
 
 	private static final Map<String, List<String>> DEFAULT_LINES = Map.ofEntries(
 			Map.entry("Contact", List.of("Contact! Suspect %distance% blocks %direction%!",
@@ -112,6 +113,7 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			case "Sides" -> list("Sides", DEFAULT_SIDES);
 			case "Unknown_Place" -> list("Unknown_Place", DEFAULT_UNKNOWN_PLACE);
 			case "Speaker_Name" -> list("Speaker_Name", DEFAULT_SPEAKER_NAME);
+			case "Lookout_Format" -> list("Lookout_Format", DEFAULT_LOOKOUT_FORMAT);
 			default -> list("Lines." + key, DEFAULT_LINES.getOrDefault(key, List.of()));
 		};
 	}
