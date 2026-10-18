@@ -8,6 +8,7 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
 import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
@@ -18,23 +19,30 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-/** {@code /glw contact [stars]}: pays a crooked desk sergeant to wipe stars while no cop has eyes on you. */
+/**
+ * {@code /glw contact [stars|fence]}: pays a crooked desk sergeant to wipe stars while no cop has eyes on you, or sells
+ * the hot bag to the fence through the installed {@link HotCashRouter}.
+ */
 @CommandHandler
 public final class ContactCommand extends Command {
 
 	private final UserManager<Player> userManager;
 	private final ContactDesk         desk;
+	private final HotCashRouter       router;
 
 	public ContactCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager,
-	                      ContactDesk desk) {
+	                      ContactDesk desk, HotCashRouter router) {
 		super(gangland, "contact", true);
 
 		this.userManager = userManager;
 		this.desk        = desk;
+		this.router      = router;
 
 		var list = getCommands().entrySet()
 		                        .stream()
@@ -56,6 +64,11 @@ public final class ContactCommand extends Command {
 		Argument stars = new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) return;
 
+			if ("fence".equalsIgnoreCase(args[1])) {
+				fence(player);
+				return;
+			}
+
 			int amount;
 			try {
 				amount = Integer.parseInt(args[1]);
@@ -65,9 +78,14 @@ public final class ContactCommand extends Command {
 			}
 
 			contact(player, Math.max(1, amount));
-		}, sender -> IntStream.rangeClosed(1, Math.max(1, Settings.getContactsMaxStars()))
-		                      .mapToObj(String::valueOf)
-		                      .toList());
+		}, sender -> {
+			List<String> tabs = IntStream.rangeClosed(1, Math.max(1, Settings.getContactsMaxStars()))
+			                             .mapToObj(String::valueOf)
+			                             .collect(Collectors.toCollection(ArrayList::new));
+
+			if (router.isInstalled()) tabs.add("fence");
+			return tabs;
+		});
 
 		getArgument().addSubArgument(stars);
 	}
@@ -79,29 +97,12 @@ public final class ContactCommand extends Command {
 			return;
 		}
 
-		User<Player> user = userManager.getUser(player);
+		User<Player> user = gate(player);
 
 		if (user == null) return;
 
 		Wanted wanted = user.getWanted();
 		int    level  = wanted.getLevel();
-
-		if (level <= 0) {
-			player.sendMessage(Messages.CONTACT_NOT_WANTED.toString());
-			return;
-		}
-
-		if (desk.seen(player.getUniqueId())) {
-			player.sendMessage(Messages.CONTACT_SEEN.toString());
-			return;
-		}
-
-		long left = desk.cooldownLeftMs(player.getUniqueId());
-
-		if (left > 0) {
-			player.sendMessage(Messages.CONTACT_COOLDOWN.toString().replace("%time%", ContactDesk.formatLeft(left)));
-			return;
-		}
 
 		int        stars = Math.min(Math.min(requested, Math.max(1, Settings.getContactsMaxStars())), level);
 		BigDecimal price = desk.priceFor(stars);
@@ -128,6 +129,50 @@ public final class ContactCommand extends Command {
 
 		player.sendMessage(replaceMoney(Messages.CONTACT_USED.toString(), price).replace("%stars%",
 		                                                                                 String.valueOf(stars)));
+	}
+
+	/** {@code /glw contact fence}: sells the hot bag through the installed {@link HotCashRouter}. */
+	void fence(Player player) {
+		if (!Settings.isContactsEnabled() || !router.isInstalled()) {
+			player.sendMessage(Messages.CONTACT_DISABLED.toString());
+			return;
+		}
+
+		if (gate(player) == null) return;
+
+		// the router owns the money; the core only starts the shared contacts cooldown when it sold
+		if (router.fence(player)) desk.startCooldown(player.getUniqueId());
+	}
+
+	/**
+	 * The refusals shared by a star call and a fence: a missing user, no stars, a cop in view, the cooldown. Sends the
+	 * refusal message and returns {@code null}, or returns the user when the gate is open.
+	 */
+	private User<Player> gate(Player player) {
+		User<Player> user = userManager.getUser(player);
+
+		if (user == null) return null;
+
+		Wanted wanted = user.getWanted();
+
+		if (wanted.getLevel() <= 0) {
+			player.sendMessage(Messages.CONTACT_NOT_WANTED.toString());
+			return null;
+		}
+
+		if (desk.seen(player.getUniqueId())) {
+			player.sendMessage(Messages.CONTACT_SEEN.toString());
+			return null;
+		}
+
+		long left = desk.cooldownLeftMs(player.getUniqueId());
+
+		if (left > 0) {
+			player.sendMessage(Messages.CONTACT_COOLDOWN.toString().replace("%time%", ContactDesk.formatLeft(left)));
+			return null;
+		}
+
+		return user;
 	}
 
 	private static String replaceMoney(String text, BigDecimal price) {

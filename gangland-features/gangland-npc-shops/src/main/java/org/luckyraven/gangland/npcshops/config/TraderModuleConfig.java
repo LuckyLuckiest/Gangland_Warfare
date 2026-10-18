@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
 import org.luckyraven.gangland.npcshops.holdup.BartizanAim;
 import org.luckyraven.gangland.npcshops.holdup.HoldUpService;
 import org.luckyraven.gangland.npcshops.holdup.HoldUpSettings;
@@ -192,7 +193,7 @@ public class TraderModuleConfig {
 
 	@Bean
 	public HoldUpService holdUpService(MoodService mood, TraderManager traders, TraderEconomyContract economy,
-	                                   FileManager fileManager, CrimeService crimes) {
+	                                   FileManager fileManager, CrimeService crimes, HotCashRouter router) {
 		boolean bartizan = Bukkit.getPluginManager().getPlugin("Bartizan") != null;
 		if (!bartizan) log.info("Hold-ups off: Bartizan not installed");
 		Predicate<Player> weaponHeld = bartizan ? BartizanAim::weaponHeld : p -> false;
@@ -201,7 +202,7 @@ public class TraderModuleConfig {
 		                         Bukkit::getOnlinePlayers, weaponHeld, resolver::resolve, mood, crimes,
 		                         new WalletHoldUpPayout(economy,
 		                                                () -> HoldUpSettings.load(fileManager.getFile("trader_settings")),
-		                                                () -> ThreadLocalRandom.current().nextDouble()),
+		                                                () -> ThreadLocalRandom.current().nextDouble(), router),
 		                         System::currentTimeMillis,
 		                         (player, text) -> ActionBarManager.send(plugin, player, text, 10L), log::debug);
 	}

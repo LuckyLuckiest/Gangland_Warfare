@@ -28,13 +28,14 @@ class BundledMoneyYmlTest {
 	}
 
 	@Test
-	@DisplayName("PLAYER Enabled is false, the key still exists, COP stays enabled")
-	void playerDropIsOff_copUnchanged() throws IOException {
+	@DisplayName("PLAYER and COP Enabled are false (0.20.0: cops carry no cash), the keys still exist")
+	void copDropOffInBundledFile() throws IOException {
 		YamlConfiguration yaml = bundled();
 
 		assertTrue(yaml.contains("Money.Drop_Sources.PLAYER.Enabled"), "the key is kept");
 		assertFalse(yaml.getBoolean("Money.Drop_Sources.PLAYER.Enabled", true));
-		assertTrue(yaml.getBoolean("Money.Drop_Sources.COP.Enabled", false));
+		assertTrue(yaml.contains("Money.Drop_Sources.COP.Enabled"), "the key is kept");
+		assertFalse(yaml.getBoolean("Money.Drop_Sources.COP.Enabled", true));
 	}
 
 }

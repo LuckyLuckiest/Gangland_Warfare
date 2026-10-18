@@ -11,6 +11,7 @@ import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDepositService;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
 import org.luckyraven.gangland.data.gang.GangItemSourceContributions;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
@@ -280,8 +281,9 @@ public class GameplayConfig {
 
 	@Bean
 	public MoneyDepositService moneyDepositService(@Qualifier("online") UserManager<Player> userManager,
-	                                               MoneyAddon moneyAddon, PlaceholderService placeholderService) {
-		return new GanglandMoneyDepositService(userManager, moneyAddon, placeholderService);
+	                                               MoneyAddon moneyAddon, PlaceholderService placeholderService,
+	                                               HotCashRouter hotCashRouter) {
+		return new GanglandMoneyDepositService(userManager, moneyAddon, placeholderService, hotCashRouter);
 	}
 
 	@Bean

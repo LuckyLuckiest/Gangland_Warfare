@@ -85,7 +85,7 @@ public class MoneyProximityPickupTask extends BukkitRunnable {
 		}
 	}
 
-	private void scanAndDeposit(Player player) {
+	void scanAndDeposit(Player player) {
 		for (Entity entity : player.getNearbyEntities(PICKUP_RANGE, PICKUP_RANGE, PICKUP_RANGE)) {
 			if (!(entity instanceof Item item)) continue;
 			if (!item.isValid() || item.isDead()) continue;
@@ -102,9 +102,9 @@ public class MoneyProximityPickupTask extends BukkitRunnable {
 			int    total       = perItem * stack.getAmount();
 			String variationId = MoneyItemUtil.readVariationId(stack);
 
-			item.remove();
+			if (!depositService.depositPickup(player, total, variationId)) continue;
 
-			depositService.deposit(player, total, variationId);
+			item.remove();
 			playPickupSound(player, variationId);
 		}
 	}
