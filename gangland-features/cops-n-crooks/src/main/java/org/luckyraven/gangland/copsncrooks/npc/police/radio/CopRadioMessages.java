@@ -11,8 +11,8 @@ import java.util.Map;
  * Police-radio lines, backed by the module's own {@code copsncrooks/cop_radio_messages.yml} (English, always shipped) /
  * {@code copsncrooks/cop_radio_messages_es.yml} (Spanish, optional — picked by {@code Settings.getLanguagePicked()} via
  * {@link LocalizedModuleYaml}). {@code Lines.<key>} holds the candidate lines for one radio signal; {@code Format},
- * {@code Dispatch_Format}, {@code Compass}, {@code Sides}, {@code Unknown_Place} and {@code Speaker_Name} live at the
- * document root, not under {@code Lines}, and are read straight from there.
+ * {@code Dispatch_Format}, {@code Compass}, {@code Sides}, {@code Unknown_Place}, {@code Speaker_Name} and
+ * {@code Lookout_Format} live at the document root, not under {@code Lines}, and are read straight from there.
  *
  * @since 1.13.0
  */
