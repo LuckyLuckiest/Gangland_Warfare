@@ -997,4 +997,16 @@ class StandoffControllerTest {
 		tickAt(1 * SEC);
 		assertEquals(before + 1, starts());
 	}
+
+	@Test
+	@DisplayName("a standoff never starts while a squad cop is cuffing the suspect")
+	void cuffingCop_blocksStart() {
+		hunters(3, 2);
+		cop(CopState.CUFFING, playerId, 9, 0);
+
+		tickAt(0);
+
+		assertEquals(0, starts());
+		assertFalse(controller.isActive(playerId));
+	}
 }

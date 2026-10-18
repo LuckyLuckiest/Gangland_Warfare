@@ -1016,4 +1016,25 @@ class YamlCopConfigProviderTest {
 		ConfigDocument document = new ConfigParser().parse(Path.of("cops.yml"), reader, report);
 		return new YamlCopConfigProvider(NodeReader.of(document.root(), report), report, null, null);
 	}
+
+	@Test
+	@DisplayName("one-shot breach and standoff lines (Stack_Up, Flashbang, Negotiate) stay priority whatever the server's Priority list says")
+	void oneShotRadioLines_alwaysPriority() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Radio:
+				      Enabled: true
+				      Priority:
+				         - Contact
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+
+		for (String key : new String[]{"Stack_Up", "Flashbang", "Negotiate", "Breach"}) {
+			assertTrue(provider.getRadioSettings().isPriority(key), key);
+		}
+	}
 }

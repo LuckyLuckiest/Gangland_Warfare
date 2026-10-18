@@ -922,4 +922,16 @@ class BreachControllerTest {
 
 		verify(flashbang, never()).blind(any(), anyInt());
 	}
+
+	@Test
+	@DisplayName("a squad Defender farther than the nearest three still enters: it replaces the last drafted cop")
+	void farDefender_isDrafted() {
+		for (int i = 1; i <= 4; i++) hunter("Assault", i);
+		CopNpc defender = hunter("Defender", 12);
+
+		tick();
+
+		verify(defender).holdPost(any());
+		assertEquals(CopState.POSTED, stateOf(defender));
+	}
 }
