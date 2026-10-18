@@ -43,7 +43,12 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 
 	@Override
 	public boolean depositPickup(Player player, double amount, String variationId) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (player == null || amount <= 0) return true;
+
+		HotCash.Take take = router.take(player, Currency.of(amount), "pickup");
+		if (take == HotCash.Take.FULL) return false;
+		if (take == HotCash.Take.WALLET) deposit(player, amount, variationId);
+		return true;
 	}
 
 	private static String formatAmount(double amount) {
