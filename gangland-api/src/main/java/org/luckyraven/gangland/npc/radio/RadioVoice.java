@@ -40,4 +40,15 @@ public interface RadioVoice {
 	default boolean overhears(Player listener, NpcSquad squad) {
 		return false;
 	}
+
+	/**
+	 * Whether {@code hearer}, a player who was just delivered one of {@code squad}'s lines, passes it on to the
+	 * player the squad hunts (a lookout). The relay is sent once per line, to a hunted player who did not hear it
+	 * directly.
+	 *
+	 * @since 2.7
+	 */
+	default boolean relaysTo(Player hearer, NpcSquad squad) {
+		return false;
+	}
 }

@@ -639,6 +639,11 @@ public class CopRadio {
 		this.extraPlaceholders = extraPlaceholders != null ? extraPlaceholders : s -> null;
 	}
 
+	/** Who relays a heard line to the hunted player (hearer, hunted); default nobody (0.20.0 lookout). */
+	public void setLookout(java.util.function.BiPredicate<Player, Player> lookout) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
 	/** The overhearing hook; the voice delegates its {@code overhears} here once api 2.7 declares it. */
 	boolean overhears(Player player, NpcSquad squad) {
 		return overhearing.test(player, squad);

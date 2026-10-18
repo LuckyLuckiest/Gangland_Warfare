@@ -385,6 +385,11 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 		return ScannerSettings.DEFAULT;
 	}
 
+	/** 0.20.0 {@code Cops.Lookout.Enable}: a gang mate who is not wanted relays the police radio he hears. */
+	default boolean isLookoutEnabled() {
+		return true;
+	}
+
 	/** 0.20.0 block: the default when cops.yml omits it; the shipped cops.yml sets the values. */
 	default SirenSettings getSirenSettings() {
 		return SirenSettings.DEFAULT;
