@@ -133,7 +133,7 @@ public final class PaperworkView {
 		ItemStack   infoIcon = XMaterial.PAPER.parseItem();
 		ItemBuilder info     = new ItemBuilder(infoIcon != null ? infoIcon : new ItemStack(Material.PAPER));
 		info.setDisplayName(messages.paperworkInfoLabel())
-		    .setLore(infoLore(detained, wantedAtArrest, remainingSec, balance));
+		    .setLore(infoLore(player.getUniqueId(), detained, wantedAtArrest, remainingSec, balance));
 		builder.slot(SLOT_INFO, ItemComponent.of(info));
 
 		builder.fill(FillComponent.of(Material.BLACK_STAINED_GLASS_PANE).name(" "));
@@ -142,19 +142,16 @@ public final class PaperworkView {
 		builder.build().open(player);
 	}
 
-	private List<String> infoLore(@Nullable DetainedPlayer detained, int wantedAtArrest, long remainingSec,
-	                              double balance) {
+	/** 0.20.0: the info lore of {@code detained} plus the seized-bag line of {@code playerId}. */
+	List<String> infoLore(UUID playerId, @Nullable DetainedPlayer detained, int wantedAtArrest, long remainingSec,
+	                      double balance) {
 		List<String> lore = new ArrayList<>(messages.paperworkInfoLore(wantedAtArrest, remainingSec,
 		                                                               formatMoney(balance)));
 		String fine = detained == null ? null : fineLine(wantedMessages, detained);
 		if (fine != null) lore.add(fine);
+		String bag = bagLine == null ? null : bagLine.apply(playerId);
+		if (bag != null) lore.add(bag);
 		return lore;
-	}
-
-	/** 0.20.0: {@link #infoLore(DetainedPlayer, int, long, double)} plus the seized-bag line of {@code playerId}. */
-	List<String> infoLore(UUID playerId, @Nullable DetainedPlayer detained, int wantedAtArrest, long remainingSec,
-	                      double balance) {
-		throw new UnsupportedOperationException("TDD stub");
 	}
 
 	private void handleBailResult(Player player, BailResult result) {
