@@ -245,12 +245,17 @@ public class BreachController {
 		return true;
 	}
 
+	/** A shield cop: a role with Block_Fraction above zero that is neither the commander nor the medic. */
+	static boolean isDefender(CopNpc cop) {
+		CopRole role = cop.getRole();
+		return role != null && !role.commander() && !role.medic() && role.blockFraction() > 0;
+	}
+
 	/** The shield role (by Block_Fraction, not name) first, else the squad leader, else draft order; then the rest. */
 	private static List<CopNpc> entryOrder(List<CopNpc> stack, CopGroup group) {
 		CopNpc first = null;
 		for (CopNpc cop : stack) {
-			CopRole role = cop.getRole();
-			if (role != null && !role.commander() && !role.medic() && role.blockFraction() > 0) {
+			if (isDefender(cop)) {
 				first = cop;
 				break;
 			}
@@ -281,7 +286,17 @@ public class BreachController {
 			}
 		}
 		hunters.sort(Comparator.comparingDouble(c -> c.getEntity().getLocation().distanceSquared(cell)));
-		return new ArrayList<>(hunters.subList(0, Math.min(size, hunters.size())));
+		List<CopNpc> drafted = new ArrayList<>(hunters.subList(0, Math.min(size, hunters.size())));
+		// a full stack with no shield: the nearest Defender takes the last slot, so a breach always has one
+		if (!drafted.isEmpty() && hunters.size() > size && drafted.stream().noneMatch(BreachController::isDefender)) {
+			for (CopNpc cop : hunters) {
+				if (isDefender(cop)) {
+					drafted.set(drafted.size() - 1, cop);
+					break;
+				}
+			}
+		}
+		return drafted;
 	}
 
 	public boolean isActive(UUID playerId) {
