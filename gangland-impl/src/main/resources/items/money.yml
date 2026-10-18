@@ -68,7 +68,8 @@ Money:
          Scale_With_Balance: true
          Balance_Fraction: 0.15
       COP:
-         Enabled: true
+         # 0.20.0: cops carry no cash; true brings cop drops back
+         Enabled: false
          Variations:
             medium:
                weight: 70

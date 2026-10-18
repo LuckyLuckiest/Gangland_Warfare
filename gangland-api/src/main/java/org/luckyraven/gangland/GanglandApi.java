@@ -36,7 +36,8 @@ public interface GanglandApi {
 	 * <p>2.5 is reserved for another release line and never used on this branch. 2.6 (Gang & Turf II) adds the
 	 * members listed in documentation/gangland-api.md, section Api 2.6.
 	 * <p>2.7 (0.20.0) adds the five vehicle events ({@code events.vehicle}), six Crimes ids and {@code RadioVoice.overhears};
-	 * see documentation/gangland-api.md, section Api 2.7.
+	 * see documentation/gangland-api.md, section Api 2.7. Its wave-2 additions are {@code data.economy.HotCash},
+ * {@code HotCashRouter}, {@code RadioVoice.relaysTo} and {@code MoneyDepositService.depositPickup}; VERSION stays 2.7.
 	 */
 	String VERSION = "2.7";
 

@@ -32,6 +32,15 @@ Slots:
          - "&7Only while no cop can see you."
       OnClick:
          Command: "/glw contact 2"
+   25:
+      Item: CHEST
+      Name: "&6&lFence the bag"
+      Lore:
+         - "&7Turn your hot bag into clean cash"
+         - "&7The fence keeps a cut."
+         - "&7Only while no cop can see you."
+      OnClick:
+         Command: "/glw contact fence"
    40:
       Item: EMERALD
       Name: "&a&lWallet"
