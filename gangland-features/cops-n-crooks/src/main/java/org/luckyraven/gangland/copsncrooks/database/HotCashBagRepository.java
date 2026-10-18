@@ -8,8 +8,12 @@ import org.luckyraven.keystone.persistence.database.component.Table;
 import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 import org.luckyraven.keystone.persistence.repository.Repository;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -29,7 +33,28 @@ public class HotCashBagRepository extends AbstractRepository<BagEntry> {
 
 	@Override
 	protected Collection<BagEntry> doLoadAll() throws SQLException {
-		throw new UnsupportedOperationException("TDD stub");
+		List<BagEntry> bags = new ArrayList<>();
+
+		for (Object[] row : tableBackend().selectAll()) {
+			int v = 0;
+
+			UUID   player;
+			String raw = String.valueOf(row[v++]);
+			try {
+				player = UUID.fromString(raw);
+			} catch (IllegalArgumentException e) {
+				continue;
+			}
+
+			bags.add(new BagEntry(player, decimal(row[v++]), decimal(row[v++]), ((Number) row[v++]).longValue(),
+			                      decimal(row[v++]), decimal(row[v])));
+		}
+
+		return bags;
+	}
+
+	private static BigDecimal decimal(Object value) {
+		return BigDecimal.valueOf(((Number) value).doubleValue());
 	}
 
 	@Override
