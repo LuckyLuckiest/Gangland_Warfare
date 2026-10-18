@@ -92,6 +92,7 @@ class ContactCommandTest {
 
 		desk    = new ContactDesk(now::get);
 		command = new ContactCommand(plugin, users, desk, router);
+		command.initializeArguments();
 	}
 
 	@AfterEach
@@ -295,6 +296,58 @@ class ContactCommandTest {
 
 		verify(hotCash).fence(player);
 		assertEquals(0, desk.cooldownLeftMs(player.getUniqueId()));
+	}
+
+
+	private org.luckyraven.keystone.command.argument.Argument fenceArgument() {
+		return command.getArgument().getNode().getChildren().get(0).getData();
+	}
+
+	@Test
+	@DisplayName("handler: '/glw contact fence' reaches router.fence (not the star parser) and starts the cooldown")
+	void fenceWordIsRoutedByTheArgument() {
+		wanted(3, 5000);
+		HotCash hotCash = fake(true);
+
+		fenceArgument().executeArgument(player, new String[]{"contact", "fence"});
+
+		verify(hotCash).fence(player);
+		assertTrue(desk.cooldownLeftMs(player.getUniqueId()) > 0);
+		verify(player, never()).sendMessage(contains("MUST"));
+	}
+
+	@Test
+	@DisplayName("handler: the word is case-insensitive")
+	void fenceWordIsCaseInsensitive() {
+		wanted(3, 5000);
+		HotCash hotCash = fake(true);
+
+		fenceArgument().executeArgument(player, new String[]{"contact", "FENCE"});
+
+		verify(hotCash).fence(player);
+	}
+
+	@Test
+	@DisplayName("handler: a star count still buys stars and never touches the fence")
+	void starCountStillContacts() {
+		wanted(3, 5000);
+		HotCash hotCash = fake(true);
+
+		fenceArgument().executeArgument(player, new String[]{"contact", "1"});
+
+		verify(hotCash, never()).fence(any());
+		assertEquals(2, user.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("tab: 'fence' is offered only while a hot-cash module is installed")
+	void tabOffersFenceOnlyWhenInstalled() {
+		assertTrue(!fenceArgument().getArgumentString(player).contains("fence"));
+
+		router.install(mock(HotCash.class));
+
+		assertTrue(fenceArgument().getArgumentString(player).contains("fence"));
+		assertTrue(fenceArgument().getArgumentString(player).contains("1"));
 	}
 
 }

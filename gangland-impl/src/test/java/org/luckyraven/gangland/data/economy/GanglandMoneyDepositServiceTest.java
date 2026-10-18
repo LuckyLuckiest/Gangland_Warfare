@@ -18,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -109,8 +111,11 @@ class GanglandMoneyDepositServiceTest {
 		return addon;
 	}
 
+	private HotCash lastHotCash;
+
 	private GanglandMoneyDepositService routed(HotCash.Take answer, MoneyAddon addon) {
 		HotCash hotCash = mock(HotCash.class);
+		lastHotCash = hotCash;
 		when(hotCash.take(any(), any(), anyString())).thenReturn(answer);
 		HotCashRouter router = new HotCashRouter();
 		router.install(hotCash);
@@ -139,6 +144,8 @@ class GanglandMoneyDepositServiceTest {
 
 		assertEquals(0, Currency.of(10D).compareTo(economy.getAmount()));
 		verify(player, never()).sendMessage(anyString());
+		verify(lastHotCash).take(eq(player), argThat(amount -> amount.compareTo(new BigDecimal("50")) == 0),
+		                         eq("pickup"));
 	}
 
 	@Test

@@ -85,7 +85,7 @@ public class MoneyProximityPickupTask extends BukkitRunnable {
 		}
 	}
 
-	private void scanAndDeposit(Player player) {
+	void scanAndDeposit(Player player) {
 		for (Entity entity : player.getNearbyEntities(PICKUP_RANGE, PICKUP_RANGE, PICKUP_RANGE)) {
 			if (!(entity instanceof Item item)) continue;
 			if (!item.isValid() || item.isDead()) continue;
