@@ -233,7 +233,7 @@ class StandoffControllerTest {
 		CopNpc idle    = cop(CopState.IDLE, playerId, 1, 10 * SEC);
 		CopNpc posted  = cop(CopState.POSTED, playerId, 2, 10 * SEC);
 		CopNpc guard   = cop(CopState.GUARDING, playerId, 3, 10 * SEC);
-		CopNpc cuffing = cop(CopState.CUFFING, playerId, 4, 10 * SEC);
+		CopNpc cuffing = cop(CopState.CUFFING, UUID.randomUUID(), 4, 10 * SEC);
 		CopNpc other   = cop(CopState.PURSUING, UUID.randomUUID(), 5, 10 * SEC);
 		CopNpc a       = cop(CopState.PURSUING, playerId, 6, 10 * SEC);
 		CopNpc b       = cop(CopState.COMBAT, playerId, 7, 10 * SEC);

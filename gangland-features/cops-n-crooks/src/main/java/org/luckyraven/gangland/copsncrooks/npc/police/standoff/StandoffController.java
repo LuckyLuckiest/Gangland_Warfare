@@ -111,6 +111,7 @@ public class StandoffController {
 		}
 		prune(id, cfg, now);
 		if (!cfg.enabled() || group.isEmpty() || now < cooldownUntil.getOrDefault(id, 0L)) return;
+		if (cuffing(group, id)) return;
 
 		List<CopNpc> hunting = hunting(group, id, player.getLocation());
 		if (hunting.size() < 2) return;
@@ -137,6 +138,15 @@ public class StandoffController {
 
 	private static void holdRefill(CopGroup group, long now, long until) {
 		group.holdPendingUntil(Math.min(until, now + HOLD_STEP_MS));
+	}
+
+	/** A squad cop mid-arrest on this suspect: the arrest, not a standoff, resolves the encounter. */
+	private static boolean cuffing(CopGroup group, UUID id) {
+		for (CopNpc cop : group.getCops()) {
+			if (cop == null || !cop.isValid()) continue;
+			if (cop.getCurrentState() == CopState.CUFFING && id.equals(cop.getTargetPlayerId())) return true;
+		}
+		return false;
 	}
 
 	private static List<CopNpc> hunting(CopGroup group, UUID id, @Nullable Location at) {
