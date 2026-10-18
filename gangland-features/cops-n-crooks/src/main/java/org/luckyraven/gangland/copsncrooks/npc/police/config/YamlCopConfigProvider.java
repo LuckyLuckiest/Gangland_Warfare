@@ -51,6 +51,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	 */
 	static final Set<String> DISPATCH_PRIORITY = Set.of("Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up");
 
+	/** One-shot breach and standoff lines: a server's Priority list must never silence them either. */
+	static final Set<String> ONE_SHOT_PRIORITY = Set.of("Stack_Up", "Breach", "Flashbang", "Negotiate");
+
 	/**
 	 * Code default for a cop_roles.yml with no Squad_Composition block (or no such file): roles are on, filled in this
 	 * order per wanted level from the {@link #builtInRoles built-in catalogue}. A Commander leads from level 3; Assault
@@ -953,6 +956,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		// Ruling R43: a server's own Priority list replaces the bundled one, but never silences the dispatch lines
 		Set<String> priority = new LinkedHashSet<>(read.priority());
 		priority.addAll(DISPATCH_PRIORITY);
+		priority.addAll(ONE_SHOT_PRIORITY);
 		return new RadioSettings(read.enabled(), read.range(), read.targetRange(), read.squadGapMs(), read.playerGapMs(),
 		                         read.ackDelayTicks(), read.responderMax(), read.cooldownMs(), priority, read.soundName(),
 		                         read.volume(), read.pitch());
