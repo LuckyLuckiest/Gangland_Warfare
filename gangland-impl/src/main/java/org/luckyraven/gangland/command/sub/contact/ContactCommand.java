@@ -8,6 +8,7 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
 import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
@@ -28,13 +29,15 @@ public final class ContactCommand extends Command {
 
 	private final UserManager<Player> userManager;
 	private final ContactDesk         desk;
+	private final HotCashRouter       router;
 
 	public ContactCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager,
-	                      ContactDesk desk) {
+	                      ContactDesk desk, HotCashRouter router) {
 		super(gangland, "contact", true);
 
 		this.userManager = userManager;
 		this.desk        = desk;
+		this.router      = router;
 
 		var list = getCommands().entrySet()
 		                        .stream()
@@ -128,6 +131,11 @@ public final class ContactCommand extends Command {
 
 		player.sendMessage(replaceMoney(Messages.CONTACT_USED.toString(), price).replace("%stars%",
 		                                                                                 String.valueOf(stars)));
+	}
+
+	/** {@code /glw contact fence}: sells the hot bag through the installed {@link HotCashRouter}. */
+	void fence(Player player) {
+		throw new UnsupportedOperationException("TDD stub");
 	}
 
 	private static String replaceMoney(String text, BigDecimal price) {

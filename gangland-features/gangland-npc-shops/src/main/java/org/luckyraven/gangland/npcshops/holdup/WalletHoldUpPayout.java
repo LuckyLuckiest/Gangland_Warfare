@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.npcshops.holdup;
 
 import org.bukkit.entity.Player;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
 import org.luckyraven.gangland.npcshops.trader.economy.TraderEconomyContract;
 
 import java.math.BigDecimal;
@@ -12,12 +13,19 @@ public final class WalletHoldUpPayout implements HoldUpPayout {
 	private final TraderEconomyContract    economy;
 	private final Supplier<HoldUpSettings> settings;
 	private final DoubleSupplier           random;
+	private final HotCashRouter            router;
 
 	public WalletHoldUpPayout(TraderEconomyContract economy, Supplier<HoldUpSettings> settings,
-	                          DoubleSupplier random) {
+	                          DoubleSupplier random, HotCashRouter router) {
 		this.economy  = economy;
 		this.settings = settings;
 		this.random   = random;
+		this.router   = router;
+	}
+
+	public WalletHoldUpPayout(TraderEconomyContract economy, Supplier<HoldUpSettings> settings,
+	                          DoubleSupplier random) {
+		this(economy, settings, random, new HotCashRouter());
 	}
 
 	@Override

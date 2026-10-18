@@ -74,4 +74,14 @@ public interface MoneyDepositService {
 		return BigDecimal.valueOf(getBalance(player));
 	}
 
+	/**
+	 * Credits a picked-up cash item; false means the pickup was refused and the item must stay on the ground.
+	 * Default = {@link #deposit(Player, double, String)} and true.
+	 *
+	 * @since 2.7
+	 */
+	default boolean depositPickup(Player player, double amount, String variationId) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
 }

@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.data.economy;
 
-import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.util.ActionBarManager;
@@ -20,7 +19,6 @@ import java.math.BigDecimal;
  * player, deposits via {@code EconomyHandler}, and emits both a chat line and an action-bar flash using the templates
  * configured in {@code money.yml}.
  */
-@RequiredArgsConstructor
 public class GanglandMoneyDepositService implements MoneyDepositService {
 
 	private static final String AMOUNT_PLACEHOLDER = "%amount%";
@@ -28,6 +26,25 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 	private final UserManager<Player> userManager;
 	private final MoneyAddon          moneyAddon;
 	private final PlaceholderService  placeholderService;
+	private final HotCashRouter       router;
+
+	public GanglandMoneyDepositService(UserManager<Player> userManager, MoneyAddon moneyAddon,
+	                                   PlaceholderService placeholderService, HotCashRouter router) {
+		this.userManager        = userManager;
+		this.moneyAddon         = moneyAddon;
+		this.placeholderService = placeholderService;
+		this.router             = router;
+	}
+
+	public GanglandMoneyDepositService(UserManager<Player> userManager, MoneyAddon moneyAddon,
+	                                   PlaceholderService placeholderService) {
+		this(userManager, moneyAddon, placeholderService, new HotCashRouter());
+	}
+
+	@Override
+	public boolean depositPickup(Player player, double amount, String variationId) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
 
 	private static String formatAmount(double amount) {
 		// Whole-number drops are the common case; only show decimals when the rolled value isn't whole.

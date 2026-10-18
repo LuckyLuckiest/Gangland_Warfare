@@ -14,6 +14,8 @@ import org.luckyraven.gangland.core.user.IdentitySettingsContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.data.economy.HotCash;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
 import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.events.wanted.EvasionState;
 import org.luckyraven.gangland.file.configuration.Messages;
@@ -50,6 +52,7 @@ class ContactCommandTest {
 	private User<Player>           user;
 	private ContactDesk            desk;
 	private ContactCommand         command;
+	private final HotCashRouter    router = new HotCashRouter();
 	private final AtomicLong       now    = new AtomicLong(1_000L);
 	private final List<Object>     events = new ArrayList<>();
 
@@ -88,7 +91,7 @@ class ContactCommandTest {
 		when(users.getUser(player)).thenReturn(user);
 
 		desk    = new ContactDesk(now::get);
-		command = new ContactCommand(plugin, users, desk);
+		command = new ContactCommand(plugin, users, desk, router);
 	}
 
 	@AfterEach
@@ -219,6 +222,79 @@ class ContactCommandTest {
 		verify(player).sendMessage(contains("DISABLED"));
 		assertEquals(5000, cash());
 		assertEquals(3, user.getWanted().getLevel());
+	}
+
+	private HotCash fake(boolean result) {
+		HotCash hotCash = mock(HotCash.class);
+		when(hotCash.fence(player)).thenReturn(result);
+		router.install(hotCash);
+		return hotCash;
+	}
+
+	@Test
+	@DisplayName("fence: wanted, unseen, router sells -> shared contacts cooldown starts, a second call is refused")
+	void fenceRoutesThroughGateAndStartsCooldown() {
+		wanted(3, 5000);
+		HotCash hotCash = fake(true);
+
+		command.fence(player);
+
+		verify(hotCash).fence(player);
+		assertTrue(desk.cooldownLeftMs(player.getUniqueId()) > 0);
+
+		command.fence(player);
+
+		verify(hotCash, times(1)).fence(player);
+		verify(player).sendMessage(contains("COOLDOWN"));
+		assertEquals(5000, cash(), "core never touches money for a fence");
+	}
+
+	@Test
+	@DisplayName("fence: seen, not wanted, no module installed, contacts off -> refused, router.fence never called")
+	void fenceRefusedWhenSeenOrNotWantedOrNoModule() throws Exception {
+		wanted(3, 5000);
+		HotCash hotCash = fake(true);
+		desk.observe(player.getUniqueId(), EvasionState.SEEN);
+		command.fence(player);
+		verify(player).sendMessage(contains("SEEN"));
+
+		wanted(0, 5000);
+		desk.observe(player.getUniqueId(), EvasionState.OFF);
+		command.fence(player);
+		verify(player).sendMessage(contains("NOT-WANTED"));
+
+		router.install(null);
+		wanted(3, 5000);
+		command.fence(player);
+		verify(player).sendMessage(contains("DISABLED"));
+
+		verify(hotCash, never()).fence(any());
+	}
+
+	@Test
+	@DisplayName("fence: contacts switched off -> DISABLED and the router is not consulted")
+	void fenceRefusedWhenContactsOff() throws Exception {
+		SettingsFixture.write(dir, "Wanted:\n  Contacts:\n    Enable: false\n");
+		SettingsFixture.initialize(dir);
+		wanted(3, 5000);
+		HotCash hotCash = fake(true);
+
+		command.fence(player);
+
+		verify(player).sendMessage(contains("DISABLED"));
+		verify(hotCash, never()).fence(any());
+	}
+
+	@Test
+	@DisplayName("fence: router answers false (empty bag, cuffs) -> no cooldown")
+	void fenceFalseStartsNoCooldown() {
+		wanted(3, 5000);
+		HotCash hotCash = fake(false);
+
+		command.fence(player);
+
+		verify(hotCash).fence(player);
+		assertEquals(0, desk.cooldownLeftMs(player.getUniqueId()));
 	}
 
 }
