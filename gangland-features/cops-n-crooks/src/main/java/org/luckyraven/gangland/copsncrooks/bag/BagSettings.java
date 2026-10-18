@@ -22,8 +22,26 @@ public record BagSettings(boolean enable, double fenceCut, double maxPerChase, d
 	/** The shipped {@code Wanted.Bag}. */
 	public static final BagSettings DEFAULT = new BagSettings(true, 0.35, 5000, 15000, 4, "medium", true, 40);
 
+	public BagSettings {
+		spillStacks = Math.max(1, Math.min(16, spillStacks));
+	}
+
 	/** Reads the {@code Wanted} section; a null section, or a missing block or key, is its default. */
 	public static BagSettings parse(@Nullable NodeReader wanted) {
-		throw new UnsupportedOperationException("TDD stub");
+		if (wanted == null) return DEFAULT;
+
+		NodeReader block = wanted.get("Bag").asMapping().reader();
+		if (block == null) return DEFAULT;
+
+		// ponytail: nextUp/nextDown make the 0 and 1 bounds exclusive; the range report shows the epsilon
+		return new BagSettings(block.get("Enable").asBool().orDefault(DEFAULT.enable()),
+		                       block.get("Fence_Cut").asDouble().min(Math.nextUp(0.0)).max(Math.nextDown(1.0))
+		                            .orDefault(DEFAULT.fenceCut()),
+		                       block.get("Max_Per_Chase").asDouble().min(0).orDefault(DEFAULT.maxPerChase()),
+		                       block.get("Max_Banked_Per_Day").asDouble().min(0).orDefault(DEFAULT.maxBankedPerDay()),
+		                       block.get("Spill_Stacks").asInt().orDefault(DEFAULT.spillStacks()),
+		                       block.get("Spill_Variation").asString().orDefault(DEFAULT.spillVariation()),
+		                       block.get("Hud_Enable").asBool().orDefault(DEFAULT.hudEnable()),
+		                       block.get("Hud_Interval_Ticks").asInt().min(1).orDefault(DEFAULT.hudIntervalTicks()));
 	}
 }
