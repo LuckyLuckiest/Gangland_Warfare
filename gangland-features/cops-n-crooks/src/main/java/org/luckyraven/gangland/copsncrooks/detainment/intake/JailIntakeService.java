@@ -91,6 +91,9 @@ public class JailIntakeService {
 		seizedInventoryService.snapshot(player);
 		clearInventory(player);
 		giveItem(player, paperworkItemFactory.create());
+		// 0.20.0: the bag is taken before the wanted clear, so the seizure line prints even on a death-commit
+		double seized = bagSeizure == null ? 0 : bagSeizure.applyAsDouble(player);
+		if (seized > 0) player.sendMessage(messages.format(WantedMessages.Key.BAG_SEIZED, money(seized)));
 		wantedClearContract.clearWanted(player.getUniqueId(), WantedCause.ARREST);
 
 		jailService.detainPlayer(jail.getId(), player.getUniqueId());
