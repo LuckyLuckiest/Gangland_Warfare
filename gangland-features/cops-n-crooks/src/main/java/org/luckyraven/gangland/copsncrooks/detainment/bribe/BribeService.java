@@ -19,6 +19,7 @@ import org.luckyraven.gangland.core.wanted.WantedCause;
 
 import org.luckyraven.gangland.copsncrooks.bag.BagFunding;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -50,6 +51,24 @@ public class BribeService {
 		this.bagFunding = bagFunding;
 	}
 
+	/** Bag first, then the wallet for the rest; the bag is debited only once the wallet part succeeded. */
+	private ChargeResult charge(Player player, double cost) {
+		if (bagFunding == null) return economy.tryCharge(player, cost);
+
+		BigDecimal price      = BigDecimal.valueOf(cost);
+		BigDecimal fromBag    = bagFunding.available(player).min(price);
+		BigDecimal fromWallet = price.subtract(fromBag);
+		if (fromWallet.signum() > 0) {
+			ChargeResult result = economy.tryCharge(player, fromWallet.doubleValue());
+			if (result != ChargeResult.SUCCESS) return result;
+		}
+		if (fromBag.signum() > 0) {
+			bagFunding.debit(player, fromBag);
+			bagFunding.announceBribe(player, fromBag, fromWallet);
+		}
+		return ChargeResult.SUCCESS;
+	}
+
 	// ── Handcuff bribe ───────────────────────────────────────────────────────
 
 	public double computeHandcuffBribeCost(Player player) {
@@ -67,7 +86,7 @@ public class BribeService {
 
 		double cost = computeHandcuffBribeCost(player);
 
-		ChargeResult result = economy.tryCharge(player, cost);
+		ChargeResult result = charge(player, cost);
 		switch (result) {
 			case INSUFFICIENT_FUNDS:
 				return BribeResult.INSUFFICIENT_FUNDS;
@@ -100,7 +119,7 @@ public class BribeService {
 
 		double cost = computeJailBribeCost(player);
 
-		ChargeResult result = economy.tryCharge(player, cost);
+		ChargeResult result = charge(player, cost);
 		switch (result) {
 			case INSUFFICIENT_FUNDS:
 				return BribeResult.INSUFFICIENT_FUNDS;
