@@ -440,8 +440,27 @@ class GetawayServiceTest {
 	@Test
 	@DisplayName("a peak above the list uses the last entry")
 	void peakAboveList_usesLastEntry() {
+		settings(new GetawaySettings(true, List.of(0, 25, 75), 600, 1000, Set.of()));
 		chase(steve, 5);
 
-		assertEquals(new Result(350, Reason.PAID), award(steve, WantedCause.EVASION));
+		assertEquals(new Result(75, Reason.PAID), award(steve, WantedCause.EVASION));
+	}
+
+	@Test
+	@DisplayName("P-GET-6: a getaway clipped to 0 by the cap still starts the cooldown")
+	void cooldown_startsEvenWhenCapped() {
+		settings(600, 75);
+		Player mate = player("Alex", OWN_GANG);
+		online.add(mate);
+		chase(steve, 3);
+		chase(mate, 2);
+
+		assertEquals(new Result(75, Reason.PAID), award(steve, WantedCause.EVASION));
+		clock.set(T0 + 600_000L);
+		assertEquals(new Result(0, Reason.CAPPED), award(steve, WantedCause.EVASION));
+		assertEquals(List.of(37, 37), grantsFor(mate));
+		clock.set(T0 + 900_000L);
+		assertEquals(new Result(0, Reason.COOLDOWN), award(steve, WantedCause.EVASION));
+		assertEquals(List.of(37, 37), grantsFor(mate));
 	}
 }
