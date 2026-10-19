@@ -93,7 +93,9 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Standoff_Over", List.of("Time's up, we're going in style!", "Barricade's down, all units moving in with style!")),
 			Map.entry("Stack_Up", List.of("Stack up on the door! Shield, you're first!", "Stacking up, hold the door!")),
 			Map.entry("Breach", List.of("Breach! Breach! Go, go, go!", "Breaching now, move in!")),
-			Map.entry("Flashbang", List.of("Flashbang out! Eyes closed!", "Flash out, going in!")));
+			Map.entry("Flashbang", List.of("Flashbang out! Eyes closed!", "Flash out, going in!")),
+			Map.entry("Most_Wanted", List.of("Most wanted: %target%, last seen near %place%. All units, be on the lookout!",
+			                                 "Attention: %target% is Most Wanted, last seen in %place%. Keep your eyes open!")));
 
 	public CopRadioMessages(FileManager fileManager) {
 		super(fileManager, BASE_NAME);

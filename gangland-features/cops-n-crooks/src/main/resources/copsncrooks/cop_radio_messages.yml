@@ -300,3 +300,7 @@ Lines:
    Flashbang:
       - "Flashbang out! Eyes closed!"
       - "Flash out, going in!"
+   # The wanted-list announcement: the most wanted suspect and where they were last seen.
+   Most_Wanted:
+      - "Most wanted: %target%, last seen near %place%. All units, be on the lookout!"
+      - "Attention: %target% is Most Wanted, last seen in %place%. Keep your eyes open!"
