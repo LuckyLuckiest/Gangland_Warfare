@@ -1,7 +1,9 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
@@ -33,7 +35,11 @@ public class MostWantedModuleConfig {
 	@Bean
 	public MostWanted mostWanted(ChaseArcs arcs, ChaseConfigLoader config, WantedMessages messages, CopManager copManager,
 	                             CopRadio copRadio) {
-		throw new UnsupportedOperationException("TDD stub");
+		return new MostWanted(plugin, arcs, config, messages, Bukkit::getOnlinePlayers, line -> {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(line);
+			}
+		}, radio(copManager, copRadio));
 	}
 
 	@Bean
@@ -44,6 +50,10 @@ public class MostWantedModuleConfig {
 	/** The police-radio call: only when the holder has a cop group to hear it. */
 	BiConsumer<Player, Integer> radio(CopManager copManager, CopRadio copRadio) {
 		return (player, stars) -> {
+			CopGroup group = copManager.groupOf(player.getUniqueId());
+			if (group != null) {
+				copRadio.dispatch(group, player, "Most_Wanted", stars, "");
+			}
 		};
 	}
 
