@@ -33,6 +33,7 @@ public final class BagService implements HotCash, BagFunding, BeanLifecycle {
 	private final BagEnv                env;
 	private final Map<UUID, Long>       lastFullLine = new ConcurrentHashMap<>();
 	private final Set<UUID>             settled      = ConcurrentHashMap.newKeySet();
+	private final Set<UUID>             quitSeized   = ConcurrentHashMap.newKeySet();
 	private volatile boolean            shuttingDown;
 
 	public BagService(HotCashBags bags, Supplier<BagSettings> settings, WantedMessages messages, BagEnv env) {
@@ -158,7 +159,10 @@ public final class BagService implements HotCash, BagFunding, BeanLifecycle {
 	public double seize(Player player) {
 		UUID       id     = player.getUniqueId();
 		BigDecimal amount = bags.takeAll(id);
-		bags.setSeized(id, amount);
+		// a quit-time seize already filed the paperwork: the intake's empty seize must not wipe it
+		if (amount.signum() > 0 || !quitSeized.remove(id)) {
+			bags.setSeized(id, amount);
+		}
 		return amount.doubleValue();
 	}
 
@@ -218,6 +222,7 @@ public final class BagService implements HotCash, BagFunding, BeanLifecycle {
 			outcome = "kept";
 		} else if (env.restrained(player)) {
 			seize(player);
+			quitSeized.add(id);
 			outcome = "seized";
 		} else {
 			bags.takeAll(id);
