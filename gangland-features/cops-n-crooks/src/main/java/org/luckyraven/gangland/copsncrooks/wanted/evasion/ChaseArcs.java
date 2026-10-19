@@ -54,6 +54,11 @@ public final class ChaseArcs {
 
 	/** A new chase. A RESTORE start with no arc (restart, or offline too long) counts as one quit. */
 	public void start(UUID id, WantedCause cause, int level) {
+		start(id, cause, level, cause == WantedCause.CRIME);
+	}
+
+	/** Like {@link #start(UUID, WantedCause, int)}; {@code earns} says whether the start level seeds earned stars (C-37). */
+	public void start(UUID id, WantedCause cause, int level, boolean earns) {
 		prune();
 		long     now = clock.getAsLong();
 		ChaseArc arc = new ChaseArc(cause);
@@ -61,6 +66,11 @@ public final class ChaseArcs {
 		arc.startedAt = now;
 		arc.lastHotAt = now;
 		arc.peak      = level;
+		if (earns) {
+			arc.earned     = level;
+			arc.earnedPeak = level;
+			arc.earnedAt   = now;
+		}
 		if (cause == WantedCause.RESTORE) {
 			arc.quits    = 1;
 			arc.seededAt = now;
@@ -68,9 +78,21 @@ public final class ChaseArcs {
 		arcs.put(id, arc);
 	}
 
-	/** Like {@link #start(UUID, WantedCause, int)}; {@code earns} says whether the start level seeds earned stars (C-37). */
-	public void start(UUID id, WantedCause cause, int level, boolean earns) {
-		throw new UnsupportedOperationException("TDD stub");
+	/**
+	 * Earned stars: a drop clamps, a CRIME raise adds (never past the new level, so a start that already seeded the
+	 * level is not counted twice); every other cause leaves it alone.
+	 */
+	public void earn(UUID id, int oldLevel, int newLevel, WantedCause cause) {
+		ChaseArc arc = arcs.get(id);
+		if (arc == null) return;
+
+		if (newLevel < oldLevel) {
+			arc.earned = Math.min(arc.earned, newLevel);
+		} else if (cause == WantedCause.CRIME && newLevel > oldLevel) {
+			arc.earned     = Math.min(arc.earned + newLevel - oldLevel, newLevel);
+			arc.earnedPeak = Math.max(arc.earnedPeak, arc.earned);
+			arc.earnedAt   = clock.getAsLong();
+		}
 	}
 
 	/** The player is back: shift every stamp by the time he was away so chase and quiet exclude it. */
@@ -117,7 +139,10 @@ public final class ChaseArcs {
 	/** A new SEEN track: a respot only when the squad had lost him first. */
 	public void seen(UUID id) {
 		ChaseArc arc = arcs.get(id);
-		if (arc != null && arc.searched) {
+		if (arc == null) return;
+
+		arc.sighted = true;
+		if (arc.searched) {
 			arc.respots++;
 			arc.searched = false;
 		}
@@ -256,10 +281,5 @@ public final class ChaseArcs {
 	public void markNews(UUID id) {
 		ChaseArc arc = arcs.get(id);
 		if (arc != null) arc.newsSent = true;
-	}
-
-	/** Earned stars (0.21.0 wave 2): see SPEC section 0. No-op without an arc. */
-	public void earn(UUID id, int oldLevel, int newLevel, WantedCause cause) {
-		throw new UnsupportedOperationException("TDD stub");
 	}
 }
