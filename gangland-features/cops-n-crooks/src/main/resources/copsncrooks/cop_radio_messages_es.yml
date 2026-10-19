@@ -227,6 +227,6 @@ Lines:
    Flashbang:
       - "¡Granada aturdidora! ¡Ojos cerrados!"
       - "¡Flash afuera, entramos!"
+   # The wanted-list announcement: the most wanted suspect and where they were last seen.
    Most_Wanted:
-      - "Más buscado: %target%, visto por última vez cerca de %place%. ¡Todas las unidades, alerta!"
-      - "Atención: %target% es el más buscado, último avistamiento en %place%. ¡Ojo abierto!"
+      - "Atención a todas las unidades: %target% es el más buscado de la ciudad, visto cerca de %place%."
