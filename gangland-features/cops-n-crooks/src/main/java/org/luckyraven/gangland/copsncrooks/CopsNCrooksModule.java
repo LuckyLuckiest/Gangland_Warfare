@@ -7,7 +7,9 @@ import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksFileConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
 import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.GetawayModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.MostWantedModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.PursuitReportModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RescueModuleConfig;
@@ -52,6 +54,9 @@ public final class CopsNCrooksModule implements KeystoneModule {
 		         .configuration(StandoffModuleConfig.class)
 		         .configuration(BreachModuleConfig.class)
 		         .configuration(PursuitReportModuleConfig.class)
+		         // 0.21.0 wave 2
+		         .configuration(GetawayModuleConfig.class)
+		         .configuration(MostWantedModuleConfig.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .commandPackage(COMMAND_PACKAGE)
 		         .repositoryPackage(REPOSITORY_PACKAGE);
