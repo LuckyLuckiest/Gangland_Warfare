@@ -19,11 +19,22 @@ public class MostWantedPlaceholders implements PlaceholderContribution {
 
 	@Override
 	public @Nullable String resolve(OfflinePlayer player, String parameter) {
-		return null;
+		return answer(parameter);
 	}
 
 	@Override
 	public @Nullable String resolveGlobal(String token) {
+		return answer(token);
+	}
+
+	private @Nullable String answer(String token) {
+		if ("cnc_most_wanted".equals(token)) {
+			String name = mostWanted.holderName();
+			return name == null ? "" : name;
+		}
+		if ("cnc_most_wanted_stars".equals(token)) {
+			return String.valueOf(mostWanted.holderStars());
+		}
 		return null;
 	}
 }
