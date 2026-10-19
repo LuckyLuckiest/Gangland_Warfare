@@ -250,8 +250,8 @@ public final class SquadRadio {
 	}
 
 	/**
-	 * A hearer who was delivered the line passes it on to the hunted player when he is online, not from the speaker's
-	 * world's list, and was not delivered it himself. Once per line: the first hearer the voice says relays. The
+	 * A hearer who was delivered the line passes it on to the hunted player when he is online and has not already
+	 * been delivered the line. Once per line: the first hearer the voice says relays. The
 	 * hunted player's own gap applies to a non-priority line, and a relay starts that gap like any delivered line.
 	 */
 	private void relayToHunted(RadioSettings cfg, RadioVoice voice, NpcSquad squad, @Nullable LivingEntity hunted,
