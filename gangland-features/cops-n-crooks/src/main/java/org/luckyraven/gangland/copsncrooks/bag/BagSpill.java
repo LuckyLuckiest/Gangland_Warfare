@@ -25,12 +25,15 @@ import java.util.function.IntFunction;
 public final class BagSpill {
 
 	/** The cops-owned PDC key of a hot bill: {@code copsncrooks:hot_cash}. */
+	@SuppressWarnings("deprecation")
 	public static final NamespacedKey KEY = new NamespacedKey("copsncrooks", "hot_cash");
 
 	private final IntFunction<ItemStack> stackMaker;
 
 	/**
-	 * @param plugin     owner of the PDC key
+	 * Plugin is kept for constructor compatibility and is unused: the PDC key is a fixed cops-owned namespace.
+	 *
+	 * @param plugin     unused, kept for constructor compatibility
 	 * @param stackMaker builds one money item worth the given whole dollars (production: {@code MoneyItemFactory.build})
 	 */
 	public BagSpill(JavaPlugin plugin, IntFunction<ItemStack> stackMaker) {
