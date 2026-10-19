@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.bag;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.function.Supplier;
 
@@ -11,15 +12,35 @@ import java.util.function.Supplier;
  */
 public final class BagHud {
 
+	private final JavaPlugin plugin;
+	private final BagService service;
+	private final Supplier<BagSettings> settings;
+	private volatile BukkitTask task;
+
 	public BagHud(JavaPlugin plugin, BagService service, Supplier<BagSettings> settings) {
+		this.plugin   = plugin;
+		this.service  = service;
+		this.settings = settings;
 	}
 
 	/** Starts (or restarts) the repeating task at the configured interval. */
 	public void start() {
-		throw new UnsupportedOperationException("TDD stub");
+		stop();
+		BagSettings cfg = settings.get();
+		if (!cfg.hudEnable()) {
+			return;
+		}
+		long interval = Math.max(1, cfg.hudIntervalTicks());
+		task = plugin.getServer().getScheduler().runTaskTimer(plugin,
+		                                                      () -> service.refreshHud(plugin.getServer().getOnlinePlayers()),
+		                                                      interval, interval);
 	}
 
 	public void stop() {
-		throw new UnsupportedOperationException("TDD stub");
+		if (task == null) {
+			return;
+		}
+		task.cancel();
+		task = null;
 	}
 }
