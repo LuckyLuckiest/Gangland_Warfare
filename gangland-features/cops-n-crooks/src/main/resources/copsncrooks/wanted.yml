@@ -342,3 +342,22 @@ Wanted:
       Enable: true
       # Seconds between repeat trespass heat
       Repeat_Seconds: 60
+
+   # 0.20.0 hot-cash bag: cash grabbed while wanted goes into a bag you keep only if you get away
+   Bag:
+      # 0.20.0 cash you grab while wanted goes into a bag you keep only if you get away; false = wallet as before
+      Enable: true
+      # 0.20.0 share the fence keeps (above 0, below 1); every ending except a getaway pays the bag minus this
+      Fence_Cut: 0.35
+      # 0.20.0 most cash one chase can bag; a full bag leaves cash on the ground; 0 = no cap
+      Max_Per_Chase: 5000
+      # 0.20.0 most bag cash a getaway banks per day; the rest goes through the fence; 0 = no cap
+      Max_Banked_Per_Day: 15000
+      # 0.20.0 money items a spilled bag drops (1-16)
+      Spill_Stacks: 4
+      # 0.20.0 items/money.yml variation the spilled bills look like
+      Spill_Variation: medium
+      # 0.20.0 show 'Bag: $X' on the action bar
+      Hud_Enable: true
+      # 0.20.0 action bar refresh in ticks
+      Hud_Interval_Ticks: 40

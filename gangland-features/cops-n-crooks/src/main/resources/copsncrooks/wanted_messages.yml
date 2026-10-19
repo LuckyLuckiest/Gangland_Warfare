@@ -136,3 +136,34 @@ Suspect:
    Mask: "in a %head%"
    # The whole description; %who% is the word for the suspect, %mask% the mask, %chest% the chest, %vehicle% the vehicle
    Format: "%who%%mask%, %chest%, %vehicle%"
+
+# 0.20.0 hot-cash bag: the action bar, the bag's messages and the fence's messages
+Bag:
+   # 0.20.0 the action bar while you carry a bag; %money_symbol% and %amount% are filled in
+   Hud: "&6Bag: &a%money_symbol%%amount%"
+   # 0.20.0 the bag is full: no more cash goes in
+   Full: "&cYour bag is full."
+   # 0.20.0 a getaway banks the bag; %amount% is what is kept
+   Banked: "&aYou got away: &f%money_symbol%%amount% &afrom your bag is clean."
+   # 0.20.0 the day's bank limit is reached: the fence takes its cut of the rest; %cut% is the fence's share, %rest% the bag cash it took
+   Over_Cap: "&7Over today's limit: the fence took &f%money_symbol%%cut% &7of &f%money_symbol%%rest%&7."
+   # 0.20.0 the chase ended and the fence paid for the bag; %bag% is the bag, %amount% what you got
+   Converted: "&7Chase over: the fence turned your bag of &f%money_symbol%%bag% &7into &a%money_symbol%%amount%&7."
+   # 0.20.0 the cops seize the bag on arrest; %amount% is what was taken
+   Seized: "&cBag seized: &f%money_symbol%%amount%"
+   # 0.20.0 the paperwork line for a seized bag; %amount% is what was taken
+   Paperwork: "&7Bag seized: &c%money_symbol%%amount%"
+   # 0.20.0 the bag spilled on death or quit; %amount% is what is on the street
+   Spilled: "&cYour bag spilled: &f%money_symbol%%amount% &cis on the street."
+   # 0.20.0 hot cash picked up or held while wanted: the cops want you now
+   Hot: "&cHot cash! The cops want you now."
+   # 0.20.0 a bribe paid partly from the bag; %bag% is the bag share, %wallet% the wallet share
+   Bribe: "&7Paid &f%money_symbol%%bag% &7from your bag and &f%money_symbol%%wallet% &7from your wallet."
+# 0.20.0 the fence: selling the bag to the fence
+Fence:
+   # 0.20.0 the fence paid for the bag; %amount% is the payment, %bag% the bag's value
+   Done: "&aThe fence paid &f%money_symbol%%amount% &afor your bag of &f%money_symbol%%bag%&a."
+   # 0.20.0 the fence has nothing to buy: the bag is empty
+   Empty: "&7Your bag is empty."
+   # 0.20.0 the fence refuses a cuffed player
+   Cuffed: "&cNot while you are in cuffs."
