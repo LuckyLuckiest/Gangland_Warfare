@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.PerimeterSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
@@ -121,6 +122,7 @@ public class StandoffController {
 
 	/** Keeps the refill held and radios the countdown. */
 	private void activeTick(State st, StandoffSettings cfg, long now) {
+		reportPostedSightings(st);
 		if (now >= st.until) {
 			timeout(st, cfg);
 			return;
@@ -131,6 +133,23 @@ public class StandoffController {
 			radio.sayFromLeader(st.group, "Negotiate", Map.of("seconds", String.valueOf(left)));
 			st.nextNegotiateAt += cfg.negotiateSeconds() * 1000L;
 		}
+	}
+
+	/** A posted cop that still sees the suspect reports him, keeping the squad's sighting fresh; the post is kept. */
+	private void reportPostedSightings(State st) {
+		for (CopNpc cop : st.posts) {
+			if (cop == null || !cop.isValid() || cop.getCurrentState() != CopState.POSTED) continue;
+			if (cop.canSee(st.player, sightRange())) {
+				st.group.getSquad().reportSighting(st.player.getLocation());
+				return;
+			}
+		}
+	}
+
+	private double sightRange() {
+		CopConfigProvider p = provider == null ? null : provider.get();
+		PerimeterSettings s = p == null ? null : p.getPerimeterSettings();
+		return (s == null ? PerimeterSettings.DEFAULT : s).sightRange();
 	}
 
 	/** ponytail: rolling hold, a short step ahead of now, so the end paths need no cancel of a long hold. */
