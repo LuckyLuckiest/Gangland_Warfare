@@ -35,6 +35,14 @@ public final class ChaseArc {
 	int                         busts;
 	/** The live breaking-news headline went out for this chase (0.21.0). */
 	boolean                     newsSent;
+	/** Stars raised with WantedCause.CRIME on this chase, drops clamp it (0.21.0). */
+	int                         earned;
+	/** Highest {@link #earned} this chase (0.21.0). */
+	int                         earnedPeak;
+	/** Clock millis when {@link #earned} last rose; 0 = never (0.21.0). */
+	long                        earnedAt;
+	/** A real cop sighting this chase (P-GET-5, 0.21.0). */
+	boolean                     sighted;
 	@Nullable AutoDrop.DropPlan pending;
 
 	ChaseArc(WantedCause startCause) {
@@ -85,5 +93,25 @@ public final class ChaseArc {
 	// 0.21.0
 	public boolean newsSent() {
 		return newsSent;
+	}
+
+	// 0.21.0 wave 2
+	public int earned() {
+		return earned;
+	}
+
+	// 0.21.0 wave 2
+	public int earnedPeak() {
+		return earnedPeak;
+	}
+
+	// 0.21.0 wave 2
+	public long earnedAt() {
+		return earnedAt;
+	}
+
+	// 0.21.0 wave 2
+	public boolean sighted() {
+		return sighted;
 	}
 }

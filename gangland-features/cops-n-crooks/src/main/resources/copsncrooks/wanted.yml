@@ -359,3 +359,37 @@ Wanted:
          Min_Seconds: 120
          # Minimum gap between live headlines server-wide
          Cooldown_Seconds: 300
+
+   # 0.21.0: getaway XP when the evasion clock takes your last star
+   Getaway:
+      # false = no getaway XP
+      Enable: true
+      # XP for getting away, by the peak stars earned through crimes; first entry is one star; the last entry is
+      # used above the list length
+      Experience:
+         - 0
+         - 25
+         - 75
+         - 175
+         - 350
+      # Seconds a player must wait between getaway payouts
+      Cooldown_Seconds: 600
+      # Most getaway XP a player gains per day, crew shares included; 0 = no cap
+      Daily_Cap: 1000
+      # Crimes whose stars never count toward the earned peak of a getaway (lower-case or any case works);
+      # these stars do not count toward Getaway or Most Wanted (C-37)
+      Exclude_Crimes:
+         - Trespass_Restricted
+         - Evading_Police
+         - Brandish_Near_Cop
+
+   # 0.21.0: the city's Most Wanted title
+   Most_Wanted:
+      # false = no Most Wanted title or radio alerts
+      Enable: true
+      # Stars earned through crimes needed for the title
+      Min_Stars: 4
+      # Seconds a player must keep the Most Wanted stars before the title is announced
+      Hold_Seconds: 10
+      # Minimum gap between title broadcasts server-wide
+      Cooldown_Seconds: 120

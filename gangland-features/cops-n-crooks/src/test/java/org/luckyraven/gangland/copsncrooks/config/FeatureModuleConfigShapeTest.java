@@ -21,7 +21,8 @@ class FeatureModuleConfigShapeTest {
 
 	private static final List<Class<?>> CONFIGS = List.of(SurrenderModuleConfig.class, RescueModuleConfig.class,
 	                                                      StandoffModuleConfig.class, BreachModuleConfig.class,
-	                                                      PursuitReportModuleConfig.class);
+	                                                      PursuitReportModuleConfig.class,
+	                                                      GetawayModuleConfig.class, MostWantedModuleConfig.class);
 
 	@Test
 	@DisplayName("each is annotated @Configuration so the bean framework scans it")

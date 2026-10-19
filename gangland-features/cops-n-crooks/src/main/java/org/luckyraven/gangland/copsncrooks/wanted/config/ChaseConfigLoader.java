@@ -34,6 +34,8 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 	private volatile PostEscapeSettings postEscape = PostEscapeSettings.DEFAULT;
 	private volatile CrewHeatSettings      crewHeat      = CrewHeatSettings.DEFAULT;
 	private volatile PursuitReportSettings pursuitReport = PursuitReportSettings.DEFAULT;
+	private volatile GetawaySettings       getaway       = GetawaySettings.DEFAULT;
+	private volatile MostWantedSettings    mostWanted    = MostWantedSettings.DEFAULT;
 
 	public ChaseConfigLoader(JavaPlugin plugin, FileManager fileManager) {
 		super(plugin, false, null, fileManager);
@@ -64,6 +66,16 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		return pursuitReport;
 	}
 
+	/** The current {@code Wanted.Getaway}, never null. @since 0.21.0 */
+	public GetawaySettings getGetaway() {
+		return getaway;
+	}
+
+	/** The current {@code Wanted.Most_Wanted}, never null. @since 0.21.0 */
+	public MostWantedSettings getMostWanted() {
+		return mostWanted;
+	}
+
 	@Override
 	public void clear() {
 		loaded     = ChaseConfig.DEFAULT;
@@ -71,6 +83,8 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		postEscape = PostEscapeSettings.DEFAULT;
 		crewHeat      = CrewHeatSettings.DEFAULT;
 		pursuitReport = PursuitReportSettings.DEFAULT;
+		getaway       = GetawaySettings.DEFAULT;
+		mostWanted    = MostWantedSettings.DEFAULT;
 	}
 
 	@Override
@@ -100,6 +114,8 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		postEscape = PostEscapeSettings.parse(wanted);
 		crewHeat = CrewHeatSettings.parse(wanted);
 		pursuitReport = PursuitReportSettings.parse(wanted);
+		getaway       = GetawaySettings.parse(wanted);
+		mostWanted    = MostWantedSettings.parse(wanted);
 
 		if (!report.isEmpty()) report.log(log);
 

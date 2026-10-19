@@ -4,7 +4,7 @@
 #
 # The text of the chase HUD and the charge sheet. & colour codes work. Placeholders in %percent% signs are filled in
 # by the plugin: %stars%, %time%, %arrow%, %distance%, %crime%, %tier%, %stance%, %count% (also the number of stars
-# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%.
+# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%.
 
 # The boss bar and the star card
 Hud:
@@ -168,4 +168,15 @@ Breaking_News:
    Live: "&4&lBREAKING &fPolice are chasing %player% across the city &c%stars%"
    # Said when the chase is over; %ending% is how it ended
    End: "&4&lBREAKING &fThe %stars% &fchase of %player% is over: %ending%"
+# 0.21.0 wave 2: the getaway XP lines (Wanted.Getaway) and the Most Wanted headline (Wanted.Most_Wanted)
+Getaway:
+   # You got away clean; %xp% is the XP you earned
+   Line: "&7Getaway: &a+%xp% XP"
+   # The daily XP cap for getaways is reached
+   Capped: "&7Getaway: &8daily XP cap reached"
+   # Said server-wide-to-the-crew when a crew mate gets away clean; %player% is who, %xp% is the XP
+   Share: "&a%player% got away clean: &f+%xp% XP &7for the crew"
+Most_Wanted:
+   # Said when a player becomes the city's Most Wanted; %player% and %stars% are that player and their level
+   New: "&4&lMOST WANTED &f%player% &7is now the city's Most Wanted &c%stars%"
 

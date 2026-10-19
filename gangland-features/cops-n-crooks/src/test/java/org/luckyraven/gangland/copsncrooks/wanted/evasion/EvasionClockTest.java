@@ -724,6 +724,32 @@ class EvasionClockTest {
 	}
 
 	@Test
+	@DisplayName("0.21.0 P-GET-5: the first real sighting (dispatch or crime scene counts) sets sighted")
+	void sighted_firstRealSighting_sets() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		assertFalse(arcs.arc(id).sighted());
+
+		unseenMs = 100;
+		tickSeconds(1);
+
+		assertTrue(arcs.arc(id).sighted());
+	}
+
+	@Test
+	@DisplayName("0.21.0 P-GET-5: a rejoin's seed alone leaves sighted false until a cop really sees him")
+	void sighted_rejoinSeedOnly_staysFalse() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		quitAndRejoin(300_000);
+		unseenMs = 1000;
+		tickSeconds(1);
+		assertFalse(arcs.arc(id).sighted());
+
+		unseenMs = 100;
+		tickSeconds(1);
+		assertTrue(arcs.arc(id).sighted());
+	}
+
+	@Test
 	@DisplayName("AUTO: 17.9 s in sight plus the 3 s Lost_Sight_Seconds grace is not a narrow escape")
 	void auto_lostSightGrace_isNotTimeInSight() {
 		auto();
