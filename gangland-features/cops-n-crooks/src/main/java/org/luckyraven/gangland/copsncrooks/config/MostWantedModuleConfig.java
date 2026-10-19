@@ -19,7 +19,9 @@ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import java.util.function.BiConsumer;
 
 /**
- * 0.21.0 wave 2 (Most Wanted lane): empty configuration shell; the lane adds its beans here.
+ * Most Wanted wiring (0.21.0): {@link MostWanted} is built from the chase arcs, chase config, wanted messages and
+ * the police-radio call (see {@link #radio}), with the online-player supplier and a server-wide broadcast;
+ * {@link MostWantedPlaceholders} is registered as a placeholder contribution.
  */
 @Configuration
 public class MostWantedModuleConfig {
