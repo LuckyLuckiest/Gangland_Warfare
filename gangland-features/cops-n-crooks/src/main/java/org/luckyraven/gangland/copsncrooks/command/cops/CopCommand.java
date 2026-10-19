@@ -11,6 +11,7 @@ import org.luckyraven.gangland.copsncrooks.item.CopsItems;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
+import org.luckyraven.gangland.copsncrooks.scanner.ScannerMapView;
 import org.luckyraven.gangland.copsncrooks.setup.SetupCommands;
 import org.luckyraven.gangland.copsncrooks.station.StationRegistry;
 import org.luckyraven.keystone.bean.command.CommandHandler;
@@ -29,10 +30,11 @@ public class CopCommand extends Command {
 	private final SetupCommands   setupCommands;
 	private final CommandMessages commandMessages;
 	private final CopsItems       copsItems;
+	private final ScannerMapView  scannerMapView;
 
 	public CopCommand(JavaPlugin plugin, CopService copService, CopSpawnManager copSpawnManager,
 	                  StationRegistry stationRegistry, CopLoader copLoader, SetupCommands setupCommands,
-	                  CommandMessages commandMessages, CopsItems copsItems) {
+	                  CommandMessages commandMessages, CopsItems copsItems, ScannerMapView scannerMapView) {
 		super(plugin, "cop", false, "cops");
 
 		this.copService      = copService;
@@ -42,6 +44,7 @@ public class CopCommand extends Command {
 		this.setupCommands   = setupCommands;
 		this.commandMessages = commandMessages;
 		this.copsItems       = copsItems;
+		this.scannerMapView  = scannerMapView;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -64,7 +67,7 @@ public class CopCommand extends Command {
 		Argument list    = new CopListCommand(getPlugin(), getArgumentTree(), getArgument(), copService, commandMessages);
 		Argument setup   = new SetupCommand(getPlugin(), getArgumentTree(), getArgument(), setupCommands);
 		Argument item    = new CopItemCommand(getPlugin(), getArgumentTree(), getArgument(), copsItems,
-		                                      commandMessages);
+		                                      commandMessages, scannerMapView);
 
 		List<Argument> arguments = new ArrayList<>();
 
