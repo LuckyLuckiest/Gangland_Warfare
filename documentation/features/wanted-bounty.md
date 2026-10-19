@@ -184,7 +184,7 @@ The full rules are in the [Cops N Crooks guide](./cops-n-crooks.md#how-a-chase-e
 
 When the evasion clock takes your last star after a cop has seen you, you gain getaway XP: 0 for one earned star, then 25,
 75, 175 and 350 for two to five. Only stars raised by crimes count, never stars from signs or admin commands. Gang mates and
-allies who are wanted right now with a crime-earned star in the same chase each get half (rounded down). One paid getaway per 600 seconds, and 1000 XP per day at most.
+allies who are wanted right now with at least one star earned through crimes each get half (rounded down). One paid getaway per 600 seconds, and 1000 XP per day at most.
 Keys: `Wanted.Getaway` in `copsncrooks/wanted.yml`.
 
 ### The city's Most Wanted (0.21.0)
