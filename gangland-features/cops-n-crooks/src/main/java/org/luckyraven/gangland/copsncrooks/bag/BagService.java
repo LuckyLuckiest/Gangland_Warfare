@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -30,6 +31,8 @@ public final class BagService implements HotCash, BagFunding {
 	private final WantedMessages        messages;
 	private final BagEnv                env;
 	private final Map<UUID, Long>       lastFullLine = new ConcurrentHashMap<>();
+	private final Set<UUID>             settled      = ConcurrentHashMap.newKeySet();
+	private volatile boolean            shuttingDown;
 
 	public BagService(HotCashBags bags, Supplier<BagSettings> settings, WantedMessages messages, BagEnv env) {
 		this.bags     = bags;
@@ -182,21 +185,50 @@ public final class BagService implements HotCash, BagFunding {
 
 	/** Join settle (after the star restore): a saved bag with stars is restored, without stars converted. */
 	public void settle(Player player) {
-		throw new UnsupportedOperationException("TDD stub");
+		settled.add(player.getUniqueId());
+		BigDecimal bag = bags.amount(player.getUniqueId());
+		if (bag.signum() <= 0) {
+			return;
+		}
+		if (env.wantedLevel(player) > 0) {
+			env.hud(player, bag);
+			env.debug("BAG " + player.getName() + " restored bag=" + plain(bag));
+		} else {
+			end(player, WantedCause.UNKNOWN);
+		}
 	}
 
 	/** Quit: spill / seize / keep per D-W2-08, D-W2-31 and the shutdown flag. */
 	public void onQuit(Player player) {
-		throw new UnsupportedOperationException("TDD stub");
+		UUID id = player.getUniqueId();
+		boolean wasSettled = settled.remove(id);
+		BigDecimal bag = bags.amount(id);
+		if (bag.signum() <= 0 || shuttingDown) {
+			return;
+		}
+
+		String outcome;
+		if (!wasSettled) {
+			outcome = "kept";
+		} else if (env.restrained(player)) {
+			seize(player);
+			outcome = "seized";
+		} else {
+			bags.takeAll(id);
+			env.spill(player, player.getLocation(), bag);
+			outcome = "spilled";
+		}
+		env.debug("BAG " + player.getName() + " quit outcome=" + outcome + " bag=" + plain(bag));
 	}
 
 	/** Marks the service as shutting down (quits no longer spill) and saves every row. */
 	public void shutdown() {
-		throw new UnsupportedOperationException("TDD stub");
+		shuttingDown = true;
+		bags.flush();
 	}
 
 	public boolean isShuttingDown() {
-		throw new UnsupportedOperationException("TDD stub");
+		return shuttingDown;
 	}
 
 	/** Sends the HUD to every online player holding a bag (the repeating task body). */
