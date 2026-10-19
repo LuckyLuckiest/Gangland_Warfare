@@ -23,5 +23,6 @@ public class MostWantedListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onQuit(PlayerQuitEvent event) {
+		mostWanted.quit(event.getPlayer().getUniqueId());
 	}
 }
