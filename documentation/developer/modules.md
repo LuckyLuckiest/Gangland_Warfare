@@ -265,7 +265,7 @@ named car/weapon domains directly - car moved, weapon was deleted:
 | `configuration/UniqueItemAddon.java` | Loads unique item definitions from `unique_items.yml`.               |
 | `converter/AmmunitionConverter.java` | Converts `"ammo:ak47"` format strings to ammunition `ItemStack`.     |
 | `converter/MaterialConverter.java`   | Converts standard `"MATERIAL_NAME"` strings to vanilla `ItemStack`.  |
-| `converter/WearableConverter.java`   | Converts `"wearable:kevlar"` format strings to wearable `ItemStack`. |
+| `converter/WearableConverter.java`   | Moved to Bartizan in 0.9.0 (`"wearable:kevlar"` strings are read by Bartizan, not Gangland). |
 
 > **Note:** this whole `item/` listing predates the 0.9.0 `keystone-item` promotion and is independently stale -
 > `ItemConverterRegistry.java`/`ItemParser.java` no longer exist under this package (the generic item framework

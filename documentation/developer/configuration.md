@@ -751,9 +751,10 @@ cars:
 
 ---
 
-## wearables.yml
+## wearables.yml (moved to Bartizan)
 
-Wearable armor definitions with traits and damage reduction.
+This file left the Gangland repo in 0.9.0. It ships inside Bartizan's own jar (`plugins/Bartizan/` at runtime) and is documented
+in the Bartizan repo. The example below is historical and is not read by Gangland.
 
 ```yaml
 wearables:

@@ -108,6 +108,17 @@ The following block types can be designated as loot chests:
 
 ---
 
+## Cracking alarm (0.20.0)
+
+Cracking a chest of a tier in `Cracking_Alarm.Tiers` (bundled: `police_armory` and `military_vault`) rings an alarm at the chest
+and commits `Safe_Cracking` (150 heat). The alarm sound is `Cracking_Alarm.Sound` (`BLOCK_BELL_USE`).
+
+- The alarm rings whether the crack succeeds or fails. Walking away mid-crack commits nothing.
+- It commits once per cracking session.
+- `Cracking_Alarm.Enable: false` turns the alarm and the heat off.
+
+Keys: `lootchests/loot_chest_settings.yml` `Cracking_Alarm.*`. See [migration-0.20.0.md](../migration-0.20.0.md).
+
 ## Configuration
 
 Loot chests are a runtime module (`gangland-features/gangland-lootchest`, `modules/gangland-lootchest-<rev>.jar`)

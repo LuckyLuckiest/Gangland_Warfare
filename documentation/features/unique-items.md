@@ -41,6 +41,11 @@ lower-tier chests. Players can carry multiple.
 | Dropped on death | Yes           |
 | Loot tier unlock | Rare          |
 
+**Hotwire (0.20.0).** Holding a lockpick and using it on a gadget car you may not use starts a hotwire. It takes
+`Hotwire.Seconds` (6) while you stay within `Hotwire.Max_Distance` (3 blocks). Success gives you that car for the session,
+marks it stolen and commits `Car_Theft`. The lockpick is used up when `Hotwire.Consume_Lockpick` is `true` (the default).
+The item is named by `Hotwire.Lockpick_Item` (`lockpick`). Keys: `gadget/gadget_settings.yml` `Hotwire.*`.
+
 ### Epic Key
 
 Required to open **Epic** tier loot chests. Droppable and tradeable.
