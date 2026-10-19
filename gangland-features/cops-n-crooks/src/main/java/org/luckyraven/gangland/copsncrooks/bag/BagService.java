@@ -177,6 +177,11 @@ public final class BagService implements HotCash, BagFunding {
 		env.debug("BAG " + player.getName() + " bribe bag=" + plain(fromBag) + " wallet=" + plain(fromWallet));
 	}
 
+	/** The "hot cash, the cops want you" warning line (listener pickup and redeem). */
+	public String hotLine() {
+		return line(Key.BAG_HOT);
+	}
+
 	/** The paperwork line for a seized bag, or null when nothing was seized. */
 	public String paperworkLine(UUID player) {
 		BigDecimal seized = bags.seized(player);
