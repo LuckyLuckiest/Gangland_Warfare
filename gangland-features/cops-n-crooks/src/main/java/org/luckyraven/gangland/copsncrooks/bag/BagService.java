@@ -6,6 +6,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages.Key;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.data.economy.HotCash;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,7 +23,7 @@ import java.util.function.Supplier;
  *
  * @since 0.20.0
  */
-public final class BagService implements HotCash, BagFunding {
+public final class BagService implements HotCash, BagFunding, BeanLifecycle {
 
 	private static final long FULL_THROTTLE_MILLIS = 3_000L;
 
@@ -230,6 +231,12 @@ public final class BagService implements HotCash, BagFunding {
 	public void shutdown() {
 		shuttingDown = true;
 		bags.flush();
+	}
+
+	/** A reload runs the shutdown hook (quits stop spilling); re-initialising clears that flag again. */
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		shuttingDown = false;
 	}
 
 	public boolean isShuttingDown() {

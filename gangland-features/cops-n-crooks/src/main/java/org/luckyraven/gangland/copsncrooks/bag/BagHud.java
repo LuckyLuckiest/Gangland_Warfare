@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.bag;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 
 import java.util.function.Supplier;
 
@@ -10,7 +11,7 @@ import java.util.function.Supplier;
  *
  * @since 0.20.0
  */
-public final class BagHud {
+public final class BagHud implements BeanLifecycle {
 
 	private final JavaPlugin plugin;
 	private final BagService service;
@@ -42,5 +43,16 @@ public final class BagHud {
 		}
 		task.cancel();
 		task = null;
+	}
+
+	/** Reload pass: the pre-clear shutdown hook stopped the task, so restart it. */
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		start();
+	}
+
+	@Override
+	public void onClear() {
+		stop();
 	}
 }
