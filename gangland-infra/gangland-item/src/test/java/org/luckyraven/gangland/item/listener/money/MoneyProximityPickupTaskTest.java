@@ -53,10 +53,12 @@ class MoneyProximityPickupTaskTest {
 	private MoneyProximityPickupTask task;
 	private Player              player;
 	private Item                entity;
+	private PerStackNbtAccessor accessor;
 
 	@BeforeEach
 	void setUp() throws InvalidConfigurationException {
-		NbtBridge.install(new PerStackNbtAccessor());
+		accessor = new PerStackNbtAccessor();
+		NbtBridge.install(accessor);
 		YamlConfiguration configuration = new YamlConfiguration();
 		configuration.loadFromString(MONEY_YAML);
 		addon = new MoneyAddon();
@@ -102,6 +104,36 @@ class MoneyProximityPickupTaskTest {
 		verify(deposits).depositPickup(eq(player), eq(300D), eq("small"));
 		verify(entity, never()).remove();
 		verify(deposits, never()).deposit(any(Player.class), anyDouble(), anyString());
+	}
+
+	@Test
+	@DisplayName("T-348 (C-43): a bill tagged copsncrooks:hot_cash is left to the normal pickup path, never put in the wallet")
+	void hotBillIsSkipped() {
+		ItemStack bills = MoneyItemFactory.build(addon.getVariation("small"), 100, deposits, 3);
+		org.bukkit.inventory.meta.ItemMeta meta = mock(org.bukkit.inventory.meta.ItemMeta.class);
+		org.bukkit.persistence.PersistentDataContainer pdc = mock(org.bukkit.persistence.PersistentDataContainer.class);
+		when(meta.getPersistentDataContainer()).thenReturn(pdc);
+		when(pdc.has(new org.bukkit.NamespacedKey("copsncrooks", "hot_cash"),
+		             org.bukkit.persistence.PersistentDataType.BYTE)).thenReturn(true);
+		ItemStack hot = new ItemStack(bills.getType(), 3) {
+			@Override
+			public org.bukkit.inventory.meta.ItemMeta getItemMeta() {
+				return meta;
+			}
+		};
+		PerStackNbtAccessor tags = accessor;
+		for (String key : List.of(org.luckyraven.gangland.item.money.MoneyItemUtil.MARKER_TAG,
+		                          org.luckyraven.gangland.item.money.MoneyItemUtil.VARIATION_TAG,
+		                          org.luckyraven.gangland.item.money.MoneyItemUtil.AMOUNT_TAG)) {
+			tags.put(hot, key, tags.get(bills, key));
+		}
+		when(entity.getItemStack()).thenReturn(hot);
+		when(deposits.depositPickup(any(), anyDouble(), any())).thenReturn(true);
+
+		task.scanAndDeposit(player);
+
+		verify(deposits, never()).depositPickup(any(), anyDouble(), any());
+		verify(entity, never()).remove();
 	}
 
 }
