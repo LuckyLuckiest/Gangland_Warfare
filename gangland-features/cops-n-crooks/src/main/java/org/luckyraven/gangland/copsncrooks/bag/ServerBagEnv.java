@@ -1,15 +1,21 @@
 package org.luckyraven.gangland.copsncrooks.bag;
 
+import lombok.CustomLog;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
+import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.file.configuration.Settings;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -20,7 +26,19 @@ import java.util.function.ToIntFunction;
  *
  * @since 0.20.0
  */
+@CustomLog
 public final class ServerBagEnv implements BagEnv {
+
+	private final JavaPlugin                plugin;
+	private final UserManager<Player>       users;
+	private final DetainmentService         detainment;
+	private final WantedStars               stars;
+	private final BagSpill                  spill;
+	private final Supplier<BagSettings>     settings;
+	private final WantedMessages            messages;
+	private final Predicate<ItemStack>      moneyItem;
+	private final ToIntFunction<ItemStack>  billReader;
+	private final BiConsumer<Player, String> actionBar;
 
 	/**
 	 * @param moneyItem  {@code MoneyItemUtil::isMoneyItem}
@@ -31,65 +49,89 @@ public final class ServerBagEnv implements BagEnv {
 	                    BagSpill spill, Supplier<BagSettings> settings, WantedMessages messages,
 	                    Predicate<ItemStack> moneyItem, ToIntFunction<ItemStack> billReader,
 	                    BiConsumer<Player, String> actionBar) {
+		this.plugin     = plugin;
+		this.users      = users;
+		this.detainment = detainment;
+		this.stars      = stars;
+		this.spill      = spill;
+		this.settings   = settings;
+		this.messages   = messages;
+		this.moneyItem  = moneyItem;
+		this.billReader = billReader;
+		this.actionBar  = actionBar;
+	}
+
+	private User<Player> userOf(Player player) {
+		return users.getUser(player);
 	}
 
 	@Override
 	public int wantedLevel(Player player) {
-		throw new UnsupportedOperationException("TDD stub");
+		User<Player> user = userOf(player);
+		return user == null ? 0 : user.getWanted().getLevel();
 	}
 
 	@Override
 	public boolean restrained(Player player) {
-		throw new UnsupportedOperationException("TDD stub");
+		return detainment.isRestrained(player);
 	}
 
 	@Override
 	public void deposit(Player player, BigDecimal amount) {
-		throw new UnsupportedOperationException("TDD stub");
+		User<Player> user = userOf(player);
+		if (user != null) {
+			user.getEconomy().depositAmount(amount);
+		}
 	}
 
 	@Override
 	public void spill(Player player, Location at, BigDecimal amount) {
-		throw new UnsupportedOperationException("TDD stub");
+		spill.drop(at, amount, settings.get().spillStacks());
 	}
 
 	@Override
 	public long epochDay() {
-		throw new UnsupportedOperationException("TDD stub");
+		return LocalDate.now().toEpochDay();
 	}
 
 	@Override
 	public long nowMillis() {
-		throw new UnsupportedOperationException("TDD stub");
+		return System.currentTimeMillis();
 	}
 
 	@Override
 	public void hud(Player player, BigDecimal bag) {
-		throw new UnsupportedOperationException("TDD stub");
+		String text = messages.format(WantedMessages.Key.BAG_HUD,
+		                              Map.of("money_symbol", Settings.getMoneySymbol(),
+		                                     "amount", Settings.formatAmount(bag)));
+		actionBar.accept(player, text);
 	}
 
 	@Override
 	public void debug(String line) {
-		throw new UnsupportedOperationException("TDD stub");
+		log.debug(line);
 	}
 
 	@Override
 	public void runTask(Runnable task) {
-		throw new UnsupportedOperationException("TDD stub");
+		plugin.getServer().getScheduler().runTask(plugin, task);
 	}
 
 	@Override
 	public void raiseHotStar(Player player) {
-		throw new UnsupportedOperationException("TDD stub");
+		User<Player> user = userOf(player);
+		if (user != null) {
+			stars.raise(user, 1, WantedCause.CRIME);
+		}
 	}
 
 	@Override
 	public boolean isHotMoney(ItemStack item) {
-		throw new UnsupportedOperationException("TDD stub");
+		return moneyItem.test(item) && spill.isHot(item);
 	}
 
 	@Override
 	public int billValue(ItemStack item) {
-		throw new UnsupportedOperationException("TDD stub");
+		return billReader.applyAsInt(item);
 	}
 }
