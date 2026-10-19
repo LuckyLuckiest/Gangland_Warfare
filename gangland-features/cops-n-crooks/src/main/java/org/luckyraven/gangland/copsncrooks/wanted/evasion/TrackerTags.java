@@ -152,6 +152,16 @@ public final class TrackerTags {
 		log.debug("TRACKER {} state=tagged vehicle={}", player.getName(), vehicle.getEntityId());
 	}
 
+	/** True while {@code p} rides a vehicle whose tag has not expired yet (read-only, no state change). */
+	public boolean hasLiveTag(Player p) {
+		Entity vehicle = p.getVehicle();
+		if (vehicle == null) {
+			return false;
+		}
+		Long expiry = vehicle.getPersistentDataContainer().get(key, PersistentDataType.LONG);
+		return expiry != null && clock.getAsLong() < expiry;
+	}
+
 	/** Drops the per-player seen-time and ping state (wanted end, quit). Tags on entities just expire. */
 	public void forget(UUID playerId) {
 		states.remove(playerId);

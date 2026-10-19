@@ -41,6 +41,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
+import java.util.function.Predicate;
 
 /**
  * Line-of-sight evasion: while cops hunt a player the safety-net timer is switched off and this clock lowers his stars
@@ -103,6 +104,8 @@ public final class EvasionClock implements WantedDecayPolicy {
 	private final QuietTrail          quiet;
 	private final LongSupplier        clock;
 	private final Consumer<Event>     callEvent;
+	/** True while the player rides a live tracker-tagged vehicle: the clock holds, no decay. */
+	private final Predicate<Player>   trackerLive;
 	private final Map<UUID, Track>    tracks     = new ConcurrentHashMap<>();
 	/** Players whose AUTO decision already failed once, so the warning is logged once each. */
 	private final Set<UUID>           autoFailed = ConcurrentHashMap.newKeySet();
@@ -113,7 +116,16 @@ public final class EvasionClock implements WantedDecayPolicy {
 	                    WantedStars stars, UserManager<Player> users, HeatLedger ledger, ChaseArcs arcs,
 	                    ChaseLearner learner, Hideouts hideouts, QuietTrail quiet, LongSupplier clock,
 	                    Consumer<Event> callEvent) {
-		this.config     = config;
+		this(config, copManager, detainment, stars, users, ledger, arcs, learner, hideouts, quiet, clock, callEvent,
+		     p -> false);
+	}
+
+	public EvasionClock(ChaseConfigLoader config, CopManager copManager, DetainmentService detainment,
+	                    WantedStars stars, UserManager<Player> users, HeatLedger ledger, ChaseArcs arcs,
+	                    ChaseLearner learner, Hideouts hideouts, QuietTrail quiet, LongSupplier clock,
+	                    Consumer<Event> callEvent, Predicate<Player> trackerLive) {
+		this.config      = config;
+		this.trackerLive = trackerLive;
 		this.copManager = copManager;
 		this.detainment = detainment;
 		this.stars      = stars;
@@ -177,6 +189,11 @@ public final class EvasionClock implements WantedDecayPolicy {
 		Track  track  = tracks.get(id);
 
 		if (detainment.isRestrained(player) || group.tippedOffWithin(now, lostMs)) {
+			if (track != null) track.lastTick = now;
+			return;
+		}
+		// C-24: a live tracker tag on his vehicle holds the clock; the tag's own pings keep the squad on him
+		if (trackerLive.test(player)) {
 			if (track != null) track.lastTick = now;
 			return;
 		}

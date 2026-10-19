@@ -17,6 +17,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.EvasionClock;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.Hideouts;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.QuietTrail;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.TrackerTags;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseHabit;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseLearner;
@@ -70,10 +71,10 @@ public class EvasionModuleConfig {
 	public EvasionClock evasionClock(ChaseConfigLoader config, CopManager copManager, DetainmentService detainment,
 	                                 WantedStars wantedStars, @Qualifier("online") UserManager<Player> users,
 	                                 HeatLedger heatLedger, ChaseArcs chaseArcs, ChaseLearner chaseLearner,
-	                                 Hideouts hideouts, QuietTrail quietTrail) {
+	                                 Hideouts hideouts, QuietTrail quietTrail, TrackerTags trackerTags) {
 		return new EvasionClock(config, copManager, detainment, wantedStars, users, heatLedger, chaseArcs, chaseLearner,
 		                        hideouts, quietTrail, System::currentTimeMillis,
-		                        event -> Bukkit.getPluginManager().callEvent(event));
+		                        event -> Bukkit.getPluginManager().callEvent(event), trackerTags::hasLiveTag);
 	}
 
 	/**
