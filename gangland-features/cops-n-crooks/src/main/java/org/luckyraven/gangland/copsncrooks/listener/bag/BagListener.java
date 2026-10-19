@@ -69,7 +69,7 @@ public class BagListener implements Listener {
 	/** NORMAL, before the core HIGH pickup listener; never cancels. */
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onPickup(EntityPickupItemEvent event) {
-		if (!(event.getEntity() instanceof Player player)) {
+		if (!(event.getEntity() instanceof Player player) || isNpc(player)) {
 			return;
 		}
 		if (env.isHotMoney(event.getItem().getItemStack()) && env.wantedLevel(player) == 0) {
@@ -99,7 +99,7 @@ public class BagListener implements Listener {
 			return;
 		}
 		ItemStack item = event.getItem();
-		if (item == null || !env.isHotMoney(item)) {
+		if (item == null || !env.isHotMoney(item) || isNpc(event.getPlayer())) {
 			return;
 		}
 
@@ -133,5 +133,13 @@ public class BagListener implements Listener {
 		env.raiseHotStar(player);
 		player.sendMessage(service.hotLine());
 		env.debug("BAG " + player.getName() + " hot star");
+	}
+
+	/**
+	 * Citizens tags every NPC entity with "NPC" metadata (house convention, as CopManager/SquadRadio). NpcSupport is
+	 * not consulted: it reads Bukkit.getPluginManager() and throws on a server-less test for every ordinary player.
+	 */
+	private static boolean isNpc(Player player) {
+		return player.hasMetadata("NPC");
 	}
 }
