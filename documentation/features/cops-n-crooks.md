@@ -260,6 +260,58 @@ The chase around a wanted player is configured in `copsncrooks/wanted.yml` (heat
 
 ---
 
+## How a chase ends
+
+### Clean getaway (0.21.0)
+
+A clean getaway is the evasion clock taking your last star after a cop has seen you. It pays XP by the peak of stars you
+earned through crimes:
+
+| Peak earned stars | XP (`Wanted.Getaway.Experience`) |
+|---|---|
+| 1 | 0 |
+| 2 | 25 |
+| 3 | 75 |
+| 4 | 175 |
+| 5 | 350 |
+
+Only stars raised by crimes count (crimes, kill combos, rescues, standoff timeouts). Stars from signs, bribes or admin
+commands never count, so a bought five pays nothing. Any other ending (surrender, busted, arrest, death, the safety-net
+timer, a contact, a bribe) pays nothing. A cop must have seen you before the search that ran out. Crimes listed in
+`Wanted.Getaway.Exclude_Crimes` never count toward the peak.
+
+Your gang mates and allies who are wanted right now, with at least one earned star in the same chase, each get half of your
+XP (rounded down) and a chat line. There is no distance limit, and a mate wanted only through a sign does not qualify.
+
+Limits: one paid getaway per `Wanted.Getaway.Cooldown_Seconds` (600) per player; a getaway inside the cooldown pays nothing and
+shares nothing. `Wanted.Getaway.Daily_Cap` (1000) caps the XP a player gains from getaways each server-local day, crew
+shares included. The report ends with `Getaway: +75 XP`, `Getaway: daily XP cap reached`, or no line when there is nothing to
+say. Cooldowns and daily totals are kept in memory, so a restart resets them.
+
+Config: `copsncrooks/wanted.yml` under `Wanted.Getaway` (`Enable`, `Experience`, `Cooldown_Seconds`, `Daily_Cap`,
+`Exclude_Crimes`). Texts: `copsncrooks/wanted_messages.yml` `Getaway.Line`, `Getaway.Capped`, `Getaway.Share`. Without Citizens
+there are no sightings, so no getaway XP is paid.
+
+### The city's Most Wanted (0.21.0)
+
+The online player with the most earned stars holds the title "the city's Most Wanted". The title needs at least
+`Wanted.Most_Wanted.Min_Stars` (4) earned stars, held for `Hold_Seconds` (10) before the title can go to that player. A
+challenger takes it only with strictly more earned stars. On a tie the current holder keeps it; otherwise the player who
+reached the level first keeps it.
+
+- **Broadcast.** When the title changes hands every online player reads one line. The broadcasts are at most one per
+  `Cooldown_Seconds` (120) server-wide. A change inside the cooldown is silent, but the title still moves.
+- **Radio.** When the new holder has a cop group (Citizens present), police dispatch says one line near him. Without a group
+  the radio line is skipped and the title and broadcast still happen.
+- **Losing the title.** The title drops silently when the holder quits, is arrested, dies, escapes or falls below
+  `Min_Stars`. It passes to the next qualified player (announced) or stays vacant (no broadcast).
+- **Placeholders** for scoreboards, the same for every viewer: `%gangland_cnc_most_wanted%` (the holder's name, empty when
+  vacant) and `%gangland_cnc_most_wanted_stars%` (the holder's earned stars, `0` when vacant).
+- **No effect on play.** No glow, no extra cops and no tier change.
+
+Config: `copsncrooks/wanted.yml` under `Wanted.Most_Wanted` (`Enable`, `Min_Stars`, `Hold_Seconds`, `Cooldown_Seconds`).
+Texts: `copsncrooks/wanted_messages.yml` `Most_Wanted.New`; `copsncrooks/cop_radio_messages.yml` (and `_es`) `Lines.Most_Wanted`.
+
 ## Where the Police Come From (0.16.0)
 
 Until 0.15 a cop popped into existence near the suspect. From 0.16.0 the police have **stations**: units leave the

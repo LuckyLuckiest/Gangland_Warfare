@@ -148,6 +148,8 @@ bail all land in this release.
   placed spawners
 - Cop count scales with wanted level via a configurable formula
 - `CopDeathEvent` fires for other listeners to react to fallen officers
+- 0.21.0 "How it ends": surrender with empty hands, busted instead of a hospital bill, lockpicks and crew rescues, crimes shared with your crew, a pursuit report for every chase
+- 0.21.0 "How it ends": standoffs and stack-up breaches, a clean getaway that pays XP, and the city's Most Wanted title
 
 ---
 

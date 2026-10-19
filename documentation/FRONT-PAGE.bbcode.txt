@@ -113,6 +113,8 @@ Players don't just fight — they:[/SIZE]
 [*][SIZE=4]Spawner placement system with intelligent fallback for areas without placed spawners[/SIZE]
 [*][SIZE=4]Cop count scales with wanted level via a configurable formula[/SIZE]
 [*][SIZE=4][B]CopDeathEvent[/B] fires for other listeners to react to fallen officers[/SIZE]
+[*][SIZE=4]0.21.0 "How it ends": surrender with empty hands, busted instead of a hospital bill, lockpicks and crew rescues, crimes shared with your crew, a pursuit report for every chase[/SIZE]
+[*][SIZE=4]0.21.0 "How it ends": standoffs and stack-up breaches, a clean getaway that pays XP, and the city's Most Wanted title[/SIZE]
 [/LIST]
 
 [B][SIZE=4]6.  Civilians[/SIZE][/B]

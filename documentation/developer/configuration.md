@@ -609,6 +609,24 @@ All keys are under `Wanted.Evasion.Auto`. A missing key uses its default; a valu
 | `Learning.Min_Seconds_Between_Outcomes` | `180` | >= 0 | A player's chases ending closer together are not learned from |
 | `Learning.Forget_After_Days` | `90` | >= 1 | Habit and level rows untouched this long are deleted at startup |
 
+0.21.0 wave 2 adds the getaway and Most Wanted keys below (both blocks sit after `Pursuit_Report`; a missing block uses these defaults). The full text of each block is in the [0.21.0 migration guide](../migration-0.21.0.md).
+
+| Key | Default | Range | Meaning |
+|---|---|---|---|
+| `Wanted.Getaway.Enable` | `true` | | `false` = no getaway XP |
+| `Wanted.Getaway.Experience` | `[0, 25, 75, 175, 350]` | | XP by earned peak stars; the first entry is one star; the last is used above the list |
+| `Wanted.Getaway.Cooldown_Seconds` | `600` | >= 0 | One paid getaway per this many seconds per player |
+| `Wanted.Getaway.Daily_Cap` | `1000` | >= 0 | Most getaway XP per player per server-local day, crew shares included; `0` = no cap |
+| `Wanted.Getaway.Exclude_Crimes` | `Trespass_Restricted`, `Evading_Police`, `Brandish_Near_Cop` | | Crime ids whose stars never count toward a getaway or Most Wanted |
+| `Wanted.Most_Wanted.Enable` | `true` | | `false` = no title and empty placeholders |
+| `Wanted.Most_Wanted.Min_Stars` | `4` | >= 1 | Earned stars needed for the title |
+| `Wanted.Most_Wanted.Hold_Seconds` | `10` | >= 0 | Seconds a player must hold `Min_Stars` before the title can go to him |
+| `Wanted.Most_Wanted.Cooldown_Seconds` | `120` | >= 0 | Minimum gap between title broadcasts server-wide |
+
+Texts: `copsncrooks/wanted_messages.yml` `Getaway.Line`, `Getaway.Capped`, `Getaway.Share`, `Most_Wanted.New`. Radio:
+`copsncrooks/cop_radio_messages.yml` (and `_es`) `Lines.Most_Wanted`. Placeholders: `%gangland_cnc_most_wanted%`,
+`%gangland_cnc_most_wanted_stars%`.
+
 ---
 
 ## Other 0.16.0 files and keys
