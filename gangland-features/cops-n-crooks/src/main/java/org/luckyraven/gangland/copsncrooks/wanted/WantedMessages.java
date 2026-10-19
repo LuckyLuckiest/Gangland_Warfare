@@ -79,7 +79,12 @@ public class WantedMessages extends LocalizedModuleYaml {
 		ENDING_PAID_OFF("Pursuit_Report.Endings.Paid_Off", "Paid off"),
 		ENDING_CLEARED("Pursuit_Report.Endings.Cleared", "Cleared"),
 		NEWS_LIVE("Breaking_News.Live", "&4&lBREAKING &fPolice are chasing %player% across the city &c%stars%"),
-		NEWS_END("Breaking_News.End", "&4&lBREAKING &fThe %stars% &fchase of %player% is over: %ending%");
+		NEWS_END("Breaking_News.End", "&4&lBREAKING &fThe %stars% &fchase of %player% is over: %ending%"),
+		// 0.21.0 wave 2
+		GETAWAY_LINE("Getaway.Line", "&7Getaway: &a+%xp% XP"),
+		GETAWAY_CAPPED("Getaway.Capped", "&7Getaway: &8daily XP cap reached"),
+		GETAWAY_SHARE("Getaway.Share", "&a%player% got away clean: &f+%xp% XP &7for the crew"),
+		MOST_WANTED_NEW("Most_Wanted.New", "&4&lMOST WANTED &f%player% &7is now the city's Most Wanted &c%stars%");
 
 		public final String path;
 		public final String fallback;
