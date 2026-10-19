@@ -52,7 +52,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	static final Set<String> DISPATCH_PRIORITY = Set.of("Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up");
 
 	/** One-shot breach and standoff lines: a server's Priority list must never silence them either. */
-	static final Set<String> ONE_SHOT_PRIORITY = Set.of("Stack_Up", "Breach", "Flashbang", "Negotiate");
+	static final Set<String> ONE_SHOT_PRIORITY = Set.of("Stack_Up", "Breach", "Flashbang", "Negotiate",
+			"Surrender_Accepted", "Standoff", "Standoff_Over");
 
 	/**
 	 * Code default for a cop_roles.yml with no Squad_Composition block (or no such file): roles are on, filled in this
