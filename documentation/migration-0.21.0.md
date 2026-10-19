@@ -374,8 +374,8 @@ Lines:
 - **Standoffs and breaches.** Cops ring a suspect they cannot reach, or stack at a door of an indoor suspect. Only the cops
   hunting you take part. No block is broken. Set `Cops.Standoff.Enabled` or `Cops.Breach.Enabled` to `false` to switch one off.
 - **Clean getaway.** When the evasion clock takes your last star after a chase in which a cop saw you, you gain getaway XP
-  (`Wanted.Getaway.Experience`). One star pays nothing. Half goes to each wanted gang mate or ally who has earned a star in
-  that chase. The cooldown and daily cap are in the table above.
+  (`Wanted.Getaway.Experience`). One star pays nothing. Half goes to each gang mate or ally who is wanted right now with a
+  crime-earned star in the same chase. The cooldown and daily cap are in `Wanted.Getaway` in `copsncrooks/wanted.yml`.
 - **The city's Most Wanted.** The online player with the most earned stars (at least `Min_Stars`) holds the title after
   `Hold_Seconds` of holding it. Stars from signs or commands never count. The title is announced at most once per
   `Cooldown_Seconds` server-wide. Placeholders: `%gangland_cnc_most_wanted%` (name) and `%gangland_cnc_most_wanted_stars%`

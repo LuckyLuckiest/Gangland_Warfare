@@ -280,7 +280,7 @@ commands never count, so a bought five pays nothing. Any other ending (surrender
 timer, a contact, a bribe) pays nothing. A cop must have seen you before the search that ran out. Crimes listed in
 `Wanted.Getaway.Exclude_Crimes` never count toward the peak.
 
-Your gang mates and allies who are wanted right now, with at least one earned star in the same chase, each get half of your
+Your gang mates and allies who are wanted right now, with a crime-earned star in the same chase, each get half of your
 XP (rounded down) and a chat line. There is no distance limit, and a mate wanted only through a sign does not qualify.
 
 Limits: one paid getaway per `Wanted.Getaway.Cooldown_Seconds` (600) per player; a getaway inside the cooldown pays nothing and

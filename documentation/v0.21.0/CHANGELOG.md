@@ -28,7 +28,7 @@ change and the behaviour that changed. Upgrade from 0.20.0.
 
 ### Clean getaway and the city's Most Wanted
 
-- **Clean getaway.** When the evasion clock takes your last star after a chase in which a cop saw you, you gain XP: 1 star 0, 2 stars 25, 3 stars 75, 4 stars 175, 5 stars 350 (earned stars only, from crimes; signs and commands never count). The report ends with your getaway line. Half goes to each wanted gang mate or ally who earned a star in the same chase. One payout per 600 seconds, and at most 1000 getaway XP per day, crew shares included.
+- **Clean getaway.** When the evasion clock takes your last star after a chase in which a cop saw you, you gain XP: 1 star 0, 2 stars 25, 3 stars 75, 4 stars 175, 5 stars 350 (earned stars only, from crimes; signs and commands never count). The report ends with your getaway line. Half goes to each gang mate or ally who is wanted right now with a crime-earned star in the same chase. One payout per 600 seconds, and at most 1000 getaway XP per day, crew shares included.
 - **The city's Most Wanted.** The online player with the most earned stars, at least 4, holds the title after 10 seconds of holding that level. A change of holder is announced to everyone, at most once every 120 seconds. Police dispatch names the new holder on the radio when he has a cop group. Placeholders `%gangland_cnc_most_wanted%` and `%gangland_cnc_most_wanted_stars%` show the holder for scoreboards.
 
 ## Changed
