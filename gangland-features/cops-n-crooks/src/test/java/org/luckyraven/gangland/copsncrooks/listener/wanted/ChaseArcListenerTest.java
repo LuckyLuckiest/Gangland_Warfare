@@ -12,6 +12,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.DropMode;
 import org.luckyraven.gangland.copsncrooks.wanted.config.EvasionSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.GetawaySettings;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
@@ -32,6 +33,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -77,6 +79,7 @@ class ChaseArcListenerTest {
 
 		config = mock(ChaseConfigLoader.class);
 		when(config.get()).thenReturn(ChaseConfig.DEFAULT);
+		when(config.getGetaway()).thenReturn(GetawaySettings.DEFAULT);
 
 		clock   = new AtomicLong(1_000_000L);
 		arcs    = new ChaseArcs(clock::get);
@@ -348,5 +351,46 @@ class ChaseArcListenerTest {
 
 		assertEquals(1, arcs.arc(playerId).earned());
 		assertEquals(3, arcs.arc(playerId).earnedPeak());
+	}
+
+	private void excludeKillPlayer() {
+		when(config.getGetaway()).thenReturn(new GetawaySettings(true, GetawaySettings.DEFAULT.experience(), 600, 1000,
+		                                                         Set.of("kill_player")));
+	}
+
+	@Test
+	@DisplayName("0.21.0 C-37: a level raise by an excluded low-agency crime does not earn; other crimes still do")
+	void levelChange_excludedCrime_doesNotEarn() {
+		excludeKillPlayer();
+		ledger.record(crime(Crimes.KILL_COP));
+		start(WantedCause.CRIME, 1);
+		assertEquals(1, arcs.arc(playerId).earned());
+
+		ledger.record(crime(Crimes.KILL_PLAYER));
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 1, 2, WantedCause.CRIME));
+		assertEquals(1, arcs.arc(playerId).earned());
+		assertEquals(1, arcs.arc(playerId).earnedPeak());
+
+		ledger.record(crime(Crimes.KILL_COP));
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 2, 3, WantedCause.CRIME));
+		assertEquals(2, arcs.arc(playerId).earned());
+	}
+
+	@Test
+	@DisplayName("0.21.0 C-37: a chase started by an excluded crime earns 0 but keeps its CRIME start cause")
+	void startOnExcludedCrime_earnsZero_keepsStartCause() {
+		excludeKillPlayer();
+		ledger.record(crime(Crimes.KILL_PLAYER));
+
+		start(WantedCause.CRIME, 2);
+
+		assertEquals(0, arcs.arc(playerId).earned());
+		assertEquals(0, arcs.arc(playerId).earnedPeak());
+		assertEquals(WantedCause.CRIME, arcs.arc(playerId).startCause());
+
+		arcs.end(playerId, false);
+		ledger.record(crime(Crimes.KILL_COP));
+		start(WantedCause.CRIME, 2);
+		assertEquals(2, arcs.arc(playerId).earned(), "a non-excluded last crime still seeds the start level");
 	}
 }

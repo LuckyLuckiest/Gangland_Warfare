@@ -68,6 +68,11 @@ public final class ChaseArcs {
 		arcs.put(id, arc);
 	}
 
+	/** Like {@link #start(UUID, WantedCause, int)}; {@code earns} says whether the start level seeds earned stars (C-37). */
+	public void start(UUID id, WantedCause cause, int level, boolean earns) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
+
 	/** The player is back: shift every stamp by the time he was away so chase and quiet exclude it. */
 	public void restore(UUID id) {
 		ChaseArc arc = arcs.get(id);

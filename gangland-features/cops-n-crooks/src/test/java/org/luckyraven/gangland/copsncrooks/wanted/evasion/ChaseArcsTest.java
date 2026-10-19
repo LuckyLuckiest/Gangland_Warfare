@@ -562,4 +562,35 @@ class ChaseArcsTest {
 		assertDoesNotThrow(() -> arcs.seen(id));
 		assertFalse(arcs.has(id));
 	}
+
+	@Test
+	@DisplayName("0.21.0: a CRIME re-raise below the peak keeps earnedPeak and stamps earnedAt; an ADMIN raise leaves earnedAt")
+	void earned_reRaiseBelowPeak_keepsPeak_stampsAt() {
+		arcs.start(id, WantedCause.CRIME, 3);
+		arcs.earn(id, 3, 1, WantedCause.EVASION);
+		clock.addAndGet(5_000);
+
+		arcs.earn(id, 1, 2, WantedCause.CRIME);
+
+		assertEquals(2, arcs.arc(id).earned());
+		assertEquals(3, arcs.arc(id).earnedPeak());
+		assertEquals(clock.get(), arcs.arc(id).earnedAt());
+
+		long at = arcs.arc(id).earnedAt();
+		clock.addAndGet(5_000);
+		arcs.earn(id, 2, 3, WantedCause.ADMIN);
+		assertEquals(at, arcs.arc(id).earnedAt());
+	}
+
+	@Test
+	@DisplayName("0.21.0 C-37: start with earns=false seeds nothing; earns=true seeds the level")
+	void start_earnsFlag_seedsOrNot() {
+		arcs.start(id, WantedCause.CRIME, 2, false);
+		assertEquals(0, arcs.arc(id).earned());
+		assertEquals(0, arcs.arc(id).earnedAt());
+		assertEquals(WantedCause.CRIME, arcs.arc(id).startCause());
+
+		arcs.start(id, WantedCause.SIGN, 2, true);
+		assertEquals(2, arcs.arc(id).earned());
+	}
 }
