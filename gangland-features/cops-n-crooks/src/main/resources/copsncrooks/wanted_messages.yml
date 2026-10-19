@@ -148,7 +148,7 @@ Pursuit_Report:
    # The cost to the city; %money_symbol% and %amount% are the cost
    Cost: "&7Cost to the city: &c%money_symbol%%amount%"
    Endings:
-      # You got away
+      # You got away: the search ran out or the timer cleared your stars
       Escaped: "Escaped"
       # You surrendered
       Surrendered: "Surrendered"
@@ -158,9 +158,9 @@ Pursuit_Report:
       Arrested: "Arrested"
       # You were killed
       Wasted: "Wasted"
-      # You paid the fine to end it
+      # You paid a contact or bribed the cops
       Paid_Off: "Paid off"
-      # The search ran out
+      # Your stars were cleared another way (an admin command or a sign)
       Cleared: "Cleared"
 # Server-wide headlines for a chase (Wanted.Pursuit_Report.Breaking_News)
 Breaking_News:
@@ -174,7 +174,7 @@ Getaway:
    Line: "&7Getaway: &a+%xp% XP"
    # The daily XP cap for getaways is reached
    Capped: "&7Getaway: &8daily XP cap reached"
-   # Said server-wide-to-the-crew when a crew mate gets away clean; %player% is who, %xp% is the XP
+   # Said to each wanted crew mate who gets a share; %player% is who got away, %xp% the mate's XP
    Share: "&a%player% got away clean: &f+%xp% XP &7for the crew"
 Most_Wanted:
    # Said when a player becomes the city's Most Wanted; %player% and %stars% are that player and their level

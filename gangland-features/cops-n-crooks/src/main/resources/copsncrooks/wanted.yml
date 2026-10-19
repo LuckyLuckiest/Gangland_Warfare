@@ -377,7 +377,7 @@ Wanted:
       # Most getaway XP a player gains per day, crew shares included; 0 = no cap
       Daily_Cap: 1000
       # Crimes whose stars never count toward the earned peak of a getaway (lower-case or any case works);
-      # these stars do not count toward Getaway or Most Wanted (C-37)
+      # these stars do not count toward Getaway or Most Wanted
       Exclude_Crimes:
          - Trespass_Restricted
          - Evading_Police
