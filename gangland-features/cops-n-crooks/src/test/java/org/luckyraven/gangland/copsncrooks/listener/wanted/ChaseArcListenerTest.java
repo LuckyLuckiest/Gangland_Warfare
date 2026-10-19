@@ -298,4 +298,55 @@ class ChaseArcListenerTest {
 		verify(learner, never()).record(any(), anyLong());
 		assertFalse(arcs.has(playerId), "the arc still ends");
 	}
+
+	// ---- 0.21.0 wave 2 (fnd-w2): earned stars ----
+
+	@Test
+	@DisplayName("0.21.0: a CRIME level change feeds earned; a SIGN raise does not")
+	void levelChange_feedsEarned() {
+		start(WantedCause.CRIME, 1);
+
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 1, 3, WantedCause.CRIME));
+		assertEquals(3, arcs.arc(playerId).earned());
+
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 3, 5, WantedCause.SIGN));
+		assertEquals(3, arcs.arc(playerId).earned());
+		assertEquals(5, view().peak(), "peak (all causes) is unchanged");
+	}
+
+	@Test
+	@DisplayName("0.21.0: start and level change in either order give earned 2 and earnedPeak 2 (D-W2-24)")
+	void startAndLevelChange_noDoubleCount() {
+		start(WantedCause.CRIME, 2);
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 0, 2, WantedCause.CRIME));
+		assertEquals(2, arcs.arc(playerId).earned());
+		assertEquals(2, arcs.arc(playerId).earnedPeak());
+
+		arcs.end(playerId, false);
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 0, 2, WantedCause.CRIME));
+		start(WantedCause.CRIME, 2);
+		assertEquals(2, arcs.arc(playerId).earned());
+		assertEquals(2, arcs.arc(playerId).earnedPeak());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a RESTORE level change never earns")
+	void restoreLevelChange_neverEarns() {
+		start(WantedCause.CRIME, 1);
+
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 0, 4, WantedCause.RESTORE));
+
+		assertEquals(1, arcs.arc(playerId).earned());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a drop clamps earned through the listener")
+	void levelChange_dropClampsEarned() {
+		start(WantedCause.CRIME, 3);
+
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 3, 1, WantedCause.EVASION));
+
+		assertEquals(1, arcs.arc(playerId).earned());
+		assertEquals(3, arcs.arc(playerId).earnedPeak());
+	}
 }

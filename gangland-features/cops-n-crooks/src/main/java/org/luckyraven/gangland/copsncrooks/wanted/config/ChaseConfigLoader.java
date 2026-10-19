@@ -64,6 +64,16 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		return pursuitReport;
 	}
 
+	/** The current {@code Wanted.Getaway}, never null. @since 0.21.0 */
+	public GetawaySettings getGetaway() {
+		return GetawaySettings.DEFAULT;
+	}
+
+	/** The current {@code Wanted.Most_Wanted}, never null. @since 0.21.0 */
+	public MostWantedSettings getMostWanted() {
+		return MostWantedSettings.DEFAULT;
+	}
+
 	@Override
 	public void clear() {
 		loaded     = ChaseConfig.DEFAULT;

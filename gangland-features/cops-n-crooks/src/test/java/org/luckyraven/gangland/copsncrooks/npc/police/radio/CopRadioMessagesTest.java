@@ -414,4 +414,19 @@ class CopRadioMessagesTest {
 
 		new Settings(fileManager).initialize();
 	}
+
+	@Test
+	@DisplayName("0.21.0 wave 2: Most_Wanted has a code default and a line in both shipped files, with the %target% and %place% placeholders")
+	void mostWantedLine_inDefaultsAndBothShippedFiles() throws IOException {
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages english  = build(shipped("copsncrooks/cop_radio_messages.yml"));
+		String           spanish  = shipped("copsncrooks/cop_radio_messages_es.yml");
+
+		assertFalse(fallback.lines("Most_Wanted").isEmpty(), "code default");
+		assertFalse(english.lines("Most_Wanted").isEmpty(), "English file");
+		assertTrue(spanish.contains("\n   Most_Wanted:"), "Spanish file");
+		assertTrue(fallback.lines("Most_Wanted").get(0).contains("%target%"));
+		assertTrue(fallback.lines("Most_Wanted").get(0).contains("%place%"));
+		assertEquals(fallback.lines("Most_Wanted"), english.lines("Most_Wanted"));
+	}
 }

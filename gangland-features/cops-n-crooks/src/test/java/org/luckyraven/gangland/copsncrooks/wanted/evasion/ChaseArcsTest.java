@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -424,5 +425,141 @@ class ChaseArcsTest {
 
 		assertEquals(0, arcs.arc(id).copsDown());
 		assertFalse(arcs.arc(id).newsSent());
+	}
+
+	// ---- 0.21.0 wave 2 (fnd-w2): earned stars and the sighted flag ----
+
+	@Test
+	@DisplayName("0.21.0: a CRIME start seeds earned and earnedPeak with the level; any other start earns 0")
+	void earned_crimeStartSeedsLevel() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		assertEquals(2, arcs.arc(id).earned());
+		assertEquals(2, arcs.arc(id).earnedPeak());
+		assertEquals(clock.get(), arcs.arc(id).earnedAt());
+
+		UUID other = UUID.randomUUID();
+		arcs.start(other, WantedCause.SIGN, 3);
+		assertEquals(0, arcs.arc(other).earned());
+		assertEquals(0, arcs.arc(other).earnedPeak());
+		assertEquals(0, arcs.arc(other).earnedAt());
+	}
+
+	@Test
+	@DisplayName("0.21.0: sign stars below a crime raise do not count as earned")
+	void earned_signStarsBelowCrimeDoNotCount() {
+		arcs.start(id, WantedCause.SIGN, 4);
+
+		arcs.earn(id, 4, 5, WantedCause.CRIME);
+
+		assertEquals(1, arcs.arc(id).earned());
+		assertEquals(1, arcs.arc(id).earnedPeak());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a drop clamps earned, earnedPeak stays, earnedAt is unchanged")
+	void earned_dropClampsPeakStays() {
+		arcs.start(id, WantedCause.CRIME, 3);
+		long at = arcs.arc(id).earnedAt();
+		clock.addAndGet(5_000);
+
+		arcs.earn(id, 3, 1, WantedCause.EVASION);
+
+		assertEquals(1, arcs.arc(id).earned());
+		assertEquals(3, arcs.arc(id).earnedPeak());
+		assertEquals(at, arcs.arc(id).earnedAt());
+	}
+
+	@Test
+	@DisplayName("0.21.0: an admin raise is ignored, a later crime raise counts")
+	void earned_adminRaiseIgnored() {
+		arcs.start(id, WantedCause.CRIME, 1);
+
+		arcs.earn(id, 1, 4, WantedCause.ADMIN);
+		assertEquals(1, arcs.arc(id).earned());
+
+		arcs.earn(id, 4, 5, WantedCause.CRIME);
+		assertEquals(2, arcs.arc(id).earned());
+		assertEquals(2, arcs.arc(id).earnedPeak());
+	}
+
+	@Test
+	@DisplayName("0.21.0: a UNKNOWN raise (PostEscapeSpotting re-spot) never earns; an UNKNOWN start earns 0 (D-W2-24)")
+	void earned_unknownRaiseIgnored() {
+		arcs.start(id, WantedCause.CRIME, 2);
+
+		arcs.earn(id, 2, 3, WantedCause.UNKNOWN);
+
+		assertEquals(2, arcs.arc(id).earned());
+		assertEquals(2, arcs.arc(id).earnedPeak());
+
+		UUID other = UUID.randomUUID();
+		arcs.start(other, WantedCause.UNKNOWN, 1);
+		assertEquals(0, arcs.arc(other).earned());
+	}
+
+	@Test
+	@DisplayName("0.21.0: earned survives a quit and a restore; restore changes none of the three fields")
+	void earned_survivesQuitRestore() {
+		arcs.start(id, WantedCause.CRIME, 3);
+		long at = arcs.arc(id).earnedAt();
+
+		arcs.quit(id);
+		clock.addAndGet(60_000);
+		arcs.restore(id);
+
+		assertEquals(3, arcs.arc(id).earned());
+		assertEquals(3, arcs.arc(id).earnedPeak());
+		assertEquals(at, arcs.arc(id).earnedAt());
+	}
+
+	@Test
+	@DisplayName("0.21.0: earn on an unknown id does not throw and creates no arc")
+	void earn_noArc_noop() {
+		assertDoesNotThrow(() -> arcs.earn(id, 0, 3, WantedCause.CRIME));
+
+		assertFalse(arcs.has(id));
+	}
+
+	@Test
+	@DisplayName("0.21.0: sighted is set by seen() only, not by lost or searchStarted; respots count as before")
+	void sighted_setBySeenOnly() {
+		arcs.start(id, WantedCause.CRIME, 3);
+		assertFalse(arcs.arc(id).sighted());
+
+		arcs.lost(id);
+		arcs.searchStarted(id);
+		assertFalse(arcs.arc(id).sighted());
+
+		arcs.seen(id);
+		assertTrue(arcs.arc(id).sighted());
+		assertEquals(1, view().respots());
+
+		arcs.searchStarted(id);
+		arcs.seen(id);
+		assertTrue(arcs.arc(id).sighted());
+		assertEquals(2, view().respots());
+	}
+
+	@Test
+	@DisplayName("0.21.0: sighted survives quit and restore; a new arc starts false")
+	void sighted_survivesQuitRestore_newArcFalse() {
+		arcs.start(id, WantedCause.CRIME, 3);
+		arcs.seen(id);
+
+		arcs.quit(id);
+		clock.addAndGet(1_000);
+		arcs.restore(id);
+		assertTrue(arcs.arc(id).sighted());
+
+		arcs.end(id, true);
+		arcs.start(id, WantedCause.RESTORE, 4);
+		assertFalse(arcs.arc(id).sighted());
+	}
+
+	@Test
+	@DisplayName("0.21.0: seen with no arc does not throw")
+	void seen_noArc_noop() {
+		assertDoesNotThrow(() -> arcs.seen(id));
+		assertFalse(arcs.has(id));
 	}
 }

@@ -10,6 +10,8 @@ import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
 import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.GetawayModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.MostWantedModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.PursuitReportModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RescueModuleConfig;
@@ -39,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CopsNCrooksModuleTest {
 
 	@Test
-	@DisplayName("configure registers the twelve configuration classes (0.21.0 appends five empty feature shells) and the three packages")
+	@DisplayName("configure registers the fourteen configuration classes (0.21.0 appends five empty feature shells, wave 2 two more) and the three packages")
 	void configure_declaresConfigsAndPackages() {
 		ModuleRegistrations registrations = new ModuleRegistrations();
 
@@ -49,7 +51,8 @@ class CopsNCrooksModuleTest {
 				CopsNCrooksModuleConfig.class, ChaseModuleConfig.class, HeatModuleConfig.class,
 				EvasionModuleConfig.class, RegistryModuleConfig.class, SurrenderModuleConfig.class,
 				RescueModuleConfig.class, StandoffModuleConfig.class, BreachModuleConfig.class,
-				PursuitReportModuleConfig.class), registrations.configurations());
+				PursuitReportModuleConfig.class, GetawayModuleConfig.class, MostWantedModuleConfig.class),
+				registrations.configurations());
 		assertEquals(List.of(CopsNCrooksModule.LISTENER_PACKAGE), registrations.listenerPackages());
 		assertEquals(List.of(CopsNCrooksModule.COMMAND_PACKAGE), registrations.commandPackages());
 		assertEquals(List.of(CopsNCrooksModule.REPOSITORY_PACKAGE), registrations.repositoryPackages());

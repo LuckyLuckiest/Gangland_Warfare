@@ -252,4 +252,9 @@ public final class ChaseArcs {
 		ChaseArc arc = arcs.get(id);
 		if (arc != null) arc.newsSent = true;
 	}
+
+	/** Earned stars (0.21.0 wave 2): see SPEC section 0. No-op without an arc. */
+	public void earn(UUID id, int oldLevel, int newLevel, WantedCause cause) {
+		throw new UnsupportedOperationException("TDD stub");
+	}
 }
