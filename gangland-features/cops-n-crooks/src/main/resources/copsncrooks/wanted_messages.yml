@@ -136,3 +136,33 @@ Suspect:
    Mask: "in a %head%"
    # The whole description; %who% is the word for the suspect, %mask% the mask, %chest% the chest, %vehicle% the vehicle
    Format: "%who%%mask%, %chest%, %vehicle%"
+# Bag: the hot cash bag (0.20.0)
+Bag:
+   # HUD line showing the bag's value
+   Hud: "&6Bag: &a%money_symbol%%amount%"
+   # The bag cannot hold more this chase
+   Full: "&cYour bag is full."
+   # A getaway banked the bag
+   Banked: "&aYou got away: &f%money_symbol%%amount% &afrom your bag is clean."
+   # The daily banking limit was passed
+   Over_Cap: "&7Over today's limit: the fence took &f%money_symbol%%cut% &7of &f%money_symbol%%rest%&7."
+   # The chase ended and the fence converted the bag
+   Converted: "&7Chase over: the fence turned your bag of &f%money_symbol%%bag% &7into &a%money_symbol%%amount%&7."
+   # Cops seized the bag
+   Seized: "&cBag seized: &f%money_symbol%%amount%"
+   # Paperwork line for a seized bag
+   Paperwork: "&7Bag seized: &c%money_symbol%%amount%"
+   # The bag spilled on the street
+   Spilled: "&cYour bag spilled: &f%money_symbol%%amount% &cis on the street."
+   # Carrying the bag made the cops notice
+   Hot: "&cHot cash! The cops want you now."
+   # A bribe paid from bag and wallet
+   Bribe: "&7Paid &f%money_symbol%%bag% &7from your bag and &f%money_symbol%%wallet% &7from your wallet."
+# Fence: the fence NPC's replies (0.20.0)
+Fence:
+   # The fence paid out
+   Done: "&aThe fence paid &f%money_symbol%%amount% &afor your bag of &f%money_symbol%%bag%&a."
+   # Nothing in the bag
+   Empty: "&7Your bag is empty."
+   # The player is in cuffs
+   Cuffed: "&cNot while you are in cuffs."

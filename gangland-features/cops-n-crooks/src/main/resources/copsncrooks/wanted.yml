@@ -342,3 +342,22 @@ Wanted:
       Enable: true
       # Seconds between repeat trespass heat
       Repeat_Seconds: 60
+
+   # 0.20.0 hot cash bag: robbery money goes into a bag until a fence pays out or a getaway banks it
+   Bag:
+      # 0.20.0: false = robbery money is paid directly, no bag
+      Enable: true
+      # Share of the bag a fence pays (0 to 1, exclusive)
+      Fence_Cut: 0.35
+      # Most money one chase can put in the bag
+      Max_Per_Chase: 5000
+      # Most money a player banks from bags per day
+      Max_Banked_Per_Day: 15000
+      # Item stacks spilled when a bag is dropped (1 to 16)
+      Spill_Stacks: 4
+      # Spill variation: low, medium or high
+      Spill_Variation: medium
+      # false = no bag line on the HUD
+      Hud_Enable: true
+      # Ticks between HUD refreshes
+      Hud_Interval_Ticks: 40
