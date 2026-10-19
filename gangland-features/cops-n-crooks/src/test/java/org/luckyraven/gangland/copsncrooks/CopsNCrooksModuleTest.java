@@ -12,6 +12,7 @@ import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.ScannerMapModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.LookoutModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.OverwatchModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.SightModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.ScannerModuleConfig;
@@ -56,7 +57,7 @@ class CopsNCrooksModuleTest {
 				WitnessModuleConfig.class, DisguiseModuleConfig.class, PatrolModuleConfig.class,
 				TrackerModuleConfig.class, ScannerModuleConfig.class, SightModuleConfig.class,
 				OverwatchModuleConfig.class, ScannerMapModuleConfig.class,
-				BagModuleConfig.class), registrations.configurations());
+				BagModuleConfig.class, LookoutModuleConfig.class), registrations.configurations());
 		assertEquals(List.of(CopsNCrooksModule.LISTENER_PACKAGE), registrations.listenerPackages());
 		assertEquals(List.of(CopsNCrooksModule.COMMAND_PACKAGE), registrations.commandPackages());
 		assertEquals(List.of(CopsNCrooksModule.REPOSITORY_PACKAGE), registrations.repositoryPackages());
