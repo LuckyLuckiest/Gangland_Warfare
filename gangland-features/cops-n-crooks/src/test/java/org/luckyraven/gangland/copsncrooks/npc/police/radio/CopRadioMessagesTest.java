@@ -429,4 +429,16 @@ class CopRadioMessagesTest {
 		assertTrue(fallback.lines("Most_Wanted").get(0).contains("%place%"));
 		assertEquals(fallback.lines("Most_Wanted"), english.lines("Most_Wanted"));
 	}
+
+	@Test
+	@DisplayName("0.21.0 wave 2 judge-fix r1: Most_Wanted is the single owner-approved spec line in code, English and Spanish")
+	void mostWantedLine_isTheSpecText() throws IOException {
+		List<String> spec = List.of("All units, be advised: %target% is the city's Most Wanted, last seen near %place%.");
+
+		assertEquals(spec, build("Lines: {}\n").lines("Most_Wanted"), "code default");
+		assertEquals(spec, build(shipped("copsncrooks/cop_radio_messages.yml")).lines("Most_Wanted"), "English file");
+		assertTrue(shipped("copsncrooks/cop_radio_messages_es.yml").contains(
+				"\"Atención a todas las unidades: %target% es el más buscado de la ciudad, visto cerca de %place%.\""),
+		           "Spanish file");
+	}
 }
