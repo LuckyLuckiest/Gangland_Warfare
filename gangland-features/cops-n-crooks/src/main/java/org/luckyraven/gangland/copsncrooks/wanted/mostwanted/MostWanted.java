@@ -3,8 +3,8 @@ package org.luckyraven.gangland.copsncrooks.wanted.mostwanted;
 import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
@@ -43,8 +43,8 @@ public class MostWanted implements BeanLifecycle {
 	private final Map<UUID, Long> qualifiedSince = new HashMap<>();
 	private BukkitTask            task;
 	private UUID                  holder;
-	private String                holderName;
-	private int                   holderStars;
+	private volatile String       holderName;
+	private volatile int          holderStars;
 	private boolean               broadcastOnce;
 	private long                  lastBroadcastAt;
 
@@ -83,7 +83,7 @@ public class MostWanted implements BeanLifecycle {
 	void tick(long now) {
 		MostWantedSettings s = config.getMostWanted();
 		if (!s.enabled()) {
-			clearHolder("DISABLED");
+			clearHolder("LOST");
 			qualifiedSince.clear();
 			return;
 		}
@@ -144,7 +144,7 @@ public class MostWanted implements BeanLifecycle {
 			                                                                           Wanted.buildStars(earned, 5))));
 			radio.accept(p, earned);
 		}
-		log.debug("MOST_WANTED {} {} announced={}", holderName, earned, announce);
+		log.debug("MOST_WANTED {} stars={} announced={}", holderName, earned, announce);
 	}
 
 	// Ranking: most earned, then the sitting holder, then earliest earnedAt, then lower UUID.
