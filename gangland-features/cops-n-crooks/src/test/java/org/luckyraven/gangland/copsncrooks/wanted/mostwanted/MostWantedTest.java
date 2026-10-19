@@ -13,6 +13,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.MostWantedSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.hud.HudFixtures;
+import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -138,6 +139,7 @@ class MostWantedTest {
 		assertEquals(1, sent.size());
 		assertTrue(plain(sent.get(0)).contains("Steve"));
 		assertTrue(plain(sent.get(0)).contains("Most Wanted"));
+		assertTrue(plain(sent.get(0)).contains(plain(Wanted.buildStars(4, 5))));
 		assertEquals(List.of("Steve:4"), radioCalls);
 	}
 
@@ -199,6 +201,35 @@ class MostWantedTest {
 		tickAt(52 * SEC);
 		assertEquals("Alex", mw.holderName());
 		assertEquals(5, mw.holderStars());
+	}
+
+	@Test
+	@DisplayName("a later holder with more earned stars beats an earlier one: most earned first, earnedAt only breaks ties")
+	void mostEarnedBeatsEarlierEarnedAt() {
+		clock.set(T0);
+		crimeStars(idA, 4);
+		clock.set(T0 + 2 * SEC);
+		crimeStars(idB, 5);
+
+		tickAt(2 * SEC);
+		tickAt(12 * SEC);
+
+		assertEquals("Alex", mw.holderName());
+		assertEquals(5, mw.holderStars());
+		assertEquals(1, sent.size());
+	}
+
+	@Test
+	@DisplayName("the production beat tick() reads the arcs clock")
+	void tickUsesArcsClock() {
+		crimeStars(idA, 4);
+
+		mw.tick();
+		assertNull(mw.holderName());
+
+		clock.set(T0 + 10 * SEC);
+		mw.tick();
+		assertEquals("Steve", mw.holderName());
 	}
 
 	@Test
