@@ -58,6 +58,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -1008,5 +1009,21 @@ class StandoffControllerTest {
 
 		assertEquals(0, starts());
 		assertFalse(controller.isActive(playerId));
+	}
+
+	@Test
+	@DisplayName("a posted cop that sees the suspect reports the sighting to the squad and keeps its post")
+	void postedCopSeesSuspect_reportsSightingKeepsPost() {
+		List<CopNpc> made = hunters(3, 2);
+		for (CopNpc c : made)
+			when(c.canSee(any(Player.class), anyDouble())).thenReturn(true);
+		tickAt(0);
+		CopNpc posted = made.stream().filter(c -> stateOf(c) == CopState.POSTED).findFirst().orElseThrow();
+
+		tickAt(SEC);
+
+		verify(squad, atLeastOnce()).reportSighting(any(Location.class));
+		assertEquals(CopState.POSTED, stateOf(posted));
+		assertTrue(controller.isActive(playerId));
 	}
 }

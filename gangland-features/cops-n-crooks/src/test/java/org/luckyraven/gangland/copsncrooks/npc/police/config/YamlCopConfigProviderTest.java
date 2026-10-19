@@ -1037,4 +1037,25 @@ class YamlCopConfigProviderTest {
 			assertTrue(provider.getRadioSettings().isPriority(key), key);
 		}
 	}
+
+	@Test
+	@DisplayName("Surrender_Accepted, Standoff and Standoff_Over stay priority whatever the server's Priority list says")
+	void surrenderAndStandoffLines_alwaysPriority() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Radio:
+				      Enabled: true
+				      Priority:
+				         - Contact
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+
+		for (String key : new String[]{"Surrender_Accepted", "Standoff", "Standoff_Over"}) {
+			assertTrue(provider.getRadioSettings().isPriority(key), key);
+		}
+	}
 }
