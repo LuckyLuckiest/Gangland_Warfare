@@ -338,7 +338,7 @@ Wanted:
 
    # 0.20.0 trespass: repeat trespass in a restricted place adds heat
    Trespass:
-      # false = trespass adds heat once only
+      # Walking into a restricted region commits Trespass_Restricted; false = no trespass crime.
       Enable: true
       # Seconds between repeat trespass heat
       Repeat_Seconds: 60
