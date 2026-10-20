@@ -119,6 +119,11 @@ public class SuspectDescriptions {
 		return words(chest.getType().name());
 	}
 
+	/** The Unknown word alone, for when no description is known. */
+	public String unknownText() {
+		return text(WantedMessages.Key.SUSPECT_UNKNOWN);
+	}
+
 	private String text(WantedMessages.Key key) {
 		return messages.format(key, Map.of());
 	}

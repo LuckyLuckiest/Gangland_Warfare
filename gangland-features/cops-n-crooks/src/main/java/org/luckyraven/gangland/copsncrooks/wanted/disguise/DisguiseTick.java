@@ -78,11 +78,13 @@ public class DisguiseTick {
 		forgetHooks.forEach(hook -> hook.accept(playerId));
 	}
 
-	/** The {@code %suspect%} placeholder for {@code squad}; empty when unknown. */
+	/** The {@code %suspect%} placeholder for {@code squad}; the Unknown word when no description is known. */
 	public Map<String, String> extras(NpcSquad squad) {
 		UUID               id     = ticked.get(squad);
 		SuspectDescription latest = id == null ? null : descriptions.latest(id);
 
-		return latest == null ? Map.of() : Map.of("suspect", descriptions.format(latest));
+		return latest == null
+		       ? Map.of("suspect", descriptions.unknownText())
+		       : Map.of("suspect", descriptions.format(latest));
 	}
 }
