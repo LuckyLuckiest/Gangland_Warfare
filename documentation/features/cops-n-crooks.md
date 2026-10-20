@@ -775,7 +775,7 @@ car. The squad leader radios it (`Suspect_Description`), and the words come from
 
 - **Masks.** A mask item in `Cops.Disguise.Mask_Items` (or a Bartizan wearable in `Mask_Wearables`) makes the description
   "unknown suspect in a <mask>".
-- **Changing clothes.** Change at least `Match_Needed` (2) of head, chest and vehicle while no cop has a fresh sighting of you.
+- **Changing clothes.** A cop keeps lock while at least `Match_Needed` (2) pieces of head, chest and vehicle still match; change enough pieces to drop below it while no cop has a fresh sighting of you.
   Cops then stop locking on to you until they see you again.
 - **The police outfit.** Wearing `Police_Outfit` (`police_helmet` and `police_vest`) at `Outfit_Max_Level` (2) stars or fewer
   stops cops locking on to you.

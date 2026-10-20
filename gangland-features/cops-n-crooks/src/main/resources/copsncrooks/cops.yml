@@ -787,7 +787,7 @@ Cops:
          - "police_vest"
       # Highest wanted level at which the police outfit still works.
       Outfit_Max_Level: 2
-      # Pieces of head, chest and vehicle to change before a cop loses you.
+      # Pieces of head, chest and vehicle that must still match for a cop to keep you (higher = easier to shake).
       Match_Needed: 2
    # Lookout: a gang mate who is not wanted relays the police radio he hears.
    Lookout:

@@ -97,7 +97,7 @@ Defaults are the shipped values. "Missing keys use the defaults" applies to ever
 | `cops.yml` `Cops.Disguise.Mask_Wearables` | `[]` | Bartizan wearable keys that hide you. |
 | `cops.yml` `Cops.Disguise.Police_Outfit` | `[police_helmet, police_vest]` | Wearables that make up the police outfit. |
 | `cops.yml` `Cops.Disguise.Outfit_Max_Level` | `2` | Highest star level the outfit still passes at. |
-| `cops.yml` `Cops.Disguise.Match_Needed` | `2` | Pieces of head, chest and vehicle to change before a cop loses you. |
+| `cops.yml` `Cops.Disguise.Match_Needed` | `2` | Pieces of head, chest and vehicle that must still match for a cop to keep you (higher = easier to shake). |
 | `cops.yml` `Cops.Patrol.Enable` | `true` | Beat cops walk near stations. |
 | `cops.yml` `Cops.Patrol.Cops_Per_Station` | `2` | Beat cops per station. |
 | `cops.yml` `Cops.Patrol.Activation_Radius` | `64` | Blocks from a station a player must be within before beats spawn. |
