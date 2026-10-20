@@ -22,9 +22,9 @@ file is renamed with a `-old` suffix and a fresh default is generated.
 | `commands.yml`     | Cops, jail and cuff command replies (0.16.1; `commands_es.yml` is the Spanish file) |
 | `civilians.yml`    | Civilian type definitions and spawner config |
 | `cars.yml`         | Car type definitions                         |
-| `wearables.yml`    | Wearable armor definitions                   |
+| `wearables.yml`    | Wearable armor definitions; moved to Bartizan in 0.9.0 (Bartizan repo) |
 | `unique_items.yml` | Unique item definitions                      |
-| `ammunition.yml`   | Ammunition type definitions                  |
+| `ammunition.yml`   | Ammunition type definitions; moved to Bartizan in 0.9.0 (Bartizan repo) |
 | `plugin.yml`       | Spigot plugin metadata (not user-editable)   |
 
 ---
