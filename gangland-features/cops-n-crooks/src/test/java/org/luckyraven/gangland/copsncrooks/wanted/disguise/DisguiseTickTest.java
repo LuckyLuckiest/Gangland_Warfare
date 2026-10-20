@@ -165,7 +165,7 @@ class DisguiseTickTest {
 
 		tick.forget(wearer.id);
 
-		assertTrue(tick.extras(squad).isEmpty());
+		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
 		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
 	}
 
@@ -179,7 +179,7 @@ class DisguiseTickTest {
 		tick.tick(wearer.player, group);
 		tick.tick(wearer.player, null);
 
-		assertTrue(tick.extras(squad).isEmpty());
+		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
 	}
 
 	@Test
@@ -215,7 +215,17 @@ class DisguiseTickTest {
 		tick.tick(wearer.player, group);
 
 		assertEquals("unknown suspect in a carved pumpkin, red jacket, on foot", tick.extras(squad).get("suspect"));
-		assertTrue(tick.extras(mock(NpcSquad.class)).isEmpty());
+		assertEquals("unknown suspect", tick.extras(mock(NpcSquad.class)).get("suspect"));
+	}
+
+	@Test
+	@DisplayName("T-342: a fresh squad or Disguise.Enable false still gets a non-empty %suspect% (the Unknown word)")
+	void extrasFallBackToUnknownWord() {
+		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
+		settings = new DisguiseSettings(false, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
+		                                settings.outfitMaxLevel(), settings.matchNeeded());
+		tick.tick(wearer.player, group);
+		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
 	}
 
 	@Test
