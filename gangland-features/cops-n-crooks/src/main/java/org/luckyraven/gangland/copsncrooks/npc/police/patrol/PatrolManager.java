@@ -54,6 +54,7 @@ public class PatrolManager implements BeanLifecycle {
 	private final LongSupplier                                 clock;
 	private final Map<Integer, List<CopNpc>>                   beats      = new LinkedHashMap<>();
 	private final Map<Integer, Long>                           emptySince = new LinkedHashMap<>();
+	private final Map<Integer, String>                         names      = new LinkedHashMap<>();
 
 	/**
 	 * @param players the players that count as "near"
@@ -93,8 +94,10 @@ public class PatrolManager implements BeanLifecycle {
 			}
 			int id = station.getId();
 			live.add(id);
+			names.put(id, station.getName());
 			double nearest = nearestPlayer(anchor);
 			List<CopNpc> cops = beats.computeIfAbsent(id, key -> new ArrayList<>());
+			boolean hadCops = !cops.isEmpty();
 			cops.removeIf(cop -> {
 				if (cop.isValid()) {
 					return false;
@@ -102,6 +105,9 @@ public class PatrolManager implements BeanLifecycle {
 				destroy(cop);
 				return true;
 			});
+			if (hadCops && cops.isEmpty()) {
+				logZeroCops(id);
+			}
 			if (nearest <= s.activationRadius()) {
 				emptySince.remove(id);
 				while (cops.size() < s.copsPerStation()) {
@@ -151,12 +157,22 @@ public class PatrolManager implements BeanLifecycle {
 		cop.destroy(entity -> markManager.removeMark(entity));
 	}
 
+	/** T-322: a beat whose last cop was pruned as invalid reports it, like the timer despawn does. */
+	private void logZeroCops(int id) {
+		log.debug("PATROL station={} cops=0", names.get(id));
+		emptySince.remove(id);
+	}
+
 	/** One AI tick for every live beat cop (called every 10 ticks): resolves each cop's target and runs its behaviour. */
 	public void aiTick() {
 		for (CopNpc cop : beatCops()) {
 			if (!cop.isValid()) {
 				destroy(cop);
-				beats.values().forEach(list -> list.remove(cop));
+				beats.forEach((id, list) -> {
+					if (list.remove(cop) && list.isEmpty()) {
+						logZeroCops(id);
+					}
+				});
 				continue;
 			}
 			UUID   id     = cop.getTargetPlayerId();

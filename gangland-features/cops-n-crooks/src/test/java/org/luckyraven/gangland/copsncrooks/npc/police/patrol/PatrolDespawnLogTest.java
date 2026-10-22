@@ -107,10 +107,11 @@ class PatrolDespawnLogTest {
 		when(station.getName()).thenReturn("Central");
 		when(station.getLocation()).thenReturn(anchor);
 		when(stations.all()).thenReturn(List.of(station));
-		CopNpc[] spawned = new CopNpc[1];
+		List<CopNpc> spawned = new ArrayList<>();
 		when(spawner.spawnAtLocation(any(), anyInt())).thenAnswer(inv -> {
-			spawned[0] = fx.cop(CopState.IDLE, 0, 0, inv.getArgument(0));
-			return spawned[0];
+			CopNpc cop = fx.cop(CopState.IDLE, 0, 0, inv.getArgument(0));
+			spawned.add(cop);
+			return cop;
 		});
 		when(fx.bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
 				.thenReturn(mock(BukkitTask.class));
@@ -122,7 +123,7 @@ class PatrolDespawnLogTest {
 		online.add(fx.player(5, 5));
 		manager.manage();
 		lines.clear();
-		PatrolFixture.kill(spawned[0]);
+		spawned.forEach(PatrolFixture::kill);
 		online.clear();
 		manager.manage();
 
