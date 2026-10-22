@@ -102,11 +102,16 @@ behaviour change, with its default.
 
 ## Fixed
 
-- **Crime witness fields (T-310).** The witness count on a crime event was never read. The witness gate now reads it.
-- **Bundled cop cash (T-345).** The bundled settings dropped cash from cops. Cops now drop none with the bundled setting; the
+- **Crime witness fields (T-341).** The witness count on a crime event was never read. The witness gate now reads it.
+- **Bundled cop cash (T-329).** The bundled settings dropped cash from cops. Cops now drop none with the bundled setting; the
   bag carries the cash instead.
-- **Stale wearable docs (T-311).** `wearables.yml` and `WearableConverter` are no longer described as Gangland files; they belong
+- **Stale wearable docs (T-318).** `wearables.yml` and `WearableConverter` are no longer described as Gangland files; they belong
   to Bartizan.
+- **Beat despawn log (T-323).** A beat despawn now logs the patrol station's `cops=0`.
+- **Bag full log (T-324).** The `BAG ... full` debug line follows the same 3 s throttle as the chat message.
+- **Hold-up config log (T-325).** `trader_settings.yml` `Hold_Up` no longer logs `config.unknown_key` at every boot.
+- **Spilled hot bills (T-330).** A full-inventory proximity pickup no longer takes a spilled hot bill, so it cannot be paid out clean.
+- **Scanner Map in an empty slot (T-338).** A Scanner Map from `/glw cop item scanner_map` is map-bound before it is added.
 
 ## Known issues
 
@@ -115,7 +120,7 @@ behaviour change, with its default.
 - A restrained (handcuffed or in transit) player who dies or quits has the bag seized, not spilled.
 - Stolen-car grants reset on a restart.
 - Map hideouts are admin regions only. Turf and gang hideouts are not on the map yet.
-- `CLAUDE.md` says the civilians and gadget modules declare `Plugins: [Bartizan]`; their `module.yml` files do not (T-312, doc
+- `CLAUDE.md` says the civilians and gadget modules declare `Plugins: [Bartizan]`; their `module.yml` files do not (T-319, doc
   drift, not fixed in this release).
 - Breaker regions do nothing yet; restricted regions drive trespass from this release.
 

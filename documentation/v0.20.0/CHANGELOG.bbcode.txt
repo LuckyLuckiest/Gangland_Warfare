@@ -114,9 +114,14 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [SIZE=6][B]Fixed[/B][/SIZE]
 
 [LIST]
-[*][B]Crime witness fields (T-310).[/B] The witness count on a crime event was never read. The witness gate now reads it.
-[*][B]Bundled cop cash (T-345).[/B] The bundled settings dropped cash from cops. Cops now drop none with the bundled setting; the bag carries the cash instead.
-[*][B]Stale wearable docs (T-311).[/B] [ICODE]wearables.yml[/ICODE] and [ICODE]WearableConverter[/ICODE] are no longer described as Gangland files; they belong to Bartizan.
+[*][B]Crime witness fields (T-341).[/B] The witness count on a crime event was never read. The witness gate now reads it.
+[*][B]Bundled cop cash (T-329).[/B] The bundled settings dropped cash from cops. Cops now drop none with the bundled setting; the bag carries the cash instead.
+[*][B]Stale wearable docs (T-318).[/B] [ICODE]wearables.yml[/ICODE] and [ICODE]WearableConverter[/ICODE] are no longer described as Gangland files; they belong to Bartizan.
+[*][B]Beat despawn log (T-323).[/B] A beat despawn now logs the patrol station's [ICODE]cops=0[/ICODE].
+[*][B]Bag full log (T-324).[/B] The [ICODE]BAG ... full[/ICODE] debug line follows the same 3 s throttle as the chat message.
+[*][B]Hold-up config log (T-325).[/B] [ICODE]trader_settings.yml[/ICODE] [ICODE]Hold_Up[/ICODE] no longer logs [ICODE]config.unknown_key[/ICODE] at every boot.
+[*][B]Spilled hot bills (T-330).[/B] A full-inventory proximity pickup no longer takes a spilled hot bill, so it cannot be paid out clean.
+[*][B]Scanner Map in an empty slot (T-338).[/B] A Scanner Map from [ICODE]/glw cop item scanner_map[/ICODE] is map-bound before it is added.
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━
@@ -129,7 +134,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [*]A restrained (handcuffed or in transit) player who dies or quits has the bag seized, not spilled.
 [*]Stolen-car grants reset on a restart.
 [*]Map hideouts are admin regions only. Turf and gang hideouts are not on the map yet.
-[*][ICODE]CLAUDE.md[/ICODE] says the civilians and gadget modules declare [ICODE]Plugins: [Bartizan][/ICODE]; their [ICODE]module.yml[/ICODE] files do not (T-312, doc drift, not fixed in this release).
+[*][ICODE]CLAUDE.md[/ICODE] says the civilians and gadget modules declare [ICODE]Plugins: [Bartizan][/ICODE]; their [ICODE]module.yml[/ICODE] files do not (T-319, doc drift, not fixed in this release).
 [*]Breaker regions do nothing yet; restricted regions drive trespass from this release.
 [/LIST]
 
