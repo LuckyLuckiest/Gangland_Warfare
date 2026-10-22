@@ -121,6 +121,7 @@ public class PatrolManager implements BeanLifecycle {
 				if (since != null && now - since >= s.despawnAfterSeconds() * 1000L) {
 					cops.forEach(this::destroy);
 					cops.clear();
+					log.debug("PATROL station={} cops=0", station.getName());
 					emptySince.remove(id);
 				}
 			}
