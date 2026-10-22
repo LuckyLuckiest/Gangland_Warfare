@@ -1,4 +1,5 @@
 [SIZE=7][B]0.20.0 Changelog - Street crime[/B][/SIZE]
+────────────
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -105,7 +106,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [*][B]Signatures 0.21.0 relies on.[/B] Unchanged since the 0.20.0 base: [ICODE]HeatLedger.record(CrimeCommittedEvent)[/ICODE], [ICODE]CrimeCommittedEvent(Player, String, Location, boolean, int)[/ICODE], [ICODE]PerimeterController.isActive(UUID)[/ICODE], [ICODE]CopManager.addAiTickHook[/ICODE], [ICODE]addCopAttackedHook[/ICODE], [ICODE]findCopByEntity[/ICODE], [ICODE]groupOf[/ICODE], [ICODE]CopNpc.holdPost[/ICODE], [ICODE]getGuardedPlayerId[/ICODE], [ICODE]getTierConfig[/ICODE], [ICODE]CopRadio.sayFromLeader(group, key[, extra])[/ICODE], [ICODE]DetainmentService.isRestrained(Player)[/ICODE].
 [*][B]New seams.[/B] [ICODE]CopPerception[/ICODE] ([ICODE]rangeFor[/ICODE], [ICODE]sees[/ICODE], [ICODE]acquires[/ICODE], [ICODE]pursuitRange[/ICODE], [ICODE]addSightFactor[/ICODE], [ICODE]addLockOnFilter[/ICODE]), [ICODE]CopManager.addCopResolver[/ICODE], [ICODE]CopRadio.setOverhearing[/ICODE], [ICODE]setExtraPlaceholders[/ICODE], [ICODE]setLookout[/ICODE], and [ICODE]CopState[/ICODE] values [ICODE]PATROL[/ICODE], [ICODE]WARNING[/ICODE], [ICODE]OVERWATCH[/ICODE].
 [*][B]Setters, constructors unchanged.[/B] [ICODE]JailIntakeService.setBagSeizure[/ICODE], [ICODE]BribeService.setBagFunding[/ICODE], [ICODE]PaperworkView.setBagLine[/ICODE], [ICODE]CopRadio.setLookout[/ICODE].
-[*][B]Tests.[/B] Reactor [ICODE]mvn -o verify[/ICODE] on the 0.20.0 tip: 5163 tests, 0 failures, 0 errors, 0 skipped (15 module summaries).
+[*][B]Tests.[/B] Reactor [ICODE]mvn -o verify[/ICODE] on the 0.20.0 tip: 5164 tests, 0 failures, 0 errors, 0 skipped (15 module summaries).
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━
@@ -142,4 +143,4 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-[I]Tests: 5163 run, 0 failures, 0 errors, 0 skipped on the 0.20.0 tip (mvn -o verify).[/I]
+[I]Tests: 5164 run, 0 failures, 0 errors, 0 skipped on the 0.20.0 tip (mvn -o verify).[/I]

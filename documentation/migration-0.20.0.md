@@ -23,7 +23,7 @@ from your file uses that default. To change a value, copy the key into your file
   `Suspect_Description`, the patrol lines) are in `copsncrooks/cop_radio_messages.yml` and `cop_radio_messages_es.yml`. A
   server with an old copy of those files falls back to the code defaults, so the new lines still speak. To see and edit them
   in the file, regenerate the two files (move the old copies aside first; known as T-138).
-- **Wanted messages.** `copsncrooks/wanted_messages.yml` gains the `Suspect.*`, `Tracker.*` and `Trespass` text. Same rule: missing
+- **Wanted messages.** `copsncrooks/wanted_messages.yml` gains the `Patrol.*`, `Suspect.*`, `Tracker.*` and `Trespass` text. Same rule: missing
   keys use the default.
 - **Restricted areas.** Trespass needs an admin region tagged `restricted`. Run `/glw cop setup mode restricted`, take the
   setup wand (`/glw cop setup wand`), mark the two corners (left click pos1, right click pos2) and run `save <name>`. No
