@@ -95,4 +95,37 @@ class PatrolDespawnLogTest {
 		assertTrue(manager.beatCops().isEmpty());
 		assertTrue(lines.contains("PATROL station=Central cops=0"), lines.toString());
 	}
+
+	@Test
+	@DisplayName("T-322: a beat cop pruned as invalid (chunk unload, Citizens despawn) logs 'PATROL station=Central cops=0'")
+	void invalidPruneLogsZeroCops() {
+		StationRegistry stations = mock(StationRegistry.class);
+		CopSpawnManager spawner  = mock(CopSpawnManager.class);
+		Location        anchor   = fx.at(0, 0);
+		Station         station  = mock(Station.class);
+		when(station.getId()).thenReturn(1);
+		when(station.getName()).thenReturn("Central");
+		when(station.getLocation()).thenReturn(anchor);
+		when(stations.all()).thenReturn(List.of(station));
+		CopNpc[] spawned = new CopNpc[1];
+		when(spawner.spawnAtLocation(any(), anyInt())).thenAnswer(inv -> {
+			spawned[0] = fx.cop(CopState.IDLE, 0, 0, inv.getArgument(0));
+			return spawned[0];
+		});
+		when(fx.bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
+				.thenReturn(mock(BukkitTask.class));
+		List<org.bukkit.entity.Player> online = new ArrayList<>();
+		PatrolManager manager = new PatrolManager(mock(JavaPlugin.class), () -> PatrolSettings.DEFAULT, stations,
+		                                          spawner, mock(NpcMarkManager.class), new CopPerception(),
+		                                          () -> online, entity -> false, () -> true, () -> fx.clock[0]);
+
+		online.add(fx.player(5, 5));
+		manager.manage();
+		lines.clear();
+		PatrolFixture.kill(spawned[0]);
+		online.clear();
+		manager.manage();
+
+		assertTrue(lines.contains("PATROL station=Central cops=0"), lines.toString());
+	}
 }

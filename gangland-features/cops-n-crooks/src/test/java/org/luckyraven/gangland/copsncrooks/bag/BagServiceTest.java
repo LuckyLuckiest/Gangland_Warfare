@@ -84,6 +84,20 @@ class BagServiceTest {
 	}
 
 	@Test
+	@DisplayName("T-324: the 'full' debug line is throttled to once per 3 s, like the chat line")
+	void fullDebugLineThrottled() {
+		fx.level(runner, 2);
+		assertEquals(HotCash.Take.BAGGED, fx.service.take(runner, bd("4900"), "pickup"));
+
+		fx.service.take(runner, bd("200"), "pickup");
+		fx.now += 1_000;
+		fx.service.take(runner, bd("200"), "pickup");
+
+		long full = fx.debug.stream().filter(l -> l.startsWith("BAG Runner full")).count();
+		assertEquals(1, full, fx.debug.toString());
+	}
+
+	@Test
 	@DisplayName("P-BAG-10: the chase cap refuses the overflow; nothing is added and the message names Bag.Full once per 3 s")
 	void chaseCapRefusesOverflow() {
 		fx.level(runner, 2);
