@@ -57,8 +57,8 @@ public final class BagService implements HotCash, BagFunding, BeanLifecycle {
 			if (last == null || now - last >= FULL_THROTTLE_MILLIS) {
 				lastFullLine.put(id, now);
 				player.sendMessage(line(Key.BAG_FULL));
+				env.debug("BAG " + player.getName() + " full source=" + source + " bag=" + plain(bags.amount(id)));
 			}
-			env.debug("BAG " + player.getName() + " full source=" + source + " bag=" + plain(bags.amount(id)));
 			return Take.FULL;
 		}
 
