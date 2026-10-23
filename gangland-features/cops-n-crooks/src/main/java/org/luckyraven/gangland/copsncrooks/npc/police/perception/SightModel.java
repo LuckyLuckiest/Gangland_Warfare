@@ -13,6 +13,7 @@ import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.detainment.surrender.SurrenderService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.SightSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 
@@ -71,7 +72,7 @@ public class SightModel implements CopPerception.SightFactor {
 		    || target.isGlowing() || target.hasPotionEffect(PotionEffectType.GLOWING)) {
 			return 1.0;
 		}
-		if (target.isSneaking() && emptyHand(target) && emptyOffHand(target)) {
+		if (SurrenderService.poseHeld(target)) {
 			CopGroup g = copManager.groupOf(id);
 			if (g != null && g.getSquad().hasFreshSighting()) {
 				return 1.0;
@@ -115,11 +116,6 @@ public class SightModel implements CopPerception.SightFactor {
 
 	private static boolean emptyHand(Player target) {
 		ItemStack item = target.getInventory().getItemInMainHand();
-		return item == null || item.getType() == Material.AIR;
-	}
-
-	private static boolean emptyOffHand(Player target) {
-		ItemStack item = target.getInventory().getItemInOffHand();
 		return item == null || item.getType() == Material.AIR;
 	}
 

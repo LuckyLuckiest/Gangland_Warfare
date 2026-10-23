@@ -134,7 +134,7 @@ public class SurrenderService {
 		log.debug("SURRENDER {} end reason={}", player.getName(), reason);
 	}
 
-	private static boolean poseHeld(Player player) {
+	public static boolean poseHeld(Player player) {
 		if (!player.isSneaking()) return false;
 		ItemStack main = player.getInventory().getItemInMainHand();
 		ItemStack off = player.getInventory().getItemInOffHand();
