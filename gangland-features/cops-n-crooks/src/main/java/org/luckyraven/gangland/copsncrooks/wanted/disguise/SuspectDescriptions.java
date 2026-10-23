@@ -49,6 +49,9 @@ public class SuspectDescriptions {
 	public SuspectDescription describe(Player player) {
 		DisguiseSettings settings = this.settings.get();
 		ItemStack        helmet   = player.getInventory().getHelmet();
+		if (helmet != null && helmet.getType() == Material.AIR) {
+			helmet = null;
+		}
 		String           wearable = keys.keyOf(helmet);
 
 		boolean maskWearable = wearable != null && containsIgnoreCase(settings.maskWearables(), wearable);
@@ -109,7 +112,7 @@ public class SuspectDescriptions {
 	}
 
 	private String chestText(@Nullable ItemStack chest) {
-		if (chest == null) {
+		if (chest == null || chest.getType() == Material.AIR) {
 			return "";
 		}
 		if (chest.getType() == Material.LEATHER_CHESTPLATE && chest.getItemMeta() instanceof LeatherArmorMeta meta
