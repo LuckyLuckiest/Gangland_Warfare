@@ -67,6 +67,8 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [*][B]T-371[/B] a chase that ended without a death left the cop group's wanted level stale; it is now cleared.
 [*][B]T-380[/B] a busted arrest could hit the original suspect after the squad retargeted; the bust now follows the cop's own target.
 [*][B]T-381[/B] the gadget fall-cancel (NORMAL) runs before Busted (HIGH), so protected landings are not busted.
+[*][B]T-398[/B] a groupless beat cop in combat kept attacking a surrendered player after the suspect's squad called a cease-fire; it now stands down.
+[*][B]T-399[/B] the white-banner surrender pose was missed by the sight check, so a night banner surrender still shrank the sighting; the pose now counts.
 [*][B]CJ-24 (partial)[/B] the rescue path is fixed; the rest of CJ-24 stays open.
 [/LIST]
 
@@ -75,6 +77,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [SIZE=6][B]Known issues[/B][/SIZE]
 
 [LIST]
+[*][B]T-372[/B] a protected lethal fall during a gang fight forfeits or is protected depending on module order, since the gadget fall-cancel and the gang fight damage listener are both NORMAL. Deferred: no change in 0.21.0.
 [*][B]T-390[/B] getaway cooldown and daily cap are kept in memory. A restart resets them.
 [*][B]T-391[/B] earned stars are kept in memory. After a restart a restored 5-star suspect cannot hold the title or earn getaway XP until he commits new crimes.
 [*][B]T-392[/B] (latent) after a restart, the chase learner can count unseen time as contact time.

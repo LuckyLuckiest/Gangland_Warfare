@@ -51,10 +51,13 @@ change and the behaviour that changed. Upgrade from 0.20.0.
 - **T-371** a chase that ended without a death left the cop group's wanted level stale; it is now cleared.
 - **T-380** a busted arrest could hit the original suspect after the squad retargeted; the bust now follows the cop's own target.
 - **T-381** the gadget fall-cancel (NORMAL) runs before Busted (HIGH), so protected landings are not busted.
+- **T-398** a groupless beat cop in combat kept attacking a surrendered player after the suspect's squad called a cease-fire; it now stands down.
+- **T-399** the white-banner surrender pose was missed by the sight check, so a night banner surrender still shrank the sighting; the pose now counts.
 - **CJ-24 (partial)** the rescue path is fixed; the rest of CJ-24 stays open.
 
 ## Known issues
 
+- **T-372** a protected lethal fall during a gang fight forfeits or is protected depending on module order, since the gadget fall-cancel and the gang fight damage listener are both NORMAL. Deferred: no change in 0.21.0.
 - **T-390** getaway cooldown and daily cap are kept in memory. A restart resets them.
 - **T-391** earned stars are kept in memory. After a restart a restored 5-star suspect cannot hold the title or earn getaway XP until he commits new crimes.
 - **T-392** (latent) after a restart, the chase learner can count unseen time as contact time.
