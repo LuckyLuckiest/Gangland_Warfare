@@ -176,4 +176,18 @@ class DisguisePursuitTest {
 
 		org.mockito.Mockito.verify(cop).transitionTo(CopState.CUFFING);
 	}
+
+	@Test
+	@DisplayName("D-D5: the police-outfit wearer (2 stars) with a fresh squad sighting is cuffed")
+	void outfitWithFreshSightingIsCuffed() {
+		wearer.helmet(Material.IRON_HELMET, "police_helmet").chest(Material.IRON_CHESTPLATE, "police_vest");
+		level = 2;
+		when(squad.hasFreshSighting()).thenReturn(true);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			cuffScene(bukkit).tick(cop);
+		}
+
+		org.mockito.Mockito.verify(cop).transitionTo(CopState.CUFFING);
+	}
 }
