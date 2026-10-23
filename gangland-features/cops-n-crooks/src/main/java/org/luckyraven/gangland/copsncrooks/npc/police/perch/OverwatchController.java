@@ -100,6 +100,9 @@ public class OverwatchController {
 		if (group == null) {
 			return;
 		}
+		if (group.isStandoff(clock.getAsLong())) {
+			return;
+		}
 		CopNpc marksman = null;
 		for (CopNpc cop : group.getCops()) {
 			if (eligible(cop, settings, id)) {
