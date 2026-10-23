@@ -10,6 +10,16 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
 import org.luckyraven.keystone.npc.NpcSquad;
+import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.behavior.PursuingBehavior;
+import org.luckyraven.gangland.npc.RetreatSettings;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.LivingEntity;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -120,5 +130,50 @@ class DisguisePursuitTest {
 
 		assertTrue(perception.acquires(cop, wearer.player, BASE));
 		assertEquals(BASE, perception.pursuitRange(cop, wearer.player, squad, BASE), 1e-9);
+	}
+
+	private PursuingBehavior cuffScene(BukkitStatics bukkit) {
+		when(wearer.player.isValid()).thenReturn(true);
+		bukkit.statics().when(() -> Bukkit.getPlayer(wearer.id)).thenReturn(wearer.player);
+		when(cop.getTargetPlayerId()).thenReturn(wearer.id);
+		when(cop.squadFor(wearer.player)).thenReturn(squad);
+		when(cop.distanceTo((LivingEntity) wearer.player)).thenReturn(1.0);
+		when(cop.hasLineOfSight(wearer.player)).thenReturn(true);
+		when(cop.getTierConfig()).thenReturn(mock(CopTierConfig.class));
+		net.citizensnpcs.api.npc.NPC npc = mock(net.citizensnpcs.api.npc.NPC.class);
+		when(npc.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(cop.getNpc()).thenReturn(npc);
+		return new PursuingBehavior(3.0, BASE, 80.0, 120, mock(DetainmentService.class), new CuffLockRegistry(),
+		                            RetreatSettings.DEFAULT, () -> 1_000L, id -> false, perception);
+	}
+
+	@Test
+	@DisplayName("T-346: a disguised suspect with no fresh squad sighting is not cuffed in cuff range")
+	void disguisedSuspectIsNotCuffed() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		crime();
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+		when(squad.hasFreshSighting()).thenReturn(false);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			cuffScene(bukkit).tick(cop);
+		}
+
+		org.mockito.Mockito.verify(cop, org.mockito.Mockito.never()).transitionTo(CopState.CUFFING);
+	}
+
+	@Test
+	@DisplayName("T-346: the same disguised suspect with a fresh squad sighting is cuffed")
+	void disguisedSuspectWithFreshSightingIsCuffed() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		crime();
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+		when(squad.hasFreshSighting()).thenReturn(true);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			cuffScene(bukkit).tick(cop);
+		}
+
+		org.mockito.Mockito.verify(cop).transitionTo(CopState.CUFFING);
 	}
 }
