@@ -50,7 +50,7 @@ change and the behaviour that changed. Upgrade from 0.20.0.
 - **T-370 (partial)** the too-hot line is not repeated once the stars drop to zero. The bribe, admin and decay paths are still partial.
 - **T-371** a chase that ended without a death left the cop group's wanted level stale; it is now cleared.
 - **T-380** a busted arrest could hit the original suspect after the squad retargeted; the bust now follows the cop's own target.
-- **T-381** the fall-bust (Busted) and the gadget fall-cancel run in a fixed order: the bust is checked before the gadget's HIGH fall-cancel.
+- **T-381** the gadget fall-cancel (NORMAL) runs before Busted (HIGH), so protected landings are not busted.
 - **CJ-24 (partial)** the rescue path is fixed; the rest of CJ-24 stays open.
 
 ## Known issues
