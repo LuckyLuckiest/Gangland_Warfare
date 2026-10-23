@@ -65,7 +65,7 @@ Defaults are the shipped values. "Missing keys use the defaults" applies to ever
 
 | Key | Default | Meaning |
 |---|---|---|
-| `Cracking_Alarm.Enable` | `true` | Cracking a chest of a listed tier rings the alarm and commits `Safe_Cracking`. |
+| `Cracking_Alarm.Enable` | `true` | Cracking a chest of a listed tier rings the alarm and commits `Safe_Cracking` (inert in 0.20.0: cracking is not enabled yet, LS-02). |
 | `Cracking_Alarm.Tiers` | `[police_armory, military_vault]` | Loot table ids that ring the alarm. |
 | `Cracking_Alarm.Sound` | `BLOCK_BELL_USE` | Sound played at the chest. |
 

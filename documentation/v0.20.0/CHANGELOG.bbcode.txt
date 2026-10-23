@@ -65,7 +65,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 
 [LIST]
 [*][B]Store hold-ups.[/B] Aim a weapon at a trader and keep aiming. The clerk fills the bag over ten seconds and you get the take. The silent alarm commits a store robbery, earlier if the trader dislikes you. A robbed trader refuses hold-ups for a while.
-[*][B]Safe cracking.[/B] Cracking a police armory or military vault chest rings an alarm and commits safe cracking.
+[*][B]Safe cracking alarm (inert in 0.20.0).[/B] The alarm and the safe-cracking crime are ready for police armory and military vault chests, but they cannot fire until loot-chest cracking is enabled (see Known limits).
 [*][B]Hotwire.[/B] Use a lockpick on a gadget car you may not use to start it. Success commits car theft.
 [*][B]Trespass.[/B] Walking into a restricted area commits trespass. Staff with [ICODE]gangland.cop.trespass.bypass[/ICODE] are exempt.
 [/LIST]

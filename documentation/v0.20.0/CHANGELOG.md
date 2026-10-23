@@ -52,7 +52,7 @@ behaviour change, with its default.
 
 - **Store hold-ups.** Aim a weapon at a trader and keep aiming. The clerk fills the bag over ten seconds and you get the take.
   The silent alarm commits a store robbery, earlier if the trader dislikes you. A robbed trader refuses hold-ups for a while.
-- **Safe cracking.** Cracking a police armory or military vault chest rings an alarm and commits safe cracking.
+- **Safe cracking alarm (inert in 0.20.0).** The alarm and the safe-cracking crime are ready for police armory and military vault chests, but they cannot fire until loot-chest cracking is enabled (see Known limits).
 - **Hotwire.** Use a lockpick on a gadget car you may not use to start it. Success commits car theft.
 - **Trespass.** Walking into a restricted area commits trespass. Staff with `gangland.cop.trespass.bypass` are exempt.
 
