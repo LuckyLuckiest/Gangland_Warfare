@@ -541,4 +541,50 @@ class CrewHeatListenerTest {
 		assertTrue(wanteds.get(b).getLevel() >= 1);
 		assertEquals(0, wanteds.get(actor).getLevel(), "the listener itself never records the actor");
 	}
+
+	/** Bukkit's dispatch for one event: handlers by priority (stable), cancelled events skip ignoreCancelled ones. */
+	private static void dispatch(CrimeCommittedEvent event, Object... listeners) throws ReflectiveOperationException {
+		List<Object> order = new ArrayList<>(List.of(listeners));
+		order.sort(java.util.Comparator.comparingInt(l -> priorityOf(l).getSlot()));
+		for (Object l : order) {
+			EventHandler h = l.getClass().getMethod("onCrime", CrimeCommittedEvent.class).getAnnotation(EventHandler.class);
+			if (event.isCancelled() && h.ignoreCancelled()) {
+				continue;
+			}
+			l.getClass().getMethod("onCrime", CrimeCommittedEvent.class).invoke(l, event);
+		}
+	}
+
+	private static EventPriority priorityOf(Object l) {
+		try {
+			return l.getClass().getMethod("onCrime", CrimeCommittedEvent.class).getAnnotation(EventHandler.class).priority();
+		} catch (NoSuchMethodException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	@Test
+	@DisplayName("cnc-integ INT-2: a witness-gated (cancelled) unseen crime is not shared; the 911 recommit shares it exactly once")
+	void integ_gatedCrimeNotSharedUntilRecommit() throws ReflectiveOperationException {
+		Player mate = player("Alex", OWN_GANG, 25);
+		npcSupport.when(NpcSupport::available).thenReturn(true);
+		org.luckyraven.gangland.civilians.witness.WitnessService witnesses =
+				mock(org.luckyraven.gangland.civilians.witness.WitnessService.class);
+		when(witnesses.witness(any(), any(), any())).thenReturn(1);
+		when(config.getWitnesses()).thenReturn(org.luckyraven.gangland.copsncrooks.wanted.config.WitnessSettings.DEFAULT);
+		WitnessGateListener gate = new WitnessGateListener(config, witnesses,
+		                                                   mock(org.luckyraven.gangland.copsncrooks.npc.police.CopManager.class));
+
+		CrimeCommittedEvent gated = new CrimeCommittedEvent(actor, Crimes.CAR_THEFT, crimeLoc, false, 0);
+		dispatch(gated, listener, gate);
+
+		assertTrue(gated.isCancelled());
+		verify(ledger, never()).record(any());
+
+		CrimeCommittedEvent recommit = new CrimeCommittedEvent(actor, Crimes.CAR_THEFT, crimeLoc, false, 1);
+		dispatch(recommit, listener, gate);
+
+		verify(ledger, times(1)).record(argThat(e -> recordsFor(e, mate, Crimes.CAR_THEFT)));
+		verify(ledger, times(1)).record(any());
+	}
 }

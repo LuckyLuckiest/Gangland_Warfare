@@ -934,4 +934,20 @@ class BreachControllerTest {
 		verify(defender).holdPost(any());
 		assertEquals(CopState.POSTED, stateOf(defender));
 	}
+
+	@Test
+	@DisplayName("cnc-integ INT-5: PATROL, WARNING and OVERWATCH cops (0.20) are never drafted into a breach stack")
+	void integ5_breachNeverDraftsPatrolWarningOverwatch() {
+		CopNpc patrol    = cop("Assault", CopState.valueOf("PATROL"), playerId, 1);
+		CopNpc warning   = cop("Assault", CopState.valueOf("WARNING"), playerId, 2);
+		CopNpc overwatch = cop("Assault", CopState.valueOf("OVERWATCH"), playerId, 3);
+		cop("Assault", CopState.PURSUING, playerId, 6);
+		cop("Assault", CopState.COMBAT, playerId, 7);
+
+		tick();
+
+		for (CopNpc not : List.of(patrol, warning, overwatch)) {
+			verify(not, never()).holdPost(any());
+		}
+	}
 }

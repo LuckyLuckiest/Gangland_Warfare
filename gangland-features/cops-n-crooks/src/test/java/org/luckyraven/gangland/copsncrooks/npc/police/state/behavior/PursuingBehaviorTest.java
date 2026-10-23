@@ -506,4 +506,18 @@ class PursuingBehaviorTest {
 
 		verify(cop).attack(player);
 	}
+
+	@Test
+	@DisplayName("cnc-integ T-346: a surrendered (cease-fire, fresh sighting) disguised suspect is still cuffed")
+	void integ_surrenderedDisguisedSuspectIsStillCuffed() {
+		ceaseFire(true);
+		CopPerception perception = new CopPerception();
+		perception.addLockOnFilter((c, p) -> false);
+		squad.reportSighting(new Location(mock(World.class), 0, 64, 0));
+		inCuffRange();
+
+		withPerception(perception).tick(cop);
+
+		verify(cop).transitionTo(CopState.CUFFING);
+	}
 }

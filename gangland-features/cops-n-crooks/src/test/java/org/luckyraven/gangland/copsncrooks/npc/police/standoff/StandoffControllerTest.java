@@ -1026,4 +1026,21 @@ class StandoffControllerTest {
 		assertEquals(CopState.POSTED, stateOf(posted));
 		assertTrue(controller.isActive(playerId));
 	}
+
+	@Test
+	@DisplayName("cnc-integ INT-5: PATROL, WARNING and OVERWATCH cops (0.20) are never drafted into a standoff")
+	void integ5_standoffNeverDraftsPatrolWarningOverwatch() {
+		CopNpc patrol    = cop(CopState.valueOf("PATROL"), playerId, 1, 10 * SEC);
+		CopNpc warning   = cop(CopState.valueOf("WARNING"), playerId, 2, 10 * SEC);
+		CopNpc overwatch = cop(CopState.valueOf("OVERWATCH"), playerId, 3, 10 * SEC);
+		hunter(4, 10 * SEC);
+		hunter(5, 10 * SEC);
+
+		tickAt(0);
+
+		for (CopNpc not : List.of(patrol, warning, overwatch)) {
+			verify(not, never()).holdPost(any());
+			verify(not, never()).transitionTo(CopState.POSTED);
+		}
+	}
 }

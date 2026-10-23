@@ -542,4 +542,58 @@ class BustedListenerTest {
 		verify(transit).schedule(player);
 	}
 
+	/**
+	 * Runs {@code busted} and a gadget-style fall-cancel (HIGH, ignoreCancelled, cancels FALL) on one event the way
+	 * Bukkit does: stable by priority, then registration order; a cancelled event skips ignoreCancelled handlers.
+	 */
+	private EntityDamageEvent lethalFallRace(boolean fallCancelRegisteredFirst) throws ReflectiveOperationException {
+		EntityDamageEvent event     = hit(9.0, DamageCause.FALL);
+		java.util.concurrent.atomic.AtomicBoolean cancelled = new java.util.concurrent.atomic.AtomicBoolean();
+		when(event.isCancelled()).thenAnswer(i -> cancelled.get());
+		doAnswer(i -> {
+			cancelled.set(i.getArgument(0));
+			return null;
+		}).when(event).setCancelled(org.mockito.ArgumentMatchers.anyBoolean());
+
+		EventPriority bustedPriority = BustedListener.class.getMethod("onDamage", EntityDamageEvent.class)
+		                                                   .getAnnotation(EventHandler.class).priority();
+		record Handler(EventPriority priority, Runnable run) {
+		}
+		Handler fall   = new Handler(EventPriority.HIGH, () -> event.setCancelled(true));
+		Handler bust   = new Handler(bustedPriority, () -> listener.onDamage(event));
+		List<Handler> order = new ArrayList<>(fallCancelRegisteredFirst ? List.of(fall, bust) : List.of(bust, fall));
+		order.sort(java.util.Comparator.comparingInt(h -> h.priority().getSlot()));
+		for (Handler h : order) {
+			if (!event.isCancelled()) {
+				h.run().run();
+			}
+		}
+		return event;
+	}
+
+	private long cuffedEvents() {
+		return firedEvents().stream().filter(CuffedEvent.class::isInstance).count();
+	}
+
+	@Test
+	@DisplayName("cnc-integ T-381: lethal fall, fall-cancel registered BEFORE Busted: exactly one bust, no downed event")
+	void integ_fallCancelRegisteredFirst_bustStillHappensOnce() throws ReflectiveOperationException {
+		hunter(2.0);
+
+		lethalFallRace(true);
+
+		assertEquals(1, cuffedEvents());
+		assertTrue(firedEvents().stream().noneMatch(PlayerDownedEvent.class::isInstance));
+	}
+
+	@Test
+	@DisplayName("cnc-integ T-381: lethal fall, fall-cancel registered AFTER Busted: exactly one bust, no downed event")
+	void integ_fallCancelRegisteredLast_bustHappensOnce() throws ReflectiveOperationException {
+		hunter(2.0);
+
+		lethalFallRace(false);
+
+		assertEquals(1, cuffedEvents());
+		assertTrue(firedEvents().stream().noneMatch(PlayerDownedEvent.class::isInstance));
+	}
 }

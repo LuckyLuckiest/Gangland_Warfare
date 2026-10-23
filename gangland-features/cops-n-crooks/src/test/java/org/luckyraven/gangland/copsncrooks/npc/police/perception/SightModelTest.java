@@ -403,4 +403,35 @@ class SightModelTest {
 		factor();
 		assertEquals(3, debug.size());
 	}
+
+	@Test
+	@DisplayName("cnc-integ INT-4 (C-11): a crouched empty-handed player the squad has just seen keeps factor 1.0 at night")
+	void integ_surrenderPoseWithFreshSightingIsNotShrunk() {
+		light(2);
+		when(player.isSneaking()).thenReturn(true);
+		when(squad.hasFreshSighting()).thenReturn(true);
+
+		assertEquals(1.0, factor(), EPS);
+	}
+
+	@Test
+	@DisplayName("cnc-integ INT-4: with a stale sighting the same pose still hides (sneak x dark = 0.28)")
+	void integ_surrenderPoseWithStaleSightingStillHides() {
+		light(2);
+		when(player.isSneaking()).thenReturn(true);
+		when(squad.hasFreshSighting()).thenReturn(false);
+
+		assertEquals(0.28, factor(), EPS);
+	}
+
+	@Test
+	@DisplayName("cnc-integ INT-4: crouched but holding an item is not the surrender pose, so it still hides")
+	void integ_crouchedWithItemStillHidesEvenWhenSeen() {
+		light(2);
+		when(player.isSneaking()).thenReturn(true);
+		when(squad.hasFreshSighting()).thenReturn(true);
+		when(inventory.getItemInMainHand()).thenReturn(new ItemStack(Material.STONE));
+
+		assertEquals(0.28, factor(), EPS);
+	}
 }
