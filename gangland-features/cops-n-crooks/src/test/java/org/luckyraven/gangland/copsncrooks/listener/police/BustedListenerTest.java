@@ -512,8 +512,8 @@ class BustedListenerTest {
 		assertTrue(BustedListener.class.isAnnotationPresent(ListenerHandler.class));
 		EventHandler handler = BustedListener.class.getMethod("onDamage", EntityDamageEvent.class)
 		                                           .getAnnotation(EventHandler.class);
-		// T-381: NORMAL, so the fall-bust runs before gadget HIGH fall-cancel.
-		assertEquals(EventPriority.NORMAL, handler.priority());
+		// T-381: HIGH (spec); the gadget fall-cancel runs earlier at NORMAL.
+		assertEquals(EventPriority.HIGH, handler.priority());
 		assertTrue(handler.ignoreCancelled());
 	}
 
@@ -544,7 +544,7 @@ class BustedListenerTest {
 	}
 
 	/**
-	 * Runs {@code busted} and a gadget-style fall-cancel (HIGH, ignoreCancelled, cancels FALL) on one event the way
+	 * Runs {@code busted} and a gadget-style fall-cancel (NORMAL, ignoreCancelled, cancels FALL) on one event the way
 	 * Bukkit does: stable by priority, then registration order; a cancelled event skips ignoreCancelled handlers.
 	 */
 	private EntityDamageEvent lethalFallRace(boolean fallCancelRegisteredFirst) throws ReflectiveOperationException {
@@ -560,7 +560,7 @@ class BustedListenerTest {
 		                                                   .getAnnotation(EventHandler.class).priority();
 		record Handler(EventPriority priority, Runnable run) {
 		}
-		Handler fall   = new Handler(EventPriority.HIGH, () -> event.setCancelled(true));
+		Handler fall   = new Handler(EventPriority.NORMAL, () -> event.setCancelled(true));
 		Handler bust   = new Handler(bustedPriority, () -> listener.onDamage(event));
 		List<Handler> order = new ArrayList<>(fallCancelRegisteredFirst ? List.of(fall, bust) : List.of(bust, fall));
 		order.sort(java.util.Comparator.comparingInt(h -> h.priority().getSlot()));
@@ -577,24 +577,24 @@ class BustedListenerTest {
 	}
 
 	@Test
-	@DisplayName("cnc-integ T-381: lethal fall, fall-cancel registered BEFORE Busted: exactly one bust, no downed event")
-	void integ_fallCancelRegisteredFirst_bustStillHappensOnce() throws ReflectiveOperationException {
+	@DisplayName("cnc-integ T-381: protected lethal fall, fall-cancel registered BEFORE Busted: no bust, no downed event")
+	void integ_fallCancelRegisteredFirst_noBust() throws ReflectiveOperationException {
 		hunter(2.0);
 
 		lethalFallRace(true);
 
-		assertEquals(1, cuffedEvents());
+		assertEquals(0, cuffedEvents());
 		assertTrue(firedEvents().stream().noneMatch(PlayerDownedEvent.class::isInstance));
 	}
 
 	@Test
-	@DisplayName("cnc-integ T-381: lethal fall, fall-cancel registered AFTER Busted: exactly one bust, no downed event")
-	void integ_fallCancelRegisteredLast_bustHappensOnce() throws ReflectiveOperationException {
+	@DisplayName("cnc-integ T-381: protected lethal fall, fall-cancel registered AFTER Busted: no bust, no downed event")
+	void integ_fallCancelRegisteredLast_noBust() throws ReflectiveOperationException {
 		hunter(2.0);
 
 		lethalFallRace(false);
 
-		assertEquals(1, cuffedEvents());
+		assertEquals(0, cuffedEvents());
 		assertTrue(firedEvents().stream().noneMatch(PlayerDownedEvent.class::isInstance));
 	}
 }

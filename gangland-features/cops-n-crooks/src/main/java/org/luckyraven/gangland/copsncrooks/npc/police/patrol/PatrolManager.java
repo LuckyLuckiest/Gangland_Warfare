@@ -55,6 +55,7 @@ public class PatrolManager implements BeanLifecycle {
 	private final Map<Integer, List<CopNpc>>                   beats      = new LinkedHashMap<>();
 	private final Map<Integer, Long>                           emptySince = new LinkedHashMap<>();
 	private final Map<Integer, String>                         names      = new LinkedHashMap<>();
+	private       java.util.function.Function<UUID, org.luckyraven.gangland.copsncrooks.npc.police.CopGroup> groupLookup = id -> null;
 
 	/**
 	 * @param players the players that count as "near"
@@ -161,6 +162,11 @@ public class PatrolManager implements BeanLifecycle {
 	private void logZeroCops(int id) {
 		log.debug("PATROL station={} cops=0", names.get(id));
 		emptySince.remove(id);
+	}
+
+	/** Where a beat cop finds its target's squad (for the cease-fire); default none. */
+	public void setGroupLookup(java.util.function.Function<UUID, org.luckyraven.gangland.copsncrooks.npc.police.CopGroup> lookup) {
+		this.groupLookup = lookup;
 	}
 
 	/** One AI tick for every live beat cop (called every 10 ticks): resolves each cop's target and runs its behaviour. */

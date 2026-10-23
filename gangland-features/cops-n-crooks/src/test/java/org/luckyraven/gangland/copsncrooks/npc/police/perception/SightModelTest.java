@@ -434,4 +434,15 @@ class SightModelTest {
 
 		assertEquals(0.28, factor(), EPS);
 	}
+
+	@Test
+	@DisplayName("cnc-integ INT-4: the white-banner surrender pose with a fresh sighting keeps factor 1.0 at night")
+	void integ_bannerPoseWithFreshSightingIsNotShrunk() {
+		light(2);
+		when(player.isSneaking()).thenReturn(true);
+		when(squad.hasFreshSighting()).thenReturn(true);
+		when(inventory.getItemInMainHand()).thenReturn(new ItemStack(com.cryptomorin.xseries.XMaterial.WHITE_BANNER.get()));
+
+		assertEquals(1.0, factor(), EPS);
+	}
 }
