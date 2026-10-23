@@ -98,7 +98,7 @@ behaviour change, with its default.
   `WARNING`, `OVERWATCH`.
 - **Setters, constructors unchanged.** `JailIntakeService.setBagSeizure`, `BribeService.setBagFunding`, `PaperworkView.setBagLine`,
   `CopRadio.setLookout`.
-- **Tests.** Reactor `mvn -o verify` on the 0.20.0 tip: 5164 tests, 0 failures, 0 errors, 0 skipped (15 module summaries).
+- **Tests.** Reactor `mvn -o verify` on the 0.20.0 tip: 5168 tests, 0 failures, 0 errors, 0 skipped (15 module summaries).
 
 ## Fixed
 
@@ -107,7 +107,7 @@ behaviour change, with its default.
   bag carries the cash instead.
 - **Stale wearable docs (T-318).** `wearables.yml` and `WearableConverter` are no longer described as Gangland files; they belong
   to Bartizan.
-- **Beat despawn log (T-323).** A beat despawn now logs the patrol station's `cops=0`.
+- **Beat despawn log (T-322, T-323).** A beat despawn or losing the last cop now logs the patrol station's `cops=0`.
 - **Bag full log (T-324).** The `BAG ... full` debug line follows the same 3 s throttle as the chat message.
 - **Hold-up config log (T-325).** `trader_settings.yml` `Hold_Up` no longer logs `config.unknown_key` at every boot.
 - **Spilled hot bills (T-330).** A full-inventory proximity pickup no longer takes a spilled hot bill, so it cannot be paid out clean.
@@ -130,4 +130,4 @@ behaviour change, with its default.
 
 ---
 
-*Tests: 5164 run, 0 failures, 0 errors, 0 skipped on the 0.20.0 tip (`mvn -o verify`).*
+*Tests: 5168 run, 0 failures, 0 errors, 0 skipped on the 0.20.0 tip (`mvn -o verify`).*
