@@ -122,6 +122,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [*][B]Hold-up config log (T-325).[/B] [ICODE]trader_settings.yml[/ICODE] [ICODE]Hold_Up[/ICODE] no longer logs [ICODE]config.unknown_key[/ICODE] at every boot.
 [*][B]Spilled hot bills (T-330).[/B] A full-inventory proximity pickup no longer takes a spilled hot bill, so it cannot be paid out clean.
 [*][B]Scanner Map in an empty slot (T-338).[/B] A Scanner Map from [ICODE]/glw cop item scanner_map[/ICODE] is map-bound before it is added.
+[*][B]Disguised suspect cuffed (T-346).[/B] A disguised suspect is no longer cuffed by a searching cop that walks into him.
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━
@@ -136,6 +137,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [*]Map hideouts are admin regions only. Turf and gang hideouts are not on the map yet.
 [*][ICODE]CLAUDE.md[/ICODE] says the civilians and gadget modules declare [ICODE]Plugins: [Bartizan][/ICODE]; their [ICODE]module.yml[/ICODE] files do not (T-319, doc drift, not fixed in this release).
 [*]Breaker regions do nothing yet; restricted regions drive trespass from this release.
+[*]Crack alarm ([ICODE]CRACK_ALARM[/ICODE]) cannot fire yet: safe cracking is not enabled (docket LS-02, T-342).
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━

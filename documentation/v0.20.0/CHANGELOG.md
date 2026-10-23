@@ -112,6 +112,7 @@ behaviour change, with its default.
 - **Hold-up config log (T-325).** `trader_settings.yml` `Hold_Up` no longer logs `config.unknown_key` at every boot.
 - **Spilled hot bills (T-330).** A full-inventory proximity pickup no longer takes a spilled hot bill, so it cannot be paid out clean.
 - **Scanner Map in an empty slot (T-338).** A Scanner Map from `/glw cop item scanner_map` is map-bound before it is added.
+- **Disguised suspect cuffed (T-346).** A disguised suspect is no longer cuffed by a searching cop that walks into him.
 
 ## Known issues
 
@@ -123,6 +124,7 @@ behaviour change, with its default.
 - `CLAUDE.md` says the civilians and gadget modules declare `Plugins: [Bartizan]`; their `module.yml` files do not (T-319, doc
   drift, not fixed in this release).
 - Breaker regions do nothing yet; restricted regions drive trespass from this release.
+- Crack alarm (`CRACK_ALARM`) cannot fire yet: safe cracking is not enabled (docket LS-02, T-342).
 
 ## API
 
