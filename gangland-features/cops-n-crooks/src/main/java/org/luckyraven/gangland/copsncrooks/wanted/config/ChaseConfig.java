@@ -49,6 +49,10 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		// Getaway and Most_Wanted (0.21.0) are read by GetawaySettings / MostWantedSettings, loaded beside this config by ChaseConfigLoader
 		wantedRoot.get("Getaway");
 		wantedRoot.get("Most_Wanted");
+		// Witnesses, Trespass and Bag (0.20.0) are read by their own settings classes, loaded beside this config
+		wantedRoot.get("Witnesses");
+		wantedRoot.get("Trespass");
+		wantedRoot.get("Bag");
 
 		ChaseConfig parsed = new ChaseConfig(heat(block(wantedRoot, "Heat", report)),
 		                                     evasion(block(wantedRoot, "Evasion", report), report),

@@ -180,3 +180,69 @@ Most_Wanted:
    # Said when a player becomes the city's Most Wanted; %player% and %stars% are that player and their level
    New: "&4&lMOST WANTED &f%player% &7is now the city's Most Wanted &c%stars%"
 
+# 0.20.0
+# Patrol stops: a beat cop's warnings during a traffic stop; %seconds% is the seconds left to comply
+Patrol:
+   # The cop tells you to put a weapon away; %seconds% is the time to comply
+   Put_Away: "&eBeat cop: &fPut that away! &7(%seconds%s)"
+   # You complied in time
+   Complied: "&aThanks, carry on."
+   # The cop orders a stop; %seconds% is the seconds you have to stop
+   Pull_Over: "&cBeat cop: &fPull over! Stop within %seconds%s"
+   # The ticket; %money_symbol% and %amount% are the fine
+   Ticket: "&7Ticket: &c%money_symbol%%amount%"
+   # You ran from a traffic stop
+   Fled: "&cYou fled a traffic stop!"
+# Trackers: a car tagged by a cop; %seconds% is the seconds left on the tag
+Tracker:
+   # The car was tagged
+   Tagged: "&cYour car has been tagged. Ditch it."
+   # The tag countdown on the HUD; %seconds% is the seconds left
+   Hud: "&cTagged &7%seconds%s"
+# Trespass: the line shown when you enter a restricted area
+Trespass: "&cRestricted area!"
+# Suspect: the words a cop's description of a suspect is built from
+Suspect:
+   # No description known
+   Unknown: "unknown suspect"
+   # The bare word for a suspect
+   Bare: "suspect"
+   # The suspect is on foot
+   On_Foot: "on foot"
+   # The suspect is in a car
+   In_Car: "in a car"
+   # The mask part of a masked suspect; %head% is what is on the head
+   Mask: "in a %head%"
+   # The whole description; %who% is the word for the suspect, %mask% the mask, %chest% the chest, %vehicle% the vehicle
+   Format: "%who%%mask%, %chest%, %vehicle%"
+
+# 0.20.0 hot-cash bag: the action bar, the bag's messages and the fence's messages
+Bag:
+   # 0.20.0 the action bar while you carry a bag; %money_symbol% and %amount% are filled in
+   Hud: "&6Bag: &a%money_symbol%%amount%"
+   # 0.20.0 the bag is full: no more cash goes in
+   Full: "&cYour bag is full."
+   # 0.20.0 a getaway banks the bag; %amount% is what is kept
+   Banked: "&aYou got away: &f%money_symbol%%amount% &afrom your bag is clean."
+   # 0.20.0 the day's bank limit is reached: the fence takes its cut of the rest; %cut% is the fence's share, %rest% the bag cash it took
+   Over_Cap: "&7Over today's limit: the fence took &f%money_symbol%%cut% &7of &f%money_symbol%%rest%&7."
+   # 0.20.0 the chase ended and the fence paid for the bag; %bag% is the bag, %amount% what you got
+   Converted: "&7Chase over: the fence turned your bag of &f%money_symbol%%bag% &7into &a%money_symbol%%amount%&7."
+   # 0.20.0 the cops seize the bag on arrest; %amount% is what was taken
+   Seized: "&cBag seized: &f%money_symbol%%amount%"
+   # 0.20.0 the paperwork line for a seized bag; %amount% is what was taken
+   Paperwork: "&7Bag seized: &c%money_symbol%%amount%"
+   # 0.20.0 the bag spilled on death or quit; %amount% is what is on the street
+   Spilled: "&cYour bag spilled: &f%money_symbol%%amount% &cis on the street."
+   # 0.20.0 hot cash picked up or held while wanted: the cops want you now
+   Hot: "&cHot cash! The cops want you now."
+   # 0.20.0 a bribe paid partly from the bag; %bag% is the bag share, %wallet% the wallet share
+   Bribe: "&7Paid &f%money_symbol%%bag% &7from your bag and &f%money_symbol%%wallet% &7from your wallet."
+# 0.20.0 the fence: selling the bag to the fence
+Fence:
+   # 0.20.0 the fence paid for the bag; %amount% is the payment, %bag% the bag's value
+   Done: "&aThe fence paid &f%money_symbol%%amount% &afor your bag of &f%money_symbol%%bag%&a."
+   # 0.20.0 the fence has nothing to buy: the bag is empty
+   Empty: "&7Your bag is empty."
+   # 0.20.0 the fence refuses a cuffed player
+   Cuffed: "&cNot while you are in cuffs."

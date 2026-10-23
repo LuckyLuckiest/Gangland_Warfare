@@ -34,6 +34,7 @@ import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToDoubleFunction;
 
 /**
  * Orchestrates the transition from HANDCUFFED → JAILED: picks a jail, seizes the inventory, zeros wanted, gives
@@ -57,6 +58,14 @@ public class JailIntakeService {
 	private final ChaseConfigLoader       chase;
 	private final HeatLedger              ledger;
 	private final WantedMessages          messages;
+
+	/** 0.20.0: takes the bag at intake (installed by BagModuleConfig); null = no bag. */
+	private ToDoubleFunction<Player> bagSeizure;
+
+	/** @since 0.20.0 */
+	public void setBagSeizure(ToDoubleFunction<Player> bagSeizure) {
+		this.bagSeizure = bagSeizure;
+	}
 
 	public boolean admit(Player player) {
 		// a downed player (the transit timer fired mid-down) pays the ward bill on undown, so he gets no sheet either
@@ -83,6 +92,9 @@ public class JailIntakeService {
 		seizedInventoryService.snapshot(player);
 		clearInventory(player);
 		giveItem(player, paperworkItemFactory.create());
+		// 0.20.0: the bag is taken before the wanted clear, so the seizure line prints even on a death-commit
+		double seized = bagSeizure == null ? 0 : bagSeizure.applyAsDouble(player);
+		if (seized > 0) player.sendMessage(messages.format(WantedMessages.Key.BAG_SEIZED, money(seized)));
 		wantedClearContract.clearWanted(player.getUniqueId(), WantedCause.ARREST);
 
 		jailService.detainPlayer(jail.getId(), player.getUniqueId());

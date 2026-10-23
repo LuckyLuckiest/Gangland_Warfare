@@ -182,6 +182,23 @@ which return typed `*Result` objects rather than booleans — pattern-match on t
 
 ---
 
+## Store hold-ups (0.20.0)
+
+A trader's till can be robbed at gunpoint. This needs the npc-shops module and Bartizan (for the weapon).
+
+- Aim a weapon at a trader from within `Hold_Up.Range` (6 blocks) and keep aiming within `Hold_Up.Aim_Angle` (10 degrees). The
+  clerk fills the bag over `Hold_Up.Fill_Seconds` (10). If you keep aiming, you get the take, between `Take_Min` (200.0) and
+  `Take_Max` (600.0).
+- The silent alarm commits `Store_Robbery` (200 heat) at `Alarm_Seconds` (10), or at `Alarm_Seconds_Disliked` (4) when the
+  trader's mood toward you is at or below `Dislike_Mood` (0.2).
+- Looking away cancels the fill. An alarm already tripped stands.
+- A robbed trader refuses hold-ups for `Cooldown_Seconds` (300).
+- While you are wanted, the take goes into your hot-cash bag, not your wallet. A take that does not fit the bag is not paid.
+  See [wanted-bounty.md](./wanted-bounty.md#the-hot-cash-bag-0200).
+- `Hold_Up.Enable: false` turns hold-ups off for every trader. Without Bartizan the weapon never fires, so hold-ups stay inert.
+
+Keys: `npc/trader_settings.yml` `Hold_Up.*`. See [migration-0.20.0.md](../migration-0.20.0.md).
+
 ## Related
 
 - [Bank & Banker](./bank.md) — the other NPC-driven economy surface.

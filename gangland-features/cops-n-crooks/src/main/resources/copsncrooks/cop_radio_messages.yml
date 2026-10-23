@@ -303,3 +303,24 @@ Lines:
    # The wanted-list announcement: the most wanted suspect and where they were last seen.
    Most_Wanted:
       - "All units, be advised: %target% is the city's Most Wanted, last seen near %place%."
+   # 0.20.0: a 911 call reaches dispatch with the crime, the place and the suspect.
+   Caller_911:
+      - "Dispatch: 911 caller reports %crime% near %place%. Suspect: %suspect%."
+   # 0.20.0: a cop describes the suspect to the squad.
+   Suspect_Description:
+      - "Suspect is %suspect%."
+   # 0.20.0: a tracker is planted on the suspect's car.
+   Tracker_Tagged:
+      - "Tracker's on the car. Dispatch has his position."
+   # 0.20.0: a tracker pings the suspect's position.
+   Tracker_Ping:
+      - "Tracker ping, he's at %place%."
+   # 0.20.0: an overwatch marksman spots the suspect.
+   Overwatch_Spotted:
+      - "Overwatch, eyes on. He's %distance% blocks out, %direction%."
+   # 0.20.0: a patrol cop sights the suspect.
+   Patrol_Sighting:
+      - "Patrol here, I see the suspect at %place%."
+
+# 0.20.0: format of a line a gang mate relays to you; %name% is the lookout and %line% the line.
+Lookout_Format: "&8[Lookout %name%] &r%line%"

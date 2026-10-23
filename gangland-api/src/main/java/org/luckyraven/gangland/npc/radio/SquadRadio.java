@@ -12,10 +12,12 @@ import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.npc.spi.NpcSquadListener;
 import org.luckyraven.keystone.sound.SoundEffect;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
@@ -205,17 +207,18 @@ public final class SquadRadio {
 		List<String> formatPool = lines.lines(formatKey);
 		String       format     = formatPool.isEmpty() ? "%line%" : formatPool.get(0);
 		// %line% last, so text inside the filled line is never re-substituted.
-		String       text = GanglandChatUtil.color(
-				withExtras(format.replace("%unit%", callsign), merged).replace("%line%", filled));
+		String       raw  = withExtras(format.replace("%unit%", callsign), merged).replace("%line%", filled);
+		String       text = GanglandChatUtil.color(raw);
 
-		int delivered = 0;
+		List<Player> deliveredTo = new ArrayList<>();
 		for (Player player : world.getPlayers()) {
 			if (player.hasMetadata("NPC")) continue;
 
 			boolean heard = withinRange(player.getLocation(), origin, cfg.range()) ||
 			                (addresseeLoc != null && withinRange(player.getLocation(), addresseeLoc, cfg.range())) ||
 			                (hunted instanceof Player && player.equals(hunted) &&
-			                 withinRange(player.getLocation(), origin, cfg.targetRange()));
+			                 withinRange(player.getLocation(), origin, cfg.targetRange())) ||
+			                voice.overhears(player, squad);
 			if (!heard) continue;
 
 			if (!priority && !bypassPlayerGap) {
@@ -223,22 +226,51 @@ public final class SquadRadio {
 				if (last != null && now - last < cfg.playerGapMs()) continue;
 			}
 
-			player.sendMessage(text);
-			if (cfg.soundName() != null) {
-				new SoundEffect(SoundEffect.SoundType.VANILLA, cfg.soundName(), cfg.volume(), cfg.pitch())
-						.playSound(player);
-			}
-			lastHeard.put(player.getUniqueId(), now);
-			delivered++;
+			deliver(cfg, player, text, now);
+			deliveredTo.add(player);
 		}
+		relayToHunted(cfg, voice, squad, hunted, deliveredTo, raw, priority, bypassPlayerGap, now);
 		pruneLastHeard(now);
 
-		if (delivered == 0) return false;
+		if (deliveredTo.isEmpty()) return false;
 		// A priority line skips the squad gap, so it does not restart it either: the order that follows a Contact
 		// in the same tick must still get through.
 		if (!priority) state.lastLineAt = now;
 		state.lastByKey.put(cooldownKey, now);
 		return true;
+	}
+
+	/** Hands one line to a player: the message, the squad's sound, and the player's last-heard time. */
+	private void deliver(RadioSettings cfg, Player player, String message, long now) {
+		player.sendMessage(message);
+		if (cfg.soundName() != null) {
+			new SoundEffect(SoundEffect.SoundType.VANILLA, cfg.soundName(), cfg.volume(), cfg.pitch()).playSound(player);
+		}
+		lastHeard.put(player.getUniqueId(), now);
+	}
+
+	/**
+	 * A hearer who was delivered the line passes it on to the hunted player when he is online and has not already
+	 * been delivered the line. Once per line: the first hearer the voice says relays. The
+	 * hunted player's own gap applies to a non-priority line, and a relay starts that gap like any delivered line.
+	 */
+	private void relayToHunted(RadioSettings cfg, RadioVoice voice, NpcSquad squad, @Nullable LivingEntity hunted,
+	                           List<Player> deliveredTo, String raw, boolean priority, boolean bypassPlayerGap, long now) {
+		if (!(hunted instanceof Player target) || !target.isOnline() || target.hasMetadata("NPC")) return;
+		if (deliveredTo.contains(target)) return;
+		if (!priority && !bypassPlayerGap) {
+			Long last = lastHeard.get(target.getUniqueId());
+			if (last != null && now - last < cfg.playerGapMs()) return;
+		}
+
+		Optional<Player> relayer = deliveredTo.stream().filter(hearer -> voice.relaysTo(hearer, squad)).findFirst();
+		if (relayer.isEmpty()) return;
+
+		List<String> lookoutPool = lines.lines("Lookout_Format");
+		String       format      = lookoutPool.isEmpty() ? "[Lookout %name%] %line%" : lookoutPool.get(0);
+		String       relayed     = GanglandChatUtil.color(
+				format.replace("%name%", relayer.get().getName()).replace("%line%", raw));
+		deliver(cfg, target, relayed, now);
 	}
 
 	/**

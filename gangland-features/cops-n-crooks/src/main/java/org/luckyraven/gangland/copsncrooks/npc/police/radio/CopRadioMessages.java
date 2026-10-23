@@ -11,8 +11,8 @@ import java.util.Map;
  * Police-radio lines, backed by the module's own {@code copsncrooks/cop_radio_messages.yml} (English, always shipped) /
  * {@code copsncrooks/cop_radio_messages_es.yml} (Spanish, optional — picked by {@code Settings.getLanguagePicked()} via
  * {@link LocalizedModuleYaml}). {@code Lines.<key>} holds the candidate lines for one radio signal; {@code Format},
- * {@code Dispatch_Format}, {@code Compass}, {@code Sides}, {@code Unknown_Place} and {@code Speaker_Name} live at the
- * document root, not under {@code Lines}, and are read straight from there.
+ * {@code Dispatch_Format}, {@code Compass}, {@code Sides}, {@code Unknown_Place}, {@code Speaker_Name} and
+ * {@code Lookout_Format} live at the document root, not under {@code Lines}, and are read straight from there.
  *
  * @since 1.13.0
  */
@@ -27,6 +27,7 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 	private static final List<String> DEFAULT_SIDES           = List.of("front", "left", "right", "back");
 	private static final List<String> DEFAULT_UNKNOWN_PLACE   = List.of("the area");
 	private static final List<String> DEFAULT_SPEAKER_NAME    = List.of("{rank} {role} &f{name} &7#{number}");
+	private static final List<String> DEFAULT_LOOKOUT_FORMAT  = List.of("&8[Lookout %name%] &r%line%");
 
 	private static final Map<String, List<String>> DEFAULT_LINES = Map.ofEntries(
 			Map.entry("Contact", List.of("Contact! Suspect %distance% blocks %direction%!",
@@ -94,7 +95,14 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Stack_Up", List.of("Stack up on the door! Shield, you're first!", "Stacking up, hold the door!")),
 			Map.entry("Breach", List.of("Breach! Breach! Go, go, go!", "Breaching now, move in!")),
 			Map.entry("Flashbang", List.of("Flashbang out! Eyes closed!", "Flash out, going in!")),
-			Map.entry("Most_Wanted", List.of("All units, be advised: %target% is the city's Most Wanted, last seen near %place%.")));
+			Map.entry("Most_Wanted", List.of("All units, be advised: %target% is the city's Most Wanted, last seen near %place%.")),
+			// 0.20.0
+			Map.entry("Caller_911", List.of("Dispatch: 911 caller reports %crime% near %place%. Suspect: %suspect%.")),
+			Map.entry("Suspect_Description", List.of("Suspect is %suspect%.")),
+			Map.entry("Tracker_Tagged", List.of("Tracker's on the car. Dispatch has his position.")),
+			Map.entry("Tracker_Ping", List.of("Tracker ping, he's at %place%.")),
+			Map.entry("Overwatch_Spotted", List.of("Overwatch, eyes on. He's %distance% blocks out, %direction%.")),
+			Map.entry("Patrol_Sighting", List.of("Patrol here, I see the suspect at %place%.")));
 
 	public CopRadioMessages(FileManager fileManager) {
 		super(fileManager, BASE_NAME);
@@ -114,6 +122,7 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			case "Sides" -> list("Sides", DEFAULT_SIDES);
 			case "Unknown_Place" -> list("Unknown_Place", DEFAULT_UNKNOWN_PLACE);
 			case "Speaker_Name" -> list("Speaker_Name", DEFAULT_SPEAKER_NAME);
+			case "Lookout_Format" -> list("Lookout_Format", DEFAULT_LOOKOUT_FORMAT);
 			default -> list("Lines." + key, DEFAULT_LINES.getOrDefault(key, List.of()));
 		};
 	}

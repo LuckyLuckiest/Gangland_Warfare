@@ -16,6 +16,7 @@ import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
 import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.plugin.PluginManager;
 import org.luckyraven.gangland.data.teleportation.HospitalShield;
@@ -151,6 +152,16 @@ public class DataConfig {
 	@Bean
 	public GanglandMoneyDropClassifier moneyDropClassifier() {
 		return new GanglandMoneyDropClassifier();
+	}
+
+	/**
+	 * Hot-cash router holder. Always present so pickup and store-take diversion share one router whether or not a
+	 * module installs a {@link org.luckyraven.gangland.data.economy.HotCash} delegate; inert (every take goes to the
+	 * wallet) until one is installed.
+	 */
+	@Bean
+	public HotCashRouter hotCashRouter() {
+		return new HotCashRouter();
 	}
 
 	/**

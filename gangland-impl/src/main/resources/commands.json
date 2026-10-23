@@ -72,8 +72,12 @@
 		"description": "Resets your account balance, or the target player's when specified."
 	},
 	"contact": {
-		"usage": "/glw contact [stars]",
+		"usage": "/glw contact [stars|fence]",
 		"description": "Pays a crooked desk sergeant to wipe stars while no cop sees you."
+	},
+	"contact.fence": {
+		"usage": "/glw contact fence",
+		"description": "Sell your hot bag to the fence for clean cash, minus his cut"
 	},
 	"balance": {
 		"usage": "/glw balance",

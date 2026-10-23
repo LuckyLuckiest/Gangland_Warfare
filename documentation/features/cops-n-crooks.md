@@ -477,6 +477,12 @@ Needs `gangland.command.cop.setup`. Kinds for `list`, `remove` and `tp` are `sta
 | `/glw cop setup tp <kind> <id>`            | Teleports you to a station, a point, or the centre of a region.                          |
 | `/glw cop setup link <stationId> <jailId\|none>` | Sets the jail a station books arrests into, or `none`.                             |
 
+### Items (0.20.0)
+
+| Command | Description |
+|---|---|
+| `/glw cop item <police_scanner\|scanner_map> [player]` | Gives a Police Scanner or a Scanner Map to yourself or the named online player. Permission `gangland.cop.item` (operators by default). Console needs the player name. |
+
 ### Active Cops
 
 | Command         | Description                          |
@@ -780,9 +786,155 @@ These are accepted for 0.16 and are the next cards, not bugs to report:
 - **A logout no longer escapes.** The chase is restored on rejoin (the pending units wait out `Rejoin_Grace_Seconds`).
 - **Spawn distances need a restart.** After `/glw reload` the `Cops.Spawn` distances and attempts keep their boot values for
   the out-of-sight search until the server restarts; everything else reloads at once.
-- **Restricted and breaker regions do nothing yet.** They are stored for a later release.
+- **Breaker regions do nothing yet.** They are stored for a later release. Restricted regions drive trespass from 0.20.0
+  (see [wanted-bounty.md](./wanted-bounty.md), Trespass).
 
 ---
+
+## Patrols, warnings and pull-overs (0.20.0)
+
+Beat cops walk the streets between calls. They are groupless: each one belongs to a station, not a squad, so
+they are not dispatched as a squad and they fight back like any other cop (`Assault_Cop` and `Kill_Cop` apply).
+
+- **Beats at stations.** Each station keeps `Cops.Patrol.Cops_Per_Station` patrol cops (default 2). A player within
+  `Cops.Patrol.Activation_Radius` (64 blocks) wakes a station's patrol. Patrol cops walk up to
+  `Cops.Patrol.Beat_Radius` (24 blocks) from the station, pausing `Pause_Seconds_Min` to `Pause_Seconds_Max` at each
+  beat point. Beat cops despawn only when nobody is within `Despawn_Radius` (96 blocks) for `Despawn_After_Seconds`
+  in a row; a player inside the radius keeps them.
+  Tier comes from `Cops.Patrol.Tier` (1 = Officer).
+- **Sighting a wanted player.** With `Cops.Patrol.Report_Wanted: true` a patrol cop who sees a wanted player reports
+  that player's position to the squad already hunting them and opens no new call. The radio line for that report is
+  `Patrol_Sighting`.
+- **Brandish warning** (`Cops.Warning`). A cop within `Range` (12 blocks) of a player holding a weapon tells the player
+  to put it away (`Wanted_Messages` `Patrol.Put_Away`, time left `%seconds%`). Complying in time sends `Patrol.Complied`;
+  the same player is warned again only after `Repeat_Seconds` (30). A warning the player ignores (still holding the
+  weapon, still in view when time is up) commits `Brandish_Near_Cop` as seen by a cop. Cops never attack from the
+  warning state.
+- **Pull-over** (`Cops.Pull_Over`). A cop within `Range` (24 blocks) signals a driver whose speed is above
+  `Speed_Limit` (12 blocks per second) to stop (`Patrol.Pull_Over`). The driver has `Comply_Seconds` (6) to slow below
+  `Stop_Speed` (1.0) and hold it for `Stop_Hold_Seconds` (2). A completed stop charges `Ticket_Amount` (150.0) from the
+  wallet only (`Patrol.Ticket`); the same driver is not pulled over again for `Repeat_Seconds` (120).
+- **Evading_Police.** A driver who runs from a traffic stop gets `Patrol.Fled` and the `Evading_Police` wanted reason
+  (`wanted.yml`, 100 points) is published.
+- **Turn it off.** Warnings and pull-overs both need beat cops, so `Cops.Patrol.Enable: false` turns them off too and
+  cops then only answer calls. There is no separate patrol switch for them; `Cops.Warning.Enable` and
+  `Cops.Pull_Over.Enable` only turn each one off on its own.
+
+## Masks, outfits and disguises (0.20.0)
+
+Every reported crime stores a suspect description: head, chest colour, the weapon held, and whether you were on foot or in a
+car. The squad leader radios it (`Suspect_Description`), and the words come from `wanted_messages.yml` (`Suspect.*`).
+
+- **Masks.** A mask item in `Cops.Disguise.Mask_Items` (or a Bartizan wearable in `Mask_Wearables`) makes the description
+  "unknown suspect in a <mask>".
+- **Changing clothes.** A cop keeps lock while at least `Match_Needed` (2) pieces of head, chest and vehicle still match; change enough pieces to drop below it while no cop has a fresh sighting of you.
+  Cops then stop locking on to you until they see you again.
+- **The police outfit.** Wearing `Police_Outfit` (`police_helmet` and `police_vest`) at `Outfit_Max_Level` (2) stars or fewer
+  stops cops locking on to you.
+- **Fresh sightings win.** While a cop has a fresh sighting, the description follows what you wear. Changing in plain view
+  does not work.
+
+Debug line: `DISGUISE <player> state=<outfit|blown|mismatch|match>` and `SUSPECT <player> desc=<text>`.
+
+## Tracker tags (0.20.0)
+
+At `Cops.Tracker.Min_Level` (2) stars, a ranged cop of your squad who sees you riding any vehicle for `Tag_Seconds` (4) in
+total tags it. The radio says `Tracker_Tagged`.
+
+- While you ride a tagged vehicle, every `Ping_Seconds` (6) the squad gets a sighting at its position. Your stars stay solid,
+  and the action bar shows the tag.
+- The tag expires `Expire_Seconds` (150) after tagging. Leaving the car and riding another, untagged one stops the pings.
+- Tags are stored on the vehicle, so a tagged car stays tagged across a restart.
+
+Debug line: `TRACKER <player> state=<tagged|ping|expired> vehicle=<entityId>`.
+
+## Police scanner and sirens (0.20.0)
+
+- **Scanner.** A player who carries the Police Scanner (anywhere in the inventory) hears every cop radio line spoken by a
+  squad with a member within `Cops.Scanner.Range` (160 blocks). The per-player gap still applies.
+- **Sirens.** Every `Cops.Siren.Interval_Seconds` (5), for each wanted player, the nearest pursuing cop of their squad that is
+  more than `Min_Distance` (24 blocks) away plays the siren sound at its own position, audible to everyone nearby. It stops
+  once that cop is within 24 blocks.
+- **Getting one.** Admins give it with `/glw cop item police_scanner [player]`. Shops and traders can list it as
+  `copsncrooks:police_scanner`.
+
+Debug line: `SIREN <player> cop=<callsign> dist=<d>`.
+
+## Darkness and crowds hide you (0.20.0)
+
+Cops spot you from a fraction of their alert range, depending on the light at your eyes and the crowd around you.
+
+- Light level 0 to `Dark_Max_Level` (4): cops see you from `Dark_Factor` (0.4) of their range. Levels 5 to `Dim_Max_Level` (8):
+  `Dim_Factor` (0.7). Level 9 and above: full range.
+- Walking (not sprinting) with nothing in your hand, among `Crowd_Min_Civilians` (3) or more civilians within `Crowd_Radius` (4
+  blocks), for `Crowd_Out_Of_Contact_Seconds` (2) after the squad last saw you: `Crowd_Factor` (0.6).
+- Sneaking multiplies by `Sneak_Factor` (0.7). The factors multiply and never go below `Min_Factor` (0.25).
+- Firing a gun, burning or glowing resets you to full range for `Shot_Reset_Seconds` (5).
+- Tiers with `Ignore_Darkness: true` (bundled: SWAT and Military) ignore the light factor. Set it by hand on your own tiers.
+
+Debug line: `SIGHT <player> factor=<f> light=<l> crowd=<c> sneak=<s>` (once per player per 5 s).
+
+## Marksman overwatch (0.20.0)
+
+At `Cops.Overwatch.Min_Level` (4) stars, when the squad loses contact, the Marksman stops chasing and walks to a roof: one of
+`Columns` (8) ring columns between `Ring_Min` (10) and `Ring_Max` (20) blocks from the last spot he saw you, at least `Min_Height`
+(4) blocks higher, with a clear line to that spot. `Reach_Seconds` (20) limits how long he has to reach the roof.
+
+- From the perch he watches with a `Sight_Range` (48-block) view. Seeing you reports a sighting, so your stars stay solid, and
+  radios `Overwatch_Spotted` with your position.
+- Overwatch ends when the chase ends, your stars fall below 4, or after `Max_Seconds` (120). He is never handed off or recycled
+  while perched. After `Max_Failures` (3) failed perches he gives up.
+
+Debug line: `OVERWATCH <player> state=<perch|spotted|give_up|end> at=<x,y,z>`.
+
+## Scanner map (0.20.0)
+
+Holding the Scanner Map (either hand) shows a live map centred on you: blue markers for your squad's cops, a red circle for the
+search zone while you are being searched for, and green markers for admin hideout regions on screen (`Show_Hideouts`). It
+refreshes every `Refresh_Ticks` (10).
+
+- It keeps working after a restart and after relog.
+- Admins give it with `/glw cop item scanner_map [player]`. Shops can list `copsncrooks:scanner_map`.
+- Not shown yet: turf and gang hideouts (the region provider is point based), and the chopper marker.
+
+Debug line: `SCANNER_MAP <player> cops=<n> circle=<true|false> hideouts=<n>` (throttled to 5 s).
+
+## The hot-cash bag (0.20.0)
+
+Cash you pick up while wanted goes into your **bag**, not your wallet. The bag pays out once, when the chase ends: it banks
+into your wallet on a getaway, converts at the fence's cut on any other clear, is seized if you are busted, and spills on the
+street if you die or quit. The full table of endings is in [wanted-bounty.md](./wanted-bounty.md#the-hot-cash-bag-0200).
+
+- The action bar shows `Bag: $X` while the bag holds money.
+- The bag is capped per chase (`Wanted.Bag.Max_Per_Chase`). A full bag refuses the pickup: the cash stays on the ground.
+- Cops drop no cash with the bundled settings (`Money.Drop_Sources.COP.Enabled: false`).
+- Every key is in [migration-0.20.0.md](../migration-0.20.0.md).
+
+Debug lines: `BAG <player> +<amount> source=<pickup|store> bag=<total>`, `BAG <player> end cause=<CAUSE> outcome=<banked|converted|seized|spilled> bag=<b> paid=<p>`.
+
+## Fence the bag (0.20.0)
+
+`/glw contact fence`, or the "Fence the bag" slot on the phone contacts page, sells the bag for wallet cash minus the fence's cut
+(`Wanted.Bag.Fence_Cut`, default 35 percent). Stars are not touched.
+
+- Same gate as the crooked contact: contacts enabled, you are wanted, no cop can see you, and the contacts cooldown is free.
+  A successful fence starts the shared cooldown.
+- Refused while you are in cuffs, in transit or jailed. An empty bag starts no cooldown.
+- Handcuff and jail bribes take from the bag first and charge your wallet only for the rest.
+
+Debug lines: `FENCE <player> bag=<b> paid=<p>`, `FENCE <player> refused reason=<cuffed|empty>`.
+
+## Crew lookout (0.20.0)
+
+A gang mate who is not wanted and hears a police line about you passes it on. You get the line once, prefixed `[Lookout <name>]`,
+even when you are out of radio range.
+
+- No relay when the mate is wanted, in no gang or another gang, is the player the squad hunts, or `Cops.Lookout.Enable` is
+  `false`. Civilian gang shouts never relay, and a line you heard yourself is not relayed again.
+- Your radio gap still applies. Priority lines bypass it exactly as for direct delivery.
+- Without the gang module there is no relay.
+
+Debug line: `LOOKOUT <hearer> -> <hunted>`.
 
 ## API
 

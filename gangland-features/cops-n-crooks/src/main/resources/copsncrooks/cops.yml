@@ -234,6 +234,9 @@ Cops:
          - "Surrender_Accepted"
          - "Standoff"
          - "Standoff_Over"
+         # 0.20.0
+         - "Overwatch_Spotted"
+         - "Caller_911"
       # One squad never repeats the same kind of line within this many ticks.
       Cooldown_Ticks:
          Contact: 160
@@ -288,6 +291,13 @@ Cops:
          Post_Up: 100
          Eyes_On: 60
          Returning_To_Patrol: 1200
+         # 0.20.0
+         Caller_911: 100
+         Suspect_Description: 1200
+         Tracker_Tagged: 600
+         Tracker_Ping: 400
+         Overwatch_Spotted: 200
+         Patrol_Sighting: 400
       # Short click played to each listener with every line (SoundConfiguration shape).
       Sound:
          Name: BLOCK_NOTE_BLOCK_HAT
@@ -599,6 +609,8 @@ Cops:
          Cuff_Radius: 4.5
          Can_Use_Weapons: true
          Skip_Cuffing: true
+         # 0.20.0: ignore the darkness sight factor (Cops.Sight.Dark_Factor).
+         Ignore_Darkness: true
          Difficulty: HARD
          # Gun cadence: a fraction of the weapon's own fire rate (see the header). Only used with Can_Use_Weapons.
          Fire_Rate_Multiplier: 0.1
@@ -623,6 +635,8 @@ Cops:
          Cuff_Radius: 5.0
          Can_Use_Weapons: true
          Skip_Cuffing: true
+         # 0.20.0: ignore the darkness sight factor (Cops.Sight.Dark_Factor).
+         Ignore_Darkness: true
          Difficulty: DEADLY
          # Gun cadence: a fraction of the weapon's own fire rate (see the header). Only used with Can_Use_Weapons.
          Fire_Rate_Multiplier: 0.1
@@ -639,3 +653,199 @@ Cops:
             Strafe_Degrees: 20.0
             Reposition_Ticks: 40
             Moving_Aim_Error: 0.08
+
+   # 0.20.0
+   # Patrol: cops walk beats around their stations between calls.
+   Patrol:
+      # Turn the patrol beats off; cops then only answer calls.
+      Enable: true
+      # Patrol cops kept per station.
+      Cops_Per_Station: 2
+      # A player within this many blocks of a station wakes its patrol.
+      Activation_Radius: 64
+      # Patrol cops despawn once no player is within this many blocks.
+      Despawn_Radius: 96
+      # Idle time before a beat cop despawns.
+      Despawn_After_Seconds: 30
+      # How far a patrol cop walks from its station along the beat.
+      Beat_Radius: 24
+      # Shortest pause, in seconds, at a beat point.
+      Pause_Seconds_Min: 3
+      # Longest pause, in seconds, at a beat point.
+      Pause_Seconds_Max: 6
+      # Cop tier of the patrol cops (1 = Officer).
+      Tier: 1
+      # Beat cops report wanted players to their squad.
+      Report_Wanted: true
+
+   # Warning: a cop tells a player to put the weapon away before escalating.
+   Warning:
+      # Turn the warning step on or off.
+      Enable: true
+      # Blocks from a cop within which the warning is given.
+      Range: 12.0
+      # Seconds the player has to put the weapon away.
+      Seconds: 5
+      # Seconds before the same player is warned again.
+      Repeat_Seconds: 30
+
+   # Pull_Over: a cop signals a speeding driver to stop. Speeds are in blocks per second.
+   Pull_Over:
+      # Turn pull-overs on or off.
+      Enable: true
+      # Blocks from a cop within which a driver can be pulled over.
+      Range: 24.0
+      # Speed in blocks per second above which a driver is pulled over.
+      Speed_Limit: 12.0
+      # Seconds the driver has to stop after the signal.
+      Comply_Seconds: 6
+      # Speed in blocks per second under which the vehicle counts as stopped.
+      Stop_Speed: 1.0
+      # Seconds the vehicle must stay below Stop_Speed before the stop counts.
+      Stop_Hold_Seconds: 2
+      # Ticket fine charged on a completed pull-over.
+      Ticket_Amount: 150.0
+      # Seconds before the same driver can be pulled over again.
+      Repeat_Seconds: 120
+
+   # Tracker: a cop tags a car with a tracker so dispatch can follow it.
+   Tracker:
+      # Turn tracker tags on or off.
+      Enable: true
+      # Lowest wanted level at which a cop can tag a car.
+      Min_Level: 2
+      # Seconds a cop spends tagging the car.
+      Tag_Seconds: 4
+      # Blocks within which a cop can tag the car.
+      Tag_Range: 48.0
+      # Seconds between tracker pings to dispatch.
+      Ping_Seconds: 6
+      # Seconds until the tracker tag expires.
+      Expire_Seconds: 150
+
+   # Scanner: the item that lets a player hear the cop radio.
+   Scanner:
+      # Turn the police scanner on or off.
+      Enable: true
+      # Blocks within which a scanner hears the cop radio.
+      Range: 160.0
+      # The scanner item.
+      Item:
+         # Material of the scanner item (XMaterial name).
+         Material: CLOCK
+         # Display name of the scanner item.
+         Name: "&9Police Scanner"
+         # Lore lines of the scanner item.
+         Lore:
+            - "&7Hear the police radio"
+
+   # Siren: the cop siren that plays near a player being chased.
+   Siren:
+      # Turn sirens on or off.
+      Enable: true
+      # Seconds between siren sounds.
+      Interval_Seconds: 5
+      # Closest a pursuing cop may be to the player with the siren (blocks).
+      Min_Distance: 24.0
+      # Sound played by the siren (Keystone SoundEffect name).
+      Sound: BLOCK_NOTE_BLOCK_BELL
+      # Siren volume.
+      Volume: 3.0
+      # Siren pitch.
+      Pitch: 1.0
+
+   # Sight: how darkness, dim light, crowds and sneaking shorten how far cops see a player.
+   Sight:
+      # Turn the sight rules on or off.
+      Enable: true
+      # Light level at or below which a player counts as in the dark.
+      Dark_Max_Level: 4
+      # Multiplier on sight range in the dark.
+      Dark_Factor: 0.4
+      # Light level at or below which a player counts as dimly lit.
+      Dim_Max_Level: 8
+      # Multiplier on sight range when dimly lit.
+      Dim_Factor: 0.7
+      # Multiplier on sight range inside a crowd.
+      Crowd_Factor: 0.6
+      # Civilians near a player needed to count as a crowd.
+      Crowd_Min_Civilians: 3
+      # Blocks around a player within which civilians count for the crowd.
+      Crowd_Radius: 4.0
+      # Seconds out of contact before crowd cover applies.
+      Crowd_Out_Of_Contact_Seconds: 2
+      # Multiplier on sight range while sneaking.
+      Sneak_Factor: 0.7
+      # Lowest multiplier the combined factors can reach.
+      Min_Factor: 0.25
+      # Seconds after a shot before the sight penalty resets.
+      Shot_Reset_Seconds: 5
+
+   # Overwatch: a marksman cop on high ground keeps a player in sight from range.
+   Overwatch:
+      # Turn overwatch on or off.
+      Enable: true
+      # Lowest wanted level at which overwatch is used.
+      Min_Level: 4
+      # Cop role that takes the overwatch position.
+      Role: Marksman
+      # Minimum blocks from the target for an overwatch position.
+      Ring_Min: 10.0
+      # Maximum blocks from the target for an overwatch position.
+      Ring_Max: 20.0
+      # Candidate positions across the search arc.
+      Columns: 8
+      # Minimum blocks above the target.
+      Min_Height: 4
+      # Sight range, in blocks, from the overwatch position.
+      Sight_Range: 48.0
+      # Failed attempts to find a position before overwatch gives up.
+      Max_Failures: 3
+      # Seconds allowed to reach the position.
+      Reach_Seconds: 20
+      # Longest seconds an overwatch lasts.
+      Max_Seconds: 120
+
+   # Scanner_Map: the item that shows cop search zones and hideouts on a map.
+   Scanner_Map:
+      # Turn the scanner map on or off.
+      Enable: true
+      # Blocks of world per map pixel.
+      Blocks_Per_Pixel: 1
+      # Ticks between map refreshes.
+      Refresh_Ticks: 10
+      # Show known hideouts on the map.
+      Show_Hideouts: true
+      # The scanner map item.
+      Item:
+         # Display name of the scanner map item.
+         Name: "&9Scanner Map"
+         # Lore lines of the scanner map item.
+         Lore:
+            - "&7Cops, search zone, hideouts"
+
+   # Disguise: masks and police outfits that hide a player's identity from cops.
+   Disguise:
+      # Turn disguises on or off.
+      Enable: true
+      # Head items that count as masks.
+      Mask_Items:
+         - "CARVED_PUMPKIN"
+         - "PLAYER_HEAD"
+         - "ZOMBIE_HEAD"
+         - "SKELETON_SKULL"
+         - "CREEPER_HEAD"
+      # Wearable items that count as masks; empty by default.
+      Mask_Wearables: []
+      # Police outfit items a player can wear to pass as a cop.
+      Police_Outfit:
+         - "police_helmet"
+         - "police_vest"
+      # Highest wanted level at which the police outfit still works.
+      Outfit_Max_Level: 2
+      # Pieces of head, chest and vehicle that must still match for a cop to keep you (higher = easier to shake).
+      Match_Needed: 2
+   # Lookout: a gang mate who is not wanted relays the police radio he hears.
+   Lookout:
+      # 0.20.0: false turns the lookout relay off; gang mates then stop relaying police radio.
+      Enable: true

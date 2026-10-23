@@ -3,6 +3,7 @@ package org.luckyraven.gangland.config;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.item.NbtTagCatalog;
 import org.luckyraven.keystone.bean.Bean;
@@ -11,6 +12,7 @@ import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pins the registration type of the core holder seams a runtime module installs a delegate into.
@@ -48,6 +50,19 @@ class HolderSeamBeanTypeTest {
 	@Test
 	void nbtTagCatalogBeanIsDeclaredAsTheHolderClass() {
 		assertDeclaredReturnType(ItemConfig.class, "nbtTagCatalog", NbtTagCatalog.class);
+	}
+
+	@Test
+	void hotCashRouterBeanIsDeclaredAsTheHolderClass() {
+		assertDeclaredReturnType(DataConfig.class, "hotCashRouter", HotCashRouter.class);
+	}
+
+	@Test
+	void moneyDepositServiceBeanTakesTheSharedRouter() {
+		Method method = findBeanMethod(GameplayConfig.class, "moneyDepositService");
+		assertNotNull(method, "GameplayConfig.moneyDepositService must exist and be a @Bean");
+		assertTrue(java.util.Arrays.asList(method.getParameterTypes()).contains(HotCashRouter.class),
+		           "the deposit service must receive the shared HotCashRouter bean, not build its own");
 	}
 
 	private static void assertDeclaredReturnType(Class<?> configuration, String beanMethod, Class<?> holder) {

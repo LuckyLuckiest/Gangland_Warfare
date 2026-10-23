@@ -95,6 +95,44 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
   civilians' 1 event and gangland-item's `PlayerItemInitEvent` all stay module/infra-owned — no named consumer
   outside their own module, so none were promoted (WS3's explicit decline for the loot-chest 9 still stands).
 
+## Api 2.7 (0.20.0)
+
+`GanglandApi.VERSION` is `"2.7"`. Additive only: nothing was removed, renamed or re-signed. Modules that use the new
+members declare `Host_Api: 2.7` (cops-n-crooks, gangland-gadget, gangland-npc-shops, gangland-lootchest); a `2.7` module
+does not load on a 0.19.x core (`module.host.incompatible`).
+
+Added in 2.7:
+
+| Addition | Package | Kind |
+|---|---|---|
+| `CarEnterEvent` | `org.luckyraven.gangland.events.vehicle` | Bukkit event, synchronous, not cancellable. `getPlayer()`, `getVehicle()`, `getCarType()`. Fired by gangland-gadget when a player enters a gadget car. |
+| `CarExitEvent` | same | Bukkit event, synchronous, not cancellable. `getPlayer()`, `getVehicle()`, `isParked()`. Fired by gangland-gadget when a player leaves a gadget car. |
+| `CarMoveEvent` | same | Bukkit event, synchronous, not cancellable. `getDriver()`, `getVehicle()`, `getFrom()`, `getTo()`, `getBlocksPerSecond()`. Fired by gangland-gadget, throttled. Both locations are defensively cloned in the constructor. |
+| `CarDamageEvent` | same | Bukkit event, synchronous, `Cancellable`. `getVehicle()`, `getDamager()` (nullable), `getDamage()`. Fired by gangland-gadget when a gadget car takes damage; cancelling it stops the damage. |
+| `CarTheftAttemptEvent` | same | Bukkit event, synchronous, `Cancellable`. `getThief()`, `getVehicle()`, `getOwner()` (nullable UUID). Fired by gangland-gadget when a player tries to hotwire a gadget car; cancelling it stops the hotwire. |
+| `Crimes.BRANDISH_NEAR_COP`, `CAR_THEFT`, `SAFE_CRACKING`, `STORE_ROBBERY`, `TRESPASS_RESTRICTED`, `EVADING_POLICE` | `org.luckyraven.gangland.crime` | Crime id constants (`"Brandish_Near_Cop"`, `"Car_Theft"`, `"Safe_Cracking"`, `"Store_Robbery"`, `"Trespass_Restricted"`, `"Evading_Police"`). They match the heat weight keys. Ids are plain strings, so a new crime needs no api bump. |
+| `RadioVoice.overhears(Player listener, NpcSquad squad)` | `org.luckyraven.gangland.npc.radio` | Default method returning `false`, so today's behaviour is unchanged. A voice that returns `true` for a listener gets that squad's lines from any distance. The voice owns its own range and item checks. The squad and player gaps still apply. |
+
+The vehicle events are the one exception to the [Events](#events) rule above: they are promoted into `gangland-api` so
+modules other than gangland-gadget can listen to them without depending on it.
+
+`SquadRadio` change: a hearer is delivered a line when the existing range terms hold or `voice.overhears(player, squad)`
+is `true`. NPC hearers are still skipped, and the player-gap throttle still applies to overheard lines.
+
+### Api 2.7 wave 2 (0.20.0, additive, VERSION unchanged)
+
+Wave 2 adds to the same `2.7` line; nothing was removed or re-signed, and no module changed its `Host_Api` for it.
+
+| Addition | Package | Kind |
+|---|---|---|
+| `HotCash` | `org.luckyraven.gangland.data.economy` | Interface a module implements to take cash a wanted player would receive. `Take take(Player, BigDecimal, String source)` returns `WALLET`, `BAGGED` or `FULL`; `boolean fence(Player)` turns the hot cash into wallet cash. `@since 2.7`. |
+| `HotCashRouter` | same | Always-present holder bean. `install(@Nullable HotCash)` sets the implementation; `isInstalled()`, `take(...)` and `fence(...)` delegate to it and fall back to the wallet when nothing is installed. `@since 2.7`. |
+| `RadioVoice.relaysTo(Player hearer, NpcSquad squad)` | `org.luckyraven.gangland.npc.radio` | Default method returning `false`. A voice returns `true` to pass a line a hearer just got on to the player the squad hunts (a lookout). Sent once per line, only to a hunted player who did not hear it directly. `@since 2.7`. |
+| `MoneyDepositService.depositPickup(Player, double, String variationId)` | `org.luckyraven.gangland.item.money` (gangland-item, re-exported) | Default method. Routes a money pickup through the `HotCashRouter` when one is installed; the default is the wallet deposit. |
+
+`SquadRadio` change: after the hearer loop, a delivered hearer for whom `relaysTo` returns `true` gives the hunted player one
+`Lookout_Format` line, unless the hunted player already heard the line in the loop. A line is never relayed twice.
+
 ## Api 2.4 (0.17.0)
 
 `GanglandApi.VERSION` is `"2.4"`. Nothing was removed or changed; every row is an addition.

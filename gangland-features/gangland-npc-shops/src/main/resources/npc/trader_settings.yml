@@ -15,3 +15,35 @@ Sell:
    Mood_Per_Sale: 0.02
 # Flat tip amount paid (in currency) when the player clicks the Tip button on the NegotiationView.
 Tip_Amount: 100.0
+# Store hold-ups: aim a Bartizan weapon at a trader to rob its till.
+Hold_Up:
+   # Master switch. false turns hold-ups off for every trader.
+   Enable: true
+   # Blocks from the trader within which an aimed weapon starts a hold-up.
+   Range: 6.0
+   # Degrees off the trader's eye line that still counts as aiming at it.
+   Aim_Angle: 10.0
+   # Seconds the clerk needs to fill the bag before the take is paid out.
+   Fill_Seconds: 10
+   # Seconds into the fill when the silent alarm trips (Store_Robbery crime).
+   Alarm_Seconds: 10
+   # Mood toward the robber at or below this value trips the alarm early.
+   Dislike_Mood: 0.2
+   # Alarm second used instead of Alarm_Seconds when the trader dislikes the player.
+   Alarm_Seconds_Disliked: 4
+   # Smallest take paid out, in currency.
+   Take_Min: 200.0
+   # Largest take paid out, in currency. A value below Take_Min is raised to Take_Min.
+   Take_Max: 600.0
+   # Seconds a robbed trader refuses further hold-ups.
+   Cooldown_Seconds: 300
+   # Player-facing texts. {seconds} and {take} are filled in at send time.
+   Messages:
+      # Action bar while the fill is in progress.
+      Filling: "The clerk fills the bag... {seconds}s"
+      # Chat when the take is paid out.
+      Done: "Got ${take} from the till. Get out!"
+      # Chat when the player looks away before the fill finishes.
+      Aborted: "You walked away. The clerk stops filling the bag."
+      # Chat when the player aims at a trader still on cooldown.
+      Closed: "This store was robbed recently. Try again later."

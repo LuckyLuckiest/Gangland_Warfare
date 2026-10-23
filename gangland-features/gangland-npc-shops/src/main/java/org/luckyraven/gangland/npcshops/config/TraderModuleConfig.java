@@ -1,9 +1,21 @@
 package org.luckyraven.gangland.npcshops.config;
 
 import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
+import org.luckyraven.gangland.npcshops.holdup.BartizanAim;
+import org.luckyraven.gangland.npcshops.holdup.HoldUpService;
+import org.luckyraven.gangland.npcshops.holdup.HoldUpSettings;
+import org.luckyraven.gangland.npcshops.holdup.TraderAimResolver;
+import org.luckyraven.gangland.npcshops.holdup.WalletHoldUpPayout;
+import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.gangland.npcshops.integration.GanglandTraderEconomy;
 import org.luckyraven.gangland.npcshops.integration.GanglandTraderMessages;
@@ -175,6 +187,24 @@ public class TraderModuleConfig {
 	                                     TraderMessageContract traderMessages) {
 		return new ShopViewOpenerImpl(traderManager, shopRegistry, traderFlow, adminFlow,
 		                              shopMessages, traderMessages);
+	}
+
+	// ── Hold-ups (Bartizan soft: only BartizanAim names a Bartizan type) ─
+
+	@Bean
+	public HoldUpService holdUpService(MoodService mood, TraderManager traders, TraderEconomyContract economy,
+	                                   FileManager fileManager, CrimeService crimes, HotCashRouter router) {
+		boolean bartizan = Bukkit.getPluginManager().getPlugin("Bartizan") != null;
+		if (!bartizan) log.info("Hold-ups off: Bartizan not installed");
+		Predicate<Player> weaponHeld = bartizan ? BartizanAim::weaponHeld : p -> false;
+		TraderAimResolver resolver = new TraderAimResolver(traders);
+		return new HoldUpService(plugin, () -> HoldUpSettings.load(fileManager.getFile("trader_settings")),
+		                         Bukkit::getOnlinePlayers, weaponHeld, resolver::resolve, mood, crimes,
+		                         new WalletHoldUpPayout(economy,
+		                                                () -> HoldUpSettings.load(fileManager.getFile("trader_settings")),
+		                                                () -> ThreadLocalRandom.current().nextDouble(), router),
+		                         System::currentTimeMillis,
+		                         (player, text) -> ActionBarManager.send(plugin, player, text, 10L), log::debug);
 	}
 
 }

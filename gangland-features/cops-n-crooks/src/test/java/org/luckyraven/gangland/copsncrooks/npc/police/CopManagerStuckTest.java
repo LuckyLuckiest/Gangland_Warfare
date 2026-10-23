@@ -383,4 +383,15 @@ class CopManagerStuckTest {
 		assertTrue(group.getCops().contains(posted));
 		verify(posted, never()).destroy(any());
 	}
+
+	@Test
+	@DisplayName("0.20 seam: an OVERWATCH cop is never recycled however long it was unreachable (recycles only PURSUING/COMBAT; pins today's rule)")
+	void overwatchCopNotRecycled() {
+		CopNpc watching = stranded(CopState.OVERWATCH, 10, 64, 0, 13_000); // behind him, out of view, over the limit
+
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.getCops().contains(watching));
+		verify(watching, never()).destroy(any());
+	}
 }

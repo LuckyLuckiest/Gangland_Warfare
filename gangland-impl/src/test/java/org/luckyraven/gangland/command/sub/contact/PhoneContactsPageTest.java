@@ -46,4 +46,30 @@ class PhoneContactsPageTest {
 		}
 	}
 
+
+	@Test
+	@DisplayName("phone_contacts slot 25 is the Fence the bag button")
+	void contactsPage_fenceButton() {
+		YamlConfiguration page = bundled("phone_contacts");
+
+		assertEquals("CHEST", page.getString("Slots.25.Item"));
+		assertEquals("&6&lFence the bag", page.getString("Slots.25.Name"));
+		assertEquals("/glw contact fence", page.getString("Slots.25.OnClick.Command"));
+	}
+
+	@Test
+	@DisplayName("commands.json lists contact.fence and the contact usage mentions fence")
+	void commandsJson_listsFence() throws Exception {
+		var stream = PhoneContactsPageTest.class.getResourceAsStream("/commands.json");
+		assertNotNull(stream, "commands.json is bundled");
+		String json = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+
+		assertTrue(json.contains("\"usage\": \"/glw contact [stars|fence]\""), "contact usage lists fence");
+		int at = json.indexOf("\"contact.fence\"");
+		assertTrue(at > 0, "contact.fence entry exists");
+		String entry = json.substring(at, json.indexOf('}', at));
+		assertTrue(entry.contains("/glw contact fence"));
+		assertTrue(entry.contains("hot bag"));
+	}
+
 }

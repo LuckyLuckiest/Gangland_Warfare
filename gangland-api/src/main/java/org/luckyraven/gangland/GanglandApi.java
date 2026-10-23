@@ -35,8 +35,11 @@ public interface GanglandApi {
 	 * <p>2.4 adds {@code Messages.USER_DATA_LOAD_FAILED} (the "your data could not be loaded, please rejoin" kick text). It also adds the offline-cache API: {@code UserManager.loadStored}, {@code setStoredLoader}, {@code pruneIdle} and {@code Settings.getOfflineCacheMinutes}.
 	 * <p>2.5 is reserved for another release line and never used on this branch. 2.6 (Gang & Turf II) adds the
 	 * members listed in documentation/gangland-api.md, section Api 2.6.
+	 * <p>2.7 (0.20.0) adds the five vehicle events ({@code events.vehicle}), six Crimes ids and {@code RadioVoice.overhears};
+	 * see documentation/gangland-api.md, section Api 2.7. Its wave-2 additions are {@code data.economy.HotCash},
+ * {@code HotCashRouter}, {@code RadioVoice.relaysTo} and {@code MoneyDepositService.depositPickup}; VERSION stays 2.7.
 	 */
-	String VERSION = "2.6";
+	String VERSION = "2.7";
 
 	/**
 	 * The permission namespace and long command alias ({@code /gangland}).

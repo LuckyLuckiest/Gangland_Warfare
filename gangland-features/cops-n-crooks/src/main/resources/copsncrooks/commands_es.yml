@@ -94,3 +94,16 @@ Cuff:
    Released: "&aLiberaste a &e%target%&a de las esposas."
    Already_Cuffed: "&c¡Este jugador ya está esposado!"
    Not_Cuffed: "&c¡Este jugador no está esposado!"
+
+# 0.20.0
+Item:
+   # Placeholders: %item% (item id), %target% (receiving player).
+   Given: "&aDiste &f%item%&a a &f%target%&a."
+   # Placeholders: %item% (the id typed), %items% (the valid item ids).
+   Unknown: "&cObjeto desconocido &f%item%&c. Objetos: &f%items%"
+   # No placeholders.
+   Needs_Player: "&cLa consola debe indicar un jugador."
+   # Placeholders: %items% (the valid item ids).
+   Usage: "&cUso: &f/glw cop item <objeto> [jugador]&c. Objetos: &f%items%"
+   # No placeholders.
+   No_Permission: "&cNo tienes permiso para dar objetos de policía."

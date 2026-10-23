@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.command.cops.CopCommand;
 import org.luckyraven.gangland.copsncrooks.config.BreachModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.BagModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.ChaseModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksFileConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksModuleConfig;
@@ -17,6 +18,16 @@ import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RescueModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.StandoffModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.SurrenderModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.ScannerMapModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.LookoutModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.OverwatchModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.SightModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.ScannerModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.TrackerModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.PatrolModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.DisguiseModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.WitnessModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.CrimeSourcesModuleConfig;
 import org.luckyraven.gangland.copsncrooks.database.DetainmentRepository;
 import org.luckyraven.gangland.copsncrooks.listener.detainment.CopListener;
 import org.luckyraven.keystone.module.ModuleRegistrations;
@@ -41,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CopsNCrooksModuleTest {
 
 	@Test
-	@DisplayName("configure registers the fourteen configuration classes (0.21.0 appends five empty feature shells, wave 2 two more) and the three packages")
+	@DisplayName("configure registers the twenty-seven configuration classes (0.20.0 eleven seams, 0.21.0 seven shells) and the three packages")
 	void configure_declaresConfigsAndPackages() {
 		ModuleRegistrations registrations = new ModuleRegistrations();
 
@@ -51,8 +62,12 @@ class CopsNCrooksModuleTest {
 				CopsNCrooksModuleConfig.class, ChaseModuleConfig.class, HeatModuleConfig.class,
 				EvasionModuleConfig.class, RegistryModuleConfig.class, SurrenderModuleConfig.class,
 				RescueModuleConfig.class, StandoffModuleConfig.class, BreachModuleConfig.class,
-				PursuitReportModuleConfig.class, GetawayModuleConfig.class, MostWantedModuleConfig.class),
-				registrations.configurations());
+				PursuitReportModuleConfig.class, GetawayModuleConfig.class, MostWantedModuleConfig.class,
+				CrimeSourcesModuleConfig.class,
+				WitnessModuleConfig.class, DisguiseModuleConfig.class, PatrolModuleConfig.class,
+				TrackerModuleConfig.class, ScannerModuleConfig.class, SightModuleConfig.class,
+				OverwatchModuleConfig.class, ScannerMapModuleConfig.class,
+				BagModuleConfig.class, LookoutModuleConfig.class), registrations.configurations());
 		assertEquals(List.of(CopsNCrooksModule.LISTENER_PACKAGE), registrations.listenerPackages());
 		assertEquals(List.of(CopsNCrooksModule.COMMAND_PACKAGE), registrations.commandPackages());
 		assertEquals(List.of(CopsNCrooksModule.REPOSITORY_PACKAGE), registrations.repositoryPackages());

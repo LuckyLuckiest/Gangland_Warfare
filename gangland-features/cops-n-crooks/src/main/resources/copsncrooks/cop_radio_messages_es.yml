@@ -230,3 +230,24 @@ Lines:
    # The wanted-list announcement: the most wanted suspect and where they were last seen.
    Most_Wanted:
       - "Atención a todas las unidades: %target% es el más buscado de la ciudad, visto cerca de %place%."
+   # 0.20.0: una llamada al 911 llega al despacho con el delito, el lugar y el sospechoso.
+   Caller_911:
+      - "Despacho: llamada al 911 reporta %crime% cerca de %place%. Sospechoso: %suspect%."
+   # 0.20.0: un policía describe al sospechoso a la escuadra.
+   Suspect_Description:
+      - "El sospechoso es %suspect%."
+   # 0.20.0: se coloca un rastreador en el auto del sospechoso.
+   Tracker_Tagged:
+      - "El rastreador está en el auto. Despacho tiene su posición."
+   # 0.20.0: el rastreador envía la posición del sospechoso.
+   Tracker_Ping:
+      - "Señal del rastreador, está en %place%."
+   # 0.20.0: un tirador de vigilancia localiza al sospechoso.
+   Overwatch_Spotted:
+      - "Vigilancia, a la vista. Está a %distance% bloques, %direction%."
+   # 0.20.0: un policía de patrulla avista al sospechoso.
+   Patrol_Sighting:
+      - "Patrulla aquí, veo al sospechoso en %place%."
+
+# 0.20.0: formato de una línea que un compañero de banda te transmite; %name% es el vigía y %line% la línea.
+Lookout_Format: "&8[Vigía %name%] &r%line%"
