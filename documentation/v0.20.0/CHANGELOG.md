@@ -98,7 +98,7 @@ behaviour change, with its default.
   `WARNING`, `OVERWATCH`.
 - **Setters, constructors unchanged.** `JailIntakeService.setBagSeizure`, `BribeService.setBagFunding`, `PaperworkView.setBagLine`,
   `CopRadio.setLookout`.
-- **Tests.** Reactor `mvn -o verify` on the 0.20.0 tip: 5171 tests, 0 failures, 0 errors, 0 skipped (15 module summaries).
+- **Tests.** Reactor `mvn -o verify` on the 0.20.0 tip: 5173 tests, 0 failures, 0 errors, 0 skipped (15 module summaries).
 
 ## Fixed
 
@@ -113,6 +113,7 @@ behaviour change, with its default.
 - **Spilled hot bills (T-330).** A full-inventory proximity pickup no longer takes a spilled hot bill, so it cannot be paid out clean.
 - **Scanner Map in an empty slot (T-338).** A Scanner Map from `/glw cop item scanner_map` is map-bound before it is added.
 - **Disguised suspect cuffed (T-346).** A disguised suspect is no longer cuffed by a searching cop that walks into him.
+- Radio suspect description no longer says air for an empty helmet or chest slot (T-353).
 
 ## Known issues
 
@@ -132,4 +133,4 @@ behaviour change, with its default.
 
 ---
 
-*Tests: 5171 run, 0 failures, 0 errors, 0 skipped on the 0.20.0 tip (`mvn -o verify`).*
+*Tests: 5173 run, 0 failures, 0 errors, 0 skipped on the 0.20.0 tip (`mvn -o verify`).*
