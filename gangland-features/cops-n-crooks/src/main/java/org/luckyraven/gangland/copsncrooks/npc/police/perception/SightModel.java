@@ -71,6 +71,12 @@ public class SightModel implements CopPerception.SightFactor {
 		    || target.isGlowing() || target.hasPotionEffect(PotionEffectType.GLOWING)) {
 			return 1.0;
 		}
+		if (target.isSneaking() && emptyHand(target) && emptyOffHand(target)) {
+			CopGroup g = copManager.groupOf(id);
+			if (g != null && g.getSquad().hasFreshSighting()) {
+				return 1.0;
+			}
+		}
 
 		int    light  = eyeLight(target);
 		double lightF = ignoreDarkness(cop) || light < 0 ? 1.0 : light <= s.darkMaxLevel() ? s.darkFactor()
@@ -109,6 +115,11 @@ public class SightModel implements CopPerception.SightFactor {
 
 	private static boolean emptyHand(Player target) {
 		ItemStack item = target.getInventory().getItemInMainHand();
+		return item == null || item.getType() == Material.AIR;
+	}
+
+	private static boolean emptyOffHand(Player target) {
+		ItemStack item = target.getInventory().getItemInOffHand();
 		return item == null || item.getType() == Material.AIR;
 	}
 
