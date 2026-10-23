@@ -196,4 +196,23 @@ class SuspectDescriptionsTest {
 
 		assertTrue(subject.format(new SuspectDescription("", "red jacket", "", false, false)).contains("TEMPLATE"));
 	}
+
+	@Test
+	@DisplayName("T-353: an AIR helmet slot is empty, not an item named air")
+	void airHelmetIsEmpty() {
+		wearer.helmet(Material.AIR);
+
+		assertEquals("", descriptions().describe(wearer.player).head());
+	}
+
+	@Test
+	@DisplayName("T-353: an AIR chest slot is empty, so the radio never says air")
+	void airChestIsEmpty() {
+		wearer.chest(Material.AIR);
+
+		SuspectDescription d = descriptions().describe(wearer.player);
+
+		assertEquals("", d.chest());
+		assertFalse(descriptions().format(d).contains("air"), descriptions().format(d));
+	}
 }
