@@ -69,7 +69,8 @@ public class BustedListener implements Listener {
 		this.wantedMessages       = wantedMessages;
 	}
 
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	// T-381: NORMAL, so the fall-bust runs before gadget HIGH fall-cancel.
+	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onDamage(EntityDamageEvent event) {
 		if (!detainmentSettings.isBustedEnabled()) return;
 		if (!Settings.isRespawnEnabled()) return;

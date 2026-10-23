@@ -512,7 +512,8 @@ class BustedListenerTest {
 		assertTrue(BustedListener.class.isAnnotationPresent(ListenerHandler.class));
 		EventHandler handler = BustedListener.class.getMethod("onDamage", EntityDamageEvent.class)
 		                                           .getAnnotation(EventHandler.class);
-		assertEquals(EventPriority.HIGH, handler.priority());
+		// T-381: NORMAL, so the fall-bust runs before gadget HIGH fall-cancel.
+		assertEquals(EventPriority.NORMAL, handler.priority());
 		assertTrue(handler.ignoreCancelled());
 	}
 
