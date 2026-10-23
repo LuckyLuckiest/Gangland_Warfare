@@ -98,7 +98,7 @@ behaviour change, with its default.
   `WARNING`, `OVERWATCH`.
 - **Setters, constructors unchanged.** `JailIntakeService.setBagSeizure`, `BribeService.setBagFunding`, `PaperworkView.setBagLine`,
   `CopRadio.setLookout`.
-- **Tests.** Reactor `mvn -o verify` on the 0.20.0 tip: 5168 tests, 0 failures, 0 errors, 0 skipped (15 module summaries).
+- **Tests.** Reactor `mvn -o verify` on the 0.20.0 tip: 5171 tests, 0 failures, 0 errors, 0 skipped (15 module summaries).
 
 ## Fixed
 
@@ -132,4 +132,4 @@ behaviour change, with its default.
 
 ---
 
-*Tests: 5168 run, 0 failures, 0 errors, 0 skipped on the 0.20.0 tip (`mvn -o verify`).*
+*Tests: 5171 run, 0 failures, 0 errors, 0 skipped on the 0.20.0 tip (`mvn -o verify`).*
