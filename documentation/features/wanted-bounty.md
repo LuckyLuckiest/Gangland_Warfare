@@ -233,6 +233,44 @@ who is already dead at intake is not fined again. The paperwork screen shows the
 
 The full rules are in the [Cops N Crooks guide](./cops-n-crooks.md#how-a-chase-ends). In short:
 
+### Surrender (0.21.0)
+
+At 1 to 3 stars, crouch with empty hands (or a white banner in hand) while the squad sees you. The cops hold fire and the
+arrest uses the surrender scale: half the sentence, half the fine, 75% bail. Above `Max_Stars` the cops do not take you alive.
+Keys: `Detainment.Surrender` in `copsncrooks/detainment.yml`.
+
+### Busted (0.21.0)
+
+With downed mode on, a lethal hit with a hunting cop in cuff range arrests you instead of downing you. The charge sheet is the
+only charge. Keys: `Detainment.Busted.Enabled` in `copsncrooks/detainment.yml`.
+
+### Lockpicks (0.21.0)
+
+A lockpick in the inventory counts each sneak tap double while you are cuffed, so you break free in half the taps. Each weighted
+tap can snap it. Keys: `Detainment.Break_Free.Lockpick` in `copsncrooks/detainment.yml`.
+
+### Rescue (0.21.0)
+
+A crew mate holds right-click on the cop guarding you for 3 seconds and frees you. Both of you gain a star. Needs the gang module.
+Keys: `Detainment.Rescue` in `copsncrooks/detainment.yml`.
+
+### Crew heat (0.21.0)
+
+A crime is shared with online gang mates and allies within 16 blocks of the crime. Trespass_Restricted, Evading_Police and
+Brandish_Near_Cop are not shared by default. Keys: `Wanted.Crew_Heat` in `copsncrooks/wanted.yml`.
+
+### Standoff and breach (0.21.0)
+
+When cops cannot reach a suspect they ring him with a countdown, and a timeout adds a star. Against an indoor suspect they stack
+at a door and breach together, with a flashbang at 4 stars. No block is broken. Keys: `Cops.Standoff` and `Cops.Breach` in
+`copsncrooks/cops.yml`.
+
+### Pursuit report (0.21.0)
+
+Every chase ends with a report: how it ended, how long it lasted, peak stars, cops down, times cuffed and the cost to the city.
+A chase of 4 stars or more, or of 2 minutes or more, is a server-wide headline. Keys: `Wanted.Pursuit_Report` in
+`copsncrooks/wanted.yml`.
+
 ### Clean getaway (0.21.0)
 
 When the evasion clock takes your last star after a cop has seen you, you gain getaway XP: 0 for one earned star, then 25,

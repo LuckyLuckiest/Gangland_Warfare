@@ -35,11 +35,22 @@ change and the behaviour that changed. Upgrade from 0.20.0.
 
 - **Busted replaces the hospital bill** when a hunting cop is in cuff range (downed mode on). A death with no cop nearby is unchanged.
 - **Skip_Cuffing** comment in `cops.yml` corrected (T-355). The value is unchanged.
+- **Standoffs and breaches** draft only the cops in pursuit or combat. Patrol, warning and overwatch cops stay out, and no overwatch starts on a group in standoff.
+- **Surrender at night.** A crouched surrender is still accepted while the squad has a fresh sighting, even at night.
 
 ## Fixed
 
 - **T-355** `Cops.Skip_Cuffing` comment now says what the key does.
 - **T-357** the SQLite legacy rebuild keeps the new `origin_type` column.
+- **T-360** one-shot radio lines (surrender accepted, standoff, standoff over, the first negotiation line) could be lost to a squad gap; they now play.
+- **T-361** a standoff could start while a squad cop was cuffing the suspect; it no longer does.
+- **T-362** the `Standoff_Over` lines said patrol or stand down; they now say the squad is going in.
+- **T-363** a breach stack drafted only the nearest three cops and left the Defender out; the Defender is now in the stack.
+- **T-366** standoff posts reported no sightings, so the suspect's stars decayed and the timeout could not be reached; posts now report sightings.
+- **T-370 (partial)** the too-hot line is not repeated once the stars drop to zero. The bribe, admin and decay paths are still partial.
+- **T-371** a chase that ended without a death left the cop group's wanted level stale; it is now cleared.
+- **T-380** a busted arrest could hit the original suspect after the squad retargeted; the bust now follows the cop's own target.
+- **T-381** the fall-bust (Busted) and the gadget fall-cancel run in a fixed order: the bust is checked before the gadget's HIGH fall-cancel.
 - **CJ-24 (partial)** the rescue path is fixed; the rest of CJ-24 stays open.
 
 ## Known issues
@@ -48,6 +59,10 @@ change and the behaviour that changed. Upgrade from 0.20.0.
 - **T-391** earned stars are kept in memory. After a restart a restored 5-star suspect cannot hold the title or earn getaway XP until he commits new crimes.
 - **T-392** (latent) after a restart, the chase learner can count unseen time as contact time.
 - **T-393** a rescue, standoff or kill-combo crime raised right after an excluded low-agency crime earns no star (under-count).
+- **T-367** a freed prisoner who stands still can be re-cuffed by the guard who was just released, in the same second. Owner check on a two-client rescue.
+- **T-395** a busted suspect can be downed by a second lethal cop hit in the same tick (multi-shooter squads at 3 stars or more). Deferred: no grace period in 0.21.0.
+- **T-396** the lockpick's lore says Rare chests only and does not mention that it speeds breaking cuffs.
+- **T-397** a bust searches at most 6 blocks, so a `Cuff_Radius` above 6 is capped at 6 for busts.
 - Surrender, rescue, standoff and breach state, and the pursuit report counters, are kept in memory. A restart forgets a standoff or breach in progress, and a report that spans a restart counts from the restart.
 
 ## Not in this release
@@ -61,7 +76,7 @@ change and the behaviour that changed. Upgrade from 0.20.0.
 
 ## Decisions taken by default
 
-Questions with no owner answer were settled by the page's recommendation or the safest default that keeps shipped behaviour: D-21-nn for the arrest and chase work, and D-W2-01 to D-W2-24 for the getaway and Most Wanted work. The decision log is part of the release record and is not shipped with the plugin.
+Questions with no owner answer were settled by the page's recommendation or the safest default that keeps shipped behaviour: D-21-01 to D-21-30 (and the D-21-FND entries) for the arrest and chase work, and D-W2-01 to D-W2-24 for the getaway and Most Wanted work. The decision log is part of the release record and is not shipped with the plugin.
 
 ## API
 
