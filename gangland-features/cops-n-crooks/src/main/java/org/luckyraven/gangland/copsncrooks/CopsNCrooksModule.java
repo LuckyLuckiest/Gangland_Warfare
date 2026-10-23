@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks;
 
 import lombok.CustomLog;
+import org.luckyraven.gangland.copsncrooks.config.BagModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.ChaseModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksFileConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksModuleConfig;
@@ -14,6 +15,7 @@ import org.luckyraven.gangland.copsncrooks.config.ScannerModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.SightModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.OverwatchModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.ScannerMapModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.LookoutModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
@@ -61,6 +63,8 @@ public final class CopsNCrooksModule implements KeystoneModule {
 		         .configuration(SightModuleConfig.class)
 		         .configuration(OverwatchModuleConfig.class)
 		         .configuration(ScannerMapModuleConfig.class)
+		         .configuration(BagModuleConfig.class)
+		         .configuration(LookoutModuleConfig.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .commandPackage(COMMAND_PACKAGE)
 		         .repositoryPackage(REPOSITORY_PACKAGE);

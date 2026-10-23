@@ -10,6 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.item.CopsItems;
+import org.luckyraven.gangland.copsncrooks.scanner.ScannerMapView;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -34,9 +35,10 @@ class CopItemCommand extends SubArgument {
 	private final Tree<Argument>   tree;
 	private final CopsItems        items;
 	private final CommandMessages  messages;
+	private final ScannerMapView   mapView;
 
 	CopItemCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CopsItems items,
-	               CommandMessages messages) {
+	               CommandMessages messages, ScannerMapView mapView) {
 		super(plugin, "item", tree, parent);
 		setPermission(PERMISSION);
 
@@ -44,6 +46,7 @@ class CopItemCommand extends SubArgument {
 		this.tree     = tree;
 		this.items    = items;
 		this.messages = messages;
+		this.mapView  = mapView;
 
 		itemArgument();
 	}
@@ -92,6 +95,12 @@ class CopItemCommand extends SubArgument {
 			                                   Map.of("item", itemId,
 			                                          "items", String.join(", ", CopsItems.ids()))));
 			return;
+		}
+
+		// A Scanner Map must be bound to a view before it enters the inventory, or it shows blank.
+		World targetWorld = target.getWorld();
+		if (CopsItems.SCANNER_MAP.equalsIgnoreCase(itemId) && targetWorld != null) {
+			mapView.ensure(stack, targetWorld);
 		}
 
 		for (ItemStack leftover : target.getInventory().addItem(stack).values()) {

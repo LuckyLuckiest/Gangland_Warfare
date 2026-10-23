@@ -40,6 +40,59 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
   least `Auto.Rampage_Min_Weight` (80) heat. The cheap crimes (brandishing near a cop, hitting a civilian, car theft)
   never make a rampage by themselves.
 
+### New crimes (0.20.0)
+
+| Crime | Heat | When it is committed |
+|---|---|---|
+| `Car_Theft` | 60 | Taking a gadget car you may not use. Witness-gated (below). |
+| `Assault_Civilian` | 30 | Hitting a civilian. Published from 0.20.0; witness-gated. |
+| `Safe_Cracking` | 150 | Cracking a `police_armory` or `military_vault` loot chest, successful or not. Once per cracking session. |
+| `Store_Robbery` | 200 | A store hold-up trips the silent alarm (see [traders.md](./traders.md#store-hold-ups-0200)). |
+| `Trespass_Restricted` | 300 | Walking into an admin region tagged `restricted`. Repeats no faster than `Trespass.Repeat_Seconds` (60). Players with `gangland.cop.trespass.bypass` are exempt. |
+| `Evading_Police` | 100 | A driver who flees a traffic stop (`Patrol.Fled`). |
+
+Warnings (`Brandish_Near_Cop`, 25) and the rest of the 0.15 list are unchanged. Crimes outside the witness list count at once,
+exactly as before.
+
+### Witnesses and 911 calls (0.20.0)
+
+A car theft or an assault on a civilian that no cop saw is not counted at once. It is counted only if someone calls it in.
+
+- A civilian within `Witness.Range` (24 blocks), with line of sight, stops, glows and calls 911. The criminal sees
+  "A witness is calling 911!".
+- If the call lasts `Witness.Call_Seconds` (8) it lands: the crime counts (heat, stars), the squad gets a sighting at the crime
+  spot, and the radio plays the 911 caller line.
+- Stop the caller in time and the call is cancelled. Hit the caller (they flee), aim a weapon at them within `Scare_Range`
+  (16 blocks, `Scare_Angle` 12 degrees: they flee), or kill them (`Kill_Civilian` counts as shipped). A killed caller hands the
+  call to the next civilian still watching; a scared one does not.
+- Nobody saw it and no cop saw it: the gated crime adds no heat.
+- Hitting a civilian publishes `Assault_Civilian` at most once per attacker and civilian every `Assault_Repeat_Seconds` (10).
+
+Keys: `wanted.yml` `Wanted.Witnesses.Enable` and `Crimes`; `civilians.yml` `Witness.*`. See [migration-0.20.0.md](../migration-0.20.0.md).
+
+### The hot-cash bag (0.20.0)
+
+Cash you pick up while wanted goes into your bag, not your wallet. The bag pays out once, when the chase ends.
+
+| Ending | Trigger | What happens to the bag |
+|---|---|---|
+| Get away | Evasion clock or the safety-net timer takes your last star (`EVASION`, `DECAY`) | Banks into your wallet, up to `Wanted.Bag.Max_Banked_Per_Day` per server day. Anything above that converts at `Fence_Cut`. |
+| Other clear | Sign, contact, handcuff bribe, admin, unknown | Converts at `Fence_Cut` (default 0.35, so you get 65 percent). |
+| Busted | Jail intake | Seized. The charge sheet prints `Bag seized: $X`. |
+| Wasted or quit | Death (including going down) or quitting while the server runs | Spills as money items where you stood. Seized instead if you are handcuffed or in transit. |
+| Server stop, reload or disable | Shutdown | Saved and restored on rejoin. Nothing spills. |
+
+- The bag pays exactly once: every ending, the fence and a bribe zero the bag before any money moves.
+- A spilled bill is hot: a player who picks it up and is not wanted gains one star, and the bill goes into his bag.
+- The bag caps per chase at `Wanted.Bag.Max_Per_Chase` (5000). A full bag refuses the pickup, and a store take that does not fit
+  is not paid.
+- **Fence the bag.** `/glw contact fence` or the phone's "Fence the bag" slot converts the bag for wallet cash minus `Fence_Cut`.
+  It is refused while you are in cuffs, in transit or jailed, and it is gated like the crooked contact (no cop sees you, and the
+  contacts cooldown is free). Stars are not touched.
+- **Bribes.** Handcuff and jail bribes take from the bag first and charge the wallet only for the rest.
+
+Keys and messages are listed in [migration-0.20.0.md](../migration-0.20.0.md).
+
 ### How Stars Are Lost
 
 - **Evasion.** While cops hunt you, break line of sight: after `Evasion.Lost_Sight_Seconds` (3) with no cop seeing

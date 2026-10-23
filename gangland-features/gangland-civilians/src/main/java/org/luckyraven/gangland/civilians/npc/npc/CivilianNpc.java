@@ -27,6 +27,7 @@ import org.luckyraven.gangland.civilians.npc.FactionSquads;
 import org.luckyraven.gangland.civilians.npc.config.CivilianNavigationConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehavior;
+import org.luckyraven.gangland.civilians.witness.WitnessCall;
 import org.luckyraven.keystone.item.ItemParser;
 
 import java.util.*;
@@ -63,6 +64,14 @@ public class CivilianNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private @Nullable       Double                               weaponReach;
+
+	/**
+	 * The 911 call this civilian is making while {@link CivilianState#CALLING}; null otherwise. Set and cleared by
+	 * {@code WitnessService}.
+	 */
+	@Getter
+	@Setter
+	private @Nullable WitnessCall witnessCall;
 
 	/**
 	 * Location of the last entity that damaged this NPC — used by flee behavior.

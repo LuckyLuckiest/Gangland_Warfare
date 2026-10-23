@@ -144,6 +144,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final OverwatchSettings overwatchSettings;
 	private final ScannerMapSettings scannerMapSettings;
 	private final DisguiseSettings  disguiseSettings;
+	private final boolean           lookoutEnabled;
 
 	// Roles (phase H13): the composition per wanted level; empty with roles off
 	private final TreeMap<Integer, List<CopRole>> compositions = new TreeMap<>();
@@ -254,6 +255,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.overwatchSettings   = parseOverwatchSettings(cops, report);
 		this.scannerMapSettings  = parseScannerMapSettings(cops, report);
 		this.disguiseSettings    = parseDisguiseSettings(cops, report);
+		this.lookoutEnabled      = parseLookoutEnabled(cops, report);
 
 		loadTiers(cops, report, itemParser);
 		loadRoles(rolesReader, report, itemParser);
@@ -570,6 +572,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public DisguiseSettings getDisguiseSettings() {
 		return disguiseSettings;
+	}
+
+	@Override
+	public boolean isLookoutEnabled() {
+		return lookoutEnabled;
 	}
 
 	@Override
@@ -1324,6 +1331,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                            policeOutfit != null ? policeOutfit : defaults.policeOutfit(),
 		                            disguise.get("Outfit_Max_Level").asInt().min(0).orDefault(defaults.outfitMaxLevel()),
 		                            disguise.get("Match_Needed").asInt().min(1).orDefault(defaults.matchNeeded()));
+	}
+
+	private boolean parseLookoutEnabled(@Nullable NodeReader cops, ConfigReport report) {
+		MappingNode section = cops == null ? null : cops.get("Lookout").asMapping().orNull();
+		if (section == null) return true;
+
+		return NodeReader.of(section, report).get("Enable").asBool().orDefault(true);
 	}
 
 	private ShotNoiseSettings parseShotNoiseSettings(@Nullable NodeReader cops, ConfigReport report) {

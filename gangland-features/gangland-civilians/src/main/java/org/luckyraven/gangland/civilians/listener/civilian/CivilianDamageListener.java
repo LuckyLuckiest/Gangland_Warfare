@@ -15,6 +15,7 @@ import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.gangland.civilians.witness.WitnessService;
 import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcSupport;
@@ -36,6 +37,7 @@ import java.util.UUID;
 public class CivilianDamageListener implements Listener {
 
 	private final CivilianService civilianService;
+	private final WitnessService  witnessService;
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onCivilianDamage(EntityDamageByEntityEvent event) {
@@ -57,14 +59,18 @@ public class CivilianDamageListener implements Listener {
 		}
 
 		if (playerAttacker != null) {
+			boolean lethal   = damaged instanceof LivingEntity le && le.getHealth() - event.getFinalDamage() <= 0;
+			boolean keepCall = lethal && npc.getWitnessCall() != null;
+			witnessService.onPlayerHitCivilian(playerAttacker, npc, lethal);
+
 			if (npc.isHostile() && ai.combatEnabled()) {
 				npc.setTargetPlayerId(playerAttacker.getUniqueId());
-				if (npc.getCurrentState() != CivilianState.COMBAT) {
+				if (!keepCall && npc.getCurrentState() != CivilianState.COMBAT) {
 					npc.transitionTo(CivilianState.COMBAT);
 				}
 				civilianService.alertFaction(npc, playerAttacker, true);
 			} else if (!npc.isHostile() && ai.fleeEnabled()) {
-				if (npc.getCurrentState() != CivilianState.FLEEING) {
+				if (!keepCall && npc.getCurrentState() != CivilianState.FLEEING) {
 					npc.setLastAttackerLocation(playerAttacker.getLocation().clone());
 					npc.transitionTo(CivilianState.FLEEING);
 				}

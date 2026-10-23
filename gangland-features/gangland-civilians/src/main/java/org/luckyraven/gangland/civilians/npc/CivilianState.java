@@ -7,5 +7,6 @@ public enum CivilianState {
 	IDLE,
 	WANDERING,
 	FLEEING,
-	COMBAT
+	COMBAT,
+	CALLING
 }

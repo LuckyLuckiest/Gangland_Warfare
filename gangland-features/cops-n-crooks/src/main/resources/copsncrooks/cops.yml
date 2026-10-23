@@ -609,7 +609,7 @@ Cops:
       Activation_Radius: 64
       # Patrol cops despawn once no player is within this many blocks.
       Despawn_Radius: 96
-      # Seconds a patrol cop may stay idle before it despawns.
+      # Idle time before a beat cop despawns.
       Despawn_After_Seconds: 30
       # How far a patrol cop walks from its station along the beat.
       Beat_Radius: 24
@@ -619,7 +619,7 @@ Cops:
       Pause_Seconds_Max: 6
       # Cop tier of the patrol cops (1 = Officer).
       Tier: 1
-      # A patrol cop who sees a crime reports it as wanted.
+      # Beat cops report wanted players to their squad.
       Report_Wanted: true
 
    # Warning: a cop tells a player to put the weapon away before escalating.
@@ -689,7 +689,7 @@ Cops:
       Enable: true
       # Seconds between siren sounds.
       Interval_Seconds: 5
-      # Blocks from the player within which the siren plays.
+      # Closest a pursuing cop may be to the player with the siren (blocks).
       Min_Distance: 24.0
       # Sound played by the siren (Keystone SoundEffect name).
       Sound: BLOCK_NOTE_BLOCK_BELL
@@ -716,7 +716,7 @@ Cops:
       Crowd_Min_Civilians: 3
       # Blocks around a player within which civilians count for the crowd.
       Crowd_Radius: 4.0
-      # Seconds out of cop contact before the crowd effect ends.
+      # Seconds out of contact before crowd cover applies.
       Crowd_Out_Of_Contact_Seconds: 2
       # Multiplier on sight range while sneaking.
       Sneak_Factor: 0.7
@@ -787,5 +787,9 @@ Cops:
          - "police_vest"
       # Highest wanted level at which the police outfit still works.
       Outfit_Max_Level: 2
-      # Number of disguise pieces that must match to pass as a cop.
+      # Pieces of head, chest and vehicle that must still match for a cop to keep you (higher = easier to shake).
       Match_Needed: 2
+   # Lookout: a gang mate who is not wanted relays the police radio he hears.
+   Lookout:
+      # 0.20.0: false turns the lookout relay off; gang mates then stop relaying police radio.
+      Enable: true

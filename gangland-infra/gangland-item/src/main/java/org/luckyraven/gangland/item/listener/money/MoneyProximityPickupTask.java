@@ -2,10 +2,13 @@ package org.luckyraven.gangland.item.listener.money;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.item.money.MoneyAddon;
@@ -32,6 +35,8 @@ public class MoneyProximityPickupTask extends BukkitRunnable {
 
 	private static final double PICKUP_RANGE     = 1.5;
 	private static final int    REFRESH_INTERVAL = 5;
+	/** Cops-owned PDC key of a hot bill (cops-n-crooks {@code BagSpill.KEY}); gangland-item cannot reference the module. */
+	private static final NamespacedKey HOT_CASH_KEY = new NamespacedKey("copsncrooks", "hot_cash");
 
 	private final MoneyAddon          moneyAddon;
 	private final MoneyDepositService depositService;
@@ -85,13 +90,17 @@ public class MoneyProximityPickupTask extends BukkitRunnable {
 		}
 	}
 
-	private void scanAndDeposit(Player player) {
+	void scanAndDeposit(Player player) {
 		for (Entity entity : player.getNearbyEntities(PICKUP_RANGE, PICKUP_RANGE, PICKUP_RANGE)) {
 			if (!(entity instanceof Item item)) continue;
 			if (!item.isValid() || item.isDead()) continue;
 
 			ItemStack stack = item.getItemStack();
 			if (!MoneyItemUtil.isMoneyItem(stack)) continue;
+
+			// A hot bill is left to the normal pickup path (HotCashRouter), never banked into the wallet here
+			ItemMeta meta = stack.getItemMeta();
+			if (meta != null && meta.getPersistentDataContainer().has(HOT_CASH_KEY, PersistentDataType.BYTE)) continue;
 
 			int perItem = MoneyItemUtil.readAmount(stack);
 			if (perItem <= 0) {
@@ -102,9 +111,9 @@ public class MoneyProximityPickupTask extends BukkitRunnable {
 			int    total       = perItem * stack.getAmount();
 			String variationId = MoneyItemUtil.readVariationId(stack);
 
-			item.remove();
+			if (!depositService.depositPickup(player, total, variationId)) continue;
 
-			depositService.deposit(player, total, variationId);
+			item.remove();
 			playPickupSound(player, variationId);
 		}
 	}

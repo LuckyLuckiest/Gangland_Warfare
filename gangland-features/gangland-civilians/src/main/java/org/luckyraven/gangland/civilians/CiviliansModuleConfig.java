@@ -6,6 +6,7 @@ import org.luckyraven.gangland.civilians.integration.GanglandCivilianSpawnConfig
 import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
+import org.luckyraven.gangland.civilians.npc.config.CiviliansConfig;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
 import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
 import org.luckyraven.gangland.civilians.npc.config.CivilianSettings;
@@ -14,6 +15,9 @@ import org.luckyraven.gangland.civilians.npc.entity.GanglandMarkDefaults;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpcFactory;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawner;
+import org.luckyraven.gangland.civilians.witness.WitnessRules;
+import org.luckyraven.gangland.civilians.witness.WitnessService;
+import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.item.ItemParser;
@@ -21,6 +25,8 @@ import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+
+import java.util.function.Supplier;
 
 /**
  * CONFIG-phase wiring for the civilians module (T-H1/T-H3), moved out of cops-n-crooks's
@@ -127,5 +133,26 @@ public class CiviliansModuleConfig {
 	                                       CivilianNpcRegistry civilianNpcRegistry, CivilianMessages civilianMessages) {
 		return new CivilianService(plugin, civiliansLoader, npcMarkManager, civilianSettings, civilianNpcFactory,
 		                           civilianSpawnManager, civilianNpcRegistry, civilianMessages);
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------
+	// Witnesses and 911 calls (0.20.0)
+	// ---------------------------------------------------------------------------------------------------------------
+
+	@Bean
+	public WitnessService witnessService(CivilianService civilianService, CrimeService crimeService,
+	                                     CivilianMessages civilianMessages) {
+		return witnessService(civilianService, crimeService, civilianMessages, WitnessService.Hooks.live(plugin));
+	}
+
+	/** The bean's wiring, testable without a plugin: rules re-read from the loaded config on every call. */
+	static WitnessService witnessService(CivilianService civilianService, CrimeService crimeService,
+	                                     CivilianMessages civilianMessages, WitnessService.Hooks hooks) {
+		Supplier<WitnessRules> rules = () -> {
+			CiviliansConfig config = civilianService.getCiviliansConfig();
+			if (config == null || config.witness() == null) return WitnessRules.DEFAULT;
+			return config.witness();
+		};
+		return new WitnessService(civilianService, crimeService, rules, civilianMessages::witnessCalling, hooks);
 	}
 }

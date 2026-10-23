@@ -14,6 +14,8 @@ Spawner_Type_Set: "&aCivilian spawner &e%type%&a set at your location."
 Spawner_Group_Set: "&aGroup spawner &e%group%&a set at your location."
 Spawner_List_Header: "Civilian spawners:"
 Spawner_List_Empty: "No civilian spawners are currently set."
+# Action-bar line a criminal sees when a witness starts calling 911.
+Witness_Calling: "&cA witness is calling 911! Stop them!"
 
 # Faction shouts (phase H12). Delivery tuning (Range, cooldowns, ...) lives in civilians.yml's own Shouts block;
 # this is only the shouted text. Every Lines key is a list; one line is picked at random. [] mutes that kind.

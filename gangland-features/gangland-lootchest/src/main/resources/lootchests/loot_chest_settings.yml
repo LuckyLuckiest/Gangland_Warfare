@@ -26,3 +26,13 @@ Rewards:
    # The commands to execute when a player opens a loot chest.
    Commands:
       - ""
+# The alarm rung when a player cracks a chest (or fails to crack one) of a listed tier. Enable turns the alarm on or off.
+Cracking_Alarm:
+   # Whether cracking a chest of a listed tier rings the alarm and adds heat.
+   Enable: true
+   # The loot table (or tier) ids that ring the alarm when cracked.
+   Tiers:
+      - police_armory
+      - military_vault
+   # The sound played when the alarm rings.
+   Sound: BLOCK_BELL_USE

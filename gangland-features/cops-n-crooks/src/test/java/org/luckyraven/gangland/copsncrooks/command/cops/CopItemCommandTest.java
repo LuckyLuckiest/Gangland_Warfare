@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.item.CopsItems;
+import org.luckyraven.gangland.copsncrooks.scanner.ScannerMapView;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -24,6 +25,7 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -42,18 +44,20 @@ class CopItemCommandTest {
 	private CommandMessages  messages;
 	private CopItemCommand   command;
 	private ItemStack        scanner;
+	private ScannerMapView   mapView;
 
 	@BeforeEach
 	void setUp() {
 		bukkit   = BukkitStatics.install(); // SubArgument registers a Bukkit permission on construction
 		items    = mock(CopsItems.class);
+		mapView  = mock(ScannerMapView.class);
 		messages = mock(CommandMessages.class);
 		scanner  = mock(ItemStack.class);
 		when(items.create("police_scanner")).thenReturn(scanner);
 		when(messages.format(any(CommandMessages.Key.class), anyMap())).thenAnswer(
 				invocation -> invocation.getArgument(0, CommandMessages.Key.class).name());
 
-		command = new CopItemCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), items, messages);
+		command = new CopItemCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), items, messages, mapView);
 	}
 
 	@AfterEach
@@ -67,7 +71,7 @@ class CopItemCommandTest {
 		Argument parent = mock(Argument.class);
 		when(parent.getPermission()).thenReturn("gangland.command.cop");
 
-		CopItemCommand built = new CopItemCommand(mock(JavaPlugin.class), new Tree<>(), parent, items, messages);
+		CopItemCommand built = new CopItemCommand(mock(JavaPlugin.class), new Tree<>(), parent, items, messages, mapView);
 
 		org.junit.jupiter.api.Assertions.assertEquals("gangland.cop.item", built.getPermission());
 	}
@@ -177,6 +181,34 @@ class CopItemCommandTest {
 		when(noWorld.getInventory().addItem(scanner)).thenReturn(new HashMap<>(Map.of(0, scanner)));
 
 		command.give(sender(false, true), "police_scanner", "Ghost");
+	}
+
+	@Test
+	@DisplayName("C-21: a Scanner Map is bound to a map view (ensure) in the target's world BEFORE it enters the inventory")
+	void scannerMap_isInitialisedBeforeAddItem() {
+		ItemStack map = mock(ItemStack.class);
+		when(items.create("scanner_map")).thenReturn(map);
+		Player bob   = onlinePlayer("Bob");
+		World  world = mock(World.class);
+		when(bob.getWorld()).thenReturn(world);
+		when(bob.getLocation()).thenReturn(new Location(world, 0, 0, 0));
+
+		command.give(sender(false, true), "scanner_map", "Bob");
+
+		org.mockito.InOrder order = inOrder(mapView, bob.getInventory());
+		order.verify(mapView).ensure(map, world);
+		order.verify(bob.getInventory()).addItem(map);
+	}
+
+	@Test
+	@DisplayName("C-21: the police scanner is not a map: ensure is never called for it")
+	void policeScanner_isNotBoundToAMapView() {
+		Player bob = onlinePlayer("Bob");
+		when(bob.getWorld()).thenReturn(mock(World.class));
+
+		command.give(sender(false, true), "police_scanner", "Bob");
+
+		verify(mapView, never()).ensure(any(), any());
 	}
 
 	private CommandSender sender(boolean player, boolean permitted) {

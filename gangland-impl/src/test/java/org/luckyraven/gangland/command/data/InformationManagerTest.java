@@ -38,7 +38,7 @@ class InformationManagerTest {
 
 		manager.processCommands();
 
-		assertEquals(119, manager.getCommands().size(),
+		assertEquals(120, manager.getCommands().size(),
 				"pins the current entry count (225 minus the 43 cops/banker/trader/civilian/jail/cuff keys that "
 				+ "moved to the cops-n-crooks module's own commands.json in 0.8.4, minus the 5 car* keys that moved "
 				+ "to the gadget module's own commands.json in 0.8.4, minus the 16 turf entries that moved to the "

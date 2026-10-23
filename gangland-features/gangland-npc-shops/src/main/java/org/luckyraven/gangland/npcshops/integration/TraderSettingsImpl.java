@@ -71,6 +71,9 @@ public final class TraderSettingsImpl implements TraderSettings, BeanLifecycle {
 			tipAmount = BigDecimal.valueOf(100);
 		}
 
+		// Hold_Up is owned by HoldUpSettings; read it here so this report does not flag it as unknown.
+		reader.get("Hold_Up");
+
 		if (!report.isEmpty()) report.log(log);
 	}
 

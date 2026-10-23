@@ -114,7 +114,7 @@ public class PursuingBehavior implements CopBehavior {
 			// A player on the post-escape search is neither cuffed nor shot at (0.16.1 T-187)
 			boolean searched = searching.test(player.getUniqueId());
 
-			if (!searched && distance <= cuffRadius && cop.hasLineOfSight(player)) {
+			if (!searched && (seen || perception.allowsLockOn(cop, player)) && distance <= cuffRadius && cop.hasLineOfSight(player)) {
 				if (cop.getTierConfig().skipCuffing() || cop.isCombatForced()) {
 					cop.transitionTo(CopState.COMBAT);
 					return;

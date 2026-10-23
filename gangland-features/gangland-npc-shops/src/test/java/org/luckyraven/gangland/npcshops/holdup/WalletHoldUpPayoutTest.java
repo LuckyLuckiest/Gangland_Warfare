@@ -3,6 +3,8 @@ package org.luckyraven.gangland.npcshops.holdup;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.data.economy.HotCash;
+import org.luckyraven.gangland.data.economy.HotCashRouter;
 import org.luckyraven.gangland.npcshops.trader.economy.TraderEconomyContract;
 
 import java.math.BigDecimal;
@@ -12,7 +14,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentCaptor.forClass;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -76,6 +81,48 @@ class WalletHoldUpPayoutTest {
 		when(economy.deposit(any(), any())).thenReturn(false);
 		BigDecimal paid = new WalletHoldUpPayout(economy, () -> range(200.0, 600.0), () -> 0.5).pay(player);
 		assertEquals(0, paid.compareTo(BigDecimal.ZERO));
+	}
+
+
+	private BigDecimal payRouted(HotCash.Take answer, HotCash[] seen) {
+		HotCash hotCash = mock(HotCash.class);
+		when(hotCash.take(any(), any(), anyString())).thenReturn(answer);
+		HotCashRouter router = new HotCashRouter();
+		router.install(hotCash);
+		seen[0] = hotCash;
+		return new WalletHoldUpPayout(economy, () -> range(200.0, 600.0), () -> 0.5, router).pay(player);
+	}
+
+	@Test
+	@DisplayName("router BAGGED: the take is returned, the wallet is never credited, source is store")
+	void wantedTakeGoesToBag() {
+		HotCash[] seen = new HotCash[1];
+
+		BigDecimal paid = payRouted(HotCash.Take.BAGGED, seen);
+
+		assertEquals(0, paid.compareTo(new BigDecimal("400.00")));
+		verify(economy, never()).deposit(any(), any());
+		verify(seen[0]).take(eq(player), eq(new BigDecimal("400.00")), eq("store"));
+	}
+
+	@Test
+	@DisplayName("router FULL: nothing is paid, nothing deposited")
+	void fullBagPaysNothing() {
+		BigDecimal paid = payRouted(HotCash.Take.FULL, new HotCash[1]);
+
+		assertEquals(0, paid.compareTo(BigDecimal.ZERO));
+		verify(economy, never()).deposit(any(), any());
+	}
+
+	@Test
+	@DisplayName("router WALLET: pays the wallet exactly as before")
+	void walletRouterPaysWallet() {
+		when(economy.deposit(any(), any())).thenReturn(true);
+
+		BigDecimal paid = payRouted(HotCash.Take.WALLET, new HotCash[1]);
+
+		assertEquals(0, paid.compareTo(new BigDecimal("400.00")));
+		verify(economy).deposit(eq(player), any());
 	}
 
 }

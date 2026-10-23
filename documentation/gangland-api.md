@@ -119,6 +119,20 @@ modules other than gangland-gadget can listen to them without depending on it.
 `SquadRadio` change: a hearer is delivered a line when the existing range terms hold or `voice.overhears(player, squad)`
 is `true`. NPC hearers are still skipped, and the player-gap throttle still applies to overheard lines.
 
+### Api 2.7 wave 2 (0.20.0, additive, VERSION unchanged)
+
+Wave 2 adds to the same `2.7` line; nothing was removed or re-signed, and no module changed its `Host_Api` for it.
+
+| Addition | Package | Kind |
+|---|---|---|
+| `HotCash` | `org.luckyraven.gangland.data.economy` | Interface a module implements to take cash a wanted player would receive. `Take take(Player, BigDecimal, String source)` returns `WALLET`, `BAGGED` or `FULL`; `boolean fence(Player)` turns the hot cash into wallet cash. `@since 2.7`. |
+| `HotCashRouter` | same | Always-present holder bean. `install(@Nullable HotCash)` sets the implementation; `isInstalled()`, `take(...)` and `fence(...)` delegate to it and fall back to the wallet when nothing is installed. `@since 2.7`. |
+| `RadioVoice.relaysTo(Player hearer, NpcSquad squad)` | `org.luckyraven.gangland.npc.radio` | Default method returning `false`. A voice returns `true` to pass a line a hearer just got on to the player the squad hunts (a lookout). Sent once per line, only to a hunted player who did not hear it directly. `@since 2.7`. |
+| `MoneyDepositService.depositPickup(Player, double, String variationId)` | `org.luckyraven.gangland.item.money` (gangland-item, re-exported) | Default method. Routes a money pickup through the `HotCashRouter` when one is installed; the default is the wallet deposit. |
+
+`SquadRadio` change: after the hearer loop, a delivered hearer for whom `relaysTo` returns `true` gives the hunted player one
+`Lookout_Format` line, unless the hunted player already heard the line in the loop. A line is never relayed twice.
+
 ## Api 2.4 (0.17.0)
 
 `GanglandApi.VERSION` is `"2.4"`. Nothing was removed or changed; every row is an addition.

@@ -152,6 +152,8 @@ permissions:
       default: true
    gangland.command.contact:
       default: true
+   gangland.command.contact.fence:
+      default: true
    gangland.command.filter:
       default: true
    gangland.command.resource:
@@ -343,6 +345,7 @@ permissions:
          gangland.command.respawn: true
          gangland.command.wanted: true
          gangland.command.contact: true
+         gangland.command.contact.fence: true
          gangland.command.filter: true
          gangland.command.resource: true
          gangland.command.car: true

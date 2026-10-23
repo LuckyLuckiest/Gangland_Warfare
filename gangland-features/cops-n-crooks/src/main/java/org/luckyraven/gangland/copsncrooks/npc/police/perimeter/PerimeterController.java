@@ -9,6 +9,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.OverwatchSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.PerimeterSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
@@ -70,8 +71,14 @@ public class PerimeterController {
 		CopGroup group = copManager.groupOf(id);
 		if (group == null) return;
 
-		List<CopNpc> candidates = candidates(group, id, settings.roles(), centre);
-		int          wanted     = Math.min(settings.posts(), candidates.size() - 1);
+		List<CopNpc> chasers  = candidates(group, id, settings.roles(), centre);
+		// the last chaser stays free; the Overwatch role still counts as a chaser but is never posted (D-O1)
+		int          wanted   = Math.min(settings.posts(), chasers.size() - 1);
+		String       skipRole = overwatchRoleToSkip(level);
+		List<CopNpc> candidates = skipRole == null ? chasers : chasers.stream()
+		                                                             .filter(cop -> !isRole(cop, skipRole))
+		                                                             .toList();
+		wanted = Math.min(wanted, candidates.size());
 		if (wanted <= 0) return;
 
 		double         ringRadius = Math.min(radius, RING_SIGHT_FRACTION * settings.sightRange());
@@ -173,6 +180,19 @@ public class PerimeterController {
 			return byRole != 0 ? byRole : Double.compare(distance(a, centre), distance(b, centre));
 		});
 		return found;
+	}
+
+	/** The Overwatch role the perimeter must leave alone at {@code level}, or null when overwatch is off or below its floor. */
+	private @Nullable String overwatchRoleToSkip(int level) {
+		CopConfigProvider config = provider.get();
+		OverwatchSettings overwatch = config == null ? null : config.getOverwatchSettings();
+		if (overwatch == null || !overwatch.enabled() || level < overwatch.minLevel()) return null;
+		return overwatch.role();
+	}
+
+	private static boolean isRole(CopNpc cop, String roleName) {
+		CopRole role = cop.getRole();
+		return role != null && roleName.equalsIgnoreCase(role.name());
 	}
 
 	private static int roleRank(CopNpc cop, List<String> roles) {

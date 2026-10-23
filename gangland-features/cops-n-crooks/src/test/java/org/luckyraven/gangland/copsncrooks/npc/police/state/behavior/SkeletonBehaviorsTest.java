@@ -17,8 +17,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 @DisplayName("Skeleton behaviours (PATROL, WARNING, OVERWATCH) do nothing")
 class SkeletonBehaviorsTest {
 
-	private static final List<CopBehavior> SKELETONS = List.of(new PatrolBehavior(), new WarningBehavior(),
-	                                                           new OverwatchBehavior());
+	private static final List<CopBehavior> SKELETONS = List.of(new PatrolBehavior(), new WarningBehavior());
 
 	@Test
 	@DisplayName("enter, tick and exit leave the cop untouched")

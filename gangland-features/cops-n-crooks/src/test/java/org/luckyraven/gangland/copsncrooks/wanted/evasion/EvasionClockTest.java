@@ -174,6 +174,55 @@ class EvasionClockTest {
 		return states().stream().map(WantedEvasionStateEvent::getState).toList();
 	}
 
+	private EvasionClock clockWithTracker(java.util.function.Predicate<Player> trackerLive) {
+		return new EvasionClock(config, copManager, detainment, stars, users(), ledger, arcs, learner, hideouts, quiet,
+		                        () -> now[0], events::add, trackerLive);
+	}
+
+	@SuppressWarnings("unchecked")
+	private UserManager<Player> users() {
+		UserManager<Player> users = mock(UserManager.class);
+		User<Player>        user  = mock(User.class);
+		when(user.getWanted()).thenReturn(wanted);
+		when(users.getUser(player)).thenReturn(user);
+		return users;
+	}
+
+	@Test
+	@DisplayName("C-24 / CQ-TRK-1: while a tracker tag is live the clock holds, no stars decay past Lost_Sight_Seconds")
+	void liveTrackerTag_holdsTheClock() {
+		unseenMs = 60_000;
+		EvasionClock tagged = clockWithTracker(p -> true);
+
+		for (int i = 0; i < 90; i++) {
+			now[0] += 1000;
+			tagged.tick(player, group);
+		}
+
+		verify(stars, never()).drop(any(), anyInt(), any());
+		assertEquals(2, wanted.getLevel());
+	}
+
+	@Test
+	@DisplayName("C-24: once the tag has expired the normal decay runs and takes a star")
+	void expiredTrackerTag_decaysNormally() {
+		unseenMs = 60_000;
+		boolean[] live   = {true};
+		EvasionClock tagged = clockWithTracker(p -> live[0]);
+
+		for (int i = 0; i < 30; i++) {
+			now[0] += 1000;
+			tagged.tick(player, group);
+		}
+		live[0] = false;
+		for (int i = 0; i < 60; i++) {
+			now[0] += 1000;
+			tagged.tick(player, group);
+		}
+
+		verify(stars, org.mockito.Mockito.atLeastOnce()).drop(any(), anyInt(), eq(WantedCause.EVASION));
+	}
+
 	@Test
 	@DisplayName("a cop that has just seen the player holds the clock and fires SEEN exactly once")
 	void seen_holds_andFiresSeenOnce() {
