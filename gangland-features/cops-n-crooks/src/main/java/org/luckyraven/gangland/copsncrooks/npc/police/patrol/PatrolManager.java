@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.PatrolSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -55,7 +57,7 @@ public class PatrolManager implements BeanLifecycle {
 	private final Map<Integer, List<CopNpc>>                   beats      = new LinkedHashMap<>();
 	private final Map<Integer, Long>                           emptySince = new LinkedHashMap<>();
 	private final Map<Integer, String>                         names      = new LinkedHashMap<>();
-	private       java.util.function.Function<UUID, org.luckyraven.gangland.copsncrooks.npc.police.CopGroup> groupLookup = id -> null;
+	private       Function<UUID, CopGroup>                     groupLookup = id -> null;
 
 	/**
 	 * @param players the players that count as "near"
@@ -165,7 +167,7 @@ public class PatrolManager implements BeanLifecycle {
 	}
 
 	/** Where a beat cop finds its target's squad (for the cease-fire); default none. */
-	public void setGroupLookup(java.util.function.Function<UUID, org.luckyraven.gangland.copsncrooks.npc.police.CopGroup> lookup) {
+	public void setGroupLookup(Function<UUID, CopGroup> lookup) {
 		this.groupLookup = lookup;
 	}
 
@@ -184,6 +186,10 @@ public class PatrolManager implements BeanLifecycle {
 			UUID   id     = cop.getTargetPlayerId();
 			Player target = id == null ? null : Bukkit.getPlayer(id);
 			boolean live  = target != null && target.isOnline() && !target.isDead();
+			CopGroup squad = id == null ? null : groupLookup.apply(id);
+			if (squad != null && squad.isCeaseFire()) {
+				live = false;
+			}
 			CopState state = cop.getCurrentState();
 			if (state == CopState.COMBAT && live) {
 				cop.tick(target);
