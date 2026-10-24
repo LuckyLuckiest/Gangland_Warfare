@@ -33,6 +33,10 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 	private volatile ChaseConfig       loaded    = ChaseConfig.DEFAULT;
 	private volatile KillComboSettings killCombo = KillComboSettings.DEFAULT;
 	private volatile PostEscapeSettings postEscape = PostEscapeSettings.DEFAULT;
+	private volatile CrewHeatSettings      crewHeat      = CrewHeatSettings.DEFAULT;
+	private volatile PursuitReportSettings pursuitReport = PursuitReportSettings.DEFAULT;
+	private volatile GetawaySettings       getaway       = GetawaySettings.DEFAULT;
+	private volatile MostWantedSettings    mostWanted    = MostWantedSettings.DEFAULT;
 	private volatile WitnessSettings  witnesses  = WitnessSettings.DEFAULT;
 	private volatile TrespassSettings  trespass   = TrespassSettings.DEFAULT;
 	private volatile BagSettings       bag        = BagSettings.DEFAULT;
@@ -56,6 +60,26 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		return postEscape;
 	}
 
+	/** The current {@code Wanted.Crew_Heat}, never null. @since 0.21.0 */
+	public CrewHeatSettings getCrewHeat() {
+		return crewHeat;
+	}
+
+	/** The current {@code Wanted.Pursuit_Report}, never null. @since 0.21.0 */
+	public PursuitReportSettings getPursuitReport() {
+		return pursuitReport;
+	}
+
+	/** The current {@code Wanted.Getaway}, never null. @since 0.21.0 */
+	public GetawaySettings getGetaway() {
+		return getaway;
+	}
+
+	/** The current {@code Wanted.Most_Wanted}, never null. @since 0.21.0 */
+	public MostWantedSettings getMostWanted() {
+		return mostWanted;
+	}
+
 	/** The current {@code Wanted.Witnesses}, never null. @since 0.20.0 */
 	public WitnessSettings getWitnesses() {
 		return witnesses;
@@ -76,6 +100,10 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		loaded     = ChaseConfig.DEFAULT;
 		killCombo  = KillComboSettings.DEFAULT;
 		postEscape = PostEscapeSettings.DEFAULT;
+		crewHeat      = CrewHeatSettings.DEFAULT;
+		pursuitReport = PursuitReportSettings.DEFAULT;
+		getaway       = GetawaySettings.DEFAULT;
+		mostWanted    = MostWantedSettings.DEFAULT;
 		witnesses  = WitnessSettings.DEFAULT;
 		trespass   = TrespassSettings.DEFAULT;
 		bag        = BagSettings.DEFAULT;
@@ -106,6 +134,10 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		loaded     = ChaseConfig.parse(wanted, report);
 		killCombo  = KillComboSettings.read(MovedSetting.of(handler, fileManager, CopsNCrooksYamlConfig.MODULE_ID));
 		postEscape = PostEscapeSettings.parse(wanted);
+		crewHeat = CrewHeatSettings.parse(wanted);
+		pursuitReport = PursuitReportSettings.parse(wanted);
+		getaway       = GetawaySettings.parse(wanted);
+		mostWanted    = MostWantedSettings.parse(wanted);
 		witnesses  = WitnessSettings.parse(wanted);
 		trespass   = TrespassSettings.parse(wanted);
 		// 0.20.0: Wanted.Bag (hot-cash bag)

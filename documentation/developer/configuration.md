@@ -609,6 +609,77 @@ All keys are under `Wanted.Evasion.Auto`. A missing key uses its default; a valu
 | `Learning.Min_Seconds_Between_Outcomes` | `180` | >= 0 | A player's chases ending closer together are not learned from |
 | `Learning.Forget_After_Days` | `90` | >= 1 | Habit and level rows untouched this long are deleted at startup |
 
+0.21.0 wave 1 adds the arrest, crew, standoff and report keys below (every key is optional; a missing block uses these defaults). The full text of each block is in the [0.21.0 migration guide](../migration-0.21.0.md).
+
+| File | Key | Default | Meaning |
+|---|---|---|---|
+| `detainment.yml` | `Detainment.Surrender.Enabled` | `true` | Surrender with empty hands (or a white banner) at 1 to `Max_Stars` stars |
+| `detainment.yml` | `Detainment.Surrender.Max_Stars` | `3` | Highest wanted level you can surrender at; above it the cops do not take you alive |
+| `detainment.yml` | `Detainment.Surrender.Sentence_Multiplier` | `0.5` | Sentence scale for a surrender |
+| `detainment.yml` | `Detainment.Surrender.Fine_Multiplier` | `0.5` | Charge-sheet fine scale for a surrender |
+| `detainment.yml` | `Detainment.Surrender.Bail_Multiplier` | `0.75` | Bail scale for a surrender |
+| `detainment.yml` | `Detainment.Surrender.Resist_Window_Seconds` | `10` | A hit on a cop this soon after surrendering adds `Resisting_Arrest` |
+| `detainment.yml` | `Detainment.Busted.Enabled` | `true` | A lethal hit with a hunting cop in cuff range arrests instead of downing (downed mode only); `false` = the 0.20.0 death |
+| `detainment.yml` | `Detainment.Break_Free.Lockpick.Tap_Weight` | `2` | Each sneak tap counts this much while cuffed with a lockpick in the inventory |
+| `detainment.yml` | `Detainment.Break_Free.Lockpick.Snap_Chance` | `0.05` | Chance per weighted tap that one lockpick breaks (0.0 to 1.0) |
+| `detainment.yml` | `Detainment.Rescue.Enabled` | `true` | A crew mate can free a cuffed player by holding right-click on the guarding cop |
+| `detainment.yml` | `Detainment.Rescue.Hold_Seconds` | `3` | How long the right-click must be held |
+| `detainment.yml` | `Detainment.Rescue.Stars` | `1` | Stars added to both the rescuer and the prisoner |
+| `wanted.yml` | `Wanted.Crew_Heat.Enable` | `true` | `false` = crimes are not shared with gang mates and allies |
+| `wanted.yml` | `Wanted.Crew_Heat.Radius` | `16.0` | Blocks from the crime spot within which mates and allies share it |
+| `wanted.yml` | `Wanted.Crew_Heat.Exclude_Crimes` | `Trespass_Restricted`, `Evading_Police`, `Brandish_Near_Cop` | Crime ids never shared; ids unknown to this build are ignored silently |
+| `wanted.yml` | `Wanted.Pursuit_Report.Enable` | `true` | `false` = no pursuit report |
+| `wanted.yml` | `Wanted.Pursuit_Report.Min_Peak_Stars` | `1` | Chases that never reached this many stars get no report |
+| `wanted.yml` | `Wanted.Pursuit_Report.City_Cost.Per_Cop_Down` | `2500.0` | Cost to the city per cop killed |
+| `wanted.yml` | `Wanted.Pursuit_Report.City_Cost.Per_Heat` | `10.0` | Cost to the city per point of chase heat |
+| `wanted.yml` | `Wanted.Pursuit_Report.Breaking_News.Enable` | `true` | `false` = no server-wide headlines |
+| `wanted.yml` | `Wanted.Pursuit_Report.Breaking_News.Min_Stars` | `4` | A chase reaching this many stars makes the news |
+| `wanted.yml` | `Wanted.Pursuit_Report.Breaking_News.Min_Seconds` | `120` | A chase lasting this long makes the news |
+| `wanted.yml` | `Wanted.Pursuit_Report.Breaking_News.Cooldown_Seconds` | `300` | Minimum gap between live headlines server-wide |
+| `cops.yml` | `Cops.Standoff.Enabled` | `true` | Cops ring a suspect they cannot reach instead of feeding officers in |
+| `cops.yml` | `Cops.Standoff.Timer_Seconds` | `45` | Countdown before the squad moves in |
+| `cops.yml` | `Cops.Standoff.Negotiate_Seconds` | `15` | Gap between negotiation radio lines |
+| `cops.yml` | `Cops.Standoff.Unreachable_Seconds` | `10` | Hunting cops unable to reach the suspect this long start a standoff |
+| `cops.yml` | `Cops.Standoff.Man_Down_Count` | `2` | Cops killed within `Man_Down_Window_Seconds` and `Spot_Radius` that start a standoff |
+| `cops.yml` | `Cops.Standoff.Man_Down_Window_Seconds` | `30` | Window for `Man_Down_Count` |
+| `cops.yml` | `Cops.Standoff.Spot_Radius` | `8.0` | Blocks apart the fallen cops must be for `Man_Down_Count` |
+| `cops.yml` | `Cops.Standoff.Post_Count` | `4` | Cops posted in a ring around the suspect; the rest take cover |
+| `cops.yml` | `Cops.Standoff.Post_Radius` | `12.0` | Ring radius in blocks |
+| `cops.yml` | `Cops.Standoff.Stars_On_Timeout` | `1` | Stars added when the countdown runs out |
+| `cops.yml` | `Cops.Standoff.Cooldown_Seconds` | `60` | Minimum gap between standoffs for one suspect |
+| `cops.yml` | `Cops.Breach.Enabled` | `true` | Cops stack at a door and breach an indoor suspect |
+| `cops.yml` | `Cops.Breach.Roof_Blocks` | `2` | More roof than this above the suspect counts as indoors |
+| `cops.yml` | `Cops.Breach.Door_Radius` | `6` | Door search radius around the last-known spot |
+| `cops.yml` | `Cops.Breach.Stack_Size` | `3` | Cops in the stack |
+| `cops.yml` | `Cops.Breach.Stack_Wait_Seconds` | `6` | Go when the stack is full or after this long |
+| `cops.yml` | `Cops.Breach.Entry_Gap_Ticks` | `20` | Gap between officers going through the door |
+| `cops.yml` | `Cops.Breach.Cooldown_Seconds` | `30` | Minimum gap between breaches for one squad |
+| `cops.yml` | `Cops.Breach.Flashbang.Min_Stars` | `4` | Wanted level from which a flashbang goes in first |
+| `cops.yml` | `Cops.Breach.Flashbang.Radius` | `8.0` | Players this close to the door with a clear line to it are blinded |
+| `cops.yml` | `Cops.Breach.Flashbang.Ticks` | `40` | Blindness and Slowness duration |
+
+Texts: `copsncrooks/wanted_messages.yml` `Surrender.*`, `Busted.*`, `Lockpick.Snapped`, `Crew_Heat.Shared`, `Rescue.*`,
+`Pursuit_Report.*` and `Breaking_News.*`. Radio: `copsncrooks/cop_radio_messages.yml` (and `_es`) `Lines.Surrender_Accepted`,
+`Lines.Standoff`, `Lines.Negotiate`, `Lines.Standoff_Over`, `Lines.Stack_Up`, `Lines.Breach`, `Lines.Flashbang`.
+
+0.21.0 wave 2 adds the getaway and Most Wanted keys below (both blocks sit after `Pursuit_Report`; a missing block uses these defaults). The full text of each block is in the [0.21.0 migration guide](../migration-0.21.0.md).
+
+| Key | Default | Range | Meaning |
+|---|---|---|---|
+| `Wanted.Getaway.Enable` | `true` | | `false` = no getaway XP |
+| `Wanted.Getaway.Experience` | `[0, 25, 75, 175, 350]` | | XP by earned peak stars; the first entry is one star; the last is used above the list |
+| `Wanted.Getaway.Cooldown_Seconds` | `600` | >= 0 | One paid getaway per this many seconds per player |
+| `Wanted.Getaway.Daily_Cap` | `1000` | >= 0 | Most getaway XP per player per server-local day, crew shares included; `0` = no cap |
+| `Wanted.Getaway.Exclude_Crimes` | `Trespass_Restricted`, `Evading_Police`, `Brandish_Near_Cop` | | Crime ids whose stars never count toward a getaway or Most Wanted |
+| `Wanted.Most_Wanted.Enable` | `true` | | `false` = no title and empty placeholders |
+| `Wanted.Most_Wanted.Min_Stars` | `4` | >= 1 | Earned stars needed for the title |
+| `Wanted.Most_Wanted.Hold_Seconds` | `10` | >= 0 | Seconds a player must hold `Min_Stars` before the title can go to him |
+| `Wanted.Most_Wanted.Cooldown_Seconds` | `120` | >= 0 | Minimum gap between title broadcasts server-wide |
+
+Texts: `copsncrooks/wanted_messages.yml` `Getaway.Line`, `Getaway.Capped`, `Getaway.Share`, `Most_Wanted.New`. Radio:
+`copsncrooks/cop_radio_messages.yml` (and `_es`) `Lines.Most_Wanted`. Placeholders: `%gangland_cnc_most_wanted%`,
+`%gangland_cnc_most_wanted_stars%`.
+
 ---
 
 ## Other 0.16.0 files and keys

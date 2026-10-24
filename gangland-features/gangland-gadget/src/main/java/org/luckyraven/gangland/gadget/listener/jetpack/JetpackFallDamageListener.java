@@ -25,7 +25,7 @@ public class JetpackFallDamageListener implements Listener {
 		this.jetpackService = jetpackService;
 	}
 
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onFallDamage(EntityDamageEvent event) {
 		if (!(event.getEntity() instanceof Player player)) return;
 		if (event.getCause() != EntityDamageEvent.DamageCause.FALL) return;

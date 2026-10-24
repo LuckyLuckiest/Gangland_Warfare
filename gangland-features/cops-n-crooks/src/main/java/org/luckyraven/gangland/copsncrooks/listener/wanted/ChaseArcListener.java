@@ -10,6 +10,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.EvasionSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArc;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseLearner;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseRecord;
@@ -50,7 +51,8 @@ public class ChaseArcListener implements Listener {
 		if (event.getCause() == WantedCause.RESTORE && arcs.has(id)) {
 			arcs.restore(id);
 		} else {
-			arcs.start(id, event.getCause(), event.getWantedLevel());
+			arcs.start(id, event.getCause(), event.getWantedLevel(),
+			           event.getCause() == WantedCause.CRIME && !excludedCrime(id));
 		}
 	}
 
@@ -62,7 +64,15 @@ public class ChaseArcListener implements Listener {
 		UUID id = event.getPlayer().getUniqueId();
 		arcs.peak(id, event.getNewLevel());
 		if (event.getNewLevel() > event.getOldLevel()) arcs.hot(id);
+		// C-37: a raise by an excluded low-agency crime is no earned star
+		WantedCause earnCause = event.getCause() == WantedCause.CRIME && excludedCrime(id) ? WantedCause.UNKNOWN : event.getCause();
+		arcs.earn(id, event.getOldLevel(), event.getNewLevel(), earnCause);
 		if (event.getCause() == WantedCause.CONTACT && event.getNewLevel() < event.getOldLevel()) arcs.boughtDown(id);
+	}
+
+	private boolean excludedCrime(UUID id) {
+		CrimeRecord last = heat.lastCrime(id);
+		return last != null && config.getGetaway().excludes(last.crimeId());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

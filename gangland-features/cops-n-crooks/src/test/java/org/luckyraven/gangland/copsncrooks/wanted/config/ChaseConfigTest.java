@@ -633,4 +633,62 @@ class ChaseConfigTest {
 		assertFalse(c.hud().lost().enabled());
 		assertFalse(c.hud().escaped().enabled());
 	}
+
+	@Test
+	@DisplayName("0.21.0: Crew_Heat and Pursuit_Report are read by their own records, so ChaseConfig reports no unknown key")
+	void crewHeatAndPursuitReport_areKnownBlocks() {
+		String yaml = """
+				Wanted:
+				   Crew_Heat:
+				      Enable: true
+				      Radius: 16.0
+				      Exclude_Crimes:
+				         - Evading_Police
+				   Pursuit_Report:
+				      Enable: true
+				      Min_Peak_Stars: 1
+				      City_Cost:
+				         Per_Cop_Down: 2500.0
+				         Per_Heat: 10.0
+				      Breaking_News:
+				         Enable: true
+				         Min_Stars: 4
+				         Min_Seconds: 120
+				         Cooldown_Seconds: 300
+				""";
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig parsed = ChaseConfig.parse(wantedRoot(yaml, report), report);
+
+		assertEquals(ChaseConfig.DEFAULT, parsed, "the new blocks change no existing block");
+		assertTrue(report.isEmpty(), report.issues().toString());
+	}
+
+	@Test
+	@DisplayName("0.21.0 wave 2: Getaway and Most_Wanted are read by their own records, so ChaseConfig reports no unknown key")
+	void getawayAndMostWanted_areKnownBlocks() {
+		String yaml = """
+				Wanted:
+				   Getaway:
+				      Enable: true
+				      Experience:
+				         - 0
+				         - 25
+				      Cooldown_Seconds: 600
+				      Daily_Cap: 1000
+				      Exclude_Crimes:
+				         - Evading_Police
+				   Most_Wanted:
+				      Enable: true
+				      Min_Stars: 4
+				      Hold_Seconds: 10
+				      Cooldown_Seconds: 120
+				""";
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig parsed = ChaseConfig.parse(wantedRoot(yaml, report), report);
+
+		assertEquals(ChaseConfig.DEFAULT, parsed, "the new blocks change no existing block");
+		assertTrue(report.isEmpty(), report.issues().toString());
+	}
 }

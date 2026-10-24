@@ -87,6 +87,15 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Regroup", List.of("Two down! Pull back to cover, backup is coming!", "We're losing men, fall back and wait for backup!")),
 			Map.entry("Regroup_Push", List.of("Backup's here! All units, push together!", "Everyone move in, now!")),
 			Map.entry("Shots_Fired", List.of("Shots fired! Converge on the sound!", "Gunfire, he's close! Move in!")),
+			// 0.21.0
+			Map.entry("Surrender_Accepted", List.of("He's giving up! Hold your fire, cuff him!", "Hands are up, he's surrendering!")),
+			Map.entry("Standoff", List.of("Barricade! Perimeter up, everyone to cover!", "He's holed up, set the perimeter!")),
+			Map.entry("Negotiate", List.of("Suspect, come out with your hands where I can see them! %seconds% seconds!", "Talk to me! Step out in %seconds% seconds or we come in!")),
+			Map.entry("Standoff_Over", List.of("Time's up, we're going in style!", "Barricade's down, all units moving in with style!")),
+			Map.entry("Stack_Up", List.of("Stack up on the door! Shield, you're first!", "Stacking up, hold the door!")),
+			Map.entry("Breach", List.of("Breach! Breach! Go, go, go!", "Breaching now, move in!")),
+			Map.entry("Flashbang", List.of("Flashbang out! Eyes closed!", "Flash out, going in!")),
+			Map.entry("Most_Wanted", List.of("All units, be advised: %target% is the city's Most Wanted, last seen near %place%.")),
 			// 0.20.0
 			Map.entry("Caller_911", List.of("Dispatch: 911 caller reports %crime% near %place%. Suspect: %suspect%.")),
 			Map.entry("Suspect_Description", List.of("Suspect is %suspect%.")),

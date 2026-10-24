@@ -6,5 +6,6 @@ public enum ReleaseReason {
 	JAIL_BRIBE,
 	SENTENCE_COMPLETE,
 	BREAK_FREE,
-	ADMIN
+	ADMIN,
+	RESCUED // 0.21.0
 }

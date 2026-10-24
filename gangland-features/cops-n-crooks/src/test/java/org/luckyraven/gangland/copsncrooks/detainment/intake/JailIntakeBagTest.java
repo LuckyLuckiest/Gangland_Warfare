@@ -118,6 +118,10 @@ class JailIntakeBagTest {
 
 		DetainmentCostsContract costs = mock(DetainmentCostsContract.class);
 		when(costs.computeSentenceSeconds(any(int.class))).thenReturn(300);
+		// 0.21.0: the arrest origin scales sentence, fine and bail; a bare mock would return 0.0 and zero the sheet
+		when(costs.getSentenceMultiplier(any())).thenReturn(1.0);
+		when(costs.getFineMultiplier(any())).thenReturn(1.0);
+		when(costs.getBailMultiplier(any())).thenReturn(1.0);
 
 		HeatLedger ledger = mock(HeatLedger.class);
 		when(ledger.chaseCrimes(ID)).thenReturn(List.of());

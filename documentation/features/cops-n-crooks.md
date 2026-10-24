@@ -260,6 +260,153 @@ The chase around a wanted player is configured in `copsncrooks/wanted.yml` (heat
 
 ---
 
+## How a chase ends
+
+### Surrender (0.21.0)
+
+At 1 to 3 stars you can give yourself up. Crouch with empty hands (or with a white banner in hand) while the squad can see you.
+The cops hold their fire and the arrest uses the surrender scale: half the sentence, half the fine and 75% bail. Standing up
+before the cuffs land ends it. Hitting a cop within `Resist_Window_Seconds` (10) adds `Resisting_Arrest`. Above `Max_Stars`
+(3) the cops do not take you alive and the line `Too_Hot` plays.
+
+Config: `copsncrooks/detainment.yml` under `Detainment.Surrender` (`Enabled`, `Max_Stars`, `Sentence_Multiplier`,
+`Fine_Multiplier`, `Bail_Multiplier`, `Resist_Window_Seconds`). Texts: `copsncrooks/wanted_messages.yml` `Surrender.Accepted`,
+`Surrender.Resisted`, `Surrender.Too_Hot`. Needs Citizens (no cop NPCs, no surrender).
+
+### Busted (0.21.0)
+
+With downed mode on, a lethal hit while a cop of your hunting squad is in that cop's cuff radius arrests you instead of
+downing you. The charge sheet is the only charge and your inventory is seized as for any arrest. Void falls and `/kill` do
+not count. A death with no cop nearby is unchanged.
+
+Config: `copsncrooks/detainment.yml` under `Detainment.Busted` (`Enabled`, default `true`). Set it to `false` to restore the
+0.20.0 death. Title and subtitle: `copsncrooks/wanted_messages.yml` `Busted.Title` and `Busted.Subtitle`.
+
+Known limit: T-395. A second lethal cop hit in the same tick can still down a busted suspect when several cops shoot at 3
+stars or more. Deferred, no grace period in 0.21.0.
+
+### Lockpicks (0.21.0)
+
+While you are cuffed, a lockpick in your inventory counts each sneak tap double, so you break free in half the taps. Each
+weighted tap can snap the lockpick, and the line `Lockpick.Snapped` plays when it does. Lockpicks work on `/glw cuff` even
+without Citizens.
+
+Config: `copsncrooks/detainment.yml` under `Detainment.Break_Free.Lockpick` (`Tap_Weight` 2, `Snap_Chance` 0.05). Text:
+`copsncrooks/wanted_messages.yml` `Lockpick.Snapped`.
+
+### Crew heat (0.21.0)
+
+A crime is shared with online gang mates and allies within 16 blocks of the crime spot, and the line `Crew_Heat.Shared` tells
+each of them whose crime it was. Trespass_Restricted, Evading_Police and Brandish_Near_Cop are not shared by default. Ids
+unknown to this build are ignored. Needs the gang module.
+
+Config: `copsncrooks/wanted.yml` under `Wanted.Crew_Heat` (`Enable`, `Radius` 16.0, `Exclude_Crimes`). Text:
+`copsncrooks/wanted_messages.yml` `Crew_Heat.Shared` (`%player%` is who committed the crime, `%crime%` the crime).
+
+### Rescue (0.21.0)
+
+A crew mate frees you by holding right-click on the cop guarding you for `Hold_Seconds` (3). The rescuer sees the progress line
+with the seconds left. When the cuffs come off, both of you gain `Stars` (1) and each gets a line. Needs the gang module.
+
+Known limits: CJ-24 is partly fixed (the rescue path works; the rest of CJ-24 stays open). T-367: a freed prisoner who stands
+still can be re-cuffed by the guard who was just released, in the same second. Owner check on a two-client rescue.
+
+Config: `copsncrooks/detainment.yml` under `Detainment.Rescue` (`Enabled`, `Hold_Seconds`, `Stars`). Texts:
+`copsncrooks/wanted_messages.yml` `Rescue.Progress`, `Rescue.Freed`, `Rescue.Freed_By`.
+
+### Standoff (0.21.0)
+
+When the cops cannot reach a suspect (no route, or unreachable for 10 seconds), or two cops are killed within 30 seconds of
+each other, the squad rings him instead of feeding officers in. Up to four cops take posts in a ring 12 blocks out and the rest
+take cover. A countdown of 45 seconds runs, with a negotiation line every 15 seconds. If it runs out the squad moves in and the
+suspect gains one star. Only cops in pursuit or combat take part. Patrol, warning and overwatch cops stay out. A standoff
+cannot start again for the same suspect within 60 seconds.
+
+Standoff state is kept in memory. A restart forgets a standoff in progress.
+
+Config: `copsncrooks/cops.yml` under `Cops.Standoff` (`Enabled`, `Timer_Seconds`, `Negotiate_Seconds`, `Unreachable_Seconds`,
+`Man_Down_Count`, `Man_Down_Window_Seconds`, `Spot_Radius`, `Post_Count`, `Post_Radius`, `Stars_On_Timeout`,
+`Cooldown_Seconds`). Radio lines: `copsncrooks/cop_radio_messages.yml` (and `_es`) `Lines.Standoff`, `Lines.Negotiate`,
+`Lines.Standoff_Over`.
+
+### Breach (0.21.0)
+
+Against an indoor suspect (more than `Roof_Blocks` (2) of roof above him), up to `Stack_Size` (3) cops stack at a door within
+`Door_Radius` (6) of his last known spot and go through together. The stack goes in when it is full or after
+`Stack_Wait_Seconds` (6), and officers enter `Entry_Gap_Ticks` (20) ticks apart. At `Flashbang.Min_Stars` (4) stars a flashbang
+goes in first: players within `Flashbang.Radius` (8) of the door with a clear line to it are blinded and slowed for
+`Flashbang.Ticks` (40). No block is broken. A squad breaches at most once per `Cooldown_Seconds` (30).
+
+Config: `copsncrooks/cops.yml` under `Cops.Breach` (`Enabled`, `Roof_Blocks`, `Door_Radius`, `Stack_Size`, `Stack_Wait_Seconds`,
+`Entry_Gap_Ticks`, `Cooldown_Seconds`, `Flashbang.*`). Radio lines: `Lines.Stack_Up`, `Lines.Breach`, `Lines.Flashbang`.
+
+### Pursuit report (0.21.0)
+
+Every chase ends with a report sent to the suspect in chat: how it ended (`Escaped`, `Surrendered`, `Busted`, `Arrested`,
+`Wasted`, `Paid_Off` or `Cleared`), how long it lasted, the peak stars, cops down, times cuffed and the cost to the city
+(`Per_Cop_Down` 2500 for each cop killed, plus `Per_Heat` 10 for each point of chase heat). A chase that never reached
+`Min_Peak_Stars` (1) gets no report.
+
+A chase of `Breaking_News.Min_Stars` (4) or more, or lasting `Min_Seconds` (120) or more, is a server-wide headline when it is
+live and again when it ends. Live headlines are at least `Cooldown_Seconds` (300) apart.
+
+Known limit: the report counters are kept in memory. A report that spans a restart counts from the restart.
+
+Config: `copsncrooks/wanted.yml` under `Wanted.Pursuit_Report` (`Enable`, `Min_Peak_Stars`, `City_Cost`, `Breaking_News.Enable`,
+`Breaking_News.Min_Stars`, `Breaking_News.Min_Seconds`, `Breaking_News.Cooldown_Seconds`). Texts:
+`copsncrooks/wanted_messages.yml` `Pursuit_Report.*` (`Header`, `Ending`, `Duration`, `Peak`, `Cops_Down`, `Busts`, `Cost` and the
+`Endings` names) and `Breaking_News.Live` / `Breaking_News.End`.
+
+### Clean getaway (0.21.0)
+
+A clean getaway is the evasion clock taking your last star after a cop has seen you. It pays XP by the peak of stars you
+earned through crimes:
+
+| Peak earned stars | XP (`Wanted.Getaway.Experience`) |
+|---|---|
+| 1 | 0 |
+| 2 | 25 |
+| 3 | 75 |
+| 4 | 175 |
+| 5 | 350 |
+
+Only stars raised by crimes count (crimes, kill combos, rescues, standoff timeouts). Stars from signs, bribes or admin
+commands never count, so a bought five pays nothing. Any other ending (surrender, busted, arrest, death, the safety-net
+timer, a contact, a bribe) pays nothing. A cop must have seen you before the search that ran out. Crimes listed in
+`Wanted.Getaway.Exclude_Crimes` never count toward the peak.
+
+Your gang mates and allies who are wanted right now, with at least one star earned through crimes, each get half of your
+XP (rounded down) and a chat line. There is no distance limit, and a mate wanted only through a sign does not qualify.
+
+Limits: one paid getaway per `Wanted.Getaway.Cooldown_Seconds` (600) per player; a getaway inside the cooldown pays nothing and
+shares nothing. `Wanted.Getaway.Daily_Cap` (1000) caps the XP a player gains from getaways each server-local day, crew
+shares included. The report ends with `Getaway: +75 XP`, `Getaway: daily XP cap reached`, or no line when there is nothing to
+say. Cooldowns and daily totals are kept in memory, so a restart resets them.
+
+Config: `copsncrooks/wanted.yml` under `Wanted.Getaway` (`Enable`, `Experience`, `Cooldown_Seconds`, `Daily_Cap`,
+`Exclude_Crimes`). Texts: `copsncrooks/wanted_messages.yml` `Getaway.Line`, `Getaway.Capped`, `Getaway.Share`. Without Citizens
+there are no sightings, so no getaway XP is paid.
+
+### The city's Most Wanted (0.21.0)
+
+The online player with the most earned stars holds the title "the city's Most Wanted". The title needs at least
+`Wanted.Most_Wanted.Min_Stars` (4) earned stars, held for `Hold_Seconds` (10) before the title can go to that player. A
+challenger takes it only with strictly more earned stars. On a tie the current holder keeps it; otherwise the player who
+reached the level first keeps it.
+
+- **Broadcast.** When the title changes hands every online player reads one line. The broadcasts are at most one per
+  `Cooldown_Seconds` (120) server-wide. A change inside the cooldown is silent, but the title still moves.
+- **Radio.** When the new holder has a cop group (Citizens present), police dispatch says one line near him. Without a group
+  the radio line is skipped and the title and broadcast still happen.
+- **Losing the title.** The title drops silently when the holder quits, is arrested, dies, escapes or falls below
+  `Min_Stars`. It passes to the next qualified player (announced) or stays vacant (no broadcast).
+- **Placeholders** for scoreboards, the same for every viewer: `%gangland_cnc_most_wanted%` (the holder's name, empty when
+  vacant) and `%gangland_cnc_most_wanted_stars%` (the holder's earned stars, `0` when vacant).
+- **No effect on play.** No glow, no extra cops and no tier change.
+
+Config: `copsncrooks/wanted.yml` under `Wanted.Most_Wanted` (`Enable`, `Min_Stars`, `Hold_Seconds`, `Cooldown_Seconds`).
+Texts: `copsncrooks/wanted_messages.yml` `Most_Wanted.New`; `copsncrooks/cop_radio_messages.yml` (and `_es`) `Lines.Most_Wanted`.
+
 ## Where the Police Come From (0.16.0)
 
 Until 0.15 a cop popped into existence near the suspect. From 0.16.0 the police have **stations**: units leave the

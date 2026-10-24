@@ -43,6 +43,12 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		wantedRoot.get("Kill_Combo");
 		// Post_Escape (0.16.1) is read by PostEscapeSettings, loaded beside this config by ChaseConfigLoader
 		wantedRoot.get("Post_Escape");
+		// Crew_Heat and Pursuit_Report (0.21.0) are read by CrewHeatSettings / PursuitReportSettings, loaded beside this config by ChaseConfigLoader
+		wantedRoot.get("Crew_Heat");
+		wantedRoot.get("Pursuit_Report");
+		// Getaway and Most_Wanted (0.21.0) are read by GetawaySettings / MostWantedSettings, loaded beside this config by ChaseConfigLoader
+		wantedRoot.get("Getaway");
+		wantedRoot.get("Most_Wanted");
 		// Witnesses, Trespass and Bag (0.20.0) are read by their own settings classes, loaded beside this config
 		wantedRoot.get("Witnesses");
 		wantedRoot.get("Trespass");

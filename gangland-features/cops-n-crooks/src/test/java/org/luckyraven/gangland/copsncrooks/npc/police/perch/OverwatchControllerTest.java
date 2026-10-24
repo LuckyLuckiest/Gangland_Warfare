@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -520,5 +521,28 @@ class OverwatchControllerTest {
 		when(marksman.isValid()).thenReturn(false);
 		org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> controller.end(player, CopState.RETURNING));
 		assertFalse(controller.isActive(playerId));
+	}
+
+	@Test
+	@DisplayName("cnc-integ INT-1/5 (C-11): a group in a 0.21 standoff sends no Marksman to a perch")
+	void integ_startSkipsAGroupInStandoff() {
+		CopNpc marksman = marksman();
+		when(group.isStandoff(anyLong())).thenReturn(true);
+
+		controller.start(player, lastSeen, 4);
+
+		assertEquals(CopState.PURSUING, stateOf(marksman));
+		verify(marksman, never()).navigateTo(any());
+	}
+
+	@Test
+	@DisplayName("cnc-integ INT-1/5 (C-11): without a standoff the same Marksman is still sent (sensitivity)")
+	void integ_startWithoutStandoffStillSends() {
+		CopNpc marksman = marksman();
+		when(group.isStandoff(anyLong())).thenReturn(false);
+
+		controller.start(player, lastSeen, 4);
+
+		assertEquals(CopState.OVERWATCH, stateOf(marksman));
 	}
 }

@@ -13,6 +13,7 @@ import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.detainment.surrender.SurrenderService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.SightSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 
@@ -70,6 +71,12 @@ public class SightModel implements CopPerception.SightFactor {
 		if ((shot != null && now - shot < s.shotResetSeconds() * 1000L) || target.getFireTicks() > 0
 		    || target.isGlowing() || target.hasPotionEffect(PotionEffectType.GLOWING)) {
 			return 1.0;
+		}
+		if (SurrenderService.poseHeld(target)) {
+			CopGroup g = copManager.groupOf(id);
+			if (g != null && g.getSquad().hasFreshSighting()) {
+				return 1.0;
+			}
 		}
 
 		int    light  = eyeLight(target);

@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
@@ -115,7 +116,7 @@ public class PursuingBehavior implements CopBehavior {
 			boolean searched = searching.test(player.getUniqueId());
 
 			if (!searched && (seen || perception.allowsLockOn(cop, player)) && distance <= cuffRadius && cop.hasLineOfSight(player)) {
-				if (cop.getTierConfig().skipCuffing() || cop.isCombatForced()) {
+				if (!ceaseFire(cop) && (cop.getTierConfig().skipCuffing() || cop.isCombatForced())) {
 					cop.transitionTo(CopState.COMBAT);
 					return;
 				}
@@ -127,7 +128,7 @@ public class PursuingBehavior implements CopBehavior {
 			}
 
 			// Ranged cops shoot while closing in
-			if (!searched && cop.isRangedAttacker() && cop.hasLineOfSight(player) && cop.canAttack()) {
+			if (!searched && cop.isRangedAttacker() && !ceaseFire(cop) && cop.hasLineOfSight(player) && cop.canAttack()) {
 				cop.attack(player);
 			}
 		} else {
@@ -163,6 +164,13 @@ public class PursuingBehavior implements CopBehavior {
 		retreat.reset(cop);
 		cop.stopNavigation();
 		cop.setPursuitTicks(0);
+	}
+
+	/** The cop's group holds fire on the player this cop is after (0.21.0 standoff / surrender). */
+	private static boolean ceaseFire(CopNpc cop) {
+		CopGroup group = cop.getGroup();
+		UUID     id    = cop.getTargetPlayerId();
+		return group != null && id != null && group.isCeaseFire() && id.equals(group.getTargetPlayerId());
 	}
 
 	private LivingEntity resolveTarget(CopNpc cop) {

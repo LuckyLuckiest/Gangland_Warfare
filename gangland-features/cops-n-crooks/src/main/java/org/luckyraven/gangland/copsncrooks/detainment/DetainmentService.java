@@ -65,7 +65,13 @@ public class DetainmentService {
 	}
 
 	public void handcuff(Player player) {
-		setState(player, DetainmentState.HANDCUFFED);
+		handcuff(player, ArrestOrigin.CUFFED);
+	}
+
+	/** 0.21.0: {@link #handcuff(Player)} that records how the arrest happened, in one registry save. */
+	public void handcuff(Player player, ArrestOrigin origin) {
+		detainmentRegistry.setState(player.getUniqueId(), DetainmentState.HANDCUFFED, origin);
+		applyVisuals(player, false);
 		applyVisuals(player, true);
 		ChatUtil.sendTitle(player, messages.handcuffedTitle(), messages.handcuffedSubtitle());
 		ActionBarManager.send(plugin, player, messages.handcuffedActionBar(), 40L);

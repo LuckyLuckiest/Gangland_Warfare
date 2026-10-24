@@ -29,6 +29,20 @@ public final class ChaseArc {
 	boolean                     searched;
 	/** A contact or bribe star took stars off mid-chase: the peak no longer says what was escaped. */
 	boolean                     boughtDown;
+	/** Cops this player killed on the chase (0.21.0 pursuit report). */
+	int                         copsDown;
+	/** Times a cop cuffed him on the chase (0.21.0). */
+	int                         busts;
+	/** The live breaking-news headline went out for this chase (0.21.0). */
+	boolean                     newsSent;
+	/** Stars raised with WantedCause.CRIME on this chase, drops clamp it (0.21.0). */
+	int                         earned;
+	/** Highest {@link #earned} this chase (0.21.0). */
+	int                         earnedPeak;
+	/** Clock millis when {@link #earned} last rose; 0 = never (0.21.0). */
+	long                        earnedAt;
+	/** A real cop sighting this chase (P-GET-5, 0.21.0). */
+	boolean                     sighted;
 	@Nullable AutoDrop.DropPlan pending;
 
 	ChaseArc(WantedCause startCause) {
@@ -64,5 +78,40 @@ public final class ChaseArc {
 	/** Every offline gap the restores shifted out of this chase, summed. */
 	public long offlineTotal() {
 		return offlineTotal;
+	}
+
+	// 0.21.0
+	public int copsDown() {
+		return copsDown;
+	}
+
+	// 0.21.0
+	public int busts() {
+		return busts;
+	}
+
+	// 0.21.0
+	public boolean newsSent() {
+		return newsSent;
+	}
+
+	// 0.21.0 wave 2
+	public int earned() {
+		return earned;
+	}
+
+	// 0.21.0 wave 2
+	public int earnedPeak() {
+		return earnedPeak;
+	}
+
+	// 0.21.0 wave 2
+	public long earnedAt() {
+		return earnedAt;
+	}
+
+	// 0.21.0 wave 2
+	public boolean sighted() {
+		return sighted;
 	}
 }

@@ -4,7 +4,7 @@
 #
 # The text of the chase HUD and the charge sheet. & colour codes work. Placeholders in %percent% signs are filled in
 # by the plugin: %stars%, %time%, %arrow%, %distance%, %crime%, %tier%, %stance%, %count% (also the number of stars
-# a star-drop line reports), %amount%, %paid%, %money_symbol%.
+# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%.
 
 # The boss bar and the star card
 Hud:
@@ -100,6 +100,85 @@ Crimes:
    Spotted: "Spotted by the cops"
    # The star card's text when no crime is on record, for example a sign or an admin raise
    Unknown_Crime: "Reported crime"
+
+# 0.21.0: the surrender, busted, lockpick, crew-heat, rescue, pursuit report and breaking news lines
+Surrender:
+   # Your hands are up and the cops hold their fire
+   Accepted: "&eHands where we can see them. &7The cops hold their fire, stay down."
+   # You hit a cop soon after surrendering
+   Resisted: "&cYou resisted arrest."
+   # Too much heat to surrender; the cops are not taking you alive
+   Too_Hot: "&cAt this heat they are not taking you alive."
+# A lethal hit with a cop close by arrests instead of downing you (Detainment.Busted)
+Busted:
+   # The title on the screen when you are cuffed this way
+   Title: "&c&lBUSTED"
+   # The subtitle under the title
+   Subtitle: "&7A cop got the cuffs on you"
+# Breaking the lock on a cuff with a lockpick (Detainment.Break_Free.Lockpick)
+Lockpick:
+   # A lockpick broke while you were picking the lock
+   Snapped: "&7Your lockpick snapped."
+# Crimes shared with gang mates and allies (Wanted.Crew_Heat); %player% is who committed it, %crime% the crime
+Crew_Heat:
+   # The crew member's crime lands on you too
+   Shared: "&c%player%'s %crime% is on you too."
+# Freeing a cuffed player (Detainment.Rescue); %seconds% is the hold time left
+Rescue:
+   # The rescuer's progress while holding right-click
+   Progress: "&eFreeing %player%... &f%seconds%s"
+   # Said to the rescuer when the prisoner is freed
+   Freed: "&aYou broke %player% out. &cThe cops want you both."
+   # Said to the prisoner when a crew mate frees them
+   Freed_By: "&a%player% broke you out!"
+# The pursuit report shown when a chase ends (Wanted.Pursuit_Report); %ending% is one of the Endings below
+Pursuit_Report:
+   # First line
+   Header: "&8&m-----&r &6&lPURSUIT REPORT &8&m-----"
+   # How the chase ended
+   Ending: "&7Ending: &f%ending%"
+   # How long the chase lasted
+   Duration: "&7Duration: &f%time%"
+   # The highest wanted level reached
+   Peak: "&7Peak: %stars%"
+   # How many cops went down; %count% is how many
+   Cops_Down: "&7Cops down: &f%count%"
+   # How many times you were cuffed; %count% is how many
+   Busts: "&7Times cuffed: &f%count%"
+   # The cost to the city; %money_symbol% and %amount% are the cost
+   Cost: "&7Cost to the city: &c%money_symbol%%amount%"
+   Endings:
+      # You got away: the search ran out or the timer cleared your stars
+      Escaped: "Escaped"
+      # You surrendered
+      Surrendered: "Surrendered"
+      # You were busted
+      Busted: "Busted"
+      # You were arrested
+      Arrested: "Arrested"
+      # You were killed
+      Wasted: "Wasted"
+      # You paid a contact or bribed the cops
+      Paid_Off: "Paid off"
+      # Your stars were cleared another way (an admin command or a sign)
+      Cleared: "Cleared"
+# Server-wide headlines for a chase (Wanted.Pursuit_Report.Breaking_News)
+Breaking_News:
+   # Said while the chase is live; %player% and %stars% are the chase
+   Live: "&4&lBREAKING &fPolice are chasing %player% across the city &c%stars%"
+   # Said when the chase is over; %ending% is how it ended
+   End: "&4&lBREAKING &fThe %stars% &fchase of %player% is over: %ending%"
+# 0.21.0 wave 2: the getaway XP lines (Wanted.Getaway) and the Most Wanted headline (Wanted.Most_Wanted)
+Getaway:
+   # You got away clean; %xp% is the XP you earned
+   Line: "&7Getaway: &a+%xp% XP"
+   # The daily XP cap for getaways is reached
+   Capped: "&7Getaway: &8daily XP cap reached"
+   # Said to each wanted crew mate who gets a share; %player% is who got away, %xp% the mate's XP
+   Share: "&a%player% got away clean: &f+%xp% XP &7for the crew"
+Most_Wanted:
+   # Said when a player becomes the city's Most Wanted; %player% and %stars% are that player and their level
+   New: "&4&lMOST WANTED &f%player% &7is now the city's Most Wanted &c%stars%"
 
 # 0.20.0
 # Patrol stops: a beat cop's warnings during a traffic stop; %seconds% is the seconds left to comply

@@ -427,6 +427,28 @@ class PatrolManagerTest {
 	}
 
 	@Test
+	@DisplayName("cnc-integ INT-1: a hit beat cop stands down when its target's squad has cease-fire (surrender)")
+	void hitBeatCop_targetCeaseFire_standsDown() {
+		Player attacker = fx.player(2, 2);
+		online.add(attacker);
+		manager.manage();
+		CopNpc beat = spawned.get(0);
+		org.luckyraven.gangland.copsncrooks.npc.police.CopGroup group = mock(org.luckyraven.gangland.copsncrooks.npc.police.CopGroup.class);
+		when(group.isCeaseFire()).thenReturn(true);
+		manager.setGroupLookup(id -> group);
+		beat.setTargetPlayerId(attacker.getUniqueId());
+		beat.setCombatForced(true);
+		beat.transitionTo(CopState.COMBAT);
+
+		manager.aiTick();
+
+		assertEquals(CopState.PATROL, beat.getCurrentState());
+		assertFalse(beat.isCombatForced());
+		assertNull(beat.getTargetPlayerId());
+		verify(beat, never()).tick(attacker);
+	}
+
+	@Test
 	@DisplayName("RETURNING or IDLE beat cops are put back on PATROL")
 	void returningOrIdle_backToPatrol() {
 		online.add(fx.player(2, 2));

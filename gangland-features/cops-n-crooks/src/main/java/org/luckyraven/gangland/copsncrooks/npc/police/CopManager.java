@@ -202,6 +202,7 @@ public class CopManager implements BeanLifecycle {
 		if (group != null) {
 			group.clearCombatAlert();
 			group.clearPending();
+			group.setLevel(0);
 			pendingCalls.removeIf(call -> call.group() == group);
 		}
 		if (group == null || group.isEmpty()) {
@@ -696,6 +697,8 @@ public class CopManager implements BeanLifecycle {
 		if (wantedLevel <= 0) {
 			if (!targetingManager.isSearching(playerId)) {
 				stopSpawnTask(playerId);
+				CopGroup decayed = groups.get(playerId);
+				if (decayed != null) decayed.setLevel(0);
 				return;
 			}
 			// A post-escape search keeps a squad at the lowest tier until it runs out (0.16.1 T-187)
@@ -913,6 +916,7 @@ public class CopManager implements BeanLifecycle {
 	 * cop within {@link #OVERDUE_VIEW_BLOCKS} of the eyes it is in, the suspect's and every other player's alike.
 	 */
 	private boolean recycles(CopNpc cop, CopGroup group, Player player, long now) {
+		if (group.isStandoff(now)) return false;
 		StuckSettings stuck = configProvider.getStuckSettings();
 		CopState      state = cop.getCurrentState();
 		LivingEntity  body  = cop.getEntity();

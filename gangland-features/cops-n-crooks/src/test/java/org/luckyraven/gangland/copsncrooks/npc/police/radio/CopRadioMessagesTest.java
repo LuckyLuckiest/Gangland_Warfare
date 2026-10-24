@@ -191,6 +191,8 @@ class CopRadioMessagesTest {
 			Map.entry("Status_Check", java.util.Set.of("role")),
 			Map.entry("Dispatch_En_Route", java.util.Set.of("count", "station", "eta")),
 			Map.entry("Wipe_Refill", java.util.Set.of("eta")),
+			Map.entry("Negotiate", java.util.Set.of("seconds")),
+
 			Map.entry("Suspect_Description", java.util.Set.of("suspect")));
 
 	// %place% is supplied by every radio voice (Unknown_Place when no caller names one)
@@ -282,6 +284,102 @@ class CopRadioMessagesTest {
 		assertEquals(List.of("la zona"), build("Unknown_Place: \"la zona\"\n").lines("Unknown_Place"));
 	}
 
+	// ---- 0.21.0 fnd-squad: the seven stand-off / breach lines ----
+
+	private static final List<String> LINES_0_21 = List.of("Surrender_Accepted", "Standoff", "Negotiate", "Standoff_Over",
+	                                                        "Stack_Up", "Breach", "Flashbang");
+
+	@Test
+	@DisplayName("0.21.0: each new key resolves to a non-empty list from the shipped English and Spanish files")
+	void newLinesPresent() throws IOException {
+		CopRadioMessages english = build(shipped("copsncrooks/cop_radio_messages.yml"));
+		initializeSettingsLanguage("es");
+		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
+		FileManager fileManager = new FileManager(plugin);
+		writeFile(fileManager, plugin, "cop_radio_messages.yml", shipped("copsncrooks/cop_radio_messages.yml"));
+		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("copsncrooks/cop_radio_messages_es.yml"));
+		CopRadioMessages spanish = new CopRadioMessages(fileManager);
+
+		for (String key : LINES_0_21) {
+			assertFalse(english.lines(key).isEmpty(), "English " + key);
+			assertFalse(spanish.lines(key).isEmpty(), "Spanish " + key);
+			assertNotEquals(english.lines(key), spanish.lines(key), "Spanish must be translated: " + key);
+		}
+	}
+
+	@Test
+	@DisplayName("T-362 P-STOFF-5: Standoff_Over fires at timeout while the squad moves in, so no line says patrol or stand down")
+	void standoffOver_doesNotPromiseStandDown() throws IOException {
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages english = build(shipped("copsncrooks/cop_radio_messages.yml"));
+		for (String line : concat(fallback.lines("Standoff_Over"), english.lines("Standoff_Over"))) {
+			String lower = line.toLowerCase();
+			assertFalse(lower.contains("patrol") || lower.contains("stand down"), line);
+		}
+		assertFalse(shipped("copsncrooks/cop_radio_messages_es.yml").contains("de vuelta a patrullar"));
+		assertFalse(shipped("copsncrooks/cop_radio_messages_es.yml").contains("bajen la guardia"));
+	}
+
+	private static List<String> concat(List<String> a, List<String> b) {
+		List<String> all = new java.util.ArrayList<>(a);
+		all.addAll(b);
+		return all;
+	}
+
+	@Test
+	@DisplayName("0.21.0 T-138: with no yaml keys at all (and with a pre-0.21 file), each new key is spoken from DEFAULT_LINES")
+	void newLinesDefaultWithoutYaml() throws IOException {
+		CopRadioMessages noKeys = build("Lines: {}\n");
+		CopRadioMessages old    = build("""
+				Lines:
+				   Contact:
+				      - "Contact!"
+				   Resisting:
+				      - "Suspect is resisting!"
+				""");
+
+		for (String key : LINES_0_21) {
+			assertFalse(noKeys.lines(key).isEmpty(), "no code default for " + key);
+			assertFalse(old.lines(key).isEmpty(), "pre-0.21 file: no code default for " + key);
+			assertEquals(noKeys.lines(key), old.lines(key), key);
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.0: Negotiate carries %seconds% in the default, English and Spanish; the other six name no %member% or %seconds%")
+	void negotiate_usesSeconds_othersUseNothingExtra() throws IOException {
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages english  = build(shipped("copsncrooks/cop_radio_messages.yml"));
+		CopRadioMessages spanish  = build(shipped("copsncrooks/cop_radio_messages_es.yml"));
+
+		for (CopRadioMessages source : List.of(fallback, english, spanish)) {
+			assertTrue(source.lines("Negotiate").stream().allMatch(line -> line.contains("%seconds%")),
+			           "every Negotiate variant shows the countdown");
+			for (String key : LINES_0_21) {
+				if (key.equals("Negotiate")) continue;
+				assertTrue(source.lines(key).stream().noneMatch(line -> line.contains("%member%") || line.contains("%seconds%")),
+				           key);
+				assertFalse(source.lines(key).isEmpty(), key);
+			}
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.0: the seven keys are appended at the end of Lines in both shipped files under a '# 0.21.0' comment")
+	void newLines_appendedAtEndOfBothFiles() throws IOException {
+		for (String resource : List.of("copsncrooks/cop_radio_messages.yml", "copsncrooks/cop_radio_messages_es.yml")) {
+			String yaml = shipped(resource);
+			int    mark = yaml.indexOf("# 0.21.0");
+			assertTrue(mark > 0, resource + " has no '# 0.21.0' comment");
+			int previous = mark;
+			for (String key : LINES_0_21) {
+				int at = yaml.indexOf("\n   " + key + ":");
+				assertTrue(at > previous, resource + ": " + key + " must follow the previous 0.21.0 key, after the comment");
+				previous = at;
+			}
+		}
+	}
+
 	private static java.util.Set<String> placeholders(List<String> pool) {
 		java.util.Set<String> found = new java.util.TreeSet<>();
 		java.util.regex.Matcher m = java.util.regex.Pattern.compile("%[a-z_]+%").matcher(String.join("\n", pool));
@@ -317,5 +415,32 @@ class CopRadioMessagesTest {
 		fileManager.addFile(handler, false);
 
 		new Settings(fileManager).initialize();
+	}
+
+	@Test
+	@DisplayName("0.21.0 wave 2: Most_Wanted has a code default and a line in both shipped files, with the %target% and %place% placeholders")
+	void mostWantedLine_inDefaultsAndBothShippedFiles() throws IOException {
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages english  = build(shipped("copsncrooks/cop_radio_messages.yml"));
+		String           spanish  = shipped("copsncrooks/cop_radio_messages_es.yml");
+
+		assertFalse(fallback.lines("Most_Wanted").isEmpty(), "code default");
+		assertFalse(english.lines("Most_Wanted").isEmpty(), "English file");
+		assertTrue(spanish.contains("\n   Most_Wanted:"), "Spanish file");
+		assertTrue(fallback.lines("Most_Wanted").get(0).contains("%target%"));
+		assertTrue(fallback.lines("Most_Wanted").get(0).contains("%place%"));
+		assertEquals(fallback.lines("Most_Wanted"), english.lines("Most_Wanted"));
+	}
+
+	@Test
+	@DisplayName("0.21.0 wave 2 judge-fix r1: Most_Wanted is the single owner-approved spec line in code, English and Spanish")
+	void mostWantedLine_isTheSpecText() throws IOException {
+		List<String> spec = List.of("All units, be advised: %target% is the city's Most Wanted, last seen near %place%.");
+
+		assertEquals(spec, build("Lines: {}\n").lines("Most_Wanted"), "code default");
+		assertEquals(spec, build(shipped("copsncrooks/cop_radio_messages.yml")).lines("Most_Wanted"), "English file");
+		assertTrue(shipped("copsncrooks/cop_radio_messages_es.yml").contains(
+				"\"Atención a todas las unidades: %target% es el más buscado de la ciudad, visto cerca de %place%.\""),
+		           "Spanish file");
 	}
 }

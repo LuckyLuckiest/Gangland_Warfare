@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.command.cops.CopCommand;
+import org.luckyraven.gangland.copsncrooks.config.BreachModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.BagModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.ChaseModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksFileConfig;
@@ -10,7 +11,13 @@ import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
 import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.GetawayModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.MostWantedModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.PursuitReportModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.RescueModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.StandoffModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.SurrenderModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.ScannerMapModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.LookoutModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.OverwatchModuleConfig;
@@ -45,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CopsNCrooksModuleTest {
 
 	@Test
-	@DisplayName("configure registers the sixteen configuration classes (nine 0.20 lane seams appended) and the three packages")
+	@DisplayName("configure registers the twenty-seven configuration classes (0.20.0 eleven seams, 0.21.0 seven shells) and the three packages")
 	void configure_declaresConfigsAndPackages() {
 		ModuleRegistrations registrations = new ModuleRegistrations();
 
@@ -53,7 +60,10 @@ class CopsNCrooksModuleTest {
 
 		assertEquals(List.of(CopsNCrooksYamlConfig.class, CopsNCrooksFileConfig.class,
 				CopsNCrooksModuleConfig.class, ChaseModuleConfig.class, HeatModuleConfig.class,
-				EvasionModuleConfig.class, RegistryModuleConfig.class, CrimeSourcesModuleConfig.class,
+				EvasionModuleConfig.class, RegistryModuleConfig.class, SurrenderModuleConfig.class,
+				RescueModuleConfig.class, StandoffModuleConfig.class, BreachModuleConfig.class,
+				PursuitReportModuleConfig.class, GetawayModuleConfig.class, MostWantedModuleConfig.class,
+				CrimeSourcesModuleConfig.class,
 				WitnessModuleConfig.class, DisguiseModuleConfig.class, PatrolModuleConfig.class,
 				TrackerModuleConfig.class, ScannerModuleConfig.class, SightModuleConfig.class,
 				OverwatchModuleConfig.class, ScannerMapModuleConfig.class,

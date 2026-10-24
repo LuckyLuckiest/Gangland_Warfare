@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.state.behavior;
 
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -280,6 +281,127 @@ class PursuingBehaviorTest {
 		verify(cop, never()).transitionTo(CopState.CUFFING);
 	}
 
+	@Test
+	@DisplayName("0.21.0: cease-fire, ranged cop with line of sight outside cuff range -> holds fire, keeps pursuing")
+	void ceaseFire_rangedHoldsFire() {
+		ceaseFire(true);
+		when(cop.isRangedAttacker()).thenReturn(true);
+		when(cop.hasLineOfSight(player)).thenReturn(true);
+		when(cop.canAttack()).thenReturn(true);
+
+		behavior.tick(cop);
+
+		verify(cop, never()).attack(any(Player.class));
+		verify(cop).pursue(player, squad, ALERT_RANGE);
+	}
+
+	@Test
+	@DisplayName("0.21.0: without cease-fire a ranged cop with line of sight still shoots while closing in")
+	void noFlag_rangedStillShoots() {
+		ceaseFire(false);
+		when(cop.isRangedAttacker()).thenReturn(true);
+		when(cop.hasLineOfSight(player)).thenReturn(true);
+		when(cop.canAttack()).thenReturn(true);
+
+		behavior.tick(cop);
+
+		verify(cop).attack(player);
+	}
+
+	@Test
+	@DisplayName("0.21.0: cease-fire, Skip_Cuffing tier in cuff range -> CUFFING, not COMBAT")
+	void ceaseFire_skipCuffingTierCuffs() {
+		inCuffRange();
+		when(cop.getTierConfig().skipCuffing()).thenReturn(true);
+		ceaseFire(true);
+
+		behavior.tick(cop);
+
+		verify(cop).transitionTo(CopState.CUFFING);
+		verify(cop, never()).transitionTo(CopState.COMBAT);
+	}
+
+	@Test
+	@DisplayName("0.21.0: cease-fire, combat-forced cop in cuff range -> CUFFING")
+	void ceaseFire_combatForcedCuffs() {
+		inCuffRange();
+		when(cop.isCombatForced()).thenReturn(true);
+		ceaseFire(true);
+
+		behavior.tick(cop);
+
+		verify(cop).transitionTo(CopState.CUFFING);
+		verify(cop, never()).transitionTo(CopState.COMBAT);
+	}
+
+	@Test
+	@DisplayName("0.21.0: cease-fire keeps the cuff-lock rule: another officer cuffing him -> hold the post, no transition")
+	void ceaseFire_lockHeldByOther_staysPursuing() {
+		inCuffRange();
+		when(cop.getTierConfig().skipCuffing()).thenReturn(true);
+		cuffLocks.tryAcquire(player.getUniqueId(), UUID.randomUUID());
+		ceaseFire(true);
+
+		behavior.tick(cop);
+
+		verify(cop, never()).transitionTo(any());
+		verify(cop).pursue(player, squad, ALERT_RANGE);
+	}
+
+	@Test
+	@DisplayName("0.21.0: the post-escape search (T-187) is checked first: a searched suspect is not cuffed even on cease-fire")
+	void ceaseFire_searchedSuspectNotCuffed() {
+		PursuingBehavior searching = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS,
+		                                                  mock(DetainmentService.class), cuffLocks,
+		                                                  RetreatSettings.DEFAULT, now::get, id -> true);
+		inCuffRange();
+		ceaseFire(true);
+
+		searching.tick(cop);
+
+		verify(cop, never()).transitionTo(CopState.CUFFING);
+		verify(cop, never()).attack(any(Player.class));
+	}
+
+	@Test
+	@DisplayName("0.21.0: cease-fire of a group that targets someone else changes nothing: Skip_Cuffing still goes to COMBAT")
+	void ceaseFireOtherTarget_skipCuffingStillCombat() {
+		inCuffRange();
+		when(cop.getTierConfig().skipCuffing()).thenReturn(true);
+		CopGroup group = mock(CopGroup.class);
+		when(group.getTargetPlayerId()).thenReturn(UUID.randomUUID());
+		when(group.isCeaseFire()).thenReturn(true);
+		when(cop.getGroup()).thenReturn(group);
+
+		behavior.tick(cop);
+
+		verify(cop).transitionTo(CopState.COMBAT);
+	}
+
+	@Test
+	@DisplayName("0.21.0: no flag (and no group): Skip_Cuffing still goes straight to COMBAT as in 0.16")
+	void noFlag_unchanged() {
+		inCuffRange();
+		when(cop.getTierConfig().skipCuffing()).thenReturn(true);
+
+		behavior.tick(cop);
+
+		verify(cop).transitionTo(CopState.COMBAT);
+
+		ceaseFire(false);
+		behavior.tick(cop);
+
+		verify(cop, times(2)).transitionTo(CopState.COMBAT);
+	}
+
+	private void ceaseFire(boolean flag) {
+		UUID     playerId = player.getUniqueId();
+		CopGroup group    = mock(CopGroup.class);
+		when(group.getTargetPlayerId()).thenReturn(playerId);
+		when(group.isCeaseFire()).thenReturn(flag);
+		when(cop.getGroup()).thenReturn(group);
+	}
+
 	private void badlyHurtShooter() {
 		LivingEntity self = mock(LivingEntity.class);
 		when(self.getHealth()).thenReturn(5.0);
@@ -383,5 +505,19 @@ class PursuingBehaviorTest {
 		withPerception(perception).tick(cop);
 
 		verify(cop).attack(player);
+	}
+
+	@Test
+	@DisplayName("cnc-integ T-346: a surrendered (cease-fire, fresh sighting) disguised suspect is still cuffed")
+	void integ_surrenderedDisguisedSuspectIsStillCuffed() {
+		ceaseFire(true);
+		CopPerception perception = new CopPerception();
+		perception.addLockOnFilter((c, p) -> false);
+		squad.reportSighting(new Location(mock(World.class), 0, 64, 0));
+		inCuffRange();
+
+		withPerception(perception).tick(cop);
+
+		verify(cop).transitionTo(CopState.CUFFING);
 	}
 }

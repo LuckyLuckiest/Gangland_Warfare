@@ -53,7 +53,7 @@ public class CuffingListener implements Listener {
 		if (target.isDead() || DownedPlayerRegistry.isDowned(target.getUniqueId())) return;
 
 		currentCuffCooldown.remove(target);
-		detainmentService.handcuff(target);
+		detainmentService.handcuff(target, event.getOrigin());
 		transitService.schedule(target);
 
 		ChatUtil.sendTitle(target, messages.cuffedTitle(), messages.cuffedSubtitle());

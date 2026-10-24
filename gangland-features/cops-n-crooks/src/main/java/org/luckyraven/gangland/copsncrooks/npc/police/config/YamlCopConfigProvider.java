@@ -49,7 +49,12 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	 * The dispatch-origin lines and the once-per-chase Handoff / Post_Up lines that must never be swallowed by the player
 	 * gap (Ruling R43, T26): added in code so an older cops.yml Priority list is covered too.
 	 */
-	static final Set<String> DISPATCH_PRIORITY = Set.of("Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up");
+	static final Set<String> DISPATCH_PRIORITY = Set.of("Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up",
+	                                                    "Most_Wanted");
+
+	/** One-shot breach and standoff lines: a server's Priority list must never silence them either. */
+	static final Set<String> ONE_SHOT_PRIORITY = Set.of("Stack_Up", "Breach", "Flashbang", "Negotiate",
+			"Surrender_Accepted", "Standoff", "Standoff_Over");
 
 	/**
 	 * Code default for a cop_roles.yml with no Squad_Composition block (or no such file): roles are on, filled in this
@@ -134,6 +139,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final BreatherSettings  breatherSettings;
 	private final HandoffSettings   handoffSettings;
 	private final PerimeterSettings perimeterSettings;
+	private final StandoffSettings  standoffSettings; // 0.21.0
+	private final BreachSettings    breachSettings; // 0.21.0
 	private final PatrolSettings    patrolSettings;
 	private final WarningSettings   warningSettings;
 	private final PullOverSettings  pullOverSettings;
@@ -245,6 +252,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.breatherSettings  = parseBreatherSettings(cops, report);
 		this.handoffSettings   = parseHandoffSettings(cops, report);
 		this.perimeterSettings = parsePerimeterSettings(cops, report);
+		this.standoffSettings  = parseStandoffSettings(cops, report); // 0.21.0
+		this.breachSettings    = parseBreachSettings(cops, report); // 0.21.0
 		this.patrolSettings    = parsePatrolSettings(cops, report);
 		this.warningSettings   = parseWarningSettings(cops, report);
 		this.pullOverSettings  = parsePullOverSettings(cops, report);
@@ -517,6 +526,16 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public HandoffSettings getHandoffSettings() {
 		return handoffSettings;
+	}
+
+	@Override
+	public StandoffSettings getStandoffSettings() { // 0.21.0
+		return standoffSettings;
+	}
+
+	@Override
+	public BreachSettings getBreachSettings() { // 0.21.0
+		return breachSettings;
 	}
 
 	@Override
@@ -1016,6 +1035,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		// Ruling R43: a server's own Priority list replaces the bundled one, but never silences the dispatch lines
 		Set<String> priority = new LinkedHashSet<>(read.priority());
 		priority.addAll(DISPATCH_PRIORITY);
+		priority.addAll(ONE_SHOT_PRIORITY);
 		return new RadioSettings(read.enabled(), read.range(), read.targetRange(), read.squadGapMs(), read.playerGapMs(),
 		                         read.ackDelayTicks(), read.responderMax(), read.cooldownMs(), priority, read.soundName(),
 		                         read.volume(), read.pitch());
@@ -1127,6 +1147,51 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                           handoff.get("Heading_Seconds").asInt().min(1).orDefault(defaults.headingSeconds()),
 		                           handoff.get("Bias_Seconds").asInt().min(0).orDefault(defaults.biasSeconds()),
 		                           handoff.get("Cone_Degrees").asDouble().min(1.0).orDefault(defaults.coneDegrees()));
+	}
+
+	// 0.21.0: clamped with Math.max (not NodeReader.min) so a too-small value clamps up rather than reverting to the default
+	private StandoffSettings parseStandoffSettings(@Nullable NodeReader cops, ConfigReport report) {
+		StandoffSettings defaults = StandoffSettings.DEFAULT;
+		MappingNode      section  = cops == null ? null : cops.get("Standoff").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader standoff = NodeReader.of(section, report);
+		return new StandoffSettings(standoff.get("Enabled").asBool().orDefault(defaults.enabled()),
+		                            Math.max(1, standoff.get("Timer_Seconds").asInt().orDefault(defaults.timerSeconds())),
+		                            Math.max(1, standoff.get("Negotiate_Seconds").asInt().orDefault(defaults.negotiateSeconds())),
+		                            Math.max(1, standoff.get("Unreachable_Seconds").asInt().orDefault(defaults.unreachableSeconds())),
+		                            Math.max(1, standoff.get("Man_Down_Count").asInt().orDefault(defaults.manDownCount())),
+		                            Math.max(1, standoff.get("Man_Down_Window_Seconds").asInt().orDefault(defaults.manDownWindowSeconds())),
+		                            Math.max(1.0, standoff.get("Spot_Radius").asDouble().orDefault(defaults.spotRadius())),
+		                            Math.max(1, standoff.get("Post_Count").asInt().orDefault(defaults.postCount())),
+		                            Math.max(2.0, standoff.get("Post_Radius").asDouble().orDefault(defaults.postRadius())),
+		                            Math.max(0, standoff.get("Stars_On_Timeout").asInt().orDefault(defaults.starsOnTimeout())),
+		                            Math.max(0, standoff.get("Cooldown_Seconds").asInt().orDefault(defaults.cooldownSeconds())));
+	}
+
+	// 0.21.0: clamped with Math.max, see parseStandoffSettings
+	private BreachSettings parseBreachSettings(@Nullable NodeReader cops, ConfigReport report) {
+		BreachSettings defaults = BreachSettings.DEFAULT;
+		MappingNode    section  = cops == null ? null : cops.get("Breach").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader breach = NodeReader.of(section, report);
+		MappingNode flashSection = breach.get("Flashbang").asMapping().orNull();
+		NodeReader  flash        = flashSection == null ? null : NodeReader.of(flashSection, report);
+		int    flashMinStars = flash == null ? defaults.flashbangMinStars() : Math.max(1,
+		                                                                              flash.get("Min_Stars").asInt().orDefault(defaults.flashbangMinStars()));
+		double flashRadius   = flash == null ? defaults.flashbangRadius() : Math.max(1.0,
+		                                                                            flash.get("Radius").asDouble().orDefault(defaults.flashbangRadius()));
+		int    flashTicks    = flash == null ? defaults.flashbangTicks() : Math.max(1,
+		                                                                            flash.get("Ticks").asInt().orDefault(defaults.flashbangTicks()));
+		return new BreachSettings(breach.get("Enabled").asBool().orDefault(defaults.enabled()),
+		                          Math.max(0, breach.get("Roof_Blocks").asInt().orDefault(defaults.roofBlocks())),
+		                          Math.max(1, breach.get("Door_Radius").asInt().orDefault(defaults.doorRadius())),
+		                          Math.max(1, breach.get("Stack_Size").asInt().orDefault(defaults.stackSize())),
+		                          Math.max(0, breach.get("Stack_Wait_Seconds").asInt().orDefault(defaults.stackWaitSeconds())),
+		                          Math.max(1, breach.get("Entry_Gap_Ticks").asInt().orDefault(defaults.entryGapTicks())),
+		                          Math.max(0, breach.get("Cooldown_Seconds").asInt().orDefault(defaults.cooldownSeconds())),
+		                          flashMinStars, flashRadius, flashTicks);
 	}
 
 	private PerimeterSettings parsePerimeterSettings(@Nullable NodeReader cops, ConfigReport report) {

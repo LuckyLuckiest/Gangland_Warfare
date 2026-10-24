@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.database;
 
+import org.luckyraven.gangland.copsncrooks.detainment.ArrestOrigin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -147,5 +148,87 @@ class DetainmentRepositorySpiTest {
 		assertNull(loaded.getFinePaid());
 		assertNull(loaded.getFineExtraSeconds());
 		assertEquals(3, loaded.getWantedAtArrest());
+	}
+
+	// ---- 0.21.0 fnd-origin: origin_type ----
+
+	@Test
+	@DisplayName("P-ORIGIN-1: a SURRENDERED row survives a save and a load, the fine columns beside it intact")
+	void roundTrip_keepsOrigin() {
+		DetainedPlayer row = new DetainedPlayer(ALICE, 1, DetainmentState.JAILED, null, 5_000L, 2);
+		row.setFinePaid(300.5);
+		row.setFineExtraSeconds(40);
+		row.setOrigin(ArrestOrigin.SURRENDERED);
+		repository.save(row);
+
+		DetainedPlayer loaded = repository.loadAll().iterator().next();
+
+		assertEquals(ArrestOrigin.SURRENDERED, loaded.getOrigin());
+		assertEquals(ArrestOrigin.SURRENDERED, loaded.originOrDefault());
+		assertEquals(300.5, loaded.getFinePaid());
+		assertEquals(40, loaded.getFineExtraSeconds());
+		assertEquals(2, loaded.getWantedAtArrest());
+	}
+
+	@Test
+	@DisplayName("P-ORIGIN-1: every origin value round-trips by name")
+	void roundTrip_everyOrigin() {
+		UUID[] ids = {ALICE, BOB, UUID.fromString("00000000-0000-0000-0000-00000000ca01"),
+		              UUID.fromString("00000000-0000-0000-0000-00000000d00d")};
+		ArrestOrigin[] all = ArrestOrigin.values();
+		for (int i = 0; i < all.length; i++) {
+			DetainedPlayer row = new DetainedPlayer(ids[i], 1, DetainmentState.HANDCUFFED);
+			row.setOrigin(all[i]);
+			repository.save(row);
+		}
+
+		for (DetainedPlayer loaded : repository.loadAll()) {
+			int index = java.util.Arrays.asList(ids).indexOf(loaded.getPlayerId());
+			assertEquals(all[index], loaded.getOrigin(), loaded.getPlayerId().toString());
+		}
+	}
+
+	@Test
+	@DisplayName("P-ORIGIN-2: a row with a null origin_type reads null and prices as CUFFED")
+	void legacyRow_readsNullOrigin_defaultsCuffed() throws SQLException {
+		backend.execute("INSERT INTO detainment (player_uuid, jail_id, state, wanted_at_arrest) VALUES (?, ?, ?, ?)",
+		                BOB.toString(), 1, "JAILED", 3);
+
+		DetainedPlayer loaded = repository.loadAll().iterator().next();
+
+		assertNull(loaded.getOrigin());
+		assertEquals(ArrestOrigin.CUFFED, loaded.originOrDefault());
+		assertEquals(3, loaded.getWantedAtArrest());
+	}
+
+	@Test
+	@DisplayName("an unknown origin name reads null without shifting any other column")
+	void unknownOrigin_keepsCursor() throws SQLException {
+		DetainedPlayer row = new DetainedPlayer(ALICE, 1, DetainmentState.JAILED, null, 5_000L, 3);
+		row.setFinePaid(10.0);
+		row.setFineExtraSeconds(7);
+		repository.save(row);
+		backend.execute("UPDATE detainment SET origin_type = ? WHERE player_uuid = ?", "BOGUS", ALICE.toString());
+
+		DetainedPlayer loaded = repository.loadAll().iterator().next();
+
+		assertNull(loaded.getOrigin());
+		assertEquals(ArrestOrigin.CUFFED, loaded.originOrDefault());
+		assertEquals(5_000L, loaded.getSentenceExpiresAt());
+		assertEquals(3, loaded.getWantedAtArrest());
+		assertEquals(10.0, loaded.getFinePaid());
+		assertEquals(7, loaded.getFineExtraSeconds());
+	}
+
+	@Test
+	@DisplayName("a row saved without an origin stores a NULL origin_type, not the string 'null'")
+	void nullOrigin_isStoredAsSqlNull() throws SQLException {
+		repository.save(new DetainedPlayer(ALICE, 1, DetainmentState.JAILED));
+
+		java.util.List<Object> raw = backend.query("SELECT origin_type FROM detainment WHERE player_uuid = ?",
+		                                           rs -> rs.getObject(1), ALICE.toString());
+
+		assertEquals(1, raw.size());
+		assertNull(raw.get(0));
 	}
 }

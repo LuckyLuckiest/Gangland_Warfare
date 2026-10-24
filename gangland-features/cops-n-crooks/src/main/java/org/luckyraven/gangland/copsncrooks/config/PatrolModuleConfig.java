@@ -74,11 +74,17 @@ public class PatrolModuleConfig {
 		                         Settings::isCitizensAvailable, System::currentTimeMillis);
 	}
 
-	/** Hands the services to the spawn manager and registers the beat cops with the cop manager. */
+	/**
+	 * Hands the services to the spawn manager, registers the beat cops with the cop manager and gives the beat cops the
+	 * squad lookup for the cease-fire. The lookup is set here, not in the bean, so the bean signature stays unchanged.
+	 */
 	@PostConstruct
 	public void installPatrol() {
+		CopManager    copManager = container.getInstance(CopManager.class);
+		PatrolManager patrol     = container.getInstance(PatrolManager.class);
 		container.getInstance(CopSpawnManager.class).setPatrolServices(container.getInstance(PatrolServices.class));
-		container.getInstance(CopManager.class).addCopResolver(container.getInstance(PatrolManager.class)::beatCopOf);
+		copManager.addCopResolver(patrol::beatCopOf);
+		patrol.setGroupLookup(copManager::groupOf);
 	}
 
 	/** Null-safe: the money symbol is unset until settings.yml loads, and {@code Map.of} rejects nulls. */
