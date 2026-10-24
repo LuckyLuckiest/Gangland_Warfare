@@ -380,7 +380,7 @@ Lines:
   `Hold_Seconds` of holding it. Stars from signs or commands never count. The title is announced at most once per
   `Cooldown_Seconds` server-wide. Placeholders: `%gangland_cnc_most_wanted%` (name) and `%gangland_cnc_most_wanted_stars%`
   (earned stars). Both are empty or `0` when the title is vacant.
-- **Skip_Cuffing comment.** The `Cops.Skip_Cuffing` comment in `cops.yml` is corrected (T-355). The value is unchanged.
+- **Skip_Cuffing comment.** The `Cops.Tiers.<n>.Skip_Cuffing` comment in `cops.yml` is corrected (T-355). The value is unchanged.
 
 **Without Citizens** there are no cop NPCs. Surrenders, busts, standoffs, breaches and rescues never trigger, and no getaway XP
 is paid, because a getaway needs a sighting. Crew heat, lockpicks on `/glw cuff`, the pursuit report and the Most Wanted title

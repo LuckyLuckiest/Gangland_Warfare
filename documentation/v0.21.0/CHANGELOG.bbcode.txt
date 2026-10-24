@@ -46,7 +46,6 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 
 [LIST]
 [*][B]Busted replaces the hospital bill[/B] when a hunting cop is in cuff range (downed mode on). A death with no cop nearby is unchanged.
-[*][B]Skip_Cuffing[/B] comment in [ICODE]cops.yml[/ICODE] corrected (T-355). The value is unchanged.
 [*][B]Standoffs and breaches[/B] draft only the cops in pursuit or combat. Patrol, warning and overwatch cops stay out, and no overwatch starts on a group in standoff.
 [*][B]Surrender at night.[/B] A crouched surrender is still accepted while the squad has a fresh sighting, even at night.
 [/LIST]
@@ -56,7 +55,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [SIZE=6][B]Fixed[/B][/SIZE]
 
 [LIST]
-[*][B]T-355[/B] the [ICODE]Cops.Skip_Cuffing[/ICODE] comment now says what the key does.
+[*][B]T-355[/B] the [ICODE]Cops.Tiers.<n>.Skip_Cuffing[/ICODE] comment now says what the key does.
 [*][B]T-357[/B] the SQLite legacy rebuild keeps the new [ICODE]origin_type[/ICODE] column.
 [*][B]T-360[/B] one-shot radio lines (surrender accepted, standoff, standoff over, the first negotiation line) could be lost to a squad gap; they now play.
 [*][B]T-361[/B] a standoff could start while a squad cop was cuffing the suspect; it no longer does.

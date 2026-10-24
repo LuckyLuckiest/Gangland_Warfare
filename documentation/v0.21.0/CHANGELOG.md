@@ -34,13 +34,12 @@ change and the behaviour that changed. Upgrade from 0.20.0.
 ## Changed
 
 - **Busted replaces the hospital bill** when a hunting cop is in cuff range (downed mode on). A death with no cop nearby is unchanged.
-- **Skip_Cuffing** comment in `cops.yml` corrected (T-355). The value is unchanged.
 - **Standoffs and breaches** draft only the cops in pursuit or combat. Patrol, warning and overwatch cops stay out, and no overwatch starts on a group in standoff.
 - **Surrender at night.** A crouched surrender is still accepted while the squad has a fresh sighting, even at night.
 
 ## Fixed
 
-- **T-355** `Cops.Skip_Cuffing` comment now says what the key does.
+- **T-355** `Cops.Tiers.<n>.Skip_Cuffing` comment now says what the key does.
 - **T-357** the SQLite legacy rebuild keeps the new `origin_type` column.
 - **T-360** one-shot radio lines (surrender accepted, standoff, standoff over, the first negotiation line) could be lost to a squad gap; they now play.
 - **T-361** a standoff could start while a squad cop was cuffing the suspect; it no longer does.
