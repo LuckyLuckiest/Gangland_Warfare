@@ -149,7 +149,7 @@ class Bundled020YamlTest {
 		Map<String, Set<String>> yamlKeys = new LinkedHashMap<>();
 		yamlKeys.put("Patrol", Set.of("Enable", "Cops_Per_Station", "Activation_Radius", "Despawn_Radius",
 		                              "Despawn_After_Seconds", "Beat_Radius", "Pause_Seconds_Min", "Pause_Seconds_Max",
-		                              "Tier", "Report_Wanted"));
+		                              "Tier", "Report_Wanted", "Respawn_Seconds"));
 		yamlKeys.put("Warning", Set.of("Enable", "Range", "Seconds", "Repeat_Seconds"));
 		yamlKeys.put("Pull_Over", Set.of("Enable", "Range", "Speed_Limit", "Comply_Seconds", "Stop_Speed",
 		                                 "Stop_Hold_Seconds", "Ticket_Amount", "Repeat_Seconds"));
