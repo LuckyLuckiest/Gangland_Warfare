@@ -1289,6 +1289,28 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("T-435: two Commanders over a level without one: one goes home, the last stays, and no release is left owed")
+	void twoCommandersOverALevelWithoutOne_oneGoesAndARadioResponderStays() {
+		oneStarWithoutACommander();
+		when(fx.provider.getSquadComposition(3)).thenReturn(List.of(COMMANDER, COMMANDER, POINTMAN, ASSAULT));
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		// one run: the responder joins straight after the drop's release
+		manager.spawnTick(playerId, one);
+		assertEquals(1, group.getCops().stream().filter(c -> c.getRole() == COMMANDER)
+		                     .filter(c -> c.getCurrentState() == CopState.PURSUING).count());
+		assertEquals(0, group.getPendingRelease(), "the last Commander is no release still owed");
+
+		CopNpc responder = responderJoins(group);
+		manager.spawnTick(playerId, one);
+
+		assertEquals(CopState.PURSUING, responder.getCurrentState(), "a radio responder stays");
+	}
+
+	@Test
 	@DisplayName("T-435: a re-spot that calls the last Commander back past the target leaves a radio responder alone")
 	void reSpotAfterTheCommanderWalked_aRadioResponderStays() {
 		oneStarWithoutACommander();

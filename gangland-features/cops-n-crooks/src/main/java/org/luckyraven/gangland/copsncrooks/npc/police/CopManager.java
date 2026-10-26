@@ -1113,13 +1113,15 @@ public class CopManager implements BeanLifecycle {
 		for (CopRole role : base) excess.merge(roleName(role), -1, Integer::sum);
 		long commanders = live.stream().filter(CopManager::isCommander).count() +
 		                  queued.stream().filter(unit -> unit.role() != null && unit.role().commander()).count();
-		// what can ever go: the roles held over the base squad, less the last Commander when his role is one of them.
+		// what can ever go: the roles held over the base squad, a Commander role's at most all Commanders but the last.
 		// A release owed past it would wait for the next cop to join and send him home instead (a radio responder)
+		Set<String> leaderRoles = new HashSet<>();
+		for (CopNpc cop : live) if (isCommander(cop)) leaderRoles.add(roleName(cop.getRole()));
+		for (PendingUnit unit : queued) if (unit.role() != null && unit.role().commander()) leaderRoles.add(unit.role().name());
 		int releasable = 0;
 		for (Map.Entry<String, Integer> role : excess.entrySet()) {
-			if (role.getValue() <= 0) continue;
-			releasable += role.getValue();
-			if (commanders == 1 && leadsTheSquad(role.getKey(), live, queued)) releasable--;
+			int over = Math.max(0, role.getValue());
+			releasable += leaderRoles.contains(role.getKey()) ? (int) Math.min(over, commanders - 1) : over;
 		}
 		group.setPendingRelease(Math.min(group.getPendingRelease(), Math.min(surplus, releasable)));
 
@@ -1154,15 +1156,6 @@ public class CopManager implements BeanLifecycle {
 			group.setPendingRelease(group.getPendingRelease() - 1);
 			surplus--;
 		}
-	}
-
-	/** The group's one Commander (live or queued) holds the role named {@code role}. */
-	private static boolean leadsTheSquad(@Nullable String role, List<CopNpc> live, List<PendingUnit> queued) {
-		for (CopNpc cop : live)
-			if (isCommander(cop)) return Objects.equals(roleName(cop.getRole()), role);
-		for (PendingUnit unit : queued)
-			if (unit.role() != null && unit.role().commander()) return Objects.equals(unit.role().name(), role);
-		return false;
 	}
 
 	private static int engagedCount(CopGroup group) {
