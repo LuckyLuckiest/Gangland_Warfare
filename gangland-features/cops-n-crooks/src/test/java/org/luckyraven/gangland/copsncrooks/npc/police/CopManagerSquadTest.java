@@ -259,6 +259,54 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("T-435: a new episode at a lower level sends the re-engaged cops over its target home, never the Commander")
+	void newLowerEpisode_reengagedCopsOverTheTarget_areSentHome() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		when(fx.provider.getSquadComposition(3)).thenReturn(List.of(COMMANDER, POINTMAN, ASSAULT, ASSAULT));
+		when(fx.provider.getSquadComposition(1)).thenReturn(List.of(COMMANDER, POINTMAN));
+		when(fx.spawner.spawnNearPlayer(any(), anyInt(), any(), any())).thenAnswer(inv -> {
+			CopNpc cop = fx.cop(CopState.IDLE, 0, 0);
+			when(cop.getRole()).thenReturn(inv.getArgument(3));
+			return cop;
+		});
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		assertEquals(4, group.getCops().size());
+
+		// cleared: the four walk home, still within Pursuit.Max_Distance of him
+		manager.onWantedEnd(player, WantedCause.UNKNOWN);
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.RETURNING);
+		// a new episode at one star re-engages every one in range
+		manager.onWantedStart(player, one);
+		manager.spawnTick(playerId, one);
+
+		List<CopNpc> engaged = group.getCops().stream().filter(c -> c.getCurrentState() != CopState.RETURNING).toList();
+		assertEquals(2, engaged.size(), "one star fields two cops, not the four of the last episode");
+		assertTrue(engaged.stream().anyMatch(c -> c.getRole() == COMMANDER), "the Commander stays (T-146)");
+	}
+
+	@Test
+	@DisplayName("T-435: a level drop sends the live cops over the new target home, not only the queued ones")
+	void levelDrop_liveCopsOverTheTarget_areSentHome() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.PURSUING);
+
+		manager.spawnTick(playerId, one);
+
+		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count());
+	}
+
+	@Test
 	@DisplayName("an NPC facing a leashed walker does not keep it: only real players watch (B13; Keystone's check counts NPCs)")
 	void strandedWatchedOnlyByNpcs_released() {
 		manager.onWantedStart(player, wanted);
@@ -437,8 +485,10 @@ class CopManagerSquadTest {
 		manager.spawnTick(playerId, CopManagerFixture.wanted(2)); // the level fell to 2 before the backup ran out
 
 		assertEquals(CopState.PURSUING, replacement.getCurrentState(), "the squad's only Commander stays");
-		assertEquals(0, group.getPendingRelease());
-		assertEquals(1, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.RETURNING).count());
+		// flipped 0.21.1 (T-435): the level drop sends home the live cops over its target too, not only the backup's
+		// extra; the Commander is the one cop left over the target of 3
+		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.RETURNING).count());
+		assertEquals(4, group.getCops().stream().filter(c -> c.getCurrentState() != CopState.RETURNING).count());
 	}
 
 	/**

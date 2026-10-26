@@ -78,7 +78,7 @@ public class CopGroup {
 	@Setter
 	private long fallBackUntil;
 
-	/** Backup cops still to send home after a backup ran out; kept until enough are free to go. */
+	/** Cops still to send home: a run-out backup's extras, or those over a lowered target (T-435); kept until free. */
 	@Setter
 	private int  pendingRelease;
 

@@ -818,6 +818,10 @@ public class CopManager implements BeanLifecycle {
 		}
 
 		group.consumeBackupExpiry(now, backup);
+		// T-435: a new episode or a level drop leaves live cops over the target (reengageReturning pulls back every one
+		// in range; trimPending only calls off queued units): the surplus goes home like an expired backup's extras
+		if (currentCount > targetCount)
+			group.setPendingRelease(Math.max(group.getPendingRelease(), currentCount - targetCount));
 		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount, composition);
 		group.pruneAttackerSquads();
 	}
@@ -1024,7 +1028,8 @@ public class CopManager implements BeanLifecycle {
 	}
 
 	/**
-	 * Sends the backup's extras home once it ran out, until the group is back to {@code targetCount}: the newest free
+	 * Sends the backup's extras home once it ran out, and the cops over a lowered target (a new episode at a lower
+	 * level, a level drop: T-435), until the group is back to {@code targetCount}: the newest free
 	 * cops of a role the group holds more of than its base squad of {@code targetCount} ({@link CopRole#nextRole}), so a
 	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). The group's last Commander is
 	 * never sent, even when the wanted level fell to a composition without one. A cop in a fight, cuffing or guarding
