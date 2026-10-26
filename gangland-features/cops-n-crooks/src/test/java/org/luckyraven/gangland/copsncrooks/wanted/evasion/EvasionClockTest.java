@@ -5,12 +5,14 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.wanted.config.AutoSettings;
@@ -42,6 +44,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -148,6 +151,13 @@ class EvasionClockTest {
 
 		clock = new EvasionClock(config, copManager, detainment, stars, users, ledger, arcs, learner, hideouts, quiet,
 		                         () -> now[0], events::add);
+	}
+
+	/** A RETURNING cop that still targets him, as a leashed cop does: it never clears its target. */
+	private CopNpc walker() {
+		CopNpc cop = cop(CopState.RETURNING);
+		when(cop.getTargetPlayerId()).thenReturn(id);
+		return cop;
 	}
 
 	private static CopNpc cop(CopState state) {
@@ -337,12 +347,62 @@ class EvasionClockTest {
 		tickSeconds(1);
 		assertTrue(clock.handlesDecay(player, wanted));
 
-		List<CopNpc> walkingHome = List.of(cop(CopState.RETURNING));
+		// a real walker keeps hunting him (targetPlayerId stays set when it leashes); inside the range it is no refill
+		List<CopNpc> walkingHome = List.of(walker());
 		when(group.getCops()).thenReturn(walkingHome);
 		assertFalse(clock.handlesDecay(player, wanted));
 		tickSeconds(1);
 		assertEquals(EvasionState.OFF, states().get(states().size() - 1).getState());
 		assertNull(clock.snapshot(id));
+	}
+
+	@Test
+	@DisplayName("a whole-squad leash pauses the search: walkers still hunting him keep the track and its progress (cause E)")
+	void leashedSquad_stillHuntingHim_pausesInsteadOfClearing() {
+		unseenMs = 10_000;
+		tickSeconds(5);
+		EvasionSnapshot before = clock.snapshot(id);
+		assertEquals(EvasionState.SEARCHING, before.state());
+
+		CopNpc walker = walker();
+		when(copManager.isStranded(walker, player)).thenReturn(true); // past Pursuit.Max_Distance: the refill is coming
+		when(group.getCops()).thenReturn(List.of(walker));
+		tickSeconds(10);
+
+		assertTrue(clock.handlesDecay(player, wanted));
+		EvasionSnapshot paused = clock.snapshot(id);
+		assertNotNull(paused, "not cleared");
+		assertEquals(before.secondsLeft(), paused.secondsLeft(), "paused: no progress while nobody stands");
+		assertFalse(stateNames().contains(EvasionState.OFF));
+	}
+
+	@Test
+	@DisplayName("a returning walker still targeting him inside Pursuit.Max_Distance holds nothing: no decay hand-over, OFF")
+	void nearWalker_targetingHim_doesNotHandleDecay_andTurnsOff() {
+		unseenMs = 10_000;
+		tickSeconds(5);
+		CopNpc near = walker();
+		when(copManager.isStranded(near, player)).thenReturn(false); // the spawn task does not refill it
+		when(group.getCops()).thenReturn(List.of(near));
+
+		assertFalse(clock.handlesDecay(player, wanted), "the Repeating_Timer safety net decays his stars");
+		tickSeconds(1);
+		assertEquals(EvasionState.OFF, states().get(states().size() - 1).getState());
+		assertNull(clock.snapshot(id));
+	}
+
+	@Test
+	@DisplayName("an active hand-off bias with every cop gone pauses the search instead of clearing it (cause E)")
+	void activeBias_noCopsLeft_pausesInsteadOfClearing() {
+		unseenMs = 10_000;
+		tickSeconds(5);
+		when(group.getCops()).thenReturn(List.of());
+		when(group.biasAt(anyLong())).thenReturn(new SpawnBias(new Vector(1, 0, 0), playerAt, Long.MAX_VALUE, 60.0));
+
+		tickSeconds(3);
+
+		assertNotNull(clock.snapshot(id));
+		assertFalse(stateNames().contains(EvasionState.OFF));
 	}
 
 	@Test
@@ -612,7 +672,7 @@ class EvasionClockTest {
 		unseenMs = 10_000;
 		tickSeconds(2);
 
-		List<CopNpc> walkingHome = List.of(cop(CopState.RETURNING));
+		List<CopNpc> walkingHome = List.of(walker());
 		when(group.getCops()).thenReturn(walkingHome);
 		tickSeconds(1);
 		assertNull(clock.snapshot(id));
@@ -636,7 +696,7 @@ class EvasionClockTest {
 		long lostAt = arcs.arc(id).lastLostAt();
 		assertTrue(lostAt > 0);
 
-		List<CopNpc> walkingHome = List.of(cop(CopState.RETURNING));
+		List<CopNpc> walkingHome = List.of(walker());
 		when(group.getCops()).thenReturn(walkingHome);
 		tickSeconds(1);
 		assertNull(clock.snapshot(id));

@@ -341,15 +341,19 @@ class CopManagerDispatchTest {
 		assertEquals(2, group().getCops().size());
 	}
 
-	/** Characterization pin: Dispatch off keeps the 0.15 start (crime-scene seed, no hold), as the pre-change code did. */
+	/**
+	 * Characterization pin: Dispatch off keeps the 0.15 start (crime-scene seed, no hold), as the pre-change code did.
+	 * Flipped 0.21.1 (R4): the seed is a tip of the spot, no longer a sighting.
+	 */
 	@Test
-	@DisplayName("a RESTORE start with dispatch off is a 0.15 start: the crime scene is seeded, no grace")
+	@DisplayName("a RESTORE start with dispatch off is a 0.15 start: the crime scene is seeded as a tip, no grace")
 	void restoreStart_dispatchOff_isTheLegacyStart() {
 		when(fx.provider.getDispatchSettings()).thenReturn(DispatchSettings.DISABLED);
 
 		manager.onWantedStart(player, wanted, WantedCause.RESTORE);
 
-		assertTrue(group().getSquad().hasFreshSighting());
+		assertFalse(group().getSquad().hasFreshSighting());
+		assertEquals(player.getLocation(), group().getSquad().lastKnownLocation());
 		assertEquals(0L, group().getBreatherUntil());
 	}
 
@@ -452,6 +456,45 @@ class CopManagerDispatchTest {
 		for (PendingUnit unit : spawnedUnits(2)) assertSame(bias, unit.bias());
 		assertEquals(lastSeen, group().getSquad().lastKnownLocation());
 		assertTrue(group().tippedOffWithin(fx.clock[0], 0L));
+		// 0.21.1 (R4): the seed is a tip - no member saw him there, so nobody chases his live position
+		assertFalse(group().getSquad().hasFreshSighting());
+	}
+
+	@Test
+	@DisplayName("units queued at three stars are called off when the level drops before they arrive (cause 4)")
+	void levelDropBeforeArrival_spawnsNoMoreThanTheNewTarget() {
+		northside();
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(1);
+		Wanted three = CopManagerFixture.wanted(3);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		assertEquals(4, group().pendingCount());
+
+		Wanted one = CopManagerFixture.wanted(1);
+		fx.clock[0] = 21_000L;
+		manager.spawnTick(playerId, one);
+
+		verify(fx.spawner, times(1)).spawnUnit(eq(player), any(), any());
+		assertEquals(1, group().getCops().size(), "the one-star target, not the four queued at three stars");
+		assertEquals(0, group().pendingCount(), "the rest were called off, not left to arrive later");
+	}
+
+	@Test
+	@DisplayName("a unit queued before a hand-off spawns under the bias that is active when it arrives")
+	void unitQueuedBeforeHandoff_spawnsUnderTheActiveBias() {
+		northside();
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		Location  lastSeen = new Location(fx.world, 70, 64, 10);
+		SpawnBias bias     = new SpawnBias(new Vector(1, 0, 0), lastSeen, 30_000L, 60.0);
+		group().setBias(bias);
+
+		fx.clock[0] = 21_000L;
+		manager.spawnTick(playerId, wanted);
+
+		for (PendingUnit unit : spawnedUnits(2)) assertSame(bias, unit.bias());
+		assertEquals(lastSeen, group().getSquad().lastKnownLocation());
 	}
 
 	@Test

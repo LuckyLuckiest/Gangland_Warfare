@@ -57,6 +57,8 @@ public class PatrolManager implements BeanLifecycle {
 	private final Map<Integer, List<CopNpc>>                   beats      = new LinkedHashMap<>();
 	private final Map<Integer, Long>                           emptySince = new LinkedHashMap<>();
 	private final Map<Integer, String>                         names      = new LinkedHashMap<>();
+	/** When each station last lost a beat cop (radio-clock ms): its replacement waits out {@code Respawn_Seconds}. */
+	private final Map<Integer, Long>                           lostAt     = new LinkedHashMap<>();
 	private       Function<UUID, CopGroup>                     groupLookup = id -> null;
 
 	/**
@@ -106,14 +108,18 @@ public class PatrolManager implements BeanLifecycle {
 					return false;
 				}
 				destroy(cop);
+				lostAt.put(id, now);
 				return true;
 			});
 			if (hadCops && cops.isEmpty()) {
 				logZeroCops(id);
 			}
+			Long lost = lostAt.get(id);
+			// cause 6: a lost beat cop is not replaced the next second in front of whoever took it down
+			boolean respawnReady = lost == null || now - lost >= s.respawnSeconds() * 1000L;
 			if (nearest <= s.activationRadius()) {
 				emptySince.remove(id);
-				while (cops.size() < s.copsPerStation()) {
+				while (respawnReady && cops.size() < s.copsPerStation()) {
 					CopNpc cop = spawner.spawnAtLocation(anchor.clone(), s.tier());
 					if (cop == null) {
 						break;
@@ -141,6 +147,7 @@ public class PatrolManager implements BeanLifecycle {
 			}
 			entry.getValue().forEach(this::destroy);
 			emptySince.remove(entry.getKey());
+			lostAt.remove(entry.getKey());
 			return true;
 		});
 	}
@@ -177,7 +184,11 @@ public class PatrolManager implements BeanLifecycle {
 			if (!cop.isValid()) {
 				destroy(cop);
 				beats.forEach((id, list) -> {
-					if (list.remove(cop) && list.isEmpty()) {
+					if (!list.remove(cop)) {
+						return;
+					}
+					lostAt.put(id, clock.getAsLong());
+					if (list.isEmpty()) {
 						logZeroCops(id);
 					}
 				});
@@ -244,6 +255,7 @@ public class PatrolManager implements BeanLifecycle {
 		beats.values().forEach(cops -> cops.forEach(this::destroy));
 		beats.clear();
 		emptySince.clear();
+		lostAt.clear();
 	}
 
 	/** Starts the repeating main-thread task. */

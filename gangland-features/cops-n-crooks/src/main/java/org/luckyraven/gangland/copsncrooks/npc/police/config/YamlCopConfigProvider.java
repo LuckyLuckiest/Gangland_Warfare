@@ -1235,7 +1235,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                          patrol.get("Beat_Radius").asInt().min(1).orDefault(defaults.beatRadius()),
 		                          pauseMin, pauseMax,
 		                          patrol.get("Tier").asInt().min(1).orDefault(defaults.tier()),
-		                          patrol.get("Report_Wanted").asBool().orDefault(defaults.reportWanted()));
+		                          patrol.get("Report_Wanted").asBool().orDefault(defaults.reportWanted()),
+		                          patrol.get("Respawn_Seconds").asInt().min(0).orDefault(defaults.respawnSeconds()));
 	}
 
 	private WarningSettings parseWarningSettings(@Nullable NodeReader cops, ConfigReport report) {

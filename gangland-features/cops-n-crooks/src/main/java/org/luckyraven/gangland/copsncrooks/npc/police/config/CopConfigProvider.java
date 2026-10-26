@@ -47,7 +47,7 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Pull_Back", 15000L),
 					Map.entry("Medic_Treating", 10000L),
 					// 0.16 dispatch, hand-off and perimeter lines
-					Map.entry("Dispatch_En_Route", 0L), Map.entry("Wipe_Refill", 0L), Map.entry("Handoff", 10000L),
+					Map.entry("Dispatch_En_Route", 30000L), Map.entry("Wipe_Refill", 0L), Map.entry("Handoff", 10000L),
 					Map.entry("Post_Up", 5000L), Map.entry("Eyes_On", 3000L),
 					Map.entry("Returning_To_Patrol", 60000L),
 					// 0.20.0 street-crime lines (milliseconds; cops.yml Cooldown_Ticks x50)

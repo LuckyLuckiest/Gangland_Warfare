@@ -251,6 +251,20 @@ class YamlCopConfigProvider020Test {
 		assertFalse(old.ignoreDarkness());
 	}
 
+	@Test
+	@DisplayName("0.21.1 cause 6: Cops.Patrol.Respawn_Seconds is read; absent it is 30")
+	void patrolRespawnSeconds_readAndDefaulted() {
+		ConfigReport report = new ConfigReport();
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Patrol:
+				      Respawn_Seconds: 5
+				""" + TIERS, report);
+
+		assertEquals(5, provider.getPatrolSettings().respawnSeconds());
+		assertEquals(30, PatrolSettings.DEFAULT.respawnSeconds());
+	}
+
 	/** A report issue whose path names the key (manual adds use "&lt;Block&gt;.&lt;Key&gt;", e.g. Overwatch.Ring_Min). */
 	private static void assertIssueAt(ConfigReport report, String key) {
 		assertTrue(report.issues().stream().anyMatch(i -> i.path() != null && i.path().contains(key)),

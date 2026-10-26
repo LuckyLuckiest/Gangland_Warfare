@@ -278,7 +278,7 @@ public class CopGroup {
 		return false;
 	}
 
-	/** Stamps the latest stuck-recycle tip-off at {@code now} (radio-clock ms). */
+	/** Stamps the latest tip-off (a crime-scene start, a hand-off seed) at {@code now} (radio-clock ms). */
 	public void markTipOff(long now) {
 		tipOffAt = now;
 	}
@@ -355,6 +355,11 @@ public class CopGroup {
 
 	public void clearPending() {
 		pending.clear();
+	}
+
+	/** Calls off the newest queued units until at most {@code max} are left (0.21.1: a level drop needs fewer). */
+	public void trimPending(int max) {
+		while (pending.size() > Math.max(0, max)) pending.remove(pending.size() - 1);
 	}
 
 	/**

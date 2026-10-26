@@ -702,7 +702,8 @@ class YamlCopConfigProviderTest {
 		assertEquals(100 * 50L, provider.getRadioSettings().cooldownFor("Post_Up"));
 		assertEquals(60 * 50L, provider.getRadioSettings().cooldownFor("Eyes_On"));
 		assertEquals(1200 * 50L, provider.getRadioSettings().cooldownFor("Returning_To_Patrol"));
-		assertEquals(0L, provider.getRadioSettings().cooldownFor("Dispatch_En_Route"));
+		// 0.21.1 cause R: one en-route line per squad per 30 s, so a leash refill is not a brand-new dispatch
+		assertEquals(600 * 50L, provider.getRadioSettings().cooldownFor("Dispatch_En_Route"));
 		assertEquals(0L, provider.getRadioSettings().cooldownFor("Wipe_Refill"));
 	}
 

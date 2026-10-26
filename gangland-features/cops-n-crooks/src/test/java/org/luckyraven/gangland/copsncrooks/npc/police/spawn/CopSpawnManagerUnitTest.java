@@ -83,6 +83,8 @@ class CopSpawnManagerUnitTest {
 		when(config.getMinOpenHorizontalSides()).thenReturn(2);
 		when(config.getSpawnerPreferenceRadius()).thenReturn(80.0);
 		when(config.getVisibilityCheckDistance()).thenReturn(48.0);
+		// the leash: a spawn spot must stay within 0.75 x 80 = 60 blocks (3D) of the suspect
+		when(config.getPursuitMaxDistance()).thenReturn(80.0);
 		// many tries per ring, so a 120 degree cone is all but certain to be hit (2/3 ^ 120 misses)
 		when(config.getSpawnPhase1Attempts()).thenReturn(30);
 		when(config.getSpawnPhase2Attempts()).thenReturn(30);
@@ -205,17 +207,76 @@ class CopSpawnManagerUnitTest {
 		assertNotNull(ringSpot());
 	}
 
+	/** Flipped 0.21.1 (owner ruling R6): a spawner in front of his eyes with a clear line is never used. */
 	@Test
-	@DisplayName("nothing out of sight: the 0.15 spawnNearPlayer path (the nearest spawner, even in view)")
+	@DisplayName("nothing out of sight: the spawnNearPlayer fallback skips a spawner he is looking at for a spot outside his view")
 	void nothingHidden_legacyPath() {
-		Location spawner = new Location(world, 5.5, GROUND_Y, 5.5);
+		Location spawner = new Location(world, 5.5, GROUND_Y, 5.5); // 45 degrees off his facing (+Z), clear line
 		spawnManager.setSpawnerLocation(spawner); // unassigned
 		blocked = dir -> false;
 
 		CopNpc cop = spawnManager.spawnUnit(player, unit(null, null), loc -> true);
 
 		assertNotNull(cop);
-		verify(factory).createCop(spawner, 3, false, MARKSMAN);
+		verify(factory, never()).createCop(eq(spawner), anyInt(), anyBoolean(), any());
+		assertTrue(angle(new Vector(0, 0, 1), ringSpot()) >= 60.0, "outside his view cone");
+	}
+
+	@Test
+	@DisplayName("R6: the dispatch-off path (spawnNearPlayer) never takes a spawner straight ahead of him; one behind is fine")
+	void spawnNearPlayer_spawnerInView_skipped_behindTaken() {
+		Location ahead  = new Location(world, 0.5, GROUND_Y, 20.5);  // straight ahead (+Z), clear line
+		spawnManager.setSpawnerLocation(ahead);
+		blocked = dir -> false;
+
+		spawnManager.spawnNearPlayer(player, 3, loc -> true, MARKSMAN);
+		verify(factory, never()).createCop(eq(ahead), anyInt(), anyBoolean(), any());
+
+		Location behind = new Location(world, 0.5, GROUND_Y, -10.5);
+		spawnManager.setSpawnerLocation(behind);
+		spawnManager.spawnNearPlayer(player, 3, loc -> true, MARKSMAN);
+		verify(factory).createCop(behind, 3, false, MARKSMAN);
+	}
+
+	@Test
+	@DisplayName("cause 2: a station spawner past 0.75 x Pursuit.Max_Distance (3D) is not chosen, even out of sight")
+	void stationSpawnerBeyondTheLeashMargin_skipped() {
+		Station  station = new Station(1, "Northside", "world", 200, GROUND_Y, 0.5, 0f, null);
+		Location far     = new Location(world, 79.5, GROUND_Y + 15, 0.5); // 80.9 blocks: leashes in the second it spawns
+		spawnManager.setSpawnerLocation(far);
+		spawnManager.assignStation(spawnManager.ID, 1);
+		blocked = dir -> true;
+
+		assertNotNull(spawnManager.spawnUnit(player, unit(station, null), loc -> true));
+
+		verify(factory, never()).createCop(eq(far), anyInt(), anyBoolean(), any());
+		assertNotNull(ringSpot());
+	}
+
+	@Test
+	@DisplayName("cause 2: the fallback's nearest spawner is skipped past the leash margin too")
+	void fallbackSpawnerBeyondTheLeashMargin_skipped() {
+		Location far = new Location(world, 0.5, GROUND_Y, -69.5); // behind him, clear line, 70 blocks
+		spawnManager.setSpawnerLocation(far);
+		blocked = dir -> false;
+
+		assertNotNull(spawnManager.spawnUnit(player, unit(null, null), loc -> true));
+
+		verify(factory, never()).createCop(eq(far), anyInt(), anyBoolean(), any());
+	}
+
+	@Test
+	@DisplayName("cause 2: a biased unit takes the hidden ring ahead before a hidden station spawner behind the heading")
+	void biasedUnit_ringAheadBeforeAStationSpawnerBehind() {
+		Station  station = new Station(1, "Northside", "world", -200.5, GROUND_Y, 0.5, 0f, null);
+		Location behind  = stationSpawner(-30.5, 0.5, 1); // west; he runs east
+		blocked = dir -> true;
+		SpawnBias bias = new SpawnBias(new Vector(1, 0, 0), new Location(world, 0.5, GROUND_Y, 0.5), 10_000L, 60.0);
+
+		spawnManager.spawnUnit(player, unit(station, bias), loc -> true);
+
+		verify(factory, never()).createCop(eq(behind), anyInt(), anyBoolean(), any());
+		assertTrue(angle(new Vector(1, 0, 0), ringSpot()) <= 60.0, "ahead (east)");
 	}
 
 	/** Coincident pass on the pre-change stub (which returned null); pins the requeue signal when every step fails. */
