@@ -69,11 +69,13 @@ class CopManagerHandoffTest {
 		CopGroup group = fx.manager.groupFor(player.getUniqueId());
 		assertEquals(2, group.getCops().size());
 
-		// the chase leashes out: both cops walk home from 500 blocks away while he runs east
+		// the chase leashes out: seen running east, then both cops walk home from 500 blocks away
 		playerAt(10);
+		group.getSquad().reportSighting(player.getLocation());
 		controller.tick(player, group);
 		fx.clock[0] += 1_000L;
 		playerAt(20);
+		group.getSquad().reportSighting(player.getLocation());
 		controller.tick(player, group);
 		for (CopNpc cop : group.getCops()) {
 			cop.transitionTo(CopState.RETURNING);
@@ -87,7 +89,7 @@ class CopManagerHandoffTest {
 		assertNotNull(bias);
 		verify(fx.radio).sayFromLeader(group, "Handoff", Map.of("direction", "east"), player);
 
-		// he keeps running; the replacements are enqueued under the bias and seeded where he was at the hand-off
+		// he keeps running; the replacements are enqueued under the bias and seeded where he was last seen (R5)
 		playerAt(90);
 		fx.manager.spawnTick(player.getUniqueId(), wanted);
 
@@ -96,6 +98,6 @@ class CopManagerHandoffTest {
 		List<PendingUnit> carrying = units.getAllValues().stream().filter(u -> u.bias() != null).toList();
 		assertTrue(carrying.size() >= 2, "both replacements carry the bias");
 		for (PendingUnit unit : carrying) assertSame(bias, unit.bias());
-		assertEquals(30.0, group.getSquad().lastKnownLocation().getX());
+		assertEquals(20.0, group.getSquad().lastKnownLocation().getX());
 	}
 }

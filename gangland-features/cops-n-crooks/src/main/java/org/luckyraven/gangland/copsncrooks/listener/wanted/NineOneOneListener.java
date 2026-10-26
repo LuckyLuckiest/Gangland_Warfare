@@ -16,7 +16,7 @@ import java.util.Map;
 
 /**
  * A civilian's 911 call landed: the held crime is committed with one witness (so it passes the gate), the squad is
- * sighted at the crime spot and the radio plays the Caller_911 line.
+ * tipped off to the crime spot and the radio plays the Caller_911 line.
  *
  * @since 0.20.0
  */
@@ -46,7 +46,8 @@ public class NineOneOneListener implements Listener {
 		CopGroup group = copManager.groupOf(criminal.getUniqueId());
 		if (group == null) return;
 
-		group.getSquad().reportSighting(event.getAt());
+		// the caller's report is a tip to the crime spot, not a sighting: the squad searches there (R4)
+		group.getSquad().reportTip(event.getAt());
 		String place = placeNames.locate(event.getAt()).orElseGet(() -> copRadio.placeOf(event.getAt()));
 		if (place == null || place.isBlank()) place = "the area";
 		copRadio.sayFromLeader(group, "Caller_911", Map.of("crime", event.getCrimeId(), "place", place));

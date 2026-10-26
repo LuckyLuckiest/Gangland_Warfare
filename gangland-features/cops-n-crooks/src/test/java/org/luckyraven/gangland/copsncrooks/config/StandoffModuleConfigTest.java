@@ -103,7 +103,9 @@ class StandoffModuleConfigTest {
 			cops.add(cop);
 		}
 		when(group.getCops()).thenReturn(cops);
-		when(group.getSquad()).thenReturn(mock(NpcSquad.class));
+		NpcSquad squad = mock(NpcSquad.class);
+		when(squad.isInContact()).thenReturn(true); // an unreachable suspect the squad still has contact with
+		when(group.getSquad()).thenReturn(squad);
 		when(group.getTargetPlayerId()).thenReturn(id);
 		return group;
 	}

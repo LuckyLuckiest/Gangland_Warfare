@@ -249,6 +249,7 @@ Cops:
          Search: 300
          Route: 300
          Route_High: 300
+         Route_Search: 300
          Climb: 300
          No_Route: 300
          Check_Fire: 160

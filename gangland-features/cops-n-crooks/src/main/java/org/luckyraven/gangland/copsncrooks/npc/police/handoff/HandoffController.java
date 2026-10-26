@@ -31,7 +31,8 @@ import static java.util.Objects.requireNonNullElse;
  * The pursuit hand-off (0.16.0): when the cops chasing a wanted player stop being engaged because the chase leashed out
  * (a cop is walking home beyond {@code Cops.Pursuit.Max_Distance}), the leader radios the suspect's heading (heard
  * around him as well as around the speaker) and units dispatched in the next {@code Bias_Seconds} spawn ahead of him,
- * seeded with the last-known position. A perimeter post counts as engaged only within {@code Max_Distance} of him.
+ * seeded with the last-known position. The heading is read from the squad's own last-known spots (0.21.1), never from
+ * where the suspect really runs once no cop sees him. A perimeter post counts as engaged only within {@code Max_Distance} of him.
  * <p>
  * Reads the config on every call ({@code /glw reload}); main thread only, like the cop AI tick that drives {@link #tick}.
  *
@@ -40,7 +41,7 @@ import static java.util.Objects.requireNonNullElse;
 @CustomLog
 public class HandoffController {
 
-	/** Travel under this many blocks over the heading window is no heading: the player's facing is used instead. */
+	/** Travel under this many blocks over the heading window is no heading: the last-seen facing is used instead. */
 	private static final double MIN_TRAVEL = 2.0;
 
 	private record Sample(long time, Location at) { }
@@ -59,7 +60,7 @@ public class HandoffController {
 		this.provider   = provider;
 	}
 
-	/** Per AI tick: records the suspect's position and sets the bias on the engaged -> not engaged edge. */
+	/** Per AI tick: records the squad's last-known spot and sets the bias on the engaged -> not engaged edge. */
 	public void tick(Player player, @Nullable CopGroup group) {
 		UUID              id     = player.getUniqueId();
 		CopConfigProvider config = provider.get();
@@ -72,11 +73,9 @@ public class HandoffController {
 			return;
 		}
 
-		long now = copRadio.now();
+		long          now    = copRadio.now();
 		Deque<Sample> window = samples.computeIfAbsent(id, key -> new ArrayDeque<>());
-		window.addLast(new Sample(now, player.getLocation().clone()));
-		while (window.size() > 1 && now - window.peekFirst().time() > settings.headingSeconds() * 1000L)
-			window.removeFirst();
+		record(window, group.getSquad().lastKnownLocation(), now, settings.headingSeconds() * 1000L);
 
 		double  maxDistance = config.getPursuitMaxDistance();
 		boolean wasEngaged  = engaged.contains(id);
@@ -85,18 +84,38 @@ public class HandoffController {
 		else engaged.remove(id);
 
 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
-		if (!leashedOut(group, id, player, maxDistance)) return;
+		if (window.isEmpty() || !leashedOut(group, id, player, maxDistance)) return;
 
 		Location oldest  = window.peekFirst().at();
 		Location newest  = window.peekLast().at();
 		Vector   heading = new Vector(newest.getX() - oldest.getX(), 0, newest.getZ() - oldest.getZ());
-		if (heading.length() < MIN_TRAVEL) heading = player.getLocation().getDirection();
+		if (heading.length() < MIN_TRAVEL) heading = newest.getDirection();
 
 		group.setBias(new SpawnBias(heading, newest, now + settings.biasSeconds() * 1000L, settings.coneDegrees()));
-		String word = copRadio.compassWord(oldest, newest);
+		// the word names the heading itself, so a fallback to the last-seen facing is said the same way
+		String word = copRadio.compassWord(newest, newest.clone().add(heading));
 		// heard around him too: the speaker is a cop walking home beyond the radio's reach of him
 		copRadio.sayFromLeader(group, "Handoff", Map.of("direction", word), player);
 		log.debug("HANDOFF {} heading={}", player.getName(), word);
+	}
+
+	/**
+	 * Adds the squad's last-known spot when it moved (a stale spot repeated every tick is no travel; the same spot only
+	 * refreshes the facing) and keeps the spots within {@code windowMs} of the newest one, so the heading is the last
+	 * stretch the squad knew of, however long ago.
+	 */
+	private static void record(Deque<Sample> window, @Nullable Location lastKnown, long now, long windowMs) {
+		if (lastKnown == null) return;
+		Sample newest = window.peekLast();
+		if (newest != null && samePlace(newest.at(), lastKnown))
+			window.addLast(new Sample(window.removeLast().time(), lastKnown));
+		else window.addLast(new Sample(now, lastKnown));
+		long latest = window.peekLast().time();
+		while (window.size() > 1 && latest - window.peekFirst().time() > windowMs) window.removeFirst();
+	}
+
+	private static boolean samePlace(Location a, Location b) {
+		return a.getWorld() == b.getWorld() && a.getX() == b.getX() && a.getY() == b.getY() && a.getZ() == b.getZ();
 	}
 
 	/**

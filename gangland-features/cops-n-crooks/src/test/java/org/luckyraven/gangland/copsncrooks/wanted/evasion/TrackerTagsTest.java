@@ -199,7 +199,7 @@ class TrackerTagsTest {
 
 		tickEverySecond(10);
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportTip(any());
 		verify(notifier, never()).tagged(any());
 		verify(notifier, never()).hud(any(), anyInt());
 	}
@@ -214,7 +214,7 @@ class TrackerTagsTest {
 			now[0] += SEC;
 		}
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportTip(any());
 		verify(notifier, never()).hud(any(), anyInt());
 	}
 
@@ -272,13 +272,15 @@ class TrackerTagsTest {
 	}
 
 	@Test
-	@DisplayName("a tagged vehicle's rider pings the squad every 6 s: 13 s of ticks give two sightings at the car")
+	@DisplayName("a tagged vehicle's rider pings the squad every 6 s: 13 s of ticks give two tips at the car")
 	void taggedRiderPingsEverySixSeconds() {
 		tag(pdcA, T0 + 150 * SEC);
 
 		tickEverySecond(13);
 
-		verify(squad, times(2)).reportSighting(locA);
+		verify(squad, times(2)).reportTip(locA);
+		// R4: a tracker ping is a tip, never a sighting: the squad searches the car's spot, it does not chase him live
+		verify(squad, never()).reportSighting(any());
 		verify(radio, times(2)).sayFromLeader(eq(group), eq("Tracker_Ping"), anyMap());
 	}
 
@@ -290,7 +292,7 @@ class TrackerTagsTest {
 
 		tickEverySecond(7);
 
-		verify(squad, times(2)).reportSighting(locA);
+		verify(squad, times(2)).reportTip(locA);
 	}
 
 	@Test
@@ -308,13 +310,13 @@ class TrackerTagsTest {
 	void swapVehicleStopsPings() {
 		tag(pdcA, T0 + 150 * SEC);
 		tickEverySecond(7);
-		verify(squad, times(1)).reportSighting(locA);
+		verify(squad, times(1)).reportTip(locA);
 
 		riding = carB;
 		sees   = false;
 		tickEverySecond(20);
 
-		verify(squad, times(1)).reportSighting(any());
+		verify(squad, times(1)).reportTip(any());
 	}
 
 	@Test
@@ -325,7 +327,7 @@ class TrackerTagsTest {
 
 		tickEverySecond(7);
 
-		verify(squad, times(1)).reportSighting(locB);
+		verify(squad, times(1)).reportTip(locB);
 	}
 
 	@Test
@@ -337,7 +339,7 @@ class TrackerTagsTest {
 		tags.tick(player, group);
 
 		assertFalse(pdcA.containsKey(KEY));
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportTip(any());
 		verify(notifier, never()).hud(any(), anyInt());
 	}
 
@@ -349,7 +351,7 @@ class TrackerTagsTest {
 
 		tickEverySecond(10);
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportTip(any());
 		verify(notifier, never()).hud(any(), anyInt());
 	}
 
@@ -393,7 +395,7 @@ class TrackerTagsTest {
 		tags.forget(id);
 		tickEverySecond(5);
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportTip(any());
 	}
 
 	@Test
@@ -408,7 +410,7 @@ class TrackerTagsTest {
 		pdcA.putAll(reloaded);
 		tickEverySecond(7);
 
-		verify(squad, times(1)).reportSighting(locA);
+		verify(squad, times(1)).reportTip(locA);
 	}
 
 	@Test

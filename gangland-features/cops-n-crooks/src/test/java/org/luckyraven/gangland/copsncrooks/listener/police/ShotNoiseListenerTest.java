@@ -90,14 +90,16 @@ class ShotNoiseListenerTest {
 	}
 
 	@Test
-	@DisplayName("a gunshot from a wanted shooter with a cop in range reports the sighting and radios Shots_Fired")
-	void gunShot_wantedShooter_copInRange_reportsTheSighting_andRadios() {
+	@DisplayName("a gunshot from a wanted shooter with a cop in range tips the squad off to the spot and radios Shots_Fired")
+	void gunShot_wantedShooter_copInRange_tipsTheSquad_andRadios() {
 		CopNpc cop = cop(30, CopState.PURSUING);
 		cops(cop);
 
 		listener.onWeaponShoot(shot(WeaponType.GUN, shooter));
 
-		verify(squad).reportSighting(shooter.getLocation());
+		// R4: a gunshot heard is a tip to the spot, never a sighting that would chase him live
+		verify(squad).reportTip(shooter.getLocation());
+		verify(squad, never()).reportSighting(any());
 		verify(radio).sayAs(group, cop, "Shots_Fired", Map.of());
 	}
 

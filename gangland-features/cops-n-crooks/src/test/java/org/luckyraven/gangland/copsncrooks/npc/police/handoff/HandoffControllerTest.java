@@ -121,10 +121,19 @@ class HandoffControllerTest {
 		when(cop.getEntity().getLocation()).thenReturn(new Location(world, 200, 64, 0));
 	}
 
-	/** One AI tick: the player stands at (x, z) when the clock reads {@code seconds} past the start. */
+	/**
+	 * One AI tick: the player stands at (x, z) when the clock reads {@code seconds} past the start, and the squad sees
+	 * him there (its last-known spot follows him).
+	 */
 	private void tick(double seconds, double x, double z) {
+		at = new Location(world, x, 64, z, at.getYaw(), at.getPitch());
+		group.getSquad().reportSighting(at);
+		blindTick(seconds);
+	}
+
+	/** One AI tick at {@code seconds} where no cop sees him: the squad's last-known spot stays where it was. */
+	private void blindTick(double seconds) {
 		clock[0] = 100_000L + (long) (seconds * 1000);
-		at       = new Location(world, x, 64, z, at.getYaw(), at.getPitch());
 		controller.tick(player, group);
 	}
 
@@ -232,6 +241,67 @@ class HandoffControllerTest {
 	}
 
 	@Test
+	@DisplayName("R5: the heading comes from the squad's last-known spots, not from where the unseen suspect really runs")
+	void heading_fromTheSquadsLastKnownHistory_notTheLiveMovement() {
+		CopNpc chaser = cop(CopState.PURSUING, 5);
+		tick(0, 0, 0);
+		tick(1, 0, 10);              // seen running south ...
+		leash(chaser);
+		at = new Location(world, 30, 64, 10, 0f, 0f);
+		blindTick(2);                // ... then, unseen, he turns east
+
+		SpawnBias bias = group.biasAt(clock[0]);
+		assertNotNull(bias);
+		assertTrue(bias.heading().getZ() > 0 && Math.abs(bias.heading().getX()) < 1e-9, "south, as last seen");
+		assertEquals(0.0, bias.lastSeen().getX());
+		assertEquals(10.0, bias.lastSeen().getZ());
+		verify(radio).sayFromLeader(group, "Handoff", Map.of("direction", "south"), player);
+	}
+
+	@Test
+	@DisplayName("R5: a suspect last seen standing still is read by the way he faced when seen, not by his live facing")
+	void barelyMoved_usesTheLastSeenFacing_notTheLiveOne() {
+		CopNpc chaser = cop(CopState.PURSUING, 5);
+		tick(0, 0, 0);               // yaw 0 faces +Z
+		tick(1, 0.5, 0);
+		leash(chaser);
+		at = new Location(world, 0.5, 64, 0, -90f, 0f); // unseen, he turns to face +X
+		blindTick(2);
+
+		Vector heading = group.biasAt(clock[0]).heading();
+		assertEquals(0.0, heading.getX(), 1e-6);
+		assertEquals(1.0, heading.getZ(), 1e-6);
+	}
+
+	@Test
+	@DisplayName("R5: a suspect seen standing still who turned before he was lost is read by his latest seen facing")
+	void standingStill_turnedInSight_usesTheLatestSeenFacing() {
+		CopNpc chaser = cop(CopState.PURSUING, 5);
+		tick(0, 0, 0);               // yaw 0 faces +Z
+		at = new Location(world, 0, 64, 0, -90f, 0f);
+		tick(1, 0, 0);               // same spot, seen turning to face +X
+		leash(chaser);
+		blindTick(2);
+
+		Vector heading = group.biasAt(clock[0]).heading();
+		assertEquals(1.0, heading.getX(), 1e-6);
+		assertEquals(0.0, heading.getZ(), 1e-6);
+	}
+
+	@Test
+	@DisplayName("R5: a squad that never saw or was told where he is has no heading to hand off")
+	void noLastKnownSpot_noHandoff() {
+		CopNpc chaser = cop(CopState.PURSUING, 5);
+		blindTick(0);
+		leash(chaser);
+		at = new Location(world, 6, 64, 0);
+		blindTick(1);
+
+		assertNull(group.biasAt(clock[0]));
+		verify(radio, never()).sayFromLeader(any(), eq("Handoff"), any(), any());
+	}
+
+	@Test
 	@DisplayName("one hand-off per bias; a new one only after it expired")
 	void oneHandoffPerBias() {
 		CopNpc chaser = breakLeash(2, 6, 0);
@@ -281,9 +351,11 @@ class HandoffControllerTest {
 			when(chaser.getNpc()).thenReturn(mock(NPC.class));
 
 			at = new Location(world, 105, 64, 0);
+			group.getSquad().reportSighting(at);
 			real.tick(player, group);
 			leash(chaser);   // the only cop, so it speaks: from 200, 90 blocks behind him (Range 32, Target_Range 64)
 			at = new Location(world, 110, 64, 0);
+			group.getSquad().reportSighting(at);
 			real.tick(player, group);
 		}
 
