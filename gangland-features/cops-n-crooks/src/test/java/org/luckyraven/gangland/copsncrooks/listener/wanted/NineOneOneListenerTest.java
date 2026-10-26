@@ -67,14 +67,16 @@ class NineOneOneListenerTest {
 	}
 
 	@Test
-	@DisplayName("commit(player, crime, at, false, 1), then squad sighted at the crime spot, then the Caller_911 line")
+	@DisplayName("commit(player, crime, at, false, 1), then the squad tipped off to the crime spot, then the Caller_911 line")
 	void landedCallCommitsWithOneWitnessAndSights() {
 		listener.onCalledIn(call("Car_Theft"));
 
 		InOrder order = inOrder(crimes, copManager, radio);
 		order.verify(crimes).commit(player, "Car_Theft", at, false, 1);
 		order.verify(copManager).groupOf(playerId);
-		assertTrue(squad.hasFreshSighting());
+		// R4: the call is a tip to the crime spot, not a sighting: the squad searches there instead of chasing him live
+		assertFalse(squad.hasFreshSighting());
+		assertEquals(at, squad.lastKnownLocation());
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> placeholders = ArgumentCaptor.forClass(Map.class);
