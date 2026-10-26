@@ -43,6 +43,7 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Search", List.of("Spread out, find him!", "Sweep the area!")),
 			Map.entry("Route", List.of("Going round, finding a way to him.", "Cutting round to him!")),
 			Map.entry("Route_High", List.of("He's up high, finding a way up.")),
+			Map.entry("Route_Search", List.of("Going round, checking his last position.", "Taking the long way, searching the area.")),
 			Map.entry("Climb", List.of("Taking the ladder!", "Going up!")),
 			Map.entry("No_Route", List.of("Can't reach him, surround the building!", "Hold the exits!")),
 			Map.entry("Check_Fire", List.of("Check your fire, friendly in the line!")),
