@@ -679,7 +679,7 @@ Cops:
       Tier: 1
       # Beat cops report wanted players to their squad.
       Report_Wanted: true
-      # Seconds a station waits after losing a beat cop (killed, despawned) before a replacement walks out.
+      # Seconds a station waits after losing a beat cop (killed or lost) before a replacement walks out.
       Respawn_Seconds: 30
 
    # Warning: a cop tells a player to put the weapon away before escalating.

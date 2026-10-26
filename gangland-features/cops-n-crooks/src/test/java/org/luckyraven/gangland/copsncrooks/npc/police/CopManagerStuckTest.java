@@ -122,6 +122,20 @@ class CopManagerStuckTest {
 	}
 
 	@Test
+	@DisplayName("r2 pin: a recycle re-tips nothing, so the search circle keeps widening from the squad's own stamp")
+	void recycle_searchCircleKeepsWidening() {
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);
+		// 40 s of searching the crime scene: the circle is already wide
+		long stamp = CopManagerFixture.ageSearch(group.getSquad(), 40_000L);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(stuck));
+		assertEquals(stamp, CopManagerFixture.searchStamp(group.getSquad()),
+		             "no reportTip, not even of the last-known spot: re-tipping would shrink the circle back to 6 blocks");
+	}
+
+	@Test
 	@DisplayName("a recycle is no tip-off: it does not hold the evasion clock (R4)")
 	void recycle_noTipOff() {
 		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);

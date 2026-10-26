@@ -33,6 +33,7 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
+import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.npc.spi.NpcSquadListener;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -201,6 +202,27 @@ final class CopManagerFixture implements AutoCloseable {
 	@Override
 	public void close() {
 		bukkit.close();
+	}
+
+	/**
+	 * Moves the squad's search-circle stamp ({@code NpcSquad.lastKnownAt}, private in Keystone 1.15.4) {@code ms} into
+	 * the past and returns the new stamp: the circle around the last-known spot is as wide as {@code ms} of searching.
+	 * ponytail: reads a Keystone internal; a public {@code millisSinceLastKnown()} upstream would replace it.
+	 */
+	static long ageSearch(NpcSquad squad, long ms) {
+		try {
+			Field field = NpcSquad.class.getDeclaredField("lastKnownAt");
+			field.setAccessible(true);
+			field.setLong(squad, field.getLong(squad) - ms);
+			return field.getLong(squad);
+		} catch (ReflectiveOperationException exception) {
+			throw new IllegalStateException(exception);
+		}
+	}
+
+	/** The squad's search-circle stamp ({@code NpcSquad.lastKnownAt}): the circle widens from it. */
+	static long searchStamp(NpcSquad squad) {
+		return ageSearch(squad, 0L);
 	}
 
 	/**

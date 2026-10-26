@@ -259,6 +259,25 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("r2 pin: a leash release re-tips nothing, so the search circle keeps widening from the squad's own stamp")
+	void strandedReleased_searchCircleKeepsWidening() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group  = manager.groupFor(playerId);
+		CopNpc   walker = fx.cop(CopState.RETURNING, -500, 500);
+		walker.setTargetPlayerId(playerId);
+		group.add(walker);
+		// 40 s of searching the crime scene: the circle is already wide
+		long stamp = CopManagerFixture.ageSearch(group.getSquad(), 40_000L);
+		fx.clock[0] += 5_000L;
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(walker), "released");
+		assertEquals(stamp, CopManagerFixture.searchStamp(group.getSquad()),
+		             "no reportTip, not even of the last-known spot: re-tipping would shrink the circle back to 6 blocks");
+	}
+
+	@Test
 	@DisplayName("T-435: a new episode at a lower level sends the re-engaged cops over its target home, never the Commander")
 	void newLowerEpisode_reengagedCopsOverTheTarget_areSentHome() {
 		Wanted three = CopManagerFixture.wanted(3);

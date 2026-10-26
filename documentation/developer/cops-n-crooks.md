@@ -642,9 +642,9 @@ Recycling (Cops.Stuck): each spawn run, a PURSUING/COMBAT cop hunting the group'
 millisUnreachable() >= Recycle_Seconds is released unless the player sees it (60-degree cone plus clear line
 within max(24, Visibility_Check_Distance); past 2x Recycle_Seconds within 24 only), it is within melee reach on his
 level (|dy| <= 1.5, clear line), or another player faces it (past 2x Recycle_Seconds: another real player with it in
-his cone, clear line, within 24). A recycle also tips the group's squad off to the player's spot now
-(NpcSquad.reportSighting), so the replacements do not hunt a last-known spot nobody could reach. The same run
-refills the group, capped at Max_Per_Player.
+his cone, clear line, within 24). A recycle is no news of the player (0.21.1, R4): no tip and no tip-off, so the
+replacements inherit the squad's own last-known spot, its search circle keeps widening and the evasion clock keeps
+running (T-147). The same run refills the group, capped at Max_Per_Player.
 
 Tier selection: `tier = min(wantedLevel, maxTier)`
 
@@ -1210,13 +1210,22 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
 **0.21.1 spawn and dispatch (cnc-cop-ai lane spawn).**
 - `CopManager.spawnTick` releases a stranded RETURNING cop (`isStrandedReturning`) that no real player watches
   (`isWatched`: `CopSightlines.inView` with line of sight within `max(24, Visibility_Check_Distance)`, Citizens NPCs
-  skipped; not `isVisibleToOtherPlayers`, which counts NPCs and the walker itself) and tips the squad with
-  `NpcSquad.reportTip(player.getLocation())` + `markTipOff`, the same snapshot `recycles()` gives. Before dispatching it
-  trims the queue to `targetCount - counted` (`CopGroup.trimPending`, newest first), so a level drop calls off units.
-  `spawnDueUnits` gives a unit queued before a hand-off the group's active bias. `reengageReturning` skips stranded cops.
+  skipped; not `isVisibleToOtherPlayers`, which counts NPCs and the walker itself). Neither this release nor
+  `recycles()` tips the squad (review r2, R4): no `reportTip`, no `markTipOff`, not even
+  `reportTip(lastKnownLocation())`, because `reportTip` re-stamps the search circle back to 6 blocks; the refill
+  inherits the squad's own lead and its widening circle (pinned by `strandedReleased_searchCircleKeepsWidening` and
+  `recycle_searchCircleKeepsWidening`). Before dispatching it trims the queue to `targetCount - counted`
+  (`CopGroup.trimPending`, newest first), so a level drop calls off units; live cops over the target (a new episode at
+  a lower level, whose `reengageReturning` pulls back every walker in range, or a level drop) go home through
+  `releaseSurplus`, never the last Commander (T-435). `spawnDueUnits` lends a unit queued before a hand-off the group's
+  active bias; a unit refused a spot is requeued without a bias that ran out (T-434). `reengageReturning` skips
+  stranded cops.
 - Tips (Keystone 1.15.4 `reportTip`, no sighting stamp): the wanted start (plus `markTipOff`, which keeps the
-  `Dispatch_Wanted` once-per-hunt gate and the evasion hold), the recycle, the biased spawn seed, and a hit on a cop
-  that has no line of sight to the attacker. Only member sightings make `NpcPursuit` chase the live position.
+  `Dispatch_Wanted` once-per-hunt gate and the evasion hold), the biased spawn seed, and a hit on a cop that has no line
+  of sight to the attacker. The seed (`reportTip(bias.lastSeen())` plus `markTipOff`) is given once per hand-off bias
+  and only while no sighting or tip moved the squad's lead since the bias was set (`CopGroup.takeBiasSeed`, T-434), so
+  it never rewinds a fresher lead or the hand-off heading sampled from it. Only member sightings make `NpcPursuit`
+  chase the live position.
 - `CopSpawnManager.fits(target)` gates every spawn path (`spawnUnit` and `spawnNearPlayer`): within
   `0.75 x Pursuit.Max_Distance` (3D) and not `inViewOf` (60 degree eye cone plus `isOutOfSight` false). The ring
   fallback takes no Keystone predicate, so a ring spot in view returns `null` (the caller retries next run). A biased unit
