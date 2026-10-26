@@ -278,7 +278,7 @@ public class CopGroup {
 		return false;
 	}
 
-	/** Stamps the latest stuck-recycle tip-off at {@code now} (radio-clock ms). */
+	/** Stamps the latest tip-off (a crime-scene start, a hand-off seed) at {@code now} (radio-clock ms). */
 	public void markTipOff(long now) {
 		tipOffAt = now;
 	}
