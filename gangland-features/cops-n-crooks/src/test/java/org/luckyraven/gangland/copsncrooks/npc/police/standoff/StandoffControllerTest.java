@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -95,6 +96,10 @@ class StandoffControllerTest {
 	private final Map<CopNpc, AtomicReference<CopState>> states = new HashMap<>();
 
 	private StandoffSettings settings = StandoffSettings.DEFAULT;
+	/** A member's own sighting holds the squad in contact; true by default, so the triggers can be exercised. */
+	private final AtomicBoolean       inContact  = new AtomicBoolean(true);
+	/** The squad's last-known spot; by default where the suspect stands. */
+	private Supplier<Location>        lastKnown  = () -> player.getLocation();
 
 	private final StandoffController controller;
 
@@ -103,6 +108,8 @@ class StandoffControllerTest {
 		when(player.getLocation()).thenReturn(centre.clone());
 		when(group.getCops()).thenReturn(cops);
 		when(group.getSquad()).thenReturn(squad);
+		when(squad.isInContact()).thenAnswer(i -> inContact.get());
+		when(squad.lastKnownLocation()).thenAnswer(i -> lastKnown.get());
 		when(group.getTargetPlayerId()).thenReturn(playerId);
 		when(group.isCeaseFire()).thenAnswer(i -> ceaseFire.get());
 		doAnswer(i -> {
@@ -279,6 +286,61 @@ class StandoffControllerTest {
 		assertTrue(now() < lastHold() && lastHold() <= until, "rolling hold " + lastHold());
 		verify(radio).sayFromLeader(group, "Standoff");
 		assertTrue(controller.isActive(playerId));
+	}
+
+	@Test
+	@DisplayName("radio-far S: an unreachable majority with no member contact and no fresh sighting is no standoff")
+	void unreachableWithoutContactOrSighting_noStart() {
+		inContact.set(false);
+		when(squad.hasFreshSighting()).thenReturn(false);
+		hunters(3, 2);
+
+		tickAt(0);
+
+		assertEquals(0, starts());
+		verify(radio, never()).sayFromLeader(any(), anyString());
+		assertFalse(controller.isActive(playerId));
+	}
+
+	@Test
+	@DisplayName("radio-far S: a fresh sighting without the contact edge still counts for the unreachable trigger")
+	void unreachableWithFreshSighting_starts() {
+		inContact.set(false);
+		when(squad.hasFreshSighting()).thenReturn(true);
+		hunters(3, 2);
+
+		tickAt(0);
+
+		verify(radio).sayFromLeader(group, "Standoff");
+	}
+
+	@Test
+	@DisplayName("radio-far S: the ring is centred on the squad's last-known spot, not where the suspect really is now")
+	void ring_centredOnTheLastKnownSpot() {
+		when(player.getLocation()).thenReturn(new Location(world, 50, 64, 0));
+		lastKnown = centre::clone;
+		List<CopNpc> hunters = hunters(3, 3);
+
+		tickAt(0);
+
+		for (CopNpc cop : hunters) {
+			NpcPost post = postOf(cop);
+			assertEquals(12.0, post.anchor().distance(centre), 1.5);
+			assertEquals(centre.getX(), post.watch().getX(), 0.01);
+		}
+	}
+
+	@Test
+	@DisplayName("radio-far S: no last-known spot, no ring; the standoff still flags and radios")
+	void noLastKnownSpot_noPosts() {
+		lastKnown = () -> null;
+		List<CopNpc> hunters = hunters(3, 3);
+
+		tickAt(0);
+
+		for (CopNpc cop : hunters)
+			verify(cop, never()).holdPost(any());
+		verify(radio).sayFromLeader(group, "Standoff");
 	}
 
 	@Test
