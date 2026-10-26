@@ -438,7 +438,7 @@ player's world:
   `Cops.Pursuit.Max_Distance` (60 blocks) of him, so a fresh cop is not past the pursuit leash the second it spawns.
 - **Lost cops leave (0.21.1).** A cop that gave up the chase beyond `Cops.Pursuit.Max_Distance` is removed as soon as
   no player is looking at it, instead of walking home for up to five minutes. Nobody saw where the player went, so the
-  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count (the squad's last Commander stays); so does a new wanted level started while the last squad is still walking home. While the whole squad is lost
+  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count (the squad's last Commander stays). A new wanted level started while the last squad is still walking home calls back only as many of them as the new level needs. Cops sent home that are still in range are the first called back when the level rises again or a cop falls. Cops answering a radio call stay even when they put the squad over its count, and the post-escape search keeps every cop it called back. While the whole squad is lost
   (cops walking home, a hand-off pending, units on the road) the evasion countdown pauses instead of restarting.
 - **Tips are not sightings (0.21.1).** The crime scene, a hand-off seed and a hit from cover tell the squad where to
   search; only a cop who really sees the player makes the squad chase his live position.

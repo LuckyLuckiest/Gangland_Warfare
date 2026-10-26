@@ -1215,16 +1215,26 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   `reportTip(lastKnownLocation())`, because `reportTip` re-stamps the search circle back to 6 blocks; the refill
   inherits the squad's own lead and its widening circle (pinned by `strandedReleased_searchCircleKeepsWidening` and
   `recycle_searchCircleKeepsWidening`). Before dispatching it trims the queue to `targetCount - counted`
-  (`CopGroup.trimPending`, newest first), so a level drop calls off units; live cops over the target (a new episode at
-  a lower level, whose `reengageReturning` pulls back every walker in range, or a level drop) go home through
-  `releaseSurplus`, never the last Commander (T-435). `spawnDueUnits` lends a unit queued before a hand-off the group's
+  (`CopGroup.trimPending`, newest first), so a level drop calls off units. Live cops over the target go home through
+  `releaseSurplus`, never the last Commander, only when the level's base target dropped below `CopGroup.lastTarget`
+  (T-435): radio responders joining at the same target stay, and the post-escape search (wanted level 0, run at one
+  star) never sends home the walkers `keepSquadOnSearch` called back (T-187). A new wanted start calls back walkers in
+  range only up to the new level's target (`reengageReturning(group, player, limit, eligible)`, nearest first). A
+  walker the group sent home (`releaseSurplus`, or left over by that capped call back) is marked in
+  `CopGroup.sentHome`: it is out of the counted cops, and while the group lacks cops (a level rise, a casualty) the
+  nearest one in range is called back before anything spawns (T-436). Only a new wanted start and `releaseSurplus`
+  mark: inside an episode a walker rotated out of a pursuit or leashed is never marked, so the D1 no-bounce rule holds
+  there. `spawnDueUnits` lends a unit queued before a hand-off the group's
   active bias; a unit refused a spot is requeued without a bias that ran out (T-434). `reengageReturning` skips
   stranded cops.
 - Tips (Keystone 1.15.4 `reportTip`, no sighting stamp): the wanted start (plus `markTipOff`, which keeps the
   `Dispatch_Wanted` once-per-hunt gate and the evasion hold), the biased spawn seed, and a hit on a cop that has no line
   of sight to the attacker. The seed (`reportTip(bias.lastSeen())` plus `markTipOff`) is given once per hand-off bias
   and only while no sighting or tip moved the squad's lead since the bias was set (`CopGroup.takeBiasSeed`, T-434), so
-  it never rewinds a fresher lead or the hand-off heading sampled from it. Only member sightings make `NpcPursuit`
+  it never rewinds a fresher lead or the hand-off heading sampled from it. Since the bias's `lastSeen` is the squad's
+  lead at the hand-off, the seed re-tips that same spot: it deliberately restarts the search circle at 6 blocks, once
+  per hand-off (not once per refill), so the units the hand-off sent search the spot they were sent to. Leash release
+  and recycle never re-tip (above). Only member sightings make `NpcPursuit`
   chase the live position.
 - `CopSpawnManager.fits(target)` gates every spawn path (`spawnUnit` and `spawnNearPlayer`): within
   `0.75 x Pursuit.Max_Distance` (3D) and not `inViewOf` (60 degree eye cone plus `isOutOfSight` false). The ring
