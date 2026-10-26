@@ -299,7 +299,7 @@ class CopManagerSquadTest {
 		// cleared: the four walk home, still within Pursuit.Max_Distance of him
 		manager.onWantedEnd(player, WantedCause.UNKNOWN);
 		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.RETURNING);
-		// a new episode at one star re-engages every one in range
+		// a new episode at one star calls back only its two of the four in range
 		manager.onWantedStart(player, one);
 		manager.spawnTick(playerId, one);
 
@@ -323,6 +323,88 @@ class CopManagerSquadTest {
 		manager.spawnTick(playerId, one);
 
 		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count());
+	}
+
+	@Test
+	@DisplayName("T-435: a new episode at a lower level calls back only its target's worth of walkers, none flip home")
+	void newLowerEpisode_callsBackOnlyItsTarget() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.onWantedEnd(player, WantedCause.UNKNOWN);
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.RETURNING);
+
+		manager.onWantedStart(player, one);
+
+		assertEquals(2, countIn(group, CopState.PURSUING), "the walkers over one star's two keep walking");
+	}
+
+	@Test
+	@DisplayName("T-436: after a level drop, a rise calls the cops sent home back before any new one spawns")
+	void levelDropThenRise_sentHomeCopsComeBack() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.spawnTick(playerId, one);
+		assertEquals(2, countIn(group, CopState.RETURNING));
+
+		manager.onWantedLevelChange(player, three, 1, 3);
+		manager.spawnTick(playerId, three);
+
+		assertEquals(4, countIn(group, CopState.PURSUING), "the two walking home in range rejoin the hunt");
+		verify(fx.spawner, times(4)).spawnNearPlayer(any(), anyInt(), any(), any());
+	}
+
+	@Test
+	@DisplayName("T-436: a casualty after a level drop is refilled by the nearest cop sent home")
+	void levelDropThenCasualty_sentHomeCopRefills() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.spawnTick(playerId, one);
+		CopNpc fallen = group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING)
+		                     .findFirst().orElseThrow();
+		when(fallen.isMarkedForRemoval()).thenReturn(true);
+
+		manager.spawnTick(playerId, one);
+
+		assertEquals(2, countIn(group, CopState.PURSUING), "one star still fields two cops");
+		verify(fx.spawner, times(4)).spawnNearPlayer(any(), anyInt(), any(), any());
+	}
+
+	@Test
+	@DisplayName("T-187: the post-escape search keeps every walker it called back, none is sent home at its one star")
+	void escapeSearch_keepsEveryCalledBackCop() {
+		Wanted three = CopManagerFixture.wanted(3);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.RETURNING);
+		manager.onWantedEnd(player, WantedCause.EVASION);
+		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+
+		assertEquals(4, countIn(group, CopState.PURSUING), "the cops walking home come back to the search");
+	}
+
+	private static long countIn(CopGroup group, CopState state) {
+		return group.getCops().stream().filter(c -> c.getCurrentState() == state).count();
 	}
 
 	@Test

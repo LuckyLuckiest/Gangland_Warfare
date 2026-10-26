@@ -11,6 +11,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
@@ -19,9 +20,11 @@ import org.luckyraven.keystone.npc.spi.NpcSquadListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -78,9 +81,18 @@ public class CopGroup {
 	@Setter
 	private long fallBackUntil;
 
-	/** Cops still to send home: a run-out backup's extras, or those over a lowered target (T-435); kept until free. */
+	/** Cops still to send home: a run-out backup's extras, or those over a dropped target (T-435); kept until free. */
 	@Setter
 	private int  pendingRelease;
+	/** The cop target of the last spawn run at a wanted level (not the search's); a lower one is a drop (T-435). */
+	@Setter
+	private int  lastTarget;
+	/**
+	 * Walkers the group sent home or left walking (a lowered target, a run-out backup, a smaller new episode): out of
+	 * the hunt's count, and called back first while the group lacks cops (T-436). Read through {@link #isSentHome}.
+	 */
+	@Getter(AccessLevel.NONE)
+	private final Set<CopNpc> sentHome = new HashSet<>();
 
 	/** Radio-clock ms of the latest tip-off (a crime-scene start, a hand-off seed); 0 when none. */
 	private long tipOffAt;
@@ -132,11 +144,24 @@ public class CopGroup {
 		cop.setGroup(this);
 	}
 
+	/** Marks a walker of the group as sent home by it ({@link #sentHome}); the caller turns it RETURNING. */
+	public void markSentHome(CopNpc cop) {
+		sentHome.add(cop);
+	}
+
+	/** Whether {@code cop} walks home because the group sent it; a cop back on duty loses the mark. */
+	public boolean isSentHome(CopNpc cop) {
+		if (cop.getCurrentState() == CopState.RETURNING) return sentHome.contains(cop);
+		sentHome.remove(cop);
+		return false;
+	}
+
 	/**
 	 * Destroys a cop that left the group (despawned, killed or invalid) and drops it from every squad. The caller
 	 * removes it from {@link #getCops()}: both call sites are iterating that list.
 	 */
 	public void release(CopNpc cop, NpcMarkManager markManager) {
+		sentHome.remove(cop);
 		squad.remove(cop);
 		leaveAttackerSquads(cop);
 		cop.destroy(entity -> markManager.removeMark(entity));
@@ -144,6 +169,7 @@ public class CopGroup {
 
 	/** Moves a live cop out of this group (a radio responder joining another one); the cop is not destroyed. */
 	public void detach(CopNpc cop) {
+		sentHome.remove(cop);
 		cops.remove(cop);
 		squad.remove(cop);
 		leaveAttackerSquads(cop);
@@ -444,5 +470,6 @@ public class CopGroup {
 			cop.destroy(entity -> markManager.removeMark(entity));
 		}
 		cops.clear();
+		sentHome.clear();
 	}
 }

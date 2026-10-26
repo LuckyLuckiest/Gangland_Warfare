@@ -73,6 +73,20 @@ class CopRadioRespondersTest {
 	}
 
 	@Test
+	@DisplayName("T-435: a responder over the squad's target stays through the next spawn run (only a lowered target sends cops home)")
+	void responderOverTheTarget_staysThroughSpawnTick() {
+		manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(2));
+		assertEquals(2, group.getCops().size());
+		CopNpc cop = fx.cop(CopState.RETURNING, 20, 0);
+		join(cop);
+		call();
+
+		manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(2));
+
+		assertEquals(CopState.PURSUING, cop.getCurrentState());
+	}
+
+	@Test
 	@DisplayName("a cop beyond Range stays on its way")
 	void copBeyondRange_ignores() {
 		CopNpc cop = fx.cop(CopState.RETURNING, 40, 0);

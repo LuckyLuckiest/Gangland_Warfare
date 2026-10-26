@@ -168,8 +168,12 @@ public class CopManager implements BeanLifecycle {
 
 		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
 		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
-		// which only guards against a per-tick bounce inside a single episode.
-		reengageReturning(group, player);
+		// which only guards against a per-tick bounce inside a single episode. Only up to the new level's target (T-435):
+		// the walkers over it keep walking, sent home, and come back first if the group lacks cops later (T-436).
+		int target  = Math.min(spawnManager.getTargetCopCount(wanted.getLevel()), configProvider.getMaxCopsPerPlayer());
+		int engaged = (int) group.getCops().stream()
+		                         .filter(cop -> cop.isValid() && cop.getCurrentState() != CopState.RETURNING).count();
+		reengageReturning(group, player, target - engaged, cop -> true);
 
 		startSpawnTask(playerId, wanted);
 		startAITask(playerId);
@@ -303,23 +307,42 @@ public class CopManager implements BeanLifecycle {
 			for (CopNpc cop : group.getCops()) {
 				if (cop.getCurrentState() == CopState.CUFFING) cop.transitionTo(CopState.PURSUING);
 			}
-			// The owner ruling: the search goes on, so cops already walking home come back to it
-			reengageReturning(group, player);
+			// The owner ruling: the search goes on, so cops already walking home come back to it, every one of them
+			// (the search's one-star squad never sends the surplus home: spawnTick)
+			reengageReturning(group, player, Integer.MAX_VALUE, cop -> true);
 		}
 	}
 
 	/**
-	 * Pulls the group's returning cops within {@code Pursuit.Max_Distance} of {@code player} back into the hunt. One
-	 * farther out would leash again on its next tick and restart its walk home (T-131, cause 5): it stays RETURNING.
+	 * Pulls up to {@code limit} of the group's returning cops within {@code Pursuit.Max_Distance} of {@code player} that
+	 * pass {@code eligible} back into the hunt, nearest first; the eligible ones over the limit are marked sent home
+	 * (T-436). One farther out would leash again on its next tick and restart its walk home (T-131, cause 5): it stays
+	 * RETURNING.
+	 *
+	 * @return the cops called back
 	 */
-	private void reengageReturning(CopGroup group, Player player) {
-		double maxDist = configProvider.getPursuitMaxDistance();
+	private List<CopNpc> reengageReturning(CopGroup group, Player player, int limit, Predicate<CopNpc> eligible) {
+		double       maxDist = configProvider.getPursuitMaxDistance();
+		List<CopNpc> walkers = new ArrayList<>();
 		for (CopNpc cop : group.getCops()) {
-			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING) continue;
-			if (isStrandedReturning(cop, player, maxDist)) continue;
+			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) continue;
+			if (isStrandedReturning(cop, player, maxDist) || !eligible.test(cop)) continue;
+			walkers.add(cop);
+		}
+		Location at = player.getLocation();
+		walkers.sort(Comparator.comparingDouble(cop -> cop.getEntity().getLocation().distanceSquared(at)));
+
+		List<CopNpc> back = new ArrayList<>();
+		for (CopNpc cop : walkers) {
+			if (back.size() >= limit) {
+				group.markSentHome(cop);
+				continue;
+			}
 			cop.setTargetPlayerId(player.getUniqueId());
 			cop.transitionTo(CopState.PURSUING);
+			back.add(cop);
 		}
+		return back;
 	}
 
 	/**
@@ -767,10 +790,13 @@ public class CopManager implements BeanLifecycle {
 		}
 		group.setLastTier(tier);
 
-		int targetCount  = Math.min(spawnManager.getTargetCopCount(wantedLevel) + group.backupExtra(now, backup),
-		                            configProvider.getMaxCopsPerPlayer());
-		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count.
-		List<CopNpc> counted = cops.stream().filter(c -> !isStrandedReturning(c, player, maxDist)).toList();
+		int baseTarget   = Math.min(spawnManager.getTargetCopCount(wantedLevel), configProvider.getMaxCopsPerPlayer());
+		int targetCount  = Math.min(baseTarget + group.backupExtra(now, backup), configProvider.getMaxCopsPerPlayer());
+		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count. Nor
+		// is one the group sent home (T-436), but while the group lacks cops the nearest in range comes back first.
+		List<CopNpc> counted = new ArrayList<>(cops.stream().filter(
+				c -> !isStrandedReturning(c, player, maxDist) && !group.isSentHome(c)).toList());
+		counted.addAll(reengageReturning(group, player, targetCount - counted.size(), group::isSentHome));
 		int currentCount = counted.size();
 		// Each new cop takes the composition's first role no counted cop holds, so a stranded one's role is refilled.
 		List<CopRole> composition = configProvider.getSquadComposition(wantedLevel);
@@ -818,10 +844,15 @@ public class CopManager implements BeanLifecycle {
 		}
 
 		group.consumeBackupExpiry(now, backup);
-		// T-435: a new episode or a level drop leaves live cops over the target (reengageReturning pulls back every one
-		// in range; trimPending only calls off queued units): the surplus goes home like an expired backup's extras
-		if (currentCount > targetCount)
-			group.setPendingRelease(Math.max(group.getPendingRelease(), currentCount - targetCount));
+		// T-435: a lowered target (a level drop, a new episode at a lower level) leaves live cops over it, and trimPending
+		// only calls off queued units: the surplus goes home like an expired backup's extras. Only on a drop: radio
+		// responders joining at the same target stay, and the post-escape search (level 0, run at one star) keeps every
+		// cop it called back (T-187)
+		if (wanted.getLevel() > 0) {
+			if (baseTarget < group.getLastTarget() && currentCount > targetCount)
+				group.setPendingRelease(Math.max(group.getPendingRelease(), currentCount - targetCount));
+			group.setLastTarget(baseTarget);
+		}
 		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount, composition);
 		group.pruneAttackerSquads();
 	}
@@ -1087,6 +1118,7 @@ public class CopManager implements BeanLifecycle {
 
 			excess.merge(role, -1, Integer::sum);
 			cop.transitionTo(CopState.RETURNING);
+			group.markSentHome(cop);
 			group.setPendingRelease(group.getPendingRelease() - 1);
 			surplus--;
 		}
