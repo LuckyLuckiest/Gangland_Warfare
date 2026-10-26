@@ -51,7 +51,7 @@ Cops:
 ```
 
 After a hand-off ("Lost him heading X. Units ahead, pick him up.") the new units no longer search the spot where he was
-lost: they walk on along the heading the squad saw him take (stopping short of a wall, on the ground there) and
+lost: they walk on along the heading the squad saw him take (stopping short of a wall, on dry ground there; over water or lava, or into unloaded chunks, they search the last-known spot) and
 search there. Neither the heading nor that spot uses his live position. `Lead_Blocks: 0` keeps the old behaviour of searching the last-known spot.
 
 ## 4. Text keys

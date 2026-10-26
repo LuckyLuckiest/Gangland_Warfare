@@ -1113,16 +1113,20 @@ public class CopManager implements BeanLifecycle {
 		for (CopRole role : base) excess.merge(roleName(role), -1, Integer::sum);
 		long commanders = live.stream().filter(CopManager::isCommander).count() +
 		                  queued.stream().filter(unit -> unit.role() != null && unit.role().commander()).count();
-		// what can ever go: the roles held over the base squad, a Commander role's at most all Commanders but the last.
-		// A release owed past it would wait for the next cop to join and send him home instead (a radio responder)
+		// what can ever go: the roles held over the base squad, the Commander roles together at most all Commanders but
+		// the last (one shared pool, however many roles are Commanders). A release owed past it would wait for the next
+		// cop to join and send him home instead (a radio responder)
 		Set<String> leaderRoles = new HashSet<>();
 		for (CopNpc cop : live) if (isCommander(cop)) leaderRoles.add(roleName(cop.getRole()));
 		for (PendingUnit unit : queued) if (unit.role() != null && unit.role().commander()) leaderRoles.add(unit.role().name());
 		int releasable = 0;
+		int leadersOver = 0;
 		for (Map.Entry<String, Integer> role : excess.entrySet()) {
 			int over = Math.max(0, role.getValue());
-			releasable += leaderRoles.contains(role.getKey()) ? (int) Math.min(over, commanders - 1) : over;
+			if (leaderRoles.contains(role.getKey())) leadersOver += over;
+			else releasable += over;
 		}
+		releasable += (int) Math.min(leadersOver, Math.max(0, commanders - 1));
 		group.setPendingRelease(Math.min(group.getPendingRelease(), Math.min(surplus, releasable)));
 
 		// a backup unit still en route is called off first, newest first: it outlived the backup on a long ETA

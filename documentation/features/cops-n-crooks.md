@@ -486,7 +486,7 @@ search; a new sighting re-arms it. A posted cop that the suspect attacks drops i
 When the suspect outruns the cops that chased him (the pursuers give up and walk home) the squad leader radios his
 heading ("Lost him heading north-east. Units ahead, pick him up.") and the **next units appear ahead of him**: for
 `Handoff.Bias_Seconds` (10) new units spawn within `Cone_Degrees` (60) of the heading. They head where the squad saw
-him going: `Lead_Blocks` (24) past his last-known spot along that heading (short of a wall, on the ground there), and
+him going: `Lead_Blocks` (24) past his last-known spot along that heading (short of a wall, on dry ground there; over water or lava, or into unloaded chunks, they search the last-known spot), and
 search there once they arrive. Neither the heading nor that spot is his live position (0.21.1). A second hand-off with
 no news of him since leads from the same last-known spot again, never on from the first lead. The first unit gives the squad that spot once, and not at all if
 a cop has spotted him since. The heading is read over the last `Heading_Seconds` (2) the squad knew of his movement.

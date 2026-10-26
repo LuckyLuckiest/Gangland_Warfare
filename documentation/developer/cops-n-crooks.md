@@ -353,8 +353,9 @@ On `MAN_DOWN`/`LEADER_DOWN` the listener also calls `CopGroup.requestBackup(now,
 current target count (`CopRole.nextRole` over the wanted level's `Squad_Composition`; roles off, any cop). A
 replacement spawned mid-backup for a fallen Commander or Pointman therefore stays and the backup's extra goes (T-146),
 and the group's last Commander is never sent, even once the wanted level has fallen to a composition without one: he
-stays as one cop over the target and `pendingRelease` is capped at what the role excess can ever release (his excess
-counted out), so no radio responder joining later is sent home in his place (T-435). A cop fighting, cuffing or
+stays as one cop over the target and `pendingRelease` is capped at what the role excess can ever release (the
+Commander-flagged roles' excess pooled and capped once at every Commander but the last, however many roles carry
+`Commander: true`), so no radio responder joining later is sent home in his place (T-435). A cop fighting, cuffing or
 guarding is never sent; the release retries next run until enough have gone. `releaseSurplus` runs only while the
 player is wanted: a backup that runs out inside the post-escape search sends nobody home (T-187).
 
@@ -1250,8 +1251,10 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   history, never the live position; `handoffLead()` caps the lead's length at `CopSpawnManager.LEASH_MARGIN x
   Pursuit.Max_Distance` from that spot (not from the player, whose live position the cap would leak). The lead stops a
   block short of the first solid block on the way (a ray trace at eye height) and stands on ground near his height
-  there (`PostRing.standingSpot`), facing the heading; no standing room or an unloaded chunk gives `lastSeen` itself,
-  so a lead is never underground or inside a building he never entered (a breach trigger). The seed goes through
+  there (`PostRing.standingSpot`), facing the heading; no dry standing room (a pond's or lava lake's bed counts as none:
+  liquids are passable) or an unloaded chunk anywhere in the box the lead spans gives `lastSeen` itself, checked before
+  the ray trace so the trace never loads a chunk on the main thread, so a lead is never underground, under water or
+  inside a building he never entered (a breach trigger). The seed goes through
   `CopGroup.seedHandoff`, which remembers it: `HandoffController` takes no heading sample while the squad's lead is that
   seed, so a second hand-off with no news since leads from the squad's real last-known spot again (x 20 -> 44, never
   44 -> 68; `secondHandoffWithoutNews_leadsFromTheLastKnownSpotAgain`). The units head for that spot and search it:

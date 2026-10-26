@@ -18,6 +18,8 @@ import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -87,5 +89,38 @@ class SpawnBiasTest {
 
 		assertEquals(20.0, led.getX(), 1e-9);
 		assertEquals(64.0, led.getY(), 1e-9);
+	}
+
+	@Test
+	@DisplayName("a pond east: the only standing room is its bed, under water, so the lead is the last-known spot")
+	void aPond_isTheLastKnownSpot() {
+		World world = world((x, z) -> x >= 40 ? 60 : 64);
+		when(world.getBlockAt(anyInt(), anyInt(), anyInt())).thenAnswer(i -> {
+			Block   block = mock(Block.class);
+			int     x     = i.getArgument(0);
+			int     y     = i.getArgument(1);
+			boolean water = x >= 40 && y >= 60 && y < 64;
+			when(block.isPassable()).thenReturn(y >= (x >= 40 ? 60 : 64));
+			when(block.isLiquid()).thenReturn(water);
+			return block;
+		});
+
+		Location led = eastFrom(world).lead(24);
+
+		assertEquals(20.0, led.getX(), 1e-9);
+		assertEquals(64.0, led.getY(), 1e-9);
+	}
+
+	@Test
+	@DisplayName("an unloaded chunk on the way: the last-known spot, and no ray trace that would load it")
+	void anUnloadedChunkOnTheWay_isTheLastKnownSpotWithoutATrace() {
+		World world = world((x, z) -> 64);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenAnswer(i -> (int) i.getArgument(0) != 2);
+
+		Location led = eastFrom(world).lead(40); // 20 -> 60: chunk 1, 2 (blocks 32..47, unloaded), 3
+
+		assertEquals(20.0, led.getX(), 1e-9);
+		verify(world, never()).rayTraceBlocks(any(Location.class), any(Vector.class), anyDouble(),
+		                                      any(FluidCollisionMode.class), anyBoolean());
 	}
 }

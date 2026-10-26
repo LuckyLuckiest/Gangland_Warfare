@@ -39,23 +39,41 @@ public record SpawnBias(Vector heading, Location lastSeen, long until, double co
 	 * Where the hand-off units head (0.21.1, owner ruling R5): {@code lastSeen} moved {@code blocks} along the heading's
 	 * horizontal direction, stopped a block short of the first solid block on the way (eye height), and set on standing
 	 * ground near his height there ({@link PostRing#standingSpot}), facing the heading. {@code lastSeen} itself when the
-	 * heading has no horizontal length, the spot's chunk is not loaded or there is no standing room there: a spot
-	 * underground or inside a building would start a breach or an unreachable search where he never went.
+	 * heading has no horizontal length, a chunk on the way is not loaded (checked before the trace, which would load it),
+	 * or there is no dry standing room there: a spot underground, under water or inside a building would start a breach
+	 * or an unreachable search where he never went.
 	 */
 	public Location lead(double blocks) {
 		Vector facing = new Vector(heading.getX(), 0, heading.getZ());
 		World  world  = lastSeen.getWorld();
 		if (facing.lengthSquared() == 0 || world == null) return lastSeen.clone();
 		facing.normalize();
+		// the trace looks up every block it crosses, which loads an unloaded chunk on the main thread: check them first
+		if (!chunksLoaded(world, lastSeen, lastSeen.clone().add(facing.clone().multiply(Math.max(0, blocks)))))
+			return lastSeen.clone();
 
 		Location       eye  = lastSeen.clone().add(0, EYE_HEIGHT, 0);
 		RayTraceResult wall = blocks > 0 ? world.rayTraceBlocks(eye, facing, blocks, FluidCollisionMode.NEVER, true) : null;
 		double         run  = wall == null ? blocks : Math.max(0, wall.getHitPosition().distance(eye.toVector()) - 1);
 		Location       to   = lastSeen.clone().add(facing.clone().multiply(run));
-		if (!world.isChunkLoaded(to.getBlockX() >> 4, to.getBlockZ() >> 4)) return lastSeen.clone();
 
+		// water and lava are passable, so the standing room found may be a pond's bed: he never went under
 		Location spot = PostRing.standingSpot(world, to.getX(), to.getZ(), lastSeen.getBlockY());
-		return spot == null ? lastSeen.clone() : spot.setDirection(facing);
+		if (spot == null || world.getBlockAt(spot.getBlockX(), spot.getBlockY(), spot.getBlockZ()).isLiquid())
+			return lastSeen.clone();
+		return spot.setDirection(facing);
+	}
+
+	/** Every chunk in the box spanning {@code from} and {@code to} is loaded (a superset of the chunks a line crosses). */
+	private static boolean chunksLoaded(World world, Location from, Location to) {
+		int minX = Math.min(from.getBlockX(), to.getBlockX()) >> 4;
+		int maxX = Math.max(from.getBlockX(), to.getBlockX()) >> 4;
+		int minZ = Math.min(from.getBlockZ(), to.getBlockZ()) >> 4;
+		int maxZ = Math.max(from.getBlockZ(), to.getBlockZ()) >> 4;
+		for (int x = minX; x <= maxX; x++)
+			for (int z = minZ; z <= maxZ; z++)
+				if (!world.isChunkLoaded(x, z)) return false;
+		return true;
 	}
 
 	/**
