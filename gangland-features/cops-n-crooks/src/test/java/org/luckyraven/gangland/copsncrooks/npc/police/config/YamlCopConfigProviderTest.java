@@ -624,6 +624,7 @@ class YamlCopConfigProviderTest {
 				      Heading_Seconds: 4
 				      Bias_Seconds: 20
 				      Cone_Degrees: 45.0
+				      Lead_Blocks: 30.0
 				   Perimeter:
 				      Enabled: false
 				      Min_Level: 4
@@ -638,7 +639,7 @@ class YamlCopConfigProviderTest {
 
 		assertEquals(new DispatchSettings(false, 5.0, 2, 20, 48.0, 30), provider.getDispatchSettings());
 		assertEquals(new BreatherSettings(false, List.of(30, 20), 5), provider.getBreatherSettings());
-		assertEquals(new HandoffSettings(false, 4, 20, 45.0), provider.getHandoffSettings());
+		assertEquals(new HandoffSettings(false, 4, 20, 45.0, 30.0), provider.getHandoffSettings());
 		assertEquals(new PerimeterSettings(false, 4, 3, List.of("Medic"), 30, 8.0, 30.0, 2.0),
 		             provider.getPerimeterSettings());
 	}

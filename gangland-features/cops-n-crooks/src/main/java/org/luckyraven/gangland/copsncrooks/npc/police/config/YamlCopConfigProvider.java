@@ -1146,7 +1146,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return new HandoffSettings(handoff.get("Enabled").asBool().orDefault(defaults.enabled()),
 		                           handoff.get("Heading_Seconds").asInt().min(1).orDefault(defaults.headingSeconds()),
 		                           handoff.get("Bias_Seconds").asInt().min(0).orDefault(defaults.biasSeconds()),
-		                           handoff.get("Cone_Degrees").asDouble().min(1.0).orDefault(defaults.coneDegrees()));
+		                           handoff.get("Cone_Degrees").asDouble().min(1.0).orDefault(defaults.coneDegrees()),
+		                           handoff.get("Lead_Blocks").asDouble().min(0.0).orDefault(defaults.leadBlocks()));
 	}
 
 	// 0.21.0: clamped with Math.max (not NodeReader.min) so a too-small value clamps up rather than reverting to the default

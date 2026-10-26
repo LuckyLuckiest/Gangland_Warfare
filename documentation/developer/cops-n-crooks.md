@@ -1216,10 +1216,17 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   inherits the squad's own lead and its widening circle (pinned by `strandedReleased_searchCircleKeepsWidening` and
   `recycle_searchCircleKeepsWidening`). Before dispatching it trims the queue to `targetCount - counted`
   (`CopGroup.trimPending`, newest first), so a level drop calls off units. Live cops over the target go home through
-  `releaseSurplus`, never the last Commander, only when the level's base target dropped below `CopGroup.lastTarget`
-  (T-435): radio responders joining at the same target stay, and the post-escape search (wanted level 0, run at one
-  star) never sends home the walkers `keepSquadOnSearch` called back (T-187). A new wanted start calls back walkers in
-  range only up to the new level's target (`reengageReturning(group, player, limit, eligible)`, nearest first). A
+  `releaseSurplus` (`CopGroup.pendingRelease` caps how many), never the last Commander, in two cases (T-435). Inside an
+  episode, only when the level's base target dropped below `CopGroup.lastTarget`: radio responders joining at the same
+  target stay. At a new wanted start, `onWantedStart` sets `pendingRelease = max(0, engaged - target)` against the
+  cops engaged after the call back, not against `lastTarget`: a correction of the r3 note, which keyed the new episode
+  on `lastTarget` too, so a re-spot after a stepwise escape (`Drop_Mode` ONE_STAR: 3, 2, 1, search) kept the four
+  cops the search called back, while an all-stars escape trimmed to two. `keepSquadOnSearch` zeroes `pendingRelease`,
+  so a drop's release still waiting for free cops (all posted) never fires in the post-escape search (wanted level 0,
+  run at one star), which keeps every walker it called back (T-187). A new wanted start calls back walkers in
+  range only up to the new level's target (`reengageReturning(group, player, limit, eligible)`, nearest first; a group
+  with no engaged Commander calls its nearest walking Commander back first, past the limit if need be, so the start
+  never leaves the last Commander sent home, T-146). A
   walker the group sent home (`releaseSurplus`, or left over by that capped call back) is marked in
   `CopGroup.sentHome`: it is out of the counted cops, and while the group lacks cops (a level rise, a casualty) the
   nearest one in range is called back before anything spawns (T-436). Only a new wanted start and `releaseSurplus`
@@ -1229,11 +1236,15 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   stranded cops.
 - Tips (Keystone 1.15.4 `reportTip`, no sighting stamp): the wanted start (plus `markTipOff`, which keeps the
   `Dispatch_Wanted` once-per-hunt gate and the evasion hold), the biased spawn seed, and a hit on a cop that has no line
-  of sight to the attacker. The seed (`reportTip(bias.lastSeen())` plus `markTipOff`) is given once per hand-off bias
-  and only while no sighting or tip moved the squad's lead since the bias was set (`CopGroup.takeBiasSeed`, T-434), so
-  it never rewinds a fresher lead or the hand-off heading sampled from it. Since the bias's `lastSeen` is the squad's
-  lead at the hand-off, the seed re-tips that same spot: it deliberately restarts the search circle at 6 blocks, once
-  per hand-off (not once per refill), so the units the hand-off sent search the spot they were sent to. Leash release
+  of sight to the attacker. The seed (`reportTip(bias.lead(handoffLead()))` plus `markTipOff`) is given once per
+  hand-off bias and only while no sighting or tip moved the squad's lead since the bias was set
+  (`CopGroup.takeBiasSeed`, T-434), so it never rewinds a fresher lead or the hand-off heading sampled from it. Owner
+  ruling R5: `SpawnBias.lead(blocks)` is the bias's `lastSeen` (the squad's lead at the hand-off) moved
+  `Cops.Handoff.Lead_Blocks` (24) along the bias heading, which `HandoffController` reads from the squad's last-known
+  history, never the live position; `handoffLead()` clamps it to `CopSpawnManager.LEASH_MARGIN x Pursuit.Max_Distance`.
+  The units head for that spot and search it: the tip restarts the search circle at 6 blocks there, once per hand-off
+  (not once per refill). Spawn placement is unchanged: `hiddenRing` ahead of the bias, through `fits` (leash margin and
+  the R6 view gate). Leash release
   and recycle never re-tip (above). Only member sightings make `NpcPursuit`
   chase the live position.
 - `CopSpawnManager.fits(target)` gates every spawn path (`spawnUnit` and `spawnNearPlayer`): within

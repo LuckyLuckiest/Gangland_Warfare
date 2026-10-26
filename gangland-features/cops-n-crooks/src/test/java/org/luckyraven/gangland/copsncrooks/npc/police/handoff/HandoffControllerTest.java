@@ -366,7 +366,7 @@ class HandoffControllerTest {
 	@Test
 	@DisplayName("Cops.Handoff.Enabled false: nothing is recorded or set")
 	void disabled_doesNothing() {
-		settings = new HandoffSettings(false, 2, 10, 60.0);
+		settings = new HandoffSettings(false, 2, 10, 60.0, 24.0);
 		breakLeash(2, 6, 0);
 
 		assertNull(group.biasAt(clock[0]));

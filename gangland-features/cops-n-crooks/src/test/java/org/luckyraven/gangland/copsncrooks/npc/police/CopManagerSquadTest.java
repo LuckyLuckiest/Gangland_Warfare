@@ -287,8 +287,10 @@ class CopManagerSquadTest {
 		when(fx.provider.getSquadComposition(3)).thenReturn(List.of(COMMANDER, POINTMAN, ASSAULT, ASSAULT));
 		when(fx.provider.getSquadComposition(1)).thenReturn(List.of(COMMANDER, POINTMAN));
 		when(fx.spawner.spawnNearPlayer(any(), anyInt(), any(), any())).thenAnswer(inv -> {
-			CopNpc cop = fx.cop(CopState.IDLE, 0, 0);
-			when(cop.getRole()).thenReturn(inv.getArgument(3));
+			CopRole role = inv.getArgument(3);
+			// the Commander walked farthest (60 blocks off him), the rest 14: nearest first alone would leave him out
+			CopNpc cop = role == COMMANDER ? fx.cop(CopState.IDLE, 10, 70) : fx.cop(CopState.IDLE, 0, 0);
+			when(cop.getRole()).thenReturn(role);
 			return cop;
 		});
 		manager.onWantedStart(player, three);
@@ -1165,5 +1167,60 @@ class CopManagerSquadTest {
 		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
 
 		assertEquals(0, manager.groupFor(playerId).getLevel());
+	}
+
+	@Test
+	@DisplayName("T-187: a release left over from a drop (posts not free yet) never fires in the post-escape search")
+	void escapeAfterADrop_leftoverReleaseNeverFiresInTheSearch() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		// he is lost: the perimeter posts every cop, so the drop to one star finds nobody free to send home
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.POSTED);
+		manager.spawnTick(playerId, one);
+		assertEquals(2, group.getPendingRelease(), "the drop's release waits for free cops");
+
+		// the last star goes: escape, the posts come off, and the search keeps all four
+		manager.onWantedEnd(player, WantedCause.EVASION);
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.PURSUING);
+		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+
+		assertEquals(4, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count());
+	}
+
+	@Test
+	@DisplayName("T-435: a re-spot at one star after a stepwise escape fields one star's target, however the stars went")
+	void stepwiseEscape_reSpottedAtOneStar_fieldsItsTarget() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted two   = CopManagerFixture.wanted(2);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(2)).thenReturn(3);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		// Drop_Mode ONE_STAR: three, two, one, then the search, which calls every walker back
+		manager.spawnTick(playerId, two);
+		manager.spawnTick(playerId, one);
+		manager.onWantedEnd(player, WantedCause.EVASION);
+		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+		assertEquals(4, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count());
+
+		// re-spotted: the search ends in a one-star wanted start
+		when(fx.targeting.isSearching(playerId)).thenReturn(false);
+		manager.onWantedLevelChange(player, one, 0, 1);
+		manager.spawnTick(playerId, one);
+		manager.spawnTick(playerId, one);
+
+		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count());
 	}
 }

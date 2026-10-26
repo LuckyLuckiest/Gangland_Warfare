@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BreatherSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DispatchSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.handoff.HandoffController;
@@ -89,7 +90,8 @@ class CopManagerHandoffTest {
 		assertNotNull(bias);
 		verify(fx.radio).sayFromLeader(group, "Handoff", Map.of("direction", "east"), player);
 
-		// he keeps running; the replacements are enqueued under the bias and seeded where he was last seen (R5)
+		// he keeps running; the replacements are enqueued under the bias and seeded Lead_Blocks (24) on along the
+		// heading the squad saw him take from where it last saw him (R5), not at his live x=90
 		playerAt(90);
 		fx.manager.spawnTick(player.getUniqueId(), wanted);
 
@@ -98,7 +100,54 @@ class CopManagerHandoffTest {
 		List<PendingUnit> carrying = units.getAllValues().stream().filter(u -> u.bias() != null).toList();
 		assertTrue(carrying.size() >= 2, "both replacements carry the bias");
 		for (PendingUnit unit : carrying) assertSame(bias, unit.bias());
-		assertEquals(20.0, group.getSquad().lastKnownLocation().getX());
+		assertEquals(44.0, group.getSquad().lastKnownLocation().getX());
+	}
+
+	/** Seen running east (x=10, x=20), then the chase leashes out with him unseen: the hand-off at x=20, heading east. */
+	private CopGroup handOffAfterARunEast(HandoffController controller) {
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group = fx.manager.groupFor(player.getUniqueId());
+		playerAt(10);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		fx.clock[0] += 1_000L;
+		playerAt(20);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		for (CopNpc cop : group.getCops()) {
+			cop.transitionTo(CopState.RETURNING);
+			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
+		}
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		assertNotNull(group.biasAt(fx.clock[0]));
+		return group;
+	}
+
+	@Test
+	@DisplayName("R5: the hand-off units head where the squad saw him going, Lead_Blocks on; his live spot never leaks")
+	void handoffSeed_isTheLastKnownSpotLedAlongTheSquadSeenHeading() {
+		CopGroup group = handOffAfterARunEast(new HandoffController(fx.manager, fx.radio, () -> fx.provider));
+
+		// unseen, he doubled back north-west
+		when(player.getLocation()).thenReturn(new Location(fx.world, -40, 64, -60));
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+
+		Location goal = group.getSquad().lastKnownLocation();
+		assertEquals(20.0 + HandoffSettings.DEFAULT.leadBlocks(), goal.getX(), 1e-9, "east of the last-known spot");
+		assertEquals(10.0, goal.getZ(), 1e-9, "on the squad-seen heading, not toward his live spot");
+	}
+
+	@Test
+	@DisplayName("R5: Lead_Blocks is clamped inside the spawn leash margin (0.75 x Pursuit.Max_Distance)")
+	void handoffLead_clampedInsideTheLeashMargin() {
+		when(fx.provider.getHandoffSettings()).thenReturn(new HandoffSettings(true, 2, 10, 60.0, 500.0));
+		CopGroup group = handOffAfterARunEast(new HandoffController(fx.manager, fx.radio, () -> fx.provider));
+
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+
+		assertEquals(20.0 + 0.75 * 80.0, group.getSquad().lastKnownLocation().getX(), 1e-9);
 	}
 
 	@Test

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BreatherSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DispatchSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
@@ -443,8 +444,13 @@ class CopManagerDispatchTest {
 		verify(fx.spawner).spawnNearPlayer(eq(player), eq(3), any(), eq(POINTMAN)); // 0 = the star's tier (fixture 3)
 	}
 
+	/** R5: the seed a hand-off unit gives, Handoff.Lead_Blocks (24) east of {@code lastSeen} along the +X heading. */
+	private static Location ledOn(Location lastSeen) {
+		return lastSeen.clone().add(HandoffSettings.DEFAULT.leadBlocks(), 0, 0);
+	}
+
 	@Test
-	@DisplayName("with a hand-off bias active, new units carry it and seed the squad with its last sighting + a tip-off")
+	@DisplayName("with a hand-off bias active, new units carry it and seed the squad with its last sighting led along the heading + a tip-off")
 	void biasActive_newUnitsAreSeededWithTipOff() {
 		manager.onWantedStart(player, wanted);
 		Location  lastSeen = new Location(fx.world, 50, 64, 10);
@@ -454,7 +460,7 @@ class CopManagerDispatchTest {
 		manager.spawnTick(playerId, wanted);
 
 		for (PendingUnit unit : spawnedUnits(2)) assertSame(bias, unit.bias());
-		assertEquals(lastSeen, group().getSquad().lastKnownLocation());
+		assertEquals(ledOn(lastSeen), group().getSquad().lastKnownLocation());
 		assertTrue(group().tippedOffWithin(fx.clock[0], 0L));
 		// 0.21.1 (R4): the seed is a tip - no member saw him there, so nobody chases his live position
 		assertFalse(group().getSquad().hasFreshSighting());
@@ -494,11 +500,11 @@ class CopManagerDispatchTest {
 		manager.spawnTick(playerId, wanted);
 
 		for (PendingUnit unit : spawnedUnits(2)) assertSame(bias, unit.bias());
-		assertEquals(lastSeen, group().getSquad().lastKnownLocation());
+		assertEquals(ledOn(lastSeen), group().getSquad().lastKnownLocation());
 	}
 
 	@Test
-	@DisplayName("a 20 s ETA outlives the 10 s bias: the unit still spawns with it and seeds lastSeen")
+	@DisplayName("a 20 s ETA outlives the 10 s bias: the unit still spawns with it and seeds its lead")
 	void biasSurvivesALongEta() {
 		northside();
 		manager.onWantedStart(player, wanted);
@@ -512,7 +518,7 @@ class CopManagerDispatchTest {
 		manager.spawnTick(playerId, wanted);
 
 		for (PendingUnit unit : spawnedUnits(2)) assertSame(bias, unit.bias());
-		assertEquals(lastSeen, group().getSquad().lastKnownLocation());
+		assertEquals(ledOn(lastSeen), group().getSquad().lastKnownLocation());
 		assertTrue(group().tippedOffWithin(21_000L, 0L));
 	}
 

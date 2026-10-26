@@ -20,6 +20,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DispatchSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.Dispatcher;
@@ -170,10 +171,11 @@ public class CopManager implements BeanLifecycle {
 		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
 		// which only guards against a per-tick bounce inside a single episode. Only up to the new level's target (T-435):
 		// the walkers over it keep walking, sent home, and come back first if the group lacks cops later (T-436).
-		int target  = Math.min(spawnManager.getTargetCopCount(wanted.getLevel()), configProvider.getMaxCopsPerPlayer());
-		int engaged = (int) group.getCops().stream()
-		                         .filter(cop -> cop.isValid() && cop.getCurrentState() != CopState.RETURNING).count();
-		reengageReturning(group, player, target - engaged, cop -> true);
+		int target = Math.min(spawnManager.getTargetCopCount(wanted.getLevel()), configProvider.getMaxCopsPerPlayer());
+		reengageReturning(group, player, target - engagedCount(group), cop -> true);
+		// The new episode fields its own target, trimmed against the cops engaged now, not against the last episode's
+		// target: a re-spot after a stepwise escape (Drop_Mode ONE_STAR) lands where an all-stars escape does (T-435)
+		group.setPendingRelease(Math.max(0, engagedCount(group) - target));
 
 		startSpawnTask(playerId, wanted);
 		startAITask(playerId);
@@ -307,6 +309,8 @@ public class CopManager implements BeanLifecycle {
 			for (CopNpc cop : group.getCops()) {
 				if (cop.getCurrentState() == CopState.CUFFING) cop.transitionTo(CopState.PURSUING);
 			}
+			// a drop's release still waiting for free cops (posted ones) never fires inside the search (T-187)
+			group.setPendingRelease(0);
 			// The owner ruling: the search goes on, so cops already walking home come back to it, every one of them
 			// (the search's one-star squad never sends the surplus home: spawnTick)
 			reengageReturning(group, player, Integer.MAX_VALUE, cop -> true);
@@ -317,24 +321,30 @@ public class CopManager implements BeanLifecycle {
 	 * Pulls up to {@code limit} of the group's returning cops within {@code Pursuit.Max_Distance} of {@code player} that
 	 * pass {@code eligible} back into the hunt, nearest first; the eligible ones over the limit are marked sent home
 	 * (T-436). One farther out would leash again on its next tick and restart its walk home (T-131, cause 5): it stays
-	 * RETURNING.
+	 * RETURNING. A group with no engaged Commander calls its nearest walking Commander back first, even past the limit,
+	 * so the squad's last Commander is never left sent home (T-146); a new episode then trims the others to its target.
 	 *
 	 * @return the cops called back
 	 */
 	private List<CopNpc> reengageReturning(CopGroup group, Player player, int limit, Predicate<CopNpc> eligible) {
 		double       maxDist = configProvider.getPursuitMaxDistance();
 		List<CopNpc> walkers = new ArrayList<>();
+		boolean      led     = false;
 		for (CopNpc cop : group.getCops()) {
+			if (cop.isValid() && cop.getCurrentState() != CopState.RETURNING && isCommander(cop)) led = true;
 			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) continue;
 			if (isStrandedReturning(cop, player, maxDist) || !eligible.test(cop)) continue;
 			walkers.add(cop);
 		}
-		Location at = player.getLocation();
-		walkers.sort(Comparator.comparingDouble(cop -> cop.getEntity().getLocation().distanceSquared(at)));
+		Location at       = player.getLocation();
+		boolean  needLead = !led;
+		walkers.sort(Comparator.comparing((CopNpc cop) -> !(needLead && isCommander(cop)))
+		                       .thenComparingDouble(cop -> cop.getEntity().getLocation().distanceSquared(at)));
 
 		List<CopNpc> back = new ArrayList<>();
 		for (CopNpc cop : walkers) {
-			if (back.size() >= limit) {
+			boolean leader = needLead && back.isEmpty() && isCommander(cop);
+			if (!leader && back.size() >= limit) {
 				group.markSentHome(cop);
 				continue;
 			}
@@ -940,8 +950,9 @@ public class CopManager implements BeanLifecycle {
 			group.add(newCop);
 
 			if (group.takeBiasSeed(unit.bias())) {
-				// a tip, not a sighting (R4): no member saw him at the hand-off spot
-				group.getSquad().reportTip(unit.bias().lastSeen());
+				// a tip, not a sighting (R4): no member saw him at the hand-off spot. The units head on along the heading
+				// the squad saw him take, Lead_Blocks past it, and search there (R5)
+				group.getSquad().reportTip(unit.bias().lead(handoffLead()));
 				group.markTipOff(now);
 			}
 		}
@@ -968,6 +979,16 @@ public class CopManager implements BeanLifecycle {
 
 	private DispatchSettings dispatchSettings() {
 		return requireNonNullElse(configProvider.getDispatchSettings(), DispatchSettings.DEFAULT);
+	}
+
+	/**
+	 * {@code Cops.Handoff.Lead_Blocks}, clamped inside the spawn leash margin ({@link CopSpawnManager#LEASH_MARGIN} x
+	 * {@code Pursuit.Max_Distance}; no leash configured keeps it as set).
+	 */
+	private double handoffLead() {
+		double lead  = requireNonNullElse(configProvider.getHandoffSettings(), HandoffSettings.DEFAULT).leadBlocks();
+		double leash = configProvider.getPursuitMaxDistance() * CopSpawnManager.LEASH_MARGIN;
+		return leash > 0 ? Math.min(lead, leash) : lead;
 	}
 
 	private BreatherSettings breatherSettings() {
@@ -1122,6 +1143,11 @@ public class CopManager implements BeanLifecycle {
 			group.setPendingRelease(group.getPendingRelease() - 1);
 			surplus--;
 		}
+	}
+
+	private static int engagedCount(CopGroup group) {
+		return (int) group.getCops().stream()
+		                  .filter(cop -> cop.isValid() && cop.getCurrentState() != CopState.RETURNING).count();
 	}
 
 	private static boolean isCommander(CopNpc cop) {

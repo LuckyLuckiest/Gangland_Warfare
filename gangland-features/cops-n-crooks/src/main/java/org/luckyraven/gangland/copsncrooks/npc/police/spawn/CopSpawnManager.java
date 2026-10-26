@@ -43,7 +43,7 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 * A spawn spot stays within this share of {@code Cops.Pursuit.Max_Distance} (3D) of the suspect: a cop spawned at
 	 * the leash line walks home in the second it spawns and is re-dispatched (0.21.1 cause 2).
 	 */
-	private static final double LEASH_MARGIN         = 0.75;
+	public static final  double LEASH_MARGIN         = 0.75;
 	/** Half-angle of a player's view cone, as {@code CopSightlines.inView}. */
 	private static final double VIEW_HALF_ANGLE      = Math.PI / 3;
 

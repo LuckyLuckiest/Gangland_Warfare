@@ -37,7 +37,24 @@ Wanted:
 - **Crime subtitles**: every title cue takes `%cause%` and the chat card is sent whenever `Star_Card` is on and the cue
   does not carry `%card%`.
 
-## 3. Text keys
+## 3. Optional edit: `copsncrooks/cops.yml`
+
+0.21.1 adds one key. The code default applies when it is missing, so an old `cops.yml` works unchanged; add it to see
+and tune it:
+
+```yaml
+Cops:
+   Handoff:
+      # new in 0.21.1: blocks past the squad's last-known spot, along the heading it saw him take, that the units sent
+      # after the hand-off head for and search. Kept within 0.75 x Pursuit.Max_Distance.
+      Lead_Blocks: 24.0
+```
+
+After a hand-off ("Lost him heading X. Units ahead, pick him up.") the new units no longer search the spot where he was
+lost: they walk on along the heading the squad saw him take and search there. Neither the heading nor that spot uses
+his live position. `Lead_Blocks: 0` keeps the old behaviour of searching the last-known spot.
+
+## 4. Text keys
 
 `copsncrooks/wanted_messages.yml` gains `Patrol.Ignored` (`"&cBeat cop: &fYou were warned. &7Cause: &c%cause%"`) and
 `Patrol.Lost_Sight`. A file without them uses the same text from the code.

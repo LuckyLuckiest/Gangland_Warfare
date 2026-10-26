@@ -10,8 +10,8 @@ import java.util.Objects;
  * suspect's heading, until {@code until}.
  *
  * @param heading     the suspect's travel direction (only X/Z are read).
- * @param lastSeen    the suspect's position at the hand-off (newest heading sample): the seed new units report, never
- *                    his live position.
+ * @param lastSeen    the squad's last-known spot at the hand-off (newest heading sample), never his live position;
+ *                    new units seed it led on along the heading ({@link #lead}).
  * @param until       radio-clock ms the bias stops applying to newly enqueued units.
  * @param coneDegrees half-angle, either side of the heading, of "ahead".
  * @since 0.16.0
@@ -26,6 +26,16 @@ public record SpawnBias(Vector heading, Location lastSeen, long until, double co
 	/** The bias still applies at {@code now}. */
 	public boolean activeAt(long now) {
 		return now < until;
+	}
+
+	/**
+	 * Where the hand-off units head (0.21.1, owner ruling R5): {@code lastSeen} moved {@code blocks} along the heading's
+	 * horizontal direction; {@code lastSeen} itself when the heading has no horizontal length.
+	 */
+	public Location lead(double blocks) {
+		Vector facing = new Vector(heading.getX(), 0, heading.getZ());
+		if (facing.lengthSquared() == 0) return lastSeen.clone();
+		return lastSeen.clone().add(facing.normalize().multiply(blocks));
 	}
 
 	/**

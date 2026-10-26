@@ -438,7 +438,7 @@ player's world:
   `Cops.Pursuit.Max_Distance` (60 blocks) of him, so a fresh cop is not past the pursuit leash the second it spawns.
 - **Lost cops leave (0.21.1).** A cop that gave up the chase beyond `Cops.Pursuit.Max_Distance` is removed as soon as
   no player is looking at it, instead of walking home for up to five minutes. Nobody saw where the player went, so the
-  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count (the squad's last Commander stays). A new wanted level started while the last squad is still walking home calls back only as many of them as the new level needs. Cops sent home that are still in range are the first called back when the level rises again or a cop falls. Cops answering a radio call stay even when they put the squad over its count, and the post-escape search keeps every cop it called back. While the whole squad is lost
+  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count (the squad's last Commander stays). A new wanted level fields that level's count whatever the last one ended with: walkers still in range are called back only as many as it needs (its Commander first), and cops still hunting beyond it go home, whether the stars went one at a time or all at once. Cops sent home that are still in range are the first called back when the level rises again or a cop falls. Cops answering a radio call stay even when they put the squad over its count, and the post-escape search keeps every cop it called back, even one a star drop had marked for home. While the whole squad is lost
   (cops walking home, a hand-off pending, units on the road) the evasion countdown pauses instead of restarting.
 - **Tips are not sightings (0.21.1).** The crime scene, a hand-off seed and a hit from cover tell the squad where to
   search; only a cop who really sees the player makes the squad chase his live position.
@@ -484,8 +484,10 @@ search; a new sighting re-arms it. A posted cop that the suspect attacks drops i
 
 When the suspect outruns the cops that chased him (the pursuers give up and walk home) the squad leader radios his
 heading ("Lost him heading north-east. Units ahead, pick him up.") and the **next units appear ahead of him**: for
-`Handoff.Bias_Seconds` (10) new units spawn within `Cone_Degrees` (60) of the heading and report his last position,
-not his live one; the first of them reports it once, and not at all if a cop has spotted him since. The heading is read over the last `Heading_Seconds` (2) of his movement.
+`Handoff.Bias_Seconds` (10) new units spawn within `Cone_Degrees` (60) of the heading. They head where the squad saw
+him going: `Lead_Blocks` (24) past his last-known spot along that heading, and search there once they arrive. Neither
+the heading nor that spot is his live position (0.21.1). The first unit gives the squad that spot once, and not at all if
+a cop has spotted him since. The heading is read over the last `Heading_Seconds` (2) the squad knew of his movement.
 
 ### Hideouts and the cold trail
 
