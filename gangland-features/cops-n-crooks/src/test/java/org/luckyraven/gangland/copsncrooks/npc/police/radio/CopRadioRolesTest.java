@@ -335,6 +335,29 @@ class CopRadioRolesTest {
 	}
 
 	@Test
+	@DisplayName("radio-far 3: the shipped Flank_Left order's %side% is read from the squad's last-known facing, not the suspect's live one")
+	void flankOrderSide_fromTheLastKnownSpot() throws java.io.IOException {
+		try (java.io.InputStream in = getClass().getClassLoader().getResourceAsStream("copsncrooks/cop_radio_messages.yml");
+		     java.io.Reader reader = new java.io.InputStreamReader(java.util.Objects.requireNonNull(in),
+		                                                           java.nio.charset.StandardCharsets.UTF_8)) {
+			org.bukkit.configuration.file.YamlConfiguration shipped =
+					org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(reader);
+			pools.put("Sides", shipped.getStringList("Sides"));
+			// the shipped pool's first line, "%member%, take his %side%!" (one line, so the pick is not random)
+			pools.put("Flank_Left", List.of(shipped.getStringList("Lines.Flank_Left").get(0)));
+		}
+		group.add(cop(1, 4, 0, null));
+		CopNpc member = cop(2, 6, 0, null);
+		group.add(member);
+		// last seen at the origin facing -Z, so +X is his right; live he faces +Z, where +X is his left
+		group.getSquad().reportSighting(new Location(world, 0, 64, 0, 180f, 0f));
+
+		signal(NpcSquadSignal.FLANK_LEFT, member, new Location(world, 12, 64, 0));
+
+		verify(bystander).sendMessage("[SWAT-1] SWAT-2, take his right!");
+	}
+
+	@Test
 	@DisplayName("radio-far 1: a route started with no contact and no fresh sighting is a search route (Route_Search), not 'to him'")
 	void route_withoutContact_saysRouteSearch() {
 		pools.put("Route", List.of("ROUTE to him"));

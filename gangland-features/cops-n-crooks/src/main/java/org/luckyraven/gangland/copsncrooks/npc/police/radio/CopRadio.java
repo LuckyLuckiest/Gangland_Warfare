@@ -116,8 +116,8 @@ public class CopRadio {
 			boolean down = signal == NpcSquadSignal.MAN_DOWN || signal == NpcSquadSignal.LEADER_DOWN;
 			if (down && member instanceof CopNpc cop && cop.getRole() != null && cop.getRole().commander())
 				commanderDown(group, squad, voice, member, where);
-			else if (!searchRoute(squad, voice, signal, member, where) && !roleLine(squad, voice, signal, member, where))
-				speak.onSignal(squad, signal, member, where);
+			else if (!searchRoute(squad, voice, signal, member, where) && !roleLine(squad, voice, signal, member, where) &&
+			         !order(squad, voice, signal, member, where)) speak.onSignal(squad, signal, member, where);
 			followUps(group, squad, voice, signal, member, where);
 			if (down) regroupCheck(group);
 			switch (signal) {
@@ -407,6 +407,28 @@ public class CopRadio {
 		if (!lines.lines("Route_Search").isEmpty())
 			radio.say(squad, voice, member.getEntity(), speakerName(member), "Route_Search", "Format", where, null,
 			          Map.of());
+		return true;
+	}
+
+	/** The leader's orders to one member: SquadRadio's {@code orderFrom} signals. */
+	private static final Set<NpcSquadSignal> ORDERS = EnumSet.of(NpcSquadSignal.FLANK_LEFT, NpcSquadSignal.FLANK_RIGHT,
+	                                                             NpcSquadSignal.PUSH, NpcSquadSignal.SEARCH,
+	                                                             NpcSquadSignal.NO_ROUTE);
+
+	/**
+	 * The leader's order to {@code member}, said here and not by SquadRadio so its {@code %side%} comes from the squad's
+	 * last-known spot and facing ({@link #sideOf}), never the suspect's live facing; the member acks one ack delay
+	 * later once the order was heard, as SquadRadio's own order does. {@code true} for an order signal.
+	 */
+	private boolean order(NpcSquad squad, RadioVoice voice, NpcSquadSignal signal, AbstractNpc member,
+	                      @Nullable Location where) {
+		if (!ORDERS.contains(signal)) return false;
+		AbstractNpc leader = squad.leader();
+		if (leader == null || leader == member) return true; // a leader never orders itself; no bare "Ack" either
+		boolean heard = radio.say(squad, voice, leader.getEntity(), speakerName(leader), SquadRadio.keyOf(signal),
+		                          "Format", where, member.getEntity(),
+		                          Map.of("member", speakerName(member), "side", sideOf(squad, where)));
+		if (heard && !lines.lines("Ack").isEmpty()) radio.sayLater(squad, voice, member, "Ack", Map.of(), 1, () -> true);
 		return true;
 	}
 
