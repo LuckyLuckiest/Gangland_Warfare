@@ -57,13 +57,15 @@ exactly as before.
 ### Witnesses and 911 calls (0.20.0)
 
 A car theft, an assault on a civilian or (since 0.21.1) the killing of a civilian that no cop saw is not counted at once.
-It is counted only if someone calls it in. Nothing here is random: every step has a fixed rule and something you can see.
+It is counted only if someone calls it in. A cop saw it when a cop (squad or beat) picks you up at that moment within
+`Alert_Range` (40), or your squad has a fresh sighting of you; then it counts at once. Nothing here is random: every step has a fixed rule and something you can see.
 
 - **Who sees it.** The nearest civilian within `Witness.Range` (24 blocks) with line of sight, and (0.21.1) facing the
   crime: `Witness.View_Angle` (180) is the width of its view, so a civilian with its back to you sees nothing. A **loud**
   crime is different: every civilian in range turns round to face it first (you see them turn), then the rule applies.
-  Loud means a crime in `Witness.Loud_Crimes` (`Kill_Civilian`), or any crime within `Witness.Loud_Shot_Seconds` (3) of
-  you firing a gun. Car theft and punching are silent.
+  Loud means any crime within `Witness.Loud_Shot_Seconds` (3) of you firing a weapon in `Witness.Loud_Weapon_Types`
+  (a gun or a throwable; a melee swing is silent), or a crime listed in `Witness.Loud_Crimes` (none by default). Car
+  theft, punching and a fist or knife kill are silent.
 - **Notice (0.21.1).** The witness stares at you for `Notice_Seconds` (1), an angry-villager puff appears over its head,
   and it says `[911] Pedestrian: Hey! I saw that! I'm calling the cops!`. You hear it wherever you are; people near it do
   too.
@@ -72,11 +74,11 @@ It is counted only if someone calls it in. Nothing here is random: every step ha
 - **Stopping it.** Hit the caller, aim a weapon at it for one AI tick (one second; `Scare_Range` 16 blocks, `Scare_Angle`
   12 degrees), or (0.21.1) walk up and right-click it within `Intimidate_Range` (4 blocks, no weapon needed; only the
   player it is reporting can do this). It says `Okay, okay! I'm hanging up!`, drops the phone, runs, and your bar says
-  `Call stopped.`. For `Scared_Cooldown_Seconds` (60) it will not call about you again. Kill the caller instead and the
+  `Call stopped.`. For `Scared_Cooldown_Seconds` (60) it will not call 911 again, about you or anyone. Kill the caller instead and the
   next civilian still watching takes over with its own Notice.
 - **Connected.** After `Witness.Call_Seconds` (8): `Yes, police? He's right here, near Docks!`, then the dispatch line
   (even if no cop is out yet), and the crime counts. The squad gets a tip to the crime spot and searches there. The star
-  card names the witness: `Car theft (reported by a witness)`.
+  card in chat names the witness: `Car theft (reported by a witness)`; the title keeps the plain crime name.
 - Nobody saw it and no cop saw it: the gated crime adds no heat.
 - Hitting a civilian publishes `Assault_Civilian` at most once per attacker and civilian every `Assault_Repeat_Seconds` (10).
 

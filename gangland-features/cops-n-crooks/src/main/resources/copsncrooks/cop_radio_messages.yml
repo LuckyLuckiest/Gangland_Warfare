@@ -311,7 +311,7 @@ Lines:
       - "All units, be advised: %target% is the city's Most Wanted, last seen near %place%."
    # 0.20.0: a 911 call reaches dispatch with the crime, the place and the suspect.
    Caller_911:
-      - "Dispatch: 911 caller reports %crime% near %place%. Suspect: %suspect%."
+      - "911 caller reports %crime% near %place%. Suspect: %suspect%."
    # 0.20.0: a cop describes the suspect to the squad.
    Suspect_Description:
       - "Suspect is %suspect%."

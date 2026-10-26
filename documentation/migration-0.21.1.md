@@ -74,9 +74,11 @@ Add inside the `Witness:` block:
 Witness:
    # ... your existing keys ...
    View_Angle: 180.0
-   Loud_Crimes:
-      - Kill_Civilian
+   Loud_Crimes: []
    Loud_Shot_Seconds: 3
+   Loud_Weapon_Types:
+      - GUN
+      - THROWABLE
    Notice_Seconds: 1
    Notice_Particle: "ANGRY_VILLAGER"
    Phone_Item: "CLOCK"
@@ -86,7 +88,8 @@ Witness:
 
 A file without these keys already gets these values from the code, so this edit only documents them; edit a value to
 change it. `View_Angle: 360.0` restores the 0.20.0 rule (civilians see all round). `Loud_Shot_Seconds: 0` stops
-gunshots counting as noise. `Phone_Item: ""` and `Notice_Particle: ""` turn those off. `Intimidate_Range: 0` turns off
+shots counting as noise; `Loud_Weapon_Types` names the Bartizan weapon categories whose shot is noise (a melee swing is
+not). List a crime id under `Loud_Crimes` (for example `Kill_Civilian`) to make it loud whatever the weapon. `Phone_Item: ""` and `Notice_Particle: ""` turn those off. `Intimidate_Range: 0` turns off
 the right-click.
 
 Add to the `Shouts.Priority` list:
@@ -128,18 +131,34 @@ the jar's `npc/civilian_messages_es.yml`.
 
 `Hud.Card.Reported: "%crime% (reported by a witness)"` is new; a file without it uses that text from the code.
 
+### 4.4a `copsncrooks/cop_radio_messages.yml` (and `cop_radio_messages_es.yml`)
+
+`Caller_911` now plays through `Dispatch_Format` (`[DISPATCH] ...`), so drop the old `Dispatch: ` lead-in or players see
+it twice:
+
+```yaml
+   Caller_911:
+      - "911 caller reports %crime% near %place%. Suspect: %suspect%."
+```
+
+The Spanish file: `- "Llamada al 911 reporta %crime% cerca de %place%. Sospechoso: %suspect%."`.
+
 ### 4.5 Behaviour that changed
 
 - A silent crime (car theft, a punch) is reported only by a civilian whose view (`View_Angle`) covers you. A loud one
-  (`Loud_Crimes`, or any crime within `Loud_Shot_Seconds` of your own gunshot) makes every civilian in range turn to it
+  (any crime within `Loud_Shot_Seconds` of your own gun or throwable shot, or one in `Loud_Crimes`, none by default)
+  makes every civilian in range turn to it
   first, visibly.
 - Notice, dialling, stopped and connected each show and say something (see
   [wanted-bounty.md](./features/wanted-bounty.md#witnesses-and-911-calls-0200)). The countdown bar replaces the one-off
   "A witness is calling 911!" line.
 - The reported player can right-click the caller within `Intimidate_Range` to stop the call, no weapon needed. A
-  stopped caller (hit, scared or intimidated) does not call about you again for `Scared_Cooldown_Seconds`.
+  stopped caller (hit, scared or intimidated) does not call 911 again, about you or anyone, for
+  `Scared_Cooldown_Seconds`.
 - `Caller_911` is a dispatch line now (`Dispatch_Format`), so it is heard even when the call has just made you wanted
   and no cop has spawned yet (T-345). Its `%crime%` is the crime's display name (`Crimes.<id>` of
   `wanted_messages.yml`), no longer the raw id (`Car_Theft`).
-- A star raised by a crime a witness reported says so in the cause: "Car theft (reported by a witness)". A store
-  hold-up's silent alarm counts as a witness report too.
+- A star raised by a civilian's 911 call says so on the chat card: "Car theft (reported by a witness)". The title's
+  `%cause%` stays the plain crime name. A store hold-up's silent alarm or a safe alarm is not labelled.
+- A gated crime (now including `Kill_Civilian`) committed in front of a cop counts at once: the gate checks whether any
+  live squad or beat cop picks you up within `Alert_Range` before it waits for a witness.

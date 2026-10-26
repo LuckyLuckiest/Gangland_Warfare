@@ -12,6 +12,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -43,6 +44,7 @@ class NineOneOneListenerTest {
 	private final CopRadio     radio      = mock(CopRadio.class);
 	private final PlaceNames   places     = mock(PlaceNames.class);
 	private final WantedMessages names    = mock(WantedMessages.class);
+	private final HeatLedger     ledger   = mock(HeatLedger.class);
 	private final Player       player     = mock(Player.class);
 	private final UUID         playerId   = UUID.randomUUID();
 	private final Location     at         = new Location(mock(World.class), 100, 64, -20);
@@ -62,7 +64,10 @@ class NineOneOneListenerTest {
 		                   org.mockito.ArgumentMatchers.anyInt())).thenReturn(true);
 		when(places.locate(any())).thenReturn(Optional.of("Docks"));
 		when(names.crimeName("Car_Theft")).thenReturn("Car theft");
-		listener = new NineOneOneListener(crimes, copManager, radio, places, names);
+		// commitReported runs the commit it is handed
+		when(ledger.commitReported(any(), any())).thenAnswer(
+				inv -> inv.<java.util.function.BooleanSupplier>getArgument(1).getAsBoolean());
+		listener = new NineOneOneListener(crimes, copManager, radio, places, names, ledger);
 	}
 
 	private CivilianCalledInEvent call(String crimeId) {
@@ -89,6 +94,16 @@ class NineOneOneListenerTest {
 		assertEquals("Docks", placeholders.getValue().get("place"));
 		// %suspect% belongs to the CopRadio extras hook (disguise lane): a line-level value would leak the real name
 		assertEquals(java.util.Set.of("crime", "place"), placeholders.getValue().keySet());
+	}
+
+	@Test
+	@DisplayName("0.21.1 Q7: the recommit runs inside HeatLedger.commitReported, so only it is labelled reported by a witness")
+	void recommitIsMarkedReported() {
+		listener.onCalledIn(call("Car_Theft"));
+
+		InOrder order = inOrder(ledger, crimes);
+		order.verify(ledger).commitReported(eq(player), any());
+		order.verify(crimes).commit(player, "Car_Theft", at, false, 1);
 	}
 
 	@Test

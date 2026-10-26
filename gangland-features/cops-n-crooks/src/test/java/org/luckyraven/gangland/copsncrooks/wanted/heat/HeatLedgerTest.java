@@ -228,12 +228,17 @@ class HeatLedgerTest {
 	}
 
 	@Test
-	@DisplayName("0.21.1 Q7: a crime with a witness and no cop is recorded as reported; a cop's or nobody's is not")
-	void reportedOnlyWhenAWitnessAndNoCop() {
-		ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 1));
+	@DisplayName("0.21.1 Q7: only the 911 recommit (commitReported) is recorded as reported; an alarm's witness is not")
+	void reportedOnlyForThe911Recommit() {
+		boolean committed = ledger.commitReported(player, () -> {
+			ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 1));
+			return true;
+		});
+		assertTrue(committed);
 		assertTrue(ledger.lastCrime(playerId).reported());
 
-		ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, true, 1));
+		// a store hold-up or a safe alarm commits with one witness too: not a civilian's 911 call
+		ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 1));
 		assertFalse(ledger.lastCrime(playerId).reported());
 
 		ledger.record(crime(Crimes.ASSAULT_COP));

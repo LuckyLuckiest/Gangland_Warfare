@@ -268,11 +268,15 @@ Uses the same `EntitySpawner` as cops, with a two-phase algorithm:
 
 `witness/WitnessService` (a civilians bean, called by cops-n-crooks' `WitnessGateListener` for a gated crime nobody
 official saw) picks the caller and runs the call; `npc/state/behavior/CivilianCallingBehavior` is the CALLING state.
-Every rule is fixed; the only dice are cosmetic (which line of a pool, idle head turns).
+Every rule is fixed. The one input that is not is where a civilian happens to be looking: with no entity within 12
+blocks `CivilianLookController.lookRandom` picks a random yaw at random idle intervals, and at `View_Angle` 180 that yaw
+decides whether a silent crime is in view. That is an accepted, visible facing rule (the owner's Q2: you can see which
+way a civilian looks), not hidden dice; a loud crime turns everyone first, so it never depends on it. Which line of a
+pool is said is the only purely cosmetic dice.
 
 | Step | Code | Rule |
 |---|---|---|
-| Pick | `WitnessService.witness` | Free civilians (not FLEEING/COMBAT/CALLING, not the 2 s victim, not in `Scared_Cooldown_Seconds`) within `Witness.Range`. A loud crime (`Loud_Crimes`, or within `Loud_Shot_Seconds` of `heardShot`) turns each one to the crime spot (`CivilianLookController.faceLocation`); a silent one needs `WitnessService.inView` (horizontal cone `View_Angle` wide around the entity's yaw, edge included, 360 = all round). Then `Hooks.sight` (`npc.canSee`). Nearest calls, the rest are watchers. |
+| Pick | `WitnessService.witness` | Free civilians (not FLEEING/COMBAT/CALLING, not the 2 s victim, not in `Scared_Cooldown_Seconds`) within `Witness.Range`. A loud crime (`Loud_Crimes`, empty by default, or within `Loud_Shot_Seconds` of a `heardShot` whose weapon category is in `Loud_Weapon_Types`, GUN and THROWABLE) turns each one to the crime spot (`CivilianLookController.faceLocation`); a silent one needs `WitnessService.inView` (horizontal cone `View_Angle` wide around the entity's yaw, edge included, 360 = all round). Then `Hooks.sight` (`npc.canSee`). Nearest calls, the rest are watchers. |
 | Notice | `startCall`, `CivilianCallingBehavior.onEnter` | `Witness_Start` spoken; the caller looks at the criminal, `Notice_Particle` (XParticle) over its head, `Phone_Item` (XMaterial) in its main hand (the old hand is kept on the per-NPC behaviour and given back in `onExit`, which runs after the service has already detached the call). First countdown bar. |
 | Dialling | `CivilianCallingBehavior.tick`, `tickCaller` | After `Notice_Seconds` the caller turns away once. Each AI tick: criminal offline = LOGOUT, caller invalid = LOST, aimed at (`Hooks.aim`, once per AI tick) = SCARED; otherwise the bar `Witness_Calling` (`%caller%`, `%seconds%`) is re-sent when the whole second changes. |
 | Stopped | `cancelCall`, `intimidate`, `onPlayerHitCivilian` | HIT, SCARED, INTIMIDATED (`CivilianInteractListener`: the call's criminal right-clicks the caller within `Intimidate_Range`): `Witness_Scared` spoken, `Witness_Stopped` bar, flee, the civilian is blocked for `Scared_Cooldown_Seconds`. LOGOUT, LOST and KILLED are silent. |
@@ -305,7 +309,7 @@ The three keys are in `Shouts.Priority` (shipped YAML and `CiviliansConfig.DEFAU
 | `CivilianDamageListener` | `EntityDamageByEntityEvent`, `PlayerDownedEvent`, `PlayerDeathEvent` | Combat/flee reaction, faction alert, squad drop on death or downed |
 | `WitnessListener` | `EntityDeathEvent`, `PlayerQuitEvent` | A dead caller hands its call over; a criminal who quits cancels his calls |
 | `CivilianInteractListener` (0.21.1) | `NPCRightClickEvent` | The reported criminal right-clicks his caller to stop the call. `condition = "isCitizensAvailable"` |
-| `WitnessShotListener` (0.21.1) | `WeaponShootEvent` | A player's gunshot makes his next crimes loud. `condition = "isBartizanAvailable"` |
+| `WitnessShotListener` (0.21.1) | `WeaponShootEvent` | A player's shot makes his next crimes loud when `event.getWeapon().getCategory()` is in `Witness.Loud_Weapon_Types` (a melee swing is not, matching the cops' `Shot_Noise` radius 0). `condition = "isBartizanAvailable"` |
 
 ---
 

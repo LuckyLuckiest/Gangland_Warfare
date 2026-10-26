@@ -277,6 +277,21 @@ class WantedHudListenerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1 Q7: the witness is named in chat only; the title's %cause% stays the plain crime name")
+	void raise_reportedByWitness_titleCauseStaysPlain() {
+		TitleCue gain = new TitleCue(true, "", "%stars% %cause%", 5, 20, 5);
+		WantedHudListener listener = listener(cuesWith(true, gain, TitleCue.DEFAULT, TitleCue.DEFAULT));
+		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
+				new CrimeRecord("Car_Theft", 100, 0L, new Location(mock(World.class), 0, 64, 0), true));
+
+		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+
+		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
+		assertEquals("★★☆☆☆ Car Theft", ChatColor.stripColor(subtitle.getValue()));
+	}
+
+	@Test
 	@DisplayName("a raise that is not a crime ignores the ledger and names the reported crime in chat")
 	void raise_nonCrimeCause_usesReportedCrime() {
 		WantedHudListener listener = listener(HudSettings.DEFAULT);

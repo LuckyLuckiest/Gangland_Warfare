@@ -142,9 +142,10 @@ public class CiviliansModuleConfig {
 
 	@Bean
 	public WitnessService witnessService(CivilianService civilianService, CrimeService crimeService,
-	                                     CivilianMessages civilianMessages, PlaceNames placeNames) {
+	                                     CivilianMessages civilianMessages, PlaceNames placeNames,
+	                                     CivilianSettings civilianSettings) {
 		return witnessService(civilianService, crimeService, civilianMessages, placeNames,
-		                      WitnessService.Hooks.live(plugin));
+		                      WitnessService.Hooks.live(plugin, civilianSettings::getCivilianAiTickRate));
 	}
 
 	/** The bean's wiring, testable without a plugin: rules re-read from the loaded config on every call. */

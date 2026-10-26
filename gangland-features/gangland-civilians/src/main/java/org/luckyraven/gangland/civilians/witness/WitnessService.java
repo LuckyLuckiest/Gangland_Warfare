@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -59,16 +60,23 @@ public final class WitnessService {
 	public record Hooks(LongSupplier clock, Sight sight, Aim aim, Consumer<Event> events,
 	                    BiConsumer<Player, String> notifier, Consumer<String> debug) {
 
+		/** {@link #live(JavaPlugin, IntSupplier)} at the shipped 20-tick AI rate. */
+		public static Hooks live(JavaPlugin plugin) {
+			return live(plugin, () -> 20);
+		}
+
 		/**
 		 * The production hooks: wall clock, {@code npc.canSee}, {@link WitnessAim}, Bukkit events, action bar. The bar
-		 * lasts 2 s: the countdown refreshes it every AI tick, and the Stopped line fades soon after.
+		 * lasts one AI tick ({@code aiTickRate}, game ticks) plus a second: the countdown refreshes it every AI tick, so
+		 * it never blinks off in between, and the Stopped line fades soon after.
 		 */
-		public static Hooks live(JavaPlugin plugin) {
+		public static Hooks live(JavaPlugin plugin, IntSupplier aiTickRate) {
 			return new Hooks(System::currentTimeMillis,
 			                 (npc, criminal, range) -> npc.canSee(criminal, range),
 			                 new WitnessAim(new BartizanArmed()),
 			                 event -> Bukkit.getPluginManager().callEvent(event),
-			                 (player, text) -> ActionBarManager.send(plugin, player, text, 40L),
+			                 (player, text) -> ActionBarManager.send(plugin, player, text,
+			                                                         Math.max(1, aiTickRate.getAsInt()) + 20L),
 			                 line -> log.debug(line));
 		}
 	}
@@ -130,9 +138,13 @@ public final class WitnessService {
 		return true;
 	}
 
-	/** {@code shooter} fired a weapon: his crimes in the next Loud_Shot_Seconds are loud. */
-	public void heardShot(Player shooter) {
-		lastShot.put(shooter.getUniqueId(), now());
+	/**
+	 * {@code shooter} fired a weapon of Bartizan category {@code weaponType}: when Loud_Weapon_Types lists it (a gun, a
+	 * throwable; never a melee swing by default) his crimes in the next Loud_Shot_Seconds are loud.
+	 */
+	public void heardShot(Player shooter, String weaponType) {
+		boolean noisy = rules.get().loudWeaponTypes().stream().anyMatch(type -> type.equalsIgnoreCase(weaponType));
+		if (noisy) lastShot.put(shooter.getUniqueId(), now());
 	}
 
 	/**

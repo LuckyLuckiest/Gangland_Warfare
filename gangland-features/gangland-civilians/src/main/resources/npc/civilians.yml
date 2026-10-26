@@ -501,11 +501,15 @@ Witness:
    # side, the edge counts). 180 = only what is in front of it; 360 = all round (the 0.20.0 behaviour).
    View_Angle: 180.0
    # 0.21.1: crime ids that are loud: every civilian in Range turns to face the crime first (you see them turn), so the
-   # view cone is met; line of sight still counts. Car_Theft and Assault_Civilian are silent unless listed here.
-   Loud_Crimes:
-      - Kill_Civilian
-   # 0.21.1: a crime within this many seconds of the criminal's own gunshot is loud too; 0 = gunshots are not noise.
+   # view cone is met; line of sight still counts. None by default: a crime is loud only through a gunshot (below), so a
+   # fist or knife kill needs a civilian in front of you. List ids here (e.g. Kill_Civilian) to make them loud anyway.
+   Loud_Crimes: []
+   # 0.21.1: a crime within this many seconds of the criminal's own shot is loud too; 0 = shots are not noise.
    Loud_Shot_Seconds: 3
+   # 0.21.1: Bartizan weapon categories whose shot is noise for Loud_Shot_Seconds. A melee swing is silent.
+   Loud_Weapon_Types:
+      - GUN
+      - THROWABLE
    # 0.21.1: seconds the witness stares at the criminal before turning away to dial (counted inside Call_Seconds).
    Notice_Seconds: 1
    # 0.21.1: particle shown above the witness when it notices a crime (XParticle name); "" = none.

@@ -630,6 +630,7 @@ class WitnessServiceTest {
 	void loudCrime_turnsCiviliansToTheNoise() {
 		CivilianNpc away  = kit.civilian(10, true, 270f);
 		CivilianNpc blind = kit.civilian(14, false, 270f);
+		kit.rules = withLoudCrimes(List.of("Kill_Civilian"));
 
 		assertEquals(1, kit.witness("Kill_Civilian"));
 
@@ -640,6 +641,17 @@ class WitnessServiceTest {
 			double yaw = ((turned.getValue().getYaw() % 360.0) + 360.0) % 360.0;
 			assertEquals(90.0, yaw, 1.0, "turned west, to the crime");
 		}
+	}
+
+	@Test
+	@DisplayName("shipped Loud_Crimes is empty: a fist or melee kill is silent, so a civilian behind the killer does not call")
+	void shippedKillIsSilent() {
+		CivilianNpc away = kit.civilian(10, true, 270f);
+		kit.rules = WitnessRules.DEFAULT;
+
+		assertEquals(0, kit.witness("Kill_Civilian"));
+		assertEquals(CivilianState.IDLE, away.getCurrentState());
+		verify(away.getEntity(), never()).teleport(any(Location.class));
 	}
 
 	@Test
@@ -656,7 +668,7 @@ class WitnessServiceTest {
 	@DisplayName("a crime within Loud_Shot_Seconds of the criminal's own gunshot is loud; a later one is silent")
 	void crimeRightAfterAGunshotIsLoud() {
 		CivilianNpc away = kit.civilian(10, true, 270f);
-		kit.service.heardShot(kit.criminal);
+		kit.service.heardShot(kit.criminal, "GUN");
 
 		kit.advanceSeconds(2);
 		assertEquals(1, kit.witness("Car_Theft"));
@@ -761,7 +773,7 @@ class WitnessServiceTest {
 		return new WitnessRules(d.enabled(), d.range(), d.callSeconds(), d.callerGlow(), d.scareRange(), d.scareAngle(),
 		                        d.reportAssault(), d.assaultRepeatSeconds(), angle, d.noticeSeconds(),
 		                        d.noticeParticle(), d.phoneItem(), d.intimidateRange(), d.scaredCooldownSeconds(),
-		                        d.loudCrimes(), d.loudShotSeconds());
+		                        d.loudCrimes(), d.loudShotSeconds(), d.loudWeaponTypes());
 	}
 
 	private static WitnessRules withIntimidateRange(double range) {
@@ -769,6 +781,14 @@ class WitnessServiceTest {
 		return new WitnessRules(d.enabled(), d.range(), d.callSeconds(), d.callerGlow(), d.scareRange(), d.scareAngle(),
 		                        d.reportAssault(), d.assaultRepeatSeconds(), d.viewAngle(), d.noticeSeconds(),
 		                        d.noticeParticle(), d.phoneItem(), range, d.scaredCooldownSeconds(), d.loudCrimes(),
-		                        d.loudShotSeconds());
+		                        d.loudShotSeconds(), d.loudWeaponTypes());
+	}
+
+	private static WitnessRules withLoudCrimes(List<String> loud) {
+		WitnessRules d = WitnessRules.DEFAULT;
+		return new WitnessRules(d.enabled(), d.range(), d.callSeconds(), d.callerGlow(), d.scareRange(), d.scareAngle(),
+		                        d.reportAssault(), d.assaultRepeatSeconds(), d.viewAngle(), d.noticeSeconds(),
+		                        d.noticeParticle(), d.phoneItem(), d.intimidateRange(), d.scaredCooldownSeconds(), loud,
+		                        d.loudShotSeconds(), d.loudWeaponTypes());
 	}
 }

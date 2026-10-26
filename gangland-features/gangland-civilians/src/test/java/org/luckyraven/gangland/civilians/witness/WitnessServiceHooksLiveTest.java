@@ -113,6 +113,16 @@ class WitnessServiceHooksLiveTest {
 	}
 
 	@Test
+	@DisplayName("the countdown bar outlasts one AI tick: AI_Tick_Rate + 20 ticks, so it never blinks off between refreshes")
+	void notifierBarOutlastsTheAiTick() {
+		try (MockedStatic<ActionBarManager> bar = mockStatic(ActionBarManager.class)) {
+			WitnessService.Hooks.live(plugin, () -> 60).notifier().accept(player, "hello");
+
+			bar.verify(() -> ActionBarManager.send(plugin, player, "hello", 80L));
+		}
+	}
+
+	@Test
 	@DisplayName("the clock is the wall clock")
 	void clockIsWallClock() {
 		long before = System.currentTimeMillis();

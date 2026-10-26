@@ -11,7 +11,8 @@ import org.luckyraven.keystone.npc.NpcSupport;
 
 /**
  * A player's gunshot is noise: his crimes in the next {@code Witness.Loud_Shot_Seconds} are loud, so civilians in range
- * turn to face them before the view cone applies (0.21.1).
+ * turn to face them before the view cone applies (0.21.1). Only the categories in {@code Witness.Loud_Weapon_Types}
+ * (GUN, THROWABLE) count: a melee swing is silent, as it is to the cops' {@code Shot_Noise}.
  *
  * <p>{@code condition = "isBartizanAvailable"}: the handler's parameter is Bartizan's {@link WeaponShootEvent}, so
  * scanning this class on a Bartizan-less server would throw {@code NoClassDefFoundError}.
@@ -29,6 +30,6 @@ public class WitnessShotListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onWeaponShoot(WeaponShootEvent event) {
-		if (event.getShooter() instanceof Player shooter && !NpcSupport.isNpc(shooter)) witnesses.heardShot(shooter);
+		if (event.getShooter() instanceof Player shooter && !NpcSupport.isNpc(shooter)) witnesses.heardShot(shooter, event.getWeapon().getCategory().name());
 	}
 }

@@ -158,7 +158,7 @@ class CivilianCallingBehaviorTest {
 		kit.rules = new WitnessRules(d.enabled(), d.range(), d.callSeconds(), d.callerGlow(), d.scareRange(),
 		                             d.scareAngle(), d.reportAssault(), d.assaultRepeatSeconds(), d.viewAngle(),
 		                             d.noticeSeconds(), "", "", d.intimidateRange(), d.scaredCooldownSeconds(),
-		                             d.loudCrimes(), d.loudShotSeconds());
+		                             d.loudCrimes(), d.loudShotSeconds(), d.loudWeaponTypes());
 		CivilianNpc     npc       = kit.civilian(10, true);
 		EntityEquipment equipment = mock(EntityEquipment.class);
 		when(npc.getEntity().getEquipment()).thenReturn(equipment);

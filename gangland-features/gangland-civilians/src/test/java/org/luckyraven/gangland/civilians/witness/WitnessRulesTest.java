@@ -71,6 +71,8 @@ class WitnessRulesTest {
 				   Loud_Crimes:
 				      - Car_Theft
 				   Loud_Shot_Seconds: 0
+				   Loud_Weapon_Types:
+				      - GUN
 				""", new ConfigReport());
 
 		assertEquals(360.0, rules.viewAngle());
@@ -81,10 +83,11 @@ class WitnessRulesTest {
 		assertEquals(30, rules.scaredCooldownSeconds());
 		assertEquals(java.util.List.of("Car_Theft"), rules.loudCrimes());
 		assertEquals(0, rules.loudShotSeconds());
+		assertEquals(java.util.List.of("GUN"), rules.loudWeaponTypes());
 	}
 
 	@Test
-	@DisplayName("0.21.1 defaults: 180 degree cone, 1 s notice, ANGRY_VILLAGER, CLOCK, 4 blocks, 60 s, Kill_Civilian loud, 3 s shot")
+	@DisplayName("0.21.1 defaults: 180 degree cone, 1 s notice, ANGRY_VILLAGER, CLOCK, 4 blocks, 60 s, no loud crime, 3 s shot from a gun or a throwable")
 	void newKeyDefaults() {
 		WitnessRules d = WitnessRules.parse(null);
 
@@ -94,8 +97,9 @@ class WitnessRulesTest {
 		assertEquals("CLOCK", d.phoneItem());
 		assertEquals(4.0, d.intimidateRange());
 		assertEquals(60, d.scaredCooldownSeconds());
-		assertEquals(java.util.List.of("Kill_Civilian"), d.loudCrimes());
+		assertTrue(d.loudCrimes().isEmpty());
 		assertEquals(3, d.loudShotSeconds());
+		assertEquals(java.util.List.of("GUN", "THROWABLE"), d.loudWeaponTypes());
 	}
 
 	@Test
