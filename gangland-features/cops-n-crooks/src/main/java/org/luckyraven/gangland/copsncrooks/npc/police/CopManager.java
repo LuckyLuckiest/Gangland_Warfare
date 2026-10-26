@@ -730,17 +730,16 @@ public class CopManager implements BeanLifecycle {
 		List<CopNpc> cops    = group.getCops();
 		long         now     = copRadio.now();
 		double       maxDist = configProvider.getPursuitMaxDistance();
-		boolean[]    leashed = {false};
 
 		cops.removeIf(cop -> {
 			if (cop.isMarkedForRemoval() || recycles(cop, group, player, now)) {
 				group.release(cop, markManager);
 				return true;
 			}
-			// R3 (T-131/T-149): a leashed walker nobody is looking at leaves the map instead of walking home
+			// R3 (T-131/T-149): a leashed walker nobody is looking at leaves the map instead of walking home. No tip (R4):
+			// nobody saw him, so the refill inherits the squad's own lead and its widening search circle
 			if (isStrandedReturning(cop, player, maxDist) && !isWatched(cop)) {
 				group.release(cop, markManager);
-				leashed[0] = true;
 				return true;
 			}
 			if (!cop.isValid()) {
@@ -755,12 +754,6 @@ public class CopManager implements BeanLifecycle {
 			}
 			return false;
 		});
-		// T-148: the refill gets a fresh lead, a tip of his spot now as recycles() gives. R4: a reportTip snapshot the
-		// squad searches, never a sighting that would chase his live position
-		if (leashed[0]) {
-			group.getSquad().reportTip(player.getLocation());
-			group.markTipOff(now);
-		}
 
 		BackupSettings backup     = backupSettings();
 		int            tier       = spawnManager.getTierForWantedLevel(wantedLevel);
@@ -946,9 +939,10 @@ public class CopManager implements BeanLifecycle {
 	/**
 	 * A cop hunting the group's suspect that has found no way to him for {@code Cops.Stuck.Recycle_Seconds}
 	 * ({@link CopNpc#millisUnreachable()}) and that no one is looking at is taken off the map; its spawner is skipped
-	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere, and dispatch
-	 * tips the squad off to where the suspect is now: its lead is dead, and a replacement hunting it would be recycled
-	 * in turn before it could find him (lane STUCK 2b-ii). Past twice {@code Recycle_Seconds} a view only protects a
+	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere. A recycle is
+	 * no news of him (0.21.1, R4): the replacement inherits the squad's last-known spot and its widening search
+	 * circle, never his live position, and the evasion clock keeps running, so a lead that stays dead ends in his
+	 * escape rather than a recycle loop (T-147). Past twice {@code Recycle_Seconds} a view only protects a
 	 * cop within {@link #OVERDUE_VIEW_BLOCKS} of the eyes it is in, the suspect's and every other player's alike.
 	 */
 	private boolean recycles(CopNpc cop, CopGroup group, Player player, long now) {
@@ -982,9 +976,6 @@ public class CopManager implements BeanLifecycle {
 		Location origin = cop.getSpawnLocation();
 		if (origin != null && stuck.avoidSpawnerSeconds() > 0)
 			group.avoid(origin, now + stuck.avoidSpawnerSeconds() * 1000L);
-		group.markTipOff(now);
-		// a tip of where he is now, not a sighting (R4): the replacements search that spot, they do not chase him live
-		group.getSquad().reportTip(player.getLocation());
 		return true;
 	}
 

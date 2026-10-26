@@ -437,11 +437,11 @@ player's world:
   only on hidden spots, so only while he cannot see them. Every spot also stays within 0.75 x
   `Cops.Pursuit.Max_Distance` (60 blocks) of him, so a fresh cop is not past the pursuit leash the second it spawns.
 - **Lost cops leave (0.21.1).** A cop that gave up the chase beyond `Cops.Pursuit.Max_Distance` is removed as soon as
-  no player is looking at it, instead of walking home for up to five minutes, and the squad gets a tip of where the
-  player is at that moment to search. A level drop calls off units no longer needed before they arrive. While the whole squad is lost
+  no player is looking at it, instead of walking home for up to five minutes. Nobody saw where the player went, so the
+  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive. While the whole squad is lost
   (cops walking home, a hand-off pending, units on the road) the evasion countdown pauses instead of restarting.
-- **Tips are not sightings (0.21.1).** The crime scene, a recycle, a hand-off seed and a hit from cover tell the squad
-  where to search; only a cop who really sees the player makes the squad chase his live position.
+- **Tips are not sightings (0.21.1).** The crime scene, a hand-off seed and a hit from cover tell the squad where to
+  search; only a cop who really sees the player makes the squad chase his live position.
 - A world with no station keeps the old ring spawn with no delay (ETA 0).
 - **The chase clock waits for the cops.** While units are on the road and none stands in the world, the evasion clock holds:
   no search opens and no star can drop. A unit that fails to spawn for 10 s past its ETA stops counting.
@@ -717,8 +717,9 @@ A stranded cop is not replaced while the player is looking at it (in front of hi
 melee reach on his level with nothing in between. Once it has been stranded for twice `Recycle_Seconds`, a view only
 keeps it within 24 blocks, the player's own and every other player's alike. With its spawner skipped, the replacement comes from the next spawner within `Spawner_Max_Y_Diff`, or from
 the ring around the player at his level (for a player indoors, the street outside counts too). The wanted-level cop
-count and `Max_Per_Player` still cap the total. Dispatch also tells the replacements where the player is now, so a
-player who slipped away unseen from a spot the stranded cops could not reach is not hunted there again.
+count and `Max_Per_Player` still cap the total. A recycle tells the squad nothing new (0.21.1): the replacements search
+around the squad's last-known spot on its widening circle, and the evasion countdown keeps running, so a player who
+slipped away unseen from a spot the stranded cops could not reach gets away instead of being found by magic.
 
 ---
 

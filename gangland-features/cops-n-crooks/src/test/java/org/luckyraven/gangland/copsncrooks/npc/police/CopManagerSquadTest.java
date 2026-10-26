@@ -228,10 +228,10 @@ class CopManagerSquadTest {
 		assertEquals(2, near.getCops().size(), "nearby returners still count");
 	}
 
-	/** r1: the leash tip is a reportTip snapshot of his spot at the release (T-148), the reading recycles() uses. */
+	/** r2 (R4): a leash release is no news of him - the squad keeps its own lead, his unseen live spot never leaks in. */
 	@Test
-	@DisplayName("a released leashed walker tips the squad to his spot as a tip, not a sighting; a watched one stays (R3/R4)")
-	void strandedReleased_tipsHisSpot_watchedStays() {
+	@DisplayName("a released leashed walker leaves the squad's lead and tip-off clock alone; a watched one stays (R3/R4)")
+	void strandedReleased_keepsTheSquadsLead_watchedStays() {
 		manager.onWantedStart(player, wanted);
 		CopGroup group   = manager.groupFor(playerId);
 		CopNpc   watched = fx.cop(CopState.RETURNING, 500, 500);
@@ -242,6 +242,7 @@ class CopManagerSquadTest {
 		group.add(alone);
 		Player bystander = observer(500, 470, false);
 		when(fx.world.getPlayers()).thenReturn(List.of(bystander));
+		Location lead  = group.getSquad().lastKnownLocation(); // the crime-scene tip
 		Location ranOn = new Location(fx.world, 60, 64, 10);
 		when(player.getLocation()).thenReturn(ranOn); // he ran on, unseen
 		fx.clock[0] += 5_000L;
@@ -252,9 +253,9 @@ class CopManagerSquadTest {
 		verify(alone).destroy(any());
 		assertTrue(group.getCops().contains(watched), "a bystander is looking at it: it stays, uncounted (T-130)");
 		assertEquals(3, group.getCops().size(), "two fresh cops plus the watched walker");
-		assertEquals(ranOn, group.getSquad().lastKnownLocation(), "the refill searches his spot, not the dead lead");
-		assertFalse(group.getSquad().hasFreshSighting(), "a tip: the squad searches the spot, it does not chase him live");
-		assertTrue(group.tippedOffWithin(fx.clock[0], 0L));
+		assertEquals(lead, group.getSquad().lastKnownLocation(), "nobody saw him run on: the squad keeps its own lead");
+		assertFalse(group.getSquad().hasFreshSighting());
+		assertFalse(group.tippedOffWithin(fx.clock[0], 0L), "a release is no tip-off: the evasion clock runs");
 	}
 
 	@Test

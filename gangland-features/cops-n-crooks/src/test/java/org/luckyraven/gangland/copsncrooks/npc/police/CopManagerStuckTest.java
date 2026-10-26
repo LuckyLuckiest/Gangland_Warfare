@@ -103,9 +103,9 @@ class CopManagerStuckTest {
 	}
 
 	@Test
-	@DisplayName("a recycle tips the squad off to where the suspect is now; a run with no recycle keeps its lead")
-	void recycle_tipsTheSquadOffToTheSuspectsSpot() {
-		// he left an unreachable pillar top unseen: without the tip every replacement hunts it until recycled in turn
+	@DisplayName("a recycle keeps the squad's lead: his unseen live spot never leaks in (R4)")
+	void recycle_keepsTheSquadsLead() {
+		// he left an unreachable pillar top unseen: nobody saw where he went, so the replacements search around it
 		Location deadLead = new Location(fx.world, -137.5, 115, 108.5);
 		group.getSquad().reportTip(deadLead); // the squad's clock is real time: a tip keeps hasFreshSighting false
 		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 11_000);
@@ -117,20 +117,21 @@ class CopManagerStuckTest {
 		manager.spawnTick(playerId, wanted);
 
 		assertFalse(group.getCops().contains(stuck));
-		assertEquals(player.getLocation(), group.getSquad().lastKnownLocation());
-		// 0.21.1 (R4): a tip, not a sighting - the replacements search that spot instead of chasing him live
+		assertEquals(deadLead, group.getSquad().lastKnownLocation(), "0.21.1 r2 (R4): last-known only, never his live spot");
 		assertFalse(group.getSquad().hasFreshSighting());
 	}
 
 	@Test
-	@DisplayName("a recycle stamps the group's tip-off clock; a run with no recycle does not")
-	void recycle_marksATipOff() {
+	@DisplayName("a recycle is no tip-off: it does not hold the evasion clock (R4)")
+	void recycle_noTipOff() {
 		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);
+		// the wanted start's crime-scene tip stamps the clock at 1 s; this run is 10 s later
+		fx.clock[0] += 10_000L;
 
 		manager.spawnTick(playerId, wanted);
 
 		assertFalse(group.getCops().contains(stuck));
-		assertTrue(group.tippedOffWithin(fx.clock[0], 0), "stamped at the radio clock");
+		assertFalse(group.tippedOffWithin(fx.clock[0], 5_000L), "a stuck cop is no news of him");
 	}
 
 	@Test
