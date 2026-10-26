@@ -1208,9 +1208,10 @@ registries keep every row (the location is nullable), so their `max + 1` already
 unioned into a server's own `Priority` list (so an old list still speaks them).
 
 **0.21.1 spawn and dispatch (cnc-cop-ai lane spawn).**
-- `CopManager.spawnTick` releases a stranded RETURNING cop (`isStrandedReturning`) that no player watches (`isWatched`:
-  the suspect's `CopSightlines.inView` within `max(24, Visibility_Check_Distance)`, bystanders through
-  `isVisibleToOtherPlayers`) and tips the squad with `NpcSquad.reportTip(lastKnownLocation())`. Before dispatching it
+- `CopManager.spawnTick` releases a stranded RETURNING cop (`isStrandedReturning`) that no real player watches
+  (`isWatched`: `CopSightlines.inView` with line of sight within `max(24, Visibility_Check_Distance)`, Citizens NPCs
+  skipped; not `isVisibleToOtherPlayers`, which counts NPCs and the walker itself) and tips the squad with
+  `NpcSquad.reportTip(player.getLocation())` + `markTipOff`, the same snapshot `recycles()` gives. Before dispatching it
   trims the queue to `targetCount - counted` (`CopGroup.trimPending`, newest first), so a level drop calls off units.
   `spawnDueUnits` gives a unit queued before a hand-off the group's active bias. `reengageReturning` skips stranded cops.
 - Tips (Keystone 1.15.4 `reportTip`, no sighting stamp): the wanted start (plus `markTipOff`, which keeps the
@@ -1220,8 +1221,10 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   `0.75 x Pursuit.Max_Distance` (3D) and not `inViewOf` (60 degree eye cone plus `isOutOfSight` false). The ring
   fallback takes no Keystone predicate, so a ring spot in view returns `null` (the caller retries next run). A biased unit
   tries `hiddenRing` ahead of the bias before the station spawners.
-- `EvasionClock.hasLiveCop` also holds for an active `biasAt(now)` or a RETURNING cop still targeting the player, so a
-  whole-squad leash pauses the search whichever AI-tick hook runs first.
+- `EvasionClock.hasLiveCop` also holds for an active `biasAt(now)` or a RETURNING cop still targeting the player past
+  `Pursuit.Max_Distance` (`CopManager.isStranded`, the walker the next spawn tick refills), so a whole-squad leash
+  pauses the search whichever AI-tick hook runs first. A walker inside the range holds nothing (a leashed cop keeps
+  its target, so keying on every walker froze the stars).
 - `PatrolManager` stamps a station's loss (manage prune and AI-tick prune) and refills only after
   `Cops.Patrol.Respawn_Seconds` (`PatrolSettings.respawnSeconds`, 10-arg constructor keeps the default 30).
 

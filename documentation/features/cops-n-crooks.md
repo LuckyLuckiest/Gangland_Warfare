@@ -437,8 +437,8 @@ player's world:
   only on hidden spots, so only while he cannot see them. Every spot also stays within 0.75 x
   `Cops.Pursuit.Max_Distance` (60 blocks) of him, so a fresh cop is not past the pursuit leash the second it spawns.
 - **Lost cops leave (0.21.1).** A cop that gave up the chase beyond `Cops.Pursuit.Max_Distance` is removed as soon as
-  no player is looking at it, instead of walking home for up to five minutes, and the squad refills from its
-  last-known spot. A level drop calls off units no longer needed before they arrive. While the whole squad is lost
+  no player is looking at it, instead of walking home for up to five minutes, and the squad gets a tip of where the
+  player is at that moment to search. A level drop calls off units no longer needed before they arrive. While the whole squad is lost
   (cops walking home, a hand-off pending, units on the road) the evasion countdown pauses instead of restarting.
 - **Tips are not sightings (0.21.1).** The crime scene, a recycle, a hand-off seed and a hit from cover tell the squad
   where to search; only a cop who really sees the player makes the squad chase his live position.

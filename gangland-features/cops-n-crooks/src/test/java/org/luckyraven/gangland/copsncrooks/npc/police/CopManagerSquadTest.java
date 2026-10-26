@@ -228,20 +228,22 @@ class CopManagerSquadTest {
 		assertEquals(2, near.getCops().size(), "nearby returners still count");
 	}
 
+	/** r1: the leash tip is a reportTip snapshot of his spot at the release (T-148), the reading recycles() uses. */
 	@Test
-	@DisplayName("a released leashed walker tips the squad to its last-known spot, never his live one; a watched one stays (R3/R4)")
-	void strandedReleased_tipsLastKnown_watchedStays() {
+	@DisplayName("a released leashed walker tips the squad to his spot as a tip, not a sighting; a watched one stays (R3/R4)")
+	void strandedReleased_tipsHisSpot_watchedStays() {
 		manager.onWantedStart(player, wanted);
 		CopGroup group   = manager.groupFor(playerId);
-		Location scene   = new Location(fx.world, 10, 64, 10);
 		CopNpc   watched = fx.cop(CopState.RETURNING, 500, 500);
 		CopNpc   alone   = fx.cop(CopState.RETURNING, -500, 500);
 		watched.setTargetPlayerId(playerId);
 		alone.setTargetPlayerId(playerId);
 		group.add(watched);
 		group.add(alone);
-		when(fx.spawner.isVisibleToOtherPlayers(eq(new Location(fx.world, 500, 64, 500)), eq(player))).thenReturn(true);
-		when(player.getLocation()).thenReturn(new Location(fx.world, 60, 64, 10)); // he ran on, unseen
+		Player bystander = observer(500, 470, false);
+		when(fx.world.getPlayers()).thenReturn(List.of(bystander));
+		Location ranOn = new Location(fx.world, 60, 64, 10);
+		when(player.getLocation()).thenReturn(ranOn); // he ran on, unseen
 		fx.clock[0] += 5_000L;
 
 		manager.spawnTick(playerId, wanted);
@@ -250,8 +252,39 @@ class CopManagerSquadTest {
 		verify(alone).destroy(any());
 		assertTrue(group.getCops().contains(watched), "a bystander is looking at it: it stays, uncounted (T-130)");
 		assertEquals(3, group.getCops().size(), "two fresh cops plus the watched walker");
-		assertEquals(scene, group.getSquad().lastKnownLocation(), "the leash tip is the last-known spot");
-		assertFalse(group.getSquad().hasFreshSighting());
+		assertEquals(ranOn, group.getSquad().lastKnownLocation(), "the refill searches his spot, not the dead lead");
+		assertFalse(group.getSquad().hasFreshSighting(), "a tip: the squad searches the spot, it does not chase him live");
+		assertTrue(group.tippedOffWithin(fx.clock[0], 0L));
+	}
+
+	@Test
+	@DisplayName("an NPC facing a leashed walker does not keep it: only real players watch (B13; Keystone's check counts NPCs)")
+	void strandedWatchedOnlyByNpcs_released() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group  = manager.groupFor(playerId);
+		CopNpc   walker = fx.cop(CopState.RETURNING, 500, 500);
+		walker.setTargetPlayerId(playerId);
+		group.add(walker);
+		// a Citizens PLAYER NPC (a cop, a civilian, the walker ahead in the file) faces it; the spawner's
+		// isVisibleToOtherPlayers iterates world.getPlayers() without an NPC filter and says yes
+		Player npc = observer(500, 470, true);
+		when(fx.world.getPlayers()).thenReturn(List.of(npc));
+		when(fx.spawner.isVisibleToOtherPlayers(any(), any())).thenReturn(true);
+		fx.clock[0] += 5_000L;
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(walker), "no real player sees it: removed");
+		verify(walker).destroy(any());
+	}
+
+	/** A player at (x, 64, z) looking along +Z with a clear line, a Citizens NPC when {@code npc}. */
+	private Player observer(double x, double z, boolean npc) {
+		Player other = mock(Player.class);
+		when(other.getEyeLocation()).thenReturn(new Location(fx.world, x, 65.62, z, 0f, 0f));
+		when(other.hasLineOfSight(any())).thenReturn(true);
+		when(other.hasMetadata("NPC")).thenReturn(npc);
+		return other;
 	}
 
 	@Test

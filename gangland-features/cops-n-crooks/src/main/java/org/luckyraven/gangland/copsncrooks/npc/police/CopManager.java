@@ -738,7 +738,7 @@ public class CopManager implements BeanLifecycle {
 				return true;
 			}
 			// R3 (T-131/T-149): a leashed walker nobody is looking at leaves the map instead of walking home
-			if (isStrandedReturning(cop, player, maxDist) && !isWatched(cop, player)) {
+			if (isStrandedReturning(cop, player, maxDist) && !isWatched(cop)) {
 				group.release(cop, markManager);
 				leashed[0] = true;
 				return true;
@@ -755,10 +755,12 @@ public class CopManager implements BeanLifecycle {
 			}
 			return false;
 		});
-		// T-148 under R4: the refill searches the squad's last-known spot from a fresh (tight) search circle; never his
-		// live spot, which no cop saw
-		Location lastKnown = group.getSquad().lastKnownLocation();
-		if (leashed[0] && lastKnown != null) group.getSquad().reportTip(lastKnown);
+		// T-148: the refill gets a fresh lead, a tip of his spot now as recycles() gives. R4: a reportTip snapshot the
+		// squad searches, never a sighting that would chase his live position
+		if (leashed[0]) {
+			group.getSquad().reportTip(player.getLocation());
+			group.markTipOff(now);
+		}
 
 		BackupSettings backup     = backupSettings();
 		int            tier       = spawnManager.getTierForWantedLevel(wantedLevel);
@@ -973,7 +975,8 @@ public class CopManager implements BeanLifecycle {
 			if (inView(player, body, protect)) return false;
 		}
 		// the same bound for bystanders: the spawner's yaw-only check sees through walls to Visibility_Check_Distance
-		if (overdue ? inViewOfBystander(at, body, player) : spawnManager.isVisibleToOtherPlayers(at, player))
+		if (overdue ? inViewOfBystander(at, body, player, OVERDUE_VIEW_BLOCKS)
+		            : spawnManager.isVisibleToOtherPlayers(at, player))
 			return false;
 
 		Location origin = cop.getSpawnLocation();
@@ -985,27 +988,27 @@ public class CopManager implements BeanLifecycle {
 		return true;
 	}
 
-	/** A real player other than {@code suspect} has {@code body} {@link CopSightlines#inView} within {@link #OVERDUE_VIEW_BLOCKS}. */
-	private static boolean inViewOfBystander(Location at, LivingEntity body, Player suspect) {
+	/**
+	 * A real player other than {@code suspect} has {@code body} {@link CopSightlines#inView} within {@code maxDistance}.
+	 * Citizens NPCs (cops are PLAYER-type, so the walker itself) are in {@code world.getPlayers()} and are skipped.
+	 */
+	private static boolean inViewOfBystander(Location at, LivingEntity body, @Nullable Player suspect,
+	                                         double maxDistance) {
 		if (at.getWorld() == null) return false;
 		for (Player other : at.getWorld().getPlayers())
-			if (!other.equals(suspect) && !other.hasMetadata("NPC") && inView(other, body, OVERDUE_VIEW_BLOCKS))
-				return true;
+			if (!other.equals(suspect) && !other.hasMetadata("NPC") && inView(other, body, maxDistance)) return true;
 		return false;
 	}
 
 	/**
-	 * A player has the cop in view: the suspect within {@code max(24, Visibility_Check_Distance)} as {@link #recycles}
-	 * protects, or a bystander through {@link CopSpawnManager#isVisibleToOtherPlayers}.
+	 * A real player, the suspect or a bystander, has the cop {@link CopSightlines#inView} (line of sight) within
+	 * {@code max(24, Visibility_Check_Distance)}. Not {@link CopSpawnManager#isVisibleToOtherPlayers}: it counts NPCs.
 	 */
-	private boolean isWatched(CopNpc cop, Player player) {
+	private boolean isWatched(CopNpc cop) {
 		LivingEntity body = cop.getEntity();
 		if (body == null) return false;
-		Location at      = body.getLocation();
-		double   protect = Math.max(OVERDUE_VIEW_BLOCKS, configProvider.getVisibilityCheckDistance());
-		if (at.getWorld() == player.getWorld() && at.distanceSquared(player.getLocation()) <= protect * protect &&
-		    inView(player, body, protect)) return true;
-		return spawnManager.isVisibleToOtherPlayers(at, player);
+		double protect = Math.max(OVERDUE_VIEW_BLOCKS, configProvider.getVisibilityCheckDistance());
+		return inViewOfBystander(body.getLocation(), body, null, protect);
 	}
 
 	/** A RETURNING cop past {@code Pursuit.Max_Distance} of {@code player}: out of this hunt, the spawn task refills it. */
