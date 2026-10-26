@@ -142,7 +142,7 @@ public final class EvasionClock implements WantedDecayPolicy {
 	@Override
 	public boolean handlesDecay(Player player, Wanted wanted) {
 		return config.get().evasion().enabled() &&
-		       hasLiveCop(copManager.groupOf(player.getUniqueId()), player.getUniqueId(), clock.getAsLong());
+		       hasLiveCop(copManager.groupOf(player.getUniqueId()), player, clock.getAsLong());
 	}
 
 	/** The player's current state, or {@code null} when he is not tracked. */
@@ -179,7 +179,7 @@ public final class EvasionClock implements WantedDecayPolicy {
 		User<Player>    user = users.getUser(player);
 		long            now  = clock.getAsLong();
 		if (user == null || !cfg.enabled() || !user.getWanted().isWanted() ||
-		    !hasLiveCop(group, player.getUniqueId(), now)) {
+		    !hasLiveCop(group, player, now)) {
 			clear(player);
 			return;
 		}
@@ -410,19 +410,19 @@ public final class EvasionClock implements WantedDecayPolicy {
 
 	/**
 	 * A cop stands in the world, or the chase is only between squads: units on their way, an active hand-off bias, or a
-	 * leashed walker still hunting him that the spawn task has not replaced yet. The last three pause the clock
-	 * (0.21.1 cause E: a whole-squad leash used to clear the search and throw its progress away), whichever AI-tick
-	 * hook runs first.
+	 * leashed walker past {@code Pursuit.Max_Distance} still hunting him, which the next spawn task releases and refills.
+	 * The last three pause the clock (0.21.1 cause E: a whole-squad leash used to clear the search and throw its
+	 * progress away), whichever AI-tick hook runs first. A walker inside the range is not refilled, so it holds nothing.
 	 */
-	private static boolean hasLiveCop(@Nullable CopGroup group, UUID playerId, long now) {
+	private boolean hasLiveCop(@Nullable CopGroup group, Player player, long now) {
 		return group != null && (hasStandingCop(group) || group.unitsEnRoute(now) || group.biasAt(now) != null ||
-		                         hasLeashedWalker(group, playerId));
+		                         hasLeashedWalker(group, player));
 	}
 
-	private static boolean hasLeashedWalker(CopGroup group, UUID playerId) {
+	private boolean hasLeashedWalker(CopGroup group, Player player) {
 		for (CopNpc cop : group.getCops()) {
-			if (cop.isValid() && cop.getCurrentState() == CopState.RETURNING && playerId.equals(cop.getTargetPlayerId()))
-				return true;
+			if (cop.isValid() && player.getUniqueId().equals(cop.getTargetPlayerId()) &&
+			    copManager.isStranded(cop, player)) return true;
 		}
 		return false;
 	}

@@ -1008,6 +1008,11 @@ public class CopManager implements BeanLifecycle {
 		return spawnManager.isVisibleToOtherPlayers(at, player);
 	}
 
+	/** A RETURNING cop past {@code Pursuit.Max_Distance} of {@code player}: out of this hunt, the spawn task refills it. */
+	public boolean isStranded(CopNpc cop, Player player) {
+		return isStrandedReturning(cop, player, configProvider.getPursuitMaxDistance());
+	}
+
 	private static boolean isStrandedReturning(CopNpc cop, Player player, double maxDist) {
 		if (cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) return false;
 		Location at = cop.getEntity().getLocation();

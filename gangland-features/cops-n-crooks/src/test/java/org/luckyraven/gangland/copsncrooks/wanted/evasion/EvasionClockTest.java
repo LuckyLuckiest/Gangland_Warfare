@@ -153,6 +153,13 @@ class EvasionClockTest {
 		                         () -> now[0], events::add);
 	}
 
+	/** A RETURNING cop that still targets him, as a leashed cop does: it never clears its target. */
+	private CopNpc walker() {
+		CopNpc cop = cop(CopState.RETURNING);
+		when(cop.getTargetPlayerId()).thenReturn(id);
+		return cop;
+	}
+
 	private static CopNpc cop(CopState state) {
 		CopNpc cop = mock(CopNpc.class);
 		when(cop.isValid()).thenReturn(true);
@@ -340,7 +347,8 @@ class EvasionClockTest {
 		tickSeconds(1);
 		assertTrue(clock.handlesDecay(player, wanted));
 
-		List<CopNpc> walkingHome = List.of(cop(CopState.RETURNING));
+		// a real walker keeps hunting him (targetPlayerId stays set when it leashes); inside the range it is no refill
+		List<CopNpc> walkingHome = List.of(walker());
 		when(group.getCops()).thenReturn(walkingHome);
 		assertFalse(clock.handlesDecay(player, wanted));
 		tickSeconds(1);
@@ -356,8 +364,8 @@ class EvasionClockTest {
 		EvasionSnapshot before = clock.snapshot(id);
 		assertEquals(EvasionState.SEARCHING, before.state());
 
-		CopNpc walker = cop(CopState.RETURNING);
-		when(walker.getTargetPlayerId()).thenReturn(id);
+		CopNpc walker = walker();
+		when(copManager.isStranded(walker, player)).thenReturn(true); // past Pursuit.Max_Distance: the refill is coming
 		when(group.getCops()).thenReturn(List.of(walker));
 		tickSeconds(10);
 
@@ -366,6 +374,21 @@ class EvasionClockTest {
 		assertNotNull(paused, "not cleared");
 		assertEquals(before.secondsLeft(), paused.secondsLeft(), "paused: no progress while nobody stands");
 		assertFalse(stateNames().contains(EvasionState.OFF));
+	}
+
+	@Test
+	@DisplayName("a returning walker still targeting him inside Pursuit.Max_Distance holds nothing: no decay hand-over, OFF")
+	void nearWalker_targetingHim_doesNotHandleDecay_andTurnsOff() {
+		unseenMs = 10_000;
+		tickSeconds(5);
+		CopNpc near = walker();
+		when(copManager.isStranded(near, player)).thenReturn(false); // the spawn task does not refill it
+		when(group.getCops()).thenReturn(List.of(near));
+
+		assertFalse(clock.handlesDecay(player, wanted), "the Repeating_Timer safety net decays his stars");
+		tickSeconds(1);
+		assertEquals(EvasionState.OFF, states().get(states().size() - 1).getState());
+		assertNull(clock.snapshot(id));
 	}
 
 	@Test
@@ -649,7 +672,7 @@ class EvasionClockTest {
 		unseenMs = 10_000;
 		tickSeconds(2);
 
-		List<CopNpc> walkingHome = List.of(cop(CopState.RETURNING));
+		List<CopNpc> walkingHome = List.of(walker());
 		when(group.getCops()).thenReturn(walkingHome);
 		tickSeconds(1);
 		assertNull(clock.snapshot(id));
@@ -673,7 +696,7 @@ class EvasionClockTest {
 		long lostAt = arcs.arc(id).lastLostAt();
 		assertTrue(lostAt > 0);
 
-		List<CopNpc> walkingHome = List.of(cop(CopState.RETURNING));
+		List<CopNpc> walkingHome = List.of(walker());
 		when(group.getCops()).thenReturn(walkingHome);
 		tickSeconds(1);
 		assertNull(clock.snapshot(id));
