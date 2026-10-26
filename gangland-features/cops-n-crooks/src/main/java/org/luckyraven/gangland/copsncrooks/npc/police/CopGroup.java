@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -81,7 +82,7 @@ public class CopGroup {
 	@Setter
 	private int  pendingRelease;
 
-	/** Radio-clock ms of the latest stuck-recycle tip-off; 0 when none. */
+	/** Radio-clock ms of the latest tip-off (a crime-scene start, a hand-off seed); 0 when none. */
 	private long tipOffAt;
 
 	/** Radio-clock ms of recent casualties, for {@link #shouldRegroup}. */
@@ -97,6 +98,15 @@ public class CopGroup {
 	/** The hand-off's spawn bias; read through {@link #biasAt}, which drops it once expired. */
 	@Getter(AccessLevel.NONE)
 	private @Nullable SpawnBias bias;
+	/** The latest bias set, kept past its expiry: units dispatched under it still spawn with it (T-434). */
+	@Getter(AccessLevel.NONE)
+	private @Nullable SpawnBias seedBias;
+	/** The squad's last-known spot when {@link #seedBias} was set. */
+	@Getter(AccessLevel.NONE)
+	private @Nullable Location  seedLead;
+	/** {@link #seedBias} seeded the squad, or a newer lead made its seed stale. */
+	@Getter(AccessLevel.NONE)
+	private boolean             seedSpent;
 	private boolean backupHeld;
 	/** Radio-clock ms of the latest casualty; a regroup clears {@link #casualtyTimes} but not this. */
 	private long    lastCasualtyAt;
@@ -278,7 +288,7 @@ public class CopGroup {
 		return false;
 	}
 
-	/** Stamps the latest tip-off (a crime-scene start, a hand-off seed) at {@code now} (radio-clock ms). */
+	/** Stamps the latest tip-off (a crime-scene start, a hand-off's one seed) at {@code now} (radio-clock ms). */
 	public void markTipOff(long now) {
 		tipOffAt = now;
 	}
@@ -376,6 +386,24 @@ public class CopGroup {
 	/** The hand-off's spawn bias for units enqueued from now on ({@code null} clears it). */
 	public void setBias(@Nullable SpawnBias bias) {
 		this.bias = bias;
+		if (bias == null) return;
+		seedBias  = bias;
+		seedLead  = squad.lastKnownLocation();
+		seedSpent = false;
+	}
+
+	/**
+	 * Whether a unit spawning under {@code unitBias} seeds the squad with its last-seen spot (T-434): only the latest
+	 * bias, only once, and only while no sighting or tip moved the squad's lead since that bias was set. A newer lead is
+	 * fresher than the hand-off spot, so the seed would rewind it (and the hand-off heading sampled from it); a second
+	 * seed of the same spot would only shrink the search circle back to its start. Spends the seed either way.
+	 */
+	// ponytail: "moved" is a location compare, as Keystone 1.15.4 NpcSquad exposes no lastKnownAt; a sighting at the
+	// exact same spot reads as no news, which only costs one more seed of that spot. Upgrade: a lead stamp upstream.
+	public boolean takeBiasSeed(@Nullable SpawnBias unitBias) {
+		if (unitBias == null || unitBias != seedBias || seedSpent) return false;
+		seedSpent = true;
+		return Objects.equals(squad.lastKnownLocation(), seedLead);
 	}
 
 	/** The hand-off bias, {@code null} once it expired. */

@@ -517,6 +517,34 @@ class CopManagerDispatchTest {
 	}
 
 	@Test
+	@DisplayName("T-434: a unit refused a spot is requeued without a bias it only borrowed, so it never outlives the bias")
+	void requeuedUnit_dropsTheBiasOnceItExpired() {
+		northside();
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		Location  crimeScene = group().getSquad().lastKnownLocation();
+		SpawnBias bias       = new SpawnBias(new Vector(1, 0, 0), new Location(fx.world, 70, 64, 10), 30_000L, 60.0);
+		group().setBias(bias);
+		// the first try finds no spot (R6 refused every spot in view); the next ones do
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null)
+		                                               .thenAnswer(inv -> fx.cop(CopState.IDLE, 0, 0));
+
+		fx.clock[0] = 21_000L;
+		manager.spawnTick(playerId, wanted);
+		assertEquals(2, group().pendingCount(), "both units wait for the next run");
+
+		fx.clock[0] = 31_000L;
+		assertNull(group().biasAt(fx.clock[0]), "the bias ran out");
+		manager.spawnTick(playerId, wanted);
+
+		List<PendingUnit> tries = spawnedUnits(3);
+		assertSame(bias, tries.get(0).bias(), "the first try borrowed the active bias");
+		assertNull(tries.get(1).bias(), "the retry spawns without the expired bias");
+		assertNull(tries.get(2).bias());
+		assertEquals(crimeScene, group().getSquad().lastKnownLocation(), "no seed from a bias that ran out");
+	}
+
+	@Test
 	@DisplayName("a held backup never holds the base squad: a lost cop is still refilled")
 	void backupHeld_baseSquadStillRefills() {
 		manager.onWantedStart(player, wanted);

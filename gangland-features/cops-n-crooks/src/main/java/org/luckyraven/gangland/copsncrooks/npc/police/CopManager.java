@@ -877,24 +877,25 @@ public class CopManager implements BeanLifecycle {
 	/**
 	 * Spawns the queued units that are due. The first one that finds no spot stops the run (the 0.15 "stop trying this
 	 * interval" rule): the rest of the due units are requeued untried, ahead of it, so a suspect with no valid spot around him
-	 * costs one failed search per run, not one per unit. A unit enqueued under a hand-off bias
-	 * seeds the squad with the bias's last sighting and a tip-off when it spawns (CONTRACTS C11), so the evasion clock
-	 * holds instead of reading the seed as a fresh sighting.
+	 * costs one failed search per run, not one per unit; a requeued unit drops a bias that ran out (T-434). The first
+	 * unit spawning under a hand-off bias seeds the squad with the bias's last sighting as a tip plus a tip-off
+	 * (CONTRACTS C11), unless a sighting or tip since the hand-off is fresher ({@link CopGroup#takeBiasSeed}).
 	 */
 	private void spawnDueUnits(Player player, CopGroup group, long now) {
 		UUID      playerId = player.getUniqueId();
 		SpawnBias active   = group.biasAt(now);
 		List<PendingUnit> due = group.takeDue(now);
 		for (int i = 0; i < due.size(); i++) {
-			PendingUnit unit = due.get(i);
+			PendingUnit queued = due.get(i);
+			PendingUnit unit   = queued;
 			// a unit queued before the hand-off still spawns ahead of him and seeded while its bias is active
-			if (unit.bias() == null && active != null)
-				unit = new PendingUnit(unit.role(), unit.tier(), unit.arriveAt(), unit.station(), active);
+			if (unit.bias() == null && active != null) unit = withBias(unit, active);
 			CopNpc newCop = spawnManager.spawnUnit(player, unit, loc -> !group.isAvoided(loc, now));
 			if (newCop == null) {
-				// the untried units go first next run: a unit refused at its one spot must not block those behind it
-				due.subList(i + 1, due.size()).forEach(group::requeue);
-				group.requeue(unit);
+				// the untried units go first next run: a unit refused at its one spot must not block those behind it.
+				// Requeued as queued (a borrowed bias is borrowed again only while active), less a bias that ran out
+				due.subList(i + 1, due.size()).forEach(next -> group.requeue(dropExpiredBias(next, now)));
+				group.requeue(dropExpiredBias(queued, now));
 				return;
 			}
 
@@ -903,12 +904,21 @@ public class CopManager implements BeanLifecycle {
 			newCop.transitionTo(CopState.PURSUING);
 			group.add(newCop);
 
-			if (unit.bias() != null) {
+			if (group.takeBiasSeed(unit.bias())) {
 				// a tip, not a sighting (R4): no member saw him at the hand-off spot
 				group.getSquad().reportTip(unit.bias().lastSeen());
 				group.markTipOff(now);
 			}
 		}
+	}
+
+	private static PendingUnit withBias(PendingUnit unit, @Nullable SpawnBias bias) {
+		return new PendingUnit(unit.role(), unit.tier(), unit.arriveAt(), unit.station(), bias);
+	}
+
+	/** {@code unit} without its bias once that ran out at {@code now}; as is otherwise. */
+	private static PendingUnit dropExpiredBias(PendingUnit unit, long now) {
+		return unit.bias() == null || unit.bias().activeAt(now) ? unit : withBias(unit, null);
 	}
 
 	/**

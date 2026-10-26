@@ -100,4 +100,55 @@ class CopManagerHandoffTest {
 		for (PendingUnit unit : carrying) assertSame(bias, unit.bias());
 		assertEquals(20.0, group.getSquad().lastKnownLocation().getX());
 	}
+
+	@Test
+	@DisplayName("T-434: a biased unit spawning after a fresher sighting keeps that sighting, and the next hand-off heads on")
+	void handoffSeed_neverRewindsAFresherSighting() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group = fx.manager.groupFor(player.getUniqueId());
+
+		// seen at x=10 then x=20, then the chase leashes out: hand-off at x=20, heading east
+		playerAt(10);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		fx.clock[0] += 1_000L;
+		playerAt(20);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		for (CopNpc cop : group.getCops()) {
+			cop.transitionTo(CopState.RETURNING);
+			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
+		}
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		assertNotNull(group.biasAt(fx.clock[0]));
+
+		// a cop sees him at x=50 after the hand-off; then the biased refill spawns
+		fx.clock[0] += 1_000L;
+		playerAt(50);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		assertEquals(50.0, group.getSquad().lastKnownLocation().getX(), "the stale hand-off spot never rewinds a sighting");
+
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		// the bias runs out; the refill chases him, then leashes out again: the second hand-off
+		fx.clock[0] += 10_000L;
+		controller.tick(player, group);
+		for (CopNpc cop : group.getCops()) {
+			cop.transitionTo(CopState.RETURNING);
+			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
+		}
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		SpawnBias second = group.biasAt(fx.clock[0]);
+		assertNotNull(second, "the second hand-off");
+		assertTrue(second.heading().getX() > 0, "he ran east (20 then 50): heading " + second.heading());
+		assertEquals(50.0, second.lastSeen().getX());
+	}
 }
