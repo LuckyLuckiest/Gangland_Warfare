@@ -16,8 +16,10 @@ import java.util.function.Supplier;
 
 /**
  * The "put that away" warning clock (0.20.0 lane patrol): per player, one warning per {@code Repeat_Seconds} counted
- * from when it was given; a warning ends complied (weapon away, or out of the cop's view when time is up) or ignored
- * (still holding, still in view) which commits {@code Brandish_Near_Cop} as seen by a cop. Main thread only.
+ * from the verdict of the last one (0.21.1; it used to count from the start of the warning); a warning ends complied
+ * (weapon away, or out of the cop's view when time is up, which says so) or ignored (still holding, still in view): the
+ * player is told the cause and {@code Brandish_Near_Cop} is committed as seen by a cop, which is worth the first star on
+ * the shipped heat. Main thread only.
  */
 @CustomLog
 public class BrandishWarnings {
@@ -70,7 +72,6 @@ public class BrandishWarnings {
 		UUID id  = player.getUniqueId();
 		long now = clock.getAsLong();
 		open.put(id, now);
-		lastGiven.put(id, now);
 		player.sendMessage(messages.format(WantedMessages.Key.PATROL_PUT_AWAY,
 		                                   Map.of("seconds", String.valueOf(settings.get().seconds()))));
 		log.debug("WARNING {} result=given", player.getName());
@@ -80,7 +81,7 @@ public class BrandishWarnings {
 	/**
 	 * Advances an open warning. {@code inView}: the warning cop still acquires the player. Weapon gone: COMPLIED
 	 * (message {@code Patrol.Complied}). Time up and still holding: IGNORED when in view (commits the crime once),
-	 * COMPLIED when not. Otherwise PENDING. A closed warning is dropped; the cooldown stays.
+	 * COMPLIED when not. Otherwise PENDING. A closed warning is dropped and starts the repeat cooldown.
 	 */
 	public Result update(Player player, boolean inView) {
 		UUID id      = player.getUniqueId();
@@ -89,7 +90,7 @@ public class BrandishWarnings {
 			return Result.COMPLIED;
 		}
 		if (!holding(player)) {
-			open.remove(id);
+			close(id);
 			player.sendMessage(messages.format(WantedMessages.Key.PATROL_COMPLIED, Map.of()));
 			log.debug("WARNING {} result=complied", player.getName());
 			return Result.COMPLIED;
@@ -97,18 +98,28 @@ public class BrandishWarnings {
 		if (clock.getAsLong() - started < settings.get().seconds() * 1000L) {
 			return Result.PENDING;
 		}
-		open.remove(id);
+		close(id);
 		if (!inView) {
+			player.sendMessage(messages.format(WantedMessages.Key.PATROL_LOST_SIGHT, Map.of()));
 			log.debug("WARNING {} result=complied", player.getName());
 			return Result.COMPLIED;
 		}
+		player.sendMessage(messages.format(WantedMessages.Key.PATROL_IGNORED,
+		                                   Map.of("cause", messages.crimeName(Crimes.BRANDISH_NEAR_COP))));
 		crimes.commit(player, Crimes.BRANDISH_NEAR_COP, player.getLocation(), true, 0);
 		log.debug("WARNING {} result=ignored", player.getName());
 		return Result.IGNORED;
 	}
 
-	/** Drops an open warning without a verdict (the cop died, left WARNING or the player left); cooldown stays. */
+	/** Drops an open warning without a verdict (the cop died, left WARNING or the player left); the cooldown starts. */
 	public void abandon(UUID playerId) {
-		open.remove(playerId);
+		close(playerId);
+	}
+
+	/** Closes the open warning, if any, and stamps the cooldown now: the verdict, not the start, begins it. */
+	private void close(UUID playerId) {
+		if (open.remove(playerId) != null) {
+			lastGiven.put(playerId, clock.getAsLong());
+		}
 	}
 }

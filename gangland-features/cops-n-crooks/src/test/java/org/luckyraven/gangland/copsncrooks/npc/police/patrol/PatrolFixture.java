@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -142,6 +143,7 @@ public final class PatrolFixture implements AutoCloseable {
 		WantedMessages messages = mock(WantedMessages.class);
 		when(messages.format(any(WantedMessages.Key.class), anyMap()))
 				.thenAnswer(inv -> ((WantedMessages.Key) inv.getArgument(0)).name());
+		when(messages.crimeName(anyString())).thenAnswer(inv -> inv.getArgument(0));
 		return messages;
 	}
 

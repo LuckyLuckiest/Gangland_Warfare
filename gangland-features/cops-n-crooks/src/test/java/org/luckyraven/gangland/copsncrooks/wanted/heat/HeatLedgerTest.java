@@ -107,6 +107,16 @@ class HeatLedgerTest {
 	}
 
 	@Test
+	@DisplayName("one ignored warning (Brandish_Near_Cop seen by a cop) gives the first star under the shipped heat")
+	void brandishNearCop_seenByCop_givesTheFirstStar() {
+		ledger.record(new CrimeCommittedEvent(player, Crimes.BRANDISH_NEAR_COP, location, true, 0));
+
+		assertEquals(1, wanted.getLevel());
+		assertEquals(1, triggers.get());
+		assertEquals(Crimes.BRANDISH_NEAR_COP, ledger.lastCrime(playerId).crimeId());
+	}
+
+	@Test
 	@DisplayName("two Kill_Cop inside the streak window reach two stars (150 + 225)")
 	void killCopTwiceInTheStreakWindow_reachesTwoStars() {
 		assertEquals(150, ledger.record(crime(Crimes.KILL_COP)));

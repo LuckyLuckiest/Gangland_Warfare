@@ -51,7 +51,7 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
 | `Trespass_Restricted` | 300 | Walking into an admin region tagged `restricted`. Repeats no faster than `Trespass.Repeat_Seconds` (60). Players with `gangland.cop.trespass.bypass` are exempt. |
 | `Evading_Police` | 100 | A driver who flees a traffic stop (`Patrol.Fled`). |
 
-Warnings (`Brandish_Near_Cop`, 25) and the rest of the 0.15 list are unchanged. Crimes outside the witness list count at once,
+Warnings (`Brandish_Near_Cop`, 67 since 0.21.1: an ignored warning is worth the first star at once; it was 25) and the rest of the 0.15 list are unchanged. Crimes outside the witness list count at once,
 exactly as before.
 
 ### Witnesses and 911 calls (0.20.0)

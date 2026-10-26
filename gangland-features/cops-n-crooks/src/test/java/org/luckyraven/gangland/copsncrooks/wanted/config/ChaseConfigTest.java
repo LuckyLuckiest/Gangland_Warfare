@@ -129,9 +129,10 @@ class ChaseConfigTest {
 		assertEquals(List.of(1, 2), ev.searchRadius());
 		assertEquals(List.of(3, 4), ev.secondsToDrop());
 		assertEquals(4.5, ev.outsideZoneSpeed());
-		TitleCue offCue = new TitleCue(false, "", "%stars% %card%", 5, 20, 5);
-		TitleCue offEsc = new TitleCue(false, "", "%card%", 5, 20, 5);
-		assertEquals(new HudSettings(false, false, offCue, offCue, offEsc, false, "ENTITY_BAT_TAKEOFF", 0.5f, 1.5f,
+		TitleCue offGain = new TitleCue(false, "", "%stars%", 5, 20, 5);
+		TitleCue offCue  = new TitleCue(false, "", "%stars% %card%", 5, 20, 5);
+		TitleCue offEsc  = new TitleCue(false, "", "%card%", 5, 20, 5);
+		assertEquals(new HudSettings(false, false, offGain, offCue, offEsc, false, "ENTITY_BAT_TAKEOFF", 0.5f, 1.5f,
 		                             false, "FLAME", 12, false), c.hud());
 		assertEquals(new ChargeSheetSettings(false, 1, 2, 3, 0.5, 9), c.chargeSheet());
 	}
@@ -616,7 +617,7 @@ class ChaseConfigTest {
 		ChaseConfig c = ChaseConfig.parse(wantedRoot("Wanted:\n   Hud:\n      Boss_Bar:\n         Enable: true\n", report),
 		                                  report);
 
-		assertEquals(TitleCue.DEFAULT, c.hud().gain());
+		assertEquals(TitleCue.GAIN, c.hud().gain());
 		assertEquals(TitleCue.DEFAULT, c.hud().lost());
 		assertEquals(TitleCue.ESCAPED, c.hud().escaped());
 	}

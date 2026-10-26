@@ -902,9 +902,13 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
   `Patrol_Sighting`.
 - **Brandish warning** (`Cops.Warning`). A cop within `Range` (12 blocks) of a player holding a weapon tells the player
   to put it away (`Wanted_Messages` `Patrol.Put_Away`, time left `%seconds%`). Complying in time sends `Patrol.Complied`;
-  the same player is warned again only after `Repeat_Seconds` (30). A warning the player ignores (still holding the
-  weapon, still in view when time is up) commits `Brandish_Near_Cop` as seen by a cop. Cops never attack from the
-  warning state.
+  the same player is warned again only after `Repeat_Seconds` (30), counted from the verdict of the last warning since
+  0.21.1 and shared by every beat cop. A warning the player ignores (still holding the weapon, still in view when time
+  is up) sends `Patrol.Ignored` naming the cause and commits `Brandish_Near_Cop` as seen by a cop, which gives the first
+  star at once (heat 67 x 1.5). Time up with the cop out of view sends `Patrol.Lost_Sight` and costs nothing. Only beat
+  cops on patrol warn, a wanted player is reported instead, and darkness, dim light and sneaking shrink `Range` (`Cops.Sight`).
+  Cops never attack from the warning state. The star title shows the star row only (`Wanted.Hud.Title.Gain.Subtitle`
+  `%stars%`); the cause card goes to chat.
 - **Pull-over** (`Cops.Pull_Over`). A cop within `Range` (24 blocks) signals a driver whose speed is above
   `Speed_Limit` (12 blocks per second) to stop (`Patrol.Pull_Over`). The driver has `Comply_Seconds` (6) to slow below
   `Stop_Speed` (1.0) and hold it for `Stop_Hold_Seconds` (2). A completed stop charges `Ticket_Amount` (150.0) from the

@@ -88,6 +88,9 @@ public class WantedMessages extends LocalizedModuleYaml {
 		// 0.20.0
 		PATROL_PUT_AWAY("Patrol.Put_Away", "&eBeat cop: &fPut that away! &7(%seconds%s)"),
 		PATROL_COMPLIED("Patrol.Complied", "&aThanks, carry on."),
+		// 0.21.1
+		PATROL_IGNORED("Patrol.Ignored", "&cBeat cop: &fYou were warned. &7Wanted for: &c%cause%"),
+		PATROL_LOST_SIGHT("Patrol.Lost_Sight", "&7Beat cop: &fLost sight of you. Keep it holstered."),
 		PATROL_PULL_OVER("Patrol.Pull_Over", "&cBeat cop: &fPull over! Stop within %seconds%s"),
 		PATROL_TICKET("Patrol.Ticket", "&7Ticket: &c%money_symbol%%amount%"),
 		PATROL_FLED("Patrol.Fled", "&cYou fled a traffic stop!"),

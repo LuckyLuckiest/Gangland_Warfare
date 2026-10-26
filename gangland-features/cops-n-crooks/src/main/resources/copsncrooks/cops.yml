@@ -679,14 +679,23 @@ Cops:
       Report_Wanted: true
 
    # Warning: a cop tells a player to put the weapon away before escalating.
+   # Only a beat cop on patrol warns: a squad cop, or one posted, idle or on overwatch, never does. A wanted player
+   # (or one the cops are still searching for) is reported, not warned. The warning ends at its verdict: weapon away
+   # ("Thanks, carry on."), out of the cop's view when time is up ("Lost sight of you"), or still held in view, which
+   # tells the player the cause (wanted_messages.yml Patrol.Ignored) and gives the first star at once
+   # (wanted.yml Heat.Crimes.Brandish_Near_Cop). The cop then goes back to its beat.
    Warning:
       # Turn the warning step on or off.
       Enable: true
-      # Blocks from a cop within which the warning is given.
+      # Blocks from a cop within which the warning is given. The cop must also be able to see the player: the range
+      # shrinks in the dark, in dim light and while the player sneaks (Cops.Sight), so at night a cop may
+      # have to walk up close before it warns.
       Range: 12.0
       # Seconds the player has to put the weapon away.
       Seconds: 5
-      # Seconds before the same player is warned again.
+      # Seconds before the same player is warned again, counted from the verdict of the last warning (0.21.1; it
+      # counted from the start of the warning before). One timer per player, shared by every beat cop: whichever
+      # cop is in range when it ends gives the next warning.
       Repeat_Seconds: 30
 
    # Pull_Over: a cop signals a speeding driver to stop. Speeds are in blocks per second.

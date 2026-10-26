@@ -38,6 +38,8 @@ class WantedMessages020Test {
 	private static final Map<WantedMessages.Key, List<String>> PLACEHOLDERS = Map.ofEntries(
 			Map.entry(WantedMessages.Key.PATROL_PUT_AWAY, List.of("%seconds%")),
 			Map.entry(WantedMessages.Key.PATROL_COMPLIED, List.of()),
+			Map.entry(WantedMessages.Key.PATROL_IGNORED, List.of("%cause%")),
+			Map.entry(WantedMessages.Key.PATROL_LOST_SIGHT, List.of()),
 			Map.entry(WantedMessages.Key.PATROL_PULL_OVER, List.of("%seconds%")),
 			Map.entry(WantedMessages.Key.PATROL_TICKET, List.of("%money_symbol%", "%amount%")),
 			Map.entry(WantedMessages.Key.PATROL_FLED, List.of()),
