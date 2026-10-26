@@ -82,14 +82,37 @@ class CopManagerSquadTest {
 		fx.close();
 	}
 
+	/** Flipped 0.21.1 (owner ruling R4): the crime scene is a tip, no cop saw him there. */
 	@Test
-	@DisplayName("a wanted start reports the crime scene to the new group's squad")
+	@DisplayName("a wanted start tips the new group's squad off to the crime scene: a last-known spot, not a sighting")
 	void wantedStart_reportsCrimeScene() {
 		manager.onWantedStart(player, wanted);
 
 		NpcSquad squad = manager.groupFor(playerId).getSquad();
-		assertTrue(squad.hasFreshSighting());
+		assertFalse(squad.hasFreshSighting(), "no cop saw him: the squad searches the spot, it does not chase him live");
 		assertEquals(new Location(fx.world, 10, 64, 10), squad.lastKnownLocation());
+		assertTrue(manager.groupFor(playerId).tippedOffWithin(fx.clock[0], 0L));
+	}
+
+	@Test
+	@DisplayName("a hit by the target from where the cop cannot see him is a tip; one the cop can see is a sighting (R4)")
+	void copAttacked_withoutLineOfSight_isATip_withItASighting() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		CopNpc   cop   = fx.cop(CopState.PURSUING, 0, 0);
+		group.add(cop);
+		Location hidden = new Location(fx.world, 40, 70, 40);
+		when(player.getLocation()).thenReturn(hidden);
+		when(cop.hasLineOfSight(player)).thenReturn(false);
+
+		manager.onCopAttackedAlert(cop, player);
+
+		assertEquals(hidden, group.getSquad().lastKnownLocation());
+		assertFalse(group.getSquad().hasFreshSighting(), "a shot from cover gives his spot away, not his live position");
+
+		when(cop.hasLineOfSight(player)).thenReturn(true);
+		manager.onCopAttackedAlert(cop, player);
+		assertTrue(group.getSquad().hasFreshSighting());
 	}
 
 	@Test
@@ -130,6 +153,19 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("a wanted start leaves a returning cop beyond Pursuit.Max_Distance walking home (T-131, cause 5)")
+	void wantedStart_farReturningCop_staysReturning() {
+		manager.onWantedStart(player, wanted);
+		CopNpc far = fx.cop(CopState.RETURNING, 500, 500);
+		manager.groupFor(playerId).add(far);
+
+		manager.onWantedStart(player, wanted);
+
+		assertEquals(CopState.RETURNING, far.getCurrentState(), "it would leash again on its next tick");
+		verify(far, never()).transitionTo(CopState.PURSUING);
+	}
+
+	@Test
 	@DisplayName("a new group's squad speaks on the police radio")
 	void newGroup_squadHasRadioListener() {
 		manager.onWantedStart(player, wanted);
@@ -165,17 +201,24 @@ class CopManagerSquadTest {
 		assertEquals("SWAT", group.getTierName());
 	}
 
+	/** Flipped 0.21.1 (T-131/T-149, owner ruling R3): an out-of-view stranded walker is released, not kept. */
 	@Test
-	@DisplayName("RETURNING cops beyond the pursuit range do not fill the spawn count; nearby ones do")
+	@DisplayName("RETURNING cops beyond the pursuit range are released out of view and refilled; nearby ones count")
 	void spawnTask_ignoresStrandedReturningCops() {
 		manager.onWantedStart(player, wanted);
 		CopGroup group = manager.groupFor(playerId);
-		group.add(fx.cop(CopState.RETURNING, 500, 500));
-		group.add(fx.cop(CopState.RETURNING, 500, -500));
+		CopNpc   east  = fx.cop(CopState.RETURNING, 500, 500);
+		CopNpc   west  = fx.cop(CopState.RETURNING, 500, -500);
+		group.add(east);
+		group.add(west);
 
 		manager.spawnTick(playerId, wanted);
 
-		assertEquals(4, group.getCops().size(), "two fresh cops despite two stranded returners");
+		assertEquals(2, group.getCops().size(), "two fresh cops; the stranded returners are gone, never above the target");
+		assertFalse(group.getCops().contains(east));
+		assertFalse(group.getCops().contains(west));
+		verify(east).destroy(any());
+		verify(west).destroy(any());
 
 		CopGroup near = manager.groupFor(playerId);
 		near.getCops().clear();
@@ -183,6 +226,32 @@ class CopManagerSquadTest {
 		near.add(fx.cop(CopState.RETURNING, 12, 10));
 		manager.spawnTick(playerId, wanted);
 		assertEquals(2, near.getCops().size(), "nearby returners still count");
+	}
+
+	@Test
+	@DisplayName("a released leashed walker tips the squad to its last-known spot, never his live one; a watched one stays (R3/R4)")
+	void strandedReleased_tipsLastKnown_watchedStays() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group   = manager.groupFor(playerId);
+		Location scene   = new Location(fx.world, 10, 64, 10);
+		CopNpc   watched = fx.cop(CopState.RETURNING, 500, 500);
+		CopNpc   alone   = fx.cop(CopState.RETURNING, -500, 500);
+		watched.setTargetPlayerId(playerId);
+		alone.setTargetPlayerId(playerId);
+		group.add(watched);
+		group.add(alone);
+		when(fx.spawner.isVisibleToOtherPlayers(eq(new Location(fx.world, 500, 64, 500)), eq(player))).thenReturn(true);
+		when(player.getLocation()).thenReturn(new Location(fx.world, 60, 64, 10)); // he ran on, unseen
+		fx.clock[0] += 5_000L;
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(alone), "out of every player's view: removed");
+		verify(alone).destroy(any());
+		assertTrue(group.getCops().contains(watched), "a bystander is looking at it: it stays, uncounted (T-130)");
+		assertEquals(3, group.getCops().size(), "two fresh cops plus the watched walker");
+		assertEquals(scene, group.getSquad().lastKnownLocation(), "the leash tip is the last-known spot");
+		assertFalse(group.getSquad().hasFreshSighting());
 	}
 
 	@Test

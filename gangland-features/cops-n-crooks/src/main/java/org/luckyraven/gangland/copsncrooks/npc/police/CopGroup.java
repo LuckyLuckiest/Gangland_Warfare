@@ -357,6 +357,11 @@ public class CopGroup {
 		pending.clear();
 	}
 
+	/** Calls off the newest queued units until at most {@code max} are left (0.21.1: a level drop needs fewer). */
+	public void trimPending(int max) {
+		while (pending.size() > Math.max(0, max)) pending.remove(pending.size() - 1);
+	}
+
 	/**
 	 * Any pending unit with {@code arriveAt + 10_000 > now}.
 	 */

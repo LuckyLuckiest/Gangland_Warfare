@@ -136,6 +136,8 @@ final class CopManagerFixture implements AutoCloseable {
 		when(player.isValid()).thenReturn(true);
 		when(player.getWorld()).thenReturn(world);
 		when(player.getLocation()).thenReturn(new Location(world, x, 64, z));
+		// looking along +Z (yaw 0), level: the view checks of the leash release and the spawn gate need eyes
+		when(player.getEyeLocation()).thenReturn(new Location(world, x, 65.62, z, 0f, 0f));
 		when(targeting.isWanted(id)).thenReturn(true);
 		bukkit.statics().when(() -> Bukkit.getPlayer(id)).thenReturn(player);
 		return player;
