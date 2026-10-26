@@ -274,6 +274,21 @@ class HandoffControllerTest {
 	}
 
 	@Test
+	@DisplayName("R5: a suspect seen standing still who turned before he was lost is read by his latest seen facing")
+	void standingStill_turnedInSight_usesTheLatestSeenFacing() {
+		CopNpc chaser = cop(CopState.PURSUING, 5);
+		tick(0, 0, 0);               // yaw 0 faces +Z
+		at = new Location(world, 0, 64, 0, -90f, 0f);
+		tick(1, 0, 0);               // same spot, seen turning to face +X
+		leash(chaser);
+		blindTick(2);
+
+		Vector heading = group.biasAt(clock[0]).heading();
+		assertEquals(1.0, heading.getX(), 1e-6);
+		assertEquals(0.0, heading.getZ(), 1e-6);
+	}
+
+	@Test
 	@DisplayName("R5: a squad that never saw or was told where he is has no heading to hand off")
 	void noLastKnownSpot_noHandoff() {
 		CopNpc chaser = cop(CopState.PURSUING, 5);

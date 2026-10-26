@@ -100,13 +100,16 @@ public class HandoffController {
 	}
 
 	/**
-	 * Adds the squad's last-known spot when it moved (a stale spot repeated every tick is no travel) and keeps the spots
-	 * within {@code windowMs} of the newest one, so the heading is the last stretch the squad knew of, however long ago.
+	 * Adds the squad's last-known spot when it moved (a stale spot repeated every tick is no travel; the same spot only
+	 * refreshes the facing) and keeps the spots within {@code windowMs} of the newest one, so the heading is the last
+	 * stretch the squad knew of, however long ago.
 	 */
 	private static void record(Deque<Sample> window, @Nullable Location lastKnown, long now, long windowMs) {
 		if (lastKnown == null) return;
 		Sample newest = window.peekLast();
-		if (newest == null || !samePlace(newest.at(), lastKnown)) window.addLast(new Sample(now, lastKnown));
+		if (newest != null && samePlace(newest.at(), lastKnown))
+			window.addLast(new Sample(window.removeLast().time(), lastKnown));
+		else window.addLast(new Sample(now, lastKnown));
 		long latest = window.peekLast().time();
 		while (window.size() > 1 && latest - window.peekFirst().time() > windowMs) window.removeFirst();
 	}
