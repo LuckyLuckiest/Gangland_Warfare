@@ -484,7 +484,7 @@ Cops:
 | `Perimeter.Lane_Length` | `16.0` | Blocks of clear lane kept toward the centre of the zone |
 | `Perimeter.Sight_Range` | `40.0` | How far a posted cop sees; the ring radius is the smaller of the zone radius and 0.8 x this |
 | `Perimeter.Leash_Radius` | `4.0` | How far a posted cop may stray (a post never uses less than 1.5) |
-| `Radio.Cooldown_Ticks.Dispatch_En_Route` / `Wipe_Refill` / `Handoff` / `Post_Up` / `Eyes_On` / `Returning_To_Patrol` | `0` / `0` / `200` / `100` / `60` / `1200` | 0.16.0 repeat cooldowns of the new radio lines |
+| `Radio.Cooldown_Ticks.Dispatch_En_Route` / `Wipe_Refill` / `Handoff` / `Post_Up` / `Eyes_On` / `Returning_To_Patrol` | `600` / `0` / `200` / `100` / `60` / `1200` | 0.16.0 repeat cooldowns of the new radio lines; `Dispatch_En_Route` was `0` until 0.21.1 (per squad, so a refill is not re-announced) |
 | `Radio.Priority` | see the file | `Dispatch_En_Route` and `Wipe_Refill` are always added to the list a server file carries (they must not be swallowed by the gap after `Dispatch_Wanted`) |
 | `Regroup.Enabled` | `true` | 0.15.0. `false` = no pull-back after casualties |
 | `Regroup.Casualties` | `2` | Cops lost inside `Window_Seconds` that trigger the pull-back |

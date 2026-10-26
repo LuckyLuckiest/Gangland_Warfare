@@ -426,10 +426,22 @@ player's world:
 - The **ETA** is the horizontal distance from the station to the suspect divided by `Dispatch.Unit_Speed` (10
   blocks per second), clamped to `Min_Eta_Seconds` (0) .. `Max_Eta_Seconds` (40) and rounded up to whole seconds.
 - The squad radios it: "3 units en route from Central, ETA 12 s." (`Dispatch_En_Route`, with the place of the crime in
-  the `Dispatch_Wanted` line).
+  the `Dispatch_Wanted` line). Since 0.21.1 the line is said once per squad per 30 s
+  (`Cops.Radio.Cooldown_Ticks.Dispatch_En_Route: 600`), so a refill does not sound like a new dispatch.
 - A unit appears out of sight: first at a spawner of its station, otherwise on a hidden ring around the suspect,
   otherwise (every spot is visible) the old spawn rules. "Out of sight" means no player who matters has a clear line
   of sight to the spot (a block ray, not a facing cone); the hunted player counts at any distance.
+- **Never in front of him (0.21.1).** No unit, refill or post-escape search squad spawns where the hunted player is
+  looking: a spot within 60 degrees of his eye direction with a clear line to it is refused on every path, the old
+  spawn rules included (the unit then waits for the next spawn run). A unit with a hand-off heading spawns ahead of him
+  only on hidden spots, so only while he cannot see them. Every spot also stays within 0.75 x
+  `Cops.Pursuit.Max_Distance` (60 blocks) of him, so a fresh cop is not past the pursuit leash the second it spawns.
+- **Lost cops leave (0.21.1).** A cop that gave up the chase beyond `Cops.Pursuit.Max_Distance` is removed as soon as
+  no player is looking at it, instead of walking home for up to five minutes, and the squad refills from its
+  last-known spot. A level drop calls off units no longer needed before they arrive. While the whole squad is lost
+  (cops walking home, a hand-off pending, units on the road) the evasion countdown pauses instead of restarting.
+- **Tips are not sightings (0.21.1).** The crime scene, a recycle, a hand-off seed and a hit from cover tell the squad
+  where to search; only a cop who really sees the player makes the squad chase his live position.
 - A world with no station keeps the old ring spawn with no delay (ETA 0).
 - **The chase clock waits for the cops.** While units are on the road and none stands in the world, the evasion clock holds:
   no search opens and no star can drop. A unit that fails to spawn for 10 s past its ETA stops counting.
@@ -896,7 +908,8 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
   `Cops.Patrol.Beat_Radius` (24 blocks) from the station, pausing `Pause_Seconds_Min` to `Pause_Seconds_Max` at each
   beat point. Beat cops despawn only when nobody is within `Despawn_Radius` (96 blocks) for `Despawn_After_Seconds`
   in a row; a player inside the radius keeps them.
-  Tier comes from `Cops.Patrol.Tier` (1 = Officer).
+  Tier comes from `Cops.Patrol.Tier` (1 = Officer). A station that loses a beat cop waits `Cops.Patrol.Respawn_Seconds`
+  (30) before a replacement walks out (0.21.1).
 - **Sighting a wanted player.** With `Cops.Patrol.Report_Wanted: true` a patrol cop who sees a wanted player reports
   that player's position to the squad already hunting them and opens no new call. The radio line for that report is
   `Patrol_Sighting`.
