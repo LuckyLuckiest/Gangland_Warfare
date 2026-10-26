@@ -1138,6 +1138,7 @@ Package `org.luckyraven.gangland.copsncrooks.wanted`, configured by `ChaseConfig
 | Evasion | `wanted.evasion.EvasionClock` (a `WantedDecayPolicy`), `EvasionListener` | Runs on the cop AI tick; fires `WantedEvasionStateEvent`; drops through `WantedStars.drop(.., EVASION)` |
 | HUD | `wanted.hud.WantedHud`, `StarCard`, `listener.wanted.WantedHudListener` | Boss bar, card, title, siren, ring and compass; a 10-tick timer; reads the events only |
 | Charge sheet | `detainment.intake.JailIntakeService` | Reads `ledger.chaseCrimes` before the ARREST clear |
+| Witnesses (0.20.0) | `listener.wanted.WitnessGateListener`, `NineOneOneListener` | The gate cancels a crime in `Wanted.Witnesses.Crimes` (0.21.1: `Kill_Civilian` too) nobody official saw and asks the civilians `WitnessService`; a landed call recommits it with one witness, tips the squad to the spot and says `Caller_911` through `CopRadio.dispatch` (0.21.1, no speaker needed: T-345). `CrimeRecord.reported` (no cop, a witness) makes `WantedHudListener` name the cause with `Hud.Card.Reported` |
 | Regroup | `CopGroup` casualty state + `CopRadio` | See the squad sections above |
 | Shot noise | `listener.police.ShotNoiseListener` | Bartizan `WeaponShootEvent` at MONITOR |
 

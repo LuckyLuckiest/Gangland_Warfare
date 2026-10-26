@@ -11,6 +11,7 @@ import org.luckyraven.gangland.civilians.events.CivilianCalledInEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -41,6 +42,7 @@ class NineOneOneListenerTest {
 	private final CopManager   copManager = mock(CopManager.class);
 	private final CopRadio     radio      = mock(CopRadio.class);
 	private final PlaceNames   places     = mock(PlaceNames.class);
+	private final WantedMessages names    = mock(WantedMessages.class);
 	private final Player       player     = mock(Player.class);
 	private final UUID         playerId   = UUID.randomUUID();
 	private final Location     at         = new Location(mock(World.class), 100, 64, -20);
@@ -59,7 +61,8 @@ class NineOneOneListenerTest {
 		when(crimes.commit(any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(),
 		                   org.mockito.ArgumentMatchers.anyInt())).thenReturn(true);
 		when(places.locate(any())).thenReturn(Optional.of("Docks"));
-		listener = new NineOneOneListener(crimes, copManager, radio, places);
+		when(names.crimeName("Car_Theft")).thenReturn("Car theft");
+		listener = new NineOneOneListener(crimes, copManager, radio, places, names);
 	}
 
 	private CivilianCalledInEvent call(String crimeId) {
@@ -81,7 +84,8 @@ class NineOneOneListenerTest {
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> placeholders = ArgumentCaptor.forClass(Map.class);
 		order.verify(radio).dispatch(eq(group), eq(player), eq("Caller_911"), eq(0), eq(""), placeholders.capture());
-		assertEquals("Car_Theft", placeholders.getValue().get("crime"));
+		// 0.21.1: %crime% is the crime's display name (Crimes.<id> of wanted_messages.yml), never the raw id
+		assertEquals("Car theft", placeholders.getValue().get("crime"));
 		assertEquals("Docks", placeholders.getValue().get("place"));
 		// %suspect% belongs to the CopRadio extras hook (disguise lane): a line-level value would leak the real name
 		assertEquals(java.util.Set.of("crime", "place"), placeholders.getValue().keySet());

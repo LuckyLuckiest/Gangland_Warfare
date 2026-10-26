@@ -89,6 +89,7 @@ Each `CivilianNpc` operates as a finite state machine with 5 states:
 | `LOOK`   | Nearby player detected   | Turns to face the player                 |
 | `FLEE`   | Nearby gunfire or threat | Runs away from threat source             |
 | `COMBAT` | Attacked while armed     | Fights back against attacker             |
+| `CALLING` | Picked as a 911 witness (0.20.0) | Stands, looks at the criminal, then dials with a phone in hand (see Witnesses below) |
 
 ### State Transitions
 
@@ -263,11 +264,35 @@ Uses the same `EntitySpawner` as cops, with a two-phase algorithm:
 
 ---
 
+## Witnesses and 911 calls (0.20.0, visible since 0.21.1)
+
+`witness/WitnessService` (a civilians bean, called by cops-n-crooks' `WitnessGateListener` for a gated crime nobody
+official saw) picks the caller and runs the call; `npc/state/behavior/CivilianCallingBehavior` is the CALLING state.
+Every rule is fixed; the only dice are cosmetic (which line of a pool, idle head turns).
+
+| Step | Code | Rule |
+|---|---|---|
+| Pick | `WitnessService.witness` | Free civilians (not FLEEING/COMBAT/CALLING, not the 2 s victim, not in `Scared_Cooldown_Seconds`) within `Witness.Range`. A loud crime (`Loud_Crimes`, or within `Loud_Shot_Seconds` of `heardShot`) turns each one to the crime spot (`CivilianLookController.faceLocation`); a silent one needs `WitnessService.inView` (horizontal cone `View_Angle` wide around the entity's yaw, edge included, 360 = all round). Then `Hooks.sight` (`npc.canSee`). Nearest calls, the rest are watchers. |
+| Notice | `startCall`, `CivilianCallingBehavior.onEnter` | `Witness_Start` spoken; the caller looks at the criminal, `Notice_Particle` (XParticle) over its head, `Phone_Item` (XMaterial) in its main hand (the old hand is kept on the per-NPC behaviour and given back in `onExit`, which runs after the service has already detached the call). First countdown bar. |
+| Dialling | `CivilianCallingBehavior.tick`, `tickCaller` | After `Notice_Seconds` the caller turns away once. Each AI tick: criminal offline = LOGOUT, caller invalid = LOST, aimed at (`Hooks.aim`, once per AI tick) = SCARED; otherwise the bar `Witness_Calling` (`%caller%`, `%seconds%`) is re-sent when the whole second changes. |
+| Stopped | `cancelCall`, `intimidate`, `onPlayerHitCivilian` | HIT, SCARED, INTIMIDATED (`CivilianInteractListener`: the call's criminal right-clicks the caller within `Intimidate_Range`): `Witness_Scared` spoken, `Witness_Stopped` bar, flee, the civilian is blocked for `Scared_Cooldown_Seconds`. LOGOUT, LOST and KILLED are silent. |
+| Hand-over | `onCallerDeath` | The first watcher that is still valid, still sees the criminal and is not CALLING/FLEEING/COMBAT starts a fresh call (its own Notice). |
+| Connected | `tickCaller` | After `Call_Seconds`: `Witness_Landed` (`%place%` from the core `PlaceNames` bean, else `Witness_Unknown_Place`), then `CivilianCalledInEvent`, then the caller flees. |
+
+Speech goes through `CivilianService.shout(speaker, key, "Witness_Format", criminal, extras)`, the same `SquadRadio` as
+faction shouts: the criminal is the addressee, so he always hears it, and bystanders within `Shouts.Range` hear it too.
+The three keys are in `Shouts.Priority` (shipped YAML and `CiviliansConfig.DEFAULT_SHOUTS`), so no gap drops them.
+`Shouts.Enabled: false` silences the speech; the action bars still show. The cop side
+(`NineOneOneListener`) commits the held crime with one witness and says `Caller_911` through `CopRadio.dispatch`.
+
+---
+
 ## Events
 
 | Event                | When Fired             | Key Data                    |
 |----------------------|------------------------|-----------------------------|
 | `CivilianDeathEvent` | Civilian NPC is killed | NPC reference, killer, type |
+| `CivilianCalledInEvent` | A 911 call connected (0.20.0) | criminal, crime id, crime spot, caller entity |
 | `NpcEvent`           | Generic NPC event      | NPC reference               |
 
 ---
@@ -278,6 +303,9 @@ Uses the same `EntitySpawner` as cops, with a two-phase algorithm:
 |-------------------------|--------------------|-------------------------------|
 | `CivilianDeathListener` | `EntityDeathEvent` | Drop handling, event dispatch |
 | `CivilianDamageListener` | `EntityDamageByEntityEvent`, `PlayerDownedEvent`, `PlayerDeathEvent` | Combat/flee reaction, faction alert, squad drop on death or downed |
+| `WitnessListener` | `EntityDeathEvent`, `PlayerQuitEvent` | A dead caller hands its call over; a criminal who quits cancels his calls |
+| `CivilianInteractListener` (0.21.1) | `NPCRightClickEvent` | The reported criminal right-clicks his caller to stop the call. `condition = "isCitizensAvailable"` |
+| `WitnessShotListener` (0.21.1) | `WeaponShootEvent` | A player's gunshot makes his next crimes loud. `condition = "isBartizanAvailable"` |
 
 ---
 

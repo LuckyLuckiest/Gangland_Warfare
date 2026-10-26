@@ -8,6 +8,7 @@ import org.luckyraven.gangland.civilians.events.CivilianCalledInEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -27,13 +28,16 @@ public class NineOneOneListener implements Listener {
 	private final CrimeService crimes;
 	private final CopManager   copManager;
 	private final CopRadio     copRadio;
-	private final PlaceNames   placeNames;
+	private final PlaceNames     placeNames;
+	private final WantedMessages messages;
 
-	public NineOneOneListener(CrimeService crimes, CopManager copManager, CopRadio copRadio, PlaceNames placeNames) {
+	public NineOneOneListener(CrimeService crimes, CopManager copManager, CopRadio copRadio, PlaceNames placeNames,
+	                          WantedMessages messages) {
 		this.crimes     = crimes;
 		this.copManager = copManager;
 		this.copRadio   = copRadio;
 		this.placeNames = placeNames;
+		this.messages   = messages;
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL)
@@ -51,6 +55,7 @@ public class NineOneOneListener implements Listener {
 		group.getSquad().reportTip(event.getAt());
 		String place = placeNames.locate(event.getAt()).orElseGet(() -> copRadio.placeOf(event.getAt()));
 		if (place == null || place.isBlank()) place = "the area";
-		copRadio.dispatch(group, criminal, "Caller_911", 0, "", Map.of("crime", event.getCrimeId(), "place", place));
+		String crime = messages.crimeName(event.getCrimeId());
+		copRadio.dispatch(group, criminal, "Caller_911", 0, "", Map.of("crime", crime, "place", place));
 	}
 }
