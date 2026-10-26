@@ -41,7 +41,8 @@ public record CiviliansConfig(
 					Map.entry("Search", 15000L), Map.entry("No_Route", 15000L), Map.entry("Check_Fire", 8000L),
 					Map.entry("Reloading", 10000L), Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L),
 					Map.entry("Rally", 6000L), Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L)),
-			java.util.Set.of("Contact", "Man_Down", "Leader_Down", "Rally", "Fall_Back", "In_Cover"), null, 1.0f, 1.0f);
+			java.util.Set.of("Contact", "Man_Down", "Leader_Down", "Rally", "Fall_Back", "In_Cover", "Witness_Start",
+			                "Witness_Scared", "Witness_Landed"), null, 1.0f, 1.0f);
 
 	/** Pre-0.20.0 7-argument constructor, kept for existing callers: defaults {@link #witness} to {@link WitnessRules#DEFAULT}. */
 	public CiviliansConfig(List<String> defaultCivilianEntities, List<String> defaultPoliceEntities,

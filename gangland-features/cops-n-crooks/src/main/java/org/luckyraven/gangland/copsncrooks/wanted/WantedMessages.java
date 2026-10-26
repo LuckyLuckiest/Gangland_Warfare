@@ -45,6 +45,8 @@ public class WantedMessages extends LocalizedModuleYaml {
 		CARD_DROP_STILL_HOT("Hud.Card.Drop_Still_Hot", "&eStill hot, one star at a time"),
 		CARD_DROP_KNOWN_FACE("Hud.Card.Drop_Known_Face", "&eThey know your face, one star at a time"),
 		CARD_DROP_NARROW("Hud.Card.Drop_Narrow", "&aThat was close, they are losing you"),
+		// 0.21.1: the crime of a raise a witness reported (a landed 911 call, a silent alarm)
+		CARD_REPORTED("Hud.Card.Reported", "%crime% (reported by a witness)"),
 		SHEET_HEADER("Charge_Sheet.Header", "&8&m-----&r &6&lCHARGE SHEET &8&m-----"),
 		SHEET_CRIME("Charge_Sheet.Crime", "&7- &f%crime% &8x%count%"),
 		SHEET_TOTAL("Charge_Sheet.Total", "&7Fine: &c%money_symbol%%amount%"),

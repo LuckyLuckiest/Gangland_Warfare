@@ -22,11 +22,13 @@ public final class WitnessCall {
 	private final List<CivilianNpc> watchers;
 	private final long              startedAtMillis;
 	private final @Nullable UUID    victimId;
-	private final boolean           glow;
+	private final WitnessRules      rules;
 	private final WitnessService    owner;
+	/** The countdown second last shown to the criminal; -1 before the first (0.21.1). */
+	private int                     shownSeconds = -1;
 
 	public WitnessCall(Player criminal, String crimeId, Location at, CivilianNpc caller, List<CivilianNpc> watchers,
-	                   long startedAtMillis, @Nullable UUID victimId, boolean glow, WitnessService owner) {
+	                   long startedAtMillis, @Nullable UUID victimId, WitnessRules rules, WitnessService owner) {
 		this.criminal        = criminal;
 		this.crimeId         = crimeId;
 		this.at              = at.clone();
@@ -34,7 +36,7 @@ public final class WitnessCall {
 		this.watchers        = List.copyOf(watchers);
 		this.startedAtMillis = startedAtMillis;
 		this.victimId        = victimId;
-		this.glow            = glow;
+		this.rules           = rules;
 		this.owner           = owner;
 	}
 
@@ -68,10 +70,23 @@ public final class WitnessCall {
 
 	/** Whether the caller glows while the call runs ({@code Witness.Caller_Glow}). */
 	public boolean glow() {
-		return glow;
+		return rules.callerGlow();
+	}
+
+	/** The {@code Witness} rules in force when the call started (0.21.1: notice, phone, particle). */
+	public WitnessRules rules() {
+		return rules;
 	}
 
 	public WitnessService owner() {
 		return owner;
+	}
+
+	public int shownSeconds() {
+		return shownSeconds;
+	}
+
+	public void shownSeconds(int seconds) {
+		this.shownSeconds = seconds;
 	}
 }

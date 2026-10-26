@@ -56,6 +56,10 @@ Shouts:
       - "Rally"
       - "Fall_Back"
       - "In_Cover"
+      # 0.21.1 the 911 witness lines: never dropped behind another shout
+      - "Witness_Start"
+      - "Witness_Scared"
+      - "Witness_Landed"
    # One squad never repeats the same kind of line within this many ticks.
    Cooldown_Ticks:
       Contact: 160
@@ -486,9 +490,30 @@ Witness:
    Caller_Glow: true
    # A caller is scared off when the criminal aims a weapon within this many blocks (blocks).
    Scare_Range: 16.0
-   # Aim cone, in degrees, counted as aiming at the caller.
+   # Aim cone, in degrees, counted as aiming at the caller. Checked once per AI tick (AI_Tick_Rate, 20 = 1 s), so the
+   # rule is "aim at the caller for one AI tick". Scaring it off makes it say Witness_Scared and drop the phone.
    Scare_Angle: 12.0
    # Whether an assault counts as a reportable crime.
    Report_Assault: true
    # Window, in seconds, per attacker and civilian before another assault is reported.
    Assault_Repeat_Seconds: 10
+   # 0.21.1: full width, in degrees, of the cone a civilian sees a silent crime in, centred on where it looks (half each
+   # side, the edge counts). 180 = only what is in front of it; 360 = all round (the 0.20.0 behaviour).
+   View_Angle: 180.0
+   # 0.21.1: crime ids that are loud: every civilian in Range turns to face the crime first (you see them turn), so the
+   # view cone is met; line of sight still counts. Car_Theft and Assault_Civilian are silent unless listed here.
+   Loud_Crimes:
+      - Kill_Civilian
+   # 0.21.1: a crime within this many seconds of the criminal's own gunshot is loud too; 0 = gunshots are not noise.
+   Loud_Shot_Seconds: 3
+   # 0.21.1: seconds the witness stares at the criminal before turning away to dial (counted inside Call_Seconds).
+   Notice_Seconds: 1
+   # 0.21.1: particle shown above the witness when it notices a crime (XParticle name); "" = none.
+   Notice_Particle: "ANGRY_VILLAGER"
+   # 0.21.1: item the caller holds while dialling (XMaterial name); its own hand comes back when the call ends. "" = none.
+   Phone_Item: "CLOCK"
+   # 0.21.1: the reported criminal stops a call by right-clicking the caller within this many blocks, no weapon
+   # needed; 0 = off.
+   Intimidate_Range: 4.0
+   # 0.21.1: seconds a caller the criminal stopped (hit, scared or intimidated) cannot call 911 again.
+   Scared_Cooldown_Seconds: 60

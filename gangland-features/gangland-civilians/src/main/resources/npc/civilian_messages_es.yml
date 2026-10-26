@@ -14,12 +14,18 @@ Spawner_Type_Set: "&aGenerador de civiles &e%type%&a colocado en tu ubicación."
 Spawner_Group_Set: "&aGenerador de grupo &e%group%&a colocado en tu ubicación."
 Spawner_List_Header: "Generadores de civiles:"
 Spawner_List_Empty: "No hay generadores de civiles colocados actualmente."
-# Action-bar line a criminal sees when a witness starts calling 911.
-Witness_Calling: "&c¡Un testigo está llamando al 911! ¡Deténlo!"
+# Cuenta atrás en la barra de acción mientras un testigo llama al 911 (0.21.1). %caller% quien llama, %seconds% segundos.
+Witness_Calling: "&c911 &f%caller% &7está llamando - &e%seconds%s"
+# Barra de acción cuando el criminal cortó la llamada: golpe, susto (apuntado) o intimidación (clic derecho) (0.21.1).
+Witness_Stopped: "&aLlamada cortada."
+# %place% de la línea Witness_Landed cuando ningún lugar con nombre cubre el crimen (0.21.1).
+Witness_Unknown_Place: "aquí"
 
 # Gritos de facción (fase H12). Mismas claves que civilian_messages.yml (inglés); si falta una, se usa el inglés.
 Shouts:
    Format: "&c[%faction%] &f%unit%&7: &f%line%"
+   # Formato de las líneas de un testigo del 911 (Witness_Start, Witness_Scared, Witness_Landed) (0.21.1).
+   Witness_Format: "&c[911] &f%unit%&7: &f%line%"
    # Dicho por un guardia al retirarse tras mantener / perder un territorio. Líneas simples, no listas.
    Turf_Held: "El territorio es nuestro. Volved a vuestros puestos."
    Turf_Lost: "Lo perdimos. Replegaos."
@@ -76,3 +82,12 @@ Shouts:
       Responding: []
       Rally:
          - "¡%faction%! ¡Nos atacan, %count% en camino!"
+      # 0.21.1 testigo del 911: vio el crimen y empieza a marcar.
+      Witness_Start:
+         - "¡Eh! ¡Lo he visto! ¡Voy a llamar a la policía!"
+      # 0.21.1 testigo del 911: el criminal cortó la llamada.
+      Witness_Scared:
+         - "¡Vale, vale! ¡Ya cuelgo!"
+      # 0.21.1 testigo del 911: la llamada conectó. %place% el lugar del crimen, si no Witness_Unknown_Place.
+      Witness_Landed:
+         - "¿Policía? ¡Está aquí mismo, cerca de %place%!"

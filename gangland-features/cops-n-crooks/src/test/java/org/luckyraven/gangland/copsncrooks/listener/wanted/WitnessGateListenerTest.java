@@ -75,6 +75,17 @@ class WitnessGateListenerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1 Q1: an unseen Kill_Civilian waits for a witness like Car_Theft (cancelled, witness asked once)")
+	void unseenKillCivilianIsWitnessGated() {
+		CrimeCommittedEvent event = crime("Kill_Civilian", false, 0);
+
+		listener.onCrime(event);
+
+		assertTrue(event.isCancelled());
+		verify(witnesses, times(1)).witness(eq(player), eq("Kill_Civilian"), eq(where));
+	}
+
+	@Test
 	@DisplayName("nobody saw it (witness() returns 0): the crime stays cancelled, so it is lost with no heat")
 	void unwitnessedCrimeIsLost() {
 		when(witnesses.witness(any(), any(), any())).thenReturn(0);
@@ -137,9 +148,9 @@ class WitnessGateListenerTest {
 	}
 
 	@Test
-	@DisplayName("crimes outside Wanted.Witnesses.Crimes are never gated (P-WIT-5)")
+	@DisplayName("crimes outside Wanted.Witnesses.Crimes are never gated (P-WIT-5; Kill_Civilian joined the list in 0.21.1)")
 	void shippedCrimesNeverGated() {
-		for (String id : List.of("Kill_Player", "Kill_Civilian", "Kill_Cop", "Assault_Cop", "Resisting_Arrest")) {
+		for (String id : List.of("Kill_Player", "Kill_Cop", "Assault_Cop", "Resisting_Arrest", "Store_Robbery")) {
 			CrimeCommittedEvent event = crime(id, false, 0);
 
 			listener.onCrime(event);

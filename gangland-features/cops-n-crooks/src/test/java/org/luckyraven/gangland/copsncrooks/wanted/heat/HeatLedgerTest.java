@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -224,6 +225,19 @@ class HeatLedgerTest {
 		ledger.onLevelChanged(playerId, 0, 3, 5, WantedCause.RESTORE);
 
 		assertEquals(450, ledger.heatOf(playerId));
+	}
+
+	@Test
+	@DisplayName("0.21.1 Q7: a crime with a witness and no cop is recorded as reported; a cop's or nobody's is not")
+	void reportedOnlyWhenAWitnessAndNoCop() {
+		ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 1));
+		assertTrue(ledger.lastCrime(playerId).reported());
+
+		ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, true, 1));
+		assertFalse(ledger.lastCrime(playerId).reported());
+
+		ledger.record(crime(Crimes.ASSAULT_COP));
+		assertFalse(ledger.lastCrime(playerId).reported());
 	}
 
 	@Test

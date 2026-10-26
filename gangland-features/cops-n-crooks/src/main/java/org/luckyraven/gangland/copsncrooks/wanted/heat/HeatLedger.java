@@ -108,7 +108,8 @@ public final class HeatLedger {
 
 		double added = weight * mult;
 		chase.heat += added;
-		chase.crimes.add(new CrimeRecord(event.getCrimeId(), added, now, event.getLocation()));
+		boolean reported = !event.isSeenByCop() && event.getWitnesses() > 0;
+		chase.crimes.add(new CrimeRecord(event.getCrimeId(), added, now, event.getLocation(), reported));
 
 		int target = heat.starsFor(chase.heat, maxLevel);
 		Consumer<Player> trigger = starTrigger;

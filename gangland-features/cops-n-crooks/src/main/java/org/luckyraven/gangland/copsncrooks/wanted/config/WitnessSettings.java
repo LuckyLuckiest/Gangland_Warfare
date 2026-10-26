@@ -14,8 +14,9 @@ import java.util.List;
  */
 public record WitnessSettings(boolean enabled, List<String> crimes) {
 
-	/** The shipped {@code Wanted.Witnesses}: enabled, gating Car_Theft and Assault_Civilian. */
-	public static final WitnessSettings DEFAULT = new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian"));
+	/** The shipped {@code Wanted.Witnesses}: enabled, gating Car_Theft, Assault_Civilian and (0.21.1) Kill_Civilian. */
+	public static final WitnessSettings DEFAULT = new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian",
+	                                                                                "Kill_Civilian"));
 
 	public WitnessSettings {
 		crimes = crimes == null ? List.of() : List.copyOf(crimes);

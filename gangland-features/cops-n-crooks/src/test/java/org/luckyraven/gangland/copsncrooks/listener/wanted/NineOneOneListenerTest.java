@@ -67,7 +67,7 @@ class NineOneOneListenerTest {
 	}
 
 	@Test
-	@DisplayName("commit(player, crime, at, false, 1), then the squad tipped off to the crime spot, then the Caller_911 line")
+	@DisplayName("commit(player, crime, at, false, 1), then the squad tipped off to the crime spot, then dispatch says Caller_911")
 	void landedCallCommitsWithOneWitnessAndSights() {
 		listener.onCalledIn(call("Car_Theft"));
 
@@ -80,7 +80,7 @@ class NineOneOneListenerTest {
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> placeholders = ArgumentCaptor.forClass(Map.class);
-		order.verify(radio).sayFromLeader(eq(group), eq("Caller_911"), placeholders.capture());
+		order.verify(radio).dispatch(eq(group), eq(player), eq("Caller_911"), eq(0), eq(""), placeholders.capture());
 		assertEquals("Car_Theft", placeholders.getValue().get("crime"));
 		assertEquals("Docks", placeholders.getValue().get("place"));
 		// %suspect% belongs to the CopRadio extras hook (disguise lane): a line-level value would leak the real name
@@ -96,7 +96,7 @@ class NineOneOneListenerTest {
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> placeholders = ArgumentCaptor.forClass(Map.class);
-		verify(radio).sayFromLeader(eq(group), eq("Caller_911"), placeholders.capture());
+		verify(radio).dispatch(eq(group), eq(player), eq("Caller_911"), eq(0), eq(""), placeholders.capture());
 		assertFalse(placeholders.getValue().get("place").isBlank());
 	}
 
@@ -108,7 +108,7 @@ class NineOneOneListenerTest {
 		listener.onCalledIn(call("Car_Theft"));
 
 		verify(crimes).commit(player, "Car_Theft", at, false, 1);
-		verify(radio, never()).sayFromLeader(any(), anyString(), anyMap());
+		verify(radio, never()).dispatch(any(), any(), anyString(), org.mockito.ArgumentMatchers.anyInt(), anyString(), anyMap());
 		assertFalse(squad.hasFreshSighting());
 	}
 
@@ -121,7 +121,7 @@ class NineOneOneListenerTest {
 		listener.onCalledIn(call("Car_Theft"));
 
 		assertFalse(squad.hasFreshSighting());
-		verify(radio, never()).sayFromLeader(any(), anyString(), anyMap());
+		verify(radio, never()).dispatch(any(), any(), anyString(), org.mockito.ArgumentMatchers.anyInt(), anyString(), anyMap());
 	}
 
 	@Test
@@ -145,7 +145,19 @@ class NineOneOneListenerTest {
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Map<String, String>> placeholders = ArgumentCaptor.forClass(Map.class);
-		verify(radio).sayFromLeader(eq(group), eq("Caller_911"), placeholders.capture());
+		verify(radio).dispatch(eq(group), eq(player), eq("Caller_911"), eq(0), eq(""), placeholders.capture());
 		assertEquals("la zona", placeholders.getValue().get("place"));
+	}
+
+	@Test
+	@DisplayName("T-345: the commit just created the group (no cop has spawned yet): dispatch still says Caller_911")
+	void landedCall_withNoCopYet_stillRadiosCaller911ViaDispatch() {
+		// a fresh group has no leader and no cop: the leader voice has nobody to speak with, dispatch needs no speaker
+		when(radio.sayFromLeader(any(), anyString(), anyMap())).thenReturn(false);
+
+		listener.onCalledIn(call("Car_Theft"));
+
+		verify(radio).dispatch(eq(group), eq(player), eq("Caller_911"), eq(0), eq(""), anyMap());
+		verify(radio, never()).sayFromLeader(any(), anyString(), anyMap());
 	}
 }

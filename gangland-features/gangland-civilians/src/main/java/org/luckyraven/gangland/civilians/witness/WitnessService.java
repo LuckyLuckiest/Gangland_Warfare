@@ -8,12 +8,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.gangland.civilians.npc.state.behavior.CivilianLookController;
 import org.luckyraven.gangland.civilians.events.CivilianCalledInEvent;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.crime.Crimes;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.util.ActionBarManager;
 
 import java.util.ArrayList;
@@ -56,13 +59,16 @@ public final class WitnessService {
 	public record Hooks(LongSupplier clock, Sight sight, Aim aim, Consumer<Event> events,
 	                    BiConsumer<Player, String> notifier, Consumer<String> debug) {
 
-		/** The production hooks: wall clock, {@code npc.canSee}, {@link WitnessAim}, Bukkit events, action bar. */
+		/**
+		 * The production hooks: wall clock, {@code npc.canSee}, {@link WitnessAim}, Bukkit events, action bar. The bar
+		 * lasts 2 s: the countdown refreshes it every AI tick, and the Stopped line fades soon after.
+		 */
 		public static Hooks live(JavaPlugin plugin) {
 			return new Hooks(System::currentTimeMillis,
 			                 (npc, criminal, range) -> npc.canSee(criminal, range),
 			                 new WitnessAim(new BartizanArmed()),
 			                 event -> Bukkit.getPluginManager().callEvent(event),
-			                 (player, text) -> ActionBarManager.send(plugin, player, text, 100L),
+			                 (player, text) -> ActionBarManager.send(plugin, player, text, 40L),
 			                 line -> log.debug(line));
 		}
 	}
@@ -76,22 +82,94 @@ public final class WitnessService {
 
 	private static final long VICTIM_EXCLUSION_MILLIS = 2000L;
 
+	/** The format every 911 line is spoken in ({@code Shouts.Witness_Format} of civilian_messages.yml). */
+	private static final String WITNESS_FORMAT = "Witness_Format";
+
 	private final CivilianService        civilians;
 	private final CrimeService           crimes;
 	private final Supplier<WitnessRules> rules;
-	private final Supplier<String>       callingMessage;
+	private final CivilianMessages       messages;
+	private final PlaceNames             places;
 	private final Hooks                  hooks;
 	private final Map<UUID, WitnessCall> calls      = new LinkedHashMap<>();
 	private final Map<UUID, Victim>      lastVictim = new HashMap<>();
 	private final Map<AssaultKey, Long>  lastAssault = new HashMap<>();
+	/** Civilian entity id -> when the criminal stopped its call (hit, scared, intimidated): Scared_Cooldown_Seconds. */
+	private final Map<UUID, Long>        stoppedAt  = new HashMap<>();
+	/** Player id -> when he last fired a weapon: Loud_Shot_Seconds. */
+	private final Map<UUID, Long>        lastShot   = new HashMap<>();
 
 	public WitnessService(CivilianService civilians, CrimeService crimes, Supplier<WitnessRules> rules,
-	                      Supplier<String> callingMessage, Hooks hooks) {
-		this.civilians       = civilians;
-		this.crimes          = crimes;
-		this.rules           = rules;
-		this.callingMessage  = callingMessage;
-		this.hooks           = hooks;
+	                      CivilianMessages messages, PlaceNames places, Hooks hooks) {
+		this.civilians = civilians;
+		this.crimes    = crimes;
+		this.rules     = rules;
+		this.messages  = messages;
+		this.places    = places;
+		this.hooks     = hooks;
+	}
+
+	/** The service clock (milliseconds), for the CALLING behaviour's notice timer. */
+	public long now() {
+		return hooks.clock().getAsLong();
+	}
+
+	/** The criminal right-clicked {@code npc}: stops its call when he is its criminal and within Intimidate_Range. */
+	public boolean intimidate(CivilianNpc npc, Player player) {
+		WitnessCall  call   = npc.getWitnessCall();
+		LivingEntity entity = npc.getEntity();
+		double       range  = rules.get().intimidateRange();
+		if (call == null || entity == null || range <= 0) return false;
+		if (!call.criminal().getUniqueId().equals(player.getUniqueId())) return false;
+
+		Location from = player.getLocation();
+		if (from == null || from.getWorld() == null || !from.getWorld().equals(entity.getWorld())) return false;
+		if (from.distance(entity.getLocation()) > range) return false;
+
+		cancelCall(npc, CancelReason.INTIMIDATED);
+		return true;
+	}
+
+	/** {@code shooter} fired a weapon: his crimes in the next Loud_Shot_Seconds are loud. */
+	public void heardShot(Player shooter) {
+		lastShot.put(shooter.getUniqueId(), now());
+	}
+
+	/**
+	 * Whether {@code target} is inside the horizontal cone {@code viewAngle} degrees wide, centred on {@code eye}'s yaw
+	 * (half the angle each side, the edge included). 360 or more sees all round.
+	 */
+	static boolean inView(Location eye, @Nullable Location target, double viewAngle) {
+		if (viewAngle >= 360.0) return true;
+		if (target == null) return false;
+
+		double dx       = target.getX() - eye.getX();
+		double dz       = target.getZ() - eye.getZ();
+		double distance = Math.hypot(dx, dz);
+		if (distance < 1.0E-4) return true;
+
+		// Bukkit yaw: 0 = +Z, 90 = -X
+		double yaw = Math.toRadians(eye.getYaw());
+		double cos = (-Math.sin(yaw) * dx + Math.cos(yaw) * dz) / distance;
+		return Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, cos)))) <= viewAngle / 2.0 + 1.0E-9;
+	}
+
+	/** A crime in Loud_Crimes, or one within Loud_Shot_Seconds of the criminal's own gunshot. */
+	private boolean isLoud(Player criminal, String crimeId, WitnessRules rules, long now) {
+		if (rules.loudCrimes().contains(crimeId)) return true;
+
+		Long shot = lastShot.get(criminal.getUniqueId());
+		return rules.loudShotSeconds() > 0 && shot != null && now - shot <= rules.loudShotSeconds() * 1000L;
+	}
+
+	/** Whether the criminal stopped this civilian's call less than Scared_Cooldown_Seconds ago. */
+	private boolean stillScared(UUID civilianId, WitnessRules rules, long now) {
+		Long at = stoppedAt.get(civilianId);
+		if (at == null) return false;
+		if (now - at < rules.scaredCooldownSeconds() * 1000L) return true;
+
+		stoppedAt.remove(civilianId);
+		return false;
 	}
 
 	/** Starts a call for a gated crime at {@code at}; returns how many callers started (0 or 1). */
@@ -99,7 +177,10 @@ public final class WitnessService {
 		WitnessRules rules = this.rules.get();
 		if (!rules.enabled() || !criminal.isOnline() || at.getWorld() == null) return 0;
 
-		UUID victimId = recentVictim(criminal);
+		long              now        = now();
+		boolean           loud       = isLoud(criminal, crimeId, rules, now);
+		Location          criminalAt = criminal.getLocation();
+		UUID              victimId   = recentVictim(criminal);
 		List<CivilianNpc> candidates = new ArrayList<>();
 		for (CivilianNpc npc : civilians.getActiveNpcs()) {
 			LivingEntity entity = npc.isValid() ? npc.getEntity() : null;
@@ -111,6 +192,14 @@ public final class WitnessService {
 				continue;
 			}
 			if (entity.getUniqueId().equals(victimId)) continue;
+			if (stillScared(entity.getUniqueId(), rules, now)) continue;
+			// a loud crime turns every free civilian in range to the noise (visibly), so the view cone is met; a silent
+			// one counts only in front of a civilian
+			if (loud) {
+				CivilianLookController.faceLocation(entity, at.clone().add(0, 1.6, 0));
+			} else if (!inView(entity.getLocation(), criminalAt, rules.viewAngle())) {
+				continue;
+			}
 			if (!hooks.sight().sees(npc, criminal, rules.range())) continue;
 			candidates.add(npc);
 		}
@@ -124,7 +213,6 @@ public final class WitnessService {
 		CivilianNpc caller = candidates.get(0);
 		startCall(criminal, crimeId, at, caller, candidates.subList(1, candidates.size()), victimId);
 
-		hooks.notifier().accept(criminal, callingMessage.get());
 		hooks.debug().accept("WITNESS " + criminal.getName() + " crime=" + crimeId + " callers=1");
 		return 1;
 	}
@@ -141,10 +229,25 @@ public final class WitnessService {
 	private void startCall(Player criminal, String crimeId, Location at, CivilianNpc caller,
 	                       List<CivilianNpc> watchers, UUID victimId) {
 		WitnessCall call = new WitnessCall(criminal, crimeId, at, caller, watchers, hooks.clock().getAsLong(),
-		                                   victimId, rules.get().callerGlow(), this);
+		                                   victimId, rules.get(), this);
 		calls.put(caller.getEntity().getUniqueId(), call);
 		caller.setWitnessCall(call);
 		caller.transitionTo(CivilianState.CALLING);
+		speak(caller, criminal, "Witness_Start", Map.of());
+		countdown(call, rules.get().callSeconds());
+	}
+
+	/** Shows the criminal the countdown when its whole number of seconds changed. */
+	private void countdown(WitnessCall call, int secondsLeft) {
+		if (secondsLeft == call.shownSeconds()) return;
+
+		call.shownSeconds(secondsLeft);
+		hooks.notifier().accept(call.criminal(), messages.witnessCalling(civilians.callsign(call.caller()), secondsLeft));
+	}
+
+	/** {@code speaker} says one 911 line ({@code Shouts.Lines.<key>}) to the criminal and the bystanders. */
+	private void speak(CivilianNpc speaker, Player criminal, String key, Map<String, String> extras) {
+		civilians.shout(speaker, key, WITNESS_FORMAT, criminal, extras);
 	}
 
 	/** A player hit a civilian (not lethal): cancels that civilian's own call, and publishes Assault_Civilian (throttled). */
@@ -209,23 +312,38 @@ public final class WitnessService {
 			cancelCall(caller, CancelReason.SCARED);
 			return;
 		}
-		if (hooks.clock().getAsLong() - call.startedAtMillis() < rules.callSeconds() * 1000L) return;
+		long elapsed = hooks.clock().getAsLong() - call.startedAtMillis();
+		long total   = rules.callSeconds() * 1000L;
+		if (elapsed < total) {
+			countdown(call, (int) ((total - elapsed + 999L) / 1000L));
+			return;
+		}
 
 		detach(call);
+		String place = places.locate(call.at()).orElseGet(messages::witnessUnknownPlace);
+		speak(caller, call.criminal(), "Witness_Landed", Map.of("place", place));
 		hooks.events().accept(new CivilianCalledInEvent(call.criminal(), call.crimeId(), call.at(), caller.getEntity()));
 		hooks.debug().accept("CALL_IN " + call.criminal().getName() + " crime=" + call.crimeId() + " caller="
 				                     + caller.getEntity().getName());
 		flee(caller, call);
 	}
 
-	/** Ends {@code caller}'s call without a report; HIT and SCARED send the caller fleeing. */
+	/**
+	 * Ends {@code caller}'s call without a report. HIT, SCARED and INTIMIDATED are the criminal stopping it: the caller
+	 * says Witness_Scared, the criminal is told Witness_Stopped, the caller flees and cannot call again for
+	 * Scared_Cooldown_Seconds.
+	 */
 	public void cancelCall(CivilianNpc caller, CancelReason reason) {
 		WitnessCall call = caller.getWitnessCall();
 		if (call == null) return;
 
 		detach(call);
 		logCancel(call, reason);
-		if (reason == CancelReason.HIT || reason == CancelReason.SCARED) {
+		if (reason == CancelReason.HIT || reason == CancelReason.SCARED || reason == CancelReason.INTIMIDATED) {
+			LivingEntity entity = caller.getEntity();
+			if (entity != null) stoppedAt.put(entity.getUniqueId(), now());
+			speak(caller, call.criminal(), "Witness_Scared", Map.of());
+			hooks.notifier().accept(call.criminal(), messages.witnessStopped());
 			flee(caller, call);
 		} else if (reason == CancelReason.LOGOUT && caller.isValid()) {
 			caller.transitionTo(CivilianState.IDLE);
@@ -244,6 +362,11 @@ public final class WitnessService {
 			List<CivilianNpc> watchers = new ArrayList<>(call.watchers());
 			for (CivilianNpc watcher : watchers) {
 				if (!watcher.isValid() || watcher.getEntity() == null) continue;
+				// a watcher already busy (the gated kill of this caller started its own call there) keeps what it has
+				CivilianState state = watcher.getCurrentState();
+				if (state == CivilianState.CALLING || state == CivilianState.FLEEING || state == CivilianState.COMBAT) {
+					continue;
+				}
 				if (!hooks.sight().sees(watcher, criminal, range)) continue;
 
 				List<CivilianNpc> rest = new ArrayList<>(watchers);
@@ -257,6 +380,7 @@ public final class WitnessService {
 
 	/** The criminal left the server: every call about them is cancelled. */
 	public void onCriminalQuit(UUID criminalId) {
+		lastShot.remove(criminalId);
 		for (WitnessCall call : activeCalls()) {
 			if (call.criminal().getUniqueId().equals(criminalId)) cancelCall(call.caller(), CancelReason.LOGOUT);
 		}

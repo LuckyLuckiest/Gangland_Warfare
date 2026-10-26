@@ -218,14 +218,20 @@ public class WantedHudListener implements Listener {
 		return cause == WantedCause.EVASION || cause == WantedCause.DECAY;
 	}
 
-	/** The display name of the crime behind a raise: the ledger's last crime, a sighting, or the reported crime. */
+	/**
+	 * The display name of the crime behind a raise: the ledger's last crime, a sighting, or the reported crime. A crime
+	 * a witness reported (no cop saw it) says so: {@code Hud.Card.Reported} (0.21.1).
+	 */
 	private String crimeName(Player player, WantedLevelChangeEvent event) {
 		CrimeRecord record = event.getCause() == WantedCause.CRIME ? ledger.lastCrime(player.getUniqueId()) : null;
 		// An UNKNOWN raise of a searched player is a sighting (PostEscapeSpotting): it fires before the search ends (wanted-15)
 		boolean spotted = record == null && event.getCause() == WantedCause.UNKNOWN &&
 		                  search.isSearching(player.getUniqueId());
 
-		return messages.crimeName(record != null ? record.crimeId() : spotted ? "Spotted" : "Unknown_Crime");
+		String name = messages.crimeName(record != null ? record.crimeId() : spotted ? "Spotted" : "Unknown_Crime");
+		if (record == null || !record.reported()) return name;
+
+		return messages.format(WantedMessages.Key.CARD_REPORTED, Map.of("crime", name));
 	}
 
 	private String raiseCard(String crime, int newLevel) {

@@ -278,6 +278,16 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	 * lines ({@code Turf_Held}, {@code Turf_Lost}).
 	 */
 	public void shout(CivilianNpc speaker, String lineKey, Map<String, String> extras) {
+		shout(speaker, lineKey, "Format", null, extras);
+	}
+
+	/**
+	 * {@link #shout(CivilianNpc, String, Map)} in the {@code formatKey} format (a {@code civilian_messages.yml}
+	 * {@code Shouts} root key), also heard within {@code Shouts.Range} of {@code addressee}: a 911 witness speaks in
+	 * {@code Witness_Format} to the criminal it reports (0.21.1).
+	 */
+	public void shout(CivilianNpc speaker, String lineKey, String formatKey, @Nullable LivingEntity addressee,
+	                  Map<String, String> extras) {
 		LivingEntity entity = speaker.getEntity();
 		if (entity == null) return;
 
@@ -287,8 +297,13 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		FactionSquads provider = providerOf.getOrDefault(squad, customProviderOf(speaker));
 		if (provider != null) merged.putAll(provider.extras(squad));
 		merged.putAll(extras);
-		shouts.say(squad, shoutVoice, entity, voice.callsign(speaker), lineKey, "Format", entity.getLocation(), null,
+		shouts.say(squad, shoutVoice, entity, voice.callsign(speaker), lineKey, formatKey, entity.getLocation(), addressee,
 		           merged);
+	}
+
+	/** The speaker's shout callsign: its type's display name, colour stripped (the 911 countdown's {@code %caller%}). */
+	public String callsign(CivilianNpc npc) {
+		return voice.callsign(npc);
 	}
 
 	/**

@@ -16,7 +16,8 @@ import java.util.Map;
 
 /**
  * A civilian's 911 call landed: the held crime is committed with one witness (so it passes the gate), the squad is
- * tipped off to the crime spot and the radio plays the Caller_911 line.
+ * tipped off to the crime spot and dispatch radios the Caller_911 line. Dispatch needs no speaker, so the line plays
+ * even when the commit has just created the group and no cop has spawned yet (0.21.1, T-345).
  *
  * @since 0.20.0
  */
@@ -50,6 +51,6 @@ public class NineOneOneListener implements Listener {
 		group.getSquad().reportTip(event.getAt());
 		String place = placeNames.locate(event.getAt()).orElseGet(() -> copRadio.placeOf(event.getAt()));
 		if (place == null || place.isBlank()) place = "the area";
-		copRadio.sayFromLeader(group, "Caller_911", Map.of("crime", event.getCrimeId(), "place", place));
+		copRadio.dispatch(group, criminal, "Caller_911", 0, "", Map.of("crime", event.getCrimeId(), "place", place));
 	}
 }

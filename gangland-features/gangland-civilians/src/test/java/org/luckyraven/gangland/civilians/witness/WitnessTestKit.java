@@ -5,10 +5,12 @@ import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.data.region.PlaceNames;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -18,6 +20,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -45,6 +49,8 @@ public final class WitnessTestKit {
 	public final List<String>         debug   = new ArrayList<>();
 	public final List<String>         notices = new ArrayList<>();
 	public final List<CivilianNpc>    all     = new ArrayList<>();
+	/** Every 911 line a civilian spoke: {@code callsign|key|addressee|extras}. */
+	public final List<String>         speech  = new ArrayList<>();
 
 	/** One {@code transitionTo} call as the npc saw it: the flee origin and the call at that very moment. */
 	public record Transition(CivilianNpc npc, CivilianState state, Location lastAttacker, WitnessCall call) {
@@ -58,6 +64,8 @@ public final class WitnessTestKit {
 	public final Location         at        = new Location(world, 0, 64, 0);
 	public final CivilianService  civilians = mock(CivilianService.class);
 	public final CrimeService     crimes    = mock(CrimeService.class);
+	public final CivilianMessages messages  = mock(CivilianMessages.class);
+	public final PlaceNames       places    = new PlaceNames();
 	public final WitnessService   service;
 
 	public WitnessTestKit() {
@@ -67,16 +75,36 @@ public final class WitnessTestKit {
 		when(criminal.getWorld()).thenReturn(world);
 		when(criminal.getLocation()).thenAnswer(invocation -> at.clone());
 		when(civilians.getActiveNpcs()).thenAnswer(invocation -> List.copyOf(all));
+		when(civilians.callsign(any())).thenReturn("Pedestrian");
+		doAnswer(invocation -> {
+			CivilianNpc speaker = invocation.getArgument(0);
+			Player      to      = invocation.getArgument(3);
+			speech.add(civilians.callsign(speaker) + "|" + invocation.getArgument(1) + "|" + invocation.getArgument(2)
+			           + "|" + (to == null ? "-" : to.getName()) + "|" + invocation.getArgument(4));
+			return null;
+		}).when(civilians).shout(any(), anyString(), anyString(), any(), any());
+		when(messages.witnessCalling(anyString(), anyInt())).thenAnswer(
+				invocation -> "CALLING " + invocation.getArgument(0) + " " + invocation.getArgument(1));
+		when(messages.witnessStopped()).thenReturn("STOPPED");
+		when(messages.witnessUnknownPlace()).thenReturn("here");
 
 		WitnessService.Hooks hooks = new WitnessService.Hooks(() -> now, (npc, who, range) -> sighted.contains(npc),
 		                                                     (who, caller, range, angle) -> aiming, events::add,
 		                                                     (who, text) -> notices.add(who.getName() + "|" + text),
 		                                                     debug::add);
-		service = new WitnessService(civilians, crimes, () -> rules, () -> "WITNESS-CALLING", hooks);
+		service = new WitnessService(civilians, crimes, () -> rules, messages, places, hooks);
 	}
 
-	/** A civilian standing {@code distance} blocks east of the crime, idle, seeing the criminal when {@code sees}. */
+	/**
+	 * A civilian standing {@code distance} blocks east of the crime, idle, seeing the criminal when {@code sees}, and
+	 * looking west at the crime (yaw 90).
+	 */
 	public CivilianNpc civilian(double distance, boolean sees) {
+		return civilian(distance, sees, 90f);
+	}
+
+	/** {@link #civilian(double, boolean)} looking along Bukkit {@code yaw} (0 = +Z, 90 = -X, 270 = +X). */
+	public CivilianNpc civilian(double distance, boolean sees, float yaw) {
 		CivilianNpc    npc    = mock(CivilianNpc.class);
 		LivingEntity   entity = mock(LivingEntity.class);
 		UUID           id     = UUID.randomUUID();
@@ -86,7 +114,7 @@ public final class WitnessTestKit {
 
 		when(entity.getUniqueId()).thenReturn(id);
 		when(entity.getWorld()).thenReturn(world);
-		when(entity.getLocation()).thenAnswer(invocation -> new Location(world, distance, 64, 0));
+		when(entity.getLocation()).thenAnswer(invocation -> new Location(world, distance, 64, 0, yaw, 0f));
 		when(entity.getHealth()).thenReturn(20.0);
 		when(entity.getName()).thenReturn("Pedestrian");
 		when(npc.getEntity()).thenReturn(entity);
