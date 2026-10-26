@@ -92,6 +92,15 @@ class WantedMessages020Test {
 	}
 
 	@Test
+	@DisplayName("the ignored-warning line names the cause but never claims a wanted status the heat config may not give")
+	void ignoredLine_namesCause_claimsNoStatus() {
+		String text = WantedMessages.Key.PATROL_IGNORED.fallback;
+
+		assertTrue(text.contains("%cause%"), text);
+		assertFalse(text.toLowerCase().contains("wanted"), text);
+	}
+
+	@Test
 	@DisplayName("the shipped wanted_messages.yml carries each new key with exactly the fallback text")
 	void shippedFile_matchesFallbacks() throws IOException {
 		YamlConfiguration yaml = shipped();

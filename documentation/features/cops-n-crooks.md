@@ -905,7 +905,7 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
   the same player is warned again only after `Repeat_Seconds` (30), counted from the verdict of the last warning since
   0.21.1 and shared by every beat cop. A warning the player ignores (still holding the weapon, still in view when time
   is up) sends `Patrol.Ignored` naming the cause and commits `Brandish_Near_Cop` as seen by a cop, which gives the first
-  star at once (heat 67 x 1.5). Time up with the cop out of view sends `Patrol.Lost_Sight` and costs nothing. Only beat
+  star at once on the shipped heat (67 x 1.5; an older `wanted.yml` keeps its lower value, see `migration-0.21.1.md`). Time up with the cop out of view sends `Patrol.Lost_Sight` and costs nothing. Only beat
   cops on patrol warn, a wanted player is reported instead, and darkness, dim light and sneaking shrink `Range` (`Cops.Sight`).
   Cops never attack from the warning state. The star title shows the star row only (`Wanted.Hud.Title.Gain.Subtitle`
   `%stars%`); the cause card goes to chat.
