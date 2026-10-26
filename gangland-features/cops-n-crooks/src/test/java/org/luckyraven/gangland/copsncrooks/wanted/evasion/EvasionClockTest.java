@@ -5,12 +5,14 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.wanted.config.AutoSettings;
@@ -42,6 +44,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -343,6 +346,40 @@ class EvasionClockTest {
 		tickSeconds(1);
 		assertEquals(EvasionState.OFF, states().get(states().size() - 1).getState());
 		assertNull(clock.snapshot(id));
+	}
+
+	@Test
+	@DisplayName("a whole-squad leash pauses the search: walkers still hunting him keep the track and its progress (cause E)")
+	void leashedSquad_stillHuntingHim_pausesInsteadOfClearing() {
+		unseenMs = 10_000;
+		tickSeconds(5);
+		EvasionSnapshot before = clock.snapshot(id);
+		assertEquals(EvasionState.SEARCHING, before.state());
+
+		CopNpc walker = cop(CopState.RETURNING);
+		when(walker.getTargetPlayerId()).thenReturn(id);
+		when(group.getCops()).thenReturn(List.of(walker));
+		tickSeconds(10);
+
+		assertTrue(clock.handlesDecay(player, wanted));
+		EvasionSnapshot paused = clock.snapshot(id);
+		assertNotNull(paused, "not cleared");
+		assertEquals(before.secondsLeft(), paused.secondsLeft(), "paused: no progress while nobody stands");
+		assertFalse(stateNames().contains(EvasionState.OFF));
+	}
+
+	@Test
+	@DisplayName("an active hand-off bias with every cop gone pauses the search instead of clearing it (cause E)")
+	void activeBias_noCopsLeft_pausesInsteadOfClearing() {
+		unseenMs = 10_000;
+		tickSeconds(5);
+		when(group.getCops()).thenReturn(List.of());
+		when(group.biasAt(anyLong())).thenReturn(new SpawnBias(new Vector(1, 0, 0), playerAt, Long.MAX_VALUE, 60.0));
+
+		tickSeconds(3);
+
+		assertNotNull(clock.snapshot(id));
+		assertFalse(stateNames().contains(EvasionState.OFF));
 	}
 
 	@Test
