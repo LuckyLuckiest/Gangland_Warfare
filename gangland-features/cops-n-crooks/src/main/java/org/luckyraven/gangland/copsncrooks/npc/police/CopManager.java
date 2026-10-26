@@ -309,8 +309,6 @@ public class CopManager implements BeanLifecycle {
 			for (CopNpc cop : group.getCops()) {
 				if (cop.getCurrentState() == CopState.CUFFING) cop.transitionTo(CopState.PURSUING);
 			}
-			// a drop's release still waiting for free cops (posted ones) never fires inside the search (T-187)
-			group.setPendingRelease(0);
 			// The owner ruling: the search goes on, so cops already walking home come back to it, every one of them
 			// (the search's one-star squad never sends the surplus home: spawnTick)
 			reengageReturning(group, player, Integer.MAX_VALUE, cop -> true);
@@ -322,7 +320,8 @@ public class CopManager implements BeanLifecycle {
 	 * pass {@code eligible} back into the hunt, nearest first; the eligible ones over the limit are marked sent home
 	 * (T-436). One farther out would leash again on its next tick and restart its walk home (T-131, cause 5): it stays
 	 * RETURNING. A group with no engaged Commander calls its nearest walking Commander back first, even past the limit,
-	 * so the squad's last Commander is never left sent home (T-146); a new episode then trims the others to its target.
+	 * so the squad's last Commander is never left sent home (T-146). A new episode then trims the others to its target;
+	 * a Commander its composition has no slot for stays as the one cop over it ({@link #releaseSurplus}).
 	 *
 	 * @return the cops called back
 	 */
@@ -856,14 +855,15 @@ public class CopManager implements BeanLifecycle {
 		group.consumeBackupExpiry(now, backup);
 		// T-435: a lowered target (a level drop, a new episode at a lower level) leaves live cops over it, and trimPending
 		// only calls off queued units: the surplus goes home like an expired backup's extras. Only on a drop: radio
-		// responders joining at the same target stay, and the post-escape search (level 0, run at one star) keeps every
-		// cop it called back (T-187)
+		// responders joining at the same target stay. The post-escape search (level 0, run at one star) sends nobody
+		// home, a drop's or a run-out backup's release included: it keeps every cop it called back (T-187). A release
+		// still owed then is replaced at the next wanted start, which trims against the cops engaged (onWantedStart)
 		if (wanted.getLevel() > 0) {
 			if (baseTarget < group.getLastTarget() && currentCount > targetCount)
 				group.setPendingRelease(Math.max(group.getPendingRelease(), currentCount - targetCount));
 			group.setLastTarget(baseTarget);
+			if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount, composition);
 		}
-		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount, composition);
 		group.pruneAttackerSquads();
 	}
 
@@ -952,7 +952,7 @@ public class CopManager implements BeanLifecycle {
 			if (group.takeBiasSeed(unit.bias())) {
 				// a tip, not a sighting (R4): no member saw him at the hand-off spot. The units head on along the heading
 				// the squad saw him take, Lead_Blocks past it, and search there (R5)
-				group.getSquad().reportTip(unit.bias().lead(handoffLead()));
+				group.seedHandoff(unit.bias().lead(handoffLead()));
 				group.markTipOff(now);
 			}
 		}
@@ -982,8 +982,9 @@ public class CopManager implements BeanLifecycle {
 	}
 
 	/**
-	 * {@code Cops.Handoff.Lead_Blocks}, clamped inside the spawn leash margin ({@link CopSpawnManager#LEASH_MARGIN} x
-	 * {@code Pursuit.Max_Distance}; no leash configured keeps it as set).
+	 * {@code Cops.Handoff.Lead_Blocks}, the lead's length capped at {@link CopSpawnManager#LEASH_MARGIN} x
+	 * {@code Pursuit.Max_Distance} (no leash configured keeps it as set). The cap is on the distance from the squad's
+	 * last-known spot, never from the player: a cap against his live position would leak it (R4).
 	 */
 	private double handoffLead() {
 		double lead  = requireNonNullElse(configProvider.getHandoffSettings(), HandoffSettings.DEFAULT).leadBlocks();
@@ -1084,9 +1085,10 @@ public class CopManager implements BeanLifecycle {
 	 * level, a level drop: T-435), until the group is back to {@code targetCount}: the newest free
 	 * cops of a role the group holds more of than its base squad of {@code targetCount} ({@link CopRole#nextRole}), so a
 	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). The group's last Commander is
-	 * never sent, even when the wanted level fell to a composition without one. A cop in a fight, cuffing or guarding
-	 * is never sent; what cannot go this run is retried on the next. Queued units count toward the group and a surplus
-	 * one still en route is called off before any live cop is sent.
+	 * never sent, even when the wanted level fell to a composition without one: he stays as one cop over the target and
+	 * the release owed is capped at what can ever go, so no later radio responder is sent home in his place. A cop in a
+	 * fight, cuffing or guarding is never sent; what cannot go this run is retried on the next. Queued units count toward
+	 * the group and a surplus one still en route is called off before any live cop is sent.
 	 */
 	private void releaseSurplus(CopGroup group, int targetCount, @Nullable List<CopRole> composition) {
 		List<CopNpc> live = new ArrayList<>();
@@ -1111,6 +1113,15 @@ public class CopManager implements BeanLifecycle {
 		for (CopRole role : base) excess.merge(roleName(role), -1, Integer::sum);
 		long commanders = live.stream().filter(CopManager::isCommander).count() +
 		                  queued.stream().filter(unit -> unit.role() != null && unit.role().commander()).count();
+		// what can ever go: the roles held over the base squad, less the last Commander when his role is one of them.
+		// A release owed past it would wait for the next cop to join and send him home instead (a radio responder)
+		int releasable = 0;
+		for (Map.Entry<String, Integer> role : excess.entrySet()) {
+			if (role.getValue() <= 0) continue;
+			releasable += role.getValue();
+			if (commanders == 1 && leadsTheSquad(role.getKey(), live, queued)) releasable--;
+		}
+		group.setPendingRelease(Math.min(group.getPendingRelease(), Math.min(surplus, releasable)));
 
 		// a backup unit still en route is called off first, newest first: it outlived the backup on a long ETA
 		for (int i = queued.size() - 1; i >= 0 && surplus > 0 && group.getPendingRelease() > 0; i--) {
@@ -1143,6 +1154,15 @@ public class CopManager implements BeanLifecycle {
 			group.setPendingRelease(group.getPendingRelease() - 1);
 			surplus--;
 		}
+	}
+
+	/** The group's one Commander (live or queued) holds the role named {@code role}. */
+	private static boolean leadsTheSquad(@Nullable String role, List<CopNpc> live, List<PendingUnit> queued) {
+		for (CopNpc cop : live)
+			if (isCommander(cop)) return Objects.equals(roleName(cop.getRole()), role);
+		for (PendingUnit unit : queued)
+			if (unit.role() != null && unit.role().commander()) return Objects.equals(unit.role().name(), role);
+		return false;
 	}
 
 	private static int engagedCount(CopGroup group) {

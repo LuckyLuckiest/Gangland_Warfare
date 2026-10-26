@@ -4,6 +4,7 @@ import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -82,6 +83,13 @@ final class CopManagerFixture implements AutoCloseable {
 		bukkit = BukkitStatics.install();
 		when(bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
 				.thenReturn(mock(BukkitTask.class));
+
+		// flat ground, solid below y 64, every chunk loaded: a hand-off lead stands on it (SpawnBias.lead)
+		Block ground = mock(Block.class);
+		Block air    = mock(Block.class);
+		when(air.isPassable()).thenReturn(true);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(true);
+		when(world.getBlockAt(anyInt(), anyInt(), anyInt())).thenAnswer(inv -> (int) inv.getArgument(1) >= 64 ? air : ground);
 
 		when(provider.getMaxCopsPerPlayer()).thenReturn(6);
 		when(provider.getPursuitMaxDistance()).thenReturn(80.0);

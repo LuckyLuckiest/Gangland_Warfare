@@ -119,6 +119,9 @@ public class CopGroup {
 	/** {@link #seedBias} seeded the squad, or a newer lead made its seed stale. */
 	@Getter(AccessLevel.NONE)
 	private boolean             seedSpent;
+	/** The lead the latest hand-off seed sent the squad to (R5): its own projection, not a sighting or a report. */
+	@Getter(AccessLevel.NONE)
+	private @Nullable Location  handoffSeed;
 	private boolean backupHeld;
 	/** Radio-clock ms of the latest casualty; a regroup clears {@link #casualtyTimes} but not this. */
 	private long    lastCasualtyAt;
@@ -430,6 +433,20 @@ public class CopGroup {
 		if (unitBias == null || unitBias != seedBias || seedSpent) return false;
 		seedSpent = true;
 		return Objects.equals(squad.lastKnownLocation(), seedLead);
+	}
+
+	/** Seeds the squad with a hand-off lead as a tip, no sighting (R4), and remembers it as a lead ({@link #isHandoffSeed}). */
+	public void seedHandoff(Location lead) {
+		squad.reportTip(lead);
+		handoffSeed = lead.clone();
+	}
+
+	/**
+	 * {@code spot} is the latest hand-off lead. The hand-off's heading history skips it, so a later hand-off with no news
+	 * leads on from the spot the squad really knew, never from the earlier lead (R5).
+	 */
+	public boolean isHandoffSeed(@Nullable Location spot) {
+		return spot != null && spot.equals(handoffSeed);
 	}
 
 	/** The hand-off bias, {@code null} once it expired. */

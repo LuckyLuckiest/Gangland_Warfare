@@ -476,7 +476,7 @@ Cops:
 | `Handoff.Heading_Seconds` | `2` | Seconds of the suspect's movement used for the heading |
 | `Handoff.Bias_Seconds` | `10` | How long new units spawn ahead of him (also how much slower a station ahead may be and still win) |
 | `Handoff.Cone_Degrees` | `60.0` | Half-angle either side of the heading |
-| `Handoff.Lead_Blocks` | `24.0` | 0.21.1. Blocks past the squad's last-known spot, along the heading it saw him take, that the hand-off units head for and search (clamped to 0.75 x `Pursuit.Max_Distance`; min 0) |
+| `Handoff.Lead_Blocks` | `24.0` | 0.21.1. Blocks past the squad's last-known spot, along the heading it saw him take, that the hand-off units head for and search (at most 0.75 x `Pursuit.Max_Distance` long; a negative value is 0; stops short of a wall, on standing ground) |
 | `Perimeter.Enabled` | `true` | 0.16.0. `false` = no posts |
 | `Perimeter.Min_Level` | `3` | Stars needed |
 | `Perimeter.Posts` | `2` | Most cops posted at once; the last free cop is never posted |

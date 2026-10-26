@@ -352,8 +352,11 @@ On `MAN_DOWN`/`LEADER_DOWN` the listener also calls `CopGroup.requestBackup(now,
 (`releaseSurplus`) sends home the newest free cops of a role the group holds more of than its base squad for the
 current target count (`CopRole.nextRole` over the wanted level's `Squad_Composition`; roles off, any cop). A
 replacement spawned mid-backup for a fallen Commander or Pointman therefore stays and the backup's extra goes (T-146),
-and the group's last Commander is never sent, even once the wanted level has fallen to a composition without one. A cop
-fighting, cuffing or guarding is never sent; the release retries next run until enough have gone.
+and the group's last Commander is never sent, even once the wanted level has fallen to a composition without one: he
+stays as one cop over the target and `pendingRelease` is capped at what the role excess can ever release (his excess
+counted out), so no radio responder joining later is sent home in his place (T-435). A cop fighting, cuffing or
+guarding is never sent; the release retries next run until enough have gone. `releaseSurplus` runs only while the
+player is wanted: a backup that runs out inside the post-escape search sends nobody home (T-187).
 
 #### Resisting (0.12.0)
 
@@ -1216,17 +1219,20 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   inherits the squad's own lead and its widening circle (pinned by `strandedReleased_searchCircleKeepsWidening` and
   `recycle_searchCircleKeepsWidening`). Before dispatching it trims the queue to `targetCount - counted`
   (`CopGroup.trimPending`, newest first), so a level drop calls off units. Live cops over the target go home through
-  `releaseSurplus` (`CopGroup.pendingRelease` caps how many), never the last Commander, in two cases (T-435). Inside an
+  `releaseSurplus` (`CopGroup.pendingRelease` caps how many, itself capped at what the role excess can release less the
+  last Commander's, so a leftover never waits for a radio responder), never the last Commander, in two cases (T-435). Inside an
   episode, only when the level's base target dropped below `CopGroup.lastTarget`: radio responders joining at the same
   target stay. At a new wanted start, `onWantedStart` sets `pendingRelease = max(0, engaged - target)` against the
   cops engaged after the call back, not against `lastTarget`: a correction of the r3 note, which keyed the new episode
   on `lastTarget` too, so a re-spot after a stepwise escape (`Drop_Mode` ONE_STAR: 3, 2, 1, search) kept the four
-  cops the search called back, while an all-stars escape trimmed to two. `keepSquadOnSearch` zeroes `pendingRelease`,
-  so a drop's release still waiting for free cops (all posted) never fires in the post-escape search (wanted level 0,
-  run at one star), which keeps every walker it called back (T-187). A new wanted start calls back walkers in
+  cops the search called back, while an all-stars escape trimmed to two. `releaseSurplus` runs only at wanted level
+  > 0, so neither a drop's release still waiting for free cops (all posted) nor a backup that runs out mid-search
+  fires in the post-escape search (wanted level 0, run at one star), which keeps every walker it called back (T-187);
+  the next wanted start replaces whatever is still owed. A new wanted start calls back walkers in
   range only up to the new level's target (`reengageReturning(group, player, limit, eligible)`, nearest first; a group
   with no engaged Commander calls its nearest walking Commander back first, past the limit if need be, so the start
-  never leaves the last Commander sent home, T-146). A
+  never leaves the last Commander sent home, T-146; when the new level's composition has no Commander slot he stays
+  as the one cop over its target). A
   walker the group sent home (`releaseSurplus`, or left over by that capped call back) is marked in
   `CopGroup.sentHome`: it is out of the counted cops, and while the group lacks cops (a level rise, a casualty) the
   nearest one in range is called back before anything spawns (T-436). Only a new wanted start and `releaseSurplus`
@@ -1241,9 +1247,15 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   (`CopGroup.takeBiasSeed`, T-434), so it never rewinds a fresher lead or the hand-off heading sampled from it. Owner
   ruling R5: `SpawnBias.lead(blocks)` is the bias's `lastSeen` (the squad's lead at the hand-off) moved
   `Cops.Handoff.Lead_Blocks` (24) along the bias heading, which `HandoffController` reads from the squad's last-known
-  history, never the live position; `handoffLead()` clamps it to `CopSpawnManager.LEASH_MARGIN x Pursuit.Max_Distance`.
-  The units head for that spot and search it: the tip restarts the search circle at 6 blocks there, once per hand-off
-  (not once per refill). Spawn placement is unchanged: `hiddenRing` ahead of the bias, through `fits` (leash margin and
+  history, never the live position; `handoffLead()` caps the lead's length at `CopSpawnManager.LEASH_MARGIN x
+  Pursuit.Max_Distance` from that spot (not from the player, whose live position the cap would leak). The lead stops a
+  block short of the first solid block on the way (a ray trace at eye height) and stands on ground near his height
+  there (`PostRing.standingSpot`), facing the heading; no standing room or an unloaded chunk gives `lastSeen` itself,
+  so a lead is never underground or inside a building he never entered (a breach trigger). The seed goes through
+  `CopGroup.seedHandoff`, which remembers it: `HandoffController` takes no heading sample while the squad's lead is that
+  seed, so a second hand-off with no news since leads from the squad's real last-known spot again (x 20 -> 44, never
+  44 -> 68; `secondHandoffWithoutNews_leadsFromTheLastKnownSpotAgain`). The units head for that spot and search it:
+  the tip restarts the search circle at 6 blocks there, once per hand-off (not once per refill). Spawn placement is unchanged: `hiddenRing` ahead of the bias, through `fits` (leash margin and
   the R6 view gate). Leash release
   and recycle never re-tip (above). Only member sightings make `NpcPursuit`
   chase the live position.

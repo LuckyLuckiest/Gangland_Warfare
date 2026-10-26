@@ -61,8 +61,11 @@ public final class PostRing {
 		return true;
 	}
 
-	/** The nearest y to {@code aroundY} (within 8) with a solid block below and two passable blocks at and above it. */
-	private static Location standingSpot(World world, double x, double z, int aroundY) {
+	/**
+	 * The nearest y to {@code aroundY} (within 8) with a solid block below and two passable blocks at and above it, at
+	 * ({@code x}, {@code z}); {@code null} when there is none. The caller checks the chunk is loaded.
+	 */
+	public static Location standingSpot(World world, double x, double z, int aroundY) {
 		int bx = floor(x);
 		int bz = floor(z);
 		for (int dy = 0; dy <= FLOOR_SEARCH; dy++) {

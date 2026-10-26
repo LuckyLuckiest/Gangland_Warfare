@@ -364,7 +364,7 @@ Cops:
       # Half-angle, in degrees, either side of the heading of that bias.
       Cone_Degrees: 60.0
       # Blocks past the squad's last-known spot, along the heading it saw him take, that the units sent after the
-      # hand-off head for and search. Kept within 0.75 x Pursuit.Max_Distance.
+      # hand-off head for and search. At most 0.75 x Pursuit.Max_Distance long; a negative value counts as 0.
       Lead_Blocks: 24.0
    # While a suspect of at least Min_Level stars is out of sight, up to Posts cops hold posts on a ring around the zone
    # (Roles first) and watch for him, for at most Max_Seconds.

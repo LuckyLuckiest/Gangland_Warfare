@@ -46,13 +46,13 @@ and tune it:
 Cops:
    Handoff:
       # new in 0.21.1: blocks past the squad's last-known spot, along the heading it saw him take, that the units sent
-      # after the hand-off head for and search. Kept within 0.75 x Pursuit.Max_Distance.
+      # after the hand-off head for and search. At most 0.75 x Pursuit.Max_Distance long; a negative value counts as 0.
       Lead_Blocks: 24.0
 ```
 
 After a hand-off ("Lost him heading X. Units ahead, pick him up.") the new units no longer search the spot where he was
-lost: they walk on along the heading the squad saw him take and search there. Neither the heading nor that spot uses
-his live position. `Lead_Blocks: 0` keeps the old behaviour of searching the last-known spot.
+lost: they walk on along the heading the squad saw him take (stopping short of a wall, on the ground there) and
+search there. Neither the heading nor that spot uses his live position. `Lead_Blocks: 0` keeps the old behaviour of searching the last-known spot.
 
 ## 4. Text keys
 

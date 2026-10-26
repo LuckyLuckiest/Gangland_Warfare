@@ -446,7 +446,7 @@ class CopManagerDispatchTest {
 
 	/** R5: the seed a hand-off unit gives, Handoff.Lead_Blocks (24) east of {@code lastSeen} along the +X heading. */
 	private static Location ledOn(Location lastSeen) {
-		return lastSeen.clone().add(HandoffSettings.DEFAULT.leadBlocks(), 0, 0);
+		return lastSeen.clone().add(HandoffSettings.DEFAULT.leadBlocks(), 0, 0).setDirection(new Vector(1, 0, 0));
 	}
 
 	@Test

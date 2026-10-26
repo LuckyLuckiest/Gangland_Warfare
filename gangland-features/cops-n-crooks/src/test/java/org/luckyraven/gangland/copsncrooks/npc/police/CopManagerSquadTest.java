@@ -1223,4 +1223,97 @@ class CopManagerSquadTest {
 
 		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count());
 	}
+
+	@Test
+	@DisplayName("T-187: a backup that runs out inside the post-escape search sends none of the searchers home")
+	void backupExpiryInsideTheSearch_sendsNobodyHome() {
+		Wanted three = CopManagerFixture.wanted(3);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
+		manager.onWantedStart(player, three);
+		CopGroup group = manager.groupFor(playerId);
+		assertTrue(group.requestBackup(fx.clock[0], fx.provider.getBackupSettings()));
+		manager.spawnTick(playerId, three);
+		assertEquals(5, countIn(group, CopState.PURSUING));
+
+		manager.onWantedEnd(player, WantedCause.EVASION);
+		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+		fx.clock[0] += 31_000L; // the backup runs out mid-search
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+
+		assertEquals(5, countIn(group, CopState.PURSUING), "the search keeps every cop it called back");
+	}
+
+	/** Three stars field Commander, Pointman and two Assaults; one star a Pointman and an Assault, no Commander. */
+	private void oneStarWithoutACommander() {
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		when(fx.provider.getSquadComposition(3)).thenReturn(List.of(COMMANDER, POINTMAN, ASSAULT, ASSAULT));
+		when(fx.provider.getSquadComposition(1)).thenReturn(List.of(POINTMAN, ASSAULT));
+		when(fx.spawner.spawnNearPlayer(any(), anyInt(), any(), any())).thenAnswer(inv -> {
+			CopNpc cop = fx.cop(CopState.IDLE, 0, 0);
+			when(cop.getRole()).thenReturn(inv.getArgument(3));
+			return cop;
+		});
+	}
+
+	/** A radio responder (an Assault) joins the group and takes up the chase. */
+	private CopNpc responderJoins(CopGroup group) {
+		CopNpc responder = fx.cop(CopState.IDLE, 0, 0);
+		when(responder.getRole()).thenReturn(ASSAULT);
+		group.add(responder);
+		responder.setTargetPlayerId(playerId);
+		responder.transitionTo(CopState.PURSUING);
+		return responder;
+	}
+
+	@Test
+	@DisplayName("T-435: a drop to a level without a Commander keeps the last one over the target, and owes no release")
+	void dropToALevelWithoutACommander_aRadioResponderStays() {
+		oneStarWithoutACommander();
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.spawnTick(playerId, one);
+		manager.spawnTick(playerId, one);
+		assertEquals(0, group.getPendingRelease(), "the protected Commander is no release still owed");
+
+		CopNpc responder = responderJoins(group);
+		manager.spawnTick(playerId, one);
+
+		assertEquals(CopState.PURSUING, responder.getCurrentState(), "a radio responder stays");
+	}
+
+	@Test
+	@DisplayName("T-435: a re-spot that calls the last Commander back past the target leaves a radio responder alone")
+	void reSpotAfterTheCommanderWalked_aRadioResponderStays() {
+		oneStarWithoutACommander();
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.onWantedEnd(player, WantedCause.EVASION);
+		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+		CopNpc commander = group.getCops().stream().filter(c -> c.getRole() == COMMANDER).findFirst().orElseThrow();
+		commander.transitionTo(CopState.RETURNING); // the AI rotated him out mid-search
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+
+		when(fx.targeting.isSearching(playerId)).thenReturn(false);
+		manager.onWantedLevelChange(player, one, 0, 1);
+		manager.spawnTick(playerId, one);
+		manager.spawnTick(playerId, one);
+		assertEquals(CopState.PURSUING, commander.getCurrentState(), "the last Commander came back (T-146)");
+
+		CopNpc responder = responderJoins(group);
+		manager.spawnTick(playerId, one);
+
+		assertEquals(CopState.PURSUING, responder.getCurrentState(), "a radio responder stays");
+	}
 }

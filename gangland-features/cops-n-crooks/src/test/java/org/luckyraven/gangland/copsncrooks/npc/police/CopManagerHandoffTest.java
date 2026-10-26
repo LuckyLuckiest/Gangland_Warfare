@@ -151,6 +151,32 @@ class CopManagerHandoffTest {
 	}
 
 	@Test
+	@DisplayName("R5: a second hand-off with no news since the first leads from the squad's last-known spot again, not from the first lead")
+	void secondHandoffWithoutNews_leadsFromTheLastKnownSpotAgain() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		CopGroup          group      = handOffAfterARunEast(controller);
+		// unseen, he doubled back; the hand-off units come and head 24 on, east
+		when(player.getLocation()).thenReturn(new Location(fx.world, -40, 64, -60));
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		controller.tick(player, group);
+		assertEquals(44.0, group.getSquad().lastKnownLocation().getX(), 1e-9);
+
+		// they find nobody there and leash out; the first bias ran out, the hand-off fires again
+		fx.clock[0] += 11_000L;
+		for (CopNpc cop : group.getCops()) {
+			cop.transitionTo(CopState.RETURNING);
+			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
+		}
+		controller.tick(player, group);
+		SpawnBias second = group.biasAt(fx.clock[0]);
+		assertNotNull(second);
+		assertEquals(20.0, second.lastSeen().getX(), 1e-9, "the squad's last-known spot, not the first lead");
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+
+		assertEquals(44.0, group.getSquad().lastKnownLocation().getX(), 1e-9, "never 68: the lead does not stack up");
+	}
+
+	@Test
 	@DisplayName("T-434: a biased unit spawning after a fresher sighting keeps that sighting, and the next hand-off heads on")
 	void handoffSeed_neverRewindsAFresherSighting() {
 		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);

@@ -75,7 +75,9 @@ public class HandoffController {
 
 		long          now    = copRadio.now();
 		Deque<Sample> window = samples.computeIfAbsent(id, key -> new ArrayDeque<>());
-		record(window, group.getSquad().lastKnownLocation(), now, settings.headingSeconds() * 1000L);
+		// a hand-off lead is the squad's own projection, not where anyone saw or reported him: no heading sample (R5)
+		Location lastKnown = group.getSquad().lastKnownLocation();
+		if (!group.isHandoffSeed(lastKnown)) record(window, lastKnown, now, settings.headingSeconds() * 1000L);
 
 		double  maxDistance = config.getPursuitMaxDistance();
 		boolean wasEngaged  = engaged.contains(id);

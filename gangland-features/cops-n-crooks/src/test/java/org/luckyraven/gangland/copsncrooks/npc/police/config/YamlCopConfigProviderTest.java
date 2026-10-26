@@ -645,6 +645,18 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1: a negative Cops.Handoff.Lead_Blocks clamps to 0, it does not revert to the default 24")
+	void negativeLeadBlocks_clampsToZero() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Handoff:
+				      Lead_Blocks: -5.0
+				""" + TIER_BLOCK);
+
+		assertEquals(0.0, provider.getHandoffSettings().leadBlocks());
+	}
+
+	@Test
 	@DisplayName("a missing block is the DEFAULT")
 	void missingNewBlocks_areDefault() {
 		CopConfigProvider provider = parse("Cops:\n" + TIER_BLOCK);
