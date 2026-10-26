@@ -354,7 +354,7 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 
 		return new HudSettings(enabled(block(n, "Boss_Bar", report), d.bossBar()),
 		                       enabled(block(n, "Star_Card", report), d.starCard()),
-		                       titleCue(titles, "Gain", TitleCue.DEFAULT, master, report),
+		                       titleCue(titles, "Gain", TitleCue.GAIN, master, report),
 		                       titleCue(titles, "Lost", TitleCue.DEFAULT, master, report),
 		                       titleCue(titles, "Escaped", TitleCue.ESCAPED, master, report), enabled(siren, d.siren()),
 		                       siren == null ? d.sirenSound() : siren.get("Sound").asString().orDefault(d.sirenSound()),

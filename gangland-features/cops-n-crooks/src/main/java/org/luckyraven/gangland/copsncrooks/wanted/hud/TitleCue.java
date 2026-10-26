@@ -15,8 +15,19 @@ public record TitleCue(boolean enabled, String title, String subtitle, int fadeI
 	/** Gained and lost: the star row, then the card. Blank Star_Card leaves the row alone, so a star is still named. */
 	public static final TitleCue DEFAULT = new TitleCue(true, "", "%stars% %card%", 5, 20, 5);
 
+	/**
+	 * Gained: the star row alone, short enough to read at a glance (0.21.1). The cause card goes to chat instead, unless
+	 * a subtitle or title of the file still carries {@code %card%}.
+	 */
+	public static final TitleCue GAIN = new TitleCue(true, "", "%stars%", 5, 20, 5);
+
 	/** Escaped: the level is 0 by now, so the star row would be empty; the card alone. */
 	public static final TitleCue ESCAPED = new TitleCue(true, "", "%card%", 5, 20, 5);
+
+	/** Whether this cue is on and puts {@code %card%} on the screen itself, so chat need not repeat the card. */
+	public boolean showsCard() {
+		return enabled && (title != null && title.contains("%card%") || subtitle != null && subtitle.contains("%card%"));
+	}
 
 	/** Fills the placeholders, then sends unless disabled or both lines are blank. Returns whether it sent. */
 	public boolean send(Player player, Map<String, String> placeholders) {

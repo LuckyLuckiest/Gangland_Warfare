@@ -187,6 +187,11 @@ Patrol:
    Put_Away: "&eBeat cop: &fPut that away! &7(%seconds%s)"
    # You complied in time
    Complied: "&aThanks, carry on."
+   # You were still holding the weapon when time ran out and the cop could see you (0.21.1); %cause% is the crime
+   # you are now wanted for. The star itself comes with the star card
+   Ignored: "&cBeat cop: &fYou were warned. &7Cause: &c%cause%"
+   # Time ran out while the cop could no longer see you, so nothing is held against you (0.21.1)
+   Lost_Sight: "&7Beat cop: &fLost sight of you. Keep it holstered."
    # The cop orders a stop; %seconds% is the seconds you have to stop
    Pull_Over: "&cBeat cop: &fPull over! Stop within %seconds%s"
    # The ticket; %money_symbol% and %amount% are the fine
