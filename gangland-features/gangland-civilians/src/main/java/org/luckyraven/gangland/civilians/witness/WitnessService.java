@@ -341,7 +341,10 @@ public final class WitnessService {
 		logCancel(call, reason);
 		if (reason == CancelReason.HIT || reason == CancelReason.SCARED || reason == CancelReason.INTIMIDATED) {
 			LivingEntity entity = caller.getEntity();
-			if (entity != null) stoppedAt.put(entity.getUniqueId(), now());
+			long now      = now();
+			long cooldown = rules.get().scaredCooldownSeconds() * 1000L;
+			stoppedAt.values().removeIf(at -> now - at >= cooldown);
+			if (entity != null) stoppedAt.put(entity.getUniqueId(), now);
 			speak(caller, call.criminal(), "Witness_Scared", Map.of());
 			hooks.notifier().accept(call.criminal(), messages.witnessStopped());
 			flee(caller, call);
