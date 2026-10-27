@@ -1,0 +1,32 @@
+[
+ {
+  "wait": 10000
+ },
+ {
+  "console": "glw module list",
+  "after": 2000
+ },
+ {
+  "console": "version Keystone",
+  "after": 1500
+ },
+ {
+  "console": "version Gangland_Warfare",
+  "after": 1500
+ },
+ {
+  "console": "version Bartizan",
+  "after": 1500
+ },
+ {
+  "console": "version Citizens",
+  "after": 1500
+ },
+ {
+  "console": "plugins",
+  "after": 1500
+ },
+ {
+  "wait": 2000
+ }
+]

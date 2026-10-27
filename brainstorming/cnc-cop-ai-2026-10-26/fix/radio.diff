@@ -1,0 +1,895 @@
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/police/ShotNoiseListener.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/police/ShotNoiseListener.java
+index d26cfcaa4..671492063 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/police/ShotNoiseListener.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/police/ShotNoiseListener.java
+@@ -24,8 +24,8 @@ import org.luckyraven.keystone.npc.NpcSupport;
+ import java.util.Map;
+ 
+ /**
+- * A wanted player's shot tells the nearest cop (within the weapon's noise radius) where he is: the squad re-centres
+- * on the shooter, which the evasion clock reads as a sighting. MONITOR + ignoreCancelled, so
++ * A wanted player's shot tells the nearest cop (within the weapon's noise radius) where he is: the squad gets a tip
++ * to the shooter's spot (0.21.1: a tip, not a sighting, so it searches there instead of chasing his live position). MONITOR + ignoreCancelled, so
+  * {@link DetainmentListener}'s restrained-shooter cancel wins. The 3 s throttle is the radio's {@code Shots_Fired}
+  * cooldown.
+  */
+@@ -82,7 +82,8 @@ public class ShotNoiseListener implements Listener {
+ 		}
+ 		if (nearest == null) return;
+ 
+-		group.getSquad().reportSighting(here);
++		// a shot heard is a tip to where it was fired, not a sighting: the squad searches there (R4)
++		group.getSquad().reportTip(here);
+ 		copRadio.sayAs(group, nearest, "Shots_Fired", Map.of());
+ 	}
+ }
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/NineOneOneListener.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/NineOneOneListener.java
+index 3eac766a0..be52f2082 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/NineOneOneListener.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/NineOneOneListener.java
+@@ -16,7 +16,7 @@ import java.util.Map;
+ 
+ /**
+  * A civilian's 911 call landed: the held crime is committed with one witness (so it passes the gate), the squad is
+- * sighted at the crime spot and the radio plays the Caller_911 line.
++ * tipped off to the crime spot and the radio plays the Caller_911 line.
+  *
+  * @since 0.20.0
+  */
+@@ -46,7 +46,8 @@ public class NineOneOneListener implements Listener {
+ 		CopGroup group = copManager.groupOf(criminal.getUniqueId());
+ 		if (group == null) return;
+ 
+-		group.getSquad().reportSighting(event.getAt());
++		// the caller's report is a tip to the crime spot, not a sighting: the squad searches there (R4)
++		group.getSquad().reportTip(event.getAt());
+ 		String place = placeNames.locate(event.getAt()).orElseGet(() -> copRadio.placeOf(event.getAt()));
+ 		if (place == null || place.isBlank()) place = "the area";
+ 		copRadio.sayFromLeader(group, "Caller_911", Map.of("crime", event.getCrimeId(), "place", place));
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/config/CopConfigProvider.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/config/CopConfigProvider.java
+index dbed6a644..1275ecff1 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/config/CopConfigProvider.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/config/CopConfigProvider.java
+@@ -29,7 +29,7 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
+ 					Map.entry("Contact", 8000L), Map.entry("Contact_Lost", 8000L), Map.entry("Engage", 15000L),
+ 					Map.entry("Push", 10000L), Map.entry("Flank_Left", 10000L), Map.entry("Flank_Right", 10000L),
+ 					Map.entry("Reposition", 5000L), Map.entry("Search", 15000L), Map.entry("Route", 15000L),
+-					Map.entry("Route_High", 15000L), Map.entry("Climb", 15000L), Map.entry("Stand_Down", 10000L),
++					Map.entry("Route_High", 15000L), Map.entry("Route_Search", 15000L), Map.entry("Climb", 15000L), Map.entry("Stand_Down", 10000L),
+ 					Map.entry("No_Route", 15000L), Map.entry("Check_Fire", 8000L), Map.entry("Reloading", 8000L),
+ 					Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L), Map.entry("Commander_Down", 5000L),
+ 					Map.entry("Resisting", 10000L), Map.entry("Backup", 20000L), Map.entry("Responding", 5000L),
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java
+index 12e13798a..f4567f9db 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java
+@@ -31,7 +31,8 @@ import static java.util.Objects.requireNonNullElse;
+  * The pursuit hand-off (0.16.0): when the cops chasing a wanted player stop being engaged because the chase leashed out
+  * (a cop is walking home beyond {@code Cops.Pursuit.Max_Distance}), the leader radios the suspect's heading (heard
+  * around him as well as around the speaker) and units dispatched in the next {@code Bias_Seconds} spawn ahead of him,
+- * seeded with the last-known position. A perimeter post counts as engaged only within {@code Max_Distance} of him.
++ * seeded with the last-known position. The heading is read from the squad's own last-known spots (0.21.1), never from
++ * where the suspect really runs once no cop sees him. A perimeter post counts as engaged only within {@code Max_Distance} of him.
+  * <p>
+  * Reads the config on every call ({@code /glw reload}); main thread only, like the cop AI tick that drives {@link #tick}.
+  *
+@@ -40,7 +41,7 @@ import static java.util.Objects.requireNonNullElse;
+ @CustomLog
+ public class HandoffController {
+ 
+-	/** Travel under this many blocks over the heading window is no heading: the player's facing is used instead. */
++	/** Travel under this many blocks over the heading window is no heading: the last-seen facing is used instead. */
+ 	private static final double MIN_TRAVEL = 2.0;
+ 
+ 	private record Sample(long time, Location at) { }
+@@ -59,7 +60,7 @@ public class HandoffController {
+ 		this.provider   = provider;
+ 	}
+ 
+-	/** Per AI tick: records the suspect's position and sets the bias on the engaged -> not engaged edge. */
++	/** Per AI tick: records the squad's last-known spot and sets the bias on the engaged -> not engaged edge. */
+ 	public void tick(Player player, @Nullable CopGroup group) {
+ 		UUID              id     = player.getUniqueId();
+ 		CopConfigProvider config = provider.get();
+@@ -72,11 +73,9 @@ public class HandoffController {
+ 			return;
+ 		}
+ 
+-		long now = copRadio.now();
++		long          now    = copRadio.now();
+ 		Deque<Sample> window = samples.computeIfAbsent(id, key -> new ArrayDeque<>());
+-		window.addLast(new Sample(now, player.getLocation().clone()));
+-		while (window.size() > 1 && now - window.peekFirst().time() > settings.headingSeconds() * 1000L)
+-			window.removeFirst();
++		record(window, group.getSquad().lastKnownLocation(), now, settings.headingSeconds() * 1000L);
+ 
+ 		double  maxDistance = config.getPursuitMaxDistance();
+ 		boolean wasEngaged  = engaged.contains(id);
+@@ -85,20 +84,40 @@ public class HandoffController {
+ 		else engaged.remove(id);
+ 
+ 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
+-		if (!leashedOut(group, id, player, maxDistance)) return;
++		if (window.isEmpty() || !leashedOut(group, id, player, maxDistance)) return;
+ 
+ 		Location oldest  = window.peekFirst().at();
+ 		Location newest  = window.peekLast().at();
+ 		Vector   heading = new Vector(newest.getX() - oldest.getX(), 0, newest.getZ() - oldest.getZ());
+-		if (heading.length() < MIN_TRAVEL) heading = player.getLocation().getDirection();
++		if (heading.length() < MIN_TRAVEL) heading = newest.getDirection();
+ 
+ 		group.setBias(new SpawnBias(heading, newest, now + settings.biasSeconds() * 1000L, settings.coneDegrees()));
+-		String word = copRadio.compassWord(oldest, newest);
++		// the word names the heading itself, so a fallback to the last-seen facing is said the same way
++		String word = copRadio.compassWord(newest, newest.clone().add(heading));
+ 		// heard around him too: the speaker is a cop walking home beyond the radio's reach of him
+ 		copRadio.sayFromLeader(group, "Handoff", Map.of("direction", word), player);
+ 		log.debug("HANDOFF {} heading={}", player.getName(), word);
+ 	}
+ 
++	/**
++	 * Adds the squad's last-known spot when it moved (a stale spot repeated every tick is no travel; the same spot only
++	 * refreshes the facing) and keeps the spots within {@code windowMs} of the newest one, so the heading is the last
++	 * stretch the squad knew of, however long ago.
++	 */
++	private static void record(Deque<Sample> window, @Nullable Location lastKnown, long now, long windowMs) {
++		if (lastKnown == null) return;
++		Sample newest = window.peekLast();
++		if (newest != null && samePlace(newest.at(), lastKnown))
++			window.addLast(new Sample(window.removeLast().time(), lastKnown));
++		else window.addLast(new Sample(now, lastKnown));
++		long latest = window.peekLast().time();
++		while (window.size() > 1 && latest - window.peekFirst().time() > windowMs) window.removeFirst();
++	}
++
++	private static boolean samePlace(Location a, Location b) {
++		return a.getWorld() == b.getWorld() && a.getX() == b.getX() && a.getY() == b.getY() && a.getZ() == b.getZ();
++	}
++
+ 	/**
+ 	 * A cop of the group chases or fights him, or holds a perimeter post within {@code maxDistance} of him: a post left
+ 	 * behind where he was lost watches an empty zone, so it no longer holds the chase.
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadio.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadio.java
+index 4184aed57..b0154ee8e 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadio.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadio.java
+@@ -116,7 +116,8 @@ public class CopRadio {
+ 			boolean down = signal == NpcSquadSignal.MAN_DOWN || signal == NpcSquadSignal.LEADER_DOWN;
+ 			if (down && member instanceof CopNpc cop && cop.getRole() != null && cop.getRole().commander())
+ 				commanderDown(group, squad, voice, member, where);
+-			else if (!roleLine(squad, voice, signal, member, where)) speak.onSignal(squad, signal, member, where);
++			else if (!searchRoute(squad, voice, signal, member, where) && !roleLine(squad, voice, signal, member, where))
++				speak.onSignal(squad, signal, member, where);
+ 			followUps(group, squad, voice, signal, member, where);
+ 			if (down) regroupCheck(group);
+ 			switch (signal) {
+@@ -395,6 +396,20 @@ public class CopRadio {
+ 		};
+ 	}
+ 
++	/**
++	 * A route started while no member sees him (no contact, no fresh sighting) is a search route: the member says
++	 * {@code Route_Search}, never {@code Route}/{@code Route_High}, which speak of a way "to him"; silent with that pool
++	 * muted. {@code true} when the signal was handled here.
++	 */
++	private boolean searchRoute(NpcSquad squad, RadioVoice voice, NpcSquadSignal signal, AbstractNpc member,
++	                            @Nullable Location where) {
++		if (signal != NpcSquadSignal.ROUTE || squad.isInContact() || squad.hasFreshSighting()) return false;
++		if (!lines.lines("Route_Search").isEmpty())
++			radio.say(squad, voice, member.getEntity(), speakerName(member), "Route_Search", "Format", where, null,
++			          Map.of());
++		return true;
++	}
++
+ 	/**
+ 	 * A Marksman or Defender speaks its own line for the signal. {@code true} when the role has a line pool for it
+ 	 * (spoken or throttled), {@code false} to fall back to the generic line.
+@@ -404,12 +419,15 @@ public class CopRadio {
+ 		String key = member instanceof CopNpc cop ? roleKey(kindOf(cop.getRole()), signal) : null;
+ 		// a role line names a spot (direction, distance): with none the generic line is said instead
+ 		if (key == null || lines.lines(key).isEmpty() || directionTo(member, where).isEmpty()) return false;
++		// Overwatch_Set claims eyes on the suspect: without line of sight neither it nor the generic Engage is said
++		if ("Overwatch_Set".equals(key) && !hasSight(member, voice.hunted(squad))) return true;
+ 
+ 		// the spot's distance and direction are said only when there is a spot: with none, SquadRadio would measure to
+ 		// the speaker's own position ("0 blocks north")
+ 		Map<String, String> extra = new HashMap<>(roleExtras(member));
+ 		extra.put("direction", directionTo(member, where));
+ 		extra.put("distance", distanceTo(member, where));
++		extra.put("side", sideOf(squad, where));
+ 		// a Defender's Shield_Up is a follow-up, three ack delays out: said at once it lands behind the Commander's
+ 		// order and the Marksman's Overwatch_Set in the squad gap and is dropped (order: 1 Commander, 2 Flanking, 3 this)
+ 		if (kindOf(((CopNpc) member).getRole()) == RoleKind.DEFENDER)
+@@ -472,6 +490,7 @@ public class CopRadio {
+ 		Map<String, String> extra = new HashMap<>(roleExtras(member));
+ 		extra.put("direction", directionTo(member, spot));
+ 		extra.put("distance", distanceTo(member, spot));
++		extra.put("side", sideOf(squad, spot));
+ 		radio.sayLater(squad, voice, member, key, extra, 3, () -> atPost((CopNpc) member, voice.hunted(squad)));
+ 	}
+ 
+@@ -480,9 +499,11 @@ public class CopRadio {
+ 	private static final double MARKSMAN_POST_BLOCKS = 40.0;
+ 	private static final double POST_SLACK_BLOCKS    = 2.0;
+ 
++	/** At its post and, for a Marksman (whose line claims eyes on him), in line of sight of the suspect. */
+ 	private static boolean atPost(CopNpc cop, @Nullable LivingEntity hunted) {
+ 		LivingEntity self = cop.getEntity();
+ 		if (self == null || hunted == null || !self.getWorld().equals(hunted.getWorld())) return false;
++		if (kindOf(cop.getRole()) == RoleKind.MARKSMAN && !hasSight(cop, hunted)) return false;
+ 
+ 		CopRole role = cop.getRole();
+ 		double  max  = kindOf(role) == RoleKind.DEFENDER ? DEFENDER_POST_BLOCKS
+@@ -568,6 +589,22 @@ public class CopRadio {
+ 		return Map.of("role", named.isEmpty() ? role.name() : named.get(0));
+ 	}
+ 
++	private static boolean hasSight(AbstractNpc cop, @Nullable LivingEntity hunted) {
++		return hunted != null && cop.hasLineOfSight(hunted);
++	}
++
++	/**
++	 * {@code %side%}: the {@code Sides} word for where {@code spot} lies from the suspect as the squad last knew him (his
++	 * spot and facing then), never his live facing; empty with no last-known spot.
++	 */
++	private String sideOf(NpcSquad squad, @Nullable Location spot) {
++		Location     seen  = squad.lastKnownLocation();
++		List<String> sides = lines.lines("Sides");
++		if (seen == null || spot == null || sides.isEmpty() || seen.getWorld() == null ||
++		    !seen.getWorld().equals(spot.getWorld())) return "";
++		return sides.get(RadioSides.sideOf(seen, spot).ordinal() % sides.size());
++	}
++
+ 	/** The compass word ({@code Compass} lines) from {@code from} to {@code where}; empty with either missing. */
+ 	private String directionTo(AbstractNpc from, @Nullable Location where) {
+ 		LivingEntity self = from.getEntity();
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadioMessages.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadioMessages.java
+index c6f7f3fbd..8989513bf 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadioMessages.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadioMessages.java
+@@ -43,6 +43,7 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines
+ 			Map.entry("Search", List.of("Spread out, find him!", "Sweep the area!")),
+ 			Map.entry("Route", List.of("Going round, finding a way to him.", "Cutting round to him!")),
+ 			Map.entry("Route_High", List.of("He's up high, finding a way up.")),
++			Map.entry("Route_Search", List.of("Going round, checking his last position.", "Taking the long way, searching the area.")),
+ 			Map.entry("Climb", List.of("Taking the ladder!", "Going up!")),
+ 			Map.entry("No_Route", List.of("Can't reach him, surround the building!", "Hold the exits!")),
+ 			Map.entry("Check_Fire", List.of("Check your fire, friendly in the line!")),
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/standoff/StandoffController.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/standoff/StandoffController.java
+index 67a1a183f..ebdd0a04c 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/standoff/StandoffController.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/standoff/StandoffController.java
+@@ -18,6 +18,7 @@ import org.luckyraven.gangland.core.user.UserManager;
+ import org.luckyraven.gangland.core.wanted.WantedCause;
+ import org.luckyraven.gangland.core.wanted.WantedStars;
+ import org.luckyraven.keystone.npc.NpcPost;
++import org.luckyraven.keystone.npc.NpcSquad;
+ 
+ import java.util.ArrayDeque;
+ import java.util.ArrayList;
+@@ -183,12 +184,16 @@ public class StandoffController {
+ 
+ 	@Nullable
+ 	private String trigger(StandoffSettings cfg, CopGroup group, UUID id, List<CopNpc> hunting, long now) {
+-		long stuck = 0;
+-		for (CopNpc cop : hunting)
+-			if (cop.millisUnreachable() >= cfg.unreachableSeconds() * 1000L) stuck++;
+-		if (stuck * 2 > hunting.size()) return "UNREACHABLE";
++		NpcSquad squad = group.getSquad();
++		// cops that cannot reach a spot nobody sees him at are searching, not besieging him (radio-far S)
++		if (squad.isInContact() || squad.hasFreshSighting()) {
++			long stuck = 0;
++			for (CopNpc cop : hunting)
++				if (cop.millisUnreachable() >= cfg.unreachableSeconds() * 1000L) stuck++;
++			if (stuck * 2 > hunting.size()) return "UNREACHABLE";
++		}
+ 
+-		if (group.getSquad().hasFreshSighting())
++		if (squad.hasFreshSighting())
+ 			for (CopNpc cop : hunting)
+ 				if (cop.isNavigationHopeless()) return "NO_ROUTE";
+ 
+@@ -222,7 +227,8 @@ public class StandoffController {
+ 		group.setFallBackUntil(until);
+ 		holdRefill(group, now, until);
+ 
+-		Location centre = player.getLocation();
++		// where the squad knows him to be, never his live position (radio-far S)
++		Location centre = group.getSquad().lastKnownLocation();
+ 		if (!perimeter.isActive(id) && centre != null && centre.getWorld() != null) post(st, cfg, hunting, centre);
+ 		radio.sayFromLeader(group, "Standoff");
+ 		log.debug("STANDOFF {} start trigger={}", player.getName(), trigger);
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/TrackerTags.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/TrackerTags.java
+index e27a912b6..56a3d1fed 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/TrackerTags.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/TrackerTags.java
+@@ -25,7 +25,7 @@ import java.util.function.ToIntFunction;
+ /**
+  * Tracker tags (0.20.0): a ranged cop of the squad who sees a wanted player ride a vehicle for {@code Tag_Seconds} in
+  * total tags it (cops-owned PDC key on the vehicle entity, value = expiry epoch ms); while he rides a tagged vehicle the
+- * squad gets a sighting every {@code Ping_Seconds} until the tag expires or he swaps vehicles. Fed once per cop AI tick
++ * squad gets a tip to the car's spot every {@code Ping_Seconds} until the tag expires or he swaps vehicles. Fed once per cop AI tick
+  * through {@code CopManager.addAiTickHook}; main thread only.
+  *
+  * @since 0.20.0
+@@ -122,7 +122,8 @@ public final class TrackerTags {
+ 		} else if (now >= state.nextPing) {
+ 			state.nextPing = now + s.pingSeconds() * 1000L;
+ 			Location at = vehicle.getLocation();
+-			group.getSquad().reportSighting(at);
++			// a ping is a tip to where the car is, not a sighting: the squad searches there (R4)
++			group.getSquad().reportTip(at);
+ 			radio.sayFromLeader(group, "Tracker_Ping", Map.of("place", Objects.toString(radio.placeOf(at), "")));
+ 			log.debug("TRACKER {} state=ping vehicle={}", player.getName(), vehicle.getEntityId());
+ 		}
+diff --git a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cop_radio_messages.yml b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cop_radio_messages.yml
+index abb88d76b..e1721c166 100644
+--- a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cop_radio_messages.yml
++++ b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cop_radio_messages.yml
+@@ -84,13 +84,19 @@ Lines:
+    Search:
+       - "Spread out, find him!"
+       - "Sweep the area!"
+-   # A member starts following a route to a suspect it cannot see directly, on level ground.
++   # A member starts following a route to a suspect it cannot see directly, on level ground, while the squad
++   # still has him in sight.
+    Route:
+       - "Going round, finding a way to him."
+       - "Cutting round to him!"
+    # The same, when the suspect is well above the member.
+    Route_High:
+       - "He's up high, finding a way up."
++   # A member starts a route while nobody has eyes on the suspect: it is searching his last-known spot, so the
++   # line must not claim it knows where he is. Empty it to keep searching routes silent.
++   Route_Search:
++      - "Going round, checking his last position."
++      - "Taking the long way, searching the area."
+    # A member starts climbing a ladder, vine or scaffolding on its route.
+    Climb:
+       - "Taking the ladder!"
+diff --git a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cop_radio_messages_es.yml b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cop_radio_messages_es.yml
+index acd3cef79..fdc82c597 100644
+--- a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cop_radio_messages_es.yml
++++ b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cop_radio_messages_es.yml
+@@ -61,6 +61,9 @@ Lines:
+       - "¡Cortándole el paso!"
+    Route_High:
+       - "Está en lo alto, buscando cómo subir."
++   Route_Search:
++      - "Rodeando, revisando su última posición."
++      - "Dando la vuelta, rastreando la zona."
+    Climb:
+       - "¡Usando la escalera!"
+       - "¡Subiendo!"
+diff --git a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml
+index 13d2ea68f..8f4468243 100644
+--- a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml
++++ b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml
+@@ -249,6 +249,7 @@ Cops:
+          Search: 300
+          Route: 300
+          Route_High: 300
++         Route_Search: 300
+          Climb: 300
+          No_Route: 300
+          Check_Fire: 160
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/config/StandoffModuleConfigTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/config/StandoffModuleConfigTest.java
+index 80448a870..c1007e977 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/config/StandoffModuleConfigTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/config/StandoffModuleConfigTest.java
+@@ -103,7 +103,9 @@ class StandoffModuleConfigTest {
+ 			cops.add(cop);
+ 		}
+ 		when(group.getCops()).thenReturn(cops);
+-		when(group.getSquad()).thenReturn(mock(NpcSquad.class));
++		NpcSquad squad = mock(NpcSquad.class);
++		when(squad.isInContact()).thenReturn(true); // an unreachable suspect the squad still has contact with
++		when(group.getSquad()).thenReturn(squad);
+ 		when(group.getTargetPlayerId()).thenReturn(id);
+ 		return group;
+ 	}
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/police/ShotNoiseListenerTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/police/ShotNoiseListenerTest.java
+index a2e4c975f..a7a48413a 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/police/ShotNoiseListenerTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/police/ShotNoiseListenerTest.java
+@@ -90,14 +90,16 @@ class ShotNoiseListenerTest {
+ 	}
+ 
+ 	@Test
+-	@DisplayName("a gunshot from a wanted shooter with a cop in range reports the sighting and radios Shots_Fired")
+-	void gunShot_wantedShooter_copInRange_reportsTheSighting_andRadios() {
++	@DisplayName("a gunshot from a wanted shooter with a cop in range tips the squad off to the spot and radios Shots_Fired")
++	void gunShot_wantedShooter_copInRange_tipsTheSquad_andRadios() {
+ 		CopNpc cop = cop(30, CopState.PURSUING);
+ 		cops(cop);
+ 
+ 		listener.onWeaponShoot(shot(WeaponType.GUN, shooter));
+ 
+-		verify(squad).reportSighting(shooter.getLocation());
++		// R4: a gunshot heard is a tip to the spot, never a sighting that would chase him live
++		verify(squad).reportTip(shooter.getLocation());
++		verify(squad, never()).reportSighting(any());
+ 		verify(radio).sayAs(group, cop, "Shots_Fired", Map.of());
+ 	}
+ 
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/wanted/NineOneOneListenerTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/wanted/NineOneOneListenerTest.java
+index b44e0eb0e..77948d878 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/wanted/NineOneOneListenerTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/wanted/NineOneOneListenerTest.java
+@@ -67,14 +67,16 @@ class NineOneOneListenerTest {
+ 	}
+ 
+ 	@Test
+-	@DisplayName("commit(player, crime, at, false, 1), then squad sighted at the crime spot, then the Caller_911 line")
++	@DisplayName("commit(player, crime, at, false, 1), then the squad tipped off to the crime spot, then the Caller_911 line")
+ 	void landedCallCommitsWithOneWitnessAndSights() {
+ 		listener.onCalledIn(call("Car_Theft"));
+ 
+ 		InOrder order = inOrder(crimes, copManager, radio);
+ 		order.verify(crimes).commit(player, "Car_Theft", at, false, 1);
+ 		order.verify(copManager).groupOf(playerId);
+-		assertTrue(squad.hasFreshSighting());
++		// R4: the call is a tip to the crime spot, not a sighting: the squad searches there instead of chasing him live
++		assertFalse(squad.hasFreshSighting());
++		assertEquals(at, squad.lastKnownLocation());
+ 
+ 		@SuppressWarnings("unchecked")
+ 		ArgumentCaptor<Map<String, String>> placeholders = ArgumentCaptor.forClass(Map.class);
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java
+index 199b69bd8..1a2e5d96d 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java
+@@ -69,11 +69,13 @@ class CopManagerHandoffTest {
+ 		CopGroup group = fx.manager.groupFor(player.getUniqueId());
+ 		assertEquals(2, group.getCops().size());
+ 
+-		// the chase leashes out: both cops walk home from 500 blocks away while he runs east
++		// the chase leashes out: seen running east, then both cops walk home from 500 blocks away
+ 		playerAt(10);
++		group.getSquad().reportSighting(player.getLocation());
+ 		controller.tick(player, group);
+ 		fx.clock[0] += 1_000L;
+ 		playerAt(20);
++		group.getSquad().reportSighting(player.getLocation());
+ 		controller.tick(player, group);
+ 		for (CopNpc cop : group.getCops()) {
+ 			cop.transitionTo(CopState.RETURNING);
+@@ -87,7 +89,7 @@ class CopManagerHandoffTest {
+ 		assertNotNull(bias);
+ 		verify(fx.radio).sayFromLeader(group, "Handoff", Map.of("direction", "east"), player);
+ 
+-		// he keeps running; the replacements are enqueued under the bias and seeded where he was at the hand-off
++		// he keeps running; the replacements are enqueued under the bias and seeded where he was last seen (R5)
+ 		playerAt(90);
+ 		fx.manager.spawnTick(player.getUniqueId(), wanted);
+ 
+@@ -96,6 +98,6 @@ class CopManagerHandoffTest {
+ 		List<PendingUnit> carrying = units.getAllValues().stream().filter(u -> u.bias() != null).toList();
+ 		assertTrue(carrying.size() >= 2, "both replacements carry the bias");
+ 		for (PendingUnit unit : carrying) assertSame(bias, unit.bias());
+-		assertEquals(30.0, group.getSquad().lastKnownLocation().getX());
++		assertEquals(20.0, group.getSquad().lastKnownLocation().getX());
+ 	}
+ }
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffControllerTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffControllerTest.java
+index 4cda4cac4..c5e191baf 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffControllerTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffControllerTest.java
+@@ -121,10 +121,19 @@ class HandoffControllerTest {
+ 		when(cop.getEntity().getLocation()).thenReturn(new Location(world, 200, 64, 0));
+ 	}
+ 
+-	/** One AI tick: the player stands at (x, z) when the clock reads {@code seconds} past the start. */
++	/**
++	 * One AI tick: the player stands at (x, z) when the clock reads {@code seconds} past the start, and the squad sees
++	 * him there (its last-known spot follows him).
++	 */
+ 	private void tick(double seconds, double x, double z) {
++		at = new Location(world, x, 64, z, at.getYaw(), at.getPitch());
++		group.getSquad().reportSighting(at);
++		blindTick(seconds);
++	}
++
++	/** One AI tick at {@code seconds} where no cop sees him: the squad's last-known spot stays where it was. */
++	private void blindTick(double seconds) {
+ 		clock[0] = 100_000L + (long) (seconds * 1000);
+-		at       = new Location(world, x, 64, z, at.getYaw(), at.getPitch());
+ 		controller.tick(player, group);
+ 	}
+ 
+@@ -231,6 +240,67 @@ class HandoffControllerTest {
+ 		assertEquals(1.0, heading.getZ(), 1e-6);
+ 	}
+ 
++	@Test
++	@DisplayName("R5: the heading comes from the squad's last-known spots, not from where the unseen suspect really runs")
++	void heading_fromTheSquadsLastKnownHistory_notTheLiveMovement() {
++		CopNpc chaser = cop(CopState.PURSUING, 5);
++		tick(0, 0, 0);
++		tick(1, 0, 10);              // seen running south ...
++		leash(chaser);
++		at = new Location(world, 30, 64, 10, 0f, 0f);
++		blindTick(2);                // ... then, unseen, he turns east
++
++		SpawnBias bias = group.biasAt(clock[0]);
++		assertNotNull(bias);
++		assertTrue(bias.heading().getZ() > 0 && Math.abs(bias.heading().getX()) < 1e-9, "south, as last seen");
++		assertEquals(0.0, bias.lastSeen().getX());
++		assertEquals(10.0, bias.lastSeen().getZ());
++		verify(radio).sayFromLeader(group, "Handoff", Map.of("direction", "south"), player);
++	}
++
++	@Test
++	@DisplayName("R5: a suspect last seen standing still is read by the way he faced when seen, not by his live facing")
++	void barelyMoved_usesTheLastSeenFacing_notTheLiveOne() {
++		CopNpc chaser = cop(CopState.PURSUING, 5);
++		tick(0, 0, 0);               // yaw 0 faces +Z
++		tick(1, 0.5, 0);
++		leash(chaser);
++		at = new Location(world, 0.5, 64, 0, -90f, 0f); // unseen, he turns to face +X
++		blindTick(2);
++
++		Vector heading = group.biasAt(clock[0]).heading();
++		assertEquals(0.0, heading.getX(), 1e-6);
++		assertEquals(1.0, heading.getZ(), 1e-6);
++	}
++
++	@Test
++	@DisplayName("R5: a suspect seen standing still who turned before he was lost is read by his latest seen facing")
++	void standingStill_turnedInSight_usesTheLatestSeenFacing() {
++		CopNpc chaser = cop(CopState.PURSUING, 5);
++		tick(0, 0, 0);               // yaw 0 faces +Z
++		at = new Location(world, 0, 64, 0, -90f, 0f);
++		tick(1, 0, 0);               // same spot, seen turning to face +X
++		leash(chaser);
++		blindTick(2);
++
++		Vector heading = group.biasAt(clock[0]).heading();
++		assertEquals(1.0, heading.getX(), 1e-6);
++		assertEquals(0.0, heading.getZ(), 1e-6);
++	}
++
++	@Test
++	@DisplayName("R5: a squad that never saw or was told where he is has no heading to hand off")
++	void noLastKnownSpot_noHandoff() {
++		CopNpc chaser = cop(CopState.PURSUING, 5);
++		blindTick(0);
++		leash(chaser);
++		at = new Location(world, 6, 64, 0);
++		blindTick(1);
++
++		assertNull(group.biasAt(clock[0]));
++		verify(radio, never()).sayFromLeader(any(), eq("Handoff"), any(), any());
++	}
++
+ 	@Test
+ 	@DisplayName("one hand-off per bias; a new one only after it expired")
+ 	void oneHandoffPerBias() {
+@@ -281,9 +351,11 @@ class HandoffControllerTest {
+ 			when(chaser.getNpc()).thenReturn(mock(NPC.class));
+ 
+ 			at = new Location(world, 105, 64, 0);
++			group.getSquad().reportSighting(at);
+ 			real.tick(player, group);
+ 			leash(chaser);   // the only cop, so it speaks: from 200, 90 blocks behind him (Range 32, Target_Range 64)
+ 			at = new Location(world, 110, 64, 0);
++			group.getSquad().reportSighting(at);
+ 			real.tick(player, group);
+ 		}
+ 
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadioRolesTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadioRolesTest.java
+index 519c8ba18..d14d4e3a1 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadioRolesTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/radio/CopRadioRolesTest.java
+@@ -34,6 +34,7 @@ import java.util.UUID;
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.junit.jupiter.api.Assertions.assertNull;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.anyString;
+ import static org.mockito.Mockito.mock;
+ import static org.mockito.Mockito.never;
+@@ -291,6 +292,90 @@ class CopRadioRolesTest {
+ 		verify(bystander).sendMessage("[SWAT-2] OW 6 " + compass(marksman, suspect) + " Marksman");
+ 	}
+ 
++	@Test
++	@DisplayName("radio-far 3: a Marksman at its flank post with no line of sight to the suspect does not claim Overwatch_Set")
++	void marksmanFlank_noLineOfSight_noOverwatchFollowUp() {
++		group.add(cop(1, 4, 0, null));
++		CopNpc marksman = cop(2, 6, 0, marksmanRole());
++		when(marksman.hasLineOfSight(any(LivingEntity.class))).thenReturn(false);
++		group.add(marksman);
++
++		signal(NpcSquadSignal.FLANK_LEFT, marksman, new Location(world, 6, 64, 12));
++		runTasks();
++
++		verify(bystander, never()).sendMessage(org.mockito.ArgumentMatchers.startsWith("[SWAT-2] OW"));
++	}
++
++	@Test
++	@DisplayName("radio-far 3: a Marksman engaging without line of sight says neither Overwatch_Set nor the generic Engage")
++	void marksmanEngage_noLineOfSight_silent() {
++		CopNpc marksman = cop(1, 4, 0, marksmanRole());
++		when(marksman.hasLineOfSight(any(LivingEntity.class))).thenReturn(false);
++		group.add(marksman);
++
++		signal(NpcSquadSignal.ENGAGE, marksman, new Location(world, 14, 64, 0));
++
++		verify(bystander, never()).sendMessage(org.mockito.ArgumentMatchers.startsWith("[SWAT-1] OW"));
++		verify(bystander, never()).sendMessage("[SWAT-1] Engage line");
++	}
++
++	@Test
++	@DisplayName("radio-far 3: Overwatch_Set's %side% is read from the squad's last-known spot and facing, not the suspect's live facing")
++	void overwatchSide_fromTheLastKnownSpot() {
++		pools.put("Sides", List.of("front", "left", "right", "behind"));
++		pools.put("Overwatch_Set", List.of("OW %side%"));
++		CopNpc marksman = cop(1, 4, 0, marksmanRole());
++		group.add(marksman);
++		// last seen at the origin facing -Z, so +X is his right; live he faces +Z, where +X is his left
++		group.getSquad().reportSighting(new Location(world, 0, 64, 0, 180f, 0f));
++
++		signal(NpcSquadSignal.ENGAGE, marksman, new Location(world, 14, 64, 0));
++
++		verify(bystander).sendMessage("[SWAT-1] OW right");
++	}
++
++	@Test
++	@DisplayName("radio-far 1: a route started with no contact and no fresh sighting is a search route (Route_Search), not 'to him'")
++	void route_withoutContact_saysRouteSearch() {
++		pools.put("Route", List.of("ROUTE to him"));
++		pools.put("Route_High", List.of("ROUTE up to him"));
++		pools.put("Route_Search", List.of("ROUTE searching"));
++		CopNpc cop = cop(1, 4, 0, null);
++		group.add(cop);
++
++		signal(NpcSquadSignal.ROUTE, cop, new Location(world, 4, 70, 20));
++
++		verify(bystander).sendMessage("[SWAT-1] ROUTE searching");
++		verify(bystander, never()).sendMessage("[SWAT-1] ROUTE to him");
++		verify(bystander, never()).sendMessage("[SWAT-1] ROUTE up to him");
++	}
++
++	@Test
++	@DisplayName("radio-far 1: a route with a fresh sighting keeps the Route line")
++	void route_withFreshSighting_saysRoute() {
++		pools.put("Route", List.of("ROUTE to him"));
++		pools.put("Route_Search", List.of("ROUTE searching"));
++		CopNpc cop = cop(1, 4, 0, null);
++		group.add(cop);
++		group.getSquad().reportSighting(new Location(world, 4, 64, 20));
++
++		signal(NpcSquadSignal.ROUTE, cop, new Location(world, 4, 64, 20));
++
++		verify(bystander).sendMessage("[SWAT-1] ROUTE to him");
++	}
++
++	@Test
++	@DisplayName("radio-far 1: with Route_Search muted a search route stays silent; it never falls back to 'to him'")
++	void route_withoutContact_mutedRouteSearch_silent() {
++		pools.put("Route", List.of("ROUTE to him"));
++		CopNpc cop = cop(1, 4, 0, null);
++		group.add(cop);
++
++		signal(NpcSquadSignal.ROUTE, cop, new Location(world, 4, 64, 20));
++
++		verify(bystander, never()).sendMessage("[SWAT-1] ROUTE to him");
++	}
++
+ 	@Test
+ 	@DisplayName("a Marksman still walking to a post far from the target does not announce Overwatch_Set")
+ 	void marksmanFlank_farFromTarget_silent() {
+@@ -649,6 +734,8 @@ class CopRadioRolesTest {
+ 		when(cop.getEntity()).thenReturn(body);
+ 		when(cop.isValid()).thenReturn(true);
+ 		when(cop.getRole()).thenReturn(role);
++		// in line of sight of the suspect unless a test says otherwise (Overwatch_Set needs it)
++		when(cop.hasLineOfSight(any(LivingEntity.class))).thenReturn(true);
+ 		return cop;
+ 	}
+ }
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/standoff/StandoffControllerTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/standoff/StandoffControllerTest.java
+index 3a74955a8..3c8859366 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/standoff/StandoffControllerTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/standoff/StandoffControllerTest.java
+@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
+ import java.util.concurrent.atomic.AtomicLong;
+ import java.util.concurrent.atomic.AtomicReference;
+ import java.util.function.BiPredicate;
++import java.util.function.Supplier;
+ 
+ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+@@ -95,6 +96,10 @@ class StandoffControllerTest {
+ 	private final Map<CopNpc, AtomicReference<CopState>> states = new HashMap<>();
+ 
+ 	private StandoffSettings settings = StandoffSettings.DEFAULT;
++	/** A member's own sighting holds the squad in contact; true by default, so the triggers can be exercised. */
++	private final AtomicBoolean       inContact  = new AtomicBoolean(true);
++	/** The squad's last-known spot; by default where the suspect stands. */
++	private Supplier<Location>        lastKnown  = () -> player.getLocation();
+ 
+ 	private final StandoffController controller;
+ 
+@@ -103,6 +108,8 @@ class StandoffControllerTest {
+ 		when(player.getLocation()).thenReturn(centre.clone());
+ 		when(group.getCops()).thenReturn(cops);
+ 		when(group.getSquad()).thenReturn(squad);
++		when(squad.isInContact()).thenAnswer(i -> inContact.get());
++		when(squad.lastKnownLocation()).thenAnswer(i -> lastKnown.get());
+ 		when(group.getTargetPlayerId()).thenReturn(playerId);
+ 		when(group.isCeaseFire()).thenAnswer(i -> ceaseFire.get());
+ 		doAnswer(i -> {
+@@ -281,6 +288,61 @@ class StandoffControllerTest {
+ 		assertTrue(controller.isActive(playerId));
+ 	}
+ 
++	@Test
++	@DisplayName("radio-far S: an unreachable majority with no member contact and no fresh sighting is no standoff")
++	void unreachableWithoutContactOrSighting_noStart() {
++		inContact.set(false);
++		when(squad.hasFreshSighting()).thenReturn(false);
++		hunters(3, 2);
++
++		tickAt(0);
++
++		assertEquals(0, starts());
++		verify(radio, never()).sayFromLeader(any(), anyString());
++		assertFalse(controller.isActive(playerId));
++	}
++
++	@Test
++	@DisplayName("radio-far S: a fresh sighting without the contact edge still counts for the unreachable trigger")
++	void unreachableWithFreshSighting_starts() {
++		inContact.set(false);
++		when(squad.hasFreshSighting()).thenReturn(true);
++		hunters(3, 2);
++
++		tickAt(0);
++
++		verify(radio).sayFromLeader(group, "Standoff");
++	}
++
++	@Test
++	@DisplayName("radio-far S: the ring is centred on the squad's last-known spot, not where the suspect really is now")
++	void ring_centredOnTheLastKnownSpot() {
++		when(player.getLocation()).thenReturn(new Location(world, 50, 64, 0));
++		lastKnown = centre::clone;
++		List<CopNpc> hunters = hunters(3, 3);
++
++		tickAt(0);
++
++		for (CopNpc cop : hunters) {
++			NpcPost post = postOf(cop);
++			assertEquals(12.0, post.anchor().distance(centre), 1.5);
++			assertEquals(centre.getX(), post.watch().getX(), 0.01);
++		}
++	}
++
++	@Test
++	@DisplayName("radio-far S: no last-known spot, no ring; the standoff still flags and radios")
++	void noLastKnownSpot_noPosts() {
++		lastKnown = () -> null;
++		List<CopNpc> hunters = hunters(3, 3);
++
++		tickAt(0);
++
++		for (CopNpc cop : hunters)
++			verify(cop, never()).holdPost(any());
++		verify(radio).sayFromLeader(group, "Standoff");
++	}
++
+ 	@Test
+ 	@DisplayName("unreachable for 9.999 s is not yet unreachable")
+ 	void unreachableJustUnderThreshold_noStart() {
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/TrackerTagsTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/TrackerTagsTest.java
+index f18632c16..78e662371 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/TrackerTagsTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/TrackerTagsTest.java
+@@ -199,7 +199,7 @@ class TrackerTagsTest {
+ 
+ 		tickEverySecond(10);
+ 
+-		verify(squad, never()).reportSighting(any());
++		verify(squad, never()).reportTip(any());
+ 		verify(notifier, never()).tagged(any());
+ 		verify(notifier, never()).hud(any(), anyInt());
+ 	}
+@@ -214,7 +214,7 @@ class TrackerTagsTest {
+ 			now[0] += SEC;
+ 		}
+ 
+-		verify(squad, never()).reportSighting(any());
++		verify(squad, never()).reportTip(any());
+ 		verify(notifier, never()).hud(any(), anyInt());
+ 	}
+ 
+@@ -272,13 +272,15 @@ class TrackerTagsTest {
+ 	}
+ 
+ 	@Test
+-	@DisplayName("a tagged vehicle's rider pings the squad every 6 s: 13 s of ticks give two sightings at the car")
++	@DisplayName("a tagged vehicle's rider pings the squad every 6 s: 13 s of ticks give two tips at the car")
+ 	void taggedRiderPingsEverySixSeconds() {
+ 		tag(pdcA, T0 + 150 * SEC);
+ 
+ 		tickEverySecond(13);
+ 
+-		verify(squad, times(2)).reportSighting(locA);
++		verify(squad, times(2)).reportTip(locA);
++		// R4: a tracker ping is a tip, never a sighting: the squad searches the car's spot, it does not chase him live
++		verify(squad, never()).reportSighting(any());
+ 		verify(radio, times(2)).sayFromLeader(eq(group), eq("Tracker_Ping"), anyMap());
+ 	}
+ 
+@@ -290,7 +292,7 @@ class TrackerTagsTest {
+ 
+ 		tickEverySecond(7);
+ 
+-		verify(squad, times(2)).reportSighting(locA);
++		verify(squad, times(2)).reportTip(locA);
+ 	}
+ 
+ 	@Test
+@@ -308,13 +310,13 @@ class TrackerTagsTest {
+ 	void swapVehicleStopsPings() {
+ 		tag(pdcA, T0 + 150 * SEC);
+ 		tickEverySecond(7);
+-		verify(squad, times(1)).reportSighting(locA);
++		verify(squad, times(1)).reportTip(locA);
+ 
+ 		riding = carB;
+ 		sees   = false;
+ 		tickEverySecond(20);
+ 
+-		verify(squad, times(1)).reportSighting(any());
++		verify(squad, times(1)).reportTip(any());
+ 	}
+ 
+ 	@Test
+@@ -325,7 +327,7 @@ class TrackerTagsTest {
+ 
+ 		tickEverySecond(7);
+ 
+-		verify(squad, times(1)).reportSighting(locB);
++		verify(squad, times(1)).reportTip(locB);
+ 	}
+ 
+ 	@Test
+@@ -337,7 +339,7 @@ class TrackerTagsTest {
+ 		tags.tick(player, group);
+ 
+ 		assertFalse(pdcA.containsKey(KEY));
+-		verify(squad, never()).reportSighting(any());
++		verify(squad, never()).reportTip(any());
+ 		verify(notifier, never()).hud(any(), anyInt());
+ 	}
+ 
+@@ -349,7 +351,7 @@ class TrackerTagsTest {
+ 
+ 		tickEverySecond(10);
+ 
+-		verify(squad, never()).reportSighting(any());
++		verify(squad, never()).reportTip(any());
+ 		verify(notifier, never()).hud(any(), anyInt());
+ 	}
+ 
+@@ -393,7 +395,7 @@ class TrackerTagsTest {
+ 		tags.forget(id);
+ 		tickEverySecond(5);
+ 
+-		verify(squad, never()).reportSighting(any());
++		verify(squad, never()).reportTip(any());
+ 	}
+ 
+ 	@Test
+@@ -408,7 +410,7 @@ class TrackerTagsTest {
+ 		pdcA.putAll(reloaded);
+ 		tickEverySecond(7);
+ 
+-		verify(squad, times(1)).reportSighting(locA);
++		verify(squad, times(1)).reportTip(locA);
+ 	}
+ 
+ 	@Test

@@ -1,0 +1,1120 @@
+[
+ {
+  "console": "gamerule spawn_mobs false",
+  "after": 300
+ },
+ {
+  "console": "gamerule spawn_monsters false",
+  "after": 300
+ },
+ {
+  "console": "gamerule advance_time false",
+  "after": 300
+ },
+ {
+  "console": "time set 6000",
+  "after": 300
+ },
+ {
+  "console": "weather clear",
+  "after": 300
+ },
+ {
+  "join": "Runner"
+ },
+ {
+  "console": "effect give Runner minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Runner minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode creative Runner",
+  "after": 200
+ },
+ {
+  "console": "clear Runner",
+  "after": 300
+ },
+ {
+  "chat": "/glw cop setup wand",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "wand given",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "hold": 0,
+  "bot": "Runner"
+ },
+ {
+  "console": "tp Runner 100 -60 38",
+  "after": 400
+ },
+ {
+  "chat": "/glw cop setup mode station",
+  "after": 600,
+  "bot": "Runner"
+ },
+ {
+  "leftClick": [
+   100,
+   -61,
+   40
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos1 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "chat": "/glw cop setup save Northside Station",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "Station .* saved|already exists",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "console": "setblock 130 -59 150 minecraft:stone",
+  "after": 300
+ },
+ {
+  "console": "tp Runner 80 -60 108",
+  "after": 400
+ },
+ {
+  "chat": "/glw cop setup mode district",
+  "after": 600,
+  "bot": "Runner"
+ },
+ {
+  "leftClick": [
+   80,
+   -61,
+   110
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos1 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "console": "tp Runner 130 -60 148",
+  "after": 400
+ },
+ {
+  "activateBlock": [
+   130,
+   -59,
+   150
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos2 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "chat": "/glw cop setup save Docks",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "Region .* saved",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "console": "gamemode survival Runner",
+  "after": 200
+ },
+ {
+  "console": "clear Runner",
+  "after": 300
+ },
+ {
+  "console": "tp Runner 100 -60 170",
+  "after": 400
+ },
+ {
+  "join": "Drawer"
+ },
+ {
+  "console": "effect give Drawer minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Drawer minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Drawer",
+  "after": 200
+ },
+ {
+  "console": "clear Drawer",
+  "after": 300
+ },
+ {
+  "console": "tp Drawer 100 -60 50",
+  "after": 400
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-BASE",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-DRAW1",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Drawer,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Drawer,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "hold": 1,
+  "bot": "Drawer"
+ },
+ {
+  "console": "bartizan weapon give Drawer pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Drawer"
+ },
+ {
+  "expectChat": "Put that away",
+  "timeout": 15000,
+  "bot": "Drawer"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-AWAY",
+  "after": 200
+ },
+ {
+  "hold": 1,
+  "bot": "Drawer"
+ },
+ {
+  "expectChat": "Thanks, carry on",
+  "timeout": 4000,
+  "bot": "Drawer"
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-AWAY-1",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Drawer,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Drawer,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-AWAY-2",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-AWAY-3",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Drawer,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Drawer,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-AWAY-4",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-AWAY-5",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Drawer,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Drawer,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-AWAY-6",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-AWAY-7",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Drawer,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Drawer,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-REDRAW",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Drawer,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Drawer,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "hold": 0,
+  "bot": "Drawer"
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-REDRAW-1",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-REDRAW-2",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-REDRAW-3",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-REDRAW-4",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Drawer",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Drawer"
+ },
+ {
+  "hold": 1,
+  "bot": "Drawer"
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:B-END",
+  "after": 200
+ },
+ {
+  "quit": true,
+  "bot": "Drawer"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "tp Runner 100 -60 50",
+  "after": 400
+ },
+ {
+  "wait": 4000
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-BASE",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-DRAW",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "hold": 1,
+  "bot": "Runner"
+ },
+ {
+  "console": "bartizan weapon give Runner pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "Put that away",
+  "timeout": 15000,
+  "bot": "Runner"
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-NOPULL-1",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3800
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-NOPULL-2",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3800
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-NOPULL-3",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3800
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-NOPULL-4",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3800
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-NOPULL-5",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3800
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-NOPULL-6",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3800
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-1",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-2",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-3",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-4",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-5",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-6",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-7",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-8",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-9",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-10",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-11",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-12",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-13",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-14",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-15",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-16",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-17",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-18",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-19",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:A-HOLD-20",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "console": "say CNCMARK:BRANDISH:END",
+  "after": 200
+ },
+ {
+  "quit": true,
+  "bot": "Runner"
+ }
+]

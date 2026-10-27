@@ -1,0 +1,1731 @@
+[
+ {
+  "console": "gamerule spawn_mobs false",
+  "after": 300
+ },
+ {
+  "console": "gamerule spawn_monsters false",
+  "after": 300
+ },
+ {
+  "console": "gamerule spawn_wandering_traders false",
+  "after": 300
+ },
+ {
+  "console": "gamerule advance_time false",
+  "after": 300
+ },
+ {
+  "console": "time set 6000",
+  "after": 300
+ },
+ {
+  "console": "weather clear",
+  "after": 300
+ },
+ {
+  "console": "say CNCMARK:CIV:A-START",
+  "after": 200
+ },
+ {
+  "join": "Silent"
+ },
+ {
+  "console": "effect give Silent minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Silent minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Silent minecraft:strength 1200 100 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Silent",
+  "after": 300
+ },
+ {
+  "console": "clear Silent",
+  "after": 300
+ },
+ {
+  "console": "tp Silent 0.5 -60 0.5 0 0",
+  "after": 500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Silent"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Silent"
+ },
+ {
+  "console": "execute at Silent run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add W_A",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=W_A] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=W_A,limit=1] 0.5 -60 8.5 180 0",
+  "after": 300
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Silent"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Silent"
+ },
+ {
+  "console": "execute at Silent run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add V_A",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=V_A] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V_A,limit=1] 2.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "console": "say CNCMARK:CIV:A-PRE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Silent"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:CIV:A-CRIME",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   2.5,
+   -58.6,
+   0.5
+  ],
+  "bot": "Silent"
+ },
+ {
+  "attack": {
+   "near": [
+    2.5,
+    -60,
+    0.5
+   ],
+   "type": "villager"
+  },
+  "after": 300,
+  "bot": "Silent"
+ },
+ {
+  "console": "say CNCMARK:CIV:A-NOTICE",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 1800
+ },
+ {
+  "console": "say CNCMARK:CIV:A-DIAL",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 8000
+ },
+ {
+  "console": "say CNCMARK:CIV:A-LANDED",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_A,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Silent"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "chat": "/glw wanted clear",
+  "after": 1500,
+  "bot": "Silent"
+ },
+ {
+  "quit": true,
+  "bot": "Silent"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:CIV:B-START",
+  "after": 200
+ },
+ {
+  "join": "Backer"
+ },
+ {
+  "console": "effect give Backer minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Backer minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Backer minecraft:strength 1200 100 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Backer",
+  "after": 300
+ },
+ {
+  "console": "clear Backer",
+  "after": 300
+ },
+ {
+  "console": "tp Backer 600.5 -60 0.5 0 0",
+  "after": 500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "join": "Decoy"
+ },
+ {
+  "console": "effect give Decoy minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Decoy minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Decoy minecraft:strength 1200 100 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Decoy",
+  "after": 300
+ },
+ {
+  "console": "clear Decoy",
+  "after": 300
+ },
+ {
+  "console": "tp Decoy 600.5 -60 20.5 0 0",
+  "after": 500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Backer"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Backer"
+ },
+ {
+  "console": "execute at Backer run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add W_B",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=W_B] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=W_B,limit=1] 600.5 -60 14.5 0 0",
+  "after": 300
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Backer"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Backer"
+ },
+ {
+  "console": "execute at Backer run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add V_B",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=V_B] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V_B,limit=1] 602.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "console": "say CNCMARK:CIV:B-PRE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Backer"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:CIV:B-CRIME",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   602.5,
+   -58.6,
+   0.5
+  ],
+  "bot": "Backer"
+ },
+ {
+  "attack": {
+   "near": [
+    602.5,
+    -60,
+    0.5
+   ],
+   "type": "villager"
+  },
+  "after": 300,
+  "bot": "Backer"
+ },
+ {
+  "console": "say CNCMARK:CIV:B-NOTICE",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 10000
+ },
+ {
+  "console": "say CNCMARK:CIV:B-AFTER",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_B,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Backer"
+ },
+ {
+  "wait": 1000
+ },
+ {
+  "chat": "/glw wanted clear",
+  "after": 1500,
+  "bot": "Backer"
+ },
+ {
+  "quit": true,
+  "bot": "Backer"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:CIV:C-START",
+  "after": 200
+ },
+ {
+  "join": "Loud"
+ },
+ {
+  "console": "effect give Loud minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Loud minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Loud minecraft:strength 1200 100 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Loud",
+  "after": 300
+ },
+ {
+  "console": "clear Loud",
+  "after": 300
+ },
+ {
+  "console": "tp Loud 1200.5 -60 0.5 0 0",
+  "after": 500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "console": "tp Decoy 1200.5 -60 20.5 0 0",
+  "after": 500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Loud"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Loud"
+ },
+ {
+  "console": "execute at Loud run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add W_C",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=W_C] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=W_C,limit=1] 1200.5 -60 14.5 0 0",
+  "after": 300
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Loud"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Loud"
+ },
+ {
+  "console": "execute at Loud run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add V_C",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=V_C] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V_C,limit=1] 1202.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "hold": 1,
+  "bot": "Loud"
+ },
+ {
+  "console": "bartizan weapon give Loud pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Loud"
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "console": "data get entity Loud SelectedItem",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:CIV:C-PRE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Loud"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:CIV:C-SHOT",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   1200.5,
+   -40,
+   0.5
+  ],
+  "bot": "Loud"
+ },
+ {
+  "useItem": true,
+  "after": 300,
+  "bot": "Loud"
+ },
+ {
+  "console": "data get entity Loud SelectedItem",
+  "after": 150
+ },
+ {
+  "hold": 1,
+  "bot": "Loud"
+ },
+ {
+  "console": "say CNCMARK:CIV:C-CRIME",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   1202.5,
+   -58.6,
+   0.5
+  ],
+  "bot": "Loud"
+ },
+ {
+  "attack": {
+   "near": [
+    1202.5,
+    -60,
+    0.5
+   ],
+   "type": "villager"
+  },
+  "after": 300,
+  "bot": "Loud"
+ },
+ {
+  "console": "say CNCMARK:CIV:C-NOTICE",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 1800
+ },
+ {
+  "console": "say CNCMARK:CIV:C-DIAL",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 8000
+ },
+ {
+  "console": "say CNCMARK:CIV:C-LANDED",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_C,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Loud"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "chat": "/glw wanted clear",
+  "after": 1500,
+  "bot": "Loud"
+ },
+ {
+  "quit": true,
+  "bot": "Loud"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "quit": true,
+  "bot": "Decoy"
+ },
+ {
+  "wait": 1000
+ },
+ {
+  "console": "say CNCMARK:CIV:D-START",
+  "after": 200
+ },
+ {
+  "join": "Grabber"
+ },
+ {
+  "console": "effect give Grabber minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Grabber minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Grabber minecraft:strength 1200 100 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Grabber",
+  "after": 300
+ },
+ {
+  "console": "clear Grabber",
+  "after": 300
+ },
+ {
+  "console": "tp Grabber 1800.5 -60 0.5 0 0",
+  "after": 500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Grabber"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Grabber"
+ },
+ {
+  "console": "execute at Grabber run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add W_D",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=W_D] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=W_D,limit=1] 1800.5 -60 8.5 180 0",
+  "after": 300
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Grabber"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Grabber"
+ },
+ {
+  "console": "execute at Grabber run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add V_D",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=V_D] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V_D,limit=1] 1802.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Grabber"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Grabber"
+ },
+ {
+  "console": "execute at Grabber run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add V2_D",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=V2_D] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V2_D,limit=1] 1840.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Grabber"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Grabber"
+ },
+ {
+  "console": "execute at Grabber run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add V3_D",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=V3_D] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V3_D,limit=1] 1840.5 -60 4.5 180 0",
+  "after": 300
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "console": "say CNCMARK:CIV:D-PRE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Grabber"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:CIV:D-CRIME",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   1802.5,
+   -58.6,
+   0.5
+  ],
+  "bot": "Grabber"
+ },
+ {
+  "attack": {
+   "near": [
+    1802.5,
+    -60,
+    0.5
+   ],
+   "type": "villager"
+  },
+  "after": 300,
+  "bot": "Grabber"
+ },
+ {
+  "console": "say CNCMARK:CIV:D-NOTICE",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 1800
+ },
+ {
+  "console": "say CNCMARK:CIV:D-DIAL",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "tp Grabber 1800.5 -60 6.5 0 0",
+  "after": 600
+ },
+ {
+  "hold": 1,
+  "bot": "Grabber"
+ },
+ {
+  "lookAt": [
+   1800.5,
+   -58.4,
+   8.5
+  ],
+  "bot": "Grabber"
+ },
+ {
+  "console": "say CNCMARK:CIV:D-GRAB",
+  "after": 200
+ },
+ {
+  "activateEntity": {
+   "near": [
+    1800.5,
+    -60,
+    8.5
+   ],
+   "type": "villager"
+  },
+  "after": 800,
+  "bot": "Grabber"
+ },
+ {
+  "console": "say CNCMARK:CIV:D-STOPPED",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Grabber"
+ },
+ {
+  "expectLog": "Transitioning civilian .* from FLEEING state to IDLE",
+  "timeout": 30000
+ },
+ {
+  "console": "say CNCMARK:CIV:D-SETTLED",
+  "after": 200
+ },
+ {
+  "console": "tp Grabber 1800.5 -60 0.5 0 0",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=W_D,limit=1] 1800.5 -60 8.5 180 0",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V2_D,limit=1] 1802.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "wait": 2500
+ },
+ {
+  "console": "say CNCMARK:CIV:D-REPEAT-PRE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Grabber"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:CIV:D-REPEAT-CRIME",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   1802.5,
+   -58.6,
+   0.5
+  ],
+  "bot": "Grabber"
+ },
+ {
+  "attack": {
+   "near": [
+    1802.5,
+    -60,
+    0.5
+   ],
+   "type": "villager"
+  },
+  "after": 300,
+  "bot": "Grabber"
+ },
+ {
+  "wait": 400
+ },
+ {
+  "console": "say CNCMARK:CIV:D-REPEAT-NOTICE",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 10000
+ },
+ {
+  "console": "say CNCMARK:CIV:D-REPEAT-AFTER",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Grabber"
+ },
+ {
+  "wait": 50000
+ },
+ {
+  "console": "tp @e[tag=W_D,limit=1] 1800.5 -60 8.5 180 0",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V3_D,limit=1] 1802.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "wait": 2500
+ },
+ {
+  "console": "say CNCMARK:CIV:D-CONTROL-PRE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Grabber"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:CIV:D-CONTROL-CRIME",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   1802.5,
+   -58.6,
+   0.5
+  ],
+  "bot": "Grabber"
+ },
+ {
+  "attack": {
+   "near": [
+    1802.5,
+    -60,
+    0.5
+   ],
+   "type": "villager"
+  },
+  "after": 300,
+  "bot": "Grabber"
+ },
+ {
+  "console": "say CNCMARK:CIV:D-CONTROL-NOTICE",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 1800
+ },
+ {
+  "console": "say CNCMARK:CIV:D-CONTROL-DIAL",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 8000
+ },
+ {
+  "console": "say CNCMARK:CIV:D-CONTROL-LANDED",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_D,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Grabber"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "chat": "/glw wanted clear",
+  "after": 1500,
+  "bot": "Grabber"
+ },
+ {
+  "quit": true,
+  "bot": "Grabber"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:CIV:E-START",
+  "after": 200
+ },
+ {
+  "join": "Killer"
+ },
+ {
+  "console": "effect give Killer minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Killer minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Killer minecraft:strength 1200 100 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Killer",
+  "after": 300
+ },
+ {
+  "console": "clear Killer",
+  "after": 300
+ },
+ {
+  "console": "tp Killer 2400.5 -60 0.5 0 0",
+  "after": 500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Killer"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Killer"
+ },
+ {
+  "console": "execute at Killer run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add W_E",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=W_E] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=W_E,limit=1] 2440.5 -60 14.5 0 0",
+  "after": 300
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Killer"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Killer"
+ },
+ {
+  "console": "execute at Killer run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add V_E",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=V_E] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V_E,limit=1] 2402.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Killer"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Killer"
+ },
+ {
+  "console": "execute at Killer run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add V2_E",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=V2_E] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V2_E,limit=1] 2440.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "console": "say CNCMARK:CIV:E1-PRE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Killer"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:CIV:E1-CRIME",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   2402.5,
+   -58.6,
+   0.5
+  ],
+  "bot": "Killer"
+ },
+ {
+  "attack": {
+   "near": [
+    2402.5,
+    -60,
+    0.5
+   ],
+   "type": "villager"
+  },
+  "after": 300,
+  "bot": "Killer"
+ },
+ {
+  "wait": 10000
+ },
+ {
+  "console": "say CNCMARK:CIV:E1-AFTER",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Killer"
+ },
+ {
+  "console": "tp @e[tag=W_E,limit=1] 2400.5 -60 8.5 180 0",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=V2_E,limit=1] 2402.5 -60 0.5 180 0",
+  "after": 300
+ },
+ {
+  "wait": 2500
+ },
+ {
+  "console": "say CNCMARK:CIV:E2-PRE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Killer"
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:CIV:E2-CRIME",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   2402.5,
+   -58.6,
+   0.5
+  ],
+  "bot": "Killer"
+ },
+ {
+  "attack": {
+   "near": [
+    2402.5,
+    -60,
+    0.5
+   ],
+   "type": "villager"
+  },
+  "after": 300,
+  "bot": "Killer"
+ },
+ {
+  "console": "say CNCMARK:CIV:E2-NOTICE",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 1800
+ },
+ {
+  "console": "say CNCMARK:CIV:E2-DIAL",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "wait": 8000
+ },
+ {
+  "console": "say CNCMARK:CIV:E2-LANDED",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=W_E,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 700,
+  "bot": "Killer"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "chat": "/glw wanted clear",
+  "after": 1500,
+  "bot": "Killer"
+ },
+ {
+  "quit": true,
+  "bot": "Killer"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:CIV:END",
+  "after": 200
+ },
+ {
+  "wait": 1000
+ }
+]

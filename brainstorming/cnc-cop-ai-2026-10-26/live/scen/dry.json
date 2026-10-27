@@ -1,0 +1,144 @@
+[
+ {
+  "console": "gamerule spawn_mobs false",
+  "after": 300
+ },
+ {
+  "console": "gamerule spawn_monsters false",
+  "after": 300
+ },
+ {
+  "console": "gamerule advance_time false",
+  "after": 300
+ },
+ {
+  "console": "time set 6000",
+  "after": 300
+ },
+ {
+  "console": "weather clear",
+  "after": 300
+ },
+ {
+  "join": "Runner"
+ },
+ {
+  "console": "effect give Runner minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Runner minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode creative Runner",
+  "after": 200
+ },
+ {
+  "console": "clear Runner",
+  "after": 300
+ },
+ {
+  "chat": "/glw cop setup wand",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "wand given",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "hold": 0,
+  "bot": "Runner"
+ },
+ {
+  "console": "tp Runner 0 -60 8",
+  "after": 400
+ },
+ {
+  "chat": "/glw cop setup mode station",
+  "after": 600,
+  "bot": "Runner"
+ },
+ {
+  "leftClick": [
+   0,
+   -61,
+   10
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos1 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "chat": "/glw cop setup save Dry Station",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "Station .* saved|already exists",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "console": "gamemode survival Runner",
+  "after": 200
+ },
+ {
+  "console": "clear Runner",
+  "after": 300
+ },
+ {
+  "console": "tp Runner 0 -60 14",
+  "after": 300
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "console": "say CNCMARK:DRY:P0",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "execute at @a[name=Runner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Runner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 300
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "wanted|stars?|level",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "console": "say CNCMARK:DRY:END",
+  "after": 200
+ },
+ {
+  "quit": true
+ }
+]

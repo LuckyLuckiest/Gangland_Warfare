@@ -1,0 +1,802 @@
+diff --git a/documentation/developer/cops-n-crooks.md b/documentation/developer/cops-n-crooks.md
+index af6f3663a..3c0f2c6d8 100644
+--- a/documentation/developer/cops-n-crooks.md
++++ b/documentation/developer/cops-n-crooks.md
+@@ -642,9 +642,9 @@ Recycling (Cops.Stuck): each spawn run, a PURSUING/COMBAT cop hunting the group'
+ millisUnreachable() >= Recycle_Seconds is released unless the player sees it (60-degree cone plus clear line
+ within max(24, Visibility_Check_Distance); past 2x Recycle_Seconds within 24 only), it is within melee reach on his
+ level (|dy| <= 1.5, clear line), or another player faces it (past 2x Recycle_Seconds: another real player with it in
+-his cone, clear line, within 24). A recycle also tips the group's squad off to the player's spot now
+-(NpcSquad.reportSighting), so the replacements do not hunt a last-known spot nobody could reach. The same run
+-refills the group, capped at Max_Per_Player.
++his cone, clear line, within 24). A recycle is no news of the player (0.21.1, R4): no tip and no tip-off, so the
++replacements inherit the squad's own last-known spot, its search circle keeps widening and the evasion clock keeps
++running (T-147). The same run refills the group, capped at Max_Per_Player.
+ 
+ Tier selection: `tier = min(wantedLevel, maxTier)`
+ 
+@@ -1210,13 +1210,32 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
+ **0.21.1 spawn and dispatch (cnc-cop-ai lane spawn).**
+ - `CopManager.spawnTick` releases a stranded RETURNING cop (`isStrandedReturning`) that no real player watches
+   (`isWatched`: `CopSightlines.inView` with line of sight within `max(24, Visibility_Check_Distance)`, Citizens NPCs
+-  skipped; not `isVisibleToOtherPlayers`, which counts NPCs and the walker itself) and tips the squad with
+-  `NpcSquad.reportTip(player.getLocation())` + `markTipOff`, the same snapshot `recycles()` gives. Before dispatching it
+-  trims the queue to `targetCount - counted` (`CopGroup.trimPending`, newest first), so a level drop calls off units.
+-  `spawnDueUnits` gives a unit queued before a hand-off the group's active bias. `reengageReturning` skips stranded cops.
++  skipped; not `isVisibleToOtherPlayers`, which counts NPCs and the walker itself). Neither this release nor
++  `recycles()` tips the squad (review r2, R4): no `reportTip`, no `markTipOff`, not even
++  `reportTip(lastKnownLocation())`, because `reportTip` re-stamps the search circle back to 6 blocks; the refill
++  inherits the squad's own lead and its widening circle (pinned by `strandedReleased_searchCircleKeepsWidening` and
++  `recycle_searchCircleKeepsWidening`). Before dispatching it trims the queue to `targetCount - counted`
++  (`CopGroup.trimPending`, newest first), so a level drop calls off units. Live cops over the target go home through
++  `releaseSurplus`, never the last Commander, only when the level's base target dropped below `CopGroup.lastTarget`
++  (T-435): radio responders joining at the same target stay, and the post-escape search (wanted level 0, run at one
++  star) never sends home the walkers `keepSquadOnSearch` called back (T-187). A new wanted start calls back walkers in
++  range only up to the new level's target (`reengageReturning(group, player, limit, eligible)`, nearest first). A
++  walker the group sent home (`releaseSurplus`, or left over by that capped call back) is marked in
++  `CopGroup.sentHome`: it is out of the counted cops, and while the group lacks cops (a level rise, a casualty) the
++  nearest one in range is called back before anything spawns (T-436). Only a new wanted start and `releaseSurplus`
++  mark: inside an episode a walker rotated out of a pursuit or leashed is never marked, so the D1 no-bounce rule holds
++  there. `spawnDueUnits` lends a unit queued before a hand-off the group's
++  active bias; a unit refused a spot is requeued without a bias that ran out (T-434). `reengageReturning` skips
++  stranded cops.
+ - Tips (Keystone 1.15.4 `reportTip`, no sighting stamp): the wanted start (plus `markTipOff`, which keeps the
+-  `Dispatch_Wanted` once-per-hunt gate and the evasion hold), the recycle, the biased spawn seed, and a hit on a cop
+-  that has no line of sight to the attacker. Only member sightings make `NpcPursuit` chase the live position.
++  `Dispatch_Wanted` once-per-hunt gate and the evasion hold), the biased spawn seed, and a hit on a cop that has no line
++  of sight to the attacker. The seed (`reportTip(bias.lastSeen())` plus `markTipOff`) is given once per hand-off bias
++  and only while no sighting or tip moved the squad's lead since the bias was set (`CopGroup.takeBiasSeed`, T-434), so
++  it never rewinds a fresher lead or the hand-off heading sampled from it. Since the bias's `lastSeen` is the squad's
++  lead at the hand-off, the seed re-tips that same spot: it deliberately restarts the search circle at 6 blocks, once
++  per hand-off (not once per refill), so the units the hand-off sent search the spot they were sent to. Leash release
++  and recycle never re-tip (above). Only member sightings make `NpcPursuit`
++  chase the live position.
+ - `CopSpawnManager.fits(target)` gates every spawn path (`spawnUnit` and `spawnNearPlayer`): within
+   `0.75 x Pursuit.Max_Distance` (3D) and not `inViewOf` (60 degree eye cone plus `isOutOfSight` false). The ring
+   fallback takes no Keystone predicate, so a ring spot in view returns `null` (the caller retries next run). A biased unit
+diff --git a/documentation/features/cops-n-crooks.md b/documentation/features/cops-n-crooks.md
+index f2de74229..0d05df381 100644
+--- a/documentation/features/cops-n-crooks.md
++++ b/documentation/features/cops-n-crooks.md
+@@ -438,7 +438,7 @@ player's world:
+   `Cops.Pursuit.Max_Distance` (60 blocks) of him, so a fresh cop is not past the pursuit leash the second it spawns.
+ - **Lost cops leave (0.21.1).** A cop that gave up the chase beyond `Cops.Pursuit.Max_Distance` is removed as soon as
+   no player is looking at it, instead of walking home for up to five minutes. Nobody saw where the player went, so the
+-  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive. While the whole squad is lost
++  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count (the squad's last Commander stays). A new wanted level started while the last squad is still walking home calls back only as many of them as the new level needs. Cops sent home that are still in range are the first called back when the level rises again or a cop falls. Cops answering a radio call stay even when they put the squad over its count, and the post-escape search keeps every cop it called back. While the whole squad is lost
+   (cops walking home, a hand-off pending, units on the road) the evasion countdown pauses instead of restarting.
+ - **Tips are not sightings (0.21.1).** The crime scene, a hand-off seed and a hit from cover tell the squad where to
+   search; only a cop who really sees the player makes the squad chase his live position.
+@@ -485,7 +485,7 @@ search; a new sighting re-arms it. A posted cop that the suspect attacks drops i
+ When the suspect outruns the cops that chased him (the pursuers give up and walk home) the squad leader radios his
+ heading ("Lost him heading north-east. Units ahead, pick him up.") and the **next units appear ahead of him**: for
+ `Handoff.Bias_Seconds` (10) new units spawn within `Cone_Degrees` (60) of the heading and report his last position,
+-not his live one. The heading is read over the last `Heading_Seconds` (2) of his movement.
++not his live one; the first of them reports it once, and not at all if a cop has spotted him since. The heading is read over the last `Heading_Seconds` (2) of his movement.
+ 
+ ### Hideouts and the cold trail
+ 
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopGroup.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopGroup.java
+index a89845a46..7b9873819 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopGroup.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopGroup.java
+@@ -11,6 +11,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
+ import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
+ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
++import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+ import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+ import org.luckyraven.keystone.npc.NpcSquad;
+ import org.luckyraven.keystone.npc.entity.NpcMarkManager;
+@@ -19,8 +20,11 @@ import org.luckyraven.keystone.npc.spi.NpcSquadListener;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.HashMap;
++import java.util.HashSet;
+ import java.util.List;
+ import java.util.Map;
++import java.util.Objects;
++import java.util.Set;
+ import java.util.UUID;
+ 
+ /**
+@@ -77,11 +81,20 @@ public class CopGroup {
+ 	@Setter
+ 	private long fallBackUntil;
+ 
+-	/** Backup cops still to send home after a backup ran out; kept until enough are free to go. */
++	/** Cops still to send home: a run-out backup's extras, or those over a dropped target (T-435); kept until free. */
+ 	@Setter
+ 	private int  pendingRelease;
++	/** The cop target of the last spawn run at a wanted level (not the search's); a lower one is a drop (T-435). */
++	@Setter
++	private int  lastTarget;
++	/**
++	 * Walkers the group sent home or left walking (a lowered target, a run-out backup, a smaller new episode): out of
++	 * the hunt's count, and called back first while the group lacks cops (T-436). Read through {@link #isSentHome}.
++	 */
++	@Getter(AccessLevel.NONE)
++	private final Set<CopNpc> sentHome = new HashSet<>();
+ 
+-	/** Radio-clock ms of the latest stuck-recycle tip-off; 0 when none. */
++	/** Radio-clock ms of the latest tip-off (a crime-scene start, a hand-off seed); 0 when none. */
+ 	private long tipOffAt;
+ 
+ 	/** Radio-clock ms of recent casualties, for {@link #shouldRegroup}. */
+@@ -97,6 +110,15 @@ public class CopGroup {
+ 	/** The hand-off's spawn bias; read through {@link #biasAt}, which drops it once expired. */
+ 	@Getter(AccessLevel.NONE)
+ 	private @Nullable SpawnBias bias;
++	/** The latest bias set, kept past its expiry: units dispatched under it still spawn with it (T-434). */
++	@Getter(AccessLevel.NONE)
++	private @Nullable SpawnBias seedBias;
++	/** The squad's last-known spot when {@link #seedBias} was set. */
++	@Getter(AccessLevel.NONE)
++	private @Nullable Location  seedLead;
++	/** {@link #seedBias} seeded the squad, or a newer lead made its seed stale. */
++	@Getter(AccessLevel.NONE)
++	private boolean             seedSpent;
+ 	private boolean backupHeld;
+ 	/** Radio-clock ms of the latest casualty; a regroup clears {@link #casualtyTimes} but not this. */
+ 	private long    lastCasualtyAt;
+@@ -122,11 +144,24 @@ public class CopGroup {
+ 		cop.setGroup(this);
+ 	}
+ 
++	/** Marks a walker of the group as sent home by it ({@link #sentHome}); the caller turns it RETURNING. */
++	public void markSentHome(CopNpc cop) {
++		sentHome.add(cop);
++	}
++
++	/** Whether {@code cop} walks home because the group sent it; a cop back on duty loses the mark. */
++	public boolean isSentHome(CopNpc cop) {
++		if (cop.getCurrentState() == CopState.RETURNING) return sentHome.contains(cop);
++		sentHome.remove(cop);
++		return false;
++	}
++
+ 	/**
+ 	 * Destroys a cop that left the group (despawned, killed or invalid) and drops it from every squad. The caller
+ 	 * removes it from {@link #getCops()}: both call sites are iterating that list.
+ 	 */
+ 	public void release(CopNpc cop, NpcMarkManager markManager) {
++		sentHome.remove(cop);
+ 		squad.remove(cop);
+ 		leaveAttackerSquads(cop);
+ 		cop.destroy(entity -> markManager.removeMark(entity));
+@@ -134,6 +169,7 @@ public class CopGroup {
+ 
+ 	/** Moves a live cop out of this group (a radio responder joining another one); the cop is not destroyed. */
+ 	public void detach(CopNpc cop) {
++		sentHome.remove(cop);
+ 		cops.remove(cop);
+ 		squad.remove(cop);
+ 		leaveAttackerSquads(cop);
+@@ -278,7 +314,7 @@ public class CopGroup {
+ 		return false;
+ 	}
+ 
+-	/** Stamps the latest tip-off (a crime-scene start, a hand-off seed) at {@code now} (radio-clock ms). */
++	/** Stamps the latest tip-off (a crime-scene start, a hand-off's one seed) at {@code now} (radio-clock ms). */
+ 	public void markTipOff(long now) {
+ 		tipOffAt = now;
+ 	}
+@@ -376,6 +412,24 @@ public class CopGroup {
+ 	/** The hand-off's spawn bias for units enqueued from now on ({@code null} clears it). */
+ 	public void setBias(@Nullable SpawnBias bias) {
+ 		this.bias = bias;
++		if (bias == null) return;
++		seedBias  = bias;
++		seedLead  = squad.lastKnownLocation();
++		seedSpent = false;
++	}
++
++	/**
++	 * Whether a unit spawning under {@code unitBias} seeds the squad with its last-seen spot (T-434): only the latest
++	 * bias, only once, and only while no sighting or tip moved the squad's lead since that bias was set. A newer lead is
++	 * fresher than the hand-off spot, so the seed would rewind it (and the hand-off heading sampled from it); a second
++	 * seed of the same spot would only shrink the search circle back to its start. Spends the seed either way.
++	 */
++	// ponytail: "moved" is a location compare, as Keystone 1.15.4 NpcSquad exposes no lastKnownAt; a sighting at the
++	// exact same spot reads as no news, which only costs one more seed of that spot. Upgrade: a lead stamp upstream.
++	public boolean takeBiasSeed(@Nullable SpawnBias unitBias) {
++		if (unitBias == null || unitBias != seedBias || seedSpent) return false;
++		seedSpent = true;
++		return Objects.equals(squad.lastKnownLocation(), seedLead);
+ 	}
+ 
+ 	/** The hand-off bias, {@code null} once it expired. */
+@@ -416,5 +470,6 @@ public class CopGroup {
+ 			cop.destroy(entity -> markManager.removeMark(entity));
+ 		}
+ 		cops.clear();
++		sentHome.clear();
+ 	}
+ }
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java
+index 43e0dc066..3db79c209 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java
+@@ -168,8 +168,12 @@ public class CopManager implements BeanLifecycle {
+ 
+ 		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
+ 		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
+-		// which only guards against a per-tick bounce inside a single episode.
+-		reengageReturning(group, player);
++		// which only guards against a per-tick bounce inside a single episode. Only up to the new level's target (T-435):
++		// the walkers over it keep walking, sent home, and come back first if the group lacks cops later (T-436).
++		int target  = Math.min(spawnManager.getTargetCopCount(wanted.getLevel()), configProvider.getMaxCopsPerPlayer());
++		int engaged = (int) group.getCops().stream()
++		                         .filter(cop -> cop.isValid() && cop.getCurrentState() != CopState.RETURNING).count();
++		reengageReturning(group, player, target - engaged, cop -> true);
+ 
+ 		startSpawnTask(playerId, wanted);
+ 		startAITask(playerId);
+@@ -303,23 +307,42 @@ public class CopManager implements BeanLifecycle {
+ 			for (CopNpc cop : group.getCops()) {
+ 				if (cop.getCurrentState() == CopState.CUFFING) cop.transitionTo(CopState.PURSUING);
+ 			}
+-			// The owner ruling: the search goes on, so cops already walking home come back to it
+-			reengageReturning(group, player);
++			// The owner ruling: the search goes on, so cops already walking home come back to it, every one of them
++			// (the search's one-star squad never sends the surplus home: spawnTick)
++			reengageReturning(group, player, Integer.MAX_VALUE, cop -> true);
+ 		}
+ 	}
+ 
+ 	/**
+-	 * Pulls the group's returning cops within {@code Pursuit.Max_Distance} of {@code player} back into the hunt. One
+-	 * farther out would leash again on its next tick and restart its walk home (T-131, cause 5): it stays RETURNING.
++	 * Pulls up to {@code limit} of the group's returning cops within {@code Pursuit.Max_Distance} of {@code player} that
++	 * pass {@code eligible} back into the hunt, nearest first; the eligible ones over the limit are marked sent home
++	 * (T-436). One farther out would leash again on its next tick and restart its walk home (T-131, cause 5): it stays
++	 * RETURNING.
++	 *
++	 * @return the cops called back
+ 	 */
+-	private void reengageReturning(CopGroup group, Player player) {
+-		double maxDist = configProvider.getPursuitMaxDistance();
++	private List<CopNpc> reengageReturning(CopGroup group, Player player, int limit, Predicate<CopNpc> eligible) {
++		double       maxDist = configProvider.getPursuitMaxDistance();
++		List<CopNpc> walkers = new ArrayList<>();
+ 		for (CopNpc cop : group.getCops()) {
+-			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING) continue;
+-			if (isStrandedReturning(cop, player, maxDist)) continue;
++			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) continue;
++			if (isStrandedReturning(cop, player, maxDist) || !eligible.test(cop)) continue;
++			walkers.add(cop);
++		}
++		Location at = player.getLocation();
++		walkers.sort(Comparator.comparingDouble(cop -> cop.getEntity().getLocation().distanceSquared(at)));
++
++		List<CopNpc> back = new ArrayList<>();
++		for (CopNpc cop : walkers) {
++			if (back.size() >= limit) {
++				group.markSentHome(cop);
++				continue;
++			}
+ 			cop.setTargetPlayerId(player.getUniqueId());
+ 			cop.transitionTo(CopState.PURSUING);
++			back.add(cop);
+ 		}
++		return back;
+ 	}
+ 
+ 	/**
+@@ -767,10 +790,13 @@ public class CopManager implements BeanLifecycle {
+ 		}
+ 		group.setLastTier(tier);
+ 
+-		int targetCount  = Math.min(spawnManager.getTargetCopCount(wantedLevel) + group.backupExtra(now, backup),
+-		                            configProvider.getMaxCopsPerPlayer());
+-		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count.
+-		List<CopNpc> counted = cops.stream().filter(c -> !isStrandedReturning(c, player, maxDist)).toList();
++		int baseTarget   = Math.min(spawnManager.getTargetCopCount(wantedLevel), configProvider.getMaxCopsPerPlayer());
++		int targetCount  = Math.min(baseTarget + group.backupExtra(now, backup), configProvider.getMaxCopsPerPlayer());
++		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count. Nor
++		// is one the group sent home (T-436), but while the group lacks cops the nearest in range comes back first.
++		List<CopNpc> counted = new ArrayList<>(cops.stream().filter(
++				c -> !isStrandedReturning(c, player, maxDist) && !group.isSentHome(c)).toList());
++		counted.addAll(reengageReturning(group, player, targetCount - counted.size(), group::isSentHome));
+ 		int currentCount = counted.size();
+ 		// Each new cop takes the composition's first role no counted cop holds, so a stranded one's role is refilled.
+ 		List<CopRole> composition = configProvider.getSquadComposition(wantedLevel);
+@@ -818,6 +844,15 @@ public class CopManager implements BeanLifecycle {
+ 		}
+ 
+ 		group.consumeBackupExpiry(now, backup);
++		// T-435: a lowered target (a level drop, a new episode at a lower level) leaves live cops over it, and trimPending
++		// only calls off queued units: the surplus goes home like an expired backup's extras. Only on a drop: radio
++		// responders joining at the same target stay, and the post-escape search (level 0, run at one star) keeps every
++		// cop it called back (T-187)
++		if (wanted.getLevel() > 0) {
++			if (baseTarget < group.getLastTarget() && currentCount > targetCount)
++				group.setPendingRelease(Math.max(group.getPendingRelease(), currentCount - targetCount));
++			group.setLastTarget(baseTarget);
++		}
+ 		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount, composition);
+ 		group.pruneAttackerSquads();
+ 	}
+@@ -877,24 +912,25 @@ public class CopManager implements BeanLifecycle {
+ 	/**
+ 	 * Spawns the queued units that are due. The first one that finds no spot stops the run (the 0.15 "stop trying this
+ 	 * interval" rule): the rest of the due units are requeued untried, ahead of it, so a suspect with no valid spot around him
+-	 * costs one failed search per run, not one per unit. A unit enqueued under a hand-off bias
+-	 * seeds the squad with the bias's last sighting and a tip-off when it spawns (CONTRACTS C11), so the evasion clock
+-	 * holds instead of reading the seed as a fresh sighting.
++	 * costs one failed search per run, not one per unit; a requeued unit drops a bias that ran out (T-434). The first
++	 * unit spawning under a hand-off bias seeds the squad with the bias's last sighting as a tip plus a tip-off
++	 * (CONTRACTS C11), unless a sighting or tip since the hand-off is fresher ({@link CopGroup#takeBiasSeed}).
+ 	 */
+ 	private void spawnDueUnits(Player player, CopGroup group, long now) {
+ 		UUID      playerId = player.getUniqueId();
+ 		SpawnBias active   = group.biasAt(now);
+ 		List<PendingUnit> due = group.takeDue(now);
+ 		for (int i = 0; i < due.size(); i++) {
+-			PendingUnit unit = due.get(i);
++			PendingUnit queued = due.get(i);
++			PendingUnit unit   = queued;
+ 			// a unit queued before the hand-off still spawns ahead of him and seeded while its bias is active
+-			if (unit.bias() == null && active != null)
+-				unit = new PendingUnit(unit.role(), unit.tier(), unit.arriveAt(), unit.station(), active);
++			if (unit.bias() == null && active != null) unit = withBias(unit, active);
+ 			CopNpc newCop = spawnManager.spawnUnit(player, unit, loc -> !group.isAvoided(loc, now));
+ 			if (newCop == null) {
+-				// the untried units go first next run: a unit refused at its one spot must not block those behind it
+-				due.subList(i + 1, due.size()).forEach(group::requeue);
+-				group.requeue(unit);
++				// the untried units go first next run: a unit refused at its one spot must not block those behind it.
++				// Requeued as queued (a borrowed bias is borrowed again only while active), less a bias that ran out
++				due.subList(i + 1, due.size()).forEach(next -> group.requeue(dropExpiredBias(next, now)));
++				group.requeue(dropExpiredBias(queued, now));
+ 				return;
+ 			}
+ 
+@@ -903,7 +939,7 @@ public class CopManager implements BeanLifecycle {
+ 			newCop.transitionTo(CopState.PURSUING);
+ 			group.add(newCop);
+ 
+-			if (unit.bias() != null) {
++			if (group.takeBiasSeed(unit.bias())) {
+ 				// a tip, not a sighting (R4): no member saw him at the hand-off spot
+ 				group.getSquad().reportTip(unit.bias().lastSeen());
+ 				group.markTipOff(now);
+@@ -911,6 +947,15 @@ public class CopManager implements BeanLifecycle {
+ 		}
+ 	}
+ 
++	private static PendingUnit withBias(PendingUnit unit, @Nullable SpawnBias bias) {
++		return new PendingUnit(unit.role(), unit.tier(), unit.arriveAt(), unit.station(), bias);
++	}
++
++	/** {@code unit} without its bias once that ran out at {@code now}; as is otherwise. */
++	private static PendingUnit dropExpiredBias(PendingUnit unit, long now) {
++		return unit.bias() == null || unit.bias().activeAt(now) ? unit : withBias(unit, null);
++	}
++
+ 	/**
+ 	 * The tier composition slot {@code slot} spawns at: its {@code "Role@tier"} tier (clamped to the top tier) when the
+ 	 * slot has one, else {@code starTier}, the wanted level's.
+@@ -1014,7 +1059,8 @@ public class CopManager implements BeanLifecycle {
+ 	}
+ 
+ 	/**
+-	 * Sends the backup's extras home once it ran out, until the group is back to {@code targetCount}: the newest free
++	 * Sends the backup's extras home once it ran out, and the cops over a lowered target (a new episode at a lower
++	 * level, a level drop: T-435), until the group is back to {@code targetCount}: the newest free
+ 	 * cops of a role the group holds more of than its base squad of {@code targetCount} ({@link CopRole#nextRole}), so a
+ 	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). The group's last Commander is
+ 	 * never sent, even when the wanted level fell to a composition without one. A cop in a fight, cuffing or guarding
+@@ -1072,6 +1118,7 @@ public class CopManager implements BeanLifecycle {
+ 
+ 			excess.merge(role, -1, Integer::sum);
+ 			cop.transitionTo(CopState.RETURNING);
++			group.markSentHome(cop);
+ 			group.setPendingRelease(group.getPendingRelease() - 1);
+ 			surplus--;
+ 		}
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/escape/PostEscapeSpotting.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/escape/PostEscapeSpotting.java
+index c2bd64d64..35893187b 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/escape/PostEscapeSpotting.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/escape/PostEscapeSpotting.java
+@@ -19,18 +19,19 @@ import java.util.function.Supplier;
+  * {@code Wanted.Post_Escape.Spotted_Stars}. The raise is a wanted start, which ends the search and resumes the normal chase
+  * with its HUD. 0 stars keeps the search harmless: the cops only trail him.
+  * <p>
+- * A tip-off is not a sighting (0.16.1 wanted-8): a stuck-recycle or hand-off stamps the squad's sighting at the suspect's
+- * real position, so a fresh sighting that the group tipped off within {@link #TIP_OFF_WINDOW_MS} is ignored, as
+- * {@code EvasionClock} ignores it. A sighting also counts only where the searched player stands (wanted-14).
++ * A tip-off is not a sighting (0.16.1 wanted-8): a wanted start or a hand-off's spawn seed stamps one, and a fresh
++ * sighting within {@link #TIP_OFF_WINDOW_MS} of it is ignored, as {@code EvasionClock} ignores it. Since 0.21.1 (R4)
++ * both are Keystone {@code reportTip}s, which no longer stamp a sighting; a stuck recycle and a leash release stamp
++ * nothing. A sighting also counts only where the searched player stands (wanted-14).
+  *
+  * @since 0.16.1
+  */
+ public final class PostEscapeSpotting {
+ 
+ 	/**
+-	 * The tip-off window. A stuck-recycle or hand-off stamps its tip-off at the AI tick's start, and the sighting it seeds
+-	 * lands a little later (after the spawn work of that tick), so the sighting can read a few ms past the tip-off's own
+-	 * window. The slack covers that gap (wanted-13). ponytail: fixed 1 s, a tick spending longer than that on spawns needs it
++	 * The tip-off window. A tip-off (the wanted start, a hand-off's spawn seed) is stamped during a tick's spawn work, and a
++	 * sighting a member makes around it can read a few ms past the tip-off's own window. The slack covers that gap
++	 * (wanted-13); a stuck recycle or a leash release stamps no tip-off (0.21.1, R4). ponytail: fixed 1 s, a tick spending longer than that on spawns needs it
+ 	 * widened, or the tip-off stamped after the sighting.
+ 	 */
+ 	static final long TIP_OFF_WINDOW_MS = NpcSquad.SIGHTING_GRACE_MS + 1000L;
+diff --git a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml
+index 9726ec7d6..0dcffe0c8 100644
+--- a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml
++++ b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml
+@@ -679,7 +679,7 @@ Cops:
+       Tier: 1
+       # Beat cops report wanted players to their squad.
+       Report_Wanted: true
+-      # Seconds a station waits after losing a beat cop (killed, despawned) before a replacement walks out.
++      # Seconds a station waits after losing a beat cop (killed or lost) before a replacement walks out.
+       Respawn_Seconds: 30
+ 
+    # Warning: a cop tells a player to put the weapon away before escalating.
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerDispatchTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerDispatchTest.java
+index e30d4bec6..b22246479 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerDispatchTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerDispatchTest.java
+@@ -516,6 +516,34 @@ class CopManagerDispatchTest {
+ 		assertTrue(group().tippedOffWithin(21_000L, 0L));
+ 	}
+ 
++	@Test
++	@DisplayName("T-434: a unit refused a spot is requeued without a bias it only borrowed, so it never outlives the bias")
++	void requeuedUnit_dropsTheBiasOnceItExpired() {
++		northside();
++		manager.onWantedStart(player, wanted);
++		manager.spawnTick(playerId, wanted);
++		Location  crimeScene = group().getSquad().lastKnownLocation();
++		SpawnBias bias       = new SpawnBias(new Vector(1, 0, 0), new Location(fx.world, 70, 64, 10), 30_000L, 60.0);
++		group().setBias(bias);
++		// the first try finds no spot (R6 refused every spot in view); the next ones do
++		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null)
++		                                               .thenAnswer(inv -> fx.cop(CopState.IDLE, 0, 0));
++
++		fx.clock[0] = 21_000L;
++		manager.spawnTick(playerId, wanted);
++		assertEquals(2, group().pendingCount(), "both units wait for the next run");
++
++		fx.clock[0] = 31_000L;
++		assertNull(group().biasAt(fx.clock[0]), "the bias ran out");
++		manager.spawnTick(playerId, wanted);
++
++		List<PendingUnit> tries = spawnedUnits(3);
++		assertSame(bias, tries.get(0).bias(), "the first try borrowed the active bias");
++		assertNull(tries.get(1).bias(), "the retry spawns without the expired bias");
++		assertNull(tries.get(2).bias());
++		assertEquals(crimeScene, group().getSquad().lastKnownLocation(), "no seed from a bias that ran out");
++	}
++
+ 	@Test
+ 	@DisplayName("a held backup never holds the base squad: a lost cop is still refilled")
+ 	void backupHeld_baseSquadStillRefills() {
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerFixture.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerFixture.java
+index a816a805d..6e058b46e 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerFixture.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerFixture.java
+@@ -33,6 +33,7 @@ import org.luckyraven.gangland.core.wanted.Wanted;
+ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.npc.TacticsConfig;
+ import org.luckyraven.keystone.npc.NpcMeleeProfile;
++import org.luckyraven.keystone.npc.NpcSquad;
+ import org.luckyraven.keystone.npc.entity.NpcMarkManager;
+ import org.luckyraven.keystone.npc.spi.NpcSquadListener;
+ import org.luckyraven.keystone.testkit.BukkitStatics;
+@@ -203,6 +204,27 @@ final class CopManagerFixture implements AutoCloseable {
+ 		bukkit.close();
+ 	}
+ 
++	/**
++	 * Moves the squad's search-circle stamp ({@code NpcSquad.lastKnownAt}, private in Keystone 1.15.4) {@code ms} into
++	 * the past and returns the new stamp: the circle around the last-known spot is as wide as {@code ms} of searching.
++	 * ponytail: reads a Keystone internal; a public {@code millisSinceLastKnown()} upstream would replace it.
++	 */
++	static long ageSearch(NpcSquad squad, long ms) {
++		try {
++			Field field = NpcSquad.class.getDeclaredField("lastKnownAt");
++			field.setAccessible(true);
++			field.setLong(squad, field.getLong(squad) - ms);
++			return field.getLong(squad);
++		} catch (ReflectiveOperationException exception) {
++			throw new IllegalStateException(exception);
++		}
++	}
++
++	/** The squad's search-circle stamp ({@code NpcSquad.lastKnownAt}): the circle widens from it. */
++	static long searchStamp(NpcSquad squad) {
++		return ageSearch(squad, 0L);
++	}
++
+ 	/**
+ 	 * {@code CopManager#onWantedStart} colours the tier name through {@code GanglandChatUtil}, which NPEs on an unset
+ 	 * {@code Settings.moneySymbol}; a CopManager test run on its own (no earlier test set the static) failed in setUp.
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java
+index 1a2e5d96d..49aef7ed9 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java
+@@ -100,4 +100,55 @@ class CopManagerHandoffTest {
+ 		for (PendingUnit unit : carrying) assertSame(bias, unit.bias());
+ 		assertEquals(20.0, group.getSquad().lastKnownLocation().getX());
+ 	}
++
++	@Test
++	@DisplayName("T-434: a biased unit spawning after a fresher sighting keeps that sighting, and the next hand-off heads on")
++	void handoffSeed_neverRewindsAFresherSighting() {
++		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
++		fx.manager.onWantedStart(player, wanted);
++		fx.manager.spawnTick(player.getUniqueId(), wanted);
++		CopGroup group = fx.manager.groupFor(player.getUniqueId());
++
++		// seen at x=10 then x=20, then the chase leashes out: hand-off at x=20, heading east
++		playerAt(10);
++		group.getSquad().reportSighting(player.getLocation());
++		controller.tick(player, group);
++		fx.clock[0] += 1_000L;
++		playerAt(20);
++		group.getSquad().reportSighting(player.getLocation());
++		controller.tick(player, group);
++		for (CopNpc cop : group.getCops()) {
++			cop.transitionTo(CopState.RETURNING);
++			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
++		}
++		fx.clock[0] += 1_000L;
++		controller.tick(player, group);
++		assertNotNull(group.biasAt(fx.clock[0]));
++
++		// a cop sees him at x=50 after the hand-off; then the biased refill spawns
++		fx.clock[0] += 1_000L;
++		playerAt(50);
++		group.getSquad().reportSighting(player.getLocation());
++		controller.tick(player, group);
++		fx.manager.spawnTick(player.getUniqueId(), wanted);
++		assertEquals(50.0, group.getSquad().lastKnownLocation().getX(), "the stale hand-off spot never rewinds a sighting");
++
++		fx.clock[0] += 1_000L;
++		controller.tick(player, group);
++
++		// the bias runs out; the refill chases him, then leashes out again: the second hand-off
++		fx.clock[0] += 10_000L;
++		controller.tick(player, group);
++		for (CopNpc cop : group.getCops()) {
++			cop.transitionTo(CopState.RETURNING);
++			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
++		}
++		fx.clock[0] += 1_000L;
++		controller.tick(player, group);
++
++		SpawnBias second = group.biasAt(fx.clock[0]);
++		assertNotNull(second, "the second hand-off");
++		assertTrue(second.heading().getX() > 0, "he ran east (20 then 50): heading " + second.heading());
++		assertEquals(50.0, second.lastSeen().getX());
++	}
+ }
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerSquadTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerSquadTest.java
+index 93f6359ed..f8855473d 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerSquadTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerSquadTest.java
+@@ -258,6 +258,155 @@ class CopManagerSquadTest {
+ 		assertFalse(group.tippedOffWithin(fx.clock[0], 0L), "a release is no tip-off: the evasion clock runs");
+ 	}
+ 
++	@Test
++	@DisplayName("r2 pin: a leash release re-tips nothing, so the search circle keeps widening from the squad's own stamp")
++	void strandedReleased_searchCircleKeepsWidening() {
++		manager.onWantedStart(player, wanted);
++		CopGroup group  = manager.groupFor(playerId);
++		CopNpc   walker = fx.cop(CopState.RETURNING, -500, 500);
++		walker.setTargetPlayerId(playerId);
++		group.add(walker);
++		// 40 s of searching the crime scene: the circle is already wide
++		long stamp = CopManagerFixture.ageSearch(group.getSquad(), 40_000L);
++		fx.clock[0] += 5_000L;
++
++		manager.spawnTick(playerId, wanted);
++
++		assertFalse(group.getCops().contains(walker), "released");
++		assertEquals(stamp, CopManagerFixture.searchStamp(group.getSquad()),
++		             "no reportTip, not even of the last-known spot: re-tipping would shrink the circle back to 6 blocks");
++	}
++
++	@Test
++	@DisplayName("T-435: a new episode at a lower level sends the re-engaged cops over its target home, never the Commander")
++	void newLowerEpisode_reengagedCopsOverTheTarget_areSentHome() {
++		Wanted three = CopManagerFixture.wanted(3);
++		Wanted one   = CopManagerFixture.wanted(1);
++		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
++		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
++		when(fx.provider.getSquadComposition(3)).thenReturn(List.of(COMMANDER, POINTMAN, ASSAULT, ASSAULT));
++		when(fx.provider.getSquadComposition(1)).thenReturn(List.of(COMMANDER, POINTMAN));
++		when(fx.spawner.spawnNearPlayer(any(), anyInt(), any(), any())).thenAnswer(inv -> {
++			CopNpc cop = fx.cop(CopState.IDLE, 0, 0);
++			when(cop.getRole()).thenReturn(inv.getArgument(3));
++			return cop;
++		});
++		manager.onWantedStart(player, three);
++		manager.spawnTick(playerId, three);
++		CopGroup group = manager.groupFor(playerId);
++		assertEquals(4, group.getCops().size());
++
++		// cleared: the four walk home, still within Pursuit.Max_Distance of him
++		manager.onWantedEnd(player, WantedCause.UNKNOWN);
++		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.RETURNING);
++		// a new episode at one star calls back only its two of the four in range
++		manager.onWantedStart(player, one);
++		manager.spawnTick(playerId, one);
++
++		List<CopNpc> engaged = group.getCops().stream().filter(c -> c.getCurrentState() != CopState.RETURNING).toList();
++		assertEquals(2, engaged.size(), "one star fields two cops, not the four of the last episode");
++		assertTrue(engaged.stream().anyMatch(c -> c.getRole() == COMMANDER), "the Commander stays (T-146)");
++	}
++
++	@Test
++	@DisplayName("T-435: a level drop sends the live cops over the new target home, not only the queued ones")
++	void levelDrop_liveCopsOverTheTarget_areSentHome() {
++		Wanted three = CopManagerFixture.wanted(3);
++		Wanted one   = CopManagerFixture.wanted(1);
++		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
++		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
++		manager.onWantedStart(player, three);
++		manager.spawnTick(playerId, three);
++		CopGroup group = manager.groupFor(playerId);
++		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.PURSUING);
++
++		manager.spawnTick(playerId, one);
++
++		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count());
++	}
++
++	@Test
++	@DisplayName("T-435: a new episode at a lower level calls back only its target's worth of walkers, none flip home")
++	void newLowerEpisode_callsBackOnlyItsTarget() {
++		Wanted three = CopManagerFixture.wanted(3);
++		Wanted one   = CopManagerFixture.wanted(1);
++		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
++		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
++		manager.onWantedStart(player, three);
++		manager.spawnTick(playerId, three);
++		CopGroup group = manager.groupFor(playerId);
++		manager.onWantedEnd(player, WantedCause.UNKNOWN);
++		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.RETURNING);
++
++		manager.onWantedStart(player, one);
++
++		assertEquals(2, countIn(group, CopState.PURSUING), "the walkers over one star's two keep walking");
++	}
++
++	@Test
++	@DisplayName("T-436: after a level drop, a rise calls the cops sent home back before any new one spawns")
++	void levelDropThenRise_sentHomeCopsComeBack() {
++		Wanted three = CopManagerFixture.wanted(3);
++		Wanted one   = CopManagerFixture.wanted(1);
++		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
++		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
++		manager.onWantedStart(player, three);
++		manager.spawnTick(playerId, three);
++		CopGroup group = manager.groupFor(playerId);
++		manager.spawnTick(playerId, one);
++		assertEquals(2, countIn(group, CopState.RETURNING));
++
++		manager.onWantedLevelChange(player, three, 1, 3);
++		manager.spawnTick(playerId, three);
++
++		assertEquals(4, countIn(group, CopState.PURSUING), "the two walking home in range rejoin the hunt");
++		verify(fx.spawner, times(4)).spawnNearPlayer(any(), anyInt(), any(), any());
++	}
++
++	@Test
++	@DisplayName("T-436: a casualty after a level drop is refilled by the nearest cop sent home")
++	void levelDropThenCasualty_sentHomeCopRefills() {
++		Wanted three = CopManagerFixture.wanted(3);
++		Wanted one   = CopManagerFixture.wanted(1);
++		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
++		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
++		manager.onWantedStart(player, three);
++		manager.spawnTick(playerId, three);
++		CopGroup group = manager.groupFor(playerId);
++		manager.spawnTick(playerId, one);
++		CopNpc fallen = group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING)
++		                     .findFirst().orElseThrow();
++		when(fallen.isMarkedForRemoval()).thenReturn(true);
++
++		manager.spawnTick(playerId, one);
++
++		assertEquals(2, countIn(group, CopState.PURSUING), "one star still fields two cops");
++		verify(fx.spawner, times(4)).spawnNearPlayer(any(), anyInt(), any(), any());
++	}
++
++	@Test
++	@DisplayName("T-187: the post-escape search keeps every walker it called back, none is sent home at its one star")
++	void escapeSearch_keepsEveryCalledBackCop() {
++		Wanted three = CopManagerFixture.wanted(3);
++		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
++		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
++		manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
++		manager.onWantedStart(player, three);
++		manager.spawnTick(playerId, three);
++		CopGroup group = manager.groupFor(playerId);
++		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.RETURNING);
++		manager.onWantedEnd(player, WantedCause.EVASION);
++		when(fx.targeting.isSearching(playerId)).thenReturn(true);
++
++		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
++
++		assertEquals(4, countIn(group, CopState.PURSUING), "the cops walking home come back to the search");
++	}
++
++	private static long countIn(CopGroup group, CopState state) {
++		return group.getCops().stream().filter(c -> c.getCurrentState() == state).count();
++	}
++
+ 	@Test
+ 	@DisplayName("an NPC facing a leashed walker does not keep it: only real players watch (B13; Keystone's check counts NPCs)")
+ 	void strandedWatchedOnlyByNpcs_released() {
+@@ -437,8 +586,10 @@ class CopManagerSquadTest {
+ 		manager.spawnTick(playerId, CopManagerFixture.wanted(2)); // the level fell to 2 before the backup ran out
+ 
+ 		assertEquals(CopState.PURSUING, replacement.getCurrentState(), "the squad's only Commander stays");
+-		assertEquals(0, group.getPendingRelease());
+-		assertEquals(1, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.RETURNING).count());
++		// flipped 0.21.1 (T-435): the level drop sends home the live cops over its target too, not only the backup's
++		// extra; the Commander is the one cop left over the target of 3
++		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.RETURNING).count());
++		assertEquals(4, group.getCops().stream().filter(c -> c.getCurrentState() != CopState.RETURNING).count());
+ 	}
+ 
+ 	/**
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerStuckTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerStuckTest.java
+index a1e8d812e..910582207 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerStuckTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerStuckTest.java
+@@ -121,6 +121,20 @@ class CopManagerStuckTest {
+ 		assertFalse(group.getSquad().hasFreshSighting());
+ 	}
+ 
++	@Test
++	@DisplayName("r2 pin: a recycle re-tips nothing, so the search circle keeps widening from the squad's own stamp")
++	void recycle_searchCircleKeepsWidening() {
++		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);
++		// 40 s of searching the crime scene: the circle is already wide
++		long stamp = CopManagerFixture.ageSearch(group.getSquad(), 40_000L);
++
++		manager.spawnTick(playerId, wanted);
++
++		assertFalse(group.getCops().contains(stuck));
++		assertEquals(stamp, CopManagerFixture.searchStamp(group.getSquad()),
++		             "no reportTip, not even of the last-known spot: re-tipping would shrink the circle back to 6 blocks");
++	}
++
+ 	@Test
+ 	@DisplayName("a recycle is no tip-off: it does not hold the evasion clock (R4)")
+ 	void recycle_noTipOff() {
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopRadioRespondersTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopRadioRespondersTest.java
+index 1b0bf0895..d8727eb0e 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopRadioRespondersTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopRadioRespondersTest.java
+@@ -72,6 +72,20 @@ class CopRadioRespondersTest {
+ 		verify(fx.radio).respond(group, group.getSquad(), cop);
+ 	}
+ 
++	@Test
++	@DisplayName("T-435: a responder over the squad's target stays through the next spawn run (only a lowered target sends cops home)")
++	void responderOverTheTarget_staysThroughSpawnTick() {
++		manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(2));
++		assertEquals(2, group.getCops().size());
++		CopNpc cop = fx.cop(CopState.RETURNING, 20, 0);
++		join(cop);
++		call();
++
++		manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(2));
++
++		assertEquals(CopState.PURSUING, cop.getCurrentState());
++	}
++
+ 	@Test
+ 	@DisplayName("a cop beyond Range stays on its way")
+ 	void copBeyondRange_ignores() {

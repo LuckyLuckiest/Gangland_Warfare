@@ -1,0 +1,248 @@
+diff --git a/documentation/developer/civilians.md b/documentation/developer/civilians.md
+index 6c40e6a8d..e9b1c41e2 100644
+--- a/documentation/developer/civilians.md
++++ b/documentation/developer/civilians.md
+@@ -276,7 +276,7 @@ pool is said is the only purely cosmetic dice.
+ 
+ | Step | Code | Rule |
+ |---|---|---|
+-| Pick | `WitnessService.witness` | Free civilians (not FLEEING/COMBAT/CALLING, not the 2 s victim, not in `Scared_Cooldown_Seconds`) within `Witness.Range`. A loud crime (`Loud_Crimes`, empty by default, or within `Loud_Shot_Seconds` of a `heardShot` whose weapon category is in `Loud_Weapon_Types`, GUN and THROWABLE) turns each one to the crime spot (`CivilianLookController.faceLocation`); a silent one needs `WitnessService.inView` (horizontal cone `View_Angle` wide around the entity's yaw, edge included, 360 = all round). Then `Hooks.sight` (`npc.canSee`). Nearest calls, the rest are watchers. |
++| Pick | `WitnessService.witness` | Free civilians (not FLEEING/COMBAT/CALLING, not the 2 s victim, not in `Scared_Cooldown_Seconds`) within `Witness.Range`. A loud crime (`Loud_Crimes`, empty by default, or within `Loud_Shot_Seconds` of a `heardShot` whose weapon category is in `Loud_Weapon_Types`, GUN and THROWABLE; a throwable's stamp is throw + `Fuse_Time` x 50 ms, so it is loud from the throw until `Loud_Shot_Seconds` after the blast, and a later shot never shortens it) turns each one to the crime spot (`CivilianLookController.faceLocation`); a silent one needs `WitnessService.inView` (horizontal cone `View_Angle` wide around the entity's yaw, edge included, 360 = all round). Then `Hooks.sight` (`npc.canSee`). Nearest calls, the rest are watchers. |
+ | Notice | `startCall`, `CivilianCallingBehavior.onEnter` | `Witness_Start` spoken; the caller looks at the criminal, `Notice_Particle` (XParticle) over its head, `Phone_Item` (XMaterial) in its main hand (the old hand is kept on the per-NPC behaviour and given back in `onExit`, which runs after the service has already detached the call). First countdown bar. |
+ | Dialling | `CivilianCallingBehavior.tick`, `tickCaller` | After `Notice_Seconds` the caller turns away once. Each AI tick: criminal offline = LOGOUT, caller invalid = LOST, aimed at (`Hooks.aim`, once per AI tick) = SCARED; otherwise the bar `Witness_Calling` (`%caller%`, `%seconds%`) is re-sent when the whole second changes. |
+ | Stopped | `cancelCall`, `intimidate`, `onPlayerHitCivilian` | HIT, SCARED, INTIMIDATED (`CivilianInteractListener`: the call's criminal right-clicks the caller within `Intimidate_Range`): `Witness_Scared` spoken, `Witness_Stopped` bar, flee, the civilian is blocked for `Scared_Cooldown_Seconds`. LOGOUT, LOST and KILLED are silent. |
+diff --git a/documentation/features/wanted-bounty.md b/documentation/features/wanted-bounty.md
+index 850fbf0aa..6eab6811a 100644
+--- a/documentation/features/wanted-bounty.md
++++ b/documentation/features/wanted-bounty.md
+@@ -64,7 +64,7 @@ It is counted only if someone calls it in. A cop saw it when a cop (squad or bea
+   crime: `Witness.View_Angle` (180) is the width of its view, so a civilian with its back to you sees nothing. A **loud**
+   crime is different: every civilian in range turns round to face it first (you see them turn), then the rule applies.
+   Loud means any crime within `Witness.Loud_Shot_Seconds` (3) of you firing a weapon in `Witness.Loud_Weapon_Types`
+-  (a gun or a throwable; a melee swing is silent), or a crime listed in `Witness.Loud_Crimes` (none by default). Car
++  (a gun or a throwable; a throwable is loud from the throw until `Loud_Shot_Seconds` after its `Fuse_Time`; a melee swing is silent), or a crime listed in `Witness.Loud_Crimes` (none by default). Car
+   theft, punching and a fist or knife kill are silent.
+ - **Notice (0.21.1).** The witness stares at you for `Notice_Seconds` (1), an angry-villager puff appears over its head,
+   and it says `[911] Pedestrian: Hey! I saw that! I'm calling the cops!`. You hear it wherever you are; people near it do
+diff --git a/documentation/migration-0.21.1.md b/documentation/migration-0.21.1.md
+index aec94131b..ef40c912d 100644
+--- a/documentation/migration-0.21.1.md
++++ b/documentation/migration-0.21.1.md
+@@ -88,7 +88,7 @@ Witness:
+ 
+ A file without these keys already gets these values from the code, so this edit only documents them; edit a value to
+ change it. `View_Angle: 360.0` restores the 0.20.0 rule (civilians see all round). `Loud_Shot_Seconds: 0` stops
+-shots counting as noise; `Loud_Weapon_Types` names the Bartizan weapon categories whose shot is noise (a melee swing is
++shots counting as noise (a throwable is loud from the throw until `Loud_Shot_Seconds` after its Bartizan `Fuse_Time`); `Loud_Weapon_Types` names the Bartizan weapon categories whose shot is noise (a melee swing is
+ not). List a crime id under `Loud_Crimes` (for example `Kill_Civilian`) to make it loud whatever the weapon. `Phone_Item: ""` and `Notice_Particle: ""` turn those off. `Intimidate_Range: 0` turns off
+ the right-click.
+ 
+@@ -146,7 +146,7 @@ The Spanish file: `- "Llamada al 911 reporta %crime% cerca de %place%. Sospechos
+ ### 4.5 Behaviour that changed
+ 
+ - A silent crime (car theft, a punch) is reported only by a civilian whose view (`View_Angle`) covers you. A loud one
+-  (any crime within `Loud_Shot_Seconds` of your own gun or throwable shot, or one in `Loud_Crimes`, none by default)
++  (any crime within `Loud_Shot_Seconds` of your own gunshot, or from a grenade's throw to `Loud_Shot_Seconds` after its blast, or one in `Loud_Crimes`, none by default)
+   makes every civilian in range turn to it
+   first, visibly.
+ - Notice, dialling, stopped and connected each show and say something (see
+diff --git a/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/listener/civilian/WitnessShotListener.java b/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/listener/civilian/WitnessShotListener.java
+index 04113f218..4e5f2f26f 100644
+--- a/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/listener/civilian/WitnessShotListener.java
++++ b/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/listener/civilian/WitnessShotListener.java
+@@ -5,6 +5,9 @@ import org.bukkit.event.EventHandler;
+ import org.bukkit.event.EventPriority;
+ import org.bukkit.event.Listener;
+ import org.luckyraven.bartizan.api.event.WeaponShootEvent;
++import org.luckyraven.bartizan.api.weapon.ThrowableWeapon;
++import org.luckyraven.bartizan.api.weapon.Weapon;
++import org.luckyraven.bartizan.api.weapon.dto.ThrowableData;
+ import org.luckyraven.gangland.civilians.witness.WitnessService;
+ import org.luckyraven.keystone.bean.listener.ListenerHandler;
+ import org.luckyraven.keystone.npc.NpcSupport;
+@@ -12,7 +15,8 @@ import org.luckyraven.keystone.npc.NpcSupport;
+ /**
+  * A player's gunshot is noise: his crimes in the next {@code Witness.Loud_Shot_Seconds} are loud, so civilians in range
+  * turn to face them before the view cone applies (0.21.1). Only the categories in {@code Witness.Loud_Weapon_Types}
+- * (GUN, THROWABLE) count: a melee swing is silent, as it is to the cops' {@code Shot_Noise}.
++ * (GUN, THROWABLE) count: a melee swing is silent, as it is to the cops' {@code Shot_Noise}. A throwable is heard when
++ * it blows up: the window is stretched by its {@code Fuse_Time}, so a grenade kill is loud however the fuse is set.
+  *
+  * <p>{@code condition = "isBartizanAvailable"}: the handler's parameter is Bartizan's {@link WeaponShootEvent}, so
+  * scanning this class on a Bartizan-less server would throw {@code NoClassDefFoundError}.
+@@ -30,6 +34,21 @@ public class WitnessShotListener implements Listener {
+ 
+ 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+ 	public void onWeaponShoot(WeaponShootEvent event) {
+-		if (event.getShooter() instanceof Player shooter && !NpcSupport.isNpc(shooter)) witnesses.heardShot(shooter, event.getWeapon().getCategory().name());
++		if (!(event.getShooter() instanceof Player shooter) || NpcSupport.isNpc(shooter)) return;
++
++		Weapon weapon = event.getWeapon();
++		witnesses.heardShot(shooter, weapon.getCategory().name(), fuseMillis(weapon));
++	}
++
++	/**
++	 * Milliseconds from the throw to the blast (Fuse_Time ticks); 0 for anything that is not a throwable.
++	 *
++	 * <p>ponytail: assumes 20 TPS against the wall clock, so below ~10 TPS a 60-tick fuse blasts after the window
++	 * closes; an Impact_When throwable blasts early (loud too long) and a Delay_After_Impact can blast late. None of
++	 * that is in the shipped configs. Upgrade path: schedule heardShot(shooter, type, 0) with runTaskLater(fuseTicks).
++	 */
++	private static long fuseMillis(Weapon weapon) {
++		ThrowableData data = weapon instanceof ThrowableWeapon throwable ? throwable.getThrowableData() : null;
++		return data == null ? 0L : Math.max(0, data.getFuseTime()) * 50L;
+ 	}
+ }
+diff --git a/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/witness/WitnessService.java b/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/witness/WitnessService.java
+index 3d6e9e3b8..5d5dee341 100644
+--- a/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/witness/WitnessService.java
++++ b/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/witness/WitnessService.java
+@@ -104,7 +104,7 @@ public final class WitnessService {
+ 	private final Map<AssaultKey, Long>  lastAssault = new HashMap<>();
+ 	/** Civilian entity id -> when the criminal stopped its call (hit, scared, intimidated): Scared_Cooldown_Seconds. */
+ 	private final Map<UUID, Long>        stoppedAt  = new HashMap<>();
+-	/** Player id -> when he last fired a weapon: Loud_Shot_Seconds. */
++	/** Player id -> when his last shot was heard (a throwable: its blast, may be ahead of now): Loud_Shot_Seconds. */
+ 	private final Map<UUID, Long>        lastShot   = new HashMap<>();
+ 
+ 	public WitnessService(CivilianService civilians, CrimeService crimes, Supplier<WitnessRules> rules,
+@@ -140,11 +140,14 @@ public final class WitnessService {
+ 
+ 	/**
+ 	 * {@code shooter} fired a weapon of Bartizan category {@code weaponType}: when Loud_Weapon_Types lists it (a gun, a
+-	 * throwable; never a melee swing by default) his crimes in the next Loud_Shot_Seconds are loud.
++	 * throwable; never a melee swing by default) his crimes in the next Loud_Shot_Seconds are loud. A throwable's noise
++	 * is its blast, {@code fuseMillis} after the throw: the window runs from the throw to Loud_Shot_Seconds after the
++	 * blast (Bartizan fires its explosion damage event only after the victim died, too late to be the noise itself).
+ 	 */
+-	public void heardShot(Player shooter, String weaponType) {
++	public void heardShot(Player shooter, String weaponType, long fuseMillis) {
+ 		boolean noisy = rules.get().loudWeaponTypes().stream().anyMatch(type -> type.equalsIgnoreCase(weaponType));
+-		if (noisy) lastShot.put(shooter.getUniqueId(), now());
++		// max: a gunshot right after the throw must not cut the pending blast's window short
++		if (noisy) lastShot.merge(shooter.getUniqueId(), now() + Math.max(0L, fuseMillis), Math::max);
+ 	}
+ 
+ 	/**
+@@ -166,7 +169,7 @@ public final class WitnessService {
+ 		return Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, cos)))) <= viewAngle / 2.0 + 1.0E-9;
+ 	}
+ 
+-	/** A crime in Loud_Crimes, or one within Loud_Shot_Seconds of the criminal's own gunshot. */
++	/** A crime in Loud_Crimes, or one before or within Loud_Shot_Seconds of the criminal's own gunshot or blast. */
+ 	private boolean isLoud(Player criminal, String crimeId, WitnessRules rules, long now) {
+ 		if (rules.loudCrimes().contains(crimeId)) return true;
+ 
+diff --git a/gangland-features/gangland-civilians/src/main/resources/npc/civilians.yml b/gangland-features/gangland-civilians/src/main/resources/npc/civilians.yml
+index a86ab1c53..8bfc57458 100644
+--- a/gangland-features/gangland-civilians/src/main/resources/npc/civilians.yml
++++ b/gangland-features/gangland-civilians/src/main/resources/npc/civilians.yml
+@@ -505,6 +505,7 @@ Witness:
+    # fist or knife kill needs a civilian in front of you. List ids here (e.g. Kill_Civilian) to make them loud anyway.
+    Loud_Crimes: []
+    # 0.21.1: a crime within this many seconds of the criminal's own shot is loud too; 0 = shots are not noise.
++   # A thrown weapon is loud from the throw until this many seconds after its blast (throw + Fuse_Time).
+    Loud_Shot_Seconds: 3
+    # 0.21.1: Bartizan weapon categories whose shot is noise for Loud_Shot_Seconds. A melee swing is silent.
+    Loud_Weapon_Types:
+diff --git a/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/listener/civilian/WitnessShotListenerTest.java b/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/listener/civilian/WitnessShotListenerTest.java
+index 2b8ff27fe..78c8df08c 100644
+--- a/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/listener/civilian/WitnessShotListenerTest.java
++++ b/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/listener/civilian/WitnessShotListenerTest.java
+@@ -6,8 +6,10 @@ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.DisplayName;
+ import org.junit.jupiter.api.Test;
+ import org.luckyraven.bartizan.api.event.WeaponShootEvent;
++import org.luckyraven.bartizan.api.weapon.ThrowableWeapon;
+ import org.luckyraven.bartizan.api.weapon.Weapon;
+ import org.luckyraven.bartizan.api.weapon.WeaponType;
++import org.luckyraven.bartizan.api.weapon.dto.ThrowableData;
+ import org.luckyraven.gangland.civilians.npc.CivilianState;
+ import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+ import org.luckyraven.gangland.civilians.witness.WitnessTestKit;
+@@ -84,8 +86,71 @@ class WitnessShotListenerTest {
+ 		assertEquals(CivilianState.CALLING, away.getCurrentState());
+ 	}
+ 
++	@Test
++	@DisplayName("a grenade is heard when it blows up: a kill 3.1 s after the throw (3 s fuse) is still loud")
++	void grenadeKillAfterTheFuseIsLoud() {
++		CivilianNpc away = kit.civilian(10, true, 270f);
++
++		listener.onWeaponShoot(grenade(60, kit.criminal));
++		kit.advanceSeconds(3.1);
++
++		assertEquals(1, kit.witness("Kill_Civilian"));
++		assertEquals(CivilianState.CALLING, away.getCurrentState());
++	}
++
++	@Test
++	@DisplayName("the grenade's window still closes Loud_Shot_Seconds after the blast")
++	void grenadeWindowClosesAfterTheBlast() {
++		CivilianNpc away = kit.civilian(10, true, 270f);
++
++		listener.onWeaponShoot(grenade(60, kit.criminal));
++		kit.advanceSeconds(6.1);
++
++		assertEquals(0, kit.witness("Kill_Civilian"));
++		assertEquals(CivilianState.IDLE, away.getCurrentState());
++	}
++
++	@Test
++	@DisplayName("a gunshot right after the throw does not cut the pending blast's window short")
++	void gunshotAfterTheThrowKeepsTheBlastWindow() {
++		CivilianNpc away = kit.civilian(10, true, 270f);
++
++		listener.onWeaponShoot(grenade(60, kit.criminal));
++		kit.advanceSeconds(1);
++		listener.onWeaponShoot(shot(WeaponType.GUN, kit.criminal));
++		kit.advanceSeconds(4.9);
++
++		assertEquals(1, kit.witness("Kill_Civilian"));
++		assertEquals(CivilianState.CALLING, away.getCurrentState());
++	}
++
++	@Test
++	@DisplayName("a grenade thrown after a gunshot stretches the window to its own blast")
++	void grenadeAfterAGunshotStretchesTheWindow() {
++		CivilianNpc away = kit.civilian(10, true, 270f);
++
++		listener.onWeaponShoot(shot(WeaponType.GUN, kit.criminal));
++		kit.advanceSeconds(1);
++		listener.onWeaponShoot(grenade(60, kit.criminal));
++		kit.advanceSeconds(5.9);
++
++		assertEquals(1, kit.witness("Kill_Civilian"));
++		assertEquals(CivilianState.CALLING, away.getCurrentState());
++	}
++
++	private static WeaponShootEvent grenade(int fuseTicks, LivingEntity shooter) {
++		ThrowableData data = mock(ThrowableData.class);
++		when(data.getFuseTime()).thenReturn(fuseTicks);
++		ThrowableWeapon weapon = mock(ThrowableWeapon.class);
++		when(weapon.getThrowableData()).thenReturn(data);
++		return shot(weapon, WeaponType.THROWABLE, shooter);
++	}
++
+ 	private static WeaponShootEvent shot(WeaponType type, LivingEntity shooter) {
+-		Weapon weapon = mock(Weapon.class);
++		return shot(mock(Weapon.class), type, shooter);
++	}
++
++	private static WeaponShootEvent shot(Weapon weapon, WeaponType type, LivingEntity shooter) {
+ 		when(weapon.getCategory()).thenReturn(type);
+ 		WeaponShootEvent event = mock(WeaponShootEvent.class);
+ 		when(event.getWeapon()).thenReturn(weapon);
+diff --git a/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/witness/WitnessServiceTest.java b/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/witness/WitnessServiceTest.java
+index 0720edfa9..58ee3527c 100644
+--- a/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/witness/WitnessServiceTest.java
++++ b/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/witness/WitnessServiceTest.java
+@@ -668,7 +668,7 @@ class WitnessServiceTest {
+ 	@DisplayName("a crime within Loud_Shot_Seconds of the criminal's own gunshot is loud; a later one is silent")
+ 	void crimeRightAfterAGunshotIsLoud() {
+ 		CivilianNpc away = kit.civilian(10, true, 270f);
+-		kit.service.heardShot(kit.criminal, "GUN");
++		kit.service.heardShot(kit.criminal, "GUN", 0L);
+ 
+ 		kit.advanceSeconds(2);
+ 		assertEquals(1, kit.witness("Car_Theft"));

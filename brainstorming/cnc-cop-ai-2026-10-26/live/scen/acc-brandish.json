@@ -1,0 +1,1928 @@
+[
+ {
+  "console": "gamerule spawn_mobs false",
+  "after": 300
+ },
+ {
+  "console": "gamerule spawn_monsters false",
+  "after": 300
+ },
+ {
+  "console": "gamerule advance_time false",
+  "after": 300
+ },
+ {
+  "console": "time set 6000",
+  "after": 300
+ },
+ {
+  "console": "weather clear",
+  "after": 300
+ },
+ {
+  "join": "Runner"
+ },
+ {
+  "console": "effect give Runner minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Runner minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode creative Runner",
+  "after": 200
+ },
+ {
+  "console": "clear Runner",
+  "after": 300
+ },
+ {
+  "chat": "/glw cop setup wand",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "wand given",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "hold": 0,
+  "bot": "Runner"
+ },
+ {
+  "console": "tp Runner 100 -60 38",
+  "after": 400
+ },
+ {
+  "chat": "/glw cop setup mode station",
+  "after": 600,
+  "bot": "Runner"
+ },
+ {
+  "leftClick": [
+   100,
+   -61,
+   40
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos1 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "chat": "/glw cop setup save Northside Station",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "Station .* saved|already exists",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "console": "setblock 130 -59 150 minecraft:stone",
+  "after": 300
+ },
+ {
+  "console": "tp Runner 80 -60 108",
+  "after": 400
+ },
+ {
+  "chat": "/glw cop setup mode district",
+  "after": 600,
+  "bot": "Runner"
+ },
+ {
+  "leftClick": [
+   80,
+   -61,
+   110
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos1 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "console": "tp Runner 130 -60 148",
+  "after": 400
+ },
+ {
+  "activateBlock": [
+   130,
+   -59,
+   150
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos2 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "chat": "/glw cop setup save Docks",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "Region .* saved",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "console": "gamemode survival Runner",
+  "after": 200
+ },
+ {
+  "console": "clear Runner",
+  "after": 300
+ },
+ {
+  "console": "tp Runner 100 -60 170",
+  "after": 400
+ },
+ {
+  "console": "say CNCMARK:ACCBR:DRAWER-START",
+  "after": 200
+ },
+ {
+  "join": "Drawer"
+ },
+ {
+  "console": "effect give Drawer minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Drawer minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Drawer",
+  "after": 200
+ },
+ {
+  "console": "clear Drawer",
+  "after": 300
+ },
+ {
+  "console": "tp Drawer 100 -60 90",
+  "after": 400
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "hold": 1,
+  "bot": "Drawer"
+ },
+ {
+  "console": "bartizan weapon give Drawer pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Drawer"
+ },
+ {
+  "console": "execute at @a[name=Drawer,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Drawer,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:D-NEAR",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "expectLog": "WARNING Drawer result=given",
+  "since": "start",
+  "timeout": 15000
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "hold": 1,
+  "bot": "Drawer"
+ },
+ {
+  "expectChat": "Thanks, carry on",
+  "since": "start",
+  "timeout": 4000,
+  "bot": "Drawer"
+ },
+ {
+  "console": "say CNCMARK:ACCBR:D-AWAY",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Drawer Pos",
+  "after": 200
+ },
+ {
+  "hold": 1,
+  "bot": "Drawer"
+ },
+ {
+  "quit": true,
+  "bot": "Drawer"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:OOV-START",
+  "after": 200
+ },
+ {
+  "join": "Oov"
+ },
+ {
+  "console": "effect give Oov minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Oov minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Oov",
+  "after": 200
+ },
+ {
+  "console": "clear Oov",
+  "after": 300
+ },
+ {
+  "console": "tp Oov 100 -60 90",
+  "after": 400
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "hold": 1,
+  "bot": "Oov"
+ },
+ {
+  "console": "bartizan weapon give Oov pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Oov"
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-NEAR",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "expectLog": "WARNING Oov result=given",
+  "since": "start",
+  "timeout": 15000
+ },
+ {
+  "console": "execute as Oov at @s run tp @s ~ ~ ~35",
+  "after": 300
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-FAR",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "expectLog": "WARNING Oov result=complied",
+  "since": "start",
+  "timeout": 9000
+ },
+ {
+  "expectChat": "Lost sight of you",
+  "since": "start",
+  "timeout": 3000,
+  "bot": "Oov"
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-VERDICT",
+  "after": 200
+ },
+ {
+  "wait": 20000
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-1",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-2",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-3",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-4",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-5",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-6",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-7",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-8",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-9",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-10",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-11",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-12",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-13",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-14",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-15",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-16",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-17",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:O-PULL-18",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 600
+ },
+ {
+  "hold": 1,
+  "bot": "Oov"
+ },
+ {
+  "quit": true,
+  "bot": "Oov"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:NIGHT-START",
+  "after": 200
+ },
+ {
+  "console": "time set 18000",
+  "after": 300
+ },
+ {
+  "join": "Nighter"
+ },
+ {
+  "console": "effect give Nighter minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Nighter minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Nighter",
+  "after": 200
+ },
+ {
+  "console": "clear Nighter",
+  "after": 300
+ },
+ {
+  "console": "tp Nighter 100 -60 90",
+  "after": 400
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-BASE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "hold": 1,
+  "bot": "Nighter"
+ },
+ {
+  "console": "bartizan weapon give Nighter pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Nighter"
+ },
+ {
+  "console": "execute at @a[name=Nighter,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Nighter,limit=1] ~6 ~ ~6",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-1a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-1b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Nighter,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Nighter,limit=1] ~6 ~ ~6",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-2a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-2b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Nighter,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Nighter,limit=1] ~6 ~ ~6",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-3a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-3b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Nighter,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Nighter,limit=1] ~6 ~ ~6",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-4a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-4b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Nighter,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Nighter,limit=1] ~6 ~ ~6",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-5a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-5b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Nighter,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Nighter,limit=1] ~6 ~ ~6",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-6a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-6b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Nighter,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Nighter,limit=1] ~6 ~ ~6",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-7a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-7b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Nighter,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Nighter,limit=1] ~6 ~ ~6",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-8a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-PULL-8b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Nighter,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Nighter,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-CONTROL",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-CONTROL-2",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:N-CONTROL-3",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Nighter Pos",
+  "after": 200
+ },
+ {
+  "console": "time set 6000",
+  "after": 300
+ },
+ {
+  "hold": 1,
+  "bot": "Nighter"
+ },
+ {
+  "quit": true,
+  "bot": "Nighter"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:SNEAK-START",
+  "after": 200
+ },
+ {
+  "join": "Sneaker"
+ },
+ {
+  "console": "effect give Sneaker minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Sneaker minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Sneaker",
+  "after": 200
+ },
+ {
+  "console": "clear Sneaker",
+  "after": 300
+ },
+ {
+  "console": "tp Sneaker 100 -60 90",
+  "after": 400
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-BASE",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "hold": 1,
+  "bot": "Sneaker"
+ },
+ {
+  "console": "bartizan weapon give Sneaker pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Sneaker"
+ },
+ {
+  "sneak": true,
+  "bot": "Sneaker"
+ },
+ {
+  "console": "execute at @a[name=Sneaker,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Sneaker,limit=1] ~7 ~ ~7",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-1a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-1b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Sneaker,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Sneaker,limit=1] ~7 ~ ~7",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-2a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-2b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Sneaker,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Sneaker,limit=1] ~7 ~ ~7",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-3a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-3b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Sneaker,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Sneaker,limit=1] ~7 ~ ~7",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-4a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-4b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Sneaker,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Sneaker,limit=1] ~7 ~ ~7",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-5a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-5b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Sneaker,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Sneaker,limit=1] ~7 ~ ~7",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-6a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-SNEAK-6b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "sneak": false,
+  "bot": "Sneaker"
+ },
+ {
+  "console": "execute at @a[name=Sneaker,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Sneaker,limit=1] ~7 ~ ~7",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-STAND-1a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-STAND-1b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Sneaker,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Sneaker,limit=1] ~7 ~ ~7",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-STAND-2a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-STAND-2b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "console": "execute at @a[name=Sneaker,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Sneaker,limit=1] ~7 ~ ~7",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-STAND-3a",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-STAND-3b",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "wait": 900
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:S-STAND-END",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Sneaker Pos",
+  "after": 200
+ },
+ {
+  "hold": 1,
+  "bot": "Sneaker"
+ },
+ {
+  "quit": true,
+  "bot": "Sneaker"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:IGNER-START",
+  "after": 200
+ },
+ {
+  "join": "Igner"
+ },
+ {
+  "console": "effect give Igner minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Igner minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Igner",
+  "after": 200
+ },
+ {
+  "console": "clear Igner",
+  "after": 300
+ },
+ {
+  "console": "tp Igner 100 -60 90",
+  "after": 400
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "hold": 1,
+  "bot": "Igner"
+ },
+ {
+  "console": "bartizan weapon give Igner pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Igner"
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-NEAR",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "expectLog": "WARNING Igner result=given",
+  "since": "start",
+  "timeout": 15000
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "wait": 500
+ },
+ {
+  "expectLog": "WARNING Igner result=ignored",
+  "since": "start",
+  "timeout": 10000
+ },
+ {
+  "expectChat": "You were warned",
+  "since": "start",
+  "timeout": 4000,
+  "bot": "Igner"
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-VERDICT",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 600,
+  "bot": "Igner"
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-STAR",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-CLEAR",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted clear",
+  "after": 1500,
+  "bot": "Igner"
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-1",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-2",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-3",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-4",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-5",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-6",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-7",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-8",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-9",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-10",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-11",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-12",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-13",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "console": "execute at @a[name=Igner,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner,distance=..60,sort=nearest,limit=1] at @s run tp @a[name=Igner,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:ACCBR:I-PULL-14",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Drawer,name=!Oov,name=!Nighter,name=!Sneaker,name=!Igner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Igner Pos",
+  "after": 200
+ },
+ {
+  "wait": 1500
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 600,
+  "bot": "Igner"
+ },
+ {
+  "hold": 1,
+  "bot": "Igner"
+ },
+ {
+  "quit": true,
+  "bot": "Igner"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:ACCBR:END",
+  "after": 200
+ },
+ {
+  "quit": true,
+  "bot": "Runner"
+ }
+]

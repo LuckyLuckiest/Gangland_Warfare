@@ -1,0 +1,285 @@
+[
+ {
+  "console": "gamerule spawn_mobs false",
+  "after": 300
+ },
+ {
+  "console": "gamerule spawn_monsters false",
+  "after": 300
+ },
+ {
+  "console": "gamerule advance_time false",
+  "after": 300
+ },
+ {
+  "console": "time set 6000",
+  "after": 300
+ },
+ {
+  "console": "weather clear",
+  "after": 300
+ },
+ {
+  "join": "Runner"
+ },
+ {
+  "console": "effect give Runner minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Runner minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode creative Runner",
+  "after": 200
+ },
+ {
+  "console": "clear Runner",
+  "after": 300
+ },
+ {
+  "chat": "/glw cop setup wand",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "wand given",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "hold": 0,
+  "bot": "Runner"
+ },
+ {
+  "console": "tp Runner 100 -60 38",
+  "after": 400
+ },
+ {
+  "chat": "/glw cop setup mode station",
+  "after": 600,
+  "bot": "Runner"
+ },
+ {
+  "leftClick": [
+   100,
+   -61,
+   40
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos1 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "chat": "/glw cop setup save Northside Station",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "Station .* saved|already exists",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "console": "setblock 130 -59 150 minecraft:stone",
+  "after": 300
+ },
+ {
+  "console": "tp Runner 80 -60 108",
+  "after": 400
+ },
+ {
+  "chat": "/glw cop setup mode district",
+  "after": 600,
+  "bot": "Runner"
+ },
+ {
+  "leftClick": [
+   80,
+   -61,
+   110
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos1 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "console": "tp Runner 130 -60 148",
+  "after": 400
+ },
+ {
+  "activateBlock": [
+   130,
+   -59,
+   150
+  ],
+  "after": 400,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "pos2 set",
+  "timeout": 3000,
+  "bot": "Runner"
+ },
+ {
+  "chat": "/glw cop setup save Docks",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectChat": "Region .* saved",
+  "timeout": 4000,
+  "bot": "Runner"
+ },
+ {
+  "console": "gamemode survival Runner",
+  "after": 200
+ },
+ {
+  "console": "clear Runner",
+  "after": 300
+ },
+ {
+  "console": "tp Runner 100 -60 170",
+  "after": 400
+ },
+ {
+  "console": "say CNCMARK:BRANDISH-R2:B-OOV-START",
+  "after": 200
+ },
+ {
+  "join": "Oov"
+ },
+ {
+  "console": "effect give Oov minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Oov minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Oov",
+  "after": 200
+ },
+ {
+  "console": "clear Oov",
+  "after": 300
+ },
+ {
+  "console": "tp Oov 100 -60 75",
+  "after": 400
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "hold": 1,
+  "bot": "Oov"
+ },
+ {
+  "console": "bartizan weapon give Oov pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Oov"
+ },
+ {
+  "console": "execute at @a[name=Oov,limit=1] as @e[type=!minecraft:item,type=!minecraft:text_display,type=!minecraft:armor_stand,type=!minecraft:interaction,type=!minecraft:item_display,type=!minecraft:villager,type=!minecraft:experience_orb,name=!Runner,name=!Nighter,name=!Sneaker,name=!Faller,name=!Oov,name=!Natural,distance=..100,sort=nearest,limit=1] at @s run tp @a[name=Oov,limit=1] ~1.5 ~ ~1.5",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH-R2:O-NEAR",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Nighter,name=!Sneaker,name=!Faller,name=!Oov,name=!Natural] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "expectLog": "WARNING Oov result=given",
+  "timeout": 15000
+ },
+ {
+  "console": "execute as Oov at @s run tp @s ~ ~ ~35",
+  "after": 300
+ },
+ {
+  "console": "say CNCMARK:BRANDISH-R2:O-FAR-1",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Nighter,name=!Sneaker,name=!Faller,name=!Oov,name=!Natural] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH-R2:O-FAR-2",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Nighter,name=!Sneaker,name=!Faller,name=!Oov,name=!Natural] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "wait": 3500
+ },
+ {
+  "console": "say CNCMARK:BRANDISH-R2:O-FAR-3",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner,name=!Nighter,name=!Sneaker,name=!Faller,name=!Oov,name=!Natural] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Oov Pos",
+  "after": 200
+ },
+ {
+  "hold": 1,
+  "bot": "Oov"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "quit": true,
+  "bot": "Oov"
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:BRANDISH-R2:END",
+  "after": 200
+ },
+ {
+  "quit": true,
+  "bot": "Runner"
+ }
+]

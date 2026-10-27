@@ -1,0 +1,715 @@
+diff --git a/documentation/README.md b/documentation/README.md
+index b9bc43e37..49f0d582d 100644
+--- a/documentation/README.md
++++ b/documentation/README.md
+@@ -76,7 +76,7 @@ In-depth technical documentation for developers working on the codebase.
+ 
+ Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in
+ [`bartizan-integration.md`](./bartizan-integration.md); server-owner migration notes are in
+-[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts), and [`migration-0.16.1.md`](./migration-0.16.1.md) (0.16.1 Keystone 1.15.1, moved text keys, new keys), [`migration-0.17.0.md`](./migration-0.17.0.md) (0.16.1 to 0.17.0, Gang & Turf I), [`migration-0.18.0.md`](./migration-0.18.0.md) (0.17.0 to 0.18.0, Gang & Turf II), [`migration-0.19.0.md`](./migration-0.19.0.md) (Gang & Turf III: owner Quartermaster placement, hub rows, gang tag, owner-naming refusal, ally permissions), and [`migration-0.20.0.md`](./migration-0.20.0.md) (Street crime, both waves: Host_Api 2.7 modules, Bartizan 0.6.0, the hot-cash bag, new keys with defaults), and [`migration-0.21.0.md`](./migration-0.21.0.md) (0.20.0 to 0.21.0, How it ends: arrests, crew heat, pursuit report, getaway XP, Most Wanted). Recoil is documented in
++[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts), and [`migration-0.16.1.md`](./migration-0.16.1.md) (0.16.1 Keystone 1.15.1, moved text keys, new keys), [`migration-0.17.0.md`](./migration-0.17.0.md) (0.16.1 to 0.17.0, Gang & Turf I), [`migration-0.18.0.md`](./migration-0.18.0.md) (0.17.0 to 0.18.0, Gang & Turf II), [`migration-0.19.0.md`](./migration-0.19.0.md) (Gang & Turf III: owner Quartermaster placement, hub rows, gang tag, owner-naming refusal, ally permissions), and [`migration-0.20.0.md`](./migration-0.20.0.md) (Street crime, both waves: Host_Api 2.7 modules, Bartizan 0.6.0, the hot-cash bag, new keys with defaults), and [`migration-0.21.0.md`](./migration-0.21.0.md) (0.20.0 to 0.21.0, How it ends: arrests, crew heat, pursuit report, getaway XP, Most Wanted), and [`migration-0.21.1.md`](./migration-0.21.1.md) (0.21.0 to 0.21.1, brandish warning: star at once, short crime subtitle). Recoil is documented in
+ [Version Compatibility](./developer/compatibility.md), now a Bartizan-side reflective packet call rather than an
+ NMS adapter this repo ships.
+ 
+diff --git a/documentation/features/cops-n-crooks.md b/documentation/features/cops-n-crooks.md
+index cbb010a9c..e2c70d030 100644
+--- a/documentation/features/cops-n-crooks.md
++++ b/documentation/features/cops-n-crooks.md
+@@ -902,9 +902,13 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
+   `Patrol_Sighting`.
+ - **Brandish warning** (`Cops.Warning`). A cop within `Range` (12 blocks) of a player holding a weapon tells the player
+   to put it away (`Wanted_Messages` `Patrol.Put_Away`, time left `%seconds%`). Complying in time sends `Patrol.Complied`;
+-  the same player is warned again only after `Repeat_Seconds` (30). A warning the player ignores (still holding the
+-  weapon, still in view when time is up) commits `Brandish_Near_Cop` as seen by a cop. Cops never attack from the
+-  warning state.
++  the same player is warned again only after `Repeat_Seconds` (30), counted from the verdict of the last warning since
++  0.21.1 and shared by every beat cop. A warning the player ignores (still holding the weapon, still in view when time
++  is up) sends `Patrol.Ignored` naming the cause and commits `Brandish_Near_Cop` as seen by a cop, which gives the first
++  star at once on the shipped heat (67 x 1.5; an older `wanted.yml` keeps its lower value, see `migration-0.21.1.md`). Time up with the cop out of view sends `Patrol.Lost_Sight` and costs nothing. Only beat
++  cops on patrol warn, a wanted player is reported instead, and darkness, dim light and sneaking shrink `Range` (`Cops.Sight`).
++  Cops never attack from the warning state. The star title shows the star row only (`Wanted.Hud.Title.Gain.Subtitle`
++  `%stars%`); the cause card goes to chat.
+ - **Pull-over** (`Cops.Pull_Over`). A cop within `Range` (24 blocks) signals a driver whose speed is above
+   `Speed_Limit` (12 blocks per second) to stop (`Patrol.Pull_Over`). The driver has `Comply_Seconds` (6) to slow below
+   `Stop_Speed` (1.0) and hold it for `Stop_Hold_Seconds` (2). A completed stop charges `Ticket_Amount` (150.0) from the
+diff --git a/documentation/features/wanted-bounty.md b/documentation/features/wanted-bounty.md
+index 7a0fb9f07..e35f55c57 100644
+--- a/documentation/features/wanted-bounty.md
++++ b/documentation/features/wanted-bounty.md
+@@ -51,7 +51,7 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to
+ | `Trespass_Restricted` | 300 | Walking into an admin region tagged `restricted`. Repeats no faster than `Trespass.Repeat_Seconds` (60). Players with `gangland.cop.trespass.bypass` are exempt. |
+ | `Evading_Police` | 100 | A driver who flees a traffic stop (`Patrol.Fled`). |
+ 
+-Warnings (`Brandish_Near_Cop`, 25) and the rest of the 0.15 list are unchanged. Crimes outside the witness list count at once,
++Warnings (`Brandish_Near_Cop`, 67 since 0.21.1: an ignored warning is worth the first star at once; it was 25) and the rest of the 0.15 list are unchanged. Crimes outside the witness list count at once,
+ exactly as before.
+ 
+ ### Witnesses and 911 calls (0.20.0)
+diff --git a/documentation/migration-0.21.1.md b/documentation/migration-0.21.1.md
+new file mode 100644
+index 000000000..4513fe985
+--- /dev/null
++++ b/documentation/migration-0.21.1.md
+@@ -0,0 +1,43 @@
++# Migrating a server from 0.21.0 to Gangland 0.21.1
++
++[← Back to Documentation Index](./README.md)
++
++0.21.1 changes how an ignored brandish warning ends. The player is told the cause in chat, and the first star arrives at
++once. The star title no longer repeats the whole description. A new install gets all of this from the shipped
++`wanted.yml`. **An existing server keeps its old `wanted.yml`**, and the code cannot rewrite it, so two values must be
++edited by hand to get the new behaviour.
++
++## 1. Edit `copsncrooks/wanted.yml`
++
++```yaml
++Wanted:
++   Heat:
++      Crimes:
++         # was 25. 67 x Seen_By_Cop_Multiplier (1.5) = 100.5, just over the first Star_Thresholds entry (100)
++         Brandish_Near_Cop: 67
++   Hud:
++      Title:
++         Gain:
++            # was "%stars% %card%". The card (cause, tier, stance) now goes to chat as a message
++            Subtitle: "%stars%"
++```
++
++- Without the first edit an ignored warning still sends the cause line but adds only 37.5 hidden heat, so the star comes
++  after about three ignored warnings. The `Patrol.Ignored` line says "Cause", not "Wanted for", so it stays true either way.
++- Without the second edit the gain subtitle keeps showing the whole card. A subtitle that still contains `%card%` is
++  never repeated in chat.
++- If you changed either value on purpose, keep your value: both are plain settings.
++
++## 2. Behaviour that changed
++
++- **Warning cooldown** (`Cops.Warning.Repeat_Seconds`, 30) now counts from the verdict of the last warning, not from its
++  start, and is shared by every beat cop.
++- **Ignored warning**: `Patrol.Ignored` (new placeholder `%cause%`) names the crime; leaving the cop's view when time is up
++  sends `Patrol.Lost_Sight` and costs nothing.
++- **Crime subtitles**: every title cue takes `%cause%` and the chat card is sent whenever `Star_Card` is on and the cue
++  does not carry `%card%`.
++
++## 3. Text keys
++
++`copsncrooks/wanted_messages.yml` gains `Patrol.Ignored` (`"&cBeat cop: &fYou were warned. &7Cause: &c%cause%"`) and
++`Patrol.Lost_Sight`. A file without them uses the same text from the code.
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/WantedHudListener.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/WantedHudListener.java
+index fe9161b22..3ab1b076e 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/WantedHudListener.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/WantedHudListener.java
+@@ -93,7 +93,8 @@ public class WantedHudListener implements Listener {
+ 		String stars    = Wanted.buildStars(newLevel, event.getWanted().getMaxLevel());
+ 
+ 		if (newLevel > event.getOldLevel()) {
+-			announce(player, newLevel, stars, raiseCard(player, event), chase.get().hud().gain());
++			String crime = crimeName(player, event);
++			announce(player, newLevel, stars, raiseCard(crime, newLevel), crime, chase.get().hud().gain());
+ 			playSiren(player);
+ 		} else if (newLevel < event.getOldLevel() && (newLevel > 0 || isGetaway(event.getCause()))) {
+ 			int          lost     = event.getOldLevel() - newLevel;
+@@ -101,7 +102,7 @@ public class WantedHudListener implements Listener {
+ 			String       card     = StarCard.dropCard(messages, event.getCause(), pending, lost);
+ 			HudSettings  settings = chase.get().hud();
+ 
+-			announce(player, newLevel, stars, card, newLevel > 0 ? settings.lost() : settings.escaped());
++			announce(player, newLevel, stars, card, card, newLevel > 0 ? settings.lost() : settings.escaped());
+ 			hud.lost(player, lost);
+ 		}
+ 
+@@ -217,31 +218,37 @@ public class WantedHudListener implements Listener {
+ 		return cause == WantedCause.EVASION || cause == WantedCause.DECAY;
+ 	}
+ 
+-	private String raiseCard(Player player, WantedLevelChangeEvent event) {
++	/** The display name of the crime behind a raise: the ledger's last crime, a sighting, or the reported crime. */
++	private String crimeName(Player player, WantedLevelChangeEvent event) {
+ 		CrimeRecord record = event.getCause() == WantedCause.CRIME ? ledger.lastCrime(player.getUniqueId()) : null;
+ 		// An UNKNOWN raise of a searched player is a sighting (PostEscapeSpotting): it fires before the search ends (wanted-15)
+ 		boolean spotted = record == null && event.getCause() == WantedCause.UNKNOWN &&
+ 		                  search.isSearching(player.getUniqueId());
+-		String crime = messages.crimeName(record != null ? record.crimeId() : spotted ? "Spotted" : "Unknown_Crime");
+ 
++		return messages.crimeName(record != null ? record.crimeId() : spotted ? "Spotted" : "Unknown_Crime");
++	}
++
++	private String raiseCard(String crime, int newLevel) {
+ 		CopConfigProvider provider = copLoader.getLoadedProvider();
+ 		CopTierConfig     tier     = provider == null ? null
+ 		                                                : provider.getTierConfig(
+-				                                                spawns.getTierForWantedLevel(event.getNewLevel()));
++				                                                spawns.getTierForWantedLevel(newLevel));
+ 
+ 		return StarCard.raiseCard(messages, crime, CopRadio.tierName(tier), tier != null && tier.skipCuffing());
+ 	}
+ 
+ 	/**
+-	 * The event's title cue, with the card shown only while Star_Card is on. The card goes to chat only when the cue is
+-	 * switched off; a cue that is on but blank sends nothing.
++	 * The event's title cue. {@code cause} fills {@code %cause%}: the crime of a raise, the card of a drop. The card is
++	 * shown on screen only where the cue carries {@code %card%} and Star_Card is on; otherwise it goes to chat as the
++	 * message naming the cause, so the subtitle can stay short. A cue that is on but blank sends nothing at all.
+ 	 */
+-	private void announce(Player player, int level, String stars, String card, TitleCue cue) {
++	private void announce(Player player, int level, String stars, String card, String cause, TitleCue cue) {
+ 		HudSettings settings = chase.get().hud();
+ 		String      shownCard = settings.starCard() ? card : "";
+ 
+-		boolean sent = cue.send(player, Map.of("stars", stars, "level", String.valueOf(level), "card", shownCard));
+-		if (!sent && !cue.enabled() && settings.starCard()) {
++		boolean sent = cue.send(player, Map.of("stars", stars, "level", String.valueOf(level), "card", shownCard,
++		                                       "cause", cause));
++		if (settings.starCard() && !cue.showsCard() && (sent || !cue.enabled())) {
+ 			player.sendMessage(card);
+ 		}
+ 	}
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/BrandishWarnings.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/BrandishWarnings.java
+index 2f44de383..036cbadb4 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/BrandishWarnings.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/BrandishWarnings.java
+@@ -16,8 +16,10 @@ import java.util.function.Supplier;
+ 
+ /**
+  * The "put that away" warning clock (0.20.0 lane patrol): per player, one warning per {@code Repeat_Seconds} counted
+- * from when it was given; a warning ends complied (weapon away, or out of the cop's view when time is up) or ignored
+- * (still holding, still in view) which commits {@code Brandish_Near_Cop} as seen by a cop. Main thread only.
++ * from the verdict of the last one (0.21.1; it used to count from the start of the warning); a warning ends complied
++ * (weapon away, or out of the cop's view when time is up, which says so) or ignored (still holding, still in view): the
++ * player is told the cause and {@code Brandish_Near_Cop} is committed as seen by a cop, which is worth the first star on
++ * the shipped heat. Main thread only.
+  */
+ @CustomLog
+ public class BrandishWarnings {
+@@ -70,7 +72,6 @@ public class BrandishWarnings {
+ 		UUID id  = player.getUniqueId();
+ 		long now = clock.getAsLong();
+ 		open.put(id, now);
+-		lastGiven.put(id, now);
+ 		player.sendMessage(messages.format(WantedMessages.Key.PATROL_PUT_AWAY,
+ 		                                   Map.of("seconds", String.valueOf(settings.get().seconds()))));
+ 		log.debug("WARNING {} result=given", player.getName());
+@@ -80,7 +81,7 @@ public class BrandishWarnings {
+ 	/**
+ 	 * Advances an open warning. {@code inView}: the warning cop still acquires the player. Weapon gone: COMPLIED
+ 	 * (message {@code Patrol.Complied}). Time up and still holding: IGNORED when in view (commits the crime once),
+-	 * COMPLIED when not. Otherwise PENDING. A closed warning is dropped; the cooldown stays.
++	 * COMPLIED when not. Otherwise PENDING. A closed warning is dropped and starts the repeat cooldown.
+ 	 */
+ 	public Result update(Player player, boolean inView) {
+ 		UUID id      = player.getUniqueId();
+@@ -89,7 +90,7 @@ public class BrandishWarnings {
+ 			return Result.COMPLIED;
+ 		}
+ 		if (!holding(player)) {
+-			open.remove(id);
++			close(id);
+ 			player.sendMessage(messages.format(WantedMessages.Key.PATROL_COMPLIED, Map.of()));
+ 			log.debug("WARNING {} result=complied", player.getName());
+ 			return Result.COMPLIED;
+@@ -97,18 +98,28 @@ public class BrandishWarnings {
+ 		if (clock.getAsLong() - started < settings.get().seconds() * 1000L) {
+ 			return Result.PENDING;
+ 		}
+-		open.remove(id);
++		close(id);
+ 		if (!inView) {
++			player.sendMessage(messages.format(WantedMessages.Key.PATROL_LOST_SIGHT, Map.of()));
+ 			log.debug("WARNING {} result=complied", player.getName());
+ 			return Result.COMPLIED;
+ 		}
++		player.sendMessage(messages.format(WantedMessages.Key.PATROL_IGNORED,
++		                                   Map.of("cause", messages.crimeName(Crimes.BRANDISH_NEAR_COP))));
+ 		crimes.commit(player, Crimes.BRANDISH_NEAR_COP, player.getLocation(), true, 0);
+ 		log.debug("WARNING {} result=ignored", player.getName());
+ 		return Result.IGNORED;
+ 	}
+ 
+-	/** Drops an open warning without a verdict (the cop died, left WARNING or the player left); cooldown stays. */
++	/** Drops an open warning without a verdict (the cop died, left WARNING or the player left); the cooldown starts. */
+ 	public void abandon(UUID playerId) {
+-		open.remove(playerId);
++		close(playerId);
++	}
++
++	/** Closes the open warning, if any, and stamps the cooldown now: the verdict, not the start, begins it. */
++	private void close(UUID playerId) {
++		if (open.remove(playerId) != null) {
++			lastGiven.put(playerId, clock.getAsLong());
++		}
+ 	}
+ }
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/WantedMessages.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/WantedMessages.java
+index 1030ce24d..6c68fa45d 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/WantedMessages.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/WantedMessages.java
+@@ -88,6 +88,9 @@ public class WantedMessages extends LocalizedModuleYaml {
+ 		// 0.20.0
+ 		PATROL_PUT_AWAY("Patrol.Put_Away", "&eBeat cop: &fPut that away! &7(%seconds%s)"),
+ 		PATROL_COMPLIED("Patrol.Complied", "&aThanks, carry on."),
++		// 0.21.1
++		PATROL_IGNORED("Patrol.Ignored", "&cBeat cop: &fYou were warned. &7Cause: &c%cause%"),
++		PATROL_LOST_SIGHT("Patrol.Lost_Sight", "&7Beat cop: &fLost sight of you. Keep it holstered."),
+ 		PATROL_PULL_OVER("Patrol.Pull_Over", "&cBeat cop: &fPull over! Stop within %seconds%s"),
+ 		PATROL_TICKET("Patrol.Ticket", "&7Ticket: &c%money_symbol%%amount%"),
+ 		PATROL_FLED("Patrol.Fled", "&cYou fled a traffic stop!"),
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/ChaseConfig.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/ChaseConfig.java
+index 35e497ef2..c5768247c 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/ChaseConfig.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/ChaseConfig.java
+@@ -354,7 +354,7 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
+ 
+ 		return new HudSettings(enabled(block(n, "Boss_Bar", report), d.bossBar()),
+ 		                       enabled(block(n, "Star_Card", report), d.starCard()),
+-		                       titleCue(titles, "Gain", TitleCue.DEFAULT, master, report),
++		                       titleCue(titles, "Gain", TitleCue.GAIN, master, report),
+ 		                       titleCue(titles, "Lost", TitleCue.DEFAULT, master, report),
+ 		                       titleCue(titles, "Escaped", TitleCue.ESCAPED, master, report), enabled(siren, d.siren()),
+ 		                       siren == null ? d.sirenSound() : siren.get("Sound").asString().orDefault(d.sirenSound()),
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/HeatSettings.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/HeatSettings.java
+index 33df97de5..708fb1737 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/HeatSettings.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/HeatSettings.java
+@@ -27,7 +27,7 @@ public record HeatSettings(boolean enabled, List<Integer> starThresholds, double
+ 
+ 	private static Map<String, Integer> defaultCrimes() {
+ 		Map<String, Integer> crimes = new LinkedHashMap<>();
+-		crimes.put("Brandish_Near_Cop", 25);
++		crimes.put("Brandish_Near_Cop", 67);
+ 		crimes.put("Assault_Civilian", 30);
+ 		crimes.put("Car_Theft", 60);
+ 		crimes.put("Kill_Player", 80);
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/HudSettings.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/HudSettings.java
+index 786569c48..bd611ea14 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/HudSettings.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/config/HudSettings.java
+@@ -12,7 +12,7 @@ public record HudSettings(boolean bossBar, boolean starCard, TitleCue gain, Titl
+                           boolean siren, String sirenSound, float sirenVolume, float sirenPitch, boolean zoneRing,
+                           String zoneParticle, int zonePoints, boolean compass) {
+ 	/** The shipped {@code Wanted.Hud}. */
+-	public static final HudSettings DEFAULT = new HudSettings(true, true, TitleCue.DEFAULT, TitleCue.DEFAULT,
++	public static final HudSettings DEFAULT = new HudSettings(true, true, TitleCue.GAIN, TitleCue.DEFAULT,
+ 	                                                          TitleCue.ESCAPED, true, "BLOCK_NOTE_BLOCK_BELL", 1.0f, 0.5f,
+ 	                                                          true, "DUST", 48, true);
+ }
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/hud/TitleCue.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/hud/TitleCue.java
+index 1835867f5..e2cfaee7c 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/hud/TitleCue.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/hud/TitleCue.java
+@@ -15,9 +15,20 @@ public record TitleCue(boolean enabled, String title, String subtitle, int fadeI
+ 	/** Gained and lost: the star row, then the card. Blank Star_Card leaves the row alone, so a star is still named. */
+ 	public static final TitleCue DEFAULT = new TitleCue(true, "", "%stars% %card%", 5, 20, 5);
+ 
++	/**
++	 * Gained: the star row alone, short enough to read at a glance (0.21.1). The cause card goes to chat instead, unless
++	 * a subtitle or title of the file still carries {@code %card%}.
++	 */
++	public static final TitleCue GAIN = new TitleCue(true, "", "%stars%", 5, 20, 5);
++
+ 	/** Escaped: the level is 0 by now, so the star row would be empty; the card alone. */
+ 	public static final TitleCue ESCAPED = new TitleCue(true, "", "%card%", 5, 20, 5);
+ 
++	/** Whether this cue is on and puts {@code %card%} on the screen itself, so chat need not repeat the card. */
++	public boolean showsCard() {
++		return enabled && (title != null && title.contains("%card%") || subtitle != null && subtitle.contains("%card%"));
++	}
++
+ 	/** Fills the placeholders, then sends unless disabled or both lines are blank. Returns whether it sent. */
+ 	public boolean send(Player player, Map<String, String> placeholders) {
+ 		if (!enabled) return false;
+diff --git a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml
+index 13d2ea68f..28f609a2d 100644
+--- a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml
++++ b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml
+@@ -679,14 +679,23 @@ Cops:
+       Report_Wanted: true
+ 
+    # Warning: a cop tells a player to put the weapon away before escalating.
++   # Only a beat cop on patrol warns: a squad cop, or one posted, idle or on overwatch, never does. A wanted player
++   # (or one the cops are still searching for) is reported, not warned. The warning ends at its verdict: weapon away
++   # ("Thanks, carry on."), out of the cop's view when time is up ("Lost sight of you"), or still held in view, which
++   # tells the player the cause (wanted_messages.yml Patrol.Ignored) and gives the first star at once
++   # (wanted.yml Heat.Crimes.Brandish_Near_Cop). The cop then goes back to its beat.
+    Warning:
+       # Turn the warning step on or off.
+       Enable: true
+-      # Blocks from a cop within which the warning is given.
++      # Blocks from a cop within which the warning is given. The cop must also be able to see the player: the range
++      # shrinks in the dark, in dim light and while the player sneaks (Cops.Sight), so at night a cop may
++      # have to walk up close before it warns.
+       Range: 12.0
+       # Seconds the player has to put the weapon away.
+       Seconds: 5
+-      # Seconds before the same player is warned again.
++      # Seconds before the same player is warned again, counted from the verdict of the last warning (0.21.1; it
++      # counted from the start of the warning before). One timer per player, shared by every beat cop: whichever
++      # cop is in range when it ends gives the next warning.
+       Repeat_Seconds: 30
+ 
+    # Pull_Over: a cop signals a speeding driver to stop. Speeds are in blocks per second.
+diff --git a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted.yml b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted.yml
+index 62830228d..abc33a307 100644
+--- a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted.yml
++++ b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted.yml
+@@ -46,8 +46,10 @@ Wanted:
+       # Heat per crime. Kill_*, Assault_Cop and Resisting_Arrest are reported in 0.15.0; the rest are read by later
+       # releases
+       Crimes:
+-         # Aiming a weapon with a cop close by
+-         Brandish_Near_Cop: 25
++         # Aiming a weapon with a cop close by, after the beat cop's warning was ignored. 0.21.1: 67 x the
++         # Seen_By_Cop_Multiplier (1.5) is just over the first Star_Thresholds entry (100), so an ignored warning is
++         # worth a star at once. Lower it (25 is the old value) and an ignored warning only builds heat
++         Brandish_Near_Cop: 67
+          # Hitting a civilian
+          Assault_Civilian: 30
+          # Stealing a car
+@@ -125,7 +127,7 @@ Wanted:
+          # Crimes in the opening that make the chase a rampage
+          Rampage_Crimes: 4
+          # Only crimes at least this heavy count toward the rampage opening; the shipped cheap crimes
+-         # (Brandish_Near_Cop 25, Assault_Civilian 30, Car_Theft 60) never do
++         # (Brandish_Near_Cop 67, Assault_Civilian 30, Car_Theft 60) never do
+          Rampage_Min_Weight: 80
+          # Peak stars that make a chase a rampage however it started (killing a cop always does)
+          Rampage_Peak_Level: 4
+@@ -240,15 +242,19 @@ Wanted:
+       # and a blank Subtitle send nothing. To blank a line write Title: "" or Subtitle: "" (a bare key with no
+       # value reads as absent and takes the default). Gained and Lost show the star row in the subtitle, so the count is still
+       # shown with Star_Card off. Fade_In, Stay and Fade_Out are in ticks (20 = 1 second).
++      # 0.21.1: also %cause%, the crime that raised the star (the card line for a lost star). The star card goes to
++      # chat, as a message naming the cause, whenever Star_Card is on and the event's Title and Subtitle do not carry
++      # %card% themselves, so a short Subtitle like "%stars%" still tells the player why. Gain used to be
++      # "%stars% %card%": a file written before 0.21.1 keeps that until its Subtitle is edited.
+       # Old look (before 0.16.1): Title "&c%stars%", Subtitle "%card%", Fade_In 5, Stay 40, Fade_Out 10 on every event.
+       Title:
+          # false = no title on any event
+          Enable: true
+-         # A star gained
++         # A star gained. The default shows the star row only; the card (cause, tier, stance) is sent to chat
+          Gain:
+             Enable: true
+             Title: ""
+-            Subtitle: "%stars% %card%"
++            Subtitle: "%stars%"
+             Fade_In: 5
+             Stay: 20
+             Fade_Out: 5
+diff --git a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted_messages.yml b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted_messages.yml
+index 1512b740d..d608f1e26 100644
+--- a/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted_messages.yml
++++ b/gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted_messages.yml
+@@ -187,6 +187,11 @@ Patrol:
+    Put_Away: "&eBeat cop: &fPut that away! &7(%seconds%s)"
+    # You complied in time
+    Complied: "&aThanks, carry on."
++   # You were still holding the weapon when time ran out and the cop could see you (0.21.1); %cause% is the crime
++   # you are now wanted for. The star itself comes with the star card
++   Ignored: "&cBeat cop: &fYou were warned. &7Cause: &c%cause%"
++   # Time ran out while the cop could no longer see you, so nothing is held against you (0.21.1)
++   Lost_Sight: "&7Beat cop: &fLost sight of you. Keep it holstered."
+    # The cop orders a stop; %seconds% is the seconds you have to stop
+    Pull_Over: "&cBeat cop: &fPull over! Stop within %seconds%s"
+    # The ticket; %money_symbol% and %amount% are the fine
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/wanted/WantedHudListenerTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/wanted/WantedHudListenerTest.java
+index e5babc0d7..9b9402e73 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/wanted/WantedHudListenerTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/listener/wanted/WantedHudListenerTest.java
+@@ -221,32 +221,57 @@ class WantedHudListenerTest {
+ 	}
+ 
+ 	@Test
+-	@DisplayName("a raise shows the stars as the title, the card as its subtitle, and plays the siren once")
+-	void raise_sendsTitleWithTheCardAsSubtitle_andPlaysTheSiren() {
++	@DisplayName("a raise shows the star row alone as the subtitle, sends the cause card to chat, and plays the siren once")
++	void raise_sendsStarRowSubtitle_andTheCardToChat_andPlaysTheSiren() {
+ 		WantedHudListener listener = listener(HudSettings.DEFAULT);
+ 
+ 		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+ 
+-		ArgumentCaptor<String> title    = ArgumentCaptor.forClass(String.class);
++		verify(player).sendTitle(ChatColor.RESET.toString(), "★★☆☆☆", 5, 20, 5);
++		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
++		verify(player).sendMessage(chat.capture());
++		assertEquals("Assault on an officer: Sergeant inbound, they still want you in cuffs",
++		             ChatColor.stripColor(chat.getValue()));
++		assertEquals(1, playSoundCalls());
++	}
++
++	@Test
++	@DisplayName("a gain subtitle that still carries %card% shows it there and does not repeat it in chat")
++	void raise_subtitleWithCard_doesNotRepeatTheCardInChat() {
++		TitleCue gain = new TitleCue(true, "", "%stars% %card%", 5, 20, 5);
++		WantedHudListener listener = listener(cuesWith(true, gain, TitleCue.DEFAULT, TitleCue.DEFAULT));
++
++		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
++
+ 		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+-		verify(player).sendTitle(title.capture(), subtitle.capture(), eq(5), eq(20), eq(5));
+-		assertEquals("", ChatColor.stripColor(title.getValue()));
++		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
+ 		assertEquals("★★☆☆☆ Assault on an officer: Sergeant inbound, they still want you in cuffs",
+ 		             ChatColor.stripColor(subtitle.getValue()));
+-		assertEquals(1, playSoundCalls());
++		verify(player, never()).sendMessage(anyString());
++	}
++
++	@Test
++	@DisplayName("%cause% in a gain subtitle is the crime name")
++	void raise_causePlaceholder_isTheCrimeName() {
++		TitleCue gain = new TitleCue(true, "", "%stars% %cause%", 5, 20, 5);
++		WantedHudListener listener = listener(cuesWith(true, gain, TitleCue.DEFAULT, TitleCue.DEFAULT));
++
++		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
++
++		verify(player).sendTitle(ChatColor.RESET.toString(), "★★☆☆☆ Assault on an officer", 5, 20, 5);
+ 	}
+ 
+ 	@Test
+-	@DisplayName("a raise that is not a crime ignores the ledger and names the reported crime")
++	@DisplayName("a raise that is not a crime ignores the ledger and names the reported crime in chat")
+ 	void raise_nonCrimeCause_usesReportedCrime() {
+ 		WantedHudListener listener = listener(HudSettings.DEFAULT);
+ 
+ 		listener.onLevelChange(change(1, 2, WantedCause.ADMIN));
+ 
+-		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+-		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
+-		assertEquals("★★☆☆☆ Reported crime: Sergeant inbound, they still want you in cuffs",
+-		             ChatColor.stripColor(subtitle.getValue()));
++		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
++		verify(player).sendMessage(chat.capture());
++		assertEquals("Reported crime: Sergeant inbound, they still want you in cuffs",
++		             ChatColor.stripColor(chat.getValue()));
+ 	}
+ 
+ 	@Test
+@@ -277,7 +302,7 @@ class WantedHudListenerTest {
+ 	@Test
+ 	@DisplayName("a star gained with both Boss_Bar and Star_Card off still names the count in the subtitle")
+ 	void gain_bossBarOff_starCardOff_namesTheCount() {
+-		HudSettings hud = new HudSettings(false, false, TitleCue.DEFAULT, TitleCue.DEFAULT, TitleCue.ESCAPED, true,
++		HudSettings hud = new HudSettings(false, false, TitleCue.GAIN, TitleCue.DEFAULT, TitleCue.ESCAPED, true,
+ 		                                  HudSettings.DEFAULT.sirenSound(), HudSettings.DEFAULT.sirenVolume(),
+ 		                                  HudSettings.DEFAULT.sirenPitch(), true, HudSettings.DEFAULT.zoneParticle(),
+ 		                                  HudSettings.DEFAULT.zonePoints(), true);
+@@ -489,7 +514,7 @@ class WantedHudListenerTest {
+ 	void lostAndEscapedUseTheirOwnCue() {
+ 		TitleCue lost    = new TitleCue(true, "Lost %level%", "lost-text", 1, 2, 3);
+ 		TitleCue escaped = new TitleCue(true, "Escaped", "escaped-text", 4, 5, 6);
+-		WantedHudListener listener = listener(cuesWith(true, TitleCue.DEFAULT, lost, escaped));
++		WantedHudListener listener = listener(cuesWith(true, TitleCue.GAIN, lost, escaped));
+ 
+ 		listener.onLevelChange(change(2, 1, WantedCause.EVASION));
+ 		verify(player).sendTitle("Lost 1", "lost-text", 1, 2, 3);
+@@ -502,7 +527,7 @@ class WantedHudListenerTest {
+ 	@DisplayName("a disabled Escaped cue still consumes the pending AUTO plan")
+ 	void disabledCue_stillConsumesPendingPlan() {
+ 		TitleCue off = new TitleCue(false, "", "%card%", 5, 20, 5);
+-		WantedHudListener listener = listener(cuesWith(true, TitleCue.DEFAULT, TitleCue.DEFAULT, off));
++		WantedHudListener listener = listener(cuesWith(true, TitleCue.GAIN, TitleCue.DEFAULT, off));
+ 		arcs.start(player.getUniqueId(), WantedCause.CRIME, 3);
+ 		arcs.stashPending(player.getUniqueId(), new DropPlan(3, Ending.PETTY, "petty"));
+ 
+@@ -585,9 +610,10 @@ class WantedHudListenerTest {
+ 
+ 		listener.onLevelChange(change(0, 1, WantedCause.UNKNOWN));
+ 
+-		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+-		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
+-		assertEquals("★☆☆☆☆ Spotted by the cops: Sergeant inbound, they still want you in cuffs",
+-		             ChatColor.stripColor(subtitle.getValue()));
++		verify(player).sendTitle(ChatColor.RESET.toString(), "★☆☆☆☆", 5, 20, 5);
++		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
++		verify(player).sendMessage(chat.capture());
++		assertEquals("Spotted by the cops: Sergeant inbound, they still want you in cuffs",
++		             ChatColor.stripColor(chat.getValue()));
+ 	}
+ }
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/BrandishWarningsTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/BrandishWarningsTest.java
+index 476fef0f5..824797d21 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/BrandishWarningsTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/BrandishWarningsTest.java
+@@ -95,6 +95,20 @@ class BrandishWarningsTest {
+ 		verify(crimes, times(1)).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+ 	}
+ 
++	@Test
++	@DisplayName("ignored: the player is told the cause (Patrol.Ignored) before the crime is committed")
++	void ignoredWarning_namesTheCause_beforeTheStar() {
++		warnings.begin(player);
++		fx.clock[0] += 5_000;
++
++		warnings.update(player, true);
++
++		org.mockito.InOrder order = org.mockito.Mockito.inOrder(player, crimes);
++		order.verify(player).sendMessage("PATROL_IGNORED");
++		order.verify(crimes).commit(eq(player), eq(Crimes.BRANDISH_NEAR_COP), any(Location.class), eq(true), eq(0));
++		verify(messages).format(WantedMessages.Key.PATROL_IGNORED, Map.of("cause", Crimes.BRANDISH_NEAR_COP));
++	}
++
+ 	@Test
+ 	@DisplayName("the crime is committed at the player's location")
+ 	void crimeLocationIsThePlayers() {
+@@ -129,6 +143,7 @@ class BrandishWarningsTest {
+ 		assertEquals(Result.COMPLIED, warnings.update(player, false));
+ 
+ 		verify(crimes, never()).commit(any(), anyString(), any(), anyBoolean(), anyInt());
++		verify(player).sendMessage("PATROL_LOST_SIGHT");
+ 	}
+ 
+ 	@Test
+@@ -160,7 +175,7 @@ class BrandishWarningsTest {
+ 	}
+ 
+ 	@Test
+-	@DisplayName("second weapon at +20 s: no new warning; at +31 s: warning (counted from the first warning)")
++	@DisplayName("the cooldown counts from the verdict: 29.999 s after it no warning, 30 s after it a warning")
+ 	void repeatCooldown() {
+ 		warnings.begin(player);
+ 		fx.clock[0] += 3_000;
+@@ -168,15 +183,29 @@ class BrandishWarningsTest {
+ 		warnings.update(player, true);
+ 		fx.armed.add(player.getUniqueId());
+ 
+-		fx.clock[0] += 17_000;
++		fx.clock[0] += 29_999;
+ 		assertFalse(warnings.canWarn(player));
+ 		assertFalse(warnings.begin(player));
+ 
+-		fx.clock[0] += 11_000;
++		fx.clock[0] += 1;
+ 		assertTrue(warnings.canWarn(player));
+ 		assertTrue(warnings.begin(player));
+ 	}
+ 
++	@Test
++	@DisplayName("an ignored warning also starts the cooldown at its verdict, not at its start")
++	void repeatCooldown_ignoredVerdict() {
++		warnings.begin(player);
++		fx.clock[0] += 5_000;
++		warnings.update(player, true);
++
++		fx.clock[0] += 29_999;
++		assertFalse(warnings.canWarn(player));
++
++		fx.clock[0] += 1;
++		assertTrue(warnings.canWarn(player));
++	}
++
+ 	@Test
+ 	@DisplayName("the cooldown is per player")
+ 	void cooldownIsPerPlayer() {
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/PatrolFixture.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/PatrolFixture.java
+index 959cd190a..2a460ac51 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/PatrolFixture.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/patrol/PatrolFixture.java
+@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
+ import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.anyBoolean;
+ import static org.mockito.ArgumentMatchers.anyMap;
++import static org.mockito.ArgumentMatchers.anyString;
+ import static org.mockito.Mockito.doAnswer;
+ import static org.mockito.Mockito.mock;
+ import static org.mockito.Mockito.when;
+@@ -142,6 +143,7 @@ public final class PatrolFixture implements AutoCloseable {
+ 		WantedMessages messages = mock(WantedMessages.class);
+ 		when(messages.format(any(WantedMessages.Key.class), anyMap()))
+ 				.thenAnswer(inv -> ((WantedMessages.Key) inv.getArgument(0)).name());
++		when(messages.crimeName(anyString())).thenAnswer(inv -> inv.getArgument(0));
+ 		return messages;
+ 	}
+ 
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/WantedMessages020Test.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/WantedMessages020Test.java
+index c312ce940..ef13e94df 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/WantedMessages020Test.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/WantedMessages020Test.java
+@@ -38,6 +38,8 @@ class WantedMessages020Test {
+ 	private static final Map<WantedMessages.Key, List<String>> PLACEHOLDERS = Map.ofEntries(
+ 			Map.entry(WantedMessages.Key.PATROL_PUT_AWAY, List.of("%seconds%")),
+ 			Map.entry(WantedMessages.Key.PATROL_COMPLIED, List.of()),
++			Map.entry(WantedMessages.Key.PATROL_IGNORED, List.of("%cause%")),
++			Map.entry(WantedMessages.Key.PATROL_LOST_SIGHT, List.of()),
+ 			Map.entry(WantedMessages.Key.PATROL_PULL_OVER, List.of("%seconds%")),
+ 			Map.entry(WantedMessages.Key.PATROL_TICKET, List.of("%money_symbol%", "%amount%")),
+ 			Map.entry(WantedMessages.Key.PATROL_FLED, List.of()),
+@@ -89,6 +91,15 @@ class WantedMessages020Test {
+ 		assertEquals("%who%%mask%, %chest%, %vehicle%", WantedMessages.Key.SUSPECT_FORMAT.fallback);
+ 	}
+ 
++	@Test
++	@DisplayName("the ignored-warning line names the cause but never claims a wanted status the heat config may not give")
++	void ignoredLine_namesCause_claimsNoStatus() {
++		String text = WantedMessages.Key.PATROL_IGNORED.fallback;
++
++		assertTrue(text.contains("%cause%"), text);
++		assertFalse(text.toLowerCase().contains("wanted"), text);
++	}
++
+ 	@Test
+ 	@DisplayName("the shipped wanted_messages.yml carries each new key with exactly the fallback text")
+ 	void shippedFile_matchesFallbacks() throws IOException {
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/config/ChaseConfigTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/config/ChaseConfigTest.java
+index 89b77e4a9..5ba691f96 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/config/ChaseConfigTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/config/ChaseConfigTest.java
+@@ -129,9 +129,10 @@ class ChaseConfigTest {
+ 		assertEquals(List.of(1, 2), ev.searchRadius());
+ 		assertEquals(List.of(3, 4), ev.secondsToDrop());
+ 		assertEquals(4.5, ev.outsideZoneSpeed());
+-		TitleCue offCue = new TitleCue(false, "", "%stars% %card%", 5, 20, 5);
+-		TitleCue offEsc = new TitleCue(false, "", "%card%", 5, 20, 5);
+-		assertEquals(new HudSettings(false, false, offCue, offCue, offEsc, false, "ENTITY_BAT_TAKEOFF", 0.5f, 1.5f,
++		TitleCue offGain = new TitleCue(false, "", "%stars%", 5, 20, 5);
++		TitleCue offCue  = new TitleCue(false, "", "%stars% %card%", 5, 20, 5);
++		TitleCue offEsc  = new TitleCue(false, "", "%card%", 5, 20, 5);
++		assertEquals(new HudSettings(false, false, offGain, offCue, offEsc, false, "ENTITY_BAT_TAKEOFF", 0.5f, 1.5f,
+ 		                             false, "FLAME", 12, false), c.hud());
+ 		assertEquals(new ChargeSheetSettings(false, 1, 2, 3, 0.5, 9), c.chargeSheet());
+ 	}
+@@ -616,7 +617,7 @@ class ChaseConfigTest {
+ 		ChaseConfig c = ChaseConfig.parse(wantedRoot("Wanted:\n   Hud:\n      Boss_Bar:\n         Enable: true\n", report),
+ 		                                  report);
+ 
+-		assertEquals(TitleCue.DEFAULT, c.hud().gain());
++		assertEquals(TitleCue.GAIN, c.hud().gain());
+ 		assertEquals(TitleCue.DEFAULT, c.hud().lost());
+ 		assertEquals(TitleCue.ESCAPED, c.hud().escaped());
+ 	}
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/heat/HeatLedgerTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/heat/HeatLedgerTest.java
+index 4b0228113..63645f08a 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/heat/HeatLedgerTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/heat/HeatLedgerTest.java
+@@ -106,6 +106,16 @@ class HeatLedgerTest {
+ 		assertEquals(Crimes.ASSAULT_COP, ledger.lastCrime(playerId).crimeId());
+ 	}
+ 
++	@Test
++	@DisplayName("one ignored warning (Brandish_Near_Cop seen by a cop) gives the first star under the shipped heat")
++	void brandishNearCop_seenByCop_givesTheFirstStar() {
++		ledger.record(new CrimeCommittedEvent(player, Crimes.BRANDISH_NEAR_COP, location, true, 0));
++
++		assertEquals(1, wanted.getLevel());
++		assertEquals(1, triggers.get());
++		assertEquals(Crimes.BRANDISH_NEAR_COP, ledger.lastCrime(playerId).crimeId());
++	}
++
+ 	@Test
+ 	@DisplayName("two Kill_Cop inside the streak window reach two stars (150 + 225)")
+ 	void killCopTwiceInTheStreakWindow_reachesTwoStars() {
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/hud/HudFixtures.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/hud/HudFixtures.java
+index ae2ac1d79..72c40e1fa 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/hud/HudFixtures.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/hud/HudFixtures.java
+@@ -56,9 +56,10 @@ public final class HudFixtures {
+ 	/** The shipped HUD with each switch given. */
+ 	public static HudSettings hud(boolean bossBar, boolean starCard, boolean title, boolean siren, boolean zoneRing,
+ 	                              boolean compass) {
+-		TitleCue gain    = TitleCue.DEFAULT;
++		TitleCue gain    = TitleCue.GAIN;
++		TitleCue lost    = TitleCue.DEFAULT;
+ 		TitleCue escaped = TitleCue.ESCAPED;
+-		return cues(bossBar, starCard, title ? gain : muted(gain), title ? gain : muted(gain),
++		return cues(bossBar, starCard, title ? gain : muted(gain), title ? lost : muted(lost),
+ 		            title ? escaped : muted(escaped), siren, zoneRing, compass);
+ 	}
+ 

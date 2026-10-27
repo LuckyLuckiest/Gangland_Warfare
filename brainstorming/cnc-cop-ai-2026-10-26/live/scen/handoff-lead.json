@@ -1,0 +1,977 @@
+[
+ {
+  "console": "gamerule spawn_mobs false",
+  "after": 300
+ },
+ {
+  "console": "gamerule spawn_monsters false",
+  "after": 300
+ },
+ {
+  "console": "gamerule advance_time false",
+  "after": 300
+ },
+ {
+  "console": "time set 6000",
+  "after": 300
+ },
+ {
+  "console": "weather clear",
+  "after": 300
+ },
+ {
+  "join": "Runner"
+ },
+ {
+  "console": "effect give Runner minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Runner minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Runner",
+  "after": 200
+ },
+ {
+  "console": "clear Runner",
+  "after": 300
+ },
+ {
+  "console": "tp Runner 0 -60 185 180 0",
+  "after": 800
+ },
+ {
+  "console": "fill -4 -61 196 4 -56 204 minecraft:stone hollow",
+  "after": 800
+ },
+ {
+  "expectLog": "Successfully filled",
+  "timeout": 10000
+ },
+ {
+  "console": "tp Runner 0 -60 0 90 0",
+  "after": 1500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "console": "say CNCMARK:HL:BASE",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:WANTED2",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted add 2",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "expectLog": "DISPATCH Runner",
+  "timeout": 20000
+ },
+ {
+  "expectLog": "UNIT Runner",
+  "timeout": 20000
+ },
+ {
+  "console": "say CNCMARK:HL:CONTACT-a",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "wait": 2000
+ },
+ {
+  "console": "say CNCMARK:HL:CONTACT-b",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:HOPS-WEST",
+  "after": 200
+ },
+ {
+  "console": "tp Runner -2 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "tp Runner -4 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "tp Runner -6 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "tp Runner -8 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "tp Runner -10 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "tp Runner -12 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "tp Runner -14 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "tp Runner -16 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "tp Runner -18 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "tp Runner -20 -60 0 90 0",
+  "after": 500
+ },
+ {
+  "console": "say CNCMARK:HL:HOPS-END",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:GO-BOX",
+  "after": 200
+ },
+ {
+  "console": "tp Runner 0 -60 200 180 0",
+  "after": 300
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-1",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-2",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-3",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-4",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-5",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-6",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-7",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-8",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-9",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-10",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-11",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-12",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-13",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-14",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-15",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-16",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-17",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-18",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-19",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-20",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-21",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-22",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-23",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-24",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-25",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-26",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-27",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:BOX-28",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "console": "say CNCMARK:HL:GO-OUT",
+  "after": 200
+ },
+ {
+  "console": "tp Runner 0 -60 185 90 0",
+  "after": 300
+ },
+ {
+  "console": "say CNCMARK:HL:OUT-1",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "console": "say CNCMARK:HL:OUT-2",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "say CNCMARK:HL:CLEAR",
+  "after": 200
+ },
+ {
+  "chat": "/glw wanted clear",
+  "after": 800,
+  "bot": "Runner"
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-1",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-2",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-3",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-4",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-5",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-6",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-7",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-8",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-9",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:WATCH-10",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:GO-AWAY",
+  "after": 200
+ },
+ {
+  "console": "tp Runner 0 -60 185 0 0",
+  "after": 300
+ },
+ {
+  "console": "say CNCMARK:HL:AWAY-1",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:AWAY-2",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:AWAY-3",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:AWAY-4",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:AWAY-5",
+  "after": 200
+ },
+ {
+  "console": "glw cop list Runner",
+  "after": 300
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "console": "data get entity Runner Rotation",
+  "after": 150
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:AWAY-6",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:AWAY-7",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "console": "say CNCMARK:HL:AWAY-8",
+  "after": 200
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Runner] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "console": "data get entity Runner Pos",
+  "after": 200
+ },
+ {
+  "wait": 300
+ },
+ {
+  "chat": "/glw wanted",
+  "after": 500,
+  "bot": "Runner"
+ },
+ {
+  "console": "say CNCMARK:HL:END",
+  "after": 200
+ },
+ {
+  "expectLog": "HANDOFF_LEAD Runner",
+  "since": "start",
+  "timeout": 1000
+ },
+ {
+  "quit": true
+ }
+]

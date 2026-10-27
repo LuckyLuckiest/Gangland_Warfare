@@ -1,0 +1,9 @@
+[
+ {"console":"gamerule spawn_mobs false","after":300},
+ {"join":"Runner"},
+ {"console":"title Runner subtitle {\"text\":\"TITLECHECK sub\",\"color\":\"yellow\"}","after":500},
+ {"console":"title Runner title [{\"text\":\"★ \"},{\"text\":\"TITLECHECK main\",\"color\":\"red\"}]","after":800},
+ {"chat":"/glw wanted add 1","after":2000,"bot":"Runner"},
+ {"wait":3000},
+ {"quit":true,"bot":"Runner"}
+]

@@ -1,0 +1,699 @@
+diff --git a/documentation/developer/civilians.md b/documentation/developer/civilians.md
+index e9b1c41e2..1d5dd1a42 100644
+--- a/documentation/developer/civilians.md
++++ b/documentation/developer/civilians.md
+@@ -277,7 +277,7 @@ pool is said is the only purely cosmetic dice.
+ | Step | Code | Rule |
+ |---|---|---|
+ | Pick | `WitnessService.witness` | Free civilians (not FLEEING/COMBAT/CALLING, not the 2 s victim, not in `Scared_Cooldown_Seconds`) within `Witness.Range`. A loud crime (`Loud_Crimes`, empty by default, or within `Loud_Shot_Seconds` of a `heardShot` whose weapon category is in `Loud_Weapon_Types`, GUN and THROWABLE; a throwable's stamp is throw + `Fuse_Time` x 50 ms, so it is loud from the throw until `Loud_Shot_Seconds` after the blast, and a later shot never shortens it) turns each one to the crime spot (`CivilianLookController.faceLocation`); a silent one needs `WitnessService.inView` (horizontal cone `View_Angle` wide around the entity's yaw, edge included, 360 = all round). Then `Hooks.sight` (`npc.canSee`). Nearest calls, the rest are watchers. |
+-| Notice | `startCall`, `CivilianCallingBehavior.onEnter` | `Witness_Start` spoken; the caller looks at the criminal, `Notice_Particle` (XParticle) over its head, `Phone_Item` (XMaterial) in its main hand (the old hand is kept on the per-NPC behaviour and given back in `onExit`, which runs after the service has already detached the call). First countdown bar. |
++| Notice | `startCall`, `CivilianCallingBehavior.onEnter` | `Witness_Start` spoken; the caller looks at the criminal, `Notice_Particle` (XParticle; a dust particle gets red `DustOptions`, any other data particle falls back to `ANGRY_VILLAGER`) over its head, `Phone_Item` (XMaterial) in its main hand (the old hand is kept on the per-NPC behaviour and given back in `onExit`, which runs after the service has already detached the call). First countdown bar. |
+ | Dialling | `CivilianCallingBehavior.tick`, `tickCaller` | After `Notice_Seconds` the caller turns away once. Each AI tick: criminal offline = LOGOUT, caller invalid = LOST, aimed at (`Hooks.aim`, once per AI tick) = SCARED; otherwise the bar `Witness_Calling` (`%caller%`, `%seconds%`) is re-sent when the whole second changes. |
+ | Stopped | `cancelCall`, `intimidate`, `onPlayerHitCivilian` | HIT, SCARED, INTIMIDATED (`CivilianInteractListener`: the call's criminal right-clicks the caller within `Intimidate_Range`): `Witness_Scared` spoken, `Witness_Stopped` bar, flee, the civilian is blocked for `Scared_Cooldown_Seconds`. LOGOUT, LOST and KILLED are silent. |
+ | Hand-over | `onCallerDeath` | The first watcher that is still valid, still sees the criminal and is not CALLING/FLEEING/COMBAT starts a fresh call (its own Notice). |
+diff --git a/documentation/developer/cops-n-crooks.md b/documentation/developer/cops-n-crooks.md
+index eac033023..02e78c0a6 100644
+--- a/documentation/developer/cops-n-crooks.md
++++ b/documentation/developer/cops-n-crooks.md
+@@ -356,7 +356,10 @@ and the group's last Commander is never sent, even once the wanted level has fal
+ stays as one cop over the target and `pendingRelease` is capped at what the role excess can ever release (the
+ Commander-flagged roles' excess pooled and capped once at every Commander but the last, however many roles carry
+ `Commander: true`), so no radio responder joining later is sent home in his place (T-435). A cop fighting, cuffing or
+-guarding is never sent; the release retries next run until enough have gone. `releaseSurplus` runs only while the
++guarding is never sent; a pursuing, idle or POSTED one is (T-510: leaving POSTED releases its post, and the perimeter,
++standoff and breach controllers drop a cop that left it; a perimeter whose last posts went that way ends `reason=EMPTY`);
++an OVERWATCH Marksman is not sent and holds the release until `Overwatch.Max_Seconds`. The release retries next run
++until enough have gone. `releaseSurplus` runs only while the
+ player is wanted: a backup that runs out inside the post-escape search sends nobody home (T-187).
+ 
+ #### Resisting (0.12.0)
+@@ -1203,9 +1206,13 @@ new spawner or jail can no longer take the id of a row that is waiting for its w
+ registries keep every row (the location is nullable), so their `max + 1` already covers unloaded worlds.
+ 
+ **Debug lines** (`log.debug`, read by the acceptance verdicts): `DISPATCH {player} count= station= eta= hold= reason= bias=`,
+-`UNIT {player} callsign= tier= role= fromStation= hidden= bias= ahead= at=`, `PERIMETER {player} start|end ...`,
++`UNIT {player} callsign= tier= role= fromStation= hidden= bias= ahead= at=`, `PERIMETER {player} start|end reason=`
++(`OFF`, `CONTACT`, `TIMEOUT`, `SIGHTED`, or `EMPTY` when every post was killed or sent home unseen),
+ `HANDOFF {player} heading=`, `HANDOFF_LEAD {player} at=x,y,z heading= dir=dx,dz from=x,y,z` (0.21.1: the seed a hand-off
+-unit applied, `from` the bias's last-known spot), `EVASION {player} speed= zone= hideout= quiet=` and
++unit applied, `from` the bias's last-known spot), `HANDOFF_RING {player} center=x,y,z fraction= clamped= fallback=`
++(0.21.1, T-509: logged just before that unit's `UNIT` line when `Spawn_Between` is above 0; `fallback=true`
++when no hidden spot lay within 16 b of the between point, or the lead is in another world (`center` = his own spot), and
++the unit took the ring ahead or a later step), `EVASION {player} speed= zone= hideout= quiet=` and
+ `EVASION {player} hold=enroute`.
+ 
+ **Radio.** `CopRadio` keeps both constructors; `setPlaceNames` and `placeOf(location)` (place name or `Unknown_Place`) supply
+@@ -1244,7 +1251,11 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
+   `staleRelease_freeChaserLeavesThePostBehind_thenIsKilled_noHandoff`). A post killed or called off is no leash, so a fall-away
+   through its loss keeps the `Bias_Seconds` rule (`postHoldsAMinute_thenThePostIsKilled_noHandoff`,
+   `staleRelease_thenTheSquadIsWipedAMinuteLater_noHandoff`). The r6 first cut re-stamped the record while posts held
+-  the chase, which also handed off on a post killed a minute after the release; it was dropped.
++  the chase, which also handed off on a post killed a minute after the release; it was dropped. r7 (review 1): a cop the
++  group sent home (`CopGroup.isSentHome`: a backup's extra or a star drop, T-510) was called off, so neither
++  `HandoffController.leashedOut` nor the `CopManager.release` stamp counts him, however far he walks with his target
++  kept (`levelDropWhilePosted_thenPostLeftBehind_noHandoff`, `levelDropWhilePursuing_...`,
++  `levelDropWalkerReleased_...`).
+   During the post-escape search
+   (`isSearching`) the leash is measured to the squad's last-known spot, the search's goal (`CopManager.leashAnchor`
+   for `isStrandedReturning`/`isStranded`, `PursuingBehavior.leashDistance` for the pursuit leash), never his live
+@@ -1270,7 +1281,7 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
+   cops engaged after the call back, not against `lastTarget`: a correction of the r3 note, which keyed the new episode
+   on `lastTarget` too, so a re-spot after a stepwise escape (`Drop_Mode` ONE_STAR: 3, 2, 1, search) kept the four
+   cops the search called back, while an all-stars escape trimmed to two. `releaseSurplus` runs only at wanted level
+-  > 0, so neither a drop's release still waiting for free cops (all posted) nor a backup that runs out mid-search
++  > 0, so neither a drop's release still waiting for free cops (all fighting) nor a backup that runs out mid-search
+   fires in the post-escape search (wanted level 0, run at one star), which keeps every walker it called back (T-187);
+   the next wanted start replaces whatever is still owed. A new wanted start calls back walkers in
+   range only up to the new level's target (`reengageReturning(group, player, limit, eligible)`, nearest first; a group
+diff --git a/documentation/features/cops-n-crooks.md b/documentation/features/cops-n-crooks.md
+index f3f2245e0..8c1381eb8 100644
+--- a/documentation/features/cops-n-crooks.md
++++ b/documentation/features/cops-n-crooks.md
+@@ -447,7 +447,7 @@ player's world:
+   (60) past `Max_Ticks`: nobody can pin a walker forever. On the post-escape search
+   the leash is measured to the spot the squad is searching, not to where he hides: searchers there are neither sent
+   home nor replaced however far off he is, and a replacement only appears within reach of that spot. Nobody saw where the player went, so the
+-  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count (the squad's last Commander stays). A new wanted level fields that level's count whatever the last one ended with: walkers still in range are called back only as many as it needs (its Commander first), and cops still hunting beyond it go home, whether the stars went one at a time or all at once. Cops sent home that are still in range are the first called back when the level rises again or a cop falls; one called back is back on duty, so if it gives up the chase later it walks home for good. Cops answering a radio call stay even when they put the squad over its count, and the post-escape search keeps every cop it called back, even one a star drop had marked for home or a backup
++  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count, a cop holding a perimeter post included (the squad's last Commander stays; a cop in a fight, cuffing or guarding goes once he is free). A new wanted level fields that level's count whatever the last one ended with: walkers still in range are called back only as many as it needs (its Commander first), and cops still hunting beyond it go home, whether the stars went one at a time or all at once. Cops sent home that are still in range are the first called back when the level rises again or a cop falls; one called back is back on duty, so if it gives up the chase later it walks home for good. Cops answering a radio call stay even when they put the squad over its count, and the post-escape search keeps every cop it called back, even one a star drop had marked for home or a backup
+   that ran out mid-search. While the whole squad is lost
+   (cops walking home, a hand-off pending, units on the road) the evasion countdown pauses instead of restarting.
+ - **Tips are not sightings (0.21.1).** The crime scene, a hand-off seed and a hit from cover tell the squad where to
+diff --git a/documentation/tests/features/cops-n-crooks.md b/documentation/tests/features/cops-n-crooks.md
+index cf11d1cdf..3e4dec4bf 100644
+--- a/documentation/tests/features/cops-n-crooks.md
++++ b/documentation/tests/features/cops-n-crooks.md
+@@ -103,7 +103,7 @@ permission.
+ - [ ] At three stars break contact: `PERIMETER ... start posts=2 radius=32`, two Marksmen/Defenders walk to posts, say "Holding the corner.",
+       and hold within 4 blocks; the rest of the squad searches.
+ - [ ] Walk into a post's line of sight: "Eyes on suspect ..." and the perimeter ends (`end reason=SIGHTED`/`CONTACT`); stay hidden
+-      60 s: `end reason=TIMEOUT`. A search at 1-2 stars posts nobody. `Perimeter.Enabled: false` posts nobody.
++      60 s: `end reason=TIMEOUT`. Every post killed or sent home by a star drop: `end reason=EMPTY`. A search at 1-2 stars posts nobody. `Perimeter.Enabled: false` posts nobody.
+ - [ ] Attack a posted cop: it drops its post and fights.
+ 
+ **S6 Hand-off**
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java
+index fcfab0336..31acc7d5b 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java
+@@ -1110,10 +1110,11 @@ public class CopManager implements BeanLifecycle {
+ 	 * Takes {@code cop} off the map ({@link CopGroup#release}); the caller drops it from the list. A leashed walker still
+ 	 * on {@code playerId}'s trail ({@link #isStrandedReturning}) is stamped on the group first, whichever removal took it
+ 	 * (an R3 release, a recycle, its walk home ending), so the hand-off still sees the leash once it is gone. A stood-down
+-	 * walker has no target and is no leash.
++	 * walker has no target and is no leash, nor is one the group sent home (a star drop, T-510: called off, r7 review 1).
+ 	 */
+ 	private void release(CopGroup group, CopNpc cop, UUID playerId, Location anchor, double maxDist, long now) {
+-		if (isStrandedReturning(cop, anchor, maxDist) && playerId.equals(cop.getTargetPlayerId()))
++		if (isStrandedReturning(cop, anchor, maxDist) && playerId.equals(cop.getTargetPlayerId()) &&
++		    !group.isSentHome(cop))
+ 			group.markLeashReleased(now);
+ 		group.release(cop, markManager);
+ 	}
+@@ -1131,7 +1132,8 @@ public class CopManager implements BeanLifecycle {
+ 	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). The group's last Commander is
+ 	 * never sent, even when the wanted level fell to a composition without one: he stays as one cop over the target and
+ 	 * the release owed is capped at what can ever go, so no later radio responder is sent home in his place. A cop in a
+-	 * fight, cuffing or guarding is never sent; what cannot go this run is retried on the next. Queued units count toward
++	 * fight, cuffing or guarding is never sent (a pursuing, idle or POSTED one is, T-510); what cannot go this run is
++	 * retried on the next. Queued units count toward
+ 	 * the group and a surplus one still en route is called off before any live cop is sent.
+ 	 */
+ 	private void releaseSurplus(CopGroup group, int targetCount, @Nullable List<CopRole> composition) {
+@@ -1192,7 +1194,9 @@ public class CopManager implements BeanLifecycle {
+ 			CopNpc   cop   = live.get(i);
+ 			CopState state = cop.getCurrentState();
+ 			String   role  = roleName(cop.getRole());
+-			if (state != CopState.PURSUING && state != CopState.IDLE || excess.get(role) <= 0) continue;
++			// T-510: a POSTED cop (perimeter, standoff, breach stack) is free to go; leaving POSTED releases the post
++			boolean free = state == CopState.PURSUING || state == CopState.IDLE || state == CopState.POSTED;
++			if (!free || excess.get(role) <= 0) continue;
+ 			if (isCommander(cop)) {
+ 				if (commanders <= 1) continue; // the squad's leader stays (T-146)
+ 				commanders--;
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java
+index debc8e802..1247f9fa5 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java
+@@ -175,13 +175,14 @@ public class HandoffController {
+ 
+ 	/**
+ 	 * A cop still hunting this player (target kept: a stood-down chase clears it) is RETURNING beyond the pursuit range,
+-	 * or one was and a spawn or AI run removed it lately ({@link CopGroup#isLeashReleased}, read by the caller).
++	 * or one was and a spawn or AI run removed it lately ({@link CopGroup#isLeashReleased}, read by the caller). A cop
++	 * the group sent home (a backup's extra, a star drop: T-510) was called off, never leashed out (r7 review 1).
+ 	 */
+ 	private static boolean leashedOut(CopGroup group, UUID id, Player player, double maxDistance) {
+ 		for (CopNpc cop : List.copyOf(group.getCops())) {
+ 			Entity body = cop.getEntity();
+ 			if (!cop.isValid() || body == null || cop.getCurrentState() != CopState.RETURNING ||
+-			    !id.equals(cop.getTargetPlayerId())) continue;
++			    !id.equals(cop.getTargetPlayerId()) || group.isSentHome(cop)) continue;
+ 			if (farFrom(body.getLocation(), player, maxDistance)) return true;
+ 		}
+ 		return false;
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/perimeter/PerimeterController.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/perimeter/PerimeterController.java
+index 955d30517..9b4d9e065 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/perimeter/PerimeterController.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/perimeter/PerimeterController.java
+@@ -125,8 +125,10 @@ public class PerimeterController {
+ 		PerimeterSettings settings = settings();
+ 		perimeter.posts.removeIf(cop -> !cop.isValid() || cop.getCurrentState() != CopState.POSTED);
+ 
++		boolean sighted = false;
+ 		for (CopNpc cop : List.copyOf(perimeter.posts)) {
+ 			if (!cop.canSee(player, settings.sightRange())) continue;
++			sighted = true;
+ 
+ 			group.getSquad().reportSighting(cop, player.getLocation(), settings.sightRange());
+ 			LivingEntity entity = cop.getEntity();
+@@ -146,7 +148,8 @@ public class PerimeterController {
+ 			active.remove(id);
+ 			release(perimeter, CopState.PURSUING);
+ 			spent.add(id);
+-			log.debug("PERIMETER {} end reason={}", player.getName(), timedOut ? "TIMEOUT" : "SIGHTED");
++			// EMPTY: every post was killed or sent home (a star drop, T-510) without seeing him
++			log.debug("PERIMETER {} end reason={}", player.getName(), timedOut ? "TIMEOUT" : sighted ? "SIGHTED" : "EMPTY");
+ 		}
+ 	}
+ 
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/spawn/CopSpawnManager.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/spawn/CopSpawnManager.java
+index 41bd31a64..04e3012cb 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/spawn/CopSpawnManager.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/spawn/CopSpawnManager.java
+@@ -266,7 +266,10 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
+ 	 * {@code Cops.Handoff.Spawn_Between} of the way from {@code target}'s live spot to the lead it is sent to
+ 	 * ({@link SpawnBias#lead} of {@link #handoffLead}), that point held within {@code Spawn.Max_Distance} of him and the
+ 	 * spawn leash margin; {@code ok} (leash, R6 view cone, the avoided spawners) still applies. {@code null} with
+-	 * {@code Spawn_Between} 0, a lead in another world, or no such spot (the caller falls back to the ring ahead).
++	 * {@code Spawn_Between} 0, a lead in another world, or no such spot (the caller falls back to the ring ahead). Unless
++	 * {@code Spawn_Between} is 0 it logs (debug) {@code HANDOFF_RING <player> center=x,y,z fraction=<f> clamped=<b>
++	 * fallback=<b>}, {@code fallback=true} when no spot was found, his own spot the centre for a lead in another world
++	 * (T-509).
+ 	 */
+ 	// ponytail: Keystone's rings are Player-centred, so the ring is sampled around him and a spot is only accepted near
+ 	// the between point; a Location-centred findHiddenSpawnLocation upstream would centre it there
+@@ -274,16 +277,30 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
+ 		HandoffSettings handoff = Objects.requireNonNullElse(configProvider.getHandoffSettings(), HandoffSettings.DEFAULT);
+ 		double          share   = Math.min(1.0, handoff.spawnBetween());
+ 		Location        at      = target.getLocation();
+-		Location        lead    = share > 0 ? bias.lead(handoffLead(configProvider)) : null;
+-		if (lead == null || !Objects.equals(lead.getWorld(), at.getWorld())) return null;
++		if (share <= 0) return null;
++		Location lead = bias.lead(handoffLead(configProvider));
++		if (lead == null || !Objects.equals(lead.getWorld(), at.getWorld())) {
++			logRing(target, at, share, false, true); // r7 review: a lead in another world falls back too
++			return null;
++		}
+ 
+ 		Vector toward = new Vector(lead.getX() - at.getX(), 0, lead.getZ() - at.getZ()).multiply(share);
+ 		double leash  = configProvider.getPursuitMaxDistance() * LEASH_MARGIN;
+ 		double reach  = leash > 0 ? Math.min(configProvider.getMaxSpawnDistance(), leash)
+ 		                          : configProvider.getMaxSpawnDistance();
+-		if (toward.length() > reach) toward.normalize().multiply(reach);
++		boolean clamped = toward.length() > reach;
++		if (clamped) toward.normalize().multiply(reach);
+ 		Location centre = at.clone().add(toward);
+-		return hiddenRing(target, ok.and(loc -> horizontalSq(loc, centre) <= BETWEEN_RADIUS * BETWEEN_RADIUS));
++		Location spot   = hiddenRing(target, ok.and(loc -> horizontalSq(loc, centre) <= BETWEEN_RADIUS * BETWEEN_RADIUS));
++		logRing(target, centre, share, clamped, spot == null);
++		return spot;
++	}
++
++	/** T-509: ACC8's R5-spawn-between judge exempts a unit whose fallback is logged beside its UNIT line. */
++	private static void logRing(Player target, Location centre, double share, boolean clamped, boolean fallback) {
++		if (log.isDebugEnabled())
++			log.debug("HANDOFF_RING {} center={},{},{} fraction={} clamped={} fallback={}", target.getName(),
++			          centre.getBlockX(), centre.getBlockY(), centre.getBlockZ(), share, clamped, fallback);
+ 	}
+ 
+ 	/**
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java
+index 446cb645d..7e753d72e 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerHandoffTest.java
+@@ -640,4 +640,82 @@ class CopManagerHandoffTest {
+ 		assertTrue(second.heading().getX() > 0, "he ran east (20 then 50): heading " + second.heading());
+ 		assertEquals(50.0, second.lastSeen().getX());
+ 	}
++
++	/**
++	 * Both cops on him seen running east (x=10, x=20), standing at x=20; {@code posted} puts them on posts there before
++	 * the stars drop to 1 and one is sent home (T-510). The walker goes 480 blocks off with his target kept; the other
++	 * posts at x=20 and he hides at x=60, then runs to x=120, past the post. {@code reap} lets a spawn tick take the
++	 * walker off the map (R3) before he runs on.
++	 */
++	private CopGroup levelDropThenPostLeftBehind(HandoffController controller, boolean posted, boolean reap) {
++		when(fx.spawner.getTargetCopCount(1)).thenReturn(1);
++		fx.manager.onWantedStart(player, wanted);
++		fx.manager.spawnTick(player.getUniqueId(), wanted);
++		CopGroup group = fx.manager.groupFor(player.getUniqueId());
++		assertEquals(2, group.getCops().size());
++		for (CopNpc cop : group.getCops()) {
++			cop.transitionTo(CopState.PURSUING);
++			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 20, 64, 10));
++		}
++		playerAt(10);
++		group.getSquad().reportSighting(player.getLocation());
++		controller.tick(player, group);
++		fx.clock[0] += 1_000L;
++		playerAt(20);
++		group.getSquad().reportSighting(player.getLocation());
++		controller.tick(player, group);
++		if (posted) {
++			for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.POSTED); // lost: both post at x=20
++			fx.clock[0] += 1_000L;
++			controller.tick(player, group);
++		}
++
++		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
++		fx.manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(1));
++		List<CopNpc> home = group.getCops().stream().filter(c -> c.getCurrentState() == CopState.RETURNING).toList();
++		assertEquals(1, home.size(), "the star drop sent one cop home");
++		for (CopNpc walker : home) when(walker.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
++		for (CopNpc cop : group.getCops()) if (cop.getCurrentState() == CopState.PURSUING) cop.transitionTo(CopState.POSTED);
++		playerAt(60);
++		if (reap) {
++			fx.manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(1));
++			assertFalse(group.getCops().contains(home.get(0)), "the walker was released");
++		}
++		for (int i = 0; i < 3; i++) {
++			fx.clock[0] += 1_000L;
++			controller.tick(player, group);
++		}
++		playerAt(120);
++		fx.clock[0] += 1_000L;
++		controller.tick(player, group);
++		return group;
++	}
++
++	@Test
++	@DisplayName("0.21.1 r7 review 1: a post sent home by a star drop walks off, then he leaves the other post behind: no hand-off")
++	void levelDropWhilePosted_thenPostLeftBehind_noHandoff() {
++		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
++		CopGroup group = levelDropThenPostLeftBehind(controller, true, false);
++
++		assertNull(group.biasAt(fx.clock[0]), "a post sent home by a star drop is no leash");
++		verify(fx.radio, never()).sayFromLeader(eq(group), eq("Handoff"), any(), any());
++	}
++
++	@Test
++	@DisplayName("0.21.1 r7 review 1: a pursuer sent home by a star drop walks off, then he leaves the post behind: no hand-off")
++	void levelDropWhilePursuing_thenPostLeftBehind_noHandoff() {
++		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
++		CopGroup group = levelDropThenPostLeftBehind(controller, false, false);
++
++		assertNull(group.biasAt(fx.clock[0]), "a pursuer sent home by a star drop is no leash");
++	}
++
++	@Test
++	@DisplayName("0.21.1 r7 review 1: a cop sent home by a star drop is released off the map, then he leaves the post behind: no hand-off")
++	void levelDropWalkerReleased_thenPostLeftBehind_noHandoff() {
++		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
++		CopGroup group = levelDropThenPostLeftBehind(controller, true, true);
++
++		assertNull(group.biasAt(fx.clock[0]), "a release of a cop sent home stamps no leash");
++	}
+ }
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerSquadTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerSquadTest.java
+index da5b4d441..a86e27d90 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerSquadTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManagerSquadTest.java
+@@ -328,6 +328,53 @@ class CopManagerSquadTest {
+ 		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count());
+ 	}
+ 
++	@Test
++	@DisplayName("T-510: a level drop with the surplus Marksman and Defender POSTED (perimeter) sends one home")
++	void levelDrop_surplusPosted_isSentHome() {
++		CopRole defender = role("Defender");
++		CopRole marksman = role("Marksman");
++		squadComposition(COMMANDER, POINTMAN, defender, marksman);
++		Wanted three = CopManagerFixture.wanted(3);
++		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
++		when(fx.spawner.getTargetCopCount(2)).thenReturn(3);
++		manager.onWantedStart(player, three);
++		manager.spawnTick(playerId, three);
++		CopGroup     group = manager.groupFor(playerId);
++		List<CopNpc> cops  = List.copyOf(group.getCops()); // Commander, Pointman, Defender, Marksman
++		assertEquals(4, cops.size());
++		cops.get(0).transitionTo(CopState.PURSUING);
++		cops.get(1).transitionTo(CopState.PURSUING);
++		cops.get(2).transitionTo(CopState.POSTED);
++		cops.get(3).transitionTo(CopState.POSTED);
++
++		manager.spawnTick(playerId, CopManagerFixture.wanted(2));
++
++		assertEquals(1, countIn(group, CopState.RETURNING), "two stars field three: the posted Marksman goes home");
++		assertEquals(CopState.RETURNING, cops.get(3).getCurrentState());
++		assertEquals(CopState.POSTED, cops.get(2).getCurrentState(), "the base squad's Defender keeps his post");
++		assertEquals(0, group.getPendingRelease());
++	}
++
++	@Test
++	@DisplayName("T-510: a COMBAT surplus cop is still never sent home on a level drop; the release waits")
++	void levelDrop_surplusInCombat_staysAndTheReleaseWaits() {
++		squadComposition(COMMANDER, POINTMAN, role("Defender"), role("Marksman"));
++		Wanted three = CopManagerFixture.wanted(3);
++		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
++		when(fx.spawner.getTargetCopCount(2)).thenReturn(3);
++		manager.onWantedStart(player, three);
++		manager.spawnTick(playerId, three);
++		CopGroup     group = manager.groupFor(playerId);
++		List<CopNpc> cops  = List.copyOf(group.getCops());
++		for (CopNpc cop : cops) cop.transitionTo(CopState.PURSUING);
++		cops.get(3).transitionTo(CopState.COMBAT);
++
++		manager.spawnTick(playerId, CopManagerFixture.wanted(2));
++
++		assertEquals(0, countIn(group, CopState.RETURNING));
++		assertEquals(1, group.getPendingRelease());
++	}
++
+ 	@Test
+ 	@DisplayName("T-435: a new episode at a lower level calls back only its target's worth of walkers, none flip home")
+ 	void newLowerEpisode_callsBackOnlyItsTarget() {
+@@ -1298,7 +1345,7 @@ class CopManagerSquadTest {
+ 	}
+ 
+ 	@Test
+-	@DisplayName("T-187: a release left over from a drop (posts not free yet) never fires in the post-escape search")
++	@DisplayName("T-187: a release left over from a drop (cops still fighting) never fires in the post-escape search")
+ 	void escapeAfterADrop_leftoverReleaseNeverFiresInTheSearch() {
+ 		Wanted three = CopManagerFixture.wanted(3);
+ 		Wanted one   = CopManagerFixture.wanted(1);
+@@ -1308,12 +1355,13 @@ class CopManagerSquadTest {
+ 		manager.onWantedStart(player, three);
+ 		manager.spawnTick(playerId, three);
+ 		CopGroup group = manager.groupFor(playerId);
+-		// he is lost: the perimeter posts every cop, so the drop to one star finds nobody free to send home
+-		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.POSTED);
++		// every cop is in a fight, so the drop to one star finds nobody free to send home (flipped 0.21.1, T-510: a
++		// POSTED cop is free to go now, so posts no longer hold the release back)
++		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.COMBAT);
+ 		manager.spawnTick(playerId, one);
+ 		assertEquals(2, group.getPendingRelease(), "the drop's release waits for free cops");
+ 
+-		// the last star goes: escape, the posts come off, and the search keeps all four
++		// the last star goes: escape, the fights end, and the search keeps all four
+ 		manager.onWantedEnd(player, WantedCause.EVASION);
+ 		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.PURSUING);
+ 		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/perimeter/PerimeterControllerTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/perimeter/PerimeterControllerTest.java
+index 2ecedd037..22aac1cef 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/perimeter/PerimeterControllerTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/perimeter/PerimeterControllerTest.java
+@@ -1,5 +1,9 @@
+ package org.luckyraven.gangland.copsncrooks.npc.police.perimeter;
+ 
++import org.apache.logging.log4j.Level;
++import org.apache.logging.log4j.core.LogEvent;
++import org.apache.logging.log4j.core.appender.AbstractAppender;
++import org.apache.logging.log4j.core.config.Configurator;
+ import org.bukkit.Location;
+ import org.bukkit.World;
+ import org.bukkit.entity.LivingEntity;
+@@ -14,6 +18,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.PerimeterSettings;
+ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+ import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
++import org.luckyraven.keystone.logging.Logger;
+ import org.luckyraven.keystone.npc.NpcFanPlacement;
+ import org.luckyraven.keystone.npc.NpcPost;
+ import org.luckyraven.keystone.npc.NpcSquad;
+@@ -282,6 +287,48 @@ class PerimeterControllerTest {
+ 		verify(marksman, never()).transitionTo(CopState.PURSUING);
+ 	}
+ 
++	@Test
++	@DisplayName("T-510 r7 review: every post sent home by a star drop ends the perimeter as EMPTY, not SIGHTED")
++	void everyPostSentHome_endsEmpty() {
++		chaser("Commander", 1);
++		CopNpc marksman = chaser("Marksman", 2);
++		CopNpc defender = chaser("Defender", 3);
++		controller.start(player, centre, 90, 4);
++		states.get(marksman).set(CopState.RETURNING);
++		states.get(defender).set(CopState.RETURNING);
++
++		List<String> lines = debugLines(() -> controller.tick(player, group));
++
++		assertFalse(controller.isActive(playerId));
++		assertEquals(List.of("PERIMETER " + player.getName() + " end reason=EMPTY"),
++		             lines.stream().filter(l -> l.contains(" end reason=")).toList());
++	}
++
++	/** The debug lines PerimeterController logs while {@code action} runs. */
++	private static List<String> debugLines(Runnable action) {
++		List<String> lines = new ArrayList<>();
++		org.apache.logging.log4j.core.Logger logger =
++				(org.apache.logging.log4j.core.Logger) Logger.getLogger(PerimeterController.class);
++		Level saved = logger.getLevel();
++		AbstractAppender capture =
++				new AbstractAppender("perimeter-capture", null, null, true) {
++					@Override
++					public void append(LogEvent event) {
++						lines.add(event.getMessage().getFormattedMessage());
++					}
++				};
++		capture.start();
++		Configurator.setLevel(logger.getName(), Level.DEBUG);
++		logger.addAppender(capture);
++		try {
++			action.run();
++		} finally {
++			logger.removeAppender(capture);
++			Configurator.setLevel(logger.getName(), saved);
++		}
++		return lines;
++	}
++
+ 	@Test
+ 	@DisplayName("SEEN: every post is released and set PURSUING; ending twice is harmless")
+ 	void seen_endsWithEveryPostPursuing() {
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/spawn/CopSpawnManagerUnitTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/spawn/CopSpawnManagerUnitTest.java
+index 013b70ed6..29240f020 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/spawn/CopSpawnManagerUnitTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/spawn/CopSpawnManagerUnitTest.java
+@@ -1,5 +1,9 @@
+ package org.luckyraven.gangland.copsncrooks.npc.police.spawn;
+ 
++import org.apache.logging.log4j.Level;
++import org.apache.logging.log4j.core.LogEvent;
++import org.apache.logging.log4j.core.appender.AbstractAppender;
++import org.apache.logging.log4j.core.config.Configurator;
+ import org.bukkit.FluidCollisionMode;
+ import org.bukkit.Location;
+ import org.bukkit.Material;
+@@ -25,14 +29,17 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
+ import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+ import org.luckyraven.gangland.copsncrooks.station.Station;
++import org.luckyraven.keystone.logging.Logger;
+ import org.luckyraven.keystone.npc.NpcFanPlacement;
+ import org.luckyraven.keystone.npc.entity.NpcMarkManager;
+ import org.luckyraven.keystone.persistence.repository.IRepository;
+ import org.mockito.ArgumentCaptor;
+ 
++import java.util.ArrayList;
+ import java.util.List;
+ import java.util.function.Predicate;
+ 
++import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.junit.jupiter.api.Assertions.assertNotNull;
+ import static org.junit.jupiter.api.Assertions.assertNull;
+ import static org.junit.jupiter.api.Assertions.assertSame;
+@@ -346,7 +353,8 @@ class CopSpawnManagerUnitTest {
+ 
+ 		Location spot = ringSpot();
+ 		assertTrue(horizontal(spot, -19.5, 0.5) <= CopSpawnManager.BETWEEN_RADIUS + 1e-9, "around the clamped point: " + spot);
+-		assertTrue(horizontal(spot, 0.5, 0.5) <= 20.0 + 1e-9, "inside the spawn range");
++		// T-507: ring spots snap to block centres, up to sqrt(0.5) past the ring's 20-block radius
++		assertTrue(horizontal(spot, 0.5, 0.5) <= 20.0 + Math.sqrt(0.5) + 1e-9, "inside the spawn range: " + spot);
+ 	}
+ 
+ 	@Test
+@@ -363,6 +371,68 @@ class CopSpawnManagerUnitTest {
+ 		assertTrue(angle(new Vector(1, 0, 0), spot) <= 60.0, "never in his view; the fallback ring ahead (east): " + spot);
+ 	}
+ 
++	@Test
++	@DisplayName("T-509: a between spot found: one HANDOFF_RING line with the clamped centre and fallback=false")
++	void handoffUnit_betweenRing_logsTheCentre() {
++		blocked = dir -> true;
++		when(player.getName()).thenReturn("Runner");
++
++		List<String> lines = debugLines(() -> spawnManager.spawnUnit(player, unit(null, runEastFrom(-200.5)), loc -> true));
++
++		assertEquals(List.of("HANDOFF_RING Runner center=-20,64,0 fraction=0.5 clamped=true fallback=false"),
++		             lines.stream().filter(l -> l.startsWith("HANDOFF_RING")).toList());
++	}
++
++	@Test
++	@DisplayName("T-509: no between spot (all in his view): the fallback is logged, naming him and fallback=true")
++	void handoffUnit_betweenRingFallback_isLogged() {
++		blocked = dir -> dir.getX() > 0.6;
++		when(player.getEyeLocation()).thenReturn(new Location(world, 0.5, GROUND_Y + 1.62, 0.5, 90f, 0f)); // looks west
++		when(player.getName()).thenReturn("Runner");
++
++		List<String> lines = debugLines(() -> spawnManager.spawnUnit(player, unit(null, runEastFrom(-40.5)), loc -> true));
++
++		assertEquals(List.of("HANDOFF_RING Runner center=-9,64,0 fraction=0.5 clamped=false fallback=true"),
++		             lines.stream().filter(l -> l.startsWith("HANDOFF_RING")).toList());
++	}
++
++	@Test
++	@DisplayName("T-509 r7 review: a lead in another world logs the fallback with his own spot as the centre")
++	void handoffUnit_leadInAnotherWorld_fallbackIsLogged() {
++		when(player.getName()).thenReturn("Runner");
++		SpawnBias elsewhere = new SpawnBias(new Vector(1, 0, 0), new Location(mock(World.class), -40.5, GROUND_Y, 0.5),
++		                                    10_000L, 60.0);
++
++		List<String> lines = debugLines(() -> spawnManager.spawnUnit(player, unit(null, elsewhere), loc -> true));
++
++		assertEquals(List.of("HANDOFF_RING Runner center=0,64,0 fraction=0.5 clamped=false fallback=true"),
++		             lines.stream().filter(l -> l.startsWith("HANDOFF_RING")).toList());
++	}
++
++	/** The debug lines CopSpawnManager logs while {@code action} runs. */
++	private static List<String> debugLines(Runnable action) {
++		List<String> lines = new ArrayList<>();
++		org.apache.logging.log4j.core.Logger logger =
++				(org.apache.logging.log4j.core.Logger) Logger.getLogger(CopSpawnManager.class);
++		Level saved = logger.getLevel();
++		AbstractAppender capture = new AbstractAppender("spawn-capture", null, null, true) {
++			@Override
++			public void append(LogEvent event) {
++				lines.add(event.getMessage().getFormattedMessage());
++			}
++		};
++		capture.start();
++		Configurator.setLevel(logger.getName(), Level.DEBUG);
++		logger.addAppender(capture);
++		try {
++			action.run();
++		} finally {
++			logger.removeAppender(capture);
++			Configurator.setLevel(logger.getName(), saved);
++		}
++		return lines;
++	}
++
+ 	@Test
+ 	@DisplayName("T-423: Spawn_Between 0 keeps the 0.16 ring ahead of the heading")
+ 	void handoffUnit_spawnBetweenOff_keepsTheRingAhead() {
+diff --git a/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/npc/state/behavior/CivilianCallingBehavior.java b/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/npc/state/behavior/CivilianCallingBehavior.java
+index 4cff976ae..b8c0a1579 100644
+--- a/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/npc/state/behavior/CivilianCallingBehavior.java
++++ b/gangland-features/gangland-civilians/src/main/java/org/luckyraven/gangland/civilians/npc/state/behavior/CivilianCallingBehavior.java
+@@ -2,6 +2,7 @@ package org.luckyraven.gangland.civilians.npc.state.behavior;
+ 
+ import com.cryptomorin.xseries.XMaterial;
+ import com.cryptomorin.xseries.particles.XParticle;
++import org.bukkit.Color;
+ import org.bukkit.Location;
+ import org.bukkit.Material;
+ import org.bukkit.Particle;
+@@ -91,7 +92,16 @@ public class CivilianCallingBehavior implements CivilianBehavior {
+ 
+ 		Particle particle = XParticle.of(name.toUpperCase(Locale.ROOT)).map(XParticle::get).orElse(null);
+ 		if (particle == null) return;
+-		world.spawnParticle(particle, entity.getLocation().add(0, 2.3, 0), 5, 0.2, 0.1, 0.2, 0);
++
++		Location at = entity.getLocation().add(0, 2.3, 0);
++		if (particle.getDataType() == Particle.DustOptions.class) {
++			world.spawnParticle(particle, at, 5, 0.2, 0.1, 0.2, 0, new Particle.DustOptions(Color.RED, 1.0F));
++		} else if (particle.getDataType() == Void.class) {
++			world.spawnParticle(particle, at, 5, 0.2, 0.1, 0.2, 0);
++		} else if (!name.equals(WitnessRules.DEFAULT.noticeParticle())) {
++			// ponytail: a block/item particle has no sensible data here, so the shipped default stands in for it
++			noticeParticle(entity, WitnessRules.DEFAULT.noticeParticle());
++		}
+ 	}
+ 
+ 	private void takeOutPhone(LivingEntity entity, String name) {
+diff --git a/gangland-features/gangland-civilians/src/main/resources/npc/civilians.yml b/gangland-features/gangland-civilians/src/main/resources/npc/civilians.yml
+index 8bfc57458..54e7ee6ef 100644
+--- a/gangland-features/gangland-civilians/src/main/resources/npc/civilians.yml
++++ b/gangland-features/gangland-civilians/src/main/resources/npc/civilians.yml
+@@ -514,6 +514,7 @@ Witness:
+    # 0.21.1: seconds the witness stares at the criminal before turning away to dial (counted inside Call_Seconds).
+    Notice_Seconds: 1
+    # 0.21.1: particle shown above the witness when it notices a crime (XParticle name); "" = none.
++   # DUST shows red; a particle that needs a block or item (BLOCK, ITEM, ...) shows ANGRY_VILLAGER instead.
+    Notice_Particle: "ANGRY_VILLAGER"
+    # 0.21.1: item the caller holds while dialling (XMaterial name); its own hand comes back when the call ends. "" = none.
+    Phone_Item: "CLOCK"
+diff --git a/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/npc/state/behavior/CivilianCallingBehaviorTest.java b/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/npc/state/behavior/CivilianCallingBehaviorTest.java
+index b1e53bec5..c6270e745 100644
+--- a/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/npc/state/behavior/CivilianCallingBehaviorTest.java
++++ b/gangland-features/gangland-civilians/src/test/java/org/luckyraven/gangland/civilians/npc/state/behavior/CivilianCallingBehaviorTest.java
+@@ -1,6 +1,7 @@
+ package org.luckyraven.gangland.civilians.npc.state.behavior;
+ 
+ import org.bukkit.Location;
++import org.bukkit.Particle;
+ import org.bukkit.entity.LivingEntity;
+ import org.bukkit.inventory.EntityEquipment;
+ import org.bukkit.inventory.ItemStack;
+@@ -21,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
+ import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.anyDouble;
+ import static org.mockito.ArgumentMatchers.anyInt;
++import static org.mockito.ArgumentMatchers.eq;
++import static org.mockito.Mockito.doAnswer;
+ import static org.mockito.Mockito.mock;
+ import static org.mockito.Mockito.times;
+ import static org.mockito.Mockito.when;
+@@ -112,6 +115,53 @@ class CivilianCallingBehaviorTest {
+ 		                                anyDouble(), anyDouble(), anyDouble());
+ 	}
+ 
++	@Test
++	@DisplayName("Notice: a DUST Notice_Particle gets its DustOptions (Bukkit throws on a dust particle without data)")
++	void dustNoticeParticle_spawnsWithDustOptions() {
++		kit.rules = withNoticeParticle("DUST");
++		dataParticlesThrowWithoutData();
++		CivilianNpc npc = kit.civilian(10, true);
++		kit.witness("Car_Theft");
++
++		behavior.onEnter(npc);
++
++		verify(kit.world).spawnParticle(eq(Particle.REDSTONE), any(Location.class), anyInt(), anyDouble(), anyDouble(),
++		                                anyDouble(), anyDouble(), any(Particle.DustOptions.class));
++	}
++
++	@Test
++	@DisplayName("Notice: a Notice_Particle needing other data (block) falls back to the default ANGRY_VILLAGER")
++	void blockDataNoticeParticle_fallsBackToTheDefault() {
++		kit.rules = withNoticeParticle("BLOCK");
++		dataParticlesThrowWithoutData();
++		CivilianNpc npc = kit.civilian(10, true);
++		kit.witness("Car_Theft");
++
++		behavior.onEnter(npc);
++
++		verify(kit.world).spawnParticle(eq(Particle.VILLAGER_ANGRY), any(Location.class), anyInt(), anyDouble(),
++		                                anyDouble(), anyDouble(), anyDouble());
++	}
++
++	/** As CraftWorld: the data-less overload throws for a particle whose data type is not Void. */
++	private void dataParticlesThrowWithoutData() {
++		doAnswer(inv -> {
++			Particle particle = inv.getArgument(0);
++			if (particle.getDataType() != Void.class)
++				throw new IllegalArgumentException("data should be " + particle.getDataType() + " got null");
++			return null;
++		}).when(kit.world).spawnParticle(any(Particle.class), any(Location.class), anyInt(), anyDouble(), anyDouble(),
++		                                 anyDouble(), anyDouble());
++	}
++
++	private static WitnessRules withNoticeParticle(String particle) {
++		WitnessRules d = WitnessRules.DEFAULT;
++		return new WitnessRules(d.enabled(), d.range(), d.callSeconds(), d.callerGlow(), d.scareRange(), d.scareAngle(),
++		                        d.reportAssault(), d.assaultRepeatSeconds(), d.viewAngle(), d.noticeSeconds(), particle,
++		                        d.phoneItem(), d.intimidateRange(), d.scaredCooldownSeconds(), d.loudCrimes(),
++		                        d.loudShotSeconds(), d.loudWeaponTypes());
++	}
++
+ 	@Test
+ 	@DisplayName("Dialling: the caller holds Phone_Item, and gets its own main hand back on exit")
+ 	void holdsPhoneThenRestoresHand() {

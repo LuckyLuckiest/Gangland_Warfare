@@ -1,0 +1,288 @@
+[
+ {
+  "wait": 8000
+ },
+ {
+  "console": "glw module list",
+  "after": 2000
+ },
+ {
+  "console": "version Keystone",
+  "after": 1500
+ },
+ {
+  "console": "version Gangland_Warfare",
+  "after": 1500
+ },
+ {
+  "console": "version Bartizan",
+  "after": 1500
+ },
+ {
+  "console": "version Citizens",
+  "after": 1500
+ },
+ {
+  "console": "gamerule spawn_mobs false",
+  "after": 300
+ },
+ {
+  "console": "gamerule spawn_monsters false",
+  "after": 300
+ },
+ {
+  "console": "gamerule spawn_wandering_traders false",
+  "after": 300
+ },
+ {
+  "console": "gamerule advance_time false",
+  "after": 300
+ },
+ {
+  "console": "time set 6000",
+  "after": 300
+ },
+ {
+  "console": "weather clear",
+  "after": 300
+ },
+ {
+  "join": "Placer"
+ },
+ {
+  "console": "effect give Placer minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Placer minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Placer minecraft:strength 1200 100 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Placer",
+  "after": 300
+ },
+ {
+  "console": "clear Placer",
+  "after": 300
+ },
+ {
+  "console": "tp Placer 0.5 -60 0.5 0 0",
+  "after": 500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Placer"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Placer"
+ },
+ {
+  "console": "execute at Placer run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add P_F",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=P_F] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=P_F,limit=1] 0.5 -60 8.5 180 0",
+  "after": 300
+ },
+ {
+  "chat": "/glw civilian spawn pedestrian",
+  "after": 1000,
+  "bot": "Placer"
+ },
+ {
+  "expectChat": "Civilian pedestrian spawned",
+  "timeout": 5000,
+  "bot": "Placer"
+ },
+ {
+  "console": "execute at Placer run tag @e[type=minecraft:villager,tag=!civ,sort=nearest,limit=1,distance=..80] add P_B",
+  "after": 300
+ },
+ {
+  "console": "tag @e[tag=P_B] add civ",
+  "after": 300
+ },
+ {
+  "console": "tp @e[tag=P_B,limit=1] 30.5 -60 14.5 0 0",
+  "after": 300
+ },
+ {
+  "join": "Decoy"
+ },
+ {
+  "console": "effect give Decoy minecraft:resistance 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Decoy minecraft:saturation 1200 4 true",
+  "after": 300
+ },
+ {
+  "console": "effect give Decoy minecraft:strength 1200 100 true",
+  "after": 300
+ },
+ {
+  "console": "gamemode survival Decoy",
+  "after": 300
+ },
+ {
+  "console": "clear Decoy",
+  "after": 300
+ },
+ {
+  "console": "tp Decoy 30.5 -60 20.5 0 0",
+  "after": 500
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "wait": 3000
+ },
+ {
+  "console": "say CNCMARK:CIV:BOOT-PLACED",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=P_F,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_F,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_F,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_F,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_B,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_B,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_B,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_B,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "execute as @e if entity @s[type=minecraft:player,name=!Silent,name=!Backer,name=!Loud,name=!Grabber,name=!Killer,name=!Placer,name=!Decoy] run data get entity @s Pos",
+  "after": 400
+ },
+ {
+  "chat": "/glw civilian list",
+  "after": 800,
+  "bot": "Placer"
+ },
+ {
+  "wait": 6000
+ },
+ {
+  "console": "say CNCMARK:CIV:BOOT-PLACED-6S",
+  "after": 200
+ },
+ {
+  "console": "data get entity @e[tag=P_F,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_F,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_F,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_F,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_B,limit=1] Pos",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_B,limit=1] Rotation",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_B,limit=1] equipment",
+  "after": 150
+ },
+ {
+  "console": "data get entity @e[tag=P_B,limit=1] Glowing",
+  "after": 150
+ },
+ {
+  "hold": 1,
+  "bot": "Placer"
+ },
+ {
+  "console": "bartizan weapon give Placer pistol",
+  "after": 1000
+ },
+ {
+  "hold": 0,
+  "bot": "Placer"
+ },
+ {
+  "console": "data get entity Placer SelectedItem",
+  "after": 200
+ },
+ {
+  "lookAt": [
+   0.5,
+   -40,
+   0.5
+  ],
+  "bot": "Placer"
+ },
+ {
+  "useItem": true,
+  "after": 800,
+  "bot": "Placer"
+ },
+ {
+  "console": "say CNCMARK:CIV:BOOT-SHOT",
+  "after": 200
+ },
+ {
+  "console": "data get entity Placer SelectedItem",
+  "after": 200
+ },
+ {
+  "quit": true,
+  "bot": "Placer"
+ },
+ {
+  "quit": true,
+  "bot": "Decoy"
+ },
+ {
+  "wait": 2000
+ }
+]
