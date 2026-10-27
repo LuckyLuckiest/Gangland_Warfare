@@ -1084,7 +1084,7 @@ class StandoffControllerTest {
 
 		tickAt(SEC);
 
-		verify(squad, atLeastOnce()).reportSighting(any(Location.class));
+		verify(squad, atLeastOnce()).reportSighting(any(CopNpc.class), any(Location.class), eq(40.0));
 		assertEquals(CopState.POSTED, stateOf(posted));
 		assertTrue(controller.isActive(playerId));
 	}

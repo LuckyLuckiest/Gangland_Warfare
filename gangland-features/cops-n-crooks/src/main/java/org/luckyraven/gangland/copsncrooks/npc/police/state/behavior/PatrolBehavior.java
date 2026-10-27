@@ -58,7 +58,7 @@ public class PatrolBehavior implements CopBehavior {
 			if (cop.distanceTo(player) > ws.range() || !services.perception().acquires(cop, player, ws.range())) continue;
 
 			if (services.wanted().test(player)) {
-				if (report) reportWanted(cop, player);
+				if (report) reportWanted(cop, player, services.perception().rangeFor(cop, player, ws.range()));
 				continue;
 			}
 			BrandishWarnings warnings = services.warnings();
@@ -71,14 +71,15 @@ public class PatrolBehavior implements CopBehavior {
 		return false;
 	}
 
-	private void reportWanted(CopNpc cop, Player player) {
+	/** {@code range}: the sight range this cop looked with, so its eyes-on mark ends when it can no longer see him. */
+	private void reportWanted(CopNpc cop, Player player, double range) {
 		CopGroup group = services.groupOf().apply(player.getUniqueId());
 		if (group == null) return;
 		NpcSquad squad = group.getSquad();
 		if (!squad.hasFreshSighting()) {
 			services.radio().sayAs(group, cop, "Patrol_Sighting", Map.of("place", services.radio().placeOf(player.getLocation())));
 		}
-		squad.reportSighting(player.getLocation());
+		squad.reportSighting(cop, player.getLocation(), range);
 	}
 
 	private void walk(CopNpc cop) {

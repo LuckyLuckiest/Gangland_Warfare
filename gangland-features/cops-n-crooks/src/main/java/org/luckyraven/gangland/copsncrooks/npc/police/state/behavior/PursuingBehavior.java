@@ -90,7 +90,10 @@ public class PursuingBehavior implements CopBehavior {
 		NpcSquad squad = cop.squadFor(target);
 
 		// Rotation: only ticks spent stuck while nobody in the squad sees the target count toward giving up
-		// (an entity target has no shared squad, so the cop's own sight decides)
+		// (an entity target has no shared squad, so the cop's own sight decides). Squad-level on purpose (0.21.1 r6):
+		// since Keystone 1.15.4 only an NPC that saw him stamps it (tips do not), and no use below acts on his live
+		// position from it: the cuff needs this cop's own line of sight in Cuff_Radius, and the pursuit range only
+		// lifts the lock-on filters for its own look (Keystone takes the live goal from the member's own sight alone)
 		boolean seen       = squad != null ? squad.hasFreshSighting() : perception.acquires(cop, target, alertRange);
 		int     stuckTicks = cop.isNavigationStuck() && !seen ? cop.getPursuitTicks() + 1 : 0;
 		cop.setPursuitTicks(stuckTicks);

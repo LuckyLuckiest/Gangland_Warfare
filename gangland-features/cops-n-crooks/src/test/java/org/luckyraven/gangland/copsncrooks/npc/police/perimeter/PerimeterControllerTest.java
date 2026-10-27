@@ -226,7 +226,7 @@ class PerimeterControllerTest {
 
 		controller.tick(player, group);
 
-		verify(squad).reportSighting(any());
+		verify(squad).reportSighting(marksman, player.getLocation(), 40.0);
 		verify(radio).sayAs(eq(group), eq(marksman), eq("Eyes_On"),
 		                    eq(Map.of("place", "the plaza", "direction", "north")));
 		verify(marksman).releasePost();

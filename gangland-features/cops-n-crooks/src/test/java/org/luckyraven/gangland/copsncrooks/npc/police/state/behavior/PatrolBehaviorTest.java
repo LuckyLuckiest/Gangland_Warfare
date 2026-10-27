@@ -211,6 +211,20 @@ class PatrolBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("Keystone 1.15.4: a beat cop reports a wanted player as its own mark, at the range it looked with")
+	void wantedPlayerReported_asTheCopsOwnMark() {
+		perception.addSightFactor((c, p) -> 0.5);
+		Player player = playerAt(5, 0);
+		wanted.add(player.getUniqueId());
+		NpcSquad squad = org.mockito.Mockito.spy(new NpcSquad());
+		groupFor(player, squad);
+
+		behavior.tick(cop);
+
+		verify(squad).reportSighting(cop, fx.at(5, 0), warningSettings.range() * 0.5);
+	}
+
+	@Test
 	@DisplayName("a wanted player with no group (no squad) is skipped without an error")
 	void wantedWithoutGroup_nothing() {
 		Player player = playerAt(5, 0);

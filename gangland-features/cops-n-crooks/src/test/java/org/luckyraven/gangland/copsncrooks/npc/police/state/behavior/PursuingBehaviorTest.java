@@ -105,6 +105,18 @@ class PursuingBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("Keystone 1.15.4 / R4: a tip (911, shots, tracker, hand-off lead) is no sighting: a stuck cop still counts")
+	void stuckWithOnlyATip_stillCountsTowardRotation() {
+		squad.reportTip(new Location(mock(World.class), 0, 64, 0));
+		when(cop.isNavigationStuck()).thenReturn(true);
+		when(cop.getPursuitTicks()).thenReturn(5);
+
+		behavior.tick(cop);
+
+		verify(cop).setPursuitTicks(6);
+	}
+
+	@Test
 	@DisplayName("stuck while a squad member sees the target: the rotation count resets")
 	void stuckButSeen_resetsCount() {
 		squad.reportSighting(new Location(mock(World.class), 0, 64, 0));

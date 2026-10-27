@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -740,6 +741,22 @@ class CopManagerSquadTest {
 
 		assertTrue(group.isCombatAlert());
 		assertTrue(group.pollResisting());
+	}
+
+	@Test
+	@DisplayName("Keystone 1.15.4: a hit the cop sees marks it eyes-on, so its squad chases while it still sees him")
+	void groupTargetHitsCopInSight_marksTheCopEyesOn() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		CopNpc   cop   = fx.cop(CopState.PURSUING, 0, 0);
+		group.add(cop);
+		when(cop.hasLineOfSight(player)).thenReturn(true);
+		when(cop.canSee(eq(player), anyDouble())).thenReturn(true);
+
+		manager.onCopAttackedAlert(cop, player);
+
+		assertTrue(org.luckyraven.keystone.npc.SquadProbe.eyesOn(group.getSquad(), player));
+		assertTrue(group.getSquad().hasFreshSighting(), "still a sighting for the squad clock");
 	}
 
 	@Test

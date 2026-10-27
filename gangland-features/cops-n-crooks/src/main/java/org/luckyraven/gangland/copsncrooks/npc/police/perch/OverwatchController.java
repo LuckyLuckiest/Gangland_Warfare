@@ -211,7 +211,9 @@ public class OverwatchController {
 		if (watch.posted && cop.canSee(player, settings.sightRange())) {
 			Location seen = player.getLocation();
 			Location from = cop.getEntity().getLocation();
-			group.getSquad().reportSighting(seen);
+			// the Marksman's own mark at the range it looked with (Keystone 1.15.4): members without sight chase toward
+			// the spot only while he still sees him
+			group.getSquad().reportSighting(cop, seen, settings.sightRange());
 			boolean said = copRadio.sayAs(group, cop, "Overwatch_Spotted", Map.of(
 					"distance", String.valueOf(Math.round(from.distance(seen))),
 					"direction", copRadio.compassWord(from, seen)));

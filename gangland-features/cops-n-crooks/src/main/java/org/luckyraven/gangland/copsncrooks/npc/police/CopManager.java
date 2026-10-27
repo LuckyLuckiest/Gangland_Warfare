@@ -427,7 +427,7 @@ public class CopManager implements BeanLifecycle {
 		if (attacker.getUniqueId().equals(group.getTargetPlayerId())) {
 			// a squad he fights is on duty again (T-433): its contact, casualty and backup calls are heard
 			group.setStoodDown(false);
-			if (copNpc.hasLineOfSight(attacker)) group.getSquad().reportSighting(attacker.getLocation());
+			if (copNpc.hasLineOfSight(attacker)) group.getSquad().reportSighting(copNpc, attacker.getLocation());
 			else group.getSquad().reportTip(attacker.getLocation());
 			group.escalate(attacker.getUniqueId());
 		}

@@ -128,7 +128,7 @@ public class PerimeterController {
 		for (CopNpc cop : List.copyOf(perimeter.posts)) {
 			if (!cop.canSee(player, settings.sightRange())) continue;
 
-			group.getSquad().reportSighting(player.getLocation());
+			group.getSquad().reportSighting(cop, player.getLocation(), settings.sightRange());
 			LivingEntity entity = cop.getEntity();
 			if (entity != null) {
 				copRadio.sayAs(group, cop, "Eyes_On", Map.of("place", copRadio.placeOf(player.getLocation()),
