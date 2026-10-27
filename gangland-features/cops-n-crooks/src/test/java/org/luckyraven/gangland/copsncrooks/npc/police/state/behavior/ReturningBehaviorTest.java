@@ -187,6 +187,42 @@ class ReturningBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1 r6 (owner ruling): a walker kept past Max_Ticks by a watcher within 24 b goes after Watched_Cap_Seconds")
+	void watchedClose_pastMaxTicks_removedAfterTheWatchedCap() {
+		withClock(StuckSettings.DEFAULT); // code default cap: 60 s
+		watchedFromTheSouth(cop.getEntity().getWorld());
+		behavior.onEnter(cop);
+		when(cop.getDespawnTicks()).thenReturn(600); // Return.Max_Ticks
+		behavior.tick(cop);
+		now += 59_000L;
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+
+		now += 1_000L; // he has stared at it for the whole cap
+		behavior.tick(cop);
+
+		verify(cop).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("0.21.1 r6: Watched_Cap_Seconds 0 keeps the 0.21.1 r5 rule (a close watcher holds it however long)")
+	void watchedCapOff_keptWhileWatched() {
+		withClock(StuckSettings.DEFAULT);
+		World           world  = cop.getEntity().getWorld();
+		CopSpawnManager spawns = mock(CopSpawnManager.class);
+		when(spawns.getSpawnerLocations()).thenReturn(java.util.List.of(new Location(world, 100, 64, 0)));
+		behavior = new ReturningBehavior(spawns, detainmentService, 600, 3.0, StuckSettings.DEFAULT, () -> now, 48.0, 0);
+		watchedFromTheSouth(world);
+		behavior.onEnter(cop);
+		when(cop.getDespawnTicks()).thenReturn(600);
+		behavior.tick(cop);
+		now += 3_600_000L;
+		behavior.tick(cop);
+
+		verify(cop, never()).markForRemoval();
+	}
+
+	@Test
 	@DisplayName("R3 (review 2): past Return.Max_Ticks only the 24-block view holds: a far watcher no longer keeps it")
 	void strandedWatchedFar_pastMaxTicks_removed() {
 		withClock(StuckSettings.DEFAULT);

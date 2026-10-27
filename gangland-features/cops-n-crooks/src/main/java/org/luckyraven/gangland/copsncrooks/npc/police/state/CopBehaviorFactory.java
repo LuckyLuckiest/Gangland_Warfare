@@ -92,7 +92,8 @@ public class CopBehaviorFactory {
 		                                                        configProvider.getMaxReturnTicks(),
 		                                                        configProvider.getStationArrivalDistance(),
 		                                                        configProvider.getStuckSettings(),
-		                                                        configProvider.getVisibilityCheckDistance()));
+		                                                        configProvider.getVisibilityCheckDistance(),
+		                                                        configProvider.getReturnWatchedCapSeconds()));
 
 		behaviors.put(CopState.POSTED, new PostedBehavior());
 		behaviors.put(CopState.PATROL, new PatrolBehavior(patrolServices));

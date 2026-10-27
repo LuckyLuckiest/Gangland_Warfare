@@ -666,6 +666,14 @@ class YamlCopConfigProviderTest {
 		}
 	}
 
+	@Test
+	@DisplayName("0.21.1 r6: Cops.Return.Watched_Cap_Seconds is optional (60); 0 turns the cap off")
+	void returnWatchedCap_optional() {
+		assertEquals(60, parse("Cops:" + NL + TIER_BLOCK).getReturnWatchedCapSeconds());
+		String yaml = String.join(NL, "Cops:", "   Return:", "      Watched_Cap_Seconds: 0", "") + TIER_BLOCK;
+		assertEquals(0, parse(yaml).getReturnWatchedCapSeconds());
+	}
+
 	private static final String NL = "\n";
 
 	@Test

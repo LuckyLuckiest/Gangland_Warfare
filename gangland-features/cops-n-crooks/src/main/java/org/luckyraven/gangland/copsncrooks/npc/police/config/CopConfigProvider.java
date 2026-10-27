@@ -269,6 +269,17 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	double getStationArrivalDistance();
 
 	/**
+	 * {@code Cops.Return.Watched_Cap_Seconds} (0.21.1 r6): how long a player within 24 blocks watching a returning cop
+	 * keeps it past {@code Max_Ticks}; 0 or less, no cap.
+	 */
+	default int getReturnWatchedCapSeconds() {
+		return DEFAULT_RETURN_WATCHED_CAP_SECONDS;
+	}
+
+	/** {@code Cops.Return.Watched_Cap_Seconds} when the config sets none (0.21.1 r6, owner ruling). */
+	int DEFAULT_RETURN_WATCHED_CAP_SECONDS = 60;
+
+	/**
 	 * Radius (blocks) the GUARDING cop tries to stay within from the cuffed player awaiting jail transit.
 	 */
 	default double getGuardRadius() {
