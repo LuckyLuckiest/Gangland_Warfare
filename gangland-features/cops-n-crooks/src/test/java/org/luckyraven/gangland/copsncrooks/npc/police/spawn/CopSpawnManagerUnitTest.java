@@ -18,6 +18,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
@@ -61,6 +62,7 @@ class CopSpawnManagerUnitTest {
 	                                                    null, 3, null, 1.0, 0, null, 0, 60, false, false);
 
 	private World           world;
+	private CopConfigProvider spawnConfig;
 	private Player          player;
 	private CopSpawnManager spawnManager;
 	private CopNpcFactory   factory;
@@ -73,6 +75,7 @@ class CopSpawnManagerUnitTest {
 	@BeforeEach
 	void setUp() {
 		CopConfigProvider config = mock(CopConfigProvider.class);
+		spawnConfig = config;
 		when(config.getMinSpawnDistance()).thenReturn(10.0);
 		when(config.getMaxSpawnDistance()).thenReturn(20.0);
 		when(config.getPhase1MinDistance()).thenReturn(15.0);
@@ -111,7 +114,13 @@ class CopSpawnManagerUnitTest {
 		});
 		when(world.rayTraceBlocks(any(Location.class), any(Vector.class), anyDouble(), any(FluidCollisionMode.class),
 		                          anyBoolean()))
-				.thenAnswer(inv -> blocked.test(inv.getArgument(1)) ? mock(RayTraceResult.class) : null);
+				// a blocked ray hits at its full length (the hand-off lead's wall check reads the hit position)
+				.thenAnswer(inv -> {
+					Vector dir = inv.getArgument(1);
+					if (!blocked.test(dir)) return null;
+					Location from = inv.getArgument(0);
+					return new RayTraceResult(from.toVector().add(dir.clone().multiply((double) inv.getArgument(2))));
+				});
 
 		player = mock(Player.class);
 		when(player.getWorld()).thenReturn(world);
@@ -302,12 +311,71 @@ class CopSpawnManagerUnitTest {
 		assertSame(world, spot.getWorld());
 	}
 
+	/** Seen running east from {@code lastSeenX} (x only), so the R5 lead lies 24 blocks further east. */
+	private SpawnBias runEastFrom(double lastSeenX) {
+		return new SpawnBias(new Vector(1, 0, 0), new Location(world, lastSeenX, GROUND_Y, 0.5), 10_000L, 60.0);
+	}
+
+	private static double horizontal(Location a, double x, double z) {
+		return Math.hypot(a.getX() - x, a.getZ() - z);
+	}
+
+	@Test
+	@DisplayName("T-423: he doubled back west past the lead: the unit spawns between him and the lead, not ahead east")
+	void handoffUnit_spawnsBetweenHimAndTheLead() {
+		blocked = dir -> true;
+		// last seen at x=-40.5 running east: the lead is x=-17.5 (24 on, a block short of the wall at the ray's end);
+		// he stands at x=0.5, so the ring centre is the midpoint, x=-8.5
+		spawnManager.spawnUnit(player, unit(null, runEastFrom(-40.5)), loc -> true);
+
+		Location spot = ringSpot();
+		assertTrue(spot.getX() < 0.5, "toward the lead (west), not ahead of the heading (east): " + spot);
+		assertTrue(horizontal(spot, -8.5, 0.5) <= CopSpawnManager.BETWEEN_RADIUS + 1e-9, "around the between point");
+	}
+
+	@Test
+	@DisplayName("T-423: a lead far off: the between point is clamped inside the spawn range of him (Spawn.Max_Distance)")
+	void handoffUnit_farLead_centreClampedToTheSpawnRange() {
+		blocked = dir -> true;
+		// lead x=-177.5: the midpoint (x=-88.5) is far outside the ring; clamped to Max_Distance (20) of him, x=-19.5
+		spawnManager.spawnUnit(player, unit(null, runEastFrom(-200.5)), loc -> true);
+
+		Location spot = ringSpot();
+		assertTrue(horizontal(spot, -19.5, 0.5) <= CopSpawnManager.BETWEEN_RADIUS + 1e-9, "around the clamped point: " + spot);
+		assertTrue(horizontal(spot, 0.5, 0.5) <= 20.0 + 1e-9, "inside the spawn range");
+	}
+
+	@Test
+	@DisplayName("T-423 / R6: every spot between him and the lead is in his view: none is taken, the unit falls back ahead")
+	void handoffUnit_betweenSpotsInView_fallBackToTheRingAhead() {
+		// west (toward the lead) lies open in front of him, east is walled off
+		blocked = dir -> dir.getX() > 0;
+		when(player.getEyeLocation()).thenReturn(new Location(world, 0.5, GROUND_Y + 1.62, 0.5, 90f, 0f)); // looks west
+
+		spawnManager.spawnUnit(player, unit(null, runEastFrom(-40.5)), loc -> true);
+
+		Location spot = ringSpot();
+		assertTrue(spot.getX() > 0.5, "never in his view; the fallback ring ahead (east): " + spot);
+	}
+
+	@Test
+	@DisplayName("T-423: Spawn_Between 0 keeps the 0.16 ring ahead of the heading")
+	void handoffUnit_spawnBetweenOff_keepsTheRingAhead() {
+		when(spawnConfig.getHandoffSettings()).thenReturn(new HandoffSettings(true, 2, 10, 60.0, 24.0, 0.0));
+		blocked = dir -> true;
+
+		spawnManager.spawnUnit(player, unit(null, runEastFrom(-40.5)), loc -> true);
+
+		assertTrue(angle(new Vector(1, 0, 0), ringSpot()) <= 60.0, "ahead (east)");
+	}
+
 	/** Solid below {@link #GROUND_Y}, air at and above it. */
 	private static Block block(int y) {
 		Block   block = mock(Block.class);
 		boolean solid = y < GROUND_Y;
 		when(block.getType()).thenReturn(solid ? Material.STONE : Material.AIR);
 		when(block.isEmpty()).thenReturn(!solid);
+		when(block.isPassable()).thenReturn(!solid);
 		return block;
 	}
 }

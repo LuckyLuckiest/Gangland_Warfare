@@ -20,7 +20,6 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DispatchSettings;
-import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.Dispatcher;
@@ -983,7 +982,7 @@ public class CopManager implements BeanLifecycle {
 				// a tip, not a sighting (R4): no member saw him at the hand-off spot. The units head on along the heading
 				// the squad saw him take, Lead_Blocks past it, and search there (R5)
 				SpawnBias seed = unit.bias();
-				Location  lead = seed.lead(handoffLead());
+				Location  lead = seed.lead(CopSpawnManager.handoffLead(configProvider));
 				group.seedHandoff(lead);
 				group.markTipOff(now);
 				if (log.isDebugEnabled()) {
@@ -1020,17 +1019,6 @@ public class CopManager implements BeanLifecycle {
 
 	private DispatchSettings dispatchSettings() {
 		return requireNonNullElse(configProvider.getDispatchSettings(), DispatchSettings.DEFAULT);
-	}
-
-	/**
-	 * {@code Cops.Handoff.Lead_Blocks}, the lead's length capped at {@link CopSpawnManager#LEASH_MARGIN} x
-	 * {@code Pursuit.Max_Distance} (no leash configured keeps it as set). The cap is on the distance from the squad's
-	 * last-known spot, never from the player: a cap against his live position would leak it (R4).
-	 */
-	private double handoffLead() {
-		double lead  = requireNonNullElse(configProvider.getHandoffSettings(), HandoffSettings.DEFAULT).leadBlocks();
-		double leash = configProvider.getPursuitMaxDistance() * CopSpawnManager.LEASH_MARGIN;
-		return leash > 0 ? Math.min(lead, leash) : lead;
 	}
 
 	private BreatherSettings breatherSettings() {

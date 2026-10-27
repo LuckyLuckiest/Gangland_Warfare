@@ -1148,7 +1148,10 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                           handoff.get("Bias_Seconds").asInt().min(0).orDefault(defaults.biasSeconds()),
 		                           handoff.get("Cone_Degrees").asDouble().min(1.0).orDefault(defaults.coneDegrees()),
 		                           // 0.21.1: Math.max, as the 0.21.0 clamps: a negative lead is no lead, not the default 24
-		                           Math.max(0.0, handoff.get("Lead_Blocks").asDouble().orDefault(defaults.leadBlocks())));
+		                           Math.max(0.0, handoff.get("Lead_Blocks").asDouble().orDefault(defaults.leadBlocks())),
+		                           // 0.21.1 r6 (T-423): optional, clamped into 0..1 like Lead_Blocks (no revert to the default)
+		                           Math.min(1.0, Math.max(0.0, handoff.get("Spawn_Between").asDouble()
+		                                                              .orDefault(defaults.spawnBetween()))));
 	}
 
 	// 0.21.0: clamped with Math.max (not NodeReader.min) so a too-small value clamps up rather than reverting to the default

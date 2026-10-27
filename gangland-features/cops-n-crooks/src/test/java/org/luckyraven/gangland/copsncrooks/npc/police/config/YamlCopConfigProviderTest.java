@@ -657,6 +657,18 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1 r6 (T-423): Cops.Handoff.Spawn_Between is optional (0.5) and clamped into 0..1")
+	void spawnBetween_optionalAndClamped() {
+		assertEquals(0.5, parse("Cops:" + NL + TIER_BLOCK).getHandoffSettings().spawnBetween());
+		for (String[] row : new String[][]{{"0.25", "0.25"}, {"1.7", "1.0"}, {"-2", "0.0"}}) {
+			String yaml = String.join(NL, "Cops:", "   Handoff:", "      Spawn_Between: " + row[0], "") + TIER_BLOCK;
+			assertEquals(Double.parseDouble(row[1]), parse(yaml).getHandoffSettings().spawnBetween(), row[0]);
+		}
+	}
+
+	private static final String NL = "\n";
+
+	@Test
 	@DisplayName("a missing block is the DEFAULT")
 	void missingNewBlocks_areDefault() {
 		CopConfigProvider provider = parse("Cops:\n" + TIER_BLOCK);

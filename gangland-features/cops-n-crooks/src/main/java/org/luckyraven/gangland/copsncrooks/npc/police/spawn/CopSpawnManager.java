@@ -13,6 +13,7 @@ import org.luckyraven.gangland.copsncrooks.database.CopSpawnerRepository;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
@@ -45,6 +46,11 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 * the leash line walks home in the second it spawns and is re-dispatched (0.21.1 cause 2).
 	 */
 	public static final  double LEASH_MARGIN         = 0.75;
+	/**
+	 * Blocks around the between point (owner ruling T-423) a hand-off unit's ring spot is taken within: the ring itself
+	 * is still sampled around him (Keystone's rings are Player-centred).
+	 */
+	public static final  double BETWEEN_RADIUS       = 16.0;
 	/** Half-angle of a player's view cone, as {@code CopSightlines.inView}. */
 	private static final double VIEW_HALF_ANGLE      = Math.PI / 3;
 
@@ -207,7 +213,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	}
 
 	/**
-	 * Spawns one due unit: (1) with a hand-off bias, {@link #hiddenRing} ahead of it; (2) its station's spawners within
+	 * Spawns one due unit: (1) with a hand-off bias, {@link #hiddenRing} between him and the hand-off lead
+	 * ({@link #betweenRing}, owner ruling T-423), else ahead of the heading; (2) its station's spawners within
 	 * {@code Spawner_Preference_Radius} of {@code target}, allowed and {@link #isOutOfSight out of sight}, nearest first;
 	 * (3) without a bias, {@link #hiddenRing} on the station side (within 60 degrees of the target->station bearing);
 	 * (4) {@link #hiddenRing} anywhere; (5) {@link #spawnNearPlayer}. Every spot must {@link #fits fit} (0.21.1: inside
@@ -221,8 +228,10 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		Predicate<Location> ok      = allowed.and(fits(target));
 		boolean             hidden  = true;
 		boolean             ring    = true;
-		// cause 2: a biased unit is placed ahead of him before any station spawner, which may stand behind the heading
-		Location spot = bias == null ? null : hiddenRing(target, ok.and(loc -> bias.ahead(at, loc)));
+		// cause 2: a biased unit is placed before any station spawner, which may stand behind the heading: between him
+		// and the lead it heads for (T-423), else ahead of him
+		Location spot = bias == null ? null : betweenRing(target, bias, ok);
+		if (spot == null && bias != null) spot = hiddenRing(target, ok.and(loc -> bias.ahead(at, loc)));
 		if (spot == null && station != null) {
 			spot = hiddenStationSpawner(target, station.getId(), ok);
 			if (spot != null) ring = false;
@@ -250,6 +259,42 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 			          ahead, spot == null ? "?" : spot.getBlockX() + "," + spot.getBlockY() + "," + spot.getBlockZ());
 		}
 		return cop;
+	}
+
+	/**
+	 * Owner ruling T-423: a hand-off unit's hidden ring spot within {@link #BETWEEN_RADIUS} of the point
+	 * {@code Cops.Handoff.Spawn_Between} of the way from {@code target}'s live spot to the lead it is sent to
+	 * ({@link SpawnBias#lead} of {@link #handoffLead}), that point held within {@code Spawn.Max_Distance} of him and the
+	 * spawn leash margin; {@code ok} (leash, R6 view cone, the avoided spawners) still applies. {@code null} with
+	 * {@code Spawn_Between} 0, a lead in another world, or no such spot (the caller falls back to the ring ahead).
+	 */
+	// ponytail: Keystone's rings are Player-centred, so the ring is sampled around him and a spot is only accepted near
+	// the between point; a Location-centred findHiddenSpawnLocation upstream would centre it there
+	private @Nullable Location betweenRing(Player target, SpawnBias bias, Predicate<Location> ok) {
+		HandoffSettings handoff = Objects.requireNonNullElse(configProvider.getHandoffSettings(), HandoffSettings.DEFAULT);
+		double          share   = Math.min(1.0, handoff.spawnBetween());
+		Location        at      = target.getLocation();
+		Location        lead    = share > 0 ? bias.lead(handoffLead(configProvider)) : null;
+		if (lead == null || !Objects.equals(lead.getWorld(), at.getWorld())) return null;
+
+		Vector toward = new Vector(lead.getX() - at.getX(), 0, lead.getZ() - at.getZ()).multiply(share);
+		double leash  = configProvider.getPursuitMaxDistance() * LEASH_MARGIN;
+		double reach  = leash > 0 ? Math.min(configProvider.getMaxSpawnDistance(), leash)
+		                          : configProvider.getMaxSpawnDistance();
+		if (toward.length() > reach) toward.normalize().multiply(reach);
+		Location centre = at.clone().add(toward);
+		return hiddenRing(target, ok.and(loc -> horizontalSq(loc, centre) <= BETWEEN_RADIUS * BETWEEN_RADIUS));
+	}
+
+	/**
+	 * {@code Cops.Handoff.Lead_Blocks}, the lead's length capped at {@link #LEASH_MARGIN} x {@code Pursuit.Max_Distance}
+	 * (no leash configured keeps it as set). The cap is on the distance from the squad's last-known spot, never from
+	 * the player: a cap against his live position would leak it (R4).
+	 */
+	public static double handoffLead(CopConfigProvider provider) {
+		double lead  = Objects.requireNonNullElse(provider.getHandoffSettings(), HandoffSettings.DEFAULT).leadBlocks();
+		double leash = provider.getPursuitMaxDistance() * LEASH_MARGIN;
+		return leash > 0 ? Math.min(lead, leash) : lead;
 	}
 
 	/**
