@@ -2,10 +2,12 @@
 
 [← Back to Documentation Index](./README.md)
 
-0.21.1 changes how an ignored brandish warning ends (sections 1, 2 and 4), where the hand-off units search (section 3) and how a civilian witness calls 911 (section 5). The player is told the cause in chat, and the first star arrives at
-once. The star title no longer repeats the whole description. A new install gets all of this from the shipped
-`wanted.yml`. **An existing server keeps its old `wanted.yml`**, and the code cannot rewrite it, so two values must be
-edited by hand to get the new behaviour.
+0.21.1 changes how an ignored brandish warning ends: the player is told the cause in chat, and the first star arrives at
+once. The star title no longer repeats the whole description (sections 1, 2 and 4). It also changes where the hand-off
+units search and how often the "en route" dispatch line repeats (section 3), and how a civilian witness calls 911
+(section 5). A new install gets all of this from the shipped files. **An existing server keeps its old files**
+(`wanted.yml`, `cops.yml`, `civilians.yml`, `civilian_messages.yml`, `cop_radio_messages.yml`), and the code cannot
+rewrite them, so the values in sections 1, 3 and 5 must be edited by hand to get the new behaviour.
 
 ## 1. Edit `copsncrooks/wanted.yml`
 
@@ -37,10 +39,25 @@ Wanted:
 - **Crime subtitles**: every title cue takes `%cause%` and the chat card is sent whenever `Star_Card` is on and the cue
   does not carry `%card%`.
 
-## 3. Optional edit: `copsncrooks/cops.yml`
+## 3. Edit `copsncrooks/cops.yml`
 
-0.21.1 adds one key. The code default applies when it is missing, so an old `cops.yml` works unchanged; add it to see
-and tune it:
+### 3.1 Required: `Dispatch_En_Route` cooldown
+
+```yaml
+Cops:
+   Radio:
+      Cooldown_Ticks:
+         # was 0. Said once per squad per 30 s, so refilling a leashed or lost unit does not sound like a new dispatch
+         Dispatch_En_Route: 600
+```
+
+0.21.0 shipped an explicit `Dispatch_En_Route: 0`, and a key in the file overrides the code default, so without this
+edit every leash or loss refill still sounds like a new dispatch. If you changed it on purpose, keep your value.
+
+### 3.2 Optional: new keys
+
+0.21.1 adds three keys. The code default applies when one is missing, so an old `cops.yml` works unchanged; add them to
+see and tune them:
 
 ```yaml
 Cops:
@@ -48,6 +65,13 @@ Cops:
       # new in 0.21.1: blocks past the squad's last-known spot, along the heading it saw him take, that the units sent
       # after the hand-off head for and search. At most 0.75 x Pursuit.Max_Distance long; a negative value counts as 0.
       Lead_Blocks: 24.0
+   Patrol:
+      # new in 0.21.1: seconds a station waits after losing a beat cop (killed or lost) before a replacement walks out.
+      Respawn_Seconds: 30
+   Radio:
+      Cooldown_Ticks:
+         # new in 0.21.1: cooldown of the Route_Search line (300 = 15 s)
+         Route_Search: 300
 ```
 
 After a hand-off ("Lost him heading X. Units ahead, pick him up.") the new units no longer search the spot where he was
@@ -58,6 +82,10 @@ search there. Neither the heading nor that spot uses his live position. `Lead_Bl
 
 `copsncrooks/wanted_messages.yml` gains `Patrol.Ignored` (`"&cBeat cop: &fYou were warned. &7Cause: &c%cause%"`) and
 `Patrol.Lost_Sight`. A file without them uses the same text from the code.
+
+`copsncrooks/cop_radio_messages.yml` (and `cop_radio_messages_es.yml`) gains `Lines.Route_Search`, said instead of
+`Route` when a cop starts a route while nobody sees him, so the line does not claim to know where he is. A file without
+it uses the English text from the code; the Spanish lines ship in the jar's `copsncrooks/cop_radio_messages_es.yml`.
 
 ## 5. Witnesses and 911 calls
 

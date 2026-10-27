@@ -41,7 +41,7 @@ Hud:
       Stance_Cuffs: "they still want you in cuffs"
       # %stance% when the cops shoot first
       Stance_Shoot: "they shoot first"
-      # 0.21.1: %crime% in Raise when a witness reported it (a landed 911 call, a silent alarm), not a cop
+      # 0.21.1: %crime% in Raise when a witness reported it (a landed 911 call), not a cop
       Reported: "%crime% (reported by a witness)"
       # A star dropped because you stayed out of sight
       Drop_Evasion: "&aYou stayed out of sight"

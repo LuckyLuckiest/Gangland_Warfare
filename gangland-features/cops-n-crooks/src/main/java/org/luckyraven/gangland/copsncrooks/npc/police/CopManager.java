@@ -488,13 +488,6 @@ public class CopManager implements BeanLifecycle {
 		return activeCombatAlerts.contains(playerId);
 	}
 
-	/**
-	 * Returns all cops assigned to a given player.
-	 *
-	 * @param playerId the player UUID
-	 *
-	 * @return list of cop NPCs
-	 */
 	/** Every live cop of every group (a snapshot); beat cops are {@code PatrolManager.beatCops()}. */
 	public List<CopNpc> liveCops() {
 		List<CopNpc> all = new ArrayList<>();
@@ -508,6 +501,13 @@ public class CopManager implements BeanLifecycle {
 		return all;
 	}
 
+	/**
+	 * Returns all cops assigned to a given player.
+	 *
+	 * @param playerId the player UUID
+	 *
+	 * @return list of cop NPCs
+	 */
 	public List<CopNpc> getCopsForPlayer(UUID playerId) {
 		CopGroup group = groups.get(playerId);
 		return group != null ? new ArrayList<>(group.getCops()) : Collections.emptyList();
