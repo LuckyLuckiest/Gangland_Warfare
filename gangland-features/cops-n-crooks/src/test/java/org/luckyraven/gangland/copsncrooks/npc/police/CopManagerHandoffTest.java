@@ -640,4 +640,82 @@ class CopManagerHandoffTest {
 		assertTrue(second.heading().getX() > 0, "he ran east (20 then 50): heading " + second.heading());
 		assertEquals(50.0, second.lastSeen().getX());
 	}
+
+	/**
+	 * Both cops on him seen running east (x=10, x=20), standing at x=20; {@code posted} puts them on posts there before
+	 * the stars drop to 1 and one is sent home (T-510). The walker goes 480 blocks off with his target kept; the other
+	 * posts at x=20 and he hides at x=60, then runs to x=120, past the post. {@code reap} lets a spawn tick take the
+	 * walker off the map (R3) before he runs on.
+	 */
+	private CopGroup levelDropThenPostLeftBehind(HandoffController controller, boolean posted, boolean reap) {
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(1);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group = fx.manager.groupFor(player.getUniqueId());
+		assertEquals(2, group.getCops().size());
+		for (CopNpc cop : group.getCops()) {
+			cop.transitionTo(CopState.PURSUING);
+			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 20, 64, 10));
+		}
+		playerAt(10);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		fx.clock[0] += 1_000L;
+		playerAt(20);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		if (posted) {
+			for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.POSTED); // lost: both post at x=20
+			fx.clock[0] += 1_000L;
+			controller.tick(player, group);
+		}
+
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
+		fx.manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(1));
+		List<CopNpc> home = group.getCops().stream().filter(c -> c.getCurrentState() == CopState.RETURNING).toList();
+		assertEquals(1, home.size(), "the star drop sent one cop home");
+		for (CopNpc walker : home) when(walker.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
+		for (CopNpc cop : group.getCops()) if (cop.getCurrentState() == CopState.PURSUING) cop.transitionTo(CopState.POSTED);
+		playerAt(60);
+		if (reap) {
+			fx.manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(1));
+			assertFalse(group.getCops().contains(home.get(0)), "the walker was released");
+		}
+		for (int i = 0; i < 3; i++) {
+			fx.clock[0] += 1_000L;
+			controller.tick(player, group);
+		}
+		playerAt(120);
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		return group;
+	}
+
+	@Test
+	@DisplayName("0.21.1 r7 review 1: a post sent home by a star drop walks off, then he leaves the other post behind: no hand-off")
+	void levelDropWhilePosted_thenPostLeftBehind_noHandoff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		CopGroup group = levelDropThenPostLeftBehind(controller, true, false);
+
+		assertNull(group.biasAt(fx.clock[0]), "a post sent home by a star drop is no leash");
+		verify(fx.radio, never()).sayFromLeader(eq(group), eq("Handoff"), any(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.1 r7 review 1: a pursuer sent home by a star drop walks off, then he leaves the post behind: no hand-off")
+	void levelDropWhilePursuing_thenPostLeftBehind_noHandoff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		CopGroup group = levelDropThenPostLeftBehind(controller, false, false);
+
+		assertNull(group.biasAt(fx.clock[0]), "a pursuer sent home by a star drop is no leash");
+	}
+
+	@Test
+	@DisplayName("0.21.1 r7 review 1: a cop sent home by a star drop is released off the map, then he leaves the post behind: no hand-off")
+	void levelDropWalkerReleased_thenPostLeftBehind_noHandoff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		CopGroup group = levelDropThenPostLeftBehind(controller, true, true);
+
+		assertNull(group.biasAt(fx.clock[0]), "a release of a cop sent home stamps no leash");
+	}
 }

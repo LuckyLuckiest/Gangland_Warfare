@@ -1110,10 +1110,11 @@ public class CopManager implements BeanLifecycle {
 	 * Takes {@code cop} off the map ({@link CopGroup#release}); the caller drops it from the list. A leashed walker still
 	 * on {@code playerId}'s trail ({@link #isStrandedReturning}) is stamped on the group first, whichever removal took it
 	 * (an R3 release, a recycle, its walk home ending), so the hand-off still sees the leash once it is gone. A stood-down
-	 * walker has no target and is no leash.
+	 * walker has no target and is no leash, nor is one the group sent home (a star drop, T-510: called off, r7 review 1).
 	 */
 	private void release(CopGroup group, CopNpc cop, UUID playerId, Location anchor, double maxDist, long now) {
-		if (isStrandedReturning(cop, anchor, maxDist) && playerId.equals(cop.getTargetPlayerId()))
+		if (isStrandedReturning(cop, anchor, maxDist) && playerId.equals(cop.getTargetPlayerId()) &&
+		    !group.isSentHome(cop))
 			group.markLeashReleased(now);
 		group.release(cop, markManager);
 	}

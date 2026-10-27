@@ -175,13 +175,14 @@ public class HandoffController {
 
 	/**
 	 * A cop still hunting this player (target kept: a stood-down chase clears it) is RETURNING beyond the pursuit range,
-	 * or one was and a spawn or AI run removed it lately ({@link CopGroup#isLeashReleased}, read by the caller).
+	 * or one was and a spawn or AI run removed it lately ({@link CopGroup#isLeashReleased}, read by the caller). A cop
+	 * the group sent home (a backup's extra, a star drop: T-510) was called off, never leashed out (r7 review 1).
 	 */
 	private static boolean leashedOut(CopGroup group, UUID id, Player player, double maxDistance) {
 		for (CopNpc cop : List.copyOf(group.getCops())) {
 			Entity body = cop.getEntity();
 			if (!cop.isValid() || body == null || cop.getCurrentState() != CopState.RETURNING ||
-			    !id.equals(cop.getTargetPlayerId())) continue;
+			    !id.equals(cop.getTargetPlayerId()) || group.isSentHome(cop)) continue;
 			if (farFrom(body.getLocation(), player, maxDistance)) return true;
 		}
 		return false;

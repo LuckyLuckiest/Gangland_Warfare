@@ -357,7 +357,9 @@ stays as one cop over the target and `pendingRelease` is capped at what the role
 Commander-flagged roles' excess pooled and capped once at every Commander but the last, however many roles carry
 `Commander: true`), so no radio responder joining later is sent home in his place (T-435). A cop fighting, cuffing or
 guarding is never sent; a pursuing, idle or POSTED one is (T-510: leaving POSTED releases its post, and the perimeter,
-standoff and breach controllers drop a cop that left it); the release retries next run until enough have gone. `releaseSurplus` runs only while the
+standoff and breach controllers drop a cop that left it; a perimeter whose last posts went that way ends `reason=EMPTY`);
+an OVERWATCH Marksman is not sent and holds the release until `Overwatch.Max_Seconds`. The release retries next run
+until enough have gone. `releaseSurplus` runs only while the
 player is wanted: a backup that runs out inside the post-escape search sends nobody home (T-187).
 
 #### Resisting (0.12.0)
@@ -1204,11 +1206,13 @@ new spawner or jail can no longer take the id of a row that is waiting for its w
 registries keep every row (the location is nullable), so their `max + 1` already covers unloaded worlds.
 
 **Debug lines** (`log.debug`, read by the acceptance verdicts): `DISPATCH {player} count= station= eta= hold= reason= bias=`,
-`UNIT {player} callsign= tier= role= fromStation= hidden= bias= ahead= at=`, `PERIMETER {player} start|end ...`,
+`UNIT {player} callsign= tier= role= fromStation= hidden= bias= ahead= at=`, `PERIMETER {player} start|end reason=`
+(`OFF`, `CONTACT`, `TIMEOUT`, `SIGHTED`, or `EMPTY` when every post was killed or sent home unseen),
 `HANDOFF {player} heading=`, `HANDOFF_LEAD {player} at=x,y,z heading= dir=dx,dz from=x,y,z` (0.21.1: the seed a hand-off
 unit applied, `from` the bias's last-known spot), `HANDOFF_RING {player} center=x,y,z fraction= clamped= fallback=`
-(0.21.1, T-509: logged just before that unit's `UNIT` line when `betweenRing` placed its between point; `fallback=true`
-when no hidden spot lay within 16 b of it and the unit took the ring ahead or a later step), `EVASION {player} speed= zone= hideout= quiet=` and
+(0.21.1, T-509: logged just before that unit's `UNIT` line when `Spawn_Between` is above 0; `fallback=true`
+when no hidden spot lay within 16 b of the between point, or the lead is in another world (`center` = his own spot), and
+the unit took the ring ahead or a later step), `EVASION {player} speed= zone= hideout= quiet=` and
 `EVASION {player} hold=enroute`.
 
 **Radio.** `CopRadio` keeps both constructors; `setPlaceNames` and `placeOf(location)` (place name or `Unknown_Place`) supply
@@ -1247,7 +1251,11 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   `staleRelease_freeChaserLeavesThePostBehind_thenIsKilled_noHandoff`). A post killed or called off is no leash, so a fall-away
   through its loss keeps the `Bias_Seconds` rule (`postHoldsAMinute_thenThePostIsKilled_noHandoff`,
   `staleRelease_thenTheSquadIsWipedAMinuteLater_noHandoff`). The r6 first cut re-stamped the record while posts held
-  the chase, which also handed off on a post killed a minute after the release; it was dropped.
+  the chase, which also handed off on a post killed a minute after the release; it was dropped. r7 (review 1): a cop the
+  group sent home (`CopGroup.isSentHome`: a backup's extra or a star drop, T-510) was called off, so neither
+  `HandoffController.leashedOut` nor the `CopManager.release` stamp counts him, however far he walks with his target
+  kept (`levelDropWhilePosted_thenPostLeftBehind_noHandoff`, `levelDropWhilePursuing_...`,
+  `levelDropWalkerReleased_...`).
   During the post-escape search
   (`isSearching`) the leash is measured to the squad's last-known spot, the search's goal (`CopManager.leashAnchor`
   for `isStrandedReturning`/`isStranded`, `PursuingBehavior.leashDistance` for the pursuit leash), never his live

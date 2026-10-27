@@ -1,5 +1,9 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.perimeter;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
@@ -14,6 +18,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.PerimeterSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.keystone.logging.Logger;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcPost;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -280,6 +285,48 @@ class PerimeterControllerTest {
 		assertEquals(CopState.POSTED, stateOf(defender));
 		controller.end(player, CopState.PURSUING);
 		verify(marksman, never()).transitionTo(CopState.PURSUING);
+	}
+
+	@Test
+	@DisplayName("T-510 r7 review: every post sent home by a star drop ends the perimeter as EMPTY, not SIGHTED")
+	void everyPostSentHome_endsEmpty() {
+		chaser("Commander", 1);
+		CopNpc marksman = chaser("Marksman", 2);
+		CopNpc defender = chaser("Defender", 3);
+		controller.start(player, centre, 90, 4);
+		states.get(marksman).set(CopState.RETURNING);
+		states.get(defender).set(CopState.RETURNING);
+
+		List<String> lines = debugLines(() -> controller.tick(player, group));
+
+		assertFalse(controller.isActive(playerId));
+		assertEquals(List.of("PERIMETER " + player.getName() + " end reason=EMPTY"),
+		             lines.stream().filter(l -> l.contains(" end reason=")).toList());
+	}
+
+	/** The debug lines PerimeterController logs while {@code action} runs. */
+	private static List<String> debugLines(Runnable action) {
+		List<String> lines = new ArrayList<>();
+		org.apache.logging.log4j.core.Logger logger =
+				(org.apache.logging.log4j.core.Logger) Logger.getLogger(PerimeterController.class);
+		Level saved = logger.getLevel();
+		AbstractAppender capture =
+				new AbstractAppender("perimeter-capture", null, null, true) {
+					@Override
+					public void append(LogEvent event) {
+						lines.add(event.getMessage().getFormattedMessage());
+					}
+				};
+		capture.start();
+		Configurator.setLevel(logger.getName(), Level.DEBUG);
+		logger.addAppender(capture);
+		try {
+			action.run();
+		} finally {
+			logger.removeAppender(capture);
+			Configurator.setLevel(logger.getName(), saved);
+		}
+		return lines;
 	}
 
 	@Test

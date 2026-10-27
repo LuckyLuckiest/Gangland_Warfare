@@ -396,6 +396,19 @@ class CopSpawnManagerUnitTest {
 		             lines.stream().filter(l -> l.startsWith("HANDOFF_RING")).toList());
 	}
 
+	@Test
+	@DisplayName("T-509 r7 review: a lead in another world logs the fallback with his own spot as the centre")
+	void handoffUnit_leadInAnotherWorld_fallbackIsLogged() {
+		when(player.getName()).thenReturn("Runner");
+		SpawnBias elsewhere = new SpawnBias(new Vector(1, 0, 0), new Location(mock(World.class), -40.5, GROUND_Y, 0.5),
+		                                    10_000L, 60.0);
+
+		List<String> lines = debugLines(() -> spawnManager.spawnUnit(player, unit(null, elsewhere), loc -> true));
+
+		assertEquals(List.of("HANDOFF_RING Runner center=0,64,0 fraction=0.5 clamped=false fallback=true"),
+		             lines.stream().filter(l -> l.startsWith("HANDOFF_RING")).toList());
+	}
+
 	/** The debug lines CopSpawnManager logs while {@code action} runs. */
 	private static List<String> debugLines(Runnable action) {
 		List<String> lines = new ArrayList<>();
