@@ -439,7 +439,8 @@ player's world:
 - **Lost cops leave (0.21.1).** A cop that gave up the chase beyond `Cops.Pursuit.Max_Distance` is removed as soon as
   no player is looking at it, instead of walking home for up to five minutes. One whose way home is blocked does the
   same: it never vanishes in front of a player (within `Visibility_Check_Distance`, never less than 24 blocks) and keeps
-  walking until nobody looks (`Return.Max_Ticks` still ends a walk home that takes too long). On the post-escape search
+  walking until nobody looks. `Return.Max_Ticks` still ends a walk home that takes too long, but only once nobody
+  within 24 blocks is looking at it. On the post-escape search
   the leash is measured to the spot the squad is searching, not to where he hides: searchers there are neither sent
   home nor replaced however far off he is, and a replacement only appears within reach of that spot. Nobody saw where the player went, so the
   replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count (the squad's last Commander stays). A new wanted level fields that level's count whatever the last one ended with: walkers still in range are called back only as many as it needs (its Commander first), and cops still hunting beyond it go home, whether the stars went one at a time or all at once. Cops sent home that are still in range are the first called back when the level rises again or a cop falls; one called back is back on duty, so if it gives up the chase later it walks home for good. Cops answering a radio call stay even when they put the squad over its count, and the post-escape search keeps every cop it called back, even one a star drop had marked for home or a backup
@@ -495,7 +496,8 @@ search there once they arrive. Neither the heading nor that spot is his live pos
 no news of him since leads from the same last-known spot again, never on from the first lead. The first unit gives the squad that spot once, and not at all if
 a cop has spotted him since. The heading is read over the last `Heading_Seconds` (2) the squad knew of his movement.
 The hand-off fires when the chase leashed out even if the walker that gave up was already taken off the map while a
-perimeter post still held the chase (0.21.1). There is no hand-off on the post-escape search: he has no stars, so
+perimeter post still held the chase, as long as that was within `Bias_Seconds` of the chase falling away; a cuff is
+never a lost chase (0.21.1). There is no hand-off on the post-escape search: he has no stars, so
 nobody radios units ahead of him. `/glw wanted clear` on a player at zero stars ends his post-escape search: the cops
 say "Suspect cleared" and walk home. After "Suspect cleared" the squad says nothing more, not even an order it was
 about to give.

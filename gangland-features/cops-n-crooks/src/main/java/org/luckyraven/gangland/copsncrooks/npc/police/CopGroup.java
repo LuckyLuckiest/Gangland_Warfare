@@ -95,12 +95,12 @@ public class CopGroup {
 	private final Set<CopNpc> sentHome = new HashSet<>();
 
 	/**
-	 * A spawn run removed a walker still hunting the target past the leash (an R3 release, a recycle, or its own walk
-	 * home ending) since the hand-off last looked: the chase leashed out though no RETURNING cop is left to show it. The
-	 * hand-off's engaged -> not engaged edge consumes it; a wanted start or end clears it.
+	 * Radio-clock ms a spawn or AI run last removed a walker still hunting the target past the leash (an R3 release, a
+	 * recycle, or its own walk home ending); 0 when none. The chase leashed out though no RETURNING cop is left to show
+	 * it: the hand-off's engaged -> not engaged edge within {@code Handoff.Bias_Seconds} of it consumes it; a wanted
+	 * start or end clears it.
 	 */
-	@Setter
-	private boolean leashReleased;
+	private long leashReleasedAt;
 
 	/**
 	 * The squad stood down (its {@code Stand_Down} line went out, T-433): it says no more orders, and a line it queued
@@ -343,6 +343,21 @@ public class CopGroup {
 	/** Stamps the latest tip-off (a crime-scene start, a hand-off's one seed) at {@code now} (radio-clock ms). */
 	public void markTipOff(long now) {
 		tipOffAt = now;
+	}
+
+	/** A leashed walker hunting the target was removed at {@code now} (radio-clock ms). */
+	public void markLeashReleased(long now) {
+		leashReleasedAt = now;
+	}
+
+	/** Forgets the leash release: a new episode, an end, or the hand-off that consumed it. */
+	public void clearLeashReleased() {
+		leashReleasedAt = 0;
+	}
+
+	/** A leashed walker was removed no more than {@code windowMs} before {@code now}: a recent release, not an old one. */
+	public boolean isLeashReleased(long now, long windowMs) {
+		return leashReleasedAt > 0 && now - leashReleasedAt <= windowMs;
 	}
 
 	/** A tip-off was stamped no more than {@code windowMs} before {@code now}. */

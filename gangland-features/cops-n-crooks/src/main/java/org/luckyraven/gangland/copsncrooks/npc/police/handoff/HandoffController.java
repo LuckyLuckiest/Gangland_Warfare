@@ -71,7 +71,7 @@ public class HandoffController {
 		if (!settings.enabled() || group == null || group.getLevel() <= 0 || copManager.isSearching(id)) {
 			samples.remove(id);
 			engaged.remove(id);
-			if (group != null) group.setLeashReleased(false);
+			if (group != null) group.clearLeashReleased();
 			return;
 		}
 
@@ -88,10 +88,12 @@ public class HandoffController {
 		else engaged.remove(id);
 
 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
-		// a leashed walker removed before the chase fell away still leashed it out, whoever chased on since: only this
-		// edge (or a wanted start or end, CopManager) consumes the record
-		boolean leashed = group.isLeashReleased() || leashedOut(group, id, player, maxDistance);
-		group.setLeashReleased(false);
+		// a leashed walker removed shortly before the chase fell away still leashed it out, whoever chased on since; one
+		// older than Bias_Seconds is no cause of this fall-away (a wipe or a stand-off a minute later). Only this edge (or
+		// a wanted start or end, CopManager) consumes the record
+		boolean leashed = group.isLeashReleased(now, settings.biasSeconds() * 1000L) ||
+		                  leashedOut(group, id, player, maxDistance);
+		group.clearLeashReleased();
 		if (window.isEmpty() || !leashed) return;
 
 		Location oldest  = window.peekFirst().at();
@@ -127,14 +129,16 @@ public class HandoffController {
 	}
 
 	/**
-	 * A cop of the group chases or fights him, or holds a perimeter post within {@code maxDistance} of him: a post left
-	 * behind where he was lost watches an empty zone, so it no longer holds the chase.
+	 * A cop of the group chases, fights, cuffs or guards him, or holds a perimeter post within {@code maxDistance} of
+	 * him: a post left behind where he was lost watches an empty zone, so it no longer holds the chase. A cuff is the
+	 * chase won, never lost (the rest sent home beside him are no leash).
 	 */
 	private static boolean isEngaged(CopGroup group, Player player, double maxDistance) {
 		for (CopNpc cop : List.copyOf(group.getCops())) {
 			CopState state = cop.getCurrentState();
 			if (!cop.isValid()) continue;
-			if (state == CopState.PURSUING || state == CopState.COMBAT) return true;
+			if (state == CopState.PURSUING || state == CopState.COMBAT || state == CopState.CUFFING ||
+			    state == CopState.GUARDING) return true;
 			Entity body = cop.getEntity();
 			if ((state == CopState.POSTED || state == CopState.OVERWATCH) &&
 			    (body == null || !farFrom(body.getLocation(), player, maxDistance)))
@@ -145,7 +149,7 @@ public class HandoffController {
 
 	/**
 	 * A cop still hunting this player (target kept: a stood-down chase clears it) is RETURNING beyond the pursuit range,
-	 * or one was and a spawn run removed it since ({@link CopGroup#isLeashReleased}, read by the caller).
+	 * or one was and a spawn or AI run removed it lately ({@link CopGroup#isLeashReleased}, read by the caller).
 	 */
 	private static boolean leashedOut(CopGroup group, UUID id, Player player, double maxDistance) {
 		for (CopNpc cop : List.copyOf(group.getCops())) {

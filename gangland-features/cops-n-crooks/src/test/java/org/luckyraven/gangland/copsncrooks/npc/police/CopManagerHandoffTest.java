@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -224,13 +225,108 @@ class CopManagerHandoffTest {
 		fx.manager.spawnTick(player.getUniqueId(), wanted);
 		CopGroup group = fx.manager.groupFor(player.getUniqueId());
 
-		group.setLeashReleased(true);
+		group.markLeashReleased(fx.clock[0]);
 		fx.manager.onWantedEnd(player, org.luckyraven.gangland.core.wanted.WantedCause.ADMIN);
-		assertFalse(group.isLeashReleased(), "a wanted end clears it");
+		assertFalse(group.isLeashReleased(fx.clock[0], 10_000L), "a wanted end clears it");
 
-		group.setLeashReleased(true);
+		group.markLeashReleased(fx.clock[0]);
 		fx.manager.onWantedStart(player, wanted);
-		assertFalse(group.isLeashReleased(), "a wanted start clears it");
+		assertFalse(group.isLeashReleased(fx.clock[0], 10_000L), "a wanted start clears it");
+	}
+
+	@Test
+	@DisplayName("0.21.1 review 2: a marked leashed walker the AI tick reaps (before any spawn run) still hands off")
+	void markedLeashedWalker_reapedByTheAiTick_thenPostsFallAway_handsOff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc   walker = chaseWithALeashedWalker(controller, group)[1];
+		// ReturningBehavior marked it inside an AI tick; the next AI tick (every 10 game ticks) reaps it, before the
+		// spawn task (every 40) sees it
+		when(walker.isMarkedForRemoval()).thenReturn(true);
+
+		fx.manager.aiTick(player.getUniqueId());
+		assertFalse(group.getCops().contains(walker), "the AI tick reaped the marked walker");
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		postsFallAway(controller, group);
+
+		assertNotNull(group.biasAt(fx.clock[0]), "the chase leashed out: the hand-off fires");
+	}
+
+	@Test
+	@DisplayName("0.21.1 review 2: a walker leashed out early, then the chaser cuffs him: a cuff is no lost chase")
+	void staleRelease_thenTheChaserCuffs_noHandoff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc[] cops   = chaseWithALeashedWalker(controller, group);
+		CopNpc   chaser = cops[0];
+
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
+		fx.manager.spawnTick(player.getUniqueId(), wanted); // the leashed walker leaves the map
+		assertFalse(group.getCops().contains(cops[1]));
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		chaser.transitionTo(CopState.CUFFING);
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		assertNull(group.biasAt(fx.clock[0]), "a cuff is no lost chase");
+		verify(fx.radio, never()).sayFromLeader(eq(group), eq("Handoff"), any(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.1 review 2: the cuff landed (GUARDING), the rest sent home beside him: no hand-off")
+	void staleRelease_thenCuffedAndGuarded_noHandoff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc[] cops   = chaseWithALeashedWalker(controller, group);
+		CopNpc   chaser = cops[0];
+
+		fx.manager.spawnTick(player.getUniqueId(), wanted); // the walker leaves, its refill arrives and chases
+		assertFalse(group.getCops().contains(cops[1]));
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		chaser.transitionTo(CopState.GUARDING);
+		for (CopNpc cop : group.getCops()) {
+			if (cop == chaser) continue;
+			cop.transitionTo(CopState.RETURNING); // sent back: target restrained, beside him, no leash
+			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 25, 64, 10));
+		}
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		assertNull(group.biasAt(fx.clock[0]), "a cuffed suspect is no lost chase");
+		verify(fx.radio, never()).sayFromLeader(eq(group), eq("Handoff"), any(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.1 review 2: a leash release a minute old has expired (Bias_Seconds): a squad wiped later lost no chase")
+	void staleRelease_thenTheSquadIsWipedAMinuteLater_noHandoff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc   chaser = chaseWithALeashedWalker(controller, group)[0];
+
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		for (int i = 0; i < 60; i++) { // a minute of chase
+			fx.clock[0] += 1_000L;
+			controller.tick(player, group);
+		}
+		when(chaser.isValid()).thenReturn(false); // killed
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		assertNull(group.biasAt(fx.clock[0]), "a wiped squad lost no chase");
 	}
 
 	@Test

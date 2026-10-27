@@ -1219,13 +1219,19 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   Citizens NPCs skipped; not `isVisibleToOtherPlayers`, which counts NPCs and the walker itself). r5: the same helper
   gates `ReturningBehavior`'s stranded-on-return despawn (owner ruling R3; the factory passes
   `Visibility_Check_Distance`), so a walker with no way home (blocked past the stuck window, or its station in another
-  world) keeps walking or standing in view and despawns on the first tick nobody looks; a watched one falls through to
-  the `Return.Max_Ticks` backstop, which (like arrival) despawns regardless (r5 review). Every spawn-run removal of a
-  walker that still targets the player past the leash (the R3 release, `recycles()`, or `isMarkedForRemoval` after its
-  walk home ended it) sets `CopGroup.leashReleased`: `HandoffController` counts it as leashed out on the next
-  engaged -> not engaged edge, however many cops chased him in between (a refill spawned in the release run included;
-  the judge r5 Q1/Q1c pair: the release timing must not decide the hand-off). Only that edge consumes it; a wanted start,
-  a wanted end (the search's `keepSquadOnSearch` included) and the controller's disabled/search early return clear it.
+  world) keeps walking or standing in view and despawns on the first tick nobody looks. The `Return.Max_Ticks` backstop
+  (any walk home, review 2) waits for nobody within the 24-block floor (`CopSightlines.watched(body, 0)`, the overdue
+  rule `recycles()` applies), so a far AFK bystander no longer keeps a walker forever and no near viewer sees it vanish;
+  arrival at a station despawns regardless. Every removal of a walker that still targets the player past the leash, in
+  `spawnTick` or `aiTick` (the R3 release, `recycles()`, `isMarkedForRemoval` after `ReturningBehavior` ended its walk,
+  usually reaped by the next AI tick before any spawn run, or `!isValid`), goes through `CopManager.release`, which
+  stamps `CopGroup.markLeashReleased(now)` (radio clock): `HandoffController` counts it as leashed out on an
+  engaged -> not engaged edge within `Handoff.Bias_Seconds` of the stamp, however many cops chased him in between (a
+  refill spawned in the release run included; the judge r5 Q1/Q1c pair: the release timing must not decide the
+  hand-off). An older stamp is no cause of the fall-away (a squad wiped a minute later). That edge consumes it; a wanted
+  start, a wanted end (the search's `keepSquadOnSearch` included) and the controller's disabled/search early return
+  clear it. `isEngaged` counts CUFFING and GUARDING with PURSUING/COMBAT (review 2): a landed cuff sends the rest home
+  beside him, which is the chase won, not lost.
   During the post-escape search
   (`isSearching`) the leash is measured to the squad's last-known spot, the search's goal (`CopManager.leashAnchor`
   for `isStrandedReturning`/`isStranded`, `PursuingBehavior.leashDistance` for the pursuit leash), never his live
@@ -1237,7 +1243,8 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   from where he hides gets no refill until Keystone offers a Location-centred ring. T-433: `CopManager.standDown` marks
   the group `stoodDown` after its `Stand_Down` line; `CopRadio` then drops every signal of the group's own squad and every
   line it queued before (`CopRadio.later` wraps `SquadRadio.sayLater`), so no "Flanking, keep him busy!" follows
-  "Suspect cleared"; the next wanted start clears it. Neither this release nor
+  "Suspect cleared"; the next wanted start clears it, and so does the target hitting a cop of the group
+  (`onCopAttackedAlert`, review 2): a squad he fights again is heard again (its contact call, Man_Down and backup). Neither this release nor
   `recycles()` tips the squad (review r2, R4): no `reportTip`, no `markTipOff`, not even
   `reportTip(lastKnownLocation())`, because `reportTip` re-stamps the search circle back to 6 blocks; the refill
   inherits the squad's own lead and its widening circle (pinned by `strandedReleased_searchCircleKeepsWidening` and

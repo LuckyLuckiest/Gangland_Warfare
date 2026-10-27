@@ -154,7 +154,7 @@ public class CopManager implements BeanLifecycle {
 		long     now      = copRadio.now();
 		// a new episode: the squad is on duty again (T-433) and no leash of the last one hands this one off
 		group.setStoodDown(false);
-		group.setLeashReleased(false);
+		group.clearLeashReleased();
 		// a crime-scene tip counts as fresh as a sighting here: a repeated start right after one stays quiet
 		boolean  fresh    = group.getSquad().hasFreshSighting() ||
 		                    group.tippedOffWithin(now, NpcSquad.SIGHTING_GRACE_MS);
@@ -205,7 +205,7 @@ public class CopManager implements BeanLifecycle {
 		}
 
 		CopGroup group = groups.get(playerId);
-		if (group != null) group.setLeashReleased(false);
+		if (group != null) group.clearLeashReleased();
 		// WantedEndEvent and the level change to 0 both land here for one clear: announce it once per episode.
 		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) standDown(group);
 
@@ -318,7 +318,7 @@ public class CopManager implements BeanLifecycle {
 		if (group != null) {
 			group.clearCombatAlert();
 			group.clearPending();
-			group.setLeashReleased(false);
+			group.clearLeashReleased();
 			pendingCalls.removeIf(call -> call.group() == group);
 			for (CopNpc cop : group.getCops()) {
 				if (cop.getCurrentState() == CopState.CUFFING) cop.transitionTo(CopState.PURSUING);
@@ -425,6 +425,8 @@ public class CopManager implements BeanLifecycle {
 		// Hitting a cop gives the group's target away: the whole squad learns where he is, and he is resisting. A hit
 		// from where the cop cannot see him is a tip of the spot, not a sighting (0.21.1, R4)
 		if (attacker.getUniqueId().equals(group.getTargetPlayerId())) {
+			// a squad he fights is on duty again (T-433): its contact, casualty and backup calls are heard
+			group.setStoodDown(false);
 			if (copNpc.hasLineOfSight(attacker)) group.getSquad().reportSighting(attacker.getLocation());
 			else group.getSquad().reportTip(attacker.getLocation());
 			group.escalate(attacker.getUniqueId());
@@ -782,14 +784,11 @@ public class CopManager implements BeanLifecycle {
 		Location     anchor  = leashAnchor(group, player);
 
 		cops.removeIf(cop -> {
-			boolean stranded = isStrandedReturning(cop, anchor, maxDist);
 			// R3 (T-131/T-149): a leashed walker nobody is looking at leaves the map instead of walking home. No tip (R4):
 			// nobody saw him, so the refill inherits the squad's own lead and its widening search circle
-			if (cop.isMarkedForRemoval() || recycles(cop, group, player, now) || (stranded && !isWatched(cop))) {
-				// a leashed walker still on his trail, whichever way it goes: the hand-off must still see the leash once
-				// it is gone (a stood-down one has no target and is no leash)
-				if (stranded && playerId.equals(cop.getTargetPlayerId())) group.setLeashReleased(true);
-				group.release(cop, markManager);
+			if (cop.isMarkedForRemoval() || recycles(cop, group, player, now) ||
+			    (isStrandedReturning(cop, anchor, maxDist) && !isWatched(cop))) {
+				release(group, cop, playerId, anchor, maxDist, now);
 				return true;
 			}
 			if (!cop.isValid()) {
@@ -799,7 +798,7 @@ public class CopManager implements BeanLifecycle {
 				if (npc.isSpawned() && npc.getEntity() == null) {
 					return false;
 				}
-				group.release(cop, markManager);
+				release(group, cop, playerId, anchor, maxDist, now);
 				return true;
 			}
 			return false;
@@ -1106,6 +1105,18 @@ public class CopManager implements BeanLifecycle {
 		return lastKnown != null ? lastKnown : player.getLocation();
 	}
 
+	/**
+	 * Takes {@code cop} off the map ({@link CopGroup#release}); the caller drops it from the list. A leashed walker still
+	 * on {@code playerId}'s trail ({@link #isStrandedReturning}) is stamped on the group first, whichever removal took it
+	 * (an R3 release, a recycle, its walk home ending), so the hand-off still sees the leash once it is gone. A stood-down
+	 * walker has no target and is no leash.
+	 */
+	private void release(CopGroup group, CopNpc cop, UUID playerId, Location anchor, double maxDist, long now) {
+		if (isStrandedReturning(cop, anchor, maxDist) && playerId.equals(cop.getTargetPlayerId()))
+			group.markLeashReleased(now);
+		group.release(cop, markManager);
+	}
+
 	private static boolean isStrandedReturning(CopNpc cop, Location anchor, double maxDist) {
 		if (cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) return false;
 		Location at = cop.getEntity().getLocation();
@@ -1228,14 +1239,18 @@ public class CopManager implements BeanLifecycle {
 			return;
 		}
 
-		List<CopNpc> cops = group.getCops();
+		List<CopNpc> cops    = group.getCops();
+		long         now     = copRadio.now();
+		double       maxDist = configProvider.getPursuitMaxDistance();
+		Location     anchor  = leashAnchor(group, player);
 
 		Iterator<CopNpc> iterator = cops.iterator();
 		while (iterator.hasNext()) {
 			CopNpc cop = iterator.next();
 
 			if (cop.isMarkedForRemoval()) {
-				group.release(cop, markManager);
+				// usually a walker ReturningBehavior marked on the last AI tick, before any spawn run saw it
+				release(group, cop, playerId, anchor, maxDist, now);
 				iterator.remove();
 				continue;
 			}
@@ -1247,7 +1262,7 @@ public class CopManager implements BeanLifecycle {
 				if (npc.isSpawned() && npc.getEntity() == null) {
 					continue;
 				}
-				group.release(cop, markManager);
+				release(group, cop, playerId, anchor, maxDist, now);
 				iterator.remove();
 				continue;
 			}

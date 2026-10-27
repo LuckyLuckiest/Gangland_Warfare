@@ -22,7 +22,7 @@ import java.util.function.LongSupplier;
  * despawns - on arrival, after {@code Return.Max_Ticks}, or once the way home has been unreachable for
  * {@code Stuck.Recycle_Seconds} (a stranded cop would otherwise stand frozen where its target died), or at once when
  * its station is in another world. A stranded cop in a real player's view stays until nobody looks (owner ruling R3,
- * {@link CopSightlines#watched}); {@code Return.Max_Ticks} still removes it.
+ * {@link CopSightlines#watched}); past {@code Return.Max_Ticks} only a view within 24 blocks still keeps it.
  * <p>
  * Only a cop sent back because its target was restrained or jailed re-engages: if that target is freed before the cop
  * reaches its station (e.g. via admin command), the cop returns to {@link CopState#COMBAT} when {@code combatForced}
@@ -66,7 +66,7 @@ public class ReturningBehavior implements CopBehavior {
 		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, clock, 0.0);
 	}
 
-	private ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
+	ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
 	                          double stationArrivalDistance, StuckSettings stuck, LongSupplier clock,
 	                          double visibilityCheckDistance) {
 		this.visibilityCheckDistance = visibilityCheckDistance;
@@ -115,15 +115,17 @@ public class ReturningBehavior implements CopBehavior {
 			}
 
 			// R3: no way home (its station in another world, or unreachable past the stuck window) despawns on the first
-			// tick nobody looks; while watched it keeps walking (or standing) until the Max_Ticks backstop below
+			// tick nobody looks; while watched it keeps walking (or standing)
 			if (noWayHome && !CopSightlines.watched(entity, visibilityCheckDistance)) {
 				tryDespawn(cop);
 				return;
 			}
 		}
 
-		// Timeout - despawn regardless of whether the station was reached
-		if (cop.getDespawnTicks() >= maxReturnTicks) {
+		// Timeout - despawn whether or not the station was reached, but never before a player's eyes (R3): past the backstop
+		// only a view within the 24-block floor holds it, so a far watcher no longer keeps it
+		LivingEntity body = cop.getEntity();
+		if (cop.getDespawnTicks() >= maxReturnTicks && (body == null || !CopSightlines.watched(body, 0))) {
 			tryDespawn(cop);
 		}
 	}
@@ -173,8 +175,8 @@ public class ReturningBehavior implements CopBehavior {
 
 	/**
 	 * Despawns the cop. Pursuit has either reached the station, timed out, or there is no way home (another world, or
-	 * unreachable past the stuck window); only that last one waits for nobody to be looking (R3) - arrival and the
-	 * timeout backstop despawn regardless.
+	 * unreachable past the stuck window); that one waits for nobody to be looking (R3), the timeout backstop for nobody
+	 * within 24 blocks - arrival despawns regardless.
 	 */
 	private void tryDespawn(CopNpc cop) {
 		cop.markForRemoval();

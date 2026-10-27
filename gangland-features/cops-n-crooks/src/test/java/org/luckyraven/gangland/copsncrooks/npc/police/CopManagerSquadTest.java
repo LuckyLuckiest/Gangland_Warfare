@@ -785,6 +785,21 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("T-433 review 2: he hits a stood-down cop: the squad is back in a fight, its contact and backup calls heard")
+	void stoodDownSquad_hitByHim_backOnDuty() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		CopNpc   cop   = fx.cop(CopState.RETURNING, 0, 0);
+		group.add(cop);
+		manager.onWantedEnd(player);
+		assertTrue(group.isStoodDown());
+
+		manager.onCopAttackedAlert(cop, player);
+
+		assertFalse(group.isStoodDown(), "a squad he fights is on duty: its signals reach the radio again");
+	}
+
+	@Test
 	@DisplayName("0.21.1: on the post-escape search the spawner's leash anchor is the squad's last-known spot, not him")
 	void searchSpawnAnchor_isTheLastKnownSpot() {
 		@SuppressWarnings("unchecked")
