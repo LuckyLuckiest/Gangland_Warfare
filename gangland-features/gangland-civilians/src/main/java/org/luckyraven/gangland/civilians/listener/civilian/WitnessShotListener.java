@@ -40,7 +40,13 @@ public class WitnessShotListener implements Listener {
 		witnesses.heardShot(shooter, weapon.getCategory().name(), fuseMillis(weapon));
 	}
 
-	/** Milliseconds from the throw to the blast (Fuse_Time ticks); 0 for anything that is not a throwable. */
+	/**
+	 * Milliseconds from the throw to the blast (Fuse_Time ticks); 0 for anything that is not a throwable.
+	 *
+	 * <p>ponytail: assumes 20 TPS against the wall clock, so below ~10 TPS a 60-tick fuse blasts after the window
+	 * closes; an Impact_When throwable blasts early (loud too long) and a Delay_After_Impact can blast late. None of
+	 * that is in the shipped configs. Upgrade path: schedule heardShot(shooter, type, 0) with runTaskLater(fuseTicks).
+	 */
 	private static long fuseMillis(Weapon weapon) {
 		ThrowableData data = weapon instanceof ThrowableWeapon throwable ? throwable.getThrowableData() : null;
 		return data == null ? 0L : Math.max(0, data.getFuseTime()) * 50L;

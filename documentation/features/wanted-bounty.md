@@ -64,7 +64,7 @@ It is counted only if someone calls it in. A cop saw it when a cop (squad or bea
   crime: `Witness.View_Angle` (180) is the width of its view, so a civilian with its back to you sees nothing. A **loud**
   crime is different: every civilian in range turns round to face it first (you see them turn), then the rule applies.
   Loud means any crime within `Witness.Loud_Shot_Seconds` (3) of you firing a weapon in `Witness.Loud_Weapon_Types`
-  (a gun or a throwable, counted from its blast; a melee swing is silent), or a crime listed in `Witness.Loud_Crimes` (none by default). Car
+  (a gun or a throwable; a throwable is loud from the throw until `Loud_Shot_Seconds` after its `Fuse_Time`; a melee swing is silent), or a crime listed in `Witness.Loud_Crimes` (none by default). Car
   theft, punching and a fist or knife kill are silent.
 - **Notice (0.21.1).** The witness stares at you for `Notice_Seconds` (1), an angry-villager puff appears over its head,
   and it says `[911] Pedestrian: Hey! I saw that! I'm calling the cops!`. You hear it wherever you are; people near it do

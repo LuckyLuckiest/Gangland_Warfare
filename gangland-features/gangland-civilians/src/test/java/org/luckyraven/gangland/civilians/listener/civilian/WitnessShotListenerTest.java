@@ -110,6 +110,34 @@ class WitnessShotListenerTest {
 		assertEquals(CivilianState.IDLE, away.getCurrentState());
 	}
 
+	@Test
+	@DisplayName("a gunshot right after the throw does not cut the pending blast's window short")
+	void gunshotAfterTheThrowKeepsTheBlastWindow() {
+		CivilianNpc away = kit.civilian(10, true, 270f);
+
+		listener.onWeaponShoot(grenade(60, kit.criminal));
+		kit.advanceSeconds(1);
+		listener.onWeaponShoot(shot(WeaponType.GUN, kit.criminal));
+		kit.advanceSeconds(4.9);
+
+		assertEquals(1, kit.witness("Kill_Civilian"));
+		assertEquals(CivilianState.CALLING, away.getCurrentState());
+	}
+
+	@Test
+	@DisplayName("a grenade thrown after a gunshot stretches the window to its own blast")
+	void grenadeAfterAGunshotStretchesTheWindow() {
+		CivilianNpc away = kit.civilian(10, true, 270f);
+
+		listener.onWeaponShoot(shot(WeaponType.GUN, kit.criminal));
+		kit.advanceSeconds(1);
+		listener.onWeaponShoot(grenade(60, kit.criminal));
+		kit.advanceSeconds(5.9);
+
+		assertEquals(1, kit.witness("Kill_Civilian"));
+		assertEquals(CivilianState.CALLING, away.getCurrentState());
+	}
+
 	private static WeaponShootEvent grenade(int fuseTicks, LivingEntity shooter) {
 		ThrowableData data = mock(ThrowableData.class);
 		when(data.getFuseTime()).thenReturn(fuseTicks);
