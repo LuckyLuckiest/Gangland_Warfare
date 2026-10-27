@@ -117,8 +117,11 @@ public class CopNpc extends AbstractNpc {
 	/** The navigator's own pathfinding range (Citizens {@code default-range-blocks}), read on the first walk. */
 	private float                            baseWalkRange = Float.NaN;
 
-	/** Blocks of pathfinding range kept past a walk's goal: a search circle around a last-known spot grows past it. */
-	static final double WALK_RANGE_MARGIN = 32.0;
+	/**
+	 * Blocks of pathfinding range kept past a walk's goal: a search circle around a last-known spot grows past it, up to
+	 * Keystone's {@code NpcSquad.SEARCH_MAX_RADIUS} (48, private there) when the spot itself is unreachable.
+	 */
+	static final double WALK_RANGE_MARGIN = 56.0;
 
 	public CopNpc(JavaPlugin plugin, NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {

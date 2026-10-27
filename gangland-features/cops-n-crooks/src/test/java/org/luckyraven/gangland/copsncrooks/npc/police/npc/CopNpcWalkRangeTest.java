@@ -73,6 +73,20 @@ class CopNpcWalkRangeTest {
 	}
 
 	@Test
+	@DisplayName("r6 review 1: the range covers the far side of Keystone's search circle (48 blocks) round the lead")
+	void pursuitTowardAFarLead_rangeCoversTheSearchCircle() {
+		NpcSquad squad = new NpcSquad();
+		squad.reportTip(new Location(world, -44, -60, 0)); // the R5 lead
+		Player runner = mock(Player.class);
+		when(runner.getWorld()).thenReturn(world);
+
+		cop.pursue(runner, squad, 40.0);
+
+		double farSide = Math.sqrt(22 * 22 + 238 * 238) + 48.0; // NpcSquad.SEARCH_MAX_RADIUS
+		assertTrue(defaults.range() >= farSide, "default range " + defaults.range() + " must reach " + farSide);
+	}
+
+	@Test
 	@DisplayName("a walk home to a station 180 blocks off gets a range that reaches it")
 	void walkToAFarStation_rangeCoversIt() {
 		cop.navigateTo(new Location(world, -22, -60, 58));

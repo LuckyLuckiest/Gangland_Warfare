@@ -362,6 +362,37 @@ class CopManagerHandoffTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1 r6 review 1: a post holds a minute after the release, then dies: no hand-off (nobody leashed out)")
+	void postHoldsAMinute_thenThePostIsKilled_noHandoff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc[] cops   = chaseWithALeashedWalker(controller, group);
+		CopNpc   chaser = cops[0];
+
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
+		fx.manager.spawnTick(player.getUniqueId(), wanted); // R3 takes the leashed walker off the map
+		assertFalse(group.getCops().contains(cops[1]), "the leashed walker was released");
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		// the chaser posts at x=20; he hides 40 blocks from the post for a minute
+		chaser.transitionTo(CopState.POSTED);
+		playerAt(60);
+		for (int i = 0; i < 60; i++) {
+			fx.clock[0] += 1_000L;
+			controller.tick(player, group);
+		}
+		when(chaser.isValid()).thenReturn(false); // the post is killed
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		assertNull(group.biasAt(fx.clock[0]), "a post killed a minute after the release lost no chase");
+		verify(fx.radio, never()).sayFromLeader(eq(group), eq("Handoff"), any(), any());
+	}
+
+	@Test
 	@DisplayName("0.21.1: the leashed walker released out of view (R3) before the posts fall away still hands the chase off")
 	void leashedWalkerReleasedBeforeTheEdge_stillHandsOff() {
 		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);

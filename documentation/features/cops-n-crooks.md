@@ -502,8 +502,10 @@ search there once they arrive. Neither the heading nor that spot is his live pos
 no news of him since leads from the same last-known spot again, never on from the first lead. The first unit gives the squad that spot once, and not at all if
 a cop has spotted him since. The heading is read over the last `Heading_Seconds` (2) the squad knew of his movement.
 The hand-off fires when the chase leashed out even if the walker that gave up was already taken off the map while a
-perimeter post still held the chase, as long as that was within `Bias_Seconds` of the chase falling away; a cuff is
-never a lost chase (0.21.1). There is no hand-off on the post-escape search: he has no stars, so
+perimeter post still held the chase, as long as that was within `Bias_Seconds` of the chase falling away, or he has
+since run more than `Pursuit.Max_Distance` past a post that held it; a post killed or called off is no lost chase, and
+a cuff never is (0.21.1). A unit sent ahead still gives up once it is `Pursuit.Max_Distance` from him, so it does not
+reach a lead farther than that from him. There is no hand-off on the post-escape search: he has no stars, so
 nobody radios units ahead of him. `/glw wanted clear` on a player at zero stars ends his post-escape search: the cops
 say "Suspect cleared" and walk home. After "Suspect cleared" the squad says nothing more, not even an order it was
 about to give.

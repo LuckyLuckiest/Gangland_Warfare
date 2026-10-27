@@ -1234,11 +1234,13 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   hand-off). An older stamp is no cause of the fall-away (a squad wiped a minute later). That edge consumes it; a wanted
   start, a wanted end (the search's `keepSquadOnSearch` included) and the controller's disabled/search early return
   clear it. `isEngaged` counts CUFFING and GUARDING with PURSUING/COMBAT (review 2): a landed cuff sends the rest home
-  beside him, which is the chase won, not lost. r6: while the group is engaged only through posts (no cop PURSUING,
-  COMBAT, CUFFING or GUARDING: `HandoffController.closing`), an unexpired stamp is re-stamped every tick, so a release
-  does not age while a post alone holds the chase and he hides near it; running past the post then still hands off
-  (`pa_postHoldsPastBiasSeconds_thenFallsAway_handsOff`). A chase that goes on (a cop chasing) lets it age as before
-  (`staleRelease_thenTheSquadIsWipedAMinuteLater_noHandoff`).
+  beside him, which is the chase won, not lost. r6 (review 1): a stamp of any age still counts on the edge when a
+  valid POSTED/OVERWATCH cop of the group now stands farther than `Pursuit.Max_Distance` from him
+  (`HandoffController.postLeftBehind`): he left a post that held the chase behind
+  (`pa_postHoldsPastBiasSeconds_thenFallsAway_handsOff`). A post killed or called off is no leash, so a fall-away
+  through its loss keeps the `Bias_Seconds` rule (`postHoldsAMinute_thenThePostIsKilled_noHandoff`,
+  `staleRelease_thenTheSquadIsWipedAMinuteLater_noHandoff`). The r6 first cut re-stamped the record while posts held
+  the chase, which also handed off on a post killed a minute after the release; it was dropped.
   During the post-escape search
   (`isSearching`) the leash is measured to the squad's last-known spot, the search's goal (`CopManager.leashAnchor`
   for `isStrandedReturning`/`isStranded`, `PursuingBehavior.leashDistance` for the pursuit leash), never his live
@@ -1323,10 +1325,16 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   farther than `localParams.range()` (Citizens `default-range-blocks`, 100 on the test server), and Keystone 1.15.4
   sets no range and hands Citizens whole route legs (`NpcRoute.legsFrom` splits only at doors and ladders). A hand-off
   pointman spawned 239 blocks from its lead had its `moveTo` stopped, its planned route's single leg stopped twice
-  ("route walk failed 2 legs"), the goal marked unreachable, and stood until the stuck recycle. The pursuit leash (44
-  blocks to the live player) and the R5 seed were not involved. `CopNpc.pursue` (goal: the squad's last-known spot)
+  ("route walk failed 2 legs"), the goal marked unreachable, and stood until the stuck recycle. The pursuit leash and
+  the R5 seed did not cause the frozen tick. Residual (owner decision, review 1): `PursuingBehavior.leashDistance`
+  measures to his live spot unless the post-escape search runs, so a hand-off unit walking toward a lead farther than
+  `Pursuit.Max_Distance` from him goes RETURNING once it is that far from his (hidden) live spot, wherever its lead is;
+  that walker's release can hand the chase off again. Hand-off units therefore cannot reach a lead more than
+  `Max_Distance` from him. Leashing a tip-only unit to its lead instead was not taken: a spawn-between unit spawns
+  within `0.75 x Max_Distance` of him, so with a lead 205 blocks off (the acc7 geometry) it would leash the moment it
+  spawned. `CopNpc.pursue` (goal: the squad's last-known spot)
   and `CopNpc.navigateTo` (stations, perches, posts, beats) set both navigator parameter sets' range to
-  `distance + 32` (`WALK_RANGE_MARGIN`) and back to the server's own range for a near goal. The upstream fix (Keystone
+  `distance + 56` (`WALK_RANGE_MARGIN`: past Keystone's 48-block `NpcSquad.SEARCH_MAX_RADIUS`, for a search round an unreachable goal; uncapped, so a far station walk raises the vanilla pathfinder's budget) and back to the server's own range for a near goal. The upstream fix (Keystone
   capping each walk and leg inside the range) would retire it.
 - `CopSpawnManager.fits(target)` gates every spawn path (`spawnUnit` and `spawnNearPlayer`): within
   `0.75 x Pursuit.Max_Distance` (3D) and not `inViewOf` (60 degree eye cone plus `isOutOfSight` false). The ring

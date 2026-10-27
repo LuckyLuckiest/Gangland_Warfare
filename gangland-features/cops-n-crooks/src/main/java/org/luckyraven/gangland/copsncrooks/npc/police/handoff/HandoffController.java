@@ -86,16 +86,14 @@ public class HandoffController {
 		boolean isEngaged   = isEngaged(group, player, maxDistance);
 		if (isEngaged) engaged.add(id);
 		else engaged.remove(id);
-		// while posts alone hold the chase (nobody chases, fights, cuffs or guards him) a leash release does not age: the
-		// chase it leashed out has not fallen away yet, however long he hides near a post (0.21.1 r6)
-		if (isEngaged && !closing(group) && group.isLeashReleased(now, settings.biasSeconds() * 1000L))
-			group.markLeashReleased(now);
 
 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
 		// a leashed walker removed shortly before the chase fell away still leashed it out, whoever chased on since; one
-		// older than Bias_Seconds is no cause of this fall-away (a wipe or a stand-off a minute later). Only this edge (or
-		// a wanted start or end, CopManager) consumes the record
+		// older than Bias_Seconds is no cause of this fall-away (a wipe or a stand-off a minute later), unless he has now
+		// left a post of the group behind (0.21.1 r6: posts held the chase since; a post killed or called off is no
+		// leash). Only this edge (or a wanted start or end, CopManager) consumes the record
 		boolean leashed = group.isLeashReleased(now, settings.biasSeconds() * 1000L) ||
+		                  group.isLeashReleased(now, Long.MAX_VALUE) && postLeftBehind(group, player, maxDistance) ||
 		                  leashedOut(group, id, player, maxDistance);
 		group.clearLeashReleased();
 		if (window.isEmpty() || !leashed) return;
@@ -156,6 +154,17 @@ public class HandoffController {
 			CopState state = cop.getCurrentState();
 			if (cop.isValid() && (state == CopState.PURSUING || state == CopState.COMBAT || state == CopState.CUFFING ||
 			                      state == CopState.GUARDING)) return true;
+		}
+		return false;
+	}
+
+	/** A live POSTED/OVERWATCH cop of the group stands farther than {@code maxDistance} from him: he left it behind. */
+	private static boolean postLeftBehind(CopGroup group, Player player, double maxDistance) {
+		for (CopNpc cop : List.copyOf(group.getCops())) {
+			CopState state = cop.getCurrentState();
+			Entity   body  = cop.getEntity();
+			if (cop.isValid() && body != null && (state == CopState.POSTED || state == CopState.OVERWATCH) &&
+			    farFrom(body.getLocation(), player, maxDistance)) return true;
 		}
 		return false;
 	}
