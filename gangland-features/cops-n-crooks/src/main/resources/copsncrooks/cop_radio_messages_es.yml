@@ -235,7 +235,7 @@ Lines:
       - "Atención a todas las unidades: %target% es el más buscado de la ciudad, visto cerca de %place%."
    # 0.20.0: una llamada al 911 llega al despacho con el delito, el lugar y el sospechoso.
    Caller_911:
-      - "Despacho: llamada al 911 reporta %crime% cerca de %place%. Sospechoso: %suspect%."
+      - "Llamada al 911 reporta %crime% cerca de %place%. Sospechoso: %suspect%."
    # 0.20.0: un policía describe al sospechoso a la escuadra.
    Suspect_Description:
       - "El sospechoso es %suspect%."

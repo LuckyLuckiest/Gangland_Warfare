@@ -111,7 +111,7 @@ class Bundled020YamlTest {
 		ConfigReport report = new ConfigReport();
 		NodeReader   wanted = wantedRoot(resource("copsncrooks/wanted.yml"), report);
 
-		assertEquals(new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian")), WitnessSettings.parse(wanted));
+		assertEquals(new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian", "Kill_Civilian")), WitnessSettings.parse(wanted));
 		assertEquals(new TrespassSettings(true, 60), TrespassSettings.parse(wanted));
 		assertEquals(100, ChaseConfig.parse(wanted, report).heat().weightOf("Evading_Police"));
 		assertEquals(Set.of("Enable", "Crimes"), keysOf(wanted, "Witnesses"));

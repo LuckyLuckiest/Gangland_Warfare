@@ -10,7 +10,9 @@ public enum CancelReason {
 	SCARED,
 	KILLED,
 	LOGOUT,
-	LOST;
+	LOST,
+	/** The criminal right-clicked the caller within {@code Witness.Intimidate_Range} (0.21.1). */
+	INTIMIDATED;
 
 	public String debugName() {
 		return name().toLowerCase(Locale.ROOT);

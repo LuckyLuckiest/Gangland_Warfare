@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
@@ -48,6 +49,8 @@ public final class HeatLedger {
 	private final Map<UUID, Map<UUID, Long>>   assaults = new ConcurrentHashMap<>();
 
 	private volatile Consumer<Player> starTrigger;
+	/** The criminal whose 911 recommit is running ({@link #commitReported}); main thread only. */
+	private @Nullable UUID            reporting;
 
 	public HeatLedger(ChaseConfigLoader config, UserManager<Player> users, CrimeService crimes,
 	                  Predicate<Player> copSight, Predicate<Location> contestedTurf,
@@ -75,6 +78,20 @@ public final class HeatLedger {
 	/** The core star handler, replayed until the stars match the heat. */
 	public void setStarTrigger(@Nullable Consumer<Player> trigger) {
 		this.starTrigger = trigger;
+	}
+
+	/**
+	 * Runs a civilian's 911 recommit: the crime it records for {@code criminal} is marked reported, so the star card
+	 * names the witness (0.21.1 Q7). Nothing else is: a safe alarm, a store hold-up or a crew mate's share commits with a
+	 * witness too, but no civilian phoned it in.
+	 */
+	public boolean commitReported(Player criminal, BooleanSupplier commit) {
+		reporting = criminal.getUniqueId();
+		try {
+			return commit.getAsBoolean();
+		} finally {
+			reporting = null;
+		}
 	}
 
 	/** @return the heat added, 0 when the crime is ignored */
@@ -108,7 +125,8 @@ public final class HeatLedger {
 
 		double added = weight * mult;
 		chase.heat += added;
-		chase.crimes.add(new CrimeRecord(event.getCrimeId(), added, now, event.getLocation()));
+		boolean reported = player.getUniqueId().equals(reporting);
+		chase.crimes.add(new CrimeRecord(event.getCrimeId(), added, now, event.getLocation(), reported));
 
 		int target = heat.starsFor(chase.heat, maxLevel);
 		Consumer<Player> trigger = starTrigger;

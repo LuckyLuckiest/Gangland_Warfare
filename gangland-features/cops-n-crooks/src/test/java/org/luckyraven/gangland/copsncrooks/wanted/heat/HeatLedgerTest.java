@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -224,6 +225,24 @@ class HeatLedgerTest {
 		ledger.onLevelChanged(playerId, 0, 3, 5, WantedCause.RESTORE);
 
 		assertEquals(450, ledger.heatOf(playerId));
+	}
+
+	@Test
+	@DisplayName("0.21.1 Q7: only the 911 recommit (commitReported) is recorded as reported; an alarm's witness is not")
+	void reportedOnlyForThe911Recommit() {
+		boolean committed = ledger.commitReported(player, () -> {
+			ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 1));
+			return true;
+		});
+		assertTrue(committed);
+		assertTrue(ledger.lastCrime(playerId).reported());
+
+		// a store hold-up or a safe alarm commits with one witness too: not a civilian's 911 call
+		ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 1));
+		assertFalse(ledger.lastCrime(playerId).reported());
+
+		ledger.record(crime(Crimes.ASSAULT_COP));
+		assertFalse(ledger.lastCrime(playerId).reported());
 	}
 
 	@Test

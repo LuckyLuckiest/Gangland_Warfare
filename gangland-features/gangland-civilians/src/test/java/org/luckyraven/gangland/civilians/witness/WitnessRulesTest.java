@@ -58,6 +58,66 @@ class WitnessRulesTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1: View_Angle, Notice_*, Phone_Item, Intimidate_Range, Scared_Cooldown_Seconds and Loud_* are read")
+	void newKeysRead() {
+		WitnessRules rules = parseRules("""
+				Witness:
+				   View_Angle: 360.0
+				   Notice_Seconds: 2
+				   Notice_Particle: "FLAME"
+				   Phone_Item: "PAPER"
+				   Intimidate_Range: 6.0
+				   Scared_Cooldown_Seconds: 30
+				   Loud_Crimes:
+				      - Car_Theft
+				   Loud_Shot_Seconds: 0
+				   Loud_Weapon_Types:
+				      - GUN
+				""", new ConfigReport());
+
+		assertEquals(360.0, rules.viewAngle());
+		assertEquals(2, rules.noticeSeconds());
+		assertEquals("FLAME", rules.noticeParticle());
+		assertEquals("PAPER", rules.phoneItem());
+		assertEquals(6.0, rules.intimidateRange());
+		assertEquals(30, rules.scaredCooldownSeconds());
+		assertEquals(java.util.List.of("Car_Theft"), rules.loudCrimes());
+		assertEquals(0, rules.loudShotSeconds());
+		assertEquals(java.util.List.of("GUN"), rules.loudWeaponTypes());
+	}
+
+	@Test
+	@DisplayName("0.21.1 defaults: 180 degree cone, 1 s notice, ANGRY_VILLAGER, CLOCK, 4 blocks, 60 s, no loud crime, 3 s shot from a gun or a throwable")
+	void newKeyDefaults() {
+		WitnessRules d = WitnessRules.parse(null);
+
+		assertEquals(180.0, d.viewAngle());
+		assertEquals(1, d.noticeSeconds());
+		assertEquals("ANGRY_VILLAGER", d.noticeParticle());
+		assertEquals("CLOCK", d.phoneItem());
+		assertEquals(4.0, d.intimidateRange());
+		assertEquals(60, d.scaredCooldownSeconds());
+		assertTrue(d.loudCrimes().isEmpty());
+		assertEquals(3, d.loudShotSeconds());
+		assertEquals(java.util.List.of("GUN", "THROWABLE"), d.loudWeaponTypes());
+	}
+
+	@Test
+	@DisplayName("Phone_Item and Notice_Particle \"\" mean none; Loud_Crimes [] means no loud crime")
+	void emptyValuesMeanNone() {
+		WitnessRules rules = parseRules("""
+				Witness:
+				   Notice_Particle: ""
+				   Phone_Item: ""
+				   Loud_Crimes: []
+				""", new ConfigReport());
+
+		assertEquals("", rules.noticeParticle());
+		assertEquals("", rules.phoneItem());
+		assertTrue(rules.loudCrimes().isEmpty());
+	}
+
+	@Test
 	@DisplayName("a partly filled block keeps the default for the missing keys")
 	void partialBlockKeepsDefaults() {
 		WitnessRules rules = parseRules("""
@@ -114,7 +174,10 @@ class WitnessRulesTest {
 		String block = next.find() ? after.substring(0, next.start()) : after;
 		String[][] expected = {{"Enable", "true"}, {"Range", "24.0"}, {"Call_Seconds", "8"}, {"Caller_Glow", "true"},
 		                       {"Scare_Range", "16.0"}, {"Scare_Angle", "12.0"}, {"Report_Assault", "true"},
-		                       {"Assault_Repeat_Seconds", "10"}};
+		                       {"Assault_Repeat_Seconds", "10"}, {"View_Angle", "180.0"}, {"Notice_Seconds", "1"},
+		                       {"Notice_Particle", "\"ANGRY_VILLAGER\""}, {"Phone_Item", "\"CLOCK\""},
+		                       {"Intimidate_Range", "4.0"}, {"Scared_Cooldown_Seconds", "60"},
+		                       {"Loud_Shot_Seconds", "3"}};
 		for (String[] pair : expected) {
 			assertTrue(java.util.regex.Pattern.compile("(?m)^   " + pair[0] + ": " + java.util.regex.Pattern.quote(pair[1])
 			                                            + "\\s*(#.*)?$").matcher(block).find(),

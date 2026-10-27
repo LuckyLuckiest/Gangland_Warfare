@@ -14,8 +14,13 @@ Spawner_Type_Set: "&aCivilian spawner &e%type%&a set at your location."
 Spawner_Group_Set: "&aGroup spawner &e%group%&a set at your location."
 Spawner_List_Header: "Civilian spawners:"
 Spawner_List_Empty: "No civilian spawners are currently set."
-# Action-bar line a criminal sees when a witness starts calling 911.
-Witness_Calling: "&cA witness is calling 911! Stop them!"
+# Action-bar countdown a criminal sees while a witness calls 911 (0.21.1). %caller% the caller, %seconds% seconds left.
+# A text without the placeholders still works, it just shows as written.
+Witness_Calling: "&c911 &f%caller% &7is calling - &e%seconds%s"
+# Action-bar line when the criminal stopped the call: hit, scared (aimed at) or intimidated (right-clicked) (0.21.1).
+Witness_Stopped: "&aCall stopped."
+# %place% of the Witness_Landed line when no named place covers the crime spot (0.21.1).
+Witness_Unknown_Place: "here"
 
 # Faction shouts (phase H12). Delivery tuning (Range, cooldowns, ...) lives in civilians.yml's own Shouts block;
 # this is only the shouted text. Every Lines key is a list; one line is picked at random. [] mutes that kind.
@@ -23,6 +28,8 @@ Witness_Calling: "&cA witness is calling 911! Stop them!"
 # same as police radio, %faction% the shouter's faction, %gang% the guard's gang tag (empty for street civilians), %count% allies recruited (Rally only).
 Shouts:
    Format: "&c[%faction%] &f%unit%&7: &f%line%"
+   # The format of a 911 witness's lines (Witness_Start, Witness_Scared, Witness_Landed) (0.21.1).
+   Witness_Format: "&c[911] &f%unit%&7: &f%line%"
    # Said by a guard standing down after a held / lost turf. Plain lines, not pools.
    Turf_Held: "Turf's ours. Back to your posts."
    Turf_Lost: "We lost it. Fall back."
@@ -86,3 +93,12 @@ Shouts:
       Responding: []
       Rally:
          - "%faction%! They're hitting us, %count% on the way!"
+      # 0.21.1 911 witness: noticed the crime, starts dialling (heard by the criminal and bystanders in Shouts.Range).
+      Witness_Start:
+         - "Hey! I saw that! I'm calling the cops!"
+      # 0.21.1 911 witness: the criminal stopped the call (hit, aimed at, or right-clicked).
+      Witness_Scared:
+         - "Okay, okay! I'm hanging up!"
+      # 0.21.1 911 witness: the call connected. %place% the named place of the crime, else Witness_Unknown_Place.
+      Witness_Landed:
+         - "Yes, police? He's right here, near %place%!"

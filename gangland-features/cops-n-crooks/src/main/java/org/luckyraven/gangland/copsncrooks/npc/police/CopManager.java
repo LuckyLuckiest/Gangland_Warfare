@@ -495,6 +495,19 @@ public class CopManager implements BeanLifecycle {
 	 *
 	 * @return list of cop NPCs
 	 */
+	/** Every live cop of every group (a snapshot); beat cops are {@code PatrolManager.beatCops()}. */
+	public List<CopNpc> liveCops() {
+		List<CopNpc> all = new ArrayList<>();
+		for (CopGroup group : groups.values()) {
+			synchronized (group.getCops()) {
+				for (CopNpc cop : group.getCops()) {
+					if (cop.isValid() && !cop.isMarkedForRemoval()) all.add(cop);
+				}
+			}
+		}
+		return all;
+	}
+
 	public List<CopNpc> getCopsForPlayer(UUID playerId) {
 		CopGroup group = groups.get(playerId);
 		return group != null ? new ArrayList<>(group.getCops()) : Collections.emptyList();

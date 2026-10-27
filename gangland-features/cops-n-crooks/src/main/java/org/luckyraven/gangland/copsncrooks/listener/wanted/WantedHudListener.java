@@ -94,7 +94,9 @@ public class WantedHudListener implements Listener {
 
 		if (newLevel > event.getOldLevel()) {
 			String crime = crimeName(player, event);
-			announce(player, newLevel, stars, raiseCard(crime, newLevel), crime, chase.get().hud().gain());
+			// the witness is named on the card (chat) only; %cause% keeps the subtitle short (R1, 0.21.1 Q7)
+			announce(player, newLevel, stars, raiseCard(cardCrime(player, event, crime), newLevel), crime,
+			         chase.get().hud().gain());
 			playSiren(player);
 		} else if (newLevel < event.getOldLevel() && (newLevel > 0 || isGetaway(event.getCause()))) {
 			int          lost     = event.getOldLevel() - newLevel;
@@ -226,6 +228,14 @@ public class WantedHudListener implements Listener {
 		                  search.isSearching(player.getUniqueId());
 
 		return messages.crimeName(record != null ? record.crimeId() : spotted ? "Spotted" : "Unknown_Crime");
+	}
+
+	/** {@code crime} for the star card: a crime a civilian's 911 call reported says so, {@code Hud.Card.Reported} (0.21.1). */
+	private String cardCrime(Player player, WantedLevelChangeEvent event, String crime) {
+		CrimeRecord record = event.getCause() == WantedCause.CRIME ? ledger.lastCrime(player.getUniqueId()) : null;
+		if (record == null || !record.reported()) return crime;
+
+		return messages.format(WantedMessages.Key.CARD_REPORTED, Map.of("crime", crime));
 	}
 
 	private String raiseCard(String crime, int newLevel) {

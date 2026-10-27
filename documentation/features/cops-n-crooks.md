@@ -197,7 +197,10 @@ blocks). Each line plays a short click sound.
 - **Orders and acknowledgements:** the squad leader orders members to push in or take a flank, and the ordered cop
   answers ("Copy.") a moment later. Shooters also call out repositioning, reloading and check-fire.
 - **Casualties:** "Officer down!" when a cop dies, or a leader change when the leader dies.
-- **Dispatch:** a new wanted level, a tier escalation, and the stand-down when the player is cleared.
+- **Dispatch:** a new wanted level, a tier escalation, and the stand-down when the player is cleared. A landed 911 call
+  ("[DISPATCH] 911 caller reports Car theft near the Docks.", `Caller_911`, the crime by its display name) is a dispatch
+  line since 0.21.1, so it plays even when the call has just made the player wanted and no cop is out yet. The
+  caller's own lines are in [wanted-bounty.md](./wanted-bounty.md#witnesses-and-911-calls-0200).
 - **Responders:** a Contact, Officer Down or Backup call pulls in up to `Radio.Responder_Max` (2) nearby cops within
   `Radio.Range`. Only cops that are idle, walking home or chasing a civilian answer, including cops from another
   wanted player's group. A cop that is cuffing, guarding or hunting a player of its own never leaves it. This is the

@@ -405,10 +405,15 @@ Wanted:
    Witnesses:
       # false = no witnesses; only a cop who sees a crime reports it
       Enable: true
-      # Crimes a witness calls in
+      # Crimes a witness calls in when no cop sees them (a cop who sees you commit one counts it at once). 0.21.1:
+      # Kill_Civilian too, so a kill neither a cop nor a civilian saw brings no star. A civilian behind you sees a silent
+      # kill (fist, knife) only if it faces you, but a gunshot turns it round first: see Witness.View_Angle and
+      # Witness.Loud_Weapon_Types in npc/civilians.yml. Store_Robbery is not listed: the shop's silent alarm already
+      # reports it as witnessed.
       Crimes:
          - Car_Theft
          - Assault_Civilian
+         - Kill_Civilian
 
    # 0.20.0 trespass: repeat trespass in a restricted place adds heat
    Trespass:

@@ -10,6 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.civilians.witness.WitnessService;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.WitnessSettings;
 import org.luckyraven.gangland.events.crime.CrimeCommittedEvent;
@@ -23,6 +28,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -37,6 +43,9 @@ class WitnessGateListenerTest {
 	private final ChaseConfigLoader config    = mock(ChaseConfigLoader.class);
 	private final WitnessService    witnesses = mock(WitnessService.class);
 	private final CopManager        copManager = mock(CopManager.class);
+	private final PatrolManager     patrol    = mock(PatrolManager.class);
+	private final CopLoader         copLoader = mock(CopLoader.class);
+	private final CopConfigProvider provider  = mock(CopConfigProvider.class);
 	private final Player            player    = mock(Player.class);
 	private final UUID              playerId  = UUID.randomUUID();
 	private final Location          where     = new Location(mock(World.class), 10, 64, 10);
@@ -49,7 +58,9 @@ class WitnessGateListenerTest {
 		when(player.getUniqueId()).thenReturn(playerId);
 		when(config.getWitnesses()).thenReturn(WitnessSettings.DEFAULT);
 		when(witnesses.witness(any(), any(), any())).thenReturn(1);
-		listener   = new WitnessGateListener(config, witnesses, copManager);
+		when(copLoader.getLoadedProvider()).thenReturn(provider);
+		when(provider.getAlertRange()).thenReturn(40.0);
+		listener   = new WitnessGateListener(config, witnesses, copManager, patrol, new CopPerception(), copLoader);
 		npcSupport = mockStatic(NpcSupport.class);
 		npcSupport.when(NpcSupport::available).thenReturn(true);
 	}
@@ -72,6 +83,17 @@ class WitnessGateListenerTest {
 
 		assertTrue(event.isCancelled());
 		verify(witnesses, times(1)).witness(eq(player), eq("Car_Theft"), eq(where));
+	}
+
+	@Test
+	@DisplayName("0.21.1 Q1: an unseen Kill_Civilian waits for a witness like Car_Theft (cancelled, witness asked once)")
+	void unseenKillCivilianIsWitnessGated() {
+		CrimeCommittedEvent event = crime("Kill_Civilian", false, 0);
+
+		listener.onCrime(event);
+
+		assertTrue(event.isCancelled());
+		verify(witnesses, times(1)).witness(eq(player), eq("Kill_Civilian"), eq(where));
 	}
 
 	@Test
@@ -112,6 +134,54 @@ class WitnessGateListenerTest {
 		verify(witnesses, never()).witness(any(), any(), any());
 	}
 
+	/** A live cop whose sight of the player is {@code sees} within the alert range. */
+	private CopNpc cop(boolean sees) {
+		CopNpc cop = mock(CopNpc.class);
+		when(cop.isValid()).thenReturn(true);
+		when(cop.canSee(eq(player), anyDouble())).thenReturn(sees);
+		return cop;
+	}
+
+	@Test
+	@DisplayName("0.21.1: a civilian kill right in front of a squad cop (any group) is not gated: no witness needed")
+	void killInSightOfASquadCopIsNotGated() {
+		List<CopNpc> cops = List.of(cop(false), cop(true));
+		when(copManager.liveCops()).thenReturn(cops);
+		CrimeCommittedEvent event = crime("Kill_Civilian", false, 0);
+
+		listener.onCrime(event);
+
+		assertFalse(event.isCancelled());
+		verify(witnesses, never()).witness(any(), any(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.1: a civilian kill in sight of a beat (patrol) cop is not gated")
+	void killInSightOfABeatCopIsNotGated() {
+		List<CopNpc> beat = List.of(cop(true));
+		when(patrol.beatCops()).thenReturn(beat);
+		CrimeCommittedEvent event = crime("Kill_Civilian", false, 0);
+
+		listener.onCrime(event);
+
+		assertFalse(event.isCancelled());
+		verify(witnesses, never()).witness(any(), any(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.1: cops nearby that cannot see the player do not excuse the gate")
+	void copsThatCannotSeeStillGate() {
+		List<CopNpc> squad = List.of(cop(false));
+		List<CopNpc> beat  = List.of(cop(false));
+		when(copManager.liveCops()).thenReturn(squad);
+		when(patrol.beatCops()).thenReturn(beat);
+		CrimeCommittedEvent event = crime("Kill_Civilian", false, 0);
+
+		listener.onCrime(event);
+
+		assertTrue(event.isCancelled());
+	}
+
 	@Test
 	@DisplayName("a group whose squad has not seen the player recently does not excuse the gate")
 	void staleSquadStillGates() {
@@ -137,9 +207,9 @@ class WitnessGateListenerTest {
 	}
 
 	@Test
-	@DisplayName("crimes outside Wanted.Witnesses.Crimes are never gated (P-WIT-5)")
+	@DisplayName("crimes outside Wanted.Witnesses.Crimes are never gated (P-WIT-5; Kill_Civilian joined the list in 0.21.1)")
 	void shippedCrimesNeverGated() {
-		for (String id : List.of("Kill_Player", "Kill_Civilian", "Kill_Cop", "Assault_Cop", "Resisting_Arrest")) {
+		for (String id : List.of("Kill_Player", "Kill_Cop", "Assault_Cop", "Resisting_Arrest", "Store_Robbery")) {
 			CrimeCommittedEvent event = crime(id, false, 0);
 
 			listener.onCrime(event);

@@ -20,11 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class CiviliansBartizanReferenceAllowlistTest {
 
 	@Test
-	@DisplayName("only the five audited classes reference Bartizan anywhere in their compiled bytecode")
+	@DisplayName("only the six audited classes reference Bartizan anywhere in their compiled bytecode (0.21.1: WitnessShotListener)")
 	void onlyAuditedClassesReferenceBartizanAnywhere() throws IOException {
 		Set<String> found = BartizanReferenceScan.findBartizanReferencingClasses(Path.of("target/classes"));
 		Set<String> allowed = Set.of(
 				"org.luckyraven.gangland.civilians.listener.gang.GangAllyWeaponImpactListener",
+				"org.luckyraven.gangland.civilians.listener.civilian.WitnessShotListener",
 				"org.luckyraven.gangland.civilians.CombatEligibilityConfig",
 				"org.luckyraven.gangland.civilians.npc.combat.GanglandCombatEligibility",
 				"org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons",

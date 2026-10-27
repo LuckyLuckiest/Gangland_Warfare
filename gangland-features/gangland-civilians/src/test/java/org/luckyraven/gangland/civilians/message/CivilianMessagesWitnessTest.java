@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("CivilianMessages - Witness_Calling (the action-bar line a criminal sees)")
@@ -29,30 +29,71 @@ class CivilianMessagesWitnessTest {
 	Path tempDir;
 
 	@Test
-	@DisplayName("the file's Witness_Calling is returned with colour codes applied")
+	@DisplayName("the file's Witness_Calling is returned with colour codes applied and %caller%/%seconds% filled")
 	void fileValueIsUsed() throws IOException {
-		CivilianMessages messages = build("Witness_Calling: \"&cmarker-witness\"\n");
+		CivilianMessages messages = build("Witness_Calling: \"&cmarker %caller% %seconds%s\"\n");
 
-		assertTrue(messages.witnessCalling().contains("marker-witness"));
-		assertFalse(messages.witnessCalling().contains("&c"));
+		assertEquals("\u00a7cmarker Pedestrian 5s", messages.witnessCalling("Pedestrian", 5));
 	}
 
 	@Test
-	@DisplayName("a file without the key falls back to the shipped English line")
+	@DisplayName("an old placeholder-free Witness_Calling still renders as written")
+	void oldTextStillRenders() throws IOException {
+		CivilianMessages messages = build("Witness_Calling: \"&cA witness is calling 911! Stop them!\"\n");
+
+		assertTrue(messages.witnessCalling("Pedestrian", 5).contains("A witness is calling 911! Stop them!"));
+	}
+
+	@Test
+	@DisplayName("a file without the keys falls back to the shipped English countdown, stopped line and place word")
 	void missingKeyFallsBack() throws IOException {
 		CivilianMessages messages = build("List_Empty: \"x\"\n");
 
-		assertTrue(messages.witnessCalling().contains("A witness is calling 911! Stop them!"));
+		assertEquals("\u00a7c911 \u00a7fPedestrian \u00a77is calling - \u00a7e5s", messages.witnessCalling("Pedestrian", 5));
+		assertEquals("\u00a7aCall stopped.", messages.witnessStopped());
+		assertEquals("here", messages.witnessUnknownPlace());
 	}
 
 	@Test
-	@DisplayName("both shipped message files declare Witness_Calling, the English one with the spec line")
-	void shippedFilesDeclareKey() throws IOException {
-		String english = resource("npc/civilian_messages.yml");
-		String spanish = resource("npc/civilian_messages_es.yml");
+	@DisplayName("Witness_Format and the three Witness pools have shipped defaults, one line each")
+	void witnessShoutDefaults() throws IOException {
+		CivilianMessages messages = build("List_Empty: \"x\"\n");
 
-		assertTrue(english.contains("\nWitness_Calling: \"&cA witness is calling 911! Stop them!\""));
-		assertTrue(spanish.contains("\nWitness_Calling: \""));
+		assertEquals(List.of("&c[911] &f%unit%&7: &f%line%"), messages.lines("Witness_Format"));
+		assertEquals(List.of("Hey! I saw that! I'm calling the cops!"), messages.lines("Witness_Start"));
+		assertEquals(List.of("Okay, okay! I'm hanging up!"), messages.lines("Witness_Scared"));
+		assertEquals(List.of("Yes, police? He's right here, near %place%!"), messages.lines("Witness_Landed"));
+	}
+
+	@Test
+	@DisplayName("Witness_Format is read at the Shouts root, the pools under Shouts.Lines")
+	void witnessShoutKeysRead() throws IOException {
+		CivilianMessages messages = build("""
+				Shouts:
+				   Witness_Format: "F %line%"
+				   Lines:
+				      Witness_Start:
+				         - "S"
+				""");
+
+		assertEquals(List.of("F %line%"), messages.lines("Witness_Format"));
+		assertEquals(List.of("S"), messages.lines("Witness_Start"));
+	}
+
+	@Test
+	@DisplayName("both shipped message files declare every 0.21.1 Witness key; English with the spec countdown line")
+	void shippedFilesDeclareKey() throws IOException {
+		String english = resource("npc/civilian_messages.yml").replace("\r\n", "\n");
+		String spanish = resource("npc/civilian_messages_es.yml").replace("\r\n", "\n");
+
+		assertTrue(english.contains("\nWitness_Calling: \"&c911 &f%caller% &7is calling - &e%seconds%s\""));
+		for (String file : List.of(english, spanish)) {
+			for (String key : List.of("\nWitness_Calling: \"", "\nWitness_Stopped: \"", "\nWitness_Unknown_Place: \"",
+			                          "\n   Witness_Format: \"", "\n      Witness_Start:\n         - \"",
+			                          "\n      Witness_Scared:\n         - \"", "\n      Witness_Landed:\n         - \"")) {
+				assertTrue(file.contains(key), key);
+			}
+		}
 	}
 
 	private String resource(String name) throws IOException {

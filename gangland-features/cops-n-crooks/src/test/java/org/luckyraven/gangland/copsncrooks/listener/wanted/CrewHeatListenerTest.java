@@ -573,7 +573,10 @@ class CrewHeatListenerTest {
 		when(witnesses.witness(any(), any(), any())).thenReturn(1);
 		when(config.getWitnesses()).thenReturn(org.luckyraven.gangland.copsncrooks.wanted.config.WitnessSettings.DEFAULT);
 		WitnessGateListener gate = new WitnessGateListener(config, witnesses,
-		                                                   mock(org.luckyraven.gangland.copsncrooks.npc.police.CopManager.class));
+		                                                   mock(org.luckyraven.gangland.copsncrooks.npc.police.CopManager.class),
+		                                                   mock(org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolManager.class),
+		                                                   new org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception(),
+		                                                   mock(org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader.class));
 
 		CrimeCommittedEvent gated = new CrimeCommittedEvent(actor, Crimes.CAR_THEFT, crimeLoc, false, 0);
 		dispatch(gated, listener, gate);

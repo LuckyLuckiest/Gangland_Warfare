@@ -8,6 +8,8 @@ import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.crime.Crimes;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -16,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -50,13 +53,13 @@ class WitnessServiceTest {
 	}
 
 	@Test
-	@DisplayName("the criminal sees the Witness_Calling line once and the WITNESS debug line is written")
+	@DisplayName("the criminal sees the Witness_Calling countdown (caller, Call_Seconds) and the WITNESS debug line is written")
 	void criminalIsToldAndDebugLogged() {
 		kit.civilian(10, true);
 
 		kit.witness("Car_Theft");
 
-		assertEquals(java.util.List.of("Bob|WITNESS-CALLING"), kit.notices);
+		assertEquals(java.util.List.of("Bob|CALLING Pedestrian 8"), kit.notices);
 		assertTrue(kit.debugContains("WITNESS Bob crime=Car_Theft callers=1"), kit.debug::toString);
 	}
 
@@ -457,5 +460,335 @@ class WitnessServiceTest {
 
 		assertTrue(kit.service.activeCalls().isEmpty());
 		assertTrue(kit.debugContains("CALL_CANCEL Bob crime=Car_Theft reason=logout"), kit.debug::toString);
+	}
+
+	// ── 0.21.1: the four visible moments (CIVILIAN-911-DESIGN §3.1) ──────────
+
+	@Test
+	@DisplayName("Notice: the caller speaks Witness_Start in Witness_Format, addressed to the criminal")
+	void callStart_speaksWitnessStartToCriminal() {
+		kit.civilian(10, true);
+
+		kit.witness("Car_Theft");
+
+		assertEquals(List.of("Pedestrian|Witness_Start|Witness_Format|Bob|{}"), kit.speech);
+	}
+
+	@Test
+	@DisplayName("Dialling: the countdown is sent once per whole second, 8 down to 1, naming the caller")
+	void countdown_actionBarShowsCallerAndSeconds() {
+		CivilianNpc caller = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+
+		for (int i = 0; i < 15; i++) {
+			kit.advanceSeconds(0.5);
+			kit.service.tickCaller(caller);
+		}
+
+		assertEquals(List.of("Bob|CALLING Pedestrian 8", "Bob|CALLING Pedestrian 7", "Bob|CALLING Pedestrian 6",
+		                     "Bob|CALLING Pedestrian 5", "Bob|CALLING Pedestrian 4", "Bob|CALLING Pedestrian 3",
+		                     "Bob|CALLING Pedestrian 2", "Bob|CALLING Pedestrian 1"), kit.notices);
+	}
+
+	@Test
+	@DisplayName("Stopped (scared): the caller speaks Witness_Scared and the criminal is told Witness_Stopped")
+	void scaredCaller_speaksScaredAndToldStopped() {
+		CivilianNpc caller = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+
+		kit.aiming = true;
+		kit.service.tickCaller(caller);
+
+		assertTrue(kit.speech.contains("Pedestrian|Witness_Scared|Witness_Format|Bob|{}"), kit.speech::toString);
+		assertEquals("Bob|STOPPED", kit.notices.get(kit.notices.size() - 1));
+	}
+
+	@Test
+	@DisplayName("Stopped (hit): the hit caller speaks Witness_Scared too")
+	void hitCaller_speaksScared() {
+		CivilianNpc caller = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+
+		kit.service.onPlayerHitCivilian(kit.criminal, caller);
+
+		assertTrue(kit.speech.contains("Pedestrian|Witness_Scared|Witness_Format|Bob|{}"), kit.speech::toString);
+		assertEquals("Bob|STOPPED", kit.notices.get(kit.notices.size() - 1));
+	}
+
+	@Test
+	@DisplayName("a logout says nothing and tells nothing")
+	void logoutIsSilent() {
+		kit.civilian(10, true);
+		kit.witness("Car_Theft");
+
+		kit.service.onCriminalQuit(kit.criminalId);
+
+		assertEquals(List.of("Pedestrian|Witness_Start|Witness_Format|Bob|{}"), kit.speech);
+		assertFalse(kit.notices.contains("Bob|STOPPED"));
+	}
+
+	@Test
+	@DisplayName("Connected: Witness_Landed (with %place%) is spoken before the CivilianCalledInEvent is fired")
+	void landing_speaksLandedBeforeCalledInEvent() {
+		CivilianNpc caller = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+		List<Integer> eventsAtLanding = new java.util.ArrayList<>();
+		org.mockito.Mockito.doAnswer(invocation -> {
+			if ("Witness_Landed".equals(invocation.getArgument(1))) eventsAtLanding.add(kit.events.size());
+			kit.speech.add(invocation.getArgument(1) + "|" + invocation.getArgument(4));
+			return null;
+		}).when(kit.civilians).shout(any(), anyString(), anyString(), any(), any());
+
+		kit.advanceSeconds(8);
+		kit.service.tickCaller(caller);
+
+		assertEquals(List.of(0), eventsAtLanding);
+		assertTrue(kit.speech.contains("Witness_Landed|{place=here}"), kit.speech::toString);
+		assertEquals(1, kit.countEvents(CivilianCalledInEvent.class));
+	}
+
+	// ── 0.21.1: intimidation (right-click) ───────────────────────────────────
+
+	@Test
+	@DisplayName("the criminal intimidates the caller within Intimidate_Range: cancelled INTIMIDATED, it flees, speaks")
+	void intimidate_byCriminalInRange_cancelsAndFlees() {
+		CivilianNpc caller = kit.civilian(3, true);
+		kit.witness("Car_Theft");
+
+		assertTrue(kit.service.intimidate(caller, kit.criminal));
+
+		assertNull(caller.getWitnessCall());
+		assertEquals(CivilianState.FLEEING, caller.getCurrentState());
+		assertTrue(kit.debugContains("CALL_CANCEL Bob crime=Car_Theft reason=intimidated"), kit.debug::toString);
+		assertTrue(kit.speech.contains("Pedestrian|Witness_Scared|Witness_Format|Bob|{}"), kit.speech::toString);
+		assertEquals("Bob|STOPPED", kit.notices.get(kit.notices.size() - 1));
+	}
+
+	@Test
+	@DisplayName("a stranger, the criminal out of range, or Intimidate_Range 0 cannot stop the call")
+	void intimidate_byStranger_orOutOfRange_keepsCalling() {
+		CivilianNpc near = kit.civilian(3, true);
+		kit.witness("Car_Theft");
+		org.bukkit.entity.Player stranger = org.mockito.Mockito.mock(org.bukkit.entity.Player.class);
+		when(stranger.getUniqueId()).thenReturn(java.util.UUID.randomUUID());
+		when(stranger.getLocation()).thenReturn(kit.at.clone());
+
+		assertFalse(kit.service.intimidate(near, stranger));
+		kit.rules = withIntimidateRange(0);
+		assertFalse(kit.service.intimidate(near, kit.criminal));
+		kit.rules = withIntimidateRange(2);
+		assertFalse(kit.service.intimidate(near, kit.criminal));
+
+		assertEquals(CivilianState.CALLING, near.getCurrentState());
+		assertEquals(1, kit.service.activeCalls().size());
+	}
+
+	@Test
+	@DisplayName("intimidating a civilian who is not calling does nothing")
+	void intimidate_nonCaller_isIgnored() {
+		CivilianNpc idle = kit.civilian(3, true);
+
+		assertFalse(kit.service.intimidate(idle, kit.criminal));
+		assertEquals(CivilianState.IDLE, idle.getCurrentState());
+	}
+
+	// ── 0.21.1: the 180 degree view cone and loud crimes ─────────────────────
+
+	@Test
+	@DisplayName("View_Angle 180: a civilian with its back to the criminal is not a witness (0 callers)")
+	void civilianFacingAway_isNotAWitness() {
+		CivilianNpc away = kit.civilian(10, true, 270f); // looks east (+X), the criminal is west of it
+
+		assertEquals(0, kit.witness("Car_Theft"));
+		assertEquals(CivilianState.IDLE, away.getCurrentState());
+	}
+
+	@Test
+	@DisplayName("View_Angle 360 keeps the old behaviour: a civilian facing away still calls")
+	void viewAngle360_keepsOldBehaviour() {
+		CivilianNpc away = kit.civilian(10, true, 270f);
+		kit.rules = withViewAngle(360);
+
+		assertEquals(1, kit.witness("Car_Theft"));
+		assertEquals(CivilianState.CALLING, away.getCurrentState());
+	}
+
+	@Test
+	@DisplayName("the cone is half View_Angle each side: 80 degrees off is seen at 180, unseen at 120")
+	void coneEdge() {
+		Location civilian = new Location(kit.world, 10, 64, 0, 90f, 0f); // looks west, straight at the origin
+		Location left80   = new Location(kit.world, 10 - Math.cos(Math.toRadians(80)), 64, Math.sin(Math.toRadians(80)));
+
+		assertTrue(WitnessService.inView(civilian, left80, 180));
+		assertFalse(WitnessService.inView(civilian, left80, 120));
+		assertTrue(WitnessService.inView(civilian, new Location(kit.world, 30, 64, 0), 360));
+		assertFalse(WitnessService.inView(civilian, new Location(kit.world, 30, 64, 0), 180));
+	}
+
+	@Test
+	@DisplayName("a loud crime (Loud_Crimes) turns every civilian in range to the noise first, so one facing away calls")
+	void loudCrime_turnsCiviliansToTheNoise() {
+		CivilianNpc away  = kit.civilian(10, true, 270f);
+		CivilianNpc blind = kit.civilian(14, false, 270f);
+		kit.rules = withLoudCrimes(List.of("Kill_Civilian"));
+
+		assertEquals(1, kit.witness("Kill_Civilian"));
+
+		assertEquals(CivilianState.CALLING, away.getCurrentState());
+		for (CivilianNpc npc : List.of(away, blind)) {
+			org.mockito.ArgumentCaptor<Location> turned = org.mockito.ArgumentCaptor.forClass(Location.class);
+			verify(npc.getEntity()).teleport(turned.capture());
+			double yaw = ((turned.getValue().getYaw() % 360.0) + 360.0) % 360.0;
+			assertEquals(90.0, yaw, 1.0, "turned west, to the crime");
+		}
+	}
+
+	@Test
+	@DisplayName("shipped Loud_Crimes is empty: a fist or melee kill is silent, so a civilian behind the killer does not call")
+	void shippedKillIsSilent() {
+		CivilianNpc away = kit.civilian(10, true, 270f);
+		kit.rules = WitnessRules.DEFAULT;
+
+		assertEquals(0, kit.witness("Kill_Civilian"));
+		assertEquals(CivilianState.IDLE, away.getCurrentState());
+		verify(away.getEntity(), never()).teleport(any(Location.class));
+	}
+
+	@Test
+	@DisplayName("a silent crime turns nobody")
+	void silentCrime_turnsNobody() {
+		CivilianNpc away = kit.civilian(10, true, 270f);
+
+		kit.witness("Car_Theft");
+
+		verify(away.getEntity(), never()).teleport(any(Location.class));
+	}
+
+	@Test
+	@DisplayName("a crime within Loud_Shot_Seconds of the criminal's own gunshot is loud; a later one is silent")
+	void crimeRightAfterAGunshotIsLoud() {
+		CivilianNpc away = kit.civilian(10, true, 270f);
+		kit.service.heardShot(kit.criminal, "GUN", 0L);
+
+		kit.advanceSeconds(2);
+		assertEquals(1, kit.witness("Car_Theft"));
+		assertEquals(CivilianState.CALLING, away.getCurrentState());
+
+		kit.service.onCriminalQuit(kit.criminalId);
+		kit.advanceSeconds(5);
+		assertEquals(0, kit.witness("Car_Theft"));
+	}
+
+	// ── 0.21.1: Scared_Cooldown_Seconds ──────────────────────────────────────
+
+	@Test
+	@DisplayName("a civilian the criminal stopped (scared) cannot call again before Scared_Cooldown_Seconds")
+	void scaredCiviliansWaitBeforeCallingAgain() {
+		CivilianNpc caller = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+		kit.aiming = true;
+		kit.service.tickCaller(caller);
+		kit.aiming = false;
+		caller.transitionTo(CivilianState.IDLE);
+
+		kit.advanceSeconds(59);
+		assertEquals(0, kit.witness("Car_Theft"));
+
+		kit.advanceSeconds(1);
+		assertEquals(1, kit.witness("Car_Theft"));
+	}
+
+	@Test
+	@DisplayName("an intimidated civilian waits out the cooldown too; a landed caller does not")
+	void intimidatedWaitsLandedDoesNot() {
+		CivilianNpc caller = kit.civilian(3, true);
+		kit.witness("Car_Theft");
+		kit.service.intimidate(caller, kit.criminal);
+		caller.transitionTo(CivilianState.IDLE);
+		kit.advanceSeconds(10);
+		assertEquals(0, kit.witness("Car_Theft"));
+
+		kit.advanceSeconds(60);
+		assertEquals(1, kit.witness("Car_Theft"));
+		kit.advanceSeconds(8);
+		kit.service.tickCaller(caller);
+		caller.transitionTo(CivilianState.IDLE);
+		assertEquals(1, kit.witness("Car_Theft"));
+	}
+
+	// ── 0.21.1: hand-over ────────────────────────────────────────────────────
+
+	@Test
+	@DisplayName("hand-over: the watcher who takes the call speaks its own Witness_Start")
+	void handOver_newCallerSpeaksStart() {
+		CivilianNpc caller  = kit.civilian(10, true);
+		CivilianNpc watcher = kit.civilian(15, true);
+		kit.witness("Car_Theft");
+		kit.speech.clear();
+
+		when(caller.isValid()).thenReturn(false);
+		kit.sighted.remove(caller);
+		kit.service.onCallerDeath(caller);
+
+		assertSame(watcher, watcher.getWitnessCall().caller());
+		assertEquals(List.of("Pedestrian|Witness_Start|Witness_Format|Bob|{}"), kit.speech);
+	}
+
+	@Test
+	@DisplayName("hand-over skips a watcher already CALLING (the gated kill started its own call): no call is overwritten")
+	void handOver_skipsWatcherAlreadyCalling() {
+		CivilianNpc caller  = kit.civilian(10, true);
+		CivilianNpc watcher = kit.civilian(15, true);
+		CivilianNpc other   = kit.civilian(20, true);
+		kit.witness("Car_Theft");
+		when(caller.isValid()).thenReturn(false);
+		kit.sighted.remove(caller);
+		// the kill of the caller is a gated Kill_Civilian: the nearest free civilian (the watcher) starts that call first
+		assertEquals(1, kit.witness("Kill_Civilian"));
+		WitnessCall killCall = watcher.getWitnessCall();
+		assertEquals("Kill_Civilian", killCall.crimeId());
+
+		kit.service.onCallerDeath(caller);
+
+		assertSame(killCall, watcher.getWitnessCall());
+		assertSame(other, other.getWitnessCall().caller());
+		assertEquals("Car_Theft", other.getWitnessCall().crimeId());
+	}
+
+	@Test
+	@DisplayName("Kill_Civilian: the civilian just killed is never its own witness")
+	void killedCivilian_isNotItsOwnWitness() {
+		CivilianNpc victim   = kit.civilian(4, true);
+		CivilianNpc onlooker = kit.civilian(12, true);
+
+		kit.service.onPlayerHitCivilian(kit.criminal, victim, true);
+		assertEquals(1, kit.witness("Kill_Civilian"));
+
+		assertNull(victim.getWitnessCall());
+		assertSame(onlooker, onlooker.getWitnessCall().caller());
+	}
+
+	private static WitnessRules withViewAngle(double angle) {
+		WitnessRules d = WitnessRules.DEFAULT;
+		return new WitnessRules(d.enabled(), d.range(), d.callSeconds(), d.callerGlow(), d.scareRange(), d.scareAngle(),
+		                        d.reportAssault(), d.assaultRepeatSeconds(), angle, d.noticeSeconds(),
+		                        d.noticeParticle(), d.phoneItem(), d.intimidateRange(), d.scaredCooldownSeconds(),
+		                        d.loudCrimes(), d.loudShotSeconds(), d.loudWeaponTypes());
+	}
+
+	private static WitnessRules withIntimidateRange(double range) {
+		WitnessRules d = WitnessRules.DEFAULT;
+		return new WitnessRules(d.enabled(), d.range(), d.callSeconds(), d.callerGlow(), d.scareRange(), d.scareAngle(),
+		                        d.reportAssault(), d.assaultRepeatSeconds(), d.viewAngle(), d.noticeSeconds(),
+		                        d.noticeParticle(), d.phoneItem(), range, d.scaredCooldownSeconds(), d.loudCrimes(),
+		                        d.loudShotSeconds(), d.loudWeaponTypes());
+	}
+
+	private static WitnessRules withLoudCrimes(List<String> loud) {
+		WitnessRules d = WitnessRules.DEFAULT;
+		return new WitnessRules(d.enabled(), d.range(), d.callSeconds(), d.callerGlow(), d.scareRange(), d.scareAngle(),
+		                        d.reportAssault(), d.assaultRepeatSeconds(), d.viewAngle(), d.noticeSeconds(),
+		                        d.noticeParticle(), d.phoneItem(), d.intimidateRange(), d.scaredCooldownSeconds(), loud,
+		                        d.loudShotSeconds(), d.loudWeaponTypes());
 	}
 }
