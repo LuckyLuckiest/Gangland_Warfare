@@ -86,6 +86,10 @@ public class HandoffController {
 		boolean isEngaged   = isEngaged(group, player, maxDistance);
 		if (isEngaged) engaged.add(id);
 		else engaged.remove(id);
+		// while posts alone hold the chase (nobody chases, fights, cuffs or guards him) a leash release does not age: the
+		// chase it leashed out has not fallen away yet, however long he hides near a post (0.21.1 r6)
+		if (isEngaged && !closing(group) && group.isLeashReleased(now, settings.biasSeconds() * 1000L))
+			group.markLeashReleased(now);
 
 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
 		// a leashed walker removed shortly before the chase fell away still leashed it out, whoever chased on since; one
@@ -134,15 +138,24 @@ public class HandoffController {
 	 * chase won, never lost (the rest sent home beside him are no leash).
 	 */
 	private static boolean isEngaged(CopGroup group, Player player, double maxDistance) {
+		if (closing(group)) return true;
 		for (CopNpc cop : List.copyOf(group.getCops())) {
 			CopState state = cop.getCurrentState();
 			if (!cop.isValid()) continue;
-			if (state == CopState.PURSUING || state == CopState.COMBAT || state == CopState.CUFFING ||
-			    state == CopState.GUARDING) return true;
 			Entity body = cop.getEntity();
 			if ((state == CopState.POSTED || state == CopState.OVERWATCH) &&
 			    (body == null || !farFrom(body.getLocation(), player, maxDistance)))
 				return true;
+		}
+		return false;
+	}
+
+	/** A cop of the group chases, fights, cuffs or guards him. */
+	private static boolean closing(CopGroup group) {
+		for (CopNpc cop : List.copyOf(group.getCops())) {
+			CopState state = cop.getCurrentState();
+			if (cop.isValid() && (state == CopState.PURSUING || state == CopState.COMBAT || state == CopState.CUFFING ||
+			                      state == CopState.GUARDING)) return true;
 		}
 		return false;
 	}
