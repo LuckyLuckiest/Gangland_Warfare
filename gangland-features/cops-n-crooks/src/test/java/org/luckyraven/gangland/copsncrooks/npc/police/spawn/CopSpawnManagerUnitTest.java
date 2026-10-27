@@ -184,6 +184,7 @@ class CopSpawnManagerUnitTest {
 	@Test
 	@DisplayName("an active bias puts the hidden ring spot ahead of the suspect's heading")
 	void activeBias_ringSpotIsAhead() {
+		when(spawnConfig.getHandoffSettings()).thenReturn(new HandoffSettings(true, 2, 10, 60.0, 24.0, 0.0)); // the 0.16 ring ahead
 		blocked = dir -> true;
 		SpawnBias bias = new SpawnBias(new Vector(0, 0, -1), new Location(world, 0.5, GROUND_Y, 0.5), 10_000L, 60.0);
 
@@ -275,7 +276,7 @@ class CopSpawnManagerUnitTest {
 	}
 
 	@Test
-	@DisplayName("cause 2: a biased unit takes the hidden ring ahead before a hidden station spawner behind the heading")
+	@DisplayName("cause 2 / T-423: a biased unit takes the hidden ring toward its lead before a hidden station spawner behind the heading")
 	void biasedUnit_ringAheadBeforeAStationSpawnerBehind() {
 		Station  station = new Station(1, "Northside", "world", -200.5, GROUND_Y, 0.5, 0f, null);
 		Location behind  = stationSpawner(-30.5, 0.5, 1); // west; he runs east
@@ -285,7 +286,8 @@ class CopSpawnManagerUnitTest {
 		spawnManager.spawnUnit(player, unit(station, bias), loc -> true);
 
 		verify(factory, never()).createCop(eq(behind), anyInt(), anyBoolean(), any());
-		assertTrue(angle(new Vector(1, 0, 0), ringSpot()) <= 60.0, "ahead (east)");
+		// lead x=23.5 (seen at him, running east): midway, x=12
+		assertTrue(horizontal(ringSpot(), 12.0, 0.5) <= CopSpawnManager.BETWEEN_RADIUS + 1e-9, "toward the lead (east)");
 	}
 
 	/** Coincident pass on the pre-change stub (which returned null); pins the requeue signal when every step fails. */
@@ -301,6 +303,7 @@ class CopSpawnManagerUnitTest {
 	@Test
 	@DisplayName("a bias is never re-read from the clock: an expired one still steers its unit")
 	void expiredBias_stillSteers() {
+		when(spawnConfig.getHandoffSettings()).thenReturn(new HandoffSettings(true, 2, 10, 60.0, 24.0, 0.0)); // the 0.16 ring ahead
 		blocked = dir -> true;
 		SpawnBias bias = new SpawnBias(new Vector(1, 0, 0), new Location(world, 0.5, GROUND_Y, 0.5), 0L, 60.0);
 
@@ -328,9 +331,10 @@ class CopSpawnManagerUnitTest {
 		// he stands at x=0.5, so the ring centre is the midpoint, x=-8.5
 		spawnManager.spawnUnit(player, unit(null, runEastFrom(-40.5)), loc -> true);
 
+		// every spot of the ring ahead (within 60 degrees of east, 10-20 blocks off) is over 16 blocks from x=-8.5
 		Location spot = ringSpot();
-		assertTrue(spot.getX() < 0.5, "toward the lead (west), not ahead of the heading (east): " + spot);
-		assertTrue(horizontal(spot, -8.5, 0.5) <= CopSpawnManager.BETWEEN_RADIUS + 1e-9, "around the between point");
+		assertTrue(horizontal(spot, -8.5, 0.5) <= CopSpawnManager.BETWEEN_RADIUS + 1e-9,
+		           "around the between point, toward the lead (west), not ahead of the heading (east): " + spot);
 	}
 
 	@Test
