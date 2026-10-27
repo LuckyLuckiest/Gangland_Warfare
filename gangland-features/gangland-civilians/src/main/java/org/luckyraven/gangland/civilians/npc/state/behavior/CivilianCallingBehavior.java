@@ -2,6 +2,7 @@ package org.luckyraven.gangland.civilians.npc.state.behavior;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.particles.XParticle;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -91,7 +92,16 @@ public class CivilianCallingBehavior implements CivilianBehavior {
 
 		Particle particle = XParticle.of(name.toUpperCase(Locale.ROOT)).map(XParticle::get).orElse(null);
 		if (particle == null) return;
-		world.spawnParticle(particle, entity.getLocation().add(0, 2.3, 0), 5, 0.2, 0.1, 0.2, 0);
+
+		Location at = entity.getLocation().add(0, 2.3, 0);
+		if (particle.getDataType() == Particle.DustOptions.class) {
+			world.spawnParticle(particle, at, 5, 0.2, 0.1, 0.2, 0, new Particle.DustOptions(Color.RED, 1.0F));
+		} else if (particle.getDataType() == Void.class) {
+			world.spawnParticle(particle, at, 5, 0.2, 0.1, 0.2, 0);
+		} else if (!name.equals(WitnessRules.DEFAULT.noticeParticle())) {
+			// ponytail: a block/item particle has no sensible data here, so the shipped default stands in for it
+			noticeParticle(entity, WitnessRules.DEFAULT.noticeParticle());
+		}
 	}
 
 	private void takeOutPhone(LivingEntity entity, String name) {

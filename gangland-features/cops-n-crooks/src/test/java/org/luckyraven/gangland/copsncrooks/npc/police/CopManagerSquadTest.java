@@ -329,6 +329,53 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("T-510: a level drop with the surplus Marksman and Defender POSTED (perimeter) sends one home")
+	void levelDrop_surplusPosted_isSentHome() {
+		CopRole defender = role("Defender");
+		CopRole marksman = role("Marksman");
+		squadComposition(COMMANDER, POINTMAN, defender, marksman);
+		Wanted three = CopManagerFixture.wanted(3);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(2)).thenReturn(3);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup     group = manager.groupFor(playerId);
+		List<CopNpc> cops  = List.copyOf(group.getCops()); // Commander, Pointman, Defender, Marksman
+		assertEquals(4, cops.size());
+		cops.get(0).transitionTo(CopState.PURSUING);
+		cops.get(1).transitionTo(CopState.PURSUING);
+		cops.get(2).transitionTo(CopState.POSTED);
+		cops.get(3).transitionTo(CopState.POSTED);
+
+		manager.spawnTick(playerId, CopManagerFixture.wanted(2));
+
+		assertEquals(1, countIn(group, CopState.RETURNING), "two stars field three: the posted Marksman goes home");
+		assertEquals(CopState.RETURNING, cops.get(3).getCurrentState());
+		assertEquals(CopState.POSTED, cops.get(2).getCurrentState(), "the base squad's Defender keeps his post");
+		assertEquals(0, group.getPendingRelease());
+	}
+
+	@Test
+	@DisplayName("T-510: a COMBAT surplus cop is still never sent home on a level drop; the release waits")
+	void levelDrop_surplusInCombat_staysAndTheReleaseWaits() {
+		squadComposition(COMMANDER, POINTMAN, role("Defender"), role("Marksman"));
+		Wanted three = CopManagerFixture.wanted(3);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(2)).thenReturn(3);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup     group = manager.groupFor(playerId);
+		List<CopNpc> cops  = List.copyOf(group.getCops());
+		for (CopNpc cop : cops) cop.transitionTo(CopState.PURSUING);
+		cops.get(3).transitionTo(CopState.COMBAT);
+
+		manager.spawnTick(playerId, CopManagerFixture.wanted(2));
+
+		assertEquals(0, countIn(group, CopState.RETURNING));
+		assertEquals(1, group.getPendingRelease());
+	}
+
+	@Test
 	@DisplayName("T-435: a new episode at a lower level calls back only its target's worth of walkers, none flip home")
 	void newLowerEpisode_callsBackOnlyItsTarget() {
 		Wanted three = CopManagerFixture.wanted(3);
@@ -1298,7 +1345,7 @@ class CopManagerSquadTest {
 	}
 
 	@Test
-	@DisplayName("T-187: a release left over from a drop (posts not free yet) never fires in the post-escape search")
+	@DisplayName("T-187: a release left over from a drop (cops still fighting) never fires in the post-escape search")
 	void escapeAfterADrop_leftoverReleaseNeverFiresInTheSearch() {
 		Wanted three = CopManagerFixture.wanted(3);
 		Wanted one   = CopManagerFixture.wanted(1);
@@ -1308,12 +1355,13 @@ class CopManagerSquadTest {
 		manager.onWantedStart(player, three);
 		manager.spawnTick(playerId, three);
 		CopGroup group = manager.groupFor(playerId);
-		// he is lost: the perimeter posts every cop, so the drop to one star finds nobody free to send home
-		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.POSTED);
+		// every cop is in a fight, so the drop to one star finds nobody free to send home (flipped 0.21.1, T-510: a
+		// POSTED cop is free to go now, so posts no longer hold the release back)
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.COMBAT);
 		manager.spawnTick(playerId, one);
 		assertEquals(2, group.getPendingRelease(), "the drop's release waits for free cops");
 
-		// the last star goes: escape, the posts come off, and the search keeps all four
+		// the last star goes: escape, the fights end, and the search keeps all four
 		manager.onWantedEnd(player, WantedCause.EVASION);
 		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.PURSUING);
 		when(fx.targeting.isSearching(playerId)).thenReturn(true);

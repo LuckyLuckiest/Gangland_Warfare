@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.civilians.npc.state.behavior;
 
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
@@ -21,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -110,6 +113,53 @@ class CivilianCallingBehaviorTest {
 
 		verify(kit.world).spawnParticle(any(org.bukkit.Particle.class), any(Location.class), anyInt(), anyDouble(),
 		                                anyDouble(), anyDouble(), anyDouble());
+	}
+
+	@Test
+	@DisplayName("Notice: a DUST Notice_Particle gets its DustOptions (Bukkit throws on a dust particle without data)")
+	void dustNoticeParticle_spawnsWithDustOptions() {
+		kit.rules = withNoticeParticle("DUST");
+		dataParticlesThrowWithoutData();
+		CivilianNpc npc = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+
+		behavior.onEnter(npc);
+
+		verify(kit.world).spawnParticle(eq(Particle.REDSTONE), any(Location.class), anyInt(), anyDouble(), anyDouble(),
+		                                anyDouble(), anyDouble(), any(Particle.DustOptions.class));
+	}
+
+	@Test
+	@DisplayName("Notice: a Notice_Particle needing other data (block) falls back to the default ANGRY_VILLAGER")
+	void blockDataNoticeParticle_fallsBackToTheDefault() {
+		kit.rules = withNoticeParticle("BLOCK");
+		dataParticlesThrowWithoutData();
+		CivilianNpc npc = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+
+		behavior.onEnter(npc);
+
+		verify(kit.world).spawnParticle(eq(Particle.VILLAGER_ANGRY), any(Location.class), anyInt(), anyDouble(),
+		                                anyDouble(), anyDouble(), anyDouble());
+	}
+
+	/** As CraftWorld: the data-less overload throws for a particle whose data type is not Void. */
+	private void dataParticlesThrowWithoutData() {
+		doAnswer(inv -> {
+			Particle particle = inv.getArgument(0);
+			if (particle.getDataType() != Void.class)
+				throw new IllegalArgumentException("data should be " + particle.getDataType() + " got null");
+			return null;
+		}).when(kit.world).spawnParticle(any(Particle.class), any(Location.class), anyInt(), anyDouble(), anyDouble(),
+		                                 anyDouble(), anyDouble());
+	}
+
+	private static WitnessRules withNoticeParticle(String particle) {
+		WitnessRules d = WitnessRules.DEFAULT;
+		return new WitnessRules(d.enabled(), d.range(), d.callSeconds(), d.callerGlow(), d.scareRange(), d.scareAngle(),
+		                        d.reportAssault(), d.assaultRepeatSeconds(), d.viewAngle(), d.noticeSeconds(), particle,
+		                        d.phoneItem(), d.intimidateRange(), d.scaredCooldownSeconds(), d.loudCrimes(),
+		                        d.loudShotSeconds(), d.loudWeaponTypes());
 	}
 
 	@Test

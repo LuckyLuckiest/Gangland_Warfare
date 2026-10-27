@@ -356,7 +356,8 @@ and the group's last Commander is never sent, even once the wanted level has fal
 stays as one cop over the target and `pendingRelease` is capped at what the role excess can ever release (the
 Commander-flagged roles' excess pooled and capped once at every Commander but the last, however many roles carry
 `Commander: true`), so no radio responder joining later is sent home in his place (T-435). A cop fighting, cuffing or
-guarding is never sent; the release retries next run until enough have gone. `releaseSurplus` runs only while the
+guarding is never sent; a pursuing, idle or POSTED one is (T-510: leaving POSTED releases its post, and the perimeter,
+standoff and breach controllers drop a cop that left it); the release retries next run until enough have gone. `releaseSurplus` runs only while the
 player is wanted: a backup that runs out inside the post-escape search sends nobody home (T-187).
 
 #### Resisting (0.12.0)
@@ -1205,7 +1206,9 @@ registries keep every row (the location is nullable), so their `max + 1` already
 **Debug lines** (`log.debug`, read by the acceptance verdicts): `DISPATCH {player} count= station= eta= hold= reason= bias=`,
 `UNIT {player} callsign= tier= role= fromStation= hidden= bias= ahead= at=`, `PERIMETER {player} start|end ...`,
 `HANDOFF {player} heading=`, `HANDOFF_LEAD {player} at=x,y,z heading= dir=dx,dz from=x,y,z` (0.21.1: the seed a hand-off
-unit applied, `from` the bias's last-known spot), `EVASION {player} speed= zone= hideout= quiet=` and
+unit applied, `from` the bias's last-known spot), `HANDOFF_RING {player} center=x,y,z fraction= clamped= fallback=`
+(0.21.1, T-509: logged just before that unit's `UNIT` line when `betweenRing` placed its between point; `fallback=true`
+when no hidden spot lay within 16 b of it and the unit took the ring ahead or a later step), `EVASION {player} speed= zone= hideout= quiet=` and
 `EVASION {player} hold=enroute`.
 
 **Radio.** `CopRadio` keeps both constructors; `setPlaceNames` and `placeOf(location)` (place name or `Unknown_Place`) supply
@@ -1270,7 +1273,7 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   cops engaged after the call back, not against `lastTarget`: a correction of the r3 note, which keyed the new episode
   on `lastTarget` too, so a re-spot after a stepwise escape (`Drop_Mode` ONE_STAR: 3, 2, 1, search) kept the four
   cops the search called back, while an all-stars escape trimmed to two. `releaseSurplus` runs only at wanted level
-  > 0, so neither a drop's release still waiting for free cops (all posted) nor a backup that runs out mid-search
+  > 0, so neither a drop's release still waiting for free cops (all fighting) nor a backup that runs out mid-search
   fires in the post-escape search (wanted level 0, run at one star), which keeps every walker it called back (T-187);
   the next wanted start replaces whatever is still owed. A new wanted start calls back walkers in
   range only up to the new level's target (`reengageReturning(group, player, limit, eligible)`, nearest first; a group

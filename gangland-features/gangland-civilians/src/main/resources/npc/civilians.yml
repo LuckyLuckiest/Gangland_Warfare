@@ -514,6 +514,7 @@ Witness:
    # 0.21.1: seconds the witness stares at the criminal before turning away to dial (counted inside Call_Seconds).
    Notice_Seconds: 1
    # 0.21.1: particle shown above the witness when it notices a crime (XParticle name); "" = none.
+   # DUST shows red; a particle that needs a block or item (BLOCK, ITEM, ...) shows ANGRY_VILLAGER instead.
    Notice_Particle: "ANGRY_VILLAGER"
    # 0.21.1: item the caller holds while dialling (XMaterial name); its own hand comes back when the call ends. "" = none.
    Phone_Item: "CLOCK"

@@ -1,5 +1,9 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.spawn;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,14 +29,17 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.station.Station;
+import org.luckyraven.keystone.logging.Logger;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.mockito.ArgumentCaptor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -346,7 +353,8 @@ class CopSpawnManagerUnitTest {
 
 		Location spot = ringSpot();
 		assertTrue(horizontal(spot, -19.5, 0.5) <= CopSpawnManager.BETWEEN_RADIUS + 1e-9, "around the clamped point: " + spot);
-		assertTrue(horizontal(spot, 0.5, 0.5) <= 20.0 + 1e-9, "inside the spawn range");
+		// T-507: ring spots snap to block centres, up to sqrt(0.5) past the ring's 20-block radius
+		assertTrue(horizontal(spot, 0.5, 0.5) <= 20.0 + Math.sqrt(0.5) + 1e-9, "inside the spawn range: " + spot);
 	}
 
 	@Test
@@ -361,6 +369,55 @@ class CopSpawnManagerUnitTest {
 
 		Location spot = ringSpot();
 		assertTrue(angle(new Vector(1, 0, 0), spot) <= 60.0, "never in his view; the fallback ring ahead (east): " + spot);
+	}
+
+	@Test
+	@DisplayName("T-509: a between spot found: one HANDOFF_RING line with the clamped centre and fallback=false")
+	void handoffUnit_betweenRing_logsTheCentre() {
+		blocked = dir -> true;
+		when(player.getName()).thenReturn("Runner");
+
+		List<String> lines = debugLines(() -> spawnManager.spawnUnit(player, unit(null, runEastFrom(-200.5)), loc -> true));
+
+		assertEquals(List.of("HANDOFF_RING Runner center=-20,64,0 fraction=0.5 clamped=true fallback=false"),
+		             lines.stream().filter(l -> l.startsWith("HANDOFF_RING")).toList());
+	}
+
+	@Test
+	@DisplayName("T-509: no between spot (all in his view): the fallback is logged, naming him and fallback=true")
+	void handoffUnit_betweenRingFallback_isLogged() {
+		blocked = dir -> dir.getX() > 0.6;
+		when(player.getEyeLocation()).thenReturn(new Location(world, 0.5, GROUND_Y + 1.62, 0.5, 90f, 0f)); // looks west
+		when(player.getName()).thenReturn("Runner");
+
+		List<String> lines = debugLines(() -> spawnManager.spawnUnit(player, unit(null, runEastFrom(-40.5)), loc -> true));
+
+		assertEquals(List.of("HANDOFF_RING Runner center=-9,64,0 fraction=0.5 clamped=false fallback=true"),
+		             lines.stream().filter(l -> l.startsWith("HANDOFF_RING")).toList());
+	}
+
+	/** The debug lines CopSpawnManager logs while {@code action} runs. */
+	private static List<String> debugLines(Runnable action) {
+		List<String> lines = new ArrayList<>();
+		org.apache.logging.log4j.core.Logger logger =
+				(org.apache.logging.log4j.core.Logger) Logger.getLogger(CopSpawnManager.class);
+		Level saved = logger.getLevel();
+		AbstractAppender capture = new AbstractAppender("spawn-capture", null, null, true) {
+			@Override
+			public void append(LogEvent event) {
+				lines.add(event.getMessage().getFormattedMessage());
+			}
+		};
+		capture.start();
+		Configurator.setLevel(logger.getName(), Level.DEBUG);
+		logger.addAppender(capture);
+		try {
+			action.run();
+		} finally {
+			logger.removeAppender(capture);
+			Configurator.setLevel(logger.getName(), saved);
+		}
+		return lines;
 	}
 
 	@Test

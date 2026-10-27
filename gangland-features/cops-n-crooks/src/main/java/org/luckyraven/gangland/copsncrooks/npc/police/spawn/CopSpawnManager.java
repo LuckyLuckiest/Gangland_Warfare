@@ -266,7 +266,9 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 * {@code Cops.Handoff.Spawn_Between} of the way from {@code target}'s live spot to the lead it is sent to
 	 * ({@link SpawnBias#lead} of {@link #handoffLead}), that point held within {@code Spawn.Max_Distance} of him and the
 	 * spawn leash margin; {@code ok} (leash, R6 view cone, the avoided spawners) still applies. {@code null} with
-	 * {@code Spawn_Between} 0, a lead in another world, or no such spot (the caller falls back to the ring ahead).
+	 * {@code Spawn_Between} 0, a lead in another world, or no such spot (the caller falls back to the ring ahead). Once
+	 * the point is placed it logs (debug) {@code HANDOFF_RING <player> center=x,y,z fraction=<f> clamped=<b>
+	 * fallback=<b>}, {@code fallback=true} when no spot was found (T-509).
 	 */
 	// ponytail: Keystone's rings are Player-centred, so the ring is sampled around him and a spot is only accepted near
 	// the between point; a Location-centred findHiddenSpawnLocation upstream would centre it there
@@ -281,9 +283,15 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		double leash  = configProvider.getPursuitMaxDistance() * LEASH_MARGIN;
 		double reach  = leash > 0 ? Math.min(configProvider.getMaxSpawnDistance(), leash)
 		                          : configProvider.getMaxSpawnDistance();
-		if (toward.length() > reach) toward.normalize().multiply(reach);
+		boolean clamped = toward.length() > reach;
+		if (clamped) toward.normalize().multiply(reach);
 		Location centre = at.clone().add(toward);
-		return hiddenRing(target, ok.and(loc -> horizontalSq(loc, centre) <= BETWEEN_RADIUS * BETWEEN_RADIUS));
+		Location spot   = hiddenRing(target, ok.and(loc -> horizontalSq(loc, centre) <= BETWEEN_RADIUS * BETWEEN_RADIUS));
+		// T-509: ACC8's R5-spawn-between judge exempts a unit whose fallback is logged beside its UNIT line
+		if (log.isDebugEnabled())
+			log.debug("HANDOFF_RING {} center={},{},{} fraction={} clamped={} fallback={}", target.getName(),
+			          centre.getBlockX(), centre.getBlockY(), centre.getBlockZ(), share, clamped, spot == null);
+		return spot;
 	}
 
 	/**

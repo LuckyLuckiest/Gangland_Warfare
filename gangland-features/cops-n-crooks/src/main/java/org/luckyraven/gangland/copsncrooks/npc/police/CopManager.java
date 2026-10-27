@@ -1131,7 +1131,8 @@ public class CopManager implements BeanLifecycle {
 	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). The group's last Commander is
 	 * never sent, even when the wanted level fell to a composition without one: he stays as one cop over the target and
 	 * the release owed is capped at what can ever go, so no later radio responder is sent home in his place. A cop in a
-	 * fight, cuffing or guarding is never sent; what cannot go this run is retried on the next. Queued units count toward
+	 * fight, cuffing or guarding is never sent (a pursuing, idle or POSTED one is, T-510); what cannot go this run is
+	 * retried on the next. Queued units count toward
 	 * the group and a surplus one still en route is called off before any live cop is sent.
 	 */
 	private void releaseSurplus(CopGroup group, int targetCount, @Nullable List<CopRole> composition) {
@@ -1192,7 +1193,9 @@ public class CopManager implements BeanLifecycle {
 			CopNpc   cop   = live.get(i);
 			CopState state = cop.getCurrentState();
 			String   role  = roleName(cop.getRole());
-			if (state != CopState.PURSUING && state != CopState.IDLE || excess.get(role) <= 0) continue;
+			// T-510: a POSTED cop (perimeter, standoff, breach stack) is free to go; leaving POSTED releases the post
+			boolean free = state == CopState.PURSUING || state == CopState.IDLE || state == CopState.POSTED;
+			if (!free || excess.get(role) <= 0) continue;
 			if (isCommander(cop)) {
 				if (commanders <= 1) continue; // the squad's leader stays (T-146)
 				commanders--;
