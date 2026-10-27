@@ -1,0 +1,140 @@
+diff --git a/documentation/developer/cops-n-crooks.md b/documentation/developer/cops-n-crooks.md
+index 02e78c0a6..67e11b7f9 100644
+--- a/documentation/developer/cops-n-crooks.md
++++ b/documentation/developer/cops-n-crooks.md
+@@ -1232,7 +1232,9 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
+   rule `recycles()` applies), so a far AFK bystander no longer keeps a walker forever and no near viewer sees it vanish;
+   r6 (owner ruling): that near view holds it for `Cops.Return.Watched_Cap_Seconds` (60, from the first tick it held
+   it; 0 = no cap, `CopConfigProvider.getReturnWatchedCapSeconds`), then it despawns watched or not;
+-  arrival at a station despawns regardless. Every removal of a walker that still targets the player past the leash, in
++  arrival at a registered station despawns regardless, but a cop with no station (home = its own spawn spot, which
++  was only hidden when it spawned) stands there while watched and despawns once nobody looks (T-527, acc9-handoff-lead).
++  Every removal of a walker that still targets the player past the leash, in
+   `spawnTick` or `aiTick` (the R3 release, `recycles()`, `isMarkedForRemoval` after `ReturningBehavior` ended its walk,
+   usually reaped by the next AI tick before any spawn run, or `!isValid`), goes through `CopManager.release`, which
+   stamps `CopGroup.markLeashReleased(now)` (radio clock): `HandoffController` counts it as leashed out on an
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/state/behavior/ReturningBehavior.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/state/behavior/ReturningBehavior.java
+index f3ecf8e33..a9d057a3d 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/state/behavior/ReturningBehavior.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/state/behavior/ReturningBehavior.java
+@@ -44,6 +44,8 @@ public class ReturningBehavior implements CopBehavior {
+ 	private final int               watchedCapSeconds;
+ 
+ 	private Location selectedStation;
++	/** Whether {@link #selectedStation} is a registered spawner, not his own spawn spot (T-527). */
++	private boolean  homeIsStation;
+ 	/**
+ 	 * Whether this return started because the target was restrained or jailed: only then does a released target pull the
+ 	 * cop back. Set on entry; behaviours are per cop ({@code CopBehaviorFactory#createBehaviors} runs per spawn).
+@@ -128,12 +130,16 @@ public class ReturningBehavior implements CopBehavior {
+ 				double distance = Math.sqrt(horizontalDistanceSquared(entity.getLocation(), selectedStation));
+ 
+ 				if (distance <= stationArrivalDistance) {
+-					tryDespawn(cop);
+-					return;
++					// T-527: a station swallows him in view; his own spawn spot was only hidden when he spawned, so there
++					// he stands until nobody looks (the backstop and watched cap below still apply)
++					if (homeIsStation || !CopSightlines.watched(entity, visibilityCheckDistance)) {
++						tryDespawn(cop);
++						return;
++					}
++				} else {
++					cop.navigateTo(selectedStation);
++					noWayHome = strandedOnReturn(cop);
+ 				}
+-
+-				cop.navigateTo(selectedStation);
+-				noWayHome = strandedOnReturn(cop);
+ 			}
+ 
+ 			// R3: no way home (its station in another world, or unreachable past the stuck window) despawns on the first
+@@ -205,7 +211,7 @@ public class ReturningBehavior implements CopBehavior {
+ 	/**
+ 	 * Despawns the cop. Pursuit has either reached the station, timed out, or there is no way home (another world, or
+ 	 * unreachable past the stuck window); that one waits for nobody to be looking (R3), the timeout backstop for nobody
+-	 * within 24 blocks - arrival despawns regardless.
++	 * within 24 blocks; arrival at a station despawns regardless, arrival at his own spawn spot waits out of view (T-527).
+ 	 */
+ 	private void tryDespawn(CopNpc cop) {
+ 		cop.markForRemoval();
+@@ -217,20 +223,18 @@ public class ReturningBehavior implements CopBehavior {
+ 	 */
+ 	private Location findNearestStation(CopNpc cop) {
+ 		List<Location> stations = spawnManager.getSpawnerLocations();
++		LivingEntity   entity   = cop.getEntity();
+ 
+-		if (stations.isEmpty()) {
+-			return cop.getSpawnLocation();
+-		}
+-
+-		LivingEntity entity = cop.getEntity();
+-
+-		if (entity == null) return cop.getSpawnLocation();
++		homeIsStation = false;
++		if (stations.isEmpty() || entity == null) return cop.getSpawnLocation();
+ 
+ 		Location copLoc = entity.getLocation();
+-
+-		return stations.stream()
++		Location nearest = stations.stream()
+ 				.filter(loc -> loc.getWorld() != null && loc.getWorld().equals(copLoc.getWorld()))
+ 				.min(Comparator.comparingDouble(loc -> horizontalDistanceSquared(loc, copLoc)))
+-				.orElse(cop.getSpawnLocation());
++				.orElse(null);
++
++		homeIsStation = nearest != null;
++		return nearest != null ? nearest : cop.getSpawnLocation();
+ 	}
+ }
+\ No newline at end of file
+diff --git a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/state/behavior/ReturningBehaviorTest.java b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/state/behavior/ReturningBehaviorTest.java
+index 8ff0dfca6..e27240c64 100644
+--- a/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/state/behavior/ReturningBehaviorTest.java
++++ b/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/npc/police/state/behavior/ReturningBehaviorTest.java
+@@ -275,6 +275,46 @@ class ReturningBehaviorTest {
+ 		verify(cop).markForRemoval();
+ 	}
+ 
++	@Test
++	@DisplayName("T-527: with no station a cop home at its own spawn spot stands while watched and despawns once nobody looks")
++	void spawnSpotHome_arrivalWatched_waitsUntilOutOfView() {
++		withClock(StuckSettings.DEFAULT);
++		World world = cop.getEntity().getWorld();
++		when(cop.getSpawnLocation()).thenReturn(new Location(world, 1, 64, 1)); // he stands on it
++		behavior = new ReturningBehavior(mock(CopSpawnManager.class), detainmentService, 600, 3.0,
++		                                 StuckSettings.DEFAULT, () -> now, 48.0);
++		Player   viewer = mock(Player.class);
++		Location eyes   = new Location(world, 0, 65.62, -10, 0f, 0f);
++		when(viewer.getEyeLocation()).thenAnswer(i -> eyes.clone());
++		when(viewer.hasLineOfSight(cop.getEntity())).thenReturn(true);
++		when(world.getPlayers()).thenReturn(java.util.List.of(viewer));
++		behavior.onEnter(cop);
++		behavior.tick(cop);
++		verify(cop, never()).markForRemoval();
++
++		eyes.setYaw(180f); // he turns away
++		behavior.tick(cop);
++		verify(cop).markForRemoval();
++	}
++
++	@Test
++	@DisplayName("T-527: a cop reaching a registered station despawns even while watched")
++	void stationArrivalWatched_despawns() {
++		World    world   = mock(World.class);
++		CopSpawnManager spawns = mock(CopSpawnManager.class);
++		when(spawns.getSpawnerLocations()).thenReturn(java.util.List.of(new Location(world, 1, 64, 1)));
++		LivingEntity body = mock(LivingEntity.class);
++		when(body.getWorld()).thenReturn(world);
++		when(body.getLocation()).thenReturn(new Location(world, 0, 64, 0));
++		when(cop.getEntity()).thenReturn(body);
++		watchedFromTheSouth(world);
++		behavior = new ReturningBehavior(spawns, detainmentService, 600, 3.0, StuckSettings.DEFAULT, () -> now, 48.0);
++		behavior.onEnter(cop);
++		behavior.tick(cop);
++
++		verify(cop).markForRemoval();
++	}
++
+ 	@Test
+ 	@DisplayName("a return unreachable for less than the window keeps walking")
+ 	void unreachableShorterThanWindow_keepsWalking() {
