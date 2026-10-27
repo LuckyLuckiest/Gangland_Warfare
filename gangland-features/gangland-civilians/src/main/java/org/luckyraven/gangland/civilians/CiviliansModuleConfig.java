@@ -18,6 +18,7 @@ import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawner;
 import org.luckyraven.gangland.civilians.witness.WitnessRules;
 import org.luckyraven.gangland.civilians.witness.WitnessService;
 import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.item.ItemParser;
@@ -141,18 +142,21 @@ public class CiviliansModuleConfig {
 
 	@Bean
 	public WitnessService witnessService(CivilianService civilianService, CrimeService crimeService,
-	                                     CivilianMessages civilianMessages) {
-		return witnessService(civilianService, crimeService, civilianMessages, WitnessService.Hooks.live(plugin));
+	                                     CivilianMessages civilianMessages, PlaceNames placeNames,
+	                                     CivilianSettings civilianSettings) {
+		return witnessService(civilianService, crimeService, civilianMessages, placeNames,
+		                      WitnessService.Hooks.live(plugin, civilianSettings::getCivilianAiTickRate));
 	}
 
 	/** The bean's wiring, testable without a plugin: rules re-read from the loaded config on every call. */
 	static WitnessService witnessService(CivilianService civilianService, CrimeService crimeService,
-	                                     CivilianMessages civilianMessages, WitnessService.Hooks hooks) {
+	                                     CivilianMessages civilianMessages, PlaceNames placeNames,
+	                                     WitnessService.Hooks hooks) {
 		Supplier<WitnessRules> rules = () -> {
 			CiviliansConfig config = civilianService.getCiviliansConfig();
 			if (config == null || config.witness() == null) return WitnessRules.DEFAULT;
 			return config.witness();
 		};
-		return new WitnessService(civilianService, crimeService, rules, civilianMessages::witnessCalling, hooks);
+		return new WitnessService(civilianService, crimeService, rules, civilianMessages, placeNames, hooks);
 	}
 }

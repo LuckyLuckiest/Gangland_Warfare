@@ -24,8 +24,8 @@ import org.luckyraven.keystone.npc.NpcSupport;
 import java.util.Map;
 
 /**
- * A wanted player's shot tells the nearest cop (within the weapon's noise radius) where he is: the squad re-centres
- * on the shooter, which the evasion clock reads as a sighting. MONITOR + ignoreCancelled, so
+ * A wanted player's shot tells the nearest cop (within the weapon's noise radius) where he is: the squad gets a tip
+ * to the shooter's spot (0.21.1: a tip, not a sighting, so it searches there instead of chasing his live position). MONITOR + ignoreCancelled, so
  * {@link DetainmentListener}'s restrained-shooter cancel wins. The 3 s throttle is the radio's {@code Shots_Fired}
  * cooldown.
  */
@@ -82,7 +82,8 @@ public class ShotNoiseListener implements Listener {
 		}
 		if (nearest == null) return;
 
-		group.getSquad().reportSighting(here);
+		// a shot heard is a tip to where it was fired, not a sighting: the squad searches there (R4)
+		group.getSquad().reportTip(here);
 		copRadio.sayAs(group, nearest, "Shots_Fired", Map.of());
 	}
 }

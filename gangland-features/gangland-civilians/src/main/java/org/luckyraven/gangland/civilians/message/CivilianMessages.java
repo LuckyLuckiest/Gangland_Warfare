@@ -30,6 +30,7 @@ public class CivilianMessages extends LocalizedModuleYaml implements RadioLines 
 	private static final List<String> DEFAULT_COMPASS = List.of("north", "north-east", "east", "south-east", "south",
 	                                                             "south-west", "west", "north-west");
 	private static final List<String> DEFAULT_SIDES   = List.of("front", "left", "right", "back");
+	private static final List<String> DEFAULT_WITNESS_FORMAT = List.of("&c[911] &f%unit%&7: &f%line%");
 
 	private static final Map<String, List<String>> DEFAULT_LINES = Map.ofEntries(
 			Map.entry("Contact", List.of("There he is! %direction%!", "Over here!")),
@@ -50,7 +51,10 @@ public class CivilianMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("In_Cover", List.of("I'm behind cover!")),
 			Map.entry("Ack", List.of()),
 			Map.entry("Responding", List.of()),
-			Map.entry("Rally", List.of("%faction%! They're hitting us, %count% on the way!")));
+			Map.entry("Rally", List.of("%faction%! They're hitting us, %count% on the way!")),
+			Map.entry("Witness_Start", List.of("Hey! I saw that! I'm calling the cops!")),
+			Map.entry("Witness_Scared", List.of("Okay, okay! I'm hanging up!")),
+			Map.entry("Witness_Landed", List.of("Yes, police? He's right here, near %place%!")));
 
 	public CivilianMessages(FileManager fileManager) {
 		super(fileManager, BASE_NAME);
@@ -69,13 +73,29 @@ public class CivilianMessages extends LocalizedModuleYaml implements RadioLines 
 			case "Turf_Held" -> list("Shouts.Turf_Held", DEFAULT_TURF_HELD);
 			case "Turf_Lost" -> list("Shouts.Turf_Lost", DEFAULT_TURF_LOST);
 			case "Sides" -> list("Shouts.Sides", DEFAULT_SIDES);
+			case "Witness_Format" -> list("Shouts.Witness_Format", DEFAULT_WITNESS_FORMAT);
 			default -> list("Shouts.Lines." + key, DEFAULT_LINES.getOrDefault(key, List.of()));
 		};
 	}
 
-	/** Action-bar line shown to a criminal when a witness starts calling 911 ({@code Witness_Calling}). */
-	public String witnessCalling() {
-		return color("Witness_Calling", "&cA witness is calling 911! Stop them!");
+	/**
+	 * Action-bar countdown a criminal sees while a witness calls 911 ({@code Witness_Calling}): {@code %caller%} the
+	 * caller's callsign, {@code %seconds%} the whole seconds left. A text without the placeholders shows as written.
+	 */
+	public String witnessCalling(String caller, int seconds) {
+		return color("Witness_Calling", "&c911 &f%caller% &7is calling - &e%seconds%s")
+				.replace("%caller%", caller)
+				.replace("%seconds%", String.valueOf(seconds));
+	}
+
+	/** Action-bar line when the criminal stopped the call: hit, scared or intimidated ({@code Witness_Stopped}). */
+	public String witnessStopped() {
+		return color("Witness_Stopped", "&aCall stopped.");
+	}
+
+	/** {@code %place%} of {@code Witness_Landed} where no named place covers the crime ({@code Witness_Unknown_Place}). */
+	public String witnessUnknownPlace() {
+		return color("Witness_Unknown_Place", "here");
 	}
 
 	public String listEmpty() {

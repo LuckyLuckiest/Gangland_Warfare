@@ -29,7 +29,7 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Contact", 8000L), Map.entry("Contact_Lost", 8000L), Map.entry("Engage", 15000L),
 					Map.entry("Push", 10000L), Map.entry("Flank_Left", 10000L), Map.entry("Flank_Right", 10000L),
 					Map.entry("Reposition", 5000L), Map.entry("Search", 15000L), Map.entry("Route", 15000L),
-					Map.entry("Route_High", 15000L), Map.entry("Climb", 15000L), Map.entry("Stand_Down", 10000L),
+					Map.entry("Route_High", 15000L), Map.entry("Route_Search", 15000L), Map.entry("Climb", 15000L), Map.entry("Stand_Down", 10000L),
 					Map.entry("No_Route", 15000L), Map.entry("Check_Fire", 8000L), Map.entry("Reloading", 8000L),
 					Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L), Map.entry("Commander_Down", 5000L),
 					Map.entry("Resisting", 10000L), Map.entry("Backup", 20000L), Map.entry("Responding", 5000L),
@@ -47,7 +47,7 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Pull_Back", 15000L),
 					Map.entry("Medic_Treating", 10000L),
 					// 0.16 dispatch, hand-off and perimeter lines
-					Map.entry("Dispatch_En_Route", 0L), Map.entry("Wipe_Refill", 0L), Map.entry("Handoff", 10000L),
+					Map.entry("Dispatch_En_Route", 30000L), Map.entry("Wipe_Refill", 0L), Map.entry("Handoff", 10000L),
 					Map.entry("Post_Up", 5000L), Map.entry("Eyes_On", 3000L),
 					Map.entry("Returning_To_Patrol", 60000L),
 					// 0.20.0 street-crime lines (milliseconds; cops.yml Cooldown_Ticks x50)
@@ -267,6 +267,17 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	 * Distance to a station at which the cop considers itself arrived and attempts despawn (blocks).
 	 */
 	double getStationArrivalDistance();
+
+	/**
+	 * {@code Cops.Return.Watched_Cap_Seconds} (0.21.1 r6): how long a player within 24 blocks watching a returning cop
+	 * keeps it past {@code Max_Ticks}; 0 or less, no cap.
+	 */
+	default int getReturnWatchedCapSeconds() {
+		return DEFAULT_RETURN_WATCHED_CAP_SECONDS;
+	}
+
+	/** {@code Cops.Return.Watched_Cap_Seconds} when the config sets none (0.21.1 r6, owner ruling). */
+	int DEFAULT_RETURN_WATCHED_CAP_SECONDS = 60;
 
 	/**
 	 * Radius (blocks) the GUARDING cop tries to stay within from the cuffed player awaiting jail transit.

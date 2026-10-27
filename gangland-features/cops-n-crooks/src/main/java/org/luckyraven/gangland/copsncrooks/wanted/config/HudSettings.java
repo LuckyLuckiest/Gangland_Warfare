@@ -12,7 +12,7 @@ public record HudSettings(boolean bossBar, boolean starCard, TitleCue gain, Titl
                           boolean siren, String sirenSound, float sirenVolume, float sirenPitch, boolean zoneRing,
                           String zoneParticle, int zonePoints, boolean compass) {
 	/** The shipped {@code Wanted.Hud}. */
-	public static final HudSettings DEFAULT = new HudSettings(true, true, TitleCue.DEFAULT, TitleCue.DEFAULT,
+	public static final HudSettings DEFAULT = new HudSettings(true, true, TitleCue.GAIN, TitleCue.DEFAULT,
 	                                                          TitleCue.ESCAPED, true, "BLOCK_NOTE_BLOCK_BELL", 1.0f, 0.5f,
 	                                                          true, "DUST", 48, true);
 }

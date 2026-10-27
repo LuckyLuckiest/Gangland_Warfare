@@ -4,6 +4,7 @@ import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -33,6 +34,7 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
+import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.npc.spi.NpcSquadListener;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -81,6 +83,13 @@ final class CopManagerFixture implements AutoCloseable {
 		bukkit = BukkitStatics.install();
 		when(bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
 				.thenReturn(mock(BukkitTask.class));
+
+		// flat ground, solid below y 64, every chunk loaded: a hand-off lead stands on it (SpawnBias.lead)
+		Block ground = mock(Block.class);
+		Block air    = mock(Block.class);
+		when(air.isPassable()).thenReturn(true);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(true);
+		when(world.getBlockAt(anyInt(), anyInt(), anyInt())).thenAnswer(inv -> (int) inv.getArgument(1) >= 64 ? air : ground);
 
 		when(provider.getMaxCopsPerPlayer()).thenReturn(6);
 		when(provider.getPursuitMaxDistance()).thenReturn(80.0);
@@ -136,6 +145,8 @@ final class CopManagerFixture implements AutoCloseable {
 		when(player.isValid()).thenReturn(true);
 		when(player.getWorld()).thenReturn(world);
 		when(player.getLocation()).thenReturn(new Location(world, x, 64, z));
+		// looking along +Z (yaw 0), level: the view checks of the leash release and the spawn gate need eyes
+		when(player.getEyeLocation()).thenReturn(new Location(world, x, 65.62, z, 0f, 0f));
 		when(targeting.isWanted(id)).thenReturn(true);
 		bukkit.statics().when(() -> Bukkit.getPlayer(id)).thenReturn(player);
 		return player;
@@ -199,6 +210,27 @@ final class CopManagerFixture implements AutoCloseable {
 	@Override
 	public void close() {
 		bukkit.close();
+	}
+
+	/**
+	 * Moves the squad's search-circle stamp ({@code NpcSquad.lastKnownAt}, private in Keystone 1.15.4) {@code ms} into
+	 * the past and returns the new stamp: the circle around the last-known spot is as wide as {@code ms} of searching.
+	 * ponytail: reads a Keystone internal; a public {@code millisSinceLastKnown()} upstream would replace it.
+	 */
+	static long ageSearch(NpcSquad squad, long ms) {
+		try {
+			Field field = NpcSquad.class.getDeclaredField("lastKnownAt");
+			field.setAccessible(true);
+			field.setLong(squad, field.getLong(squad) - ms);
+			return field.getLong(squad);
+		} catch (ReflectiveOperationException exception) {
+			throw new IllegalStateException(exception);
+		}
+	}
+
+	/** The squad's search-circle stamp ({@code NpcSquad.lastKnownAt}): the circle widens from it. */
+	static long searchStamp(NpcSquad squad) {
+		return ageSearch(squad, 0L);
 	}
 
 	/**

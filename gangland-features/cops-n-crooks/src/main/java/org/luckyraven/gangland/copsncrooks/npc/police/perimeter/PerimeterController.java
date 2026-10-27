@@ -125,10 +125,12 @@ public class PerimeterController {
 		PerimeterSettings settings = settings();
 		perimeter.posts.removeIf(cop -> !cop.isValid() || cop.getCurrentState() != CopState.POSTED);
 
+		boolean sighted = false;
 		for (CopNpc cop : List.copyOf(perimeter.posts)) {
 			if (!cop.canSee(player, settings.sightRange())) continue;
+			sighted = true;
 
-			group.getSquad().reportSighting(player.getLocation());
+			group.getSquad().reportSighting(cop, player.getLocation(), settings.sightRange());
 			LivingEntity entity = cop.getEntity();
 			if (entity != null) {
 				copRadio.sayAs(group, cop, "Eyes_On", Map.of("place", copRadio.placeOf(player.getLocation()),
@@ -146,7 +148,8 @@ public class PerimeterController {
 			active.remove(id);
 			release(perimeter, CopState.PURSUING);
 			spent.add(id);
-			log.debug("PERIMETER {} end reason={}", player.getName(), timedOut ? "TIMEOUT" : "SIGHTED");
+			// EMPTY: every post was killed or sent home (a star drop, T-510) without seeing him
+			log.debug("PERIMETER {} end reason={}", player.getName(), timedOut ? "TIMEOUT" : sighted ? "SIGHTED" : "EMPTY");
 		}
 	}
 

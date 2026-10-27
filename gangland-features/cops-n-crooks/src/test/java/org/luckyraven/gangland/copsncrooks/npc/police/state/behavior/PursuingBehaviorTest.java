@@ -105,6 +105,18 @@ class PursuingBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("Keystone 1.15.4 / R4: a tip (911, shots, tracker, hand-off lead) is no sighting: a stuck cop still counts")
+	void stuckWithOnlyATip_stillCountsTowardRotation() {
+		squad.reportTip(new Location(mock(World.class), 0, 64, 0));
+		when(cop.isNavigationStuck()).thenReturn(true);
+		when(cop.getPursuitTicks()).thenReturn(5);
+
+		behavior.tick(cop);
+
+		verify(cop).setPursuitTicks(6);
+	}
+
+	@Test
 	@DisplayName("stuck while a squad member sees the target: the rotation count resets")
 	void stuckButSeen_resetsCount() {
 		squad.reportSighting(new Location(mock(World.class), 0, 64, 0));
@@ -265,6 +277,46 @@ class PursuingBehaviorTest {
 
 		verify(cop).pauseNavigation();
 		verify(cop, never()).pursue(any(), any(), anyDouble());
+	}
+
+	@Test
+	@DisplayName("0.21.1: on the post-escape search the leash reads to the squad's last-known spot, not his hidden live spot")
+	void searchingTarget_leashMeasuredToTheLastKnownSpot() {
+		PursuingBehavior searching = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS,
+		                                                  mock(DetainmentService.class), cuffLocks,
+		                                                  RetreatSettings.DEFAULT, now::get,
+		                                                  id -> id.equals(player.getUniqueId()));
+		World        world = mock(World.class);
+		LivingEntity self  = mock(LivingEntity.class);
+		when(self.getWorld()).thenReturn(world);
+		when(self.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+		when(cop.getEntity()).thenReturn(self);
+		squad.reportTip(new Location(world, 10, 64, 0));
+		// he hides 90 blocks off, past the leash; the search circles the spot the squad knew, 10 blocks from this cop
+		when(cop.distanceTo((LivingEntity) player)).thenReturn(MAX_DISTANCE + 10);
+
+		searching.tick(cop);
+
+		verify(cop, never()).transitionTo(CopState.RETURNING);
+	}
+
+	@Test
+	@DisplayName("0.21.1: on the post-escape search a searcher past the leash from the last-known spot still walks home")
+	void searchingTarget_farFromTheLastKnownSpot_rotatesOut() {
+		PursuingBehavior searching = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS,
+		                                                  mock(DetainmentService.class), cuffLocks,
+		                                                  RetreatSettings.DEFAULT, now::get,
+		                                                  id -> id.equals(player.getUniqueId()));
+		World        world = mock(World.class);
+		LivingEntity self  = mock(LivingEntity.class);
+		when(self.getWorld()).thenReturn(world);
+		when(self.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+		when(cop.getEntity()).thenReturn(self);
+		squad.reportTip(new Location(world, MAX_DISTANCE + 10, 64, 0));
+
+		searching.tick(cop);
+
+		verify(cop).transitionTo(CopState.RETURNING);
 	}
 
 	@Test

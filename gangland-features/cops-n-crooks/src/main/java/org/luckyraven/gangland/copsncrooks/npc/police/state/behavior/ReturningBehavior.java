@@ -6,8 +6,10 @@ import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopSightlines;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -19,7 +21,10 @@ import java.util.function.LongSupplier;
 /**
  * Cop navigates back to the nearest registered spawn station. {@link #tryDespawn} marks the cop for removal - and it
  * despawns - on arrival, after {@code Return.Max_Ticks}, or once the way home has been unreachable for
- * {@code Stuck.Recycle_Seconds} (a stranded cop would otherwise stand frozen where its target died).
+ * {@code Stuck.Recycle_Seconds} (a stranded cop would otherwise stand frozen where its target died), or at once when
+ * its station is in another world. A stranded cop in a real player's view stays until nobody looks (owner ruling R3,
+ * {@link CopSightlines#watched}); past {@code Return.Max_Ticks} only a view within 24 blocks still keeps it, and for
+ * {@code Return.Watched_Cap_Seconds} at most (0.21.1 r6).
  * <p>
  * Only a cop sent back because its target was restrained or jailed re-engages: if that target is freed before the cop
  * reaches its station (e.g. via admin command), the cop returns to {@link CopState#COMBAT} when {@code combatForced}
@@ -33,8 +38,14 @@ public class ReturningBehavior implements CopBehavior {
 	private final int               maxReturnTicks;
 	private final double            stationArrivalDistance;
 	private final StuckSettings     stuck;
+	/** {@code Visibility_Check_Distance}: how far a view keeps a stranded cop from vanishing (R3). */
+	private final double            visibilityCheckDistance;
+	/** {@code Return.Watched_Cap_Seconds}: how long a view within 24 blocks keeps it past Max_Ticks; 0 or less: no cap. */
+	private final int               watchedCapSeconds;
 
 	private Location selectedStation;
+	/** Whether {@link #selectedStation} is a registered spawner, not his own spawn spot (T-527). */
+	private boolean  homeIsStation;
 	/**
 	 * Whether this return started because the target was restrained or jailed: only then does a released target pull the
 	 * cop back. Set on entry; behaviours are per cop ({@code CopBehaviorFactory#createBehaviors} runs per spawn).
@@ -43,14 +54,46 @@ public class ReturningBehavior implements CopBehavior {
 	private final LongSupplier  clock;
 	/** Wall time the way home first read unreachable on this leg; 0 while it reads reachable. */
 	private long     strandedSince;
+	/** Wall time a view first held it past {@code Max_Ticks}; 0 until then (the watched cap counts from it). */
+	private long     watchedSince;
 
 	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
 	                         double stationArrivalDistance, StuckSettings stuck) {
-		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, System::currentTimeMillis);
+		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, 0.0);
+	}
+
+	/** {@code visibilityCheckDistance} widens the view that keeps a stranded cop past the 24-block floor (R3). */
+	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
+	                         double stationArrivalDistance, StuckSettings stuck, double visibilityCheckDistance) {
+		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, visibilityCheckDistance,
+		     CopConfigProvider.DEFAULT_RETURN_WATCHED_CAP_SECONDS);
+	}
+
+	/** {@code watchedCapSeconds}: {@code Return.Watched_Cap_Seconds} (0.21.1 r6), 0 or less for no cap. */
+	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
+	                         double stationArrivalDistance, StuckSettings stuck, double visibilityCheckDistance,
+	                         int watchedCapSeconds) {
+		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, System::currentTimeMillis,
+		     visibilityCheckDistance, watchedCapSeconds);
 	}
 
 	ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
 	                  double stationArrivalDistance, StuckSettings stuck, LongSupplier clock) {
+		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, clock, 0.0);
+	}
+
+	ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
+	                          double stationArrivalDistance, StuckSettings stuck, LongSupplier clock,
+	                          double visibilityCheckDistance) {
+		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, clock,
+		     visibilityCheckDistance, CopConfigProvider.DEFAULT_RETURN_WATCHED_CAP_SECONDS);
+	}
+
+	ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
+	                  double stationArrivalDistance, StuckSettings stuck, LongSupplier clock,
+	                  double visibilityCheckDistance, int watchedCapSeconds) {
+		this.watchedCapSeconds       = watchedCapSeconds;
+		this.visibilityCheckDistance = visibilityCheckDistance;
 		this.clock                  = clock;
 		this.stuck                  = stuck;
 		this.spawnManager           = spawnManager;
@@ -80,32 +123,45 @@ public class ReturningBehavior implements CopBehavior {
 
 			if (entity == null) return;
 
-			World world = entity.getWorld();
+			World   world     = entity.getWorld();
+			boolean noWayHome = !world.equals(selectedStation.getWorld());
 
-			if (!world.equals(selectedStation.getWorld())) {
-				tryDespawn(cop);
-				return;
+			if (!noWayHome) {
+				double distance = Math.sqrt(horizontalDistanceSquared(entity.getLocation(), selectedStation));
+
+				if (distance <= stationArrivalDistance) {
+					// T-527: a station swallows him in view; his own spawn spot was only hidden when he spawned, so there
+					// he stands until nobody looks (the backstop and watched cap below still apply)
+					if (homeIsStation || !CopSightlines.watched(entity, visibilityCheckDistance)) {
+						tryDespawn(cop);
+						return;
+					}
+				} else {
+					cop.navigateTo(selectedStation);
+					noWayHome = strandedOnReturn(cop);
+				}
 			}
 
-			double distance = Math.sqrt(horizontalDistanceSquared(entity.getLocation(), selectedStation));
-
-			if (distance <= stationArrivalDistance) {
-				tryDespawn(cop);
-				return;
-			}
-
-			cop.navigateTo(selectedStation);
-
-			if (strandedOnReturn(cop)) {
+			// R3: no way home (its station in another world, or unreachable past the stuck window) despawns on the first
+			// tick nobody looks; while watched it keeps walking (or standing)
+			if (noWayHome && !CopSightlines.watched(entity, visibilityCheckDistance)) {
 				tryDespawn(cop);
 				return;
 			}
 		}
 
-		// Timeout - despawn regardless of whether the station was reached
-		if (cop.getDespawnTicks() >= maxReturnTicks) {
+		// Timeout - despawn whether or not the station was reached, but never before a player's eyes (R3): past the backstop
+		// only a view within the 24-block floor holds it, so a far watcher no longer keeps it, and that view only for
+		// Return.Watched_Cap_Seconds (0.21.1 r6): nobody pins a walker forever by staring at it
+		LivingEntity body = cop.getEntity();
+		if (cop.getDespawnTicks() < maxReturnTicks) return;
+		if (body == null || !CopSightlines.watched(body, 0)) {
 			tryDespawn(cop);
+			return;
 		}
+		long now = clock.getAsLong();
+		if (watchedSince == 0) watchedSince = now;
+		if (watchedCapSeconds > 0 && now - watchedSince >= watchedCapSeconds * 1000L) tryDespawn(cop);
 	}
 
 	@Override
@@ -114,6 +170,7 @@ public class ReturningBehavior implements CopBehavior {
 		selectedStation = null;
 		cop.leaveSquad();
 		strandedSince = 0;
+		watchedSince  = 0;
 
 		Player target = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
 		reengageOnRelease = target != null && detainmentService.isRestrained(target);
@@ -152,8 +209,9 @@ public class ReturningBehavior implements CopBehavior {
 	}
 
 	/**
-	 * Despawns the cop unconditionally. Pursuit has either reached the station, timed out, or the pursuit leash has
-	 * given up — spawn-cap recovery takes priority over keeping the cop around for bystanders.
+	 * Despawns the cop. Pursuit has either reached the station, timed out, or there is no way home (another world, or
+	 * unreachable past the stuck window); that one waits for nobody to be looking (R3), the timeout backstop for nobody
+	 * within 24 blocks; arrival at a station despawns regardless, arrival at his own spawn spot waits out of view (T-527).
 	 */
 	private void tryDespawn(CopNpc cop) {
 		cop.markForRemoval();
@@ -165,20 +223,18 @@ public class ReturningBehavior implements CopBehavior {
 	 */
 	private Location findNearestStation(CopNpc cop) {
 		List<Location> stations = spawnManager.getSpawnerLocations();
+		LivingEntity   entity   = cop.getEntity();
 
-		if (stations.isEmpty()) {
-			return cop.getSpawnLocation();
-		}
-
-		LivingEntity entity = cop.getEntity();
-
-		if (entity == null) return cop.getSpawnLocation();
+		homeIsStation = false;
+		if (stations.isEmpty() || entity == null) return cop.getSpawnLocation();
 
 		Location copLoc = entity.getLocation();
-
-		return stations.stream()
+		Location nearest = stations.stream()
 				.filter(loc -> loc.getWorld() != null && loc.getWorld().equals(copLoc.getWorld()))
 				.min(Comparator.comparingDouble(loc -> horizontalDistanceSquared(loc, copLoc)))
-				.orElse(cop.getSpawnLocation());
+				.orElse(null);
+
+		homeIsStation = nearest != null;
+		return nearest != null ? nearest : cop.getSpawnLocation();
 	}
 }

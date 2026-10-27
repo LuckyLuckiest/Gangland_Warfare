@@ -40,9 +40,9 @@ class ChaseConfig020Test {
 	}
 
 	@Test
-	@DisplayName("no Witnesses block, or no Wanted section: enabled, crimes [Car_Theft, Assault_Civilian]")
+	@DisplayName("no Witnesses block, or no Wanted section: enabled, crimes [Car_Theft, Assault_Civilian, Kill_Civilian] (0.21.1 Q1)")
 	void witnesses_default() {
-		WitnessSettings expected = new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian"));
+		WitnessSettings expected = new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian", "Kill_Civilian"));
 
 		assertEquals(expected, WitnessSettings.parse(null));
 		assertEquals(expected, WitnessSettings.parse(wanted("Wanted:\n   Heat:\n      Enabled: true\n",

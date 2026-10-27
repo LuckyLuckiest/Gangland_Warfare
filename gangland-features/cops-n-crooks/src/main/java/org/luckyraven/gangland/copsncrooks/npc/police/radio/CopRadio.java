@@ -113,10 +113,13 @@ public class CopRadio {
 		RadioVoice       voice = voice(group);
 		NpcSquadListener speak = radio.listener(voice);
 		return (squad, signal, member, where) -> {
+			// T-433: a squad that stood down ("Suspect cleared") hunts nobody: no more orders, calls or role lines
+			if (stoodDown(group, squad)) return;
 			boolean down = signal == NpcSquadSignal.MAN_DOWN || signal == NpcSquadSignal.LEADER_DOWN;
 			if (down && member instanceof CopNpc cop && cop.getRole() != null && cop.getRole().commander())
 				commanderDown(group, squad, voice, member, where);
-			else if (!roleLine(squad, voice, signal, member, where)) speak.onSignal(squad, signal, member, where);
+			else if (!searchRoute(squad, voice, signal, member, where) && !roleLine(group, squad, voice, signal, member, where) &&
+			         !order(group, squad, voice, signal, member, where)) speak.onSignal(squad, signal, member, where);
 			followUps(group, squad, voice, signal, member, where);
 			if (down) regroupCheck(group);
 			switch (signal) {
@@ -190,7 +193,22 @@ public class CopRadio {
 	public void sayFromLeaderLater(CopGroup group, String key, int steps, BooleanSupplier stillRelevant) {
 		AbstractNpc speaker = leaderSpeaker(group);
 		if (speaker == null) return;
-		radio.sayLater(group.getSquad(), voice(group), speaker, key, Map.of(), steps, stillRelevant);
+		later(group, group.getSquad(), voice(group), speaker, key, Map.of(), steps, stillRelevant);
+	}
+
+	/**
+	 * {@link SquadRadio#sayLater} for {@code group}: a line queued before its squad stood down is dropped when due
+	 * (T-433: a Flanking order heard 12 ms after "Suspect cleared").
+	 */
+	private void later(CopGroup group, NpcSquad squad, RadioVoice voice, AbstractNpc speaker, String key,
+	                   Map<String, String> extra, int steps, BooleanSupplier stillRelevant) {
+		radio.sayLater(squad, voice, speaker, key, extra, steps,
+		               () -> !stoodDown(group, squad) && stillRelevant.getAsBoolean());
+	}
+
+	/** {@code squad} is {@code group}'s own and the group stood down (an attacker's squad answers for itself). */
+	private static boolean stoodDown(CopGroup group, NpcSquad squad) {
+		return squad == group.getSquad() && group.isStoodDown();
 	}
 
 	/** A casualty counts toward a regroup; the second one inside the window sends the squad to cover. */
@@ -231,7 +249,7 @@ public class CopRadio {
 	 */
 	public void sayAsLater(CopGroup group, CopNpc cop, String key, Map<String, String> extra, int steps,
 	                       BooleanSupplier stillRelevant) {
-		radio.sayLater(group.getSquad(), voice(group), cop, key, withRole(cop, extra), steps, stillRelevant);
+		later(group, group.getSquad(), voice(group), cop, key, withRole(cop, extra), steps, stillRelevant);
 	}
 
 	/** Who {@code squad} of {@code group} hunts: the wanted player, or the attacker the squad was opened for. */
@@ -396,24 +414,63 @@ public class CopRadio {
 	}
 
 	/**
+	 * A route started while no member sees him (no contact, no fresh sighting) is a search route: the member says
+	 * {@code Route_Search}, never {@code Route}/{@code Route_High}, which speak of a way "to him"; silent with that pool
+	 * muted. {@code true} when the signal was handled here.
+	 */
+	private boolean searchRoute(NpcSquad squad, RadioVoice voice, NpcSquadSignal signal, AbstractNpc member,
+	                            @Nullable Location where) {
+		if (signal != NpcSquadSignal.ROUTE || squad.isInContact() || squad.hasFreshSighting()) return false;
+		if (!lines.lines("Route_Search").isEmpty())
+			radio.say(squad, voice, member.getEntity(), speakerName(member), "Route_Search", "Format", where, null,
+			          Map.of());
+		return true;
+	}
+
+	/** The leader's orders to one member: SquadRadio's {@code orderFrom} signals. */
+	private static final Set<NpcSquadSignal> ORDERS = EnumSet.of(NpcSquadSignal.FLANK_LEFT, NpcSquadSignal.FLANK_RIGHT,
+	                                                             NpcSquadSignal.PUSH, NpcSquadSignal.SEARCH,
+	                                                             NpcSquadSignal.NO_ROUTE);
+
+	/**
+	 * The leader's order to {@code member}, said here and not by SquadRadio so its {@code %side%} comes from the squad's
+	 * last-known spot and facing ({@link #sideOf}), never the suspect's live facing; the member acks one ack delay
+	 * later once the order was heard, as SquadRadio's own order does. {@code true} for an order signal.
+	 */
+	private boolean order(CopGroup group, NpcSquad squad, RadioVoice voice, NpcSquadSignal signal, AbstractNpc member,
+	                      @Nullable Location where) {
+		if (!ORDERS.contains(signal)) return false;
+		AbstractNpc leader = squad.leader();
+		if (leader == null || leader == member) return true; // a leader never orders itself; no bare "Ack" either
+		boolean heard = radio.say(squad, voice, leader.getEntity(), speakerName(leader), SquadRadio.keyOf(signal),
+		                          "Format", where, member.getEntity(),
+		                          Map.of("member", speakerName(member), "side", sideOf(squad, where)));
+		if (heard && !lines.lines("Ack").isEmpty()) later(group, squad, voice, member, "Ack", Map.of(), 1, () -> true);
+		return true;
+	}
+
+	/**
 	 * A Marksman or Defender speaks its own line for the signal. {@code true} when the role has a line pool for it
 	 * (spoken or throttled), {@code false} to fall back to the generic line.
 	 */
-	private boolean roleLine(NpcSquad squad, RadioVoice voice, NpcSquadSignal signal, AbstractNpc member,
+	private boolean roleLine(CopGroup group, NpcSquad squad, RadioVoice voice, NpcSquadSignal signal, AbstractNpc member,
 	                         @Nullable Location where) {
 		String key = member instanceof CopNpc cop ? roleKey(kindOf(cop.getRole()), signal) : null;
 		// a role line names a spot (direction, distance): with none the generic line is said instead
 		if (key == null || lines.lines(key).isEmpty() || directionTo(member, where).isEmpty()) return false;
+		// Overwatch_Set claims eyes on the suspect: without line of sight neither it nor the generic Engage is said
+		if ("Overwatch_Set".equals(key) && !hasSight(member, voice.hunted(squad))) return true;
 
 		// the spot's distance and direction are said only when there is a spot: with none, SquadRadio would measure to
 		// the speaker's own position ("0 blocks north")
 		Map<String, String> extra = new HashMap<>(roleExtras(member));
 		extra.put("direction", directionTo(member, where));
 		extra.put("distance", distanceTo(member, where));
+		extra.put("side", sideOf(squad, where));
 		// a Defender's Shield_Up is a follow-up, three ack delays out: said at once it lands behind the Commander's
 		// order and the Marksman's Overwatch_Set in the squad gap and is dropped (order: 1 Commander, 2 Flanking, 3 this)
 		if (kindOf(((CopNpc) member).getRole()) == RoleKind.DEFENDER)
-			radio.sayLater(squad, voice, member, key, extra, 3, () -> shieldRelevant(member, squad, voice));
+			later(group, squad, voice, member, key, extra, 3, () -> shieldRelevant(member, squad, voice));
 		else radio.say(squad, voice, member.getEntity(), speakerName(member), key, "Format", where, null, extra);
 		return true;
 	}
@@ -440,14 +497,14 @@ public class CopRadio {
 			case MAN_DOWN, LEADER_DOWN -> commanderSays(group, squad, voice, "Pull_Back", where,
 			                                            Map.of("member", memberName(member)), member);
 			case FLANK_LEFT, FLANK_RIGHT, PUSH -> {
-				postLine(squad, voice, member);
+				postLine(group, squad, voice, member);
 				AbstractNpc leader = squad.leader();
 				if (signal == NpcSquadSignal.PUSH || leader == null || leader == member ||
 				    !(member instanceof CopNpc cop) || kindOf(cop.getRole()) != RoleKind.ASSAULT) return;
 				// step 2: past the leader's order (step 0) and the member's own ack (step 1)
 				Map<String, String> extra = new HashMap<>(roleExtras(member));
 				extra.put("direction", directionTo(member, where));
-				radio.sayLater(squad, voice, member, undirected("Flanking", extra.get("direction")), extra, 2,
+				later(group, squad, voice, member, undirected("Flanking", extra.get("direction")), extra, 2,
 				               member::isValid);
 			}
 			default -> { }
@@ -456,23 +513,31 @@ public class CopRadio {
 
 	/**
 	 * A Marksman or Defender whose order puts it on a post other than the fan's centre ({@code ENGAGE} is
-	 * {@link #roleLine}'s) calls it: {@code Overwatch_Set} / {@code Shield_Up}, measured to the hunted target, three
-	 * ack delays out (past the leader's order, the member's ack and an Assault's {@code Flanking}). There is no
+	 * {@link #roleLine}'s) calls it: {@code Overwatch_Set} / {@code Shield_Up}, measured to the hunted target when said
+	 * (0.21.1), three ack delays out (past the leader's order, the member's ack and an Assault's {@code Flanking}). There is no
 	 * arrival signal from the squad, so "reached its post" is approximated: the line goes out only if the cop is then
 	 * within its band of the target ({@link #atPost}). Cooldowns keep it to once per engagement.
 	 */
-	private void postLine(NpcSquad squad, RadioVoice voice, AbstractNpc member) {
+	private void postLine(CopGroup group, NpcSquad squad, RadioVoice voice, AbstractNpc member) {
 		RoleKind kind = member instanceof CopNpc cop ? kindOf(cop.getRole()) : null;
 		String   key  = kind == RoleKind.MARKSMAN ? "Overwatch_Set" : kind == RoleKind.DEFENDER ? "Shield_Up" : null;
 		LivingEntity hunted = voice.hunted(squad);
 		if (key == null || lines.lines(key).isEmpty() || hunted == null) return;
 
-		Location spot = hunted.getLocation();
-		if (directionTo(member, spot).isEmpty()) return;
+		if (directionTo(member, hunted.getLocation()).isEmpty()) return;
 		Map<String, String> extra = new HashMap<>(roleExtras(member));
-		extra.put("direction", directionTo(member, spot));
-		extra.put("distance", distanceTo(member, spot));
-		radio.sayLater(squad, voice, member, key, extra, 3, () -> atPost((CopNpc) member, voice.hunted(squad)));
+		// measured when said, three ack delays out, not at the order: the cop walked to its post meanwhile
+		// ponytail: SquadRadio.sayLater (gangland-api) takes a fixed map and reads it after the relevance check, so the
+		// check fills it; a Supplier<Map> overload there would be the clean seam (an api minor)
+		later(group, squad, voice, member, key, extra, 3, () -> {
+			LivingEntity now = voice.hunted(squad);
+			if (!atPost((CopNpc) member, now)) return false;
+			Location spot = now.getLocation();
+			extra.put("direction", directionTo(member, spot));
+			extra.put("distance", distanceTo(member, spot));
+			extra.put("side", sideOf(squad, spot));
+			return true;
+		});
 	}
 
 	/** The Defender's front post is up close; a Marksman's is inside its own band (a little slack past the max). */
@@ -480,9 +545,11 @@ public class CopRadio {
 	private static final double MARKSMAN_POST_BLOCKS = 40.0;
 	private static final double POST_SLACK_BLOCKS    = 2.0;
 
+	/** At its post and, for a Marksman (whose line claims eyes on him), in line of sight of the suspect. */
 	private static boolean atPost(CopNpc cop, @Nullable LivingEntity hunted) {
 		LivingEntity self = cop.getEntity();
 		if (self == null || hunted == null || !self.getWorld().equals(hunted.getWorld())) return false;
+		if (kindOf(cop.getRole()) == RoleKind.MARKSMAN && !hasSight(cop, hunted)) return false;
 
 		CopRole role = cop.getRole();
 		double  max  = kindOf(role) == RoleKind.DEFENDER ? DEFENDER_POST_BLOCKS
@@ -513,7 +580,7 @@ public class CopRadio {
 		extra.put("direction", directionTo(defender, spot));
 		extra.put("distance", distanceTo(defender, spot));
 		CopNpc speaker = defender;
-		radio.sayLater(squad, voice, speaker, "Shield_Up", extra, 3, () -> shieldRelevant(speaker, squad, voice));
+		later(group, squad, voice, speaker, "Shield_Up", extra, 3, () -> shieldRelevant(speaker, squad, voice));
 	}
 
 	/** A Shield_Up is still worth saying while its Defender lives and the squad still hunts. */
@@ -530,7 +597,7 @@ public class CopRadio {
 		merged.putAll(extra);
 		merged.put("direction", directionTo(commander, where));
 		if (key.startsWith("Commander_Orders")) key = undirected("Commander_Orders", merged.get("direction"), key);
-		radio.sayLater(squad, voice, commander, key, merged, 1, commander::isValid);
+		later(group, squad, voice, commander, key, merged, 1, commander::isValid);
 	}
 
 	/** {@code key}, or its {@code _Undirected} pool when there is no direction to name (a signal without a spot). */
@@ -566,6 +633,22 @@ public class CopRadio {
 		// the language file may name the role (Lines.Role_<key>); the key itself otherwise
 		List<String> named = lines.lines("Role_" + role.name());
 		return Map.of("role", named.isEmpty() ? role.name() : named.get(0));
+	}
+
+	private static boolean hasSight(AbstractNpc cop, @Nullable LivingEntity hunted) {
+		return hunted != null && cop.hasLineOfSight(hunted);
+	}
+
+	/**
+	 * {@code %side%}: the {@code Sides} word for where {@code spot} lies from the suspect as the squad last knew him (his
+	 * spot and facing then), never his live facing; empty with no last-known spot.
+	 */
+	private String sideOf(NpcSquad squad, @Nullable Location spot) {
+		Location     seen  = squad.lastKnownLocation();
+		List<String> sides = lines.lines("Sides");
+		if (seen == null || spot == null || sides.isEmpty() || seen.getWorld() == null ||
+		    !seen.getWorld().equals(spot.getWorld())) return "";
+		return sides.get(RadioSides.sideOf(seen, spot).ordinal() % sides.size());
 	}
 
 	/** The compass word ({@code Compass} lines) from {@code from} to {@code where}; empty with either missing. */

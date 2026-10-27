@@ -114,6 +114,14 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private @Nullable String                 firstName;
+	/** The navigator's own pathfinding range (Citizens {@code default-range-blocks}), read on the first walk. */
+	private float                            baseWalkRange = Float.NaN;
+
+	/**
+	 * Blocks of pathfinding range kept past a walk's goal: a search circle around a last-known spot grows past it, up to
+	 * Keystone's {@code NpcSquad.SEARCH_MAX_RADIUS} (48, private there) when the spot itself is unreachable.
+	 */
+	static final double WALK_RANGE_MARGIN = 56.0;
 
 	public CopNpc(JavaPlugin plugin, NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {
@@ -124,6 +132,41 @@ public class CopNpc extends AbstractNpc {
 	}
 
 	// ── AbstractNpc contract ─────────────────────────────────────────
+
+	/** {@inheritDoc} With the pathfinding range widened to reach the squad's last-known spot ({@link #coverWalk}). */
+	@Override
+	public void pursue(LivingEntity target, @Nullable NpcSquad squad, double sightRange) {
+		if (squad != null) coverWalk(squad.lastKnownLocation());
+		super.pursue(target, squad, sightRange);
+	}
+
+	/** {@inheritDoc} With the pathfinding range widened to reach {@code destination} ({@link #coverWalk}). */
+	@Override
+	public void navigateTo(Location destination) {
+		coverWalk(destination);
+		super.navigateTo(destination);
+	}
+
+	/**
+	 * Citizens stops any walk, a path or a planned route leg alike, whose end is farther than the navigator's
+	 * pathfinding range on its next tick ({@code CitizensNavigator.run}: {@code STUCK}), and Keystone 1.15.4 hands it
+	 * whole legs to a far goal: a hand-off pointman 239 blocks from its lead under {@code default-range-blocks: 100}
+	 * logged "route walk failed 2 legs" and stood until the stuck recycle (0.21.1 r6). So the range is set to reach
+	 * {@code goal} plus {@link #WALK_RANGE_MARGIN} (both parameter sets, as {@link #applySpeed}), and goes back to the
+	 * server's own range for a near goal so the vanilla pathfinder's search stays small.
+	 */
+	// ponytail: per-NPC range on the goal it walks to; the upstream fix is Keystone capping each walk and route leg
+	// inside the navigator's range (docket KS-NP-NEW), after which this goes
+	private void coverWalk(@Nullable Location goal) {
+		LivingEntity body = getEntity();
+		if (goal == null || body == null || goal.getWorld() != body.getWorld()) return;
+		var defaults = npc.getNavigator().getDefaultParameters();
+		if (Float.isNaN(baseWalkRange)) baseWalkRange = defaults.range();
+		float range = (float) Math.max(baseWalkRange, body.getLocation().distance(goal) + WALK_RANGE_MARGIN);
+		if (range == defaults.range()) return;
+		defaults.range(range);
+		npc.getNavigator().getLocalParameters().range(range);
+	}
 
 	@Override
 	public boolean canUseRangedAttack() {

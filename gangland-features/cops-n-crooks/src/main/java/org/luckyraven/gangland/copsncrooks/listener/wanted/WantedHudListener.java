@@ -93,7 +93,10 @@ public class WantedHudListener implements Listener {
 		String stars    = Wanted.buildStars(newLevel, event.getWanted().getMaxLevel());
 
 		if (newLevel > event.getOldLevel()) {
-			announce(player, newLevel, stars, raiseCard(player, event), chase.get().hud().gain());
+			String crime = crimeName(player, event);
+			// the witness is named on the card (chat) only; %cause% keeps the subtitle short (R1, 0.21.1 Q7)
+			announce(player, newLevel, stars, raiseCard(cardCrime(player, event, crime), newLevel), crime,
+			         chase.get().hud().gain());
 			playSiren(player);
 		} else if (newLevel < event.getOldLevel() && (newLevel > 0 || isGetaway(event.getCause()))) {
 			int          lost     = event.getOldLevel() - newLevel;
@@ -101,7 +104,7 @@ public class WantedHudListener implements Listener {
 			String       card     = StarCard.dropCard(messages, event.getCause(), pending, lost);
 			HudSettings  settings = chase.get().hud();
 
-			announce(player, newLevel, stars, card, newLevel > 0 ? settings.lost() : settings.escaped());
+			announce(player, newLevel, stars, card, card, newLevel > 0 ? settings.lost() : settings.escaped());
 			hud.lost(player, lost);
 		}
 
@@ -217,31 +220,45 @@ public class WantedHudListener implements Listener {
 		return cause == WantedCause.EVASION || cause == WantedCause.DECAY;
 	}
 
-	private String raiseCard(Player player, WantedLevelChangeEvent event) {
+	/** The display name of the crime behind a raise: the ledger's last crime, a sighting, or the reported crime. */
+	private String crimeName(Player player, WantedLevelChangeEvent event) {
 		CrimeRecord record = event.getCause() == WantedCause.CRIME ? ledger.lastCrime(player.getUniqueId()) : null;
 		// An UNKNOWN raise of a searched player is a sighting (PostEscapeSpotting): it fires before the search ends (wanted-15)
 		boolean spotted = record == null && event.getCause() == WantedCause.UNKNOWN &&
 		                  search.isSearching(player.getUniqueId());
-		String crime = messages.crimeName(record != null ? record.crimeId() : spotted ? "Spotted" : "Unknown_Crime");
 
+		return messages.crimeName(record != null ? record.crimeId() : spotted ? "Spotted" : "Unknown_Crime");
+	}
+
+	/** {@code crime} for the star card: a crime a civilian's 911 call reported says so, {@code Hud.Card.Reported} (0.21.1). */
+	private String cardCrime(Player player, WantedLevelChangeEvent event, String crime) {
+		CrimeRecord record = event.getCause() == WantedCause.CRIME ? ledger.lastCrime(player.getUniqueId()) : null;
+		if (record == null || !record.reported()) return crime;
+
+		return messages.format(WantedMessages.Key.CARD_REPORTED, Map.of("crime", crime));
+	}
+
+	private String raiseCard(String crime, int newLevel) {
 		CopConfigProvider provider = copLoader.getLoadedProvider();
 		CopTierConfig     tier     = provider == null ? null
 		                                                : provider.getTierConfig(
-				                                                spawns.getTierForWantedLevel(event.getNewLevel()));
+				                                                spawns.getTierForWantedLevel(newLevel));
 
 		return StarCard.raiseCard(messages, crime, CopRadio.tierName(tier), tier != null && tier.skipCuffing());
 	}
 
 	/**
-	 * The event's title cue, with the card shown only while Star_Card is on. The card goes to chat only when the cue is
-	 * switched off; a cue that is on but blank sends nothing.
+	 * The event's title cue. {@code cause} fills {@code %cause%}: the crime of a raise, the card of a drop. The card is
+	 * shown on screen only where the cue carries {@code %card%} and Star_Card is on; otherwise it goes to chat as the
+	 * message naming the cause, so the subtitle can stay short. A cue that is on but blank sends nothing at all.
 	 */
-	private void announce(Player player, int level, String stars, String card, TitleCue cue) {
+	private void announce(Player player, int level, String stars, String card, String cause, TitleCue cue) {
 		HudSettings settings = chase.get().hud();
 		String      shownCard = settings.starCard() ? card : "";
 
-		boolean sent = cue.send(player, Map.of("stars", stars, "level", String.valueOf(level), "card", shownCard));
-		if (!sent && !cue.enabled() && settings.starCard()) {
+		boolean sent = cue.send(player, Map.of("stars", stars, "level", String.valueOf(level), "card", shownCard,
+		                                       "cause", cause));
+		if (settings.starCard() && !cue.showsCard() && (sent || !cue.enabled())) {
 			player.sendMessage(card);
 		}
 	}

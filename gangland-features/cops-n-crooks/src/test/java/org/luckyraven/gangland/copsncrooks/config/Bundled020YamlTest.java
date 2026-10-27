@@ -111,7 +111,7 @@ class Bundled020YamlTest {
 		ConfigReport report = new ConfigReport();
 		NodeReader   wanted = wantedRoot(resource("copsncrooks/wanted.yml"), report);
 
-		assertEquals(new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian")), WitnessSettings.parse(wanted));
+		assertEquals(new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian", "Kill_Civilian")), WitnessSettings.parse(wanted));
 		assertEquals(new TrespassSettings(true, 60), TrespassSettings.parse(wanted));
 		assertEquals(100, ChaseConfig.parse(wanted, report).heat().weightOf("Evading_Police"));
 		assertEquals(Set.of("Enable", "Crimes"), keysOf(wanted, "Witnesses"));
@@ -149,7 +149,7 @@ class Bundled020YamlTest {
 		Map<String, Set<String>> yamlKeys = new LinkedHashMap<>();
 		yamlKeys.put("Patrol", Set.of("Enable", "Cops_Per_Station", "Activation_Radius", "Despawn_Radius",
 		                              "Despawn_After_Seconds", "Beat_Radius", "Pause_Seconds_Min", "Pause_Seconds_Max",
-		                              "Tier", "Report_Wanted"));
+		                              "Tier", "Report_Wanted", "Respawn_Seconds"));
 		yamlKeys.put("Warning", Set.of("Enable", "Range", "Seconds", "Repeat_Seconds"));
 		yamlKeys.put("Pull_Over", Set.of("Enable", "Range", "Speed_Limit", "Comply_Seconds", "Stop_Speed",
 		                                 "Stop_Hold_Seconds", "Ticket_Amount", "Repeat_Seconds"));

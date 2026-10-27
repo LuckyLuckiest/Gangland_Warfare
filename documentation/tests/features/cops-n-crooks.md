@@ -103,7 +103,7 @@ permission.
 - [ ] At three stars break contact: `PERIMETER ... start posts=2 radius=32`, two Marksmen/Defenders walk to posts, say "Holding the corner.",
       and hold within 4 blocks; the rest of the squad searches.
 - [ ] Walk into a post's line of sight: "Eyes on suspect ..." and the perimeter ends (`end reason=SIGHTED`/`CONTACT`); stay hidden
-      60 s: `end reason=TIMEOUT`. A search at 1-2 stars posts nobody. `Perimeter.Enabled: false` posts nobody.
+      60 s: `end reason=TIMEOUT`. Every post killed or sent home by a star drop: `end reason=EMPTY`. A search at 1-2 stars posts nobody. `Perimeter.Enabled: false` posts nobody.
 - [ ] Attack a posted cop: it drops its post and fights.
 
 **S6 Hand-off**

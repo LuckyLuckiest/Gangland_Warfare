@@ -103,11 +103,11 @@ class CopManagerStuckTest {
 	}
 
 	@Test
-	@DisplayName("a recycle tips the squad off to where the suspect is now; a run with no recycle keeps its lead")
-	void recycle_tipsTheSquadOffToTheSuspectsSpot() {
-		// he left an unreachable pillar top unseen: without the tip every replacement hunts it until recycled in turn
+	@DisplayName("a recycle keeps the squad's lead: his unseen live spot never leaks in (R4)")
+	void recycle_keepsTheSquadsLead() {
+		// he left an unreachable pillar top unseen: nobody saw where he went, so the replacements search around it
 		Location deadLead = new Location(fx.world, -137.5, 115, 108.5);
-		group.getSquad().reportSighting(deadLead);
+		group.getSquad().reportTip(deadLead); // the squad's clock is real time: a tip keeps hasFreshSighting false
 		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 11_000);
 
 		manager.spawnTick(playerId, wanted);
@@ -117,28 +117,47 @@ class CopManagerStuckTest {
 		manager.spawnTick(playerId, wanted);
 
 		assertFalse(group.getCops().contains(stuck));
-		assertEquals(player.getLocation(), group.getSquad().lastKnownLocation());
+		assertEquals(deadLead, group.getSquad().lastKnownLocation(), "0.21.1 r2 (R4): last-known only, never his live spot");
+		assertFalse(group.getSquad().hasFreshSighting());
 	}
 
 	@Test
-	@DisplayName("a recycle stamps the group's tip-off clock; a run with no recycle does not")
-	void recycle_marksATipOff() {
+	@DisplayName("r2 pin: a recycle re-tips nothing, so the search circle keeps widening from the squad's own stamp")
+	void recycle_searchCircleKeepsWidening() {
 		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);
+		// 40 s of searching the crime scene: the circle is already wide
+		long stamp = CopManagerFixture.ageSearch(group.getSquad(), 40_000L);
 
 		manager.spawnTick(playerId, wanted);
 
 		assertFalse(group.getCops().contains(stuck));
-		assertTrue(group.tippedOffWithin(fx.clock[0], 0), "stamped at the radio clock");
+		assertEquals(stamp, CopManagerFixture.searchStamp(group.getSquad()),
+		             "no reportTip, not even of the last-known spot: re-tipping would shrink the circle back to 6 blocks");
+	}
+
+	@Test
+	@DisplayName("a recycle is no tip-off: it does not hold the evasion clock (R4)")
+	void recycle_noTipOff() {
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);
+		// the wanted start's crime-scene tip stamps the clock at 1 s; this run is 10 s later
+		fx.clock[0] += 10_000L;
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(stuck));
+		assertFalse(group.tippedOffWithin(fx.clock[0], 5_000L), "a stuck cop is no news of him");
 	}
 
 	@Test
 	@DisplayName("no recycle, no tip-off stamp")
 	void noRecycle_noTipOff() {
 		stranded(CopState.PURSUING, 10, 64, 0, 11_000);
+		// 0.21.1: the wanted start's crime-scene tip stamps the clock at 1 s; this run is 10 s later
+		fx.clock[0] += 10_000L;
 
 		manager.spawnTick(playerId, wanted);
 
-		assertFalse(group.tippedOffWithin(fx.clock[0], Long.MAX_VALUE / 2));
+		assertFalse(group.tippedOffWithin(fx.clock[0], 5_000L));
 	}
 
 	@Test

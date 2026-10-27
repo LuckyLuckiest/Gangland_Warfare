@@ -119,6 +119,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	// Return / despawn settings
 	private final int    maxReturnTicks;
+	private final int    returnWatchedCapSeconds;
 	private final double stationArrivalDistance;
 
 	// Misc
@@ -251,6 +252,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.dispatchSettings  = parseDispatchSettings(cops, report);
 		this.breatherSettings  = parseBreatherSettings(cops, report);
 		this.handoffSettings   = parseHandoffSettings(cops, report);
+		this.returnWatchedCapSeconds = parseReturnWatchedCap(cops, report);
 		this.perimeterSettings = parsePerimeterSettings(cops, report);
 		this.standoffSettings  = parseStandoffSettings(cops, report); // 0.21.0
 		this.breachSettings    = parseBreachSettings(cops, report); // 0.21.0
@@ -456,6 +458,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public int getMaxReturnTicks() {
 		return maxReturnTicks;
+	}
+
+	@Override
+	public int getReturnWatchedCapSeconds() {
+		return returnWatchedCapSeconds;
 	}
 
 	@Override
@@ -1146,7 +1153,25 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return new HandoffSettings(handoff.get("Enabled").asBool().orDefault(defaults.enabled()),
 		                           handoff.get("Heading_Seconds").asInt().min(1).orDefault(defaults.headingSeconds()),
 		                           handoff.get("Bias_Seconds").asInt().min(0).orDefault(defaults.biasSeconds()),
-		                           handoff.get("Cone_Degrees").asDouble().min(1.0).orDefault(defaults.coneDegrees()));
+		                           handoff.get("Cone_Degrees").asDouble().min(1.0).orDefault(defaults.coneDegrees()),
+		                           // 0.21.1: Math.max, as the 0.21.0 clamps: a negative lead is no lead, not the default 24
+		                           Math.max(0.0, handoff.get("Lead_Blocks").asDouble().orDefault(defaults.leadBlocks())),
+		                           // 0.21.1 r6 (T-423): optional, clamped into 0..1 like Lead_Blocks (no revert to the default)
+		                           Math.min(1.0, Math.max(0.0, handoff.get("Spawn_Between").asDouble()
+		                                                              .orDefault(defaults.spawnBetween()))));
+	}
+
+	/**
+	 * {@code Cops.Return.Watched_Cap_Seconds} (0.21.1 r6), optional, read here rather than through {@link CopSettings}
+	 * (a new key never lived in settings.yml, so it needs no MovedSetting fallback). Its siblings {@code Max_Ticks} and
+	 * {@code Station_Arrival_Distance} are read by {@link CopSettings}, so they are touched here to stay known keys.
+	 */
+	private static int parseReturnWatchedCap(@Nullable NodeReader cops, ConfigReport report) {
+		MappingNode section = cops == null ? null : cops.get("Return").asMapping().orNull();
+		if (section == null) return DEFAULT_RETURN_WATCHED_CAP_SECONDS;
+		NodeReader ret = NodeReader.of(section, report);
+		ret.markAllKeysTouched();
+		return ret.get("Watched_Cap_Seconds").asInt().orDefault(DEFAULT_RETURN_WATCHED_CAP_SECONDS);
 	}
 
 	// 0.21.0: clamped with Math.max (not NodeReader.min) so a too-small value clamps up rather than reverting to the default
@@ -1235,7 +1260,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                          patrol.get("Beat_Radius").asInt().min(1).orDefault(defaults.beatRadius()),
 		                          pauseMin, pauseMax,
 		                          patrol.get("Tier").asInt().min(1).orDefault(defaults.tier()),
-		                          patrol.get("Report_Wanted").asBool().orDefault(defaults.reportWanted()));
+		                          patrol.get("Report_Wanted").asBool().orDefault(defaults.reportWanted()),
+		                          patrol.get("Respawn_Seconds").asInt().min(0).orDefault(defaults.respawnSeconds()));
 	}
 
 	private WarningSettings parseWarningSettings(@Nullable NodeReader cops, ConfigReport report) {

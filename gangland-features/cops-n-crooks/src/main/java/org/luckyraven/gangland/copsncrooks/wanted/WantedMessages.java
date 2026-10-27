@@ -45,6 +45,8 @@ public class WantedMessages extends LocalizedModuleYaml {
 		CARD_DROP_STILL_HOT("Hud.Card.Drop_Still_Hot", "&eStill hot, one star at a time"),
 		CARD_DROP_KNOWN_FACE("Hud.Card.Drop_Known_Face", "&eThey know your face, one star at a time"),
 		CARD_DROP_NARROW("Hud.Card.Drop_Narrow", "&aThat was close, they are losing you"),
+		// 0.21.1: the crime of a raise a witness reported (a landed 911 call, a silent alarm)
+		CARD_REPORTED("Hud.Card.Reported", "%crime% (reported by a witness)"),
 		SHEET_HEADER("Charge_Sheet.Header", "&8&m-----&r &6&lCHARGE SHEET &8&m-----"),
 		SHEET_CRIME("Charge_Sheet.Crime", "&7- &f%crime% &8x%count%"),
 		SHEET_TOTAL("Charge_Sheet.Total", "&7Fine: &c%money_symbol%%amount%"),
@@ -88,6 +90,9 @@ public class WantedMessages extends LocalizedModuleYaml {
 		// 0.20.0
 		PATROL_PUT_AWAY("Patrol.Put_Away", "&eBeat cop: &fPut that away! &7(%seconds%s)"),
 		PATROL_COMPLIED("Patrol.Complied", "&aThanks, carry on."),
+		// 0.21.1
+		PATROL_IGNORED("Patrol.Ignored", "&cBeat cop: &fYou were warned. &7Cause: &c%cause%"),
+		PATROL_LOST_SIGHT("Patrol.Lost_Sight", "&7Beat cop: &fLost sight of you. Keep it holstered."),
 		PATROL_PULL_OVER("Patrol.Pull_Over", "&cBeat cop: &fPull over! Stop within %seconds%s"),
 		PATROL_TICKET("Patrol.Ticket", "&7Ticket: &c%money_symbol%%amount%"),
 		PATROL_FLED("Patrol.Fled", "&cYou fled a traffic stop!"),

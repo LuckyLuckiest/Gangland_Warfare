@@ -197,7 +197,10 @@ blocks). Each line plays a short click sound.
 - **Orders and acknowledgements:** the squad leader orders members to push in or take a flank, and the ordered cop
   answers ("Copy.") a moment later. Shooters also call out repositioning, reloading and check-fire.
 - **Casualties:** "Officer down!" when a cop dies, or a leader change when the leader dies.
-- **Dispatch:** a new wanted level, a tier escalation, and the stand-down when the player is cleared.
+- **Dispatch:** a new wanted level, a tier escalation, and the stand-down when the player is cleared. A landed 911 call
+  ("[DISPATCH] 911 caller reports Car theft near the Docks.", `Caller_911`, the crime by its display name) is a dispatch
+  line since 0.21.1, so it plays even when the call has just made the player wanted and no cop is out yet. The
+  caller's own lines are in [wanted-bounty.md](./wanted-bounty.md#witnesses-and-911-calls-0200).
 - **Responders:** a Contact, Officer Down or Backup call pulls in up to `Radio.Responder_Max` (2) nearby cops within
   `Radio.Range`. Only cops that are idle, walking home or chasing a civilian answer, including cops from another
   wanted player's group. A cop that is cuffing, guarding or hunting a player of its own never leaves it. This is the
@@ -426,10 +429,29 @@ player's world:
 - The **ETA** is the horizontal distance from the station to the suspect divided by `Dispatch.Unit_Speed` (10
   blocks per second), clamped to `Min_Eta_Seconds` (0) .. `Max_Eta_Seconds` (40) and rounded up to whole seconds.
 - The squad radios it: "3 units en route from Central, ETA 12 s." (`Dispatch_En_Route`, with the place of the crime in
-  the `Dispatch_Wanted` line).
+  the `Dispatch_Wanted` line). Since 0.21.1 the line is said once per squad per 30 s
+  (`Cops.Radio.Cooldown_Ticks.Dispatch_En_Route: 600`), so a refill does not sound like a new dispatch.
 - A unit appears out of sight: first at a spawner of its station, otherwise on a hidden ring around the suspect,
   otherwise (every spot is visible) the old spawn rules. "Out of sight" means no player who matters has a clear line
   of sight to the spot (a block ray, not a facing cone); the hunted player counts at any distance.
+- **Never in front of him (0.21.1).** No unit, refill or post-escape search squad spawns where the hunted player is
+  looking: a spot within 60 degrees of his eye direction with a clear line to it is refused on every path, the old
+  spawn rules included (the unit then waits for the next spawn run). A unit sent after a hand-off spawns between him and
+  the spot it heads for, or ahead of him, only on hidden spots, so only while he cannot see them. Every spot also stays within 0.75 x
+  `Cops.Pursuit.Max_Distance` (60 blocks) of him, so a fresh cop is not past the pursuit leash the second it spawns.
+- **Lost cops leave (0.21.1).** A cop that gave up the chase beyond `Cops.Pursuit.Max_Distance` is removed as soon as
+  no player is looking at it, instead of walking home for up to five minutes. One whose way home is blocked does the
+  same: it never vanishes in front of a player (within `Visibility_Check_Distance`, never less than 24 blocks) and keeps
+  walking until nobody looks. `Return.Max_Ticks` still ends a walk home that takes too long, but only once nobody
+  within 24 blocks is looking at it, or once someone has stared at it from that close for `Return.Watched_Cap_Seconds`
+  (60) past `Max_Ticks`: nobody can pin a walker forever. On the post-escape search
+  the leash is measured to the spot the squad is searching, not to where he hides: searchers there are neither sent
+  home nor replaced however far off he is, and a replacement only appears within reach of that spot. Nobody saw where the player went, so the
+  replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count, a cop holding a perimeter post included (the squad's last Commander stays; a cop in a fight, cuffing or guarding goes once he is free). A new wanted level fields that level's count whatever the last one ended with: walkers still in range are called back only as many as it needs (its Commander first), and cops still hunting beyond it go home, whether the stars went one at a time or all at once. Cops sent home that are still in range are the first called back when the level rises again or a cop falls; one called back is back on duty, so if it gives up the chase later it walks home for good. Cops answering a radio call stay even when they put the squad over its count, and the post-escape search keeps every cop it called back, even one a star drop had marked for home or a backup
+  that ran out mid-search. While the whole squad is lost
+  (cops walking home, a hand-off pending, units on the road) the evasion countdown pauses instead of restarting.
+- **Tips are not sightings (0.21.1).** The crime scene, a hand-off seed and a hit from cover tell the squad where to
+  search; only a cop who really sees the player makes the squad chase his live position.
 - A world with no station keeps the old ring spawn with no delay (ETA 0).
 - **The chase clock waits for the cops.** While units are on the road and none stands in the world, the evasion clock holds:
   no search opens and no star can drop. A unit that fails to spawn for 10 s past its ETA stops counting.
@@ -471,9 +493,23 @@ search; a new sighting re-arms it. A posted cop that the suspect attacks drops i
 ### The hand-off
 
 When the suspect outruns the cops that chased him (the pursuers give up and walk home) the squad leader radios his
-heading ("Lost him heading north-east. Units ahead, pick him up.") and the **next units appear ahead of him**: for
-`Handoff.Bias_Seconds` (10) new units spawn within `Cone_Degrees` (60) of the heading and report his last position,
-not his live one. The heading is read over the last `Heading_Seconds` (2) of his movement.
+heading ("Lost him heading north-east. Units ahead, pick him up.") and the **next units appear near him, toward where
+they are sent**: for `Handoff.Bias_Seconds` (10) new units spawn around the point `Spawn_Between` (0.5, midway) of the
+way from where he really is to the spot they head for, held within `Spawn.Max_Distance` of him and never in his view
+(0.21.1); when no hidden spot fits there they spawn within `Cone_Degrees` (60) of the heading as before. They head where the squad saw
+him going: `Lead_Blocks` (24) past his last-known spot along that heading (short of a wall, on dry ground there; over water or lava, a seagrass or kelp bed, a waterlogged block, or into unloaded chunks, they search the last-known spot), and
+search there once they arrive. Neither the heading nor that spot is his live position (0.21.1). A second hand-off with
+no news of him since leads from the same last-known spot again, never on from the first lead. The first unit gives the squad that spot once, and not at all if
+a cop has spotted him since. The heading is read over the last `Heading_Seconds` (2) the squad knew of his movement.
+The hand-off fires when the chase leashed out even if the walker that gave up was already taken off the map while a
+perimeter post still held the chase, as long as that was within `Bias_Seconds` of the chase falling away, or he has
+since run more than `Pursuit.Max_Distance` past a post while posts alone held the chase (a cop that chased him on for
+longer than `Bias_Seconds` after that walker went ends this); a post killed or called off is no lost chase, and
+a cuff never is (0.21.1). A unit sent ahead still gives up once it is `Pursuit.Max_Distance` from him, so it does not
+reach a lead farther than that from him. There is no hand-off on the post-escape search: he has no stars, so
+nobody radios units ahead of him. `/glw wanted clear` on a player at zero stars ends his post-escape search: the cops
+say "Suspect cleared" and walk home. After "Suspect cleared" the squad says nothing more, not even an order it was
+about to give.
 
 ### Hideouts and the cold trail
 
@@ -705,8 +741,9 @@ A stranded cop is not replaced while the player is looking at it (in front of hi
 melee reach on his level with nothing in between. Once it has been stranded for twice `Recycle_Seconds`, a view only
 keeps it within 24 blocks, the player's own and every other player's alike. With its spawner skipped, the replacement comes from the next spawner within `Spawner_Max_Y_Diff`, or from
 the ring around the player at his level (for a player indoors, the street outside counts too). The wanted-level cop
-count and `Max_Per_Player` still cap the total. Dispatch also tells the replacements where the player is now, so a
-player who slipped away unseen from a spot the stranded cops could not reach is not hunted there again.
+count and `Max_Per_Player` still cap the total. A recycle tells the squad nothing new (0.21.1): the replacements search
+around the squad's last-known spot on its widening circle, and the evasion countdown keeps running, so a player who
+slipped away unseen from a spot the stranded cops could not reach gets away instead of being found by magic.
 
 ---
 
@@ -847,6 +884,7 @@ Cops:
    Return:
       Max_Ticks: 600                # AI ticks before a cop with no target is force-despawned (600 ≈ 30 s)
       Station_Arrival_Distance: 3.0 # Blocks from the spawn station at which the cop considers itself arrived and despawns
+      Watched_Cap_Seconds: 60       # 0.21.1: past Max_Ticks a player within 24 blocks keeps it this long at most (0 = no cap)
 ```
 
 ---
@@ -896,15 +934,20 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
   `Cops.Patrol.Beat_Radius` (24 blocks) from the station, pausing `Pause_Seconds_Min` to `Pause_Seconds_Max` at each
   beat point. Beat cops despawn only when nobody is within `Despawn_Radius` (96 blocks) for `Despawn_After_Seconds`
   in a row; a player inside the radius keeps them.
-  Tier comes from `Cops.Patrol.Tier` (1 = Officer).
+  Tier comes from `Cops.Patrol.Tier` (1 = Officer). A station that loses a beat cop waits `Cops.Patrol.Respawn_Seconds`
+  (30) before a replacement walks out (0.21.1).
 - **Sighting a wanted player.** With `Cops.Patrol.Report_Wanted: true` a patrol cop who sees a wanted player reports
   that player's position to the squad already hunting them and opens no new call. The radio line for that report is
   `Patrol_Sighting`.
 - **Brandish warning** (`Cops.Warning`). A cop within `Range` (12 blocks) of a player holding a weapon tells the player
   to put it away (`Wanted_Messages` `Patrol.Put_Away`, time left `%seconds%`). Complying in time sends `Patrol.Complied`;
-  the same player is warned again only after `Repeat_Seconds` (30). A warning the player ignores (still holding the
-  weapon, still in view when time is up) commits `Brandish_Near_Cop` as seen by a cop. Cops never attack from the
-  warning state.
+  the same player is warned again only after `Repeat_Seconds` (30), counted from the verdict of the last warning since
+  0.21.1 and shared by every beat cop. A warning the player ignores (still holding the weapon, still in view when time
+  is up) sends `Patrol.Ignored` naming the cause and commits `Brandish_Near_Cop` as seen by a cop, which gives the first
+  star at once on the shipped heat (67 x 1.5; an older `wanted.yml` keeps its lower value, see `migration-0.21.1.md`). Time up with the cop out of view sends `Patrol.Lost_Sight` and costs nothing. Only beat
+  cops on patrol warn, a wanted player is reported instead, and darkness, dim light and sneaking shrink `Range` (`Cops.Sight`).
+  Cops never attack from the warning state. The star title shows the star row only (`Wanted.Hud.Title.Gain.Subtitle`
+  `%stars%`); the cause card goes to chat.
 - **Pull-over** (`Cops.Pull_Over`). A cop within `Range` (24 blocks) signals a driver whose speed is above
   `Speed_Limit` (12 blocks per second) to stop (`Patrol.Pull_Over`). The driver has `Comply_Seconds` (6) to slow below
   `Stop_Speed` (1.0) and hold it for `Stop_Hold_Seconds` (2). A completed stop charges `Ticket_Amount` (150.0) from the

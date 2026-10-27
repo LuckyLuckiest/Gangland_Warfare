@@ -476,6 +476,8 @@ Cops:
 | `Handoff.Heading_Seconds` | `2` | Seconds of the suspect's movement used for the heading |
 | `Handoff.Bias_Seconds` | `10` | How long new units spawn ahead of him (also how much slower a station ahead may be and still win) |
 | `Handoff.Cone_Degrees` | `60.0` | Half-angle either side of the heading |
+| `Handoff.Spawn_Between` | `0.5` | 0.21.1 (T-423). How far from his live spot toward the lead the hand-off units' spawn ring is centred, 0..1 (clamped); held within `Spawn.Max_Distance` of him and the leash margin, never in his view; no hidden spot there falls back to the ring ahead. 0 = the ring ahead only |
+| `Handoff.Lead_Blocks` | `24.0` | 0.21.1. Blocks past the squad's last-known spot, along the heading it saw him take, that the hand-off units head for and search (at most 0.75 x `Pursuit.Max_Distance` long; a negative value is 0; stops short of a wall, on standing ground) |
 | `Perimeter.Enabled` | `true` | 0.16.0. `false` = no posts |
 | `Perimeter.Min_Level` | `3` | Stars needed |
 | `Perimeter.Posts` | `2` | Most cops posted at once; the last free cop is never posted |
@@ -484,7 +486,7 @@ Cops:
 | `Perimeter.Lane_Length` | `16.0` | Blocks of clear lane kept toward the centre of the zone |
 | `Perimeter.Sight_Range` | `40.0` | How far a posted cop sees; the ring radius is the smaller of the zone radius and 0.8 x this |
 | `Perimeter.Leash_Radius` | `4.0` | How far a posted cop may stray (a post never uses less than 1.5) |
-| `Radio.Cooldown_Ticks.Dispatch_En_Route` / `Wipe_Refill` / `Handoff` / `Post_Up` / `Eyes_On` / `Returning_To_Patrol` | `0` / `0` / `200` / `100` / `60` / `1200` | 0.16.0 repeat cooldowns of the new radio lines |
+| `Radio.Cooldown_Ticks.Dispatch_En_Route` / `Wipe_Refill` / `Handoff` / `Post_Up` / `Eyes_On` / `Returning_To_Patrol` | `600` / `0` / `200` / `100` / `60` / `1200` | 0.16.0 repeat cooldowns of the new radio lines; `Dispatch_En_Route` was `0` until 0.21.1 (per squad, so a refill is not re-announced) |
 | `Radio.Priority` | see the file | `Dispatch_En_Route` and `Wipe_Refill` are always added to the list a server file carries (they must not be swallowed by the gap after `Dispatch_Wanted`) |
 | `Regroup.Enabled` | `true` | 0.15.0. `false` = no pull-back after casualties |
 | `Regroup.Casualties` | `2` | Cops lost inside `Window_Seconds` that trigger the pull-back |

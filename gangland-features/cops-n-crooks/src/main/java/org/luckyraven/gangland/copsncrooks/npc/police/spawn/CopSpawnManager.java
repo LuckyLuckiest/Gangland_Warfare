@@ -13,6 +13,7 @@ import org.luckyraven.gangland.copsncrooks.database.CopSpawnerRepository;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
@@ -32,6 +33,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 @CustomLog
@@ -39,6 +41,18 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	/** Half-angle, either side of the target->station bearing, of the station side a unit's ring spot prefers. */
 	private static final double STATION_SIDE_DEGREES = 60.0;
+	/**
+	 * A spawn spot stays within this share of {@code Cops.Pursuit.Max_Distance} (3D) of the suspect: a cop spawned at
+	 * the leash line walks home in the second it spawns and is re-dispatched (0.21.1 cause 2).
+	 */
+	public static final  double LEASH_MARGIN         = 0.75;
+	/**
+	 * Blocks around the between point (owner ruling T-423) a hand-off unit's ring spot is taken within: the ring itself
+	 * is still sampled around him (Keystone's rings are Player-centred).
+	 */
+	public static final  double BETWEEN_RADIUS       = 16.0;
+	/** Half-angle of a player's view cone, as {@code CopSightlines.inView}. */
+	private static final double VIEW_HALF_ANGLE      = Math.PI / 3;
 
 	private final JavaPlugin         plugin;
 	private final CopLoader          copLoader;
@@ -48,6 +62,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	private final DetainmentService  detainmentService;
 	private final CuffLockRegistry   cuffLockRegistry;
 	private volatile Predicate<UUID> searchGuard = id -> false;
+	/** Where {@link #insideLeash} measures from for a suspect: him, unless {@link #setLeashAnchor} says otherwise. */
+	private volatile Function<Player, Location> leashAnchor = Player::getLocation;
 	private volatile CopPerception   perception  = new CopPerception();
 	private volatile PatrolServices  patrolServices;
 
@@ -150,7 +166,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	/**
 	 * Spawns a cop NPC near the given player with the specified tier: at the closest registered spawner whose location
-	 * {@code allowed} accepts, else somewhere on the ring around him.
+	 * {@code allowed} accepts, else somewhere on the ring around him. Either spot must {@link #fits fit}: inside the
+	 * leash margin and out of his view (0.21.1, owner ruling R6); a ring spot in view is refused, so {@code null}.
 	 *
 	 * @param target the player to spawn near
 	 * @param tier the cop tier
@@ -161,7 +178,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 */
 	@Nullable
 	public CopNpc spawnNearPlayer(Player target, int tier, Predicate<Location> allowed, @Nullable CopRole role) {
-		Location spawnLoc = findClosestSpawnerLocation(target, allowed);
+		Predicate<Location> fits     = fits(target);
+		Location            spawnLoc = findClosestSpawnerLocation(target, allowed.and(fits));
 
 		if (spawnLoc != null) {
 			return copNpcFactory.createCop(spawnLoc, tier, false, role);
@@ -169,7 +187,9 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 		spawnLoc = findRingLocation(target);
 
-		if (spawnLoc == null) return null;
+		// ponytail: the ring search takes no filter, so a spot it picks in his view is refused and the caller retries on
+		// its next run; a Keystone ring predicate (as findHiddenSpawnLocation has) replaces this
+		if (spawnLoc == null || !fits.test(spawnLoc)) return null;
 
 		return copNpcFactory.createCop(spawnLoc, tier, true, role);
 	}
@@ -193,24 +213,33 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	}
 
 	/**
-	 * Spawns one due unit: (1) its station's spawners within {@code Spawner_Preference_Radius} of {@code target},
-	 * allowed and {@link #isOutOfSight out of sight}, nearest first; (2) {@link #hiddenRing} ahead of the unit's bias,
-	 * else on the station side (within 60 degrees of the target->station bearing); (3) {@link #hiddenRing} anywhere;
-	 * (4) {@link #spawnNearPlayer}. {@code null} when all fail (the caller requeues the unit).
+	 * Spawns one due unit: (1) with a hand-off bias, {@link #hiddenRing} between him and the hand-off lead
+	 * ({@link #betweenRing}, owner ruling T-423), else ahead of the heading; (2) its station's spawners within
+	 * {@code Spawner_Preference_Radius} of {@code target}, allowed and {@link #isOutOfSight out of sight}, nearest first;
+	 * (3) without a bias, {@link #hiddenRing} on the station side (within 60 degrees of the target->station bearing);
+	 * (4) {@link #hiddenRing} anywhere; (5) {@link #spawnNearPlayer}. Every spot must {@link #fits fit} (0.21.1: inside
+	 * the leash margin, out of his view). {@code null} when all fail (the caller requeues the unit).
 	 */
 	@Nullable
 	public CopNpc spawnUnit(Player target, PendingUnit unit, Predicate<Location> allowed) {
-		Location at      = target.getLocation();
-		Station  station = unit.station();
-		boolean  hidden  = true;
-		boolean  ring    = true;
-		Location spot    = station == null ? null : hiddenStationSpawner(target, station.getId(), allowed);
-		if (spot != null) {
-			ring = false;
-		} else {
-			SpawnBias side = unit.bias() != null ? unit.bias() : stationSide(at, station);
-			if (side != null) spot = hiddenRing(target, allowed.and(loc -> side.ahead(at, loc)));
-			if (spot == null) spot = hiddenRing(target, allowed);
+		Location            at      = target.getLocation();
+		Station             station = unit.station();
+		SpawnBias           bias    = unit.bias();
+		Predicate<Location> ok      = allowed.and(fits(target));
+		boolean             hidden  = true;
+		boolean             ring    = true;
+		// cause 2: a biased unit is placed before any station spawner, which may stand behind the heading: between him
+		// and the lead it heads for (T-423), else ahead of him
+		Location spot = bias == null ? null : betweenRing(target, bias, ok);
+		if (spot == null && bias != null) spot = hiddenRing(target, ok.and(loc -> bias.ahead(at, loc)));
+		if (spot == null && station != null) {
+			spot = hiddenStationSpawner(target, station.getId(), ok);
+			if (spot != null) ring = false;
+		}
+		if (spot == null) {
+			SpawnBias side = bias == null ? stationSide(at, station) : null;
+			if (side != null) spot = hiddenRing(target, ok.and(loc -> side.ahead(at, loc)));
+			if (spot == null) spot = hiddenRing(target, ok);
 		}
 
 		CopNpc cop;
@@ -230,6 +259,59 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 			          ahead, spot == null ? "?" : spot.getBlockX() + "," + spot.getBlockY() + "," + spot.getBlockZ());
 		}
 		return cop;
+	}
+
+	/**
+	 * Owner ruling T-423: a hand-off unit's hidden ring spot within {@link #BETWEEN_RADIUS} of the point
+	 * {@code Cops.Handoff.Spawn_Between} of the way from {@code target}'s live spot to the lead it is sent to
+	 * ({@link SpawnBias#lead} of {@link #handoffLead}), that point held within {@code Spawn.Max_Distance} of him and the
+	 * spawn leash margin; {@code ok} (leash, R6 view cone, the avoided spawners) still applies. {@code null} with
+	 * {@code Spawn_Between} 0, a lead in another world, or no such spot (the caller falls back to the ring ahead). Unless
+	 * {@code Spawn_Between} is 0 it logs (debug) {@code HANDOFF_RING <player> center=x,y,z fraction=<f> clamped=<b>
+	 * fallback=<b>}, {@code fallback=true} when no spot was found, his own spot the centre for a lead in another world
+	 * (T-509).
+	 */
+	// ponytail: Keystone's rings are Player-centred, so the ring is sampled around him and a spot is only accepted near
+	// the between point; a Location-centred findHiddenSpawnLocation upstream would centre it there
+	private @Nullable Location betweenRing(Player target, SpawnBias bias, Predicate<Location> ok) {
+		HandoffSettings handoff = Objects.requireNonNullElse(configProvider.getHandoffSettings(), HandoffSettings.DEFAULT);
+		double          share   = Math.min(1.0, handoff.spawnBetween());
+		Location        at      = target.getLocation();
+		if (share <= 0) return null;
+		Location lead = bias.lead(handoffLead(configProvider));
+		if (lead == null || !Objects.equals(lead.getWorld(), at.getWorld())) {
+			logRing(target, at, share, false, true); // r7 review: a lead in another world falls back too
+			return null;
+		}
+
+		Vector toward = new Vector(lead.getX() - at.getX(), 0, lead.getZ() - at.getZ()).multiply(share);
+		double leash  = configProvider.getPursuitMaxDistance() * LEASH_MARGIN;
+		double reach  = leash > 0 ? Math.min(configProvider.getMaxSpawnDistance(), leash)
+		                          : configProvider.getMaxSpawnDistance();
+		boolean clamped = toward.length() > reach;
+		if (clamped) toward.normalize().multiply(reach);
+		Location centre = at.clone().add(toward);
+		Location spot   = hiddenRing(target, ok.and(loc -> horizontalSq(loc, centre) <= BETWEEN_RADIUS * BETWEEN_RADIUS));
+		logRing(target, centre, share, clamped, spot == null);
+		return spot;
+	}
+
+	/** T-509: ACC8's R5-spawn-between judge exempts a unit whose fallback is logged beside its UNIT line. */
+	private static void logRing(Player target, Location centre, double share, boolean clamped, boolean fallback) {
+		if (log.isDebugEnabled())
+			log.debug("HANDOFF_RING {} center={},{},{} fraction={} clamped={} fallback={}", target.getName(),
+			          centre.getBlockX(), centre.getBlockY(), centre.getBlockZ(), share, clamped, fallback);
+	}
+
+	/**
+	 * {@code Cops.Handoff.Lead_Blocks}, the lead's length capped at {@link #LEASH_MARGIN} x {@code Pursuit.Max_Distance}
+	 * (no leash configured keeps it as set). The cap is on the distance from the squad's last-known spot, never from
+	 * the player: a cap against his live position would leak it (R4).
+	 */
+	public static double handoffLead(CopConfigProvider provider) {
+		double lead  = Objects.requireNonNullElse(provider.getHandoffSettings(), HandoffSettings.DEFAULT).leadBlocks();
+		double leash = provider.getPursuitMaxDistance() * LEASH_MARGIN;
+		return leash > 0 ? Math.min(lead, leash) : lead;
 	}
 
 	/**
@@ -262,6 +344,35 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		if (station == null) return null;
 		Vector bearing = new Vector(station.getX() - at.getX(), 0, station.getZ() - at.getZ());
 		return new SpawnBias(bearing, at, Long.MAX_VALUE, STATION_SIDE_DEGREES);
+	}
+
+	/**
+	 * Where a cop may appear for {@code target} (0.21.1): within {@link #LEASH_MARGIN} x {@code Pursuit.Max_Distance}
+	 * of his {@link #setLeashAnchor leash anchor} (3D; no leash configured keeps every distance) and not
+	 * {@link #inViewOf in his view}.
+	 */
+	private Predicate<Location> fits(Player target) {
+		return spot -> insideLeash(spot, target) && !inViewOf(target, spot);
+	}
+
+	private boolean insideLeash(Location spot, Player target) {
+		double   leash = configProvider.getPursuitMaxDistance() * LEASH_MARGIN;
+		Location at    = leashAnchor.apply(target);
+		if (!(leash > 0)) return true;
+		return Objects.equals(spot.getWorld(), at.getWorld()) && spot.distanceSquared(at) <= leash * leash;
+	}
+
+	/**
+	 * Owner ruling R6: {@code spot} is in front of {@code target}'s eyes (within 60 degrees of where he looks) and a
+	 * player has a clear line to it ({@link #isOutOfSight} false). A spot he is not looking at, or one a wall hides, is
+	 * fine, so "ahead along his heading" only spawns there while he looks elsewhere.
+	 */
+	private boolean inViewOf(Player target, Location spot) {
+		Location eye = target.getEyeLocation();
+		if (eye == null || spot.getWorld() == null || !spot.getWorld().equals(eye.getWorld())) return false;
+		Vector toward = spot.toVector().add(new Vector(0, 1.6, 0)).subtract(eye.toVector());
+		if (toward.lengthSquared() == 0) return true;
+		return eye.getDirection().angle(toward) < VIEW_HALF_ANGLE && !isOutOfSight(spot, target);
 	}
 
 	private static double horizontalSq(Location a, Location b) {
@@ -342,6 +453,17 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 */
 	public void setSearchGuard(Predicate<UUID> searchGuard) {
 		this.searchGuard = searchGuard;
+	}
+
+	/**
+	 * Where the leash margin of a spawn spot is measured from for a suspect: the point his pursuit leash reads from
+	 * (CopManager: the squad's last-known spot on the post-escape search, else him). The ring and the spawner search
+	 * stay centred on him; only spots also inside that margin are taken.
+	 */
+	// ponytail: Keystone's EntitySpawner rings are Player-centred, so a search far from him gets no spot; a Location-
+	// centred findHiddenSpawnLocation overload upstream would centre search refills on the last-known spot itself
+	public void setLeashAnchor(Function<Player, Location> leashAnchor) {
+		this.leashAnchor = Objects.requireNonNull(leashAnchor, "leashAnchor");
 	}
 
 	/** The sight decisions the cops' behaviours share (0.20.0 seam); read when the factories are rebuilt. */

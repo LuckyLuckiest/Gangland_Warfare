@@ -160,18 +160,41 @@ class PatrolManagerTest {
 		verify(spawner, never()).spawnAtLocation(any(), anyInt());
 	}
 
+	/** Flipped 0.21.1 (cause 6): the replacement waits out Respawn_Seconds instead of popping in on the next tick. */
 	@Test
-	@DisplayName("a dead beat cop is replaced on the next tick")
+	@DisplayName("a dead beat cop is replaced once Respawn_Seconds (30) have passed, not on the next tick")
 	void deadCopReplaced() {
 		online.add(fx.player(5, 5));
 		manager.manage();
 		PatrolFixture.kill(spawned.get(0));
 
 		manager.manage();
+		verify(spawned.get(0)).destroy(any());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		assertEquals(1, manager.beatCops().size());
 
+		fx.clock[0] += 29_000;
+		manager.manage();
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+
+		fx.clock[0] += 1_000;
+		manager.manage();
 		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
 		assertEquals(2, manager.beatCops().size());
-		verify(spawned.get(0)).destroy(any());
+	}
+
+	@Test
+	@DisplayName("a beat cop lost in the AI tick starts the same respawn wait")
+	void copLostInAiTick_waitsOutRespawnSeconds() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+
+		manager.aiTick();
+		manager.manage();
+
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		assertEquals(1, manager.beatCops().size());
 	}
 
 	@Test
@@ -482,7 +505,7 @@ class PatrolManagerTest {
 	}
 
 	@Test
-	@DisplayName("a beat cop that turned invalid is destroyed, forgotten and replaced on the next manage")
+	@DisplayName("a beat cop that turned invalid is destroyed, forgotten and replaced once Respawn_Seconds have passed")
 	void invalidCopPruned() {
 		online.add(fx.player(2, 2));
 		manager.manage();
@@ -494,6 +517,8 @@ class PatrolManagerTest {
 		assertEquals(1, manager.beatCops().size());
 		verify(gone, never()).tick(any());
 		verify(gone).destroy(any());
+		// flipped 0.21.1 (cause 6): not on the next manage, after the station's respawn wait
+		fx.clock[0] += 30_000;
 		manager.manage();
 		assertEquals(2, manager.beatCops().size());
 	}

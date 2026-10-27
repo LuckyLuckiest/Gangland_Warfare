@@ -25,7 +25,7 @@ import java.util.function.ToIntFunction;
 /**
  * Tracker tags (0.20.0): a ranged cop of the squad who sees a wanted player ride a vehicle for {@code Tag_Seconds} in
  * total tags it (cops-owned PDC key on the vehicle entity, value = expiry epoch ms); while he rides a tagged vehicle the
- * squad gets a sighting every {@code Ping_Seconds} until the tag expires or he swaps vehicles. Fed once per cop AI tick
+ * squad gets a tip to the car's spot every {@code Ping_Seconds} until the tag expires or he swaps vehicles. Fed once per cop AI tick
  * through {@code CopManager.addAiTickHook}; main thread only.
  *
  * @since 0.20.0
@@ -122,7 +122,8 @@ public final class TrackerTags {
 		} else if (now >= state.nextPing) {
 			state.nextPing = now + s.pingSeconds() * 1000L;
 			Location at = vehicle.getLocation();
-			group.getSquad().reportSighting(at);
+			// a ping is a tip to where the car is, not a sighting: the squad searches there (R4)
+			group.getSquad().reportTip(at);
 			radio.sayFromLeader(group, "Tracker_Ping", Map.of("place", Objects.toString(radio.placeOf(at), "")));
 			log.debug("TRACKER {} state=ping vehicle={}", player.getName(), vehicle.getEntityId());
 		}

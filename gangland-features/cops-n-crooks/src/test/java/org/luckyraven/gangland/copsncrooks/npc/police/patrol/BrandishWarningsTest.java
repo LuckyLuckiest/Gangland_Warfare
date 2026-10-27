@@ -96,6 +96,20 @@ class BrandishWarningsTest {
 	}
 
 	@Test
+	@DisplayName("ignored: the player is told the cause (Patrol.Ignored) before the crime is committed")
+	void ignoredWarning_namesTheCause_beforeTheStar() {
+		warnings.begin(player);
+		fx.clock[0] += 5_000;
+
+		warnings.update(player, true);
+
+		org.mockito.InOrder order = org.mockito.Mockito.inOrder(player, crimes);
+		order.verify(player).sendMessage("PATROL_IGNORED");
+		order.verify(crimes).commit(eq(player), eq(Crimes.BRANDISH_NEAR_COP), any(Location.class), eq(true), eq(0));
+		verify(messages).format(WantedMessages.Key.PATROL_IGNORED, Map.of("cause", Crimes.BRANDISH_NEAR_COP));
+	}
+
+	@Test
 	@DisplayName("the crime is committed at the player's location")
 	void crimeLocationIsThePlayers() {
 		warnings.begin(player);
@@ -129,6 +143,7 @@ class BrandishWarningsTest {
 		assertEquals(Result.COMPLIED, warnings.update(player, false));
 
 		verify(crimes, never()).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+		verify(player).sendMessage("PATROL_LOST_SIGHT");
 	}
 
 	@Test
@@ -160,7 +175,7 @@ class BrandishWarningsTest {
 	}
 
 	@Test
-	@DisplayName("second weapon at +20 s: no new warning; at +31 s: warning (counted from the first warning)")
+	@DisplayName("the cooldown counts from the verdict: 29.999 s after it no warning, 30 s after it a warning")
 	void repeatCooldown() {
 		warnings.begin(player);
 		fx.clock[0] += 3_000;
@@ -168,13 +183,27 @@ class BrandishWarningsTest {
 		warnings.update(player, true);
 		fx.armed.add(player.getUniqueId());
 
-		fx.clock[0] += 17_000;
+		fx.clock[0] += 29_999;
 		assertFalse(warnings.canWarn(player));
 		assertFalse(warnings.begin(player));
 
-		fx.clock[0] += 11_000;
+		fx.clock[0] += 1;
 		assertTrue(warnings.canWarn(player));
 		assertTrue(warnings.begin(player));
+	}
+
+	@Test
+	@DisplayName("an ignored warning also starts the cooldown at its verdict, not at its start")
+	void repeatCooldown_ignoredVerdict() {
+		warnings.begin(player);
+		fx.clock[0] += 5_000;
+		warnings.update(player, true);
+
+		fx.clock[0] += 29_999;
+		assertFalse(warnings.canWarn(player));
+
+		fx.clock[0] += 1;
+		assertTrue(warnings.canWarn(player));
 	}
 
 	@Test

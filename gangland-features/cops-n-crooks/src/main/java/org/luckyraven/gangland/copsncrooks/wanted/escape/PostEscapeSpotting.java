@@ -19,18 +19,19 @@ import java.util.function.Supplier;
  * {@code Wanted.Post_Escape.Spotted_Stars}. The raise is a wanted start, which ends the search and resumes the normal chase
  * with its HUD. 0 stars keeps the search harmless: the cops only trail him.
  * <p>
- * A tip-off is not a sighting (0.16.1 wanted-8): a stuck-recycle or hand-off stamps the squad's sighting at the suspect's
- * real position, so a fresh sighting that the group tipped off within {@link #TIP_OFF_WINDOW_MS} is ignored, as
- * {@code EvasionClock} ignores it. A sighting also counts only where the searched player stands (wanted-14).
+ * A tip-off is not a sighting (0.16.1 wanted-8): a wanted start or a hand-off's spawn seed stamps one, and a fresh
+ * sighting within {@link #TIP_OFF_WINDOW_MS} of it is ignored, as {@code EvasionClock} ignores it. Since 0.21.1 (R4)
+ * both are Keystone {@code reportTip}s, which no longer stamp a sighting; a stuck recycle and a leash release stamp
+ * nothing. A sighting also counts only where the searched player stands (wanted-14).
  *
  * @since 0.16.1
  */
 public final class PostEscapeSpotting {
 
 	/**
-	 * The tip-off window. A stuck-recycle or hand-off stamps its tip-off at the AI tick's start, and the sighting it seeds
-	 * lands a little later (after the spawn work of that tick), so the sighting can read a few ms past the tip-off's own
-	 * window. The slack covers that gap (wanted-13). ponytail: fixed 1 s, a tick spending longer than that on spawns needs it
+	 * The tip-off window. A tip-off (the wanted start, a hand-off's spawn seed) is stamped during a tick's spawn work, and a
+	 * sighting a member makes around it can read a few ms past the tip-off's own window. The slack covers that gap
+	 * (wanted-13); a stuck recycle or a leash release stamps no tip-off (0.21.1, R4). ponytail: fixed 1 s, a tick spending longer than that on spawns needs it
 	 * widened, or the tip-off stamped after the sighting.
 	 */
 	static final long TIP_OFF_WINDOW_MS = NpcSquad.SIGHTING_GRACE_MS + 1000L;

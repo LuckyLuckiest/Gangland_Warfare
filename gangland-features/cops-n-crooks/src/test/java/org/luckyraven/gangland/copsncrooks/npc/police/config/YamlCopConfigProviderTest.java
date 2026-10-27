@@ -624,6 +624,7 @@ class YamlCopConfigProviderTest {
 				      Heading_Seconds: 4
 				      Bias_Seconds: 20
 				      Cone_Degrees: 45.0
+				      Lead_Blocks: 30.0
 				   Perimeter:
 				      Enabled: false
 				      Min_Level: 4
@@ -638,10 +639,42 @@ class YamlCopConfigProviderTest {
 
 		assertEquals(new DispatchSettings(false, 5.0, 2, 20, 48.0, 30), provider.getDispatchSettings());
 		assertEquals(new BreatherSettings(false, List.of(30, 20), 5), provider.getBreatherSettings());
-		assertEquals(new HandoffSettings(false, 4, 20, 45.0), provider.getHandoffSettings());
+		assertEquals(new HandoffSettings(false, 4, 20, 45.0, 30.0), provider.getHandoffSettings());
 		assertEquals(new PerimeterSettings(false, 4, 3, List.of("Medic"), 30, 8.0, 30.0, 2.0),
 		             provider.getPerimeterSettings());
 	}
+
+	@Test
+	@DisplayName("0.21.1: a negative Cops.Handoff.Lead_Blocks clamps to 0, it does not revert to the default 24")
+	void negativeLeadBlocks_clampsToZero() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Handoff:
+				      Lead_Blocks: -5.0
+				""" + TIER_BLOCK);
+
+		assertEquals(0.0, provider.getHandoffSettings().leadBlocks());
+	}
+
+	@Test
+	@DisplayName("0.21.1 r6 (T-423): Cops.Handoff.Spawn_Between is optional (0.5) and clamped into 0..1")
+	void spawnBetween_optionalAndClamped() {
+		assertEquals(0.5, parse("Cops:" + NL + TIER_BLOCK).getHandoffSettings().spawnBetween());
+		for (String[] row : new String[][]{{"0.25", "0.25"}, {"1.7", "1.0"}, {"-2", "0.0"}}) {
+			String yaml = String.join(NL, "Cops:", "   Handoff:", "      Spawn_Between: " + row[0], "") + TIER_BLOCK;
+			assertEquals(Double.parseDouble(row[1]), parse(yaml).getHandoffSettings().spawnBetween(), row[0]);
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.1 r6: Cops.Return.Watched_Cap_Seconds is optional (60); 0 turns the cap off")
+	void returnWatchedCap_optional() {
+		assertEquals(60, parse("Cops:" + NL + TIER_BLOCK).getReturnWatchedCapSeconds());
+		String yaml = String.join(NL, "Cops:", "   Return:", "      Watched_Cap_Seconds: 0", "") + TIER_BLOCK;
+		assertEquals(0, parse(yaml).getReturnWatchedCapSeconds());
+	}
+
+	private static final String NL = "\n";
 
 	@Test
 	@DisplayName("a missing block is the DEFAULT")
@@ -702,7 +735,8 @@ class YamlCopConfigProviderTest {
 		assertEquals(100 * 50L, provider.getRadioSettings().cooldownFor("Post_Up"));
 		assertEquals(60 * 50L, provider.getRadioSettings().cooldownFor("Eyes_On"));
 		assertEquals(1200 * 50L, provider.getRadioSettings().cooldownFor("Returning_To_Patrol"));
-		assertEquals(0L, provider.getRadioSettings().cooldownFor("Dispatch_En_Route"));
+		// 0.21.1 cause R: one en-route line per squad per 30 s, so a leash refill is not a brand-new dispatch
+		assertEquals(600 * 50L, provider.getRadioSettings().cooldownFor("Dispatch_En_Route"));
 		assertEquals(0L, provider.getRadioSettings().cooldownFor("Wipe_Refill"));
 	}
 

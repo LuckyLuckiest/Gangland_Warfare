@@ -34,6 +34,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -289,6 +290,129 @@ class CopRadioRolesTest {
 
 		Location suspect = new Location(world, 0, 64, 0);
 		verify(bystander).sendMessage("[SWAT-2] OW 6 " + compass(marksman, suspect) + " Marksman");
+	}
+
+	@Test
+	@DisplayName("0.21.1: Overwatch_Set's distance is measured when it is said, three ack delays out, not at the order")
+	void marksmanFlank_overwatchDistance_measuredWhenSaid() {
+		group.add(cop(1, 4, 0, null));
+		CopNpc marksman = cop(2, 6, 0, marksmanRole());
+		group.add(marksman);
+		signal(NpcSquadSignal.FLANK_LEFT, marksman, new Location(world, 6, 64, 12));
+
+		// it walks out to its post before the line goes out
+		when(marksman.getEntity().getLocation()).thenReturn(new Location(world, 20, 64, 0));
+		runTasks();
+
+		Location suspect = new Location(world, 0, 64, 0);
+		verify(bystander).sendMessage("[SWAT-2] OW 20 " + compass(marksman, suspect) + " Marksman");
+	}
+
+	@Test
+	@DisplayName("radio-far 3: a Marksman at its flank post with no line of sight to the suspect does not claim Overwatch_Set")
+	void marksmanFlank_noLineOfSight_noOverwatchFollowUp() {
+		group.add(cop(1, 4, 0, null));
+		CopNpc marksman = cop(2, 6, 0, marksmanRole());
+		when(marksman.hasLineOfSight(any(LivingEntity.class))).thenReturn(false);
+		group.add(marksman);
+
+		signal(NpcSquadSignal.FLANK_LEFT, marksman, new Location(world, 6, 64, 12));
+		runTasks();
+
+		verify(bystander, never()).sendMessage(org.mockito.ArgumentMatchers.startsWith("[SWAT-2] OW"));
+	}
+
+	@Test
+	@DisplayName("radio-far 3: a Marksman engaging without line of sight says neither Overwatch_Set nor the generic Engage")
+	void marksmanEngage_noLineOfSight_silent() {
+		CopNpc marksman = cop(1, 4, 0, marksmanRole());
+		when(marksman.hasLineOfSight(any(LivingEntity.class))).thenReturn(false);
+		group.add(marksman);
+
+		signal(NpcSquadSignal.ENGAGE, marksman, new Location(world, 14, 64, 0));
+
+		verify(bystander, never()).sendMessage(org.mockito.ArgumentMatchers.startsWith("[SWAT-1] OW"));
+		verify(bystander, never()).sendMessage("[SWAT-1] Engage line");
+	}
+
+	@Test
+	@DisplayName("radio-far 3: Overwatch_Set's %side% is read from the squad's last-known spot and facing, not the suspect's live facing")
+	void overwatchSide_fromTheLastKnownSpot() {
+		pools.put("Sides", List.of("front", "left", "right", "behind"));
+		pools.put("Overwatch_Set", List.of("OW %side%"));
+		CopNpc marksman = cop(1, 4, 0, marksmanRole());
+		group.add(marksman);
+		// last seen at the origin facing -Z, so +X is his right; live he faces +Z, where +X is his left
+		group.getSquad().reportSighting(new Location(world, 0, 64, 0, 180f, 0f));
+
+		signal(NpcSquadSignal.ENGAGE, marksman, new Location(world, 14, 64, 0));
+
+		verify(bystander).sendMessage("[SWAT-1] OW right");
+	}
+
+	@Test
+	@DisplayName("radio-far 3: the shipped Flank_Left order's %side% is read from the squad's last-known facing, not the suspect's live one")
+	void flankOrderSide_fromTheLastKnownSpot() throws java.io.IOException {
+		try (java.io.InputStream in = getClass().getClassLoader().getResourceAsStream("copsncrooks/cop_radio_messages.yml");
+		     java.io.Reader reader = new java.io.InputStreamReader(java.util.Objects.requireNonNull(in),
+		                                                           java.nio.charset.StandardCharsets.UTF_8)) {
+			org.bukkit.configuration.file.YamlConfiguration shipped =
+					org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(reader);
+			pools.put("Sides", shipped.getStringList("Sides"));
+			// the shipped pool's first line, "%member%, take his %side%!" (one line, so the pick is not random)
+			pools.put("Flank_Left", List.of(shipped.getStringList("Lines.Flank_Left").get(0)));
+		}
+		group.add(cop(1, 4, 0, null));
+		CopNpc member = cop(2, 6, 0, null);
+		group.add(member);
+		// last seen at the origin facing -Z, so +X is his right; live he faces +Z, where +X is his left
+		group.getSquad().reportSighting(new Location(world, 0, 64, 0, 180f, 0f));
+
+		signal(NpcSquadSignal.FLANK_LEFT, member, new Location(world, 12, 64, 0));
+
+		verify(bystander).sendMessage("[SWAT-1] SWAT-2, take his right!");
+	}
+
+	@Test
+	@DisplayName("radio-far 1: a route started with no contact and no fresh sighting is a search route (Route_Search), not 'to him'")
+	void route_withoutContact_saysRouteSearch() {
+		pools.put("Route", List.of("ROUTE to him"));
+		pools.put("Route_High", List.of("ROUTE up to him"));
+		pools.put("Route_Search", List.of("ROUTE searching"));
+		CopNpc cop = cop(1, 4, 0, null);
+		group.add(cop);
+
+		signal(NpcSquadSignal.ROUTE, cop, new Location(world, 4, 70, 20));
+
+		verify(bystander).sendMessage("[SWAT-1] ROUTE searching");
+		verify(bystander, never()).sendMessage("[SWAT-1] ROUTE to him");
+		verify(bystander, never()).sendMessage("[SWAT-1] ROUTE up to him");
+	}
+
+	@Test
+	@DisplayName("radio-far 1: a route with a fresh sighting keeps the Route line")
+	void route_withFreshSighting_saysRoute() {
+		pools.put("Route", List.of("ROUTE to him"));
+		pools.put("Route_Search", List.of("ROUTE searching"));
+		CopNpc cop = cop(1, 4, 0, null);
+		group.add(cop);
+		group.getSquad().reportSighting(new Location(world, 4, 64, 20));
+
+		signal(NpcSquadSignal.ROUTE, cop, new Location(world, 4, 64, 20));
+
+		verify(bystander).sendMessage("[SWAT-1] ROUTE to him");
+	}
+
+	@Test
+	@DisplayName("radio-far 1: with Route_Search muted a search route stays silent; it never falls back to 'to him'")
+	void route_withoutContact_mutedRouteSearch_silent() {
+		pools.put("Route", List.of("ROUTE to him"));
+		CopNpc cop = cop(1, 4, 0, null);
+		group.add(cop);
+
+		signal(NpcSquadSignal.ROUTE, cop, new Location(world, 4, 64, 20));
+
+		verify(bystander, never()).sendMessage("[SWAT-1] ROUTE to him");
 	}
 
 	@Test
@@ -551,6 +675,35 @@ class CopRadioRolesTest {
 	}
 
 	@Test
+	@DisplayName("T-433: a flank queued before 'Suspect cleared' is never said after it, nor its ack")
+	void flankQueuedBeforeTheStandDown_silentAfterIt() {
+		CopNpc leader  = cop(1, 4, 0, null);
+		CopNpc assault = cop(2, 6, 0, assaultRole());
+		group.add(leader);
+		group.add(assault);
+
+		signal(NpcSquadSignal.FLANK_LEFT, assault, new Location(world, 6, 64, 12));
+		group.setStoodDown(true); // the wanted clear: Stand_Down said
+		runTasks();
+
+		verify(bystander, never()).sendMessage(org.mockito.ArgumentMatchers.startsWith("[SWAT-2] FLANK"));
+		verify(bystander, never()).sendMessage("[SWAT-2] Ack line");
+	}
+
+	@Test
+	@DisplayName("T-433: a squad that stood down says no orders or role lines on a signal")
+	void stoodDownSquad_signalSilent() {
+		CopNpc marksman = cop(1, 4, 0, marksmanRole());
+		group.add(marksman);
+		group.setStoodDown(true);
+
+		signal(NpcSquadSignal.ENGAGE, marksman, new Location(world, 14, 64, 0));
+		runTasks();
+
+		verify(bystander, never()).sendMessage(org.mockito.ArgumentMatchers.anyString());
+	}
+
+	@Test
 	@DisplayName("a flank order to a non-Assault cop gets only the ack")
 	void plainFlank_noFlankingLine() {
 		CopNpc leader = cop(1, 4, 0, null);
@@ -649,6 +802,8 @@ class CopRadioRolesTest {
 		when(cop.getEntity()).thenReturn(body);
 		when(cop.isValid()).thenReturn(true);
 		when(cop.getRole()).thenReturn(role);
+		// in line of sight of the suspect unless a test says otherwise (Overwatch_Set needs it)
+		when(cop.hasLineOfSight(any(LivingEntity.class))).thenReturn(true);
 		return cop;
 	}
 }

@@ -84,13 +84,19 @@ Lines:
    Search:
       - "Spread out, find him!"
       - "Sweep the area!"
-   # A member starts following a route to a suspect it cannot see directly, on level ground.
+   # A member starts following a route to a suspect it cannot see directly, on level ground, while the squad
+   # still has him in sight.
    Route:
       - "Going round, finding a way to him."
       - "Cutting round to him!"
    # The same, when the suspect is well above the member.
    Route_High:
       - "He's up high, finding a way up."
+   # A member starts a route while nobody has eyes on the suspect: it is searching his last-known spot, so the
+   # line must not claim it knows where he is. Empty it to keep searching routes silent.
+   Route_Search:
+      - "Going round, checking his last position."
+      - "Taking the long way, searching the area."
    # A member starts climbing a ladder, vine or scaffolding on its route.
    Climb:
       - "Taking the ladder!"
@@ -305,7 +311,7 @@ Lines:
       - "All units, be advised: %target% is the city's Most Wanted, last seen near %place%."
    # 0.20.0: a 911 call reaches dispatch with the crime, the place and the suspect.
    Caller_911:
-      - "Dispatch: 911 caller reports %crime% near %place%. Suspect: %suspect%."
+      - "911 caller reports %crime% near %place%. Suspect: %suspect%."
    # 0.20.0: a cop describes the suspect to the squad.
    Suspect_Description:
       - "Suspect is %suspect%."

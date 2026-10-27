@@ -11,6 +11,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
@@ -19,8 +20,11 @@ import org.luckyraven.keystone.npc.spi.NpcSquadListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -77,11 +81,35 @@ public class CopGroup {
 	@Setter
 	private long fallBackUntil;
 
-	/** Backup cops still to send home after a backup ran out; kept until enough are free to go. */
+	/** Cops still to send home: a run-out backup's extras, or those over a dropped target (T-435); kept until free. */
 	@Setter
 	private int  pendingRelease;
+	/** The cop target of the last spawn run at a wanted level (not the search's); a lower one is a drop (T-435). */
+	@Setter
+	private int  lastTarget;
+	/**
+	 * Walkers the group sent home or left walking (a lowered target, a run-out backup, a smaller new episode): out of
+	 * the hunt's count, and called back first while the group lacks cops (T-436). Read through {@link #isSentHome}.
+	 */
+	@Getter(AccessLevel.NONE)
+	private final Set<CopNpc> sentHome = new HashSet<>();
 
-	/** Radio-clock ms of the latest stuck-recycle tip-off; 0 when none. */
+	/**
+	 * Radio-clock ms a spawn or AI run last removed a walker still hunting the target past the leash (an R3 release, a
+	 * recycle, or its own walk home ending); 0 when none. The chase leashed out though no RETURNING cop is left to show
+	 * it: the hand-off's engaged -> not engaged edge within {@code Handoff.Bias_Seconds} of it consumes it; a wanted
+	 * start or end clears it.
+	 */
+	private long leashReleasedAt;
+
+	/**
+	 * The squad stood down (its {@code Stand_Down} line went out, T-433): it says no more orders, and a line it queued
+	 * before is dropped. The next wanted start clears it.
+	 */
+	@Setter
+	private boolean stoodDown;
+
+	/** Radio-clock ms of the latest tip-off (a crime-scene start, a hand-off seed); 0 when none. */
 	private long tipOffAt;
 
 	/** Radio-clock ms of recent casualties, for {@link #shouldRegroup}. */
@@ -97,6 +125,18 @@ public class CopGroup {
 	/** The hand-off's spawn bias; read through {@link #biasAt}, which drops it once expired. */
 	@Getter(AccessLevel.NONE)
 	private @Nullable SpawnBias bias;
+	/** The latest bias set, kept past its expiry: units dispatched under it still spawn with it (T-434). */
+	@Getter(AccessLevel.NONE)
+	private @Nullable SpawnBias seedBias;
+	/** The squad's last-known spot when {@link #seedBias} was set. */
+	@Getter(AccessLevel.NONE)
+	private @Nullable Location  seedLead;
+	/** {@link #seedBias} seeded the squad, or a newer lead made its seed stale. */
+	@Getter(AccessLevel.NONE)
+	private boolean             seedSpent;
+	/** The lead the latest hand-off seed sent the squad to (R5): its own projection, not a sighting or a report. */
+	@Getter(AccessLevel.NONE)
+	private @Nullable Location  handoffSeed;
 	private boolean backupHeld;
 	/** Radio-clock ms of the latest casualty; a regroup clears {@link #casualtyTimes} but not this. */
 	private long    lastCasualtyAt;
@@ -122,11 +162,32 @@ public class CopGroup {
 		cop.setGroup(this);
 	}
 
+	/** Marks a walker of the group as sent home by it ({@link #sentHome}); the caller turns it RETURNING. */
+	public void markSentHome(CopNpc cop) {
+		sentHome.add(cop);
+	}
+
+	/**
+	 * {@code cop} was called back on duty: it loses the mark at once, so a later rotation out of the chase is an ordinary
+	 * walk home and never a call-back candidate (T-436, D1).
+	 */
+	public void unmarkSentHome(CopNpc cop) {
+		sentHome.remove(cop);
+	}
+
+	/** Whether {@code cop} walks home because the group sent it; a cop back on duty loses the mark. */
+	public boolean isSentHome(CopNpc cop) {
+		if (cop.getCurrentState() == CopState.RETURNING) return sentHome.contains(cop);
+		sentHome.remove(cop);
+		return false;
+	}
+
 	/**
 	 * Destroys a cop that left the group (despawned, killed or invalid) and drops it from every squad. The caller
 	 * removes it from {@link #getCops()}: both call sites are iterating that list.
 	 */
 	public void release(CopNpc cop, NpcMarkManager markManager) {
+		sentHome.remove(cop);
 		squad.remove(cop);
 		leaveAttackerSquads(cop);
 		cop.destroy(entity -> markManager.removeMark(entity));
@@ -134,6 +195,7 @@ public class CopGroup {
 
 	/** Moves a live cop out of this group (a radio responder joining another one); the cop is not destroyed. */
 	public void detach(CopNpc cop) {
+		sentHome.remove(cop);
 		cops.remove(cop);
 		squad.remove(cop);
 		leaveAttackerSquads(cop);
@@ -278,9 +340,24 @@ public class CopGroup {
 		return false;
 	}
 
-	/** Stamps the latest stuck-recycle tip-off at {@code now} (radio-clock ms). */
+	/** Stamps the latest tip-off (a crime-scene start, a hand-off's one seed) at {@code now} (radio-clock ms). */
 	public void markTipOff(long now) {
 		tipOffAt = now;
+	}
+
+	/** A leashed walker hunting the target was removed at {@code now} (radio-clock ms). */
+	public void markLeashReleased(long now) {
+		leashReleasedAt = now;
+	}
+
+	/** Forgets the leash release: a new episode, an end, or the hand-off that consumed it. */
+	public void clearLeashReleased() {
+		leashReleasedAt = 0;
+	}
+
+	/** A leashed walker was removed no more than {@code windowMs} before {@code now}: a recent release, not an old one. */
+	public boolean isLeashReleased(long now, long windowMs) {
+		return leashReleasedAt > 0 && now - leashReleasedAt <= windowMs;
 	}
 
 	/** A tip-off was stamped no more than {@code windowMs} before {@code now}. */
@@ -357,6 +434,11 @@ public class CopGroup {
 		pending.clear();
 	}
 
+	/** Calls off the newest queued units until at most {@code max} are left (0.21.1: a level drop needs fewer). */
+	public void trimPending(int max) {
+		while (pending.size() > Math.max(0, max)) pending.remove(pending.size() - 1);
+	}
+
 	/**
 	 * Any pending unit with {@code arriveAt + 10_000 > now}.
 	 */
@@ -371,6 +453,38 @@ public class CopGroup {
 	/** The hand-off's spawn bias for units enqueued from now on ({@code null} clears it). */
 	public void setBias(@Nullable SpawnBias bias) {
 		this.bias = bias;
+		if (bias == null) return;
+		seedBias  = bias;
+		seedLead  = squad.lastKnownLocation();
+		seedSpent = false;
+	}
+
+	/**
+	 * Whether a unit spawning under {@code unitBias} seeds the squad with its last-seen spot (T-434): only the latest
+	 * bias, only once, and only while no sighting or tip moved the squad's lead since that bias was set. A newer lead is
+	 * fresher than the hand-off spot, so the seed would rewind it (and the hand-off heading sampled from it); a second
+	 * seed of the same spot would only shrink the search circle back to its start. Spends the seed either way.
+	 */
+	// ponytail: "moved" is a location compare, as Keystone 1.15.4 NpcSquad exposes no lastKnownAt; a sighting at the
+	// exact same spot reads as no news, which only costs one more seed of that spot. Upgrade: a lead stamp upstream.
+	public boolean takeBiasSeed(@Nullable SpawnBias unitBias) {
+		if (unitBias == null || unitBias != seedBias || seedSpent) return false;
+		seedSpent = true;
+		return Objects.equals(squad.lastKnownLocation(), seedLead);
+	}
+
+	/** Seeds the squad with a hand-off lead as a tip, no sighting (R4), and remembers it as a lead ({@link #isHandoffSeed}). */
+	public void seedHandoff(Location lead) {
+		squad.reportTip(lead);
+		handoffSeed = lead.clone();
+	}
+
+	/**
+	 * {@code spot} is the latest hand-off lead. The hand-off's heading history skips it, so a later hand-off with no news
+	 * leads on from the spot the squad really knew, never from the earlier lead (R5).
+	 */
+	public boolean isHandoffSeed(@Nullable Location spot) {
+		return spot != null && spot.equals(handoffSeed);
 	}
 
 	/** The hand-off bias, {@code null} once it expired. */
@@ -411,5 +525,6 @@ public class CopGroup {
 			cop.destroy(entity -> markManager.removeMark(entity));
 		}
 		cops.clear();
+		sentHome.clear();
 	}
 }

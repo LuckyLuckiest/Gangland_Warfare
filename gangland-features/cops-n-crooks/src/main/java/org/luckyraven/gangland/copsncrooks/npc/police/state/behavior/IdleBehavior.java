@@ -36,7 +36,9 @@ public class IdleBehavior implements CopBehavior {
 
 		NpcSquad squad = cop.squadFor(target);
 		boolean  sees  = perception.acquires(cop, target, alertRange);
-		if (sees && squad != null) squad.reportSighting(target.getLocation());
+		// its own mark at the range it looked with (Keystone 1.15.4): teammates chase only while it still sees him
+		if (sees && squad != null)
+			squad.reportSighting(cop, target.getLocation(), perception.rangeFor(cop, target, alertRange));
 
 		if (sees || (squad != null && squad.hasFreshSighting())) {
 			cop.transitionTo(CopState.PURSUING);

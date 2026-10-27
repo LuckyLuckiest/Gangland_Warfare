@@ -58,7 +58,7 @@ import static org.luckyraven.gangland.copsncrooks.npc.police.perception.CopSight
 public class CopManager implements BeanLifecycle {
 
 	/** Past twice {@code Recycle_Seconds}, only a view within this many blocks keeps a stranded cop. */
-	private static final double OVERDUE_VIEW_BLOCKS = 24.0;
+	private static final double OVERDUE_VIEW_BLOCKS = CopSightlines.WATCH_MIN_BLOCKS;
 
 	private final JavaPlugin            plugin;
 	@Getter
@@ -120,6 +120,9 @@ public class CopManager implements BeanLifecycle {
 		this.spawnTasks          = new ConcurrentHashMap<>();
 		this.activeCombatAlerts  = ConcurrentHashMap.newKeySet();
 		this.copAttackers        = ConcurrentHashMap.newKeySet();
+		// the spawner places a cop inside the leash margin of the same anchor the leash reads from (the search's
+		// last-known spot, 0.21.1), so a search refill is never leashed off on its first tick
+		spawnManager.setLeashAnchor(player -> leashAnchor(groups.get(player.getUniqueId()), player));
 	}
 
 	/**
@@ -147,23 +150,37 @@ public class CopManager implements BeanLifecycle {
 		// hunt, or one whose trail went cold, before the squad hears of it.
 		CopGroup existing = groups.get(playerId);
 		CopGroup group    = groups.computeIfAbsent(playerId, this::newGroup);
-		if (existing == null || !group.getSquad().hasFreshSighting()) {
+		long     now      = copRadio.now();
+		// a new episode: the squad is on duty again (T-433) and no leash of the last one hands this one off
+		group.setStoodDown(false);
+		group.clearLeashReleased();
+		// a crime-scene tip counts as fresh as a sighting here: a repeated start right after one stays quiet
+		boolean  fresh    = group.getSquad().hasFreshSighting() ||
+		                    group.tippedOffWithin(now, NpcSquad.SIGHTING_GRACE_MS);
+		if (existing == null || !fresh) {
 			copRadio.dispatch(group, player, "Dispatch_Wanted", wanted.getLevel(), tierNameFor(wanted.getLevel()));
 		}
 		DispatchSettings dispatch = dispatchSettings();
 		if (cause == WantedCause.RESTORE && dispatch.enabled()) {
 			// A rejoin is no crime scene: nobody saw him come back. His units wait out the rejoin grace (Ruling R21).
-			long now = copRadio.now();
 			group.setBreatherUntil(Math.max(group.getBreatherUntil(), now + dispatch.rejoinGraceSeconds() * 1000L));
 			restoring.add(playerId);
 		} else {
-			group.getSquad().reportSighting(player.getLocation());
+			// 0.21.1 (R4): the crime scene is a tip, no cop saw him there - the squad searches the spot instead of
+			// chasing his live position; the tip-off stamp holds the evasion clock as the old sighting did
+			group.getSquad().reportTip(player.getLocation());
+			group.markTipOff(now);
 		}
 
 		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
 		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
-		// which only guards against a per-tick bounce inside a single episode.
-		reengageReturning(group, playerId);
+		// which only guards against a per-tick bounce inside a single episode. Only up to the new level's target (T-435):
+		// the walkers over it keep walking, sent home, and come back first if the group lacks cops later (T-436).
+		int target = Math.min(spawnManager.getTargetCopCount(wanted.getLevel()), configProvider.getMaxCopsPerPlayer());
+		reengageReturning(group, player, target - engagedCount(group), cop -> true);
+		// The new episode fields its own target, trimmed against the cops engaged now, not against the last episode's
+		// target: a re-spot after a stepwise escape (Drop_Mode ONE_STAR) lands where an all-stars escape does (T-435)
+		group.setPendingRelease(Math.max(0, engagedCount(group) - target));
 
 		startSpawnTask(playerId, wanted);
 		startAITask(playerId);
@@ -182,13 +199,14 @@ public class CopManager implements BeanLifecycle {
 		UUID playerId = player.getUniqueId();
 
 		if (escape.test(cause)) {
-			keepSquadOnSearch(playerId);
+			keepSquadOnSearch(player);
 			return;
 		}
 
 		CopGroup group = groups.get(playerId);
+		if (group != null) group.clearLeashReleased();
 		// WantedEndEvent and the level change to 0 both land here for one clear: announce it once per episode.
-		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) copRadio.sayFromLeader(group, "Stand_Down");
+		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) standDown(group);
 
 		if (cause == WantedCause.DEATH || cause == WantedCause.ARREST) {
 			endSquad(playerId);
@@ -231,7 +249,13 @@ public class CopManager implements BeanLifecycle {
 		removeCopAttacker(playerId);
 
 		CopGroup group = groups.get(playerId);
-		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) copRadio.sayFromLeader(group, "Stand_Down");
+		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) standDown(group);
+	}
+
+	/** The leader says {@code Stand_Down}; the squad then says nothing more, its queued orders included (T-433). */
+	private void standDown(CopGroup group) {
+		copRadio.sayFromLeader(group, "Stand_Down");
+		group.setStoodDown(true);
 	}
 
 	/**
@@ -284,7 +308,8 @@ public class CopManager implements BeanLifecycle {
 	 * on (it keeps a lowest-tier squad, see {@link #spawnTick}). A cop mid-cuff drops the cuff: a searched player is never
 	 * cuffed.
 	 */
-	private void keepSquadOnSearch(UUID playerId) {
+	private void keepSquadOnSearch(Player player) {
+		UUID playerId = player.getUniqueId();
 		clearCombatAlert(playerId);
 		restoring.remove(playerId);
 
@@ -292,22 +317,57 @@ public class CopManager implements BeanLifecycle {
 		if (group != null) {
 			group.clearCombatAlert();
 			group.clearPending();
+			group.clearLeashReleased();
 			pendingCalls.removeIf(call -> call.group() == group);
 			for (CopNpc cop : group.getCops()) {
 				if (cop.getCurrentState() == CopState.CUFFING) cop.transitionTo(CopState.PURSUING);
 			}
-			// The owner ruling: the search goes on, so cops already walking home come back to it
-			reengageReturning(group, playerId);
+			// The owner ruling: the search goes on, so cops already walking home come back to it, every one of them
+			// (the search's one-star squad never sends the surplus home: spawnTick)
+			reengageReturning(group, player, Integer.MAX_VALUE, cop -> true);
 		}
 	}
 
-	/** Pulls the group's returning cops back into the hunt for {@code playerId}. */
-	private void reengageReturning(CopGroup group, UUID playerId) {
+	/**
+	 * Pulls up to {@code limit} of the group's returning cops within {@code Pursuit.Max_Distance} of {@code player} that
+	 * pass {@code eligible} back into the hunt, nearest first; the eligible ones over the limit are marked sent home
+	 * (T-436). One farther out would leash again on its next tick and restart its walk home (T-131, cause 5): it stays
+	 * RETURNING. A group with no engaged Commander calls its nearest walking Commander back first, even past the limit,
+	 * so the squad's last Commander is never left sent home (T-146). A new episode then trims the others to its target;
+	 * a Commander its composition has no slot for stays as the one cop over it ({@link #releaseSurplus}).
+	 *
+	 * @return the cops called back
+	 */
+	private List<CopNpc> reengageReturning(CopGroup group, Player player, int limit, Predicate<CopNpc> eligible) {
+		double       maxDist = configProvider.getPursuitMaxDistance();
+		Location     anchor  = leashAnchor(group, player);
+		List<CopNpc> walkers = new ArrayList<>();
+		boolean      led     = false;
 		for (CopNpc cop : group.getCops()) {
-			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING) continue;
-			cop.setTargetPlayerId(playerId);
-			cop.transitionTo(CopState.PURSUING);
+			if (cop.isValid() && cop.getCurrentState() != CopState.RETURNING && isCommander(cop)) led = true;
+			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) continue;
+			if (isStrandedReturning(cop, anchor, maxDist) || !eligible.test(cop)) continue;
+			walkers.add(cop);
 		}
+		Location at       = player.getLocation();
+		boolean  needLead = !led;
+		walkers.sort(Comparator.comparing((CopNpc cop) -> !(needLead && isCommander(cop)))
+		                       .thenComparingDouble(cop -> cop.getEntity().getLocation().distanceSquared(at)));
+
+		List<CopNpc> back = new ArrayList<>();
+		for (CopNpc cop : walkers) {
+			boolean leader = needLead && back.isEmpty() && isCommander(cop);
+			if (!leader && back.size() >= limit) {
+				group.markSentHome(cop);
+				continue;
+			}
+			cop.setTargetPlayerId(player.getUniqueId());
+			cop.transitionTo(CopState.PURSUING);
+			// back on duty: a later rotation out of the chase must not read as sent home and bounce it back (D1)
+			group.unmarkSentHome(cop);
+			back.add(cop);
+		}
+		return back;
 	}
 
 	/**
@@ -361,9 +421,13 @@ public class CopManager implements BeanLifecycle {
 		CopGroup group = findGroupContaining(copNpc);
 		if (group == null || group.isEmpty()) return;
 
-		// Hitting a cop gives the group's target away: the whole squad learns where he is, and he is resisting
+		// Hitting a cop gives the group's target away: the whole squad learns where he is, and he is resisting. A hit
+		// from where the cop cannot see him is a tip of the spot, not a sighting (0.21.1, R4)
 		if (attacker.getUniqueId().equals(group.getTargetPlayerId())) {
-			group.getSquad().reportSighting(attacker.getLocation());
+			// a squad he fights is on duty again (T-433): its contact, casualty and backup calls are heard
+			group.setStoodDown(false);
+			if (copNpc.hasLineOfSight(attacker)) group.getSquad().reportSighting(copNpc, attacker.getLocation());
+			else group.getSquad().reportTip(attacker.getLocation());
 			group.escalate(attacker.getUniqueId());
 		}
 
@@ -421,6 +485,19 @@ public class CopManager implements BeanLifecycle {
 	 */
 	public boolean hasCombatAlert(UUID playerId) {
 		return activeCombatAlerts.contains(playerId);
+	}
+
+	/** Every live cop of every group (a snapshot); beat cops are {@code PatrolManager.beatCops()}. */
+	public List<CopNpc> liveCops() {
+		List<CopNpc> all = new ArrayList<>();
+		for (CopGroup group : groups.values()) {
+			synchronized (group.getCops()) {
+				for (CopNpc cop : group.getCops()) {
+					if (cop.isValid() && !cop.isMarkedForRemoval()) all.add(cop);
+				}
+			}
+		}
+		return all;
 	}
 
 	/**
@@ -713,12 +790,17 @@ public class CopManager implements BeanLifecycle {
 		CopGroup group = groups.get(playerId);
 		if (group == null) return;
 
-		List<CopNpc> cops = group.getCops();
-		long         now  = copRadio.now();
+		List<CopNpc> cops    = group.getCops();
+		long         now     = copRadio.now();
+		double       maxDist = configProvider.getPursuitMaxDistance();
+		Location     anchor  = leashAnchor(group, player);
 
 		cops.removeIf(cop -> {
-			if (cop.isMarkedForRemoval() || recycles(cop, group, player, now)) {
-				group.release(cop, markManager);
+			// R3 (T-131/T-149): a leashed walker nobody is looking at leaves the map instead of walking home. No tip (R4):
+			// nobody saw him, so the refill inherits the squad's own lead and its widening search circle
+			if (cop.isMarkedForRemoval() || recycles(cop, group, player, now) ||
+			    (isStrandedReturning(cop, anchor, maxDist) && !isWatched(cop))) {
+				release(group, cop, playerId, anchor, maxDist, now);
 				return true;
 			}
 			if (!cop.isValid()) {
@@ -728,7 +810,7 @@ public class CopManager implements BeanLifecycle {
 				if (npc.isSpawned() && npc.getEntity() == null) {
 					return false;
 				}
-				group.release(cop, markManager);
+				release(group, cop, playerId, anchor, maxDist, now);
 				return true;
 			}
 			return false;
@@ -746,11 +828,13 @@ public class CopManager implements BeanLifecycle {
 		}
 		group.setLastTier(tier);
 
-		int targetCount  = Math.min(spawnManager.getTargetCopCount(wantedLevel) + group.backupExtra(now, backup),
-		                            configProvider.getMaxCopsPerPlayer());
-		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count.
-		double maxDist = configProvider.getPursuitMaxDistance();
-		List<CopNpc> counted = cops.stream().filter(c -> !isStrandedReturning(c, player, maxDist)).toList();
+		int baseTarget   = Math.min(spawnManager.getTargetCopCount(wantedLevel), configProvider.getMaxCopsPerPlayer());
+		int targetCount  = Math.min(baseTarget + group.backupExtra(now, backup), configProvider.getMaxCopsPerPlayer());
+		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count. Nor
+		// is one the group sent home (T-436), but while the group lacks cops the nearest in range comes back first.
+		List<CopNpc> counted = new ArrayList<>(cops.stream().filter(
+				c -> !isStrandedReturning(c, anchor, maxDist) && !group.isSentHome(c)).toList());
+		counted.addAll(reengageReturning(group, player, targetCount - counted.size(), group::isSentHome));
 		int currentCount = counted.size();
 		// Each new cop takes the composition's first role no counted cop holds, so a stranded one's role is refilled.
 		List<CopRole> composition = configProvider.getSquadComposition(wantedLevel);
@@ -777,7 +861,11 @@ public class CopManager implements BeanLifecycle {
 				currentCount++;
 			}
 		} else {
-			dispatchMissing(player, group, wantedLevel, tier, targetCount - currentCount, composition, liveRoles, now);
+			int lacking = targetCount - currentCount;
+			// cause 4: units no longer needed (the level dropped, a backup ran out) are called off before they arrive,
+			// newest first, so the queue never holds more than the group lacks
+			group.trimPending(Math.max(0, lacking));
+			dispatchMissing(player, group, wantedLevel, tier, lacking, composition, liveRoles, now);
 			spawnDueUnits(player, group, now);
 		}
 
@@ -794,7 +882,17 @@ public class CopManager implements BeanLifecycle {
 		}
 
 		group.consumeBackupExpiry(now, backup);
-		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount, composition);
+		// T-435: a lowered target (a level drop, a new episode at a lower level) leaves live cops over it, and trimPending
+		// only calls off queued units: the surplus goes home like an expired backup's extras. Only on a drop: radio
+		// responders joining at the same target stay. The post-escape search (level 0, run at one star) sends nobody
+		// home, a drop's or a run-out backup's release included: it keeps every cop it called back (T-187). A release
+		// still owed then is replaced at the next wanted start, which trims against the cops engaged (onWantedStart)
+		if (wanted.getLevel() > 0) {
+			if (baseTarget < group.getLastTarget() && currentCount > targetCount)
+				group.setPendingRelease(Math.max(group.getPendingRelease(), currentCount - targetCount));
+			group.setLastTarget(baseTarget);
+			if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount, composition);
+		}
 		group.pruneAttackerSquads();
 	}
 
@@ -853,20 +951,25 @@ public class CopManager implements BeanLifecycle {
 	/**
 	 * Spawns the queued units that are due. The first one that finds no spot stops the run (the 0.15 "stop trying this
 	 * interval" rule): the rest of the due units are requeued untried, ahead of it, so a suspect with no valid spot around him
-	 * costs one failed search per run, not one per unit. A unit enqueued under a hand-off bias
-	 * seeds the squad with the bias's last sighting and a tip-off when it spawns (CONTRACTS C11), so the evasion clock
-	 * holds instead of reading the seed as a fresh sighting.
+	 * costs one failed search per run, not one per unit; a requeued unit drops a bias that ran out (T-434). The first
+	 * unit spawning under a hand-off bias seeds the squad with the bias's last sighting as a tip plus a tip-off
+	 * (CONTRACTS C11), unless a sighting or tip since the hand-off is fresher ({@link CopGroup#takeBiasSeed}).
 	 */
 	private void spawnDueUnits(Player player, CopGroup group, long now) {
-		UUID playerId = player.getUniqueId();
+		UUID      playerId = player.getUniqueId();
+		SpawnBias active   = group.biasAt(now);
 		List<PendingUnit> due = group.takeDue(now);
 		for (int i = 0; i < due.size(); i++) {
-			PendingUnit unit   = due.get(i);
-			CopNpc      newCop = spawnManager.spawnUnit(player, unit, loc -> !group.isAvoided(loc, now));
+			PendingUnit queued = due.get(i);
+			PendingUnit unit   = queued;
+			// a unit queued before the hand-off still spawns ahead of him and seeded while its bias is active
+			if (unit.bias() == null && active != null) unit = withBias(unit, active);
+			CopNpc newCop = spawnManager.spawnUnit(player, unit, loc -> !group.isAvoided(loc, now));
 			if (newCop == null) {
-				// the untried units go first next run: a unit refused at its one spot must not block those behind it
-				due.subList(i + 1, due.size()).forEach(group::requeue);
-				group.requeue(unit);
+				// the untried units go first next run: a unit refused at its one spot must not block those behind it.
+				// Requeued as queued (a borrowed bias is borrowed again only while active), less a bias that ran out
+				due.subList(i + 1, due.size()).forEach(next -> group.requeue(dropExpiredBias(next, now)));
+				group.requeue(dropExpiredBias(queued, now));
 				return;
 			}
 
@@ -875,11 +978,33 @@ public class CopManager implements BeanLifecycle {
 			newCop.transitionTo(CopState.PURSUING);
 			group.add(newCop);
 
-			if (unit.bias() != null) {
-				group.getSquad().reportSighting(unit.bias().lastSeen());
+			if (group.takeBiasSeed(unit.bias())) {
+				// a tip, not a sighting (R4): no member saw him at the hand-off spot. The units head on along the heading
+				// the squad saw him take, Lead_Blocks past it, and search there (R5)
+				SpawnBias seed = unit.bias();
+				Location  lead = seed.lead(CopSpawnManager.handoffLead(configProvider));
+				group.seedHandoff(lead);
 				group.markTipOff(now);
+				if (log.isDebugEnabled()) {
+					Location from = seed.lastSeen();
+					log.debug("HANDOFF_LEAD {} at={},{},{} heading={} dir={},{} from={},{},{}", player.getName(),
+					          lead.getBlockX(), lead.getBlockY(), lead.getBlockZ(),
+					          copRadio.compassWord(from, from.clone().add(seed.heading())),
+					          String.format(Locale.ROOT, "%.2f", seed.heading().getX()),
+					          String.format(Locale.ROOT, "%.2f", seed.heading().getZ()),
+					          from.getBlockX(), from.getBlockY(), from.getBlockZ());
+				}
 			}
 		}
+	}
+
+	private static PendingUnit withBias(PendingUnit unit, @Nullable SpawnBias bias) {
+		return new PendingUnit(unit.role(), unit.tier(), unit.arriveAt(), unit.station(), bias);
+	}
+
+	/** {@code unit} without its bias once that ran out at {@code now}; as is otherwise. */
+	private static PendingUnit dropExpiredBias(PendingUnit unit, long now) {
+		return unit.bias() == null || unit.bias().activeAt(now) ? unit : withBias(unit, null);
 	}
 
 	/**
@@ -910,9 +1035,10 @@ public class CopManager implements BeanLifecycle {
 	/**
 	 * A cop hunting the group's suspect that has found no way to him for {@code Cops.Stuck.Recycle_Seconds}
 	 * ({@link CopNpc#millisUnreachable()}) and that no one is looking at is taken off the map; its spawner is skipped
-	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere, and dispatch
-	 * tips the squad off to where the suspect is now: its lead is dead, and a replacement hunting it would be recycled
-	 * in turn before it could find him (lane STUCK 2b-ii). Past twice {@code Recycle_Seconds} a view only protects a
+	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere. A recycle is
+	 * no news of him (0.21.1, R4): the replacement inherits the squad's last-known spot and its widening search
+	 * circle, never his live position, and the evasion clock keeps running, so a lead that stays dead ends in his
+	 * escape rather than a recycle loop (T-147). Past twice {@code Recycle_Seconds} a view only protects a
 	 * cop within {@link #OVERDUE_VIEW_BLOCKS} of the eyes it is in, the suspect's and every other player's alike.
 	 */
 	private boolean recycles(CopNpc cop, CopGroup group, Player player, long now) {
@@ -939,39 +1065,76 @@ public class CopManager implements BeanLifecycle {
 			if (inView(player, body, protect)) return false;
 		}
 		// the same bound for bystanders: the spawner's yaw-only check sees through walls to Visibility_Check_Distance
-		if (overdue ? inViewOfBystander(at, body, player) : spawnManager.isVisibleToOtherPlayers(at, player))
+		if (overdue ? CopSightlines.inViewOfPlayers(body, player, OVERDUE_VIEW_BLOCKS)
+		            : spawnManager.isVisibleToOtherPlayers(at, player))
 			return false;
 
 		Location origin = cop.getSpawnLocation();
 		if (origin != null && stuck.avoidSpawnerSeconds() > 0)
 			group.avoid(origin, now + stuck.avoidSpawnerSeconds() * 1000L);
-		group.markTipOff(now);
-		group.getSquad().reportSighting(player.getLocation());
 		return true;
 	}
 
-	/** A real player other than {@code suspect} has {@code body} {@link CopSightlines#inView} within {@link #OVERDUE_VIEW_BLOCKS}. */
-	private static boolean inViewOfBystander(Location at, LivingEntity body, Player suspect) {
-		if (at.getWorld() == null) return false;
-		for (Player other : at.getWorld().getPlayers())
-			if (!other.equals(suspect) && !other.hasMetadata("NPC") && inView(other, body, OVERDUE_VIEW_BLOCKS))
-				return true;
-		return false;
-	}
-
-	private static boolean isStrandedReturning(CopNpc cop, Player player, double maxDist) {
-		if (cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) return false;
-		Location at = cop.getEntity().getLocation();
-		return at.getWorld() != player.getWorld() || at.distanceSquared(player.getLocation()) > maxDist * maxDist;
+	/** R3: a real player, the suspect or a bystander, has the cop in view ({@link CopSightlines#watched}). */
+	private boolean isWatched(CopNpc cop) {
+		LivingEntity body = cop.getEntity();
+		return body != null && CopSightlines.watched(body, configProvider.getVisibilityCheckDistance());
 	}
 
 	/**
-	 * Sends the backup's extras home once it ran out, until the group is back to {@code targetCount}: the newest free
+	 * A RETURNING cop past {@code Pursuit.Max_Distance} of {@code player} ({@link #leashAnchor}): out of this hunt, the
+	 * spawn task refills it.
+	 */
+	public boolean isStranded(CopNpc cop, Player player) {
+		return isStrandedReturning(cop, leashAnchor(groups.get(player.getUniqueId()), player),
+		                           configProvider.getPursuitMaxDistance());
+	}
+
+	/** Whether {@code playerId} is on the post-escape search (0.16.1 T-187): zero stars, the squad still looking. */
+	public boolean isSearching(UUID playerId) {
+		return targetingManager.isSearching(playerId);
+	}
+
+	/**
+	 * Where the pursuit leash is measured from: the player, except on the post-escape search, whose goal is the squad's
+	 * last-known spot (0.21.1). Searchers circling that spot never leash off, and are never refilled, for a hidden player
+	 * 90 blocks away: the live position would leak where he hides (R4). As {@code PursuingBehavior}'s own leash.
+	 */
+	private Location leashAnchor(@Nullable CopGroup group, Player player) {
+		Location lastKnown = group == null || !targetingManager.isSearching(player.getUniqueId()) ? null
+		                                                                                         : group.getSquad().lastKnownLocation();
+		return lastKnown != null ? lastKnown : player.getLocation();
+	}
+
+	/**
+	 * Takes {@code cop} off the map ({@link CopGroup#release}); the caller drops it from the list. A leashed walker still
+	 * on {@code playerId}'s trail ({@link #isStrandedReturning}) is stamped on the group first, whichever removal took it
+	 * (an R3 release, a recycle, its walk home ending), so the hand-off still sees the leash once it is gone. A stood-down
+	 * walker has no target and is no leash, nor is one the group sent home (a star drop, T-510: called off, r7 review 1).
+	 */
+	private void release(CopGroup group, CopNpc cop, UUID playerId, Location anchor, double maxDist, long now) {
+		if (isStrandedReturning(cop, anchor, maxDist) && playerId.equals(cop.getTargetPlayerId()) &&
+		    !group.isSentHome(cop))
+			group.markLeashReleased(now);
+		group.release(cop, markManager);
+	}
+
+	private static boolean isStrandedReturning(CopNpc cop, Location anchor, double maxDist) {
+		if (cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) return false;
+		Location at = cop.getEntity().getLocation();
+		return at.getWorld() != anchor.getWorld() || at.distanceSquared(anchor) > maxDist * maxDist;
+	}
+
+	/**
+	 * Sends the backup's extras home once it ran out, and the cops over a lowered target (a new episode at a lower
+	 * level, a level drop: T-435), until the group is back to {@code targetCount}: the newest free
 	 * cops of a role the group holds more of than its base squad of {@code targetCount} ({@link CopRole#nextRole}), so a
 	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). The group's last Commander is
-	 * never sent, even when the wanted level fell to a composition without one. A cop in a fight, cuffing or guarding
-	 * is never sent; what cannot go this run is retried on the next. Queued units count toward the group and a surplus
-	 * one still en route is called off before any live cop is sent.
+	 * never sent, even when the wanted level fell to a composition without one: he stays as one cop over the target and
+	 * the release owed is capped at what can ever go, so no later radio responder is sent home in his place. A cop in a
+	 * fight, cuffing or guarding is never sent (a pursuing, idle or POSTED one is, T-510); what cannot go this run is
+	 * retried on the next. Queued units count toward
+	 * the group and a surplus one still en route is called off before any live cop is sent.
 	 */
 	private void releaseSurplus(CopGroup group, int targetCount, @Nullable List<CopRole> composition) {
 		List<CopNpc> live = new ArrayList<>();
@@ -996,6 +1159,21 @@ public class CopManager implements BeanLifecycle {
 		for (CopRole role : base) excess.merge(roleName(role), -1, Integer::sum);
 		long commanders = live.stream().filter(CopManager::isCommander).count() +
 		                  queued.stream().filter(unit -> unit.role() != null && unit.role().commander()).count();
+		// what can ever go: the roles held over the base squad, the Commander roles together at most all Commanders but
+		// the last (one shared pool, however many roles are Commanders). A release owed past it would wait for the next
+		// cop to join and send him home instead (a radio responder)
+		Set<String> leaderRoles = new HashSet<>();
+		for (CopNpc cop : live) if (isCommander(cop)) leaderRoles.add(roleName(cop.getRole()));
+		for (PendingUnit unit : queued) if (unit.role() != null && unit.role().commander()) leaderRoles.add(unit.role().name());
+		int releasable = 0;
+		int leadersOver = 0;
+		for (Map.Entry<String, Integer> role : excess.entrySet()) {
+			int over = Math.max(0, role.getValue());
+			if (leaderRoles.contains(role.getKey())) leadersOver += over;
+			else releasable += over;
+		}
+		releasable += (int) Math.min(leadersOver, Math.max(0, commanders - 1));
+		group.setPendingRelease(Math.min(group.getPendingRelease(), Math.min(surplus, releasable)));
 
 		// a backup unit still en route is called off first, newest first: it outlived the backup on a long ETA
 		for (int i = queued.size() - 1; i >= 0 && surplus > 0 && group.getPendingRelease() > 0; i--) {
@@ -1016,7 +1194,9 @@ public class CopManager implements BeanLifecycle {
 			CopNpc   cop   = live.get(i);
 			CopState state = cop.getCurrentState();
 			String   role  = roleName(cop.getRole());
-			if (state != CopState.PURSUING && state != CopState.IDLE || excess.get(role) <= 0) continue;
+			// T-510: a POSTED cop (perimeter, standoff, breach stack) is free to go; leaving POSTED releases the post
+			boolean free = state == CopState.PURSUING || state == CopState.IDLE || state == CopState.POSTED;
+			if (!free || excess.get(role) <= 0) continue;
 			if (isCommander(cop)) {
 				if (commanders <= 1) continue; // the squad's leader stays (T-146)
 				commanders--;
@@ -1024,9 +1204,15 @@ public class CopManager implements BeanLifecycle {
 
 			excess.merge(role, -1, Integer::sum);
 			cop.transitionTo(CopState.RETURNING);
+			group.markSentHome(cop);
 			group.setPendingRelease(group.getPendingRelease() - 1);
 			surplus--;
 		}
+	}
+
+	private static int engagedCount(CopGroup group) {
+		return (int) group.getCops().stream()
+		                  .filter(cop -> cop.isValid() && cop.getCurrentState() != CopState.RETURNING).count();
 	}
 
 	private static boolean isCommander(CopNpc cop) {
@@ -1058,14 +1244,18 @@ public class CopManager implements BeanLifecycle {
 			return;
 		}
 
-		List<CopNpc> cops = group.getCops();
+		List<CopNpc> cops    = group.getCops();
+		long         now     = copRadio.now();
+		double       maxDist = configProvider.getPursuitMaxDistance();
+		Location     anchor  = leashAnchor(group, player);
 
 		Iterator<CopNpc> iterator = cops.iterator();
 		while (iterator.hasNext()) {
 			CopNpc cop = iterator.next();
 
 			if (cop.isMarkedForRemoval()) {
-				group.release(cop, markManager);
+				// usually a walker ReturningBehavior marked on the last AI tick, before any spawn run saw it
+				release(group, cop, playerId, anchor, maxDist, now);
 				iterator.remove();
 				continue;
 			}
@@ -1077,7 +1267,7 @@ public class CopManager implements BeanLifecycle {
 				if (npc.isSpawned() && npc.getEntity() == null) {
 					continue;
 				}
-				group.release(cop, markManager);
+				release(group, cop, playerId, anchor, maxDist, now);
 				iterator.remove();
 				continue;
 			}

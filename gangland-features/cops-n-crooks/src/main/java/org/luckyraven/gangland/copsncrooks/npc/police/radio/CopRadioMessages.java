@@ -43,6 +43,7 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Search", List.of("Spread out, find him!", "Sweep the area!")),
 			Map.entry("Route", List.of("Going round, finding a way to him.", "Cutting round to him!")),
 			Map.entry("Route_High", List.of("He's up high, finding a way up.")),
+			Map.entry("Route_Search", List.of("Going round, checking his last position.", "Taking the long way, searching the area.")),
 			Map.entry("Climb", List.of("Taking the ladder!", "Going up!")),
 			Map.entry("No_Route", List.of("Can't reach him, surround the building!", "Hold the exits!")),
 			Map.entry("Check_Fire", List.of("Check your fire, friendly in the line!")),
@@ -97,7 +98,7 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Flashbang", List.of("Flashbang out! Eyes closed!", "Flash out, going in!")),
 			Map.entry("Most_Wanted", List.of("All units, be advised: %target% is the city's Most Wanted, last seen near %place%.")),
 			// 0.20.0
-			Map.entry("Caller_911", List.of("Dispatch: 911 caller reports %crime% near %place%. Suspect: %suspect%.")),
+			Map.entry("Caller_911", List.of("911 caller reports %crime% near %place%. Suspect: %suspect%.")),
 			Map.entry("Suspect_Description", List.of("Suspect is %suspect%.")),
 			Map.entry("Tracker_Tagged", List.of("Tracker's on the car. Dispatch has his position.")),
 			Map.entry("Tracker_Ping", List.of("Tracker ping, he's at %place%.")),

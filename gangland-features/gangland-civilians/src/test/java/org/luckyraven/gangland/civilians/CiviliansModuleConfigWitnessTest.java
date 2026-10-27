@@ -40,7 +40,7 @@ class CiviliansModuleConfigWitnessTest {
 	                                                                  });
 
 	private WitnessService bean() {
-		return CiviliansModuleConfig.witnessService(kit.civilians, kit.crimes, messages, hooks);
+		return CiviliansModuleConfig.witnessService(kit.civilians, kit.crimes, messages, kit.places, hooks);
 	}
 
 	private static CiviliansConfig config(boolean enabled) {
@@ -83,10 +83,10 @@ class CiviliansModuleConfigWitnessTest {
 	}
 
 	@Test
-	@DisplayName("the criminal is shown CivilianMessages.witnessCalling()")
+	@DisplayName("the criminal is shown CivilianMessages.witnessCalling(caller, Call_Seconds)")
 	void messageFromCivilianMessages() {
 		when(kit.civilians.getCiviliansConfig()).thenReturn(config(true));
-		when(messages.witnessCalling()).thenReturn("&cMSG-FROM-YAML");
+		when(messages.witnessCalling("Pedestrian", 8)).thenReturn("&cMSG-FROM-YAML");
 		CivilianNpc npc = kit.civilian(10, false);
 
 		assertEquals(1, bean().witness(kit.criminal, "Car_Theft", kit.at));

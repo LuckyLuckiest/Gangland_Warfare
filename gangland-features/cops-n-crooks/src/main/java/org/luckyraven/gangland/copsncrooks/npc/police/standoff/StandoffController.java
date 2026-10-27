@@ -18,6 +18,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.keystone.npc.NpcPost;
+import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -139,8 +140,9 @@ public class StandoffController {
 	private void reportPostedSightings(State st) {
 		for (CopNpc cop : st.posts) {
 			if (cop == null || !cop.isValid() || cop.getCurrentState() != CopState.POSTED) continue;
-			if (cop.canSee(st.player, sightRange())) {
-				st.group.getSquad().reportSighting(st.player.getLocation());
+			double range = sightRange();
+			if (cop.canSee(st.player, range)) {
+				st.group.getSquad().reportSighting(cop, st.player.getLocation(), range);
 				return;
 			}
 		}
@@ -183,12 +185,16 @@ public class StandoffController {
 
 	@Nullable
 	private String trigger(StandoffSettings cfg, CopGroup group, UUID id, List<CopNpc> hunting, long now) {
-		long stuck = 0;
-		for (CopNpc cop : hunting)
-			if (cop.millisUnreachable() >= cfg.unreachableSeconds() * 1000L) stuck++;
-		if (stuck * 2 > hunting.size()) return "UNREACHABLE";
+		NpcSquad squad = group.getSquad();
+		// cops that cannot reach a spot nobody sees him at are searching, not besieging him (radio-far S)
+		if (squad.isInContact() || squad.hasFreshSighting()) {
+			long stuck = 0;
+			for (CopNpc cop : hunting)
+				if (cop.millisUnreachable() >= cfg.unreachableSeconds() * 1000L) stuck++;
+			if (stuck * 2 > hunting.size()) return "UNREACHABLE";
+		}
 
-		if (group.getSquad().hasFreshSighting())
+		if (squad.hasFreshSighting())
 			for (CopNpc cop : hunting)
 				if (cop.isNavigationHopeless()) return "NO_ROUTE";
 
@@ -222,7 +228,8 @@ public class StandoffController {
 		group.setFallBackUntil(until);
 		holdRefill(group, now, until);
 
-		Location centre = player.getLocation();
+		// where the squad knows him to be, never his live position (radio-far S)
+		Location centre = group.getSquad().lastKnownLocation();
 		if (!perimeter.isActive(id) && centre != null && centre.getWorld() != null) post(st, cfg, hunting, centre);
 		radio.sayFromLeader(group, "Standoff");
 		log.debug("STANDOFF {} start trigger={}", player.getName(), trigger);

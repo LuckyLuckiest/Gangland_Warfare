@@ -221,32 +221,87 @@ class WantedHudListenerTest {
 	}
 
 	@Test
-	@DisplayName("a raise shows the stars as the title, the card as its subtitle, and plays the siren once")
-	void raise_sendsTitleWithTheCardAsSubtitle_andPlaysTheSiren() {
+	@DisplayName("a raise shows the star row alone as the subtitle, sends the cause card to chat, and plays the siren once")
+	void raise_sendsStarRowSubtitle_andTheCardToChat_andPlaysTheSiren() {
 		WantedHudListener listener = listener(HudSettings.DEFAULT);
 
 		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
 
-		ArgumentCaptor<String> title    = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
-		verify(player).sendTitle(title.capture(), subtitle.capture(), eq(5), eq(20), eq(5));
-		assertEquals("", ChatColor.stripColor(title.getValue()));
-		assertEquals("★★☆☆☆ Assault on an officer: Sergeant inbound, they still want you in cuffs",
-		             ChatColor.stripColor(subtitle.getValue()));
+		verify(player).sendTitle(ChatColor.RESET.toString(), "★★☆☆☆", 5, 20, 5);
+		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
+		verify(player).sendMessage(chat.capture());
+		assertEquals("Assault on an officer: Sergeant inbound, they still want you in cuffs",
+		             ChatColor.stripColor(chat.getValue()));
 		assertEquals(1, playSoundCalls());
 	}
 
 	@Test
-	@DisplayName("a raise that is not a crime ignores the ledger and names the reported crime")
+	@DisplayName("a gain subtitle that still carries %card% shows it there and does not repeat it in chat")
+	void raise_subtitleWithCard_doesNotRepeatTheCardInChat() {
+		TitleCue gain = new TitleCue(true, "", "%stars% %card%", 5, 20, 5);
+		WantedHudListener listener = listener(cuesWith(true, gain, TitleCue.DEFAULT, TitleCue.DEFAULT));
+
+		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+
+		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
+		assertEquals("★★☆☆☆ Assault on an officer: Sergeant inbound, they still want you in cuffs",
+		             ChatColor.stripColor(subtitle.getValue()));
+		verify(player, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("%cause% in a gain subtitle is the crime name")
+	void raise_causePlaceholder_isTheCrimeName() {
+		TitleCue gain = new TitleCue(true, "", "%stars% %cause%", 5, 20, 5);
+		WantedHudListener listener = listener(cuesWith(true, gain, TitleCue.DEFAULT, TitleCue.DEFAULT));
+
+		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+
+		verify(player).sendTitle(ChatColor.RESET.toString(), "★★☆☆☆ Assault on an officer", 5, 20, 5);
+	}
+
+	@Test
+	@DisplayName("0.21.1 Q7: a raise from a crime a witness phoned in names the witness in the cause")
+	void raise_reportedByWitness_namesTheWitness() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
+				new CrimeRecord("Car_Theft", 100, 0L, new Location(mock(World.class), 0, 64, 0), true));
+
+		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+
+		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
+		verify(player).sendMessage(chat.capture());
+		assertEquals("Car Theft (reported by a witness): Sergeant inbound, they still want you in cuffs",
+		             ChatColor.stripColor(chat.getValue()));
+	}
+
+	@Test
+	@DisplayName("0.21.1 Q7: the witness is named in chat only; the title's %cause% stays the plain crime name")
+	void raise_reportedByWitness_titleCauseStaysPlain() {
+		TitleCue gain = new TitleCue(true, "", "%stars% %cause%", 5, 20, 5);
+		WantedHudListener listener = listener(cuesWith(true, gain, TitleCue.DEFAULT, TitleCue.DEFAULT));
+		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
+				new CrimeRecord("Car_Theft", 100, 0L, new Location(mock(World.class), 0, 64, 0), true));
+
+		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+
+		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
+		assertEquals("★★☆☆☆ Car Theft", ChatColor.stripColor(subtitle.getValue()));
+	}
+
+	@Test
+	@DisplayName("a raise that is not a crime ignores the ledger and names the reported crime in chat")
 	void raise_nonCrimeCause_usesReportedCrime() {
 		WantedHudListener listener = listener(HudSettings.DEFAULT);
 
 		listener.onLevelChange(change(1, 2, WantedCause.ADMIN));
 
-		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
-		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
-		assertEquals("★★☆☆☆ Reported crime: Sergeant inbound, they still want you in cuffs",
-		             ChatColor.stripColor(subtitle.getValue()));
+		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
+		verify(player).sendMessage(chat.capture());
+		assertEquals("Reported crime: Sergeant inbound, they still want you in cuffs",
+		             ChatColor.stripColor(chat.getValue()));
 	}
 
 	@Test
@@ -277,7 +332,7 @@ class WantedHudListenerTest {
 	@Test
 	@DisplayName("a star gained with both Boss_Bar and Star_Card off still names the count in the subtitle")
 	void gain_bossBarOff_starCardOff_namesTheCount() {
-		HudSettings hud = new HudSettings(false, false, TitleCue.DEFAULT, TitleCue.DEFAULT, TitleCue.ESCAPED, true,
+		HudSettings hud = new HudSettings(false, false, TitleCue.GAIN, TitleCue.DEFAULT, TitleCue.ESCAPED, true,
 		                                  HudSettings.DEFAULT.sirenSound(), HudSettings.DEFAULT.sirenVolume(),
 		                                  HudSettings.DEFAULT.sirenPitch(), true, HudSettings.DEFAULT.zoneParticle(),
 		                                  HudSettings.DEFAULT.zonePoints(), true);
@@ -489,7 +544,7 @@ class WantedHudListenerTest {
 	void lostAndEscapedUseTheirOwnCue() {
 		TitleCue lost    = new TitleCue(true, "Lost %level%", "lost-text", 1, 2, 3);
 		TitleCue escaped = new TitleCue(true, "Escaped", "escaped-text", 4, 5, 6);
-		WantedHudListener listener = listener(cuesWith(true, TitleCue.DEFAULT, lost, escaped));
+		WantedHudListener listener = listener(cuesWith(true, TitleCue.GAIN, lost, escaped));
 
 		listener.onLevelChange(change(2, 1, WantedCause.EVASION));
 		verify(player).sendTitle("Lost 1", "lost-text", 1, 2, 3);
@@ -502,7 +557,7 @@ class WantedHudListenerTest {
 	@DisplayName("a disabled Escaped cue still consumes the pending AUTO plan")
 	void disabledCue_stillConsumesPendingPlan() {
 		TitleCue off = new TitleCue(false, "", "%card%", 5, 20, 5);
-		WantedHudListener listener = listener(cuesWith(true, TitleCue.DEFAULT, TitleCue.DEFAULT, off));
+		WantedHudListener listener = listener(cuesWith(true, TitleCue.GAIN, TitleCue.DEFAULT, off));
 		arcs.start(player.getUniqueId(), WantedCause.CRIME, 3);
 		arcs.stashPending(player.getUniqueId(), new DropPlan(3, Ending.PETTY, "petty"));
 
@@ -585,9 +640,10 @@ class WantedHudListenerTest {
 
 		listener.onLevelChange(change(0, 1, WantedCause.UNKNOWN));
 
-		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
-		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
-		assertEquals("★☆☆☆☆ Spotted by the cops: Sergeant inbound, they still want you in cuffs",
-		             ChatColor.stripColor(subtitle.getValue()));
+		verify(player).sendTitle(ChatColor.RESET.toString(), "★☆☆☆☆", 5, 20, 5);
+		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
+		verify(player).sendMessage(chat.capture());
+		assertEquals("Spotted by the cops: Sergeant inbound, they still want you in cuffs",
+		             ChatColor.stripColor(chat.getValue()));
 	}
 }

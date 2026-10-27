@@ -38,6 +38,8 @@ class WantedMessages020Test {
 	private static final Map<WantedMessages.Key, List<String>> PLACEHOLDERS = Map.ofEntries(
 			Map.entry(WantedMessages.Key.PATROL_PUT_AWAY, List.of("%seconds%")),
 			Map.entry(WantedMessages.Key.PATROL_COMPLIED, List.of()),
+			Map.entry(WantedMessages.Key.PATROL_IGNORED, List.of("%cause%")),
+			Map.entry(WantedMessages.Key.PATROL_LOST_SIGHT, List.of()),
 			Map.entry(WantedMessages.Key.PATROL_PULL_OVER, List.of("%seconds%")),
 			Map.entry(WantedMessages.Key.PATROL_TICKET, List.of("%money_symbol%", "%amount%")),
 			Map.entry(WantedMessages.Key.PATROL_FLED, List.of()),
@@ -87,6 +89,15 @@ class WantedMessages020Test {
 		assertEquals("on foot", WantedMessages.Key.SUSPECT_ON_FOOT.fallback);
 		assertEquals("in a car", WantedMessages.Key.SUSPECT_IN_CAR.fallback);
 		assertEquals("%who%%mask%, %chest%, %vehicle%", WantedMessages.Key.SUSPECT_FORMAT.fallback);
+	}
+
+	@Test
+	@DisplayName("the ignored-warning line names the cause but never claims a wanted status the heat config may not give")
+	void ignoredLine_namesCause_claimsNoStatus() {
+		String text = WantedMessages.Key.PATROL_IGNORED.fallback;
+
+		assertTrue(text.contains("%cause%"), text);
+		assertFalse(text.toLowerCase().contains("wanted"), text);
 	}
 
 	@Test

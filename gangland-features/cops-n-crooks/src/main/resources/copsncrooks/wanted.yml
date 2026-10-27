@@ -46,8 +46,10 @@ Wanted:
       # Heat per crime. Kill_*, Assault_Cop and Resisting_Arrest are reported in 0.15.0; the rest are read by later
       # releases
       Crimes:
-         # Aiming a weapon with a cop close by
-         Brandish_Near_Cop: 25
+         # Aiming a weapon with a cop close by, after the beat cop's warning was ignored. 0.21.1: 67 x the
+         # Seen_By_Cop_Multiplier (1.5) is just over the first Star_Thresholds entry (100), so an ignored warning is
+         # worth a star at once. Lower it (25 is the old value) and an ignored warning only builds heat
+         Brandish_Near_Cop: 67
          # Hitting a civilian
          Assault_Civilian: 30
          # Stealing a car
@@ -125,7 +127,7 @@ Wanted:
          # Crimes in the opening that make the chase a rampage
          Rampage_Crimes: 4
          # Only crimes at least this heavy count toward the rampage opening; the shipped cheap crimes
-         # (Brandish_Near_Cop 25, Assault_Civilian 30, Car_Theft 60) never do
+         # (Brandish_Near_Cop 67, Assault_Civilian 30, Car_Theft 60) never do
          Rampage_Min_Weight: 80
          # Peak stars that make a chase a rampage however it started (killing a cop always does)
          Rampage_Peak_Level: 4
@@ -240,15 +242,19 @@ Wanted:
       # and a blank Subtitle send nothing. To blank a line write Title: "" or Subtitle: "" (a bare key with no
       # value reads as absent and takes the default). Gained and Lost show the star row in the subtitle, so the count is still
       # shown with Star_Card off. Fade_In, Stay and Fade_Out are in ticks (20 = 1 second).
+      # 0.21.1: also %cause%, the crime that raised the star (the card line for a lost star). The star card goes to
+      # chat, as a message naming the cause, whenever Star_Card is on and the event's Title and Subtitle do not carry
+      # %card% themselves, so a short Subtitle like "%stars%" still tells the player why. Gain used to be
+      # "%stars% %card%": a file written before 0.21.1 keeps that until its Subtitle is edited.
       # Old look (before 0.16.1): Title "&c%stars%", Subtitle "%card%", Fade_In 5, Stay 40, Fade_Out 10 on every event.
       Title:
          # false = no title on any event
          Enable: true
-         # A star gained
+         # A star gained. The default shows the star row only; the card (cause, tier, stance) is sent to chat
          Gain:
             Enable: true
             Title: ""
-            Subtitle: "%stars% %card%"
+            Subtitle: "%stars%"
             Fade_In: 5
             Stay: 20
             Fade_Out: 5
@@ -399,10 +405,15 @@ Wanted:
    Witnesses:
       # false = no witnesses; only a cop who sees a crime reports it
       Enable: true
-      # Crimes a witness calls in
+      # Crimes a witness calls in when no cop sees them (a cop who sees you commit one counts it at once). 0.21.1:
+      # Kill_Civilian too, so a kill neither a cop nor a civilian saw brings no star. A civilian behind you sees a silent
+      # kill (fist, knife) only if it faces you, but a gunshot turns it round first: see Witness.View_Angle and
+      # Witness.Loud_Weapon_Types in npc/civilians.yml. Store_Robbery is not listed: the shop's silent alarm already
+      # reports it as witnessed.
       Crimes:
          - Car_Theft
          - Assault_Civilian
+         - Kill_Civilian
 
    # 0.20.0 trespass: repeat trespass in a restricted place adds heat
    Trespass:

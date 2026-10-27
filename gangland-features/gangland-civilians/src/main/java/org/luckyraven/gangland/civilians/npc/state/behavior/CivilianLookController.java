@@ -85,7 +85,8 @@ public final class CivilianLookController {
 		return nearestPlayer != null ? nearestPlayer : nearestOther;
 	}
 
-	private static void faceLocation(LivingEntity entity, Location target) {
+	/** Turns {@code entity} to look at {@code target} (a teleport to its own spot with the new direction). */
+	public static void faceLocation(LivingEntity entity, Location target) {
 		Location origin    = entity.getLocation().add(0, 1.6, 0);
 		Vector   direction = target.toVector().subtract(origin.toVector());
 		if (direction.lengthSquared() < 0.0001) return;

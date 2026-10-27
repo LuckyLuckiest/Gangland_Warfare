@@ -27,7 +27,7 @@ public record HeatSettings(boolean enabled, List<Integer> starThresholds, double
 
 	private static Map<String, Integer> defaultCrimes() {
 		Map<String, Integer> crimes = new LinkedHashMap<>();
-		crimes.put("Brandish_Near_Cop", 25);
+		crimes.put("Brandish_Near_Cop", 67);
 		crimes.put("Assault_Civilian", 30);
 		crimes.put("Car_Theft", 60);
 		crimes.put("Kill_Player", 80);

@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.state.behavior;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
@@ -10,6 +11,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.keystone.npc.NpcSquad;
 
@@ -24,7 +26,7 @@ import java.util.function.Predicate;
  * around obstacles, search from the last-known position, wait below an unreachable target. A failed path never sends
  * the cop back. It is rotated out ({@link CopState#RETURNING}, replaced by the spawner) only after
  * {@code maxPursuitTicks} AI ticks stuck while nobody in its squad sees the target, or when the target is farther than
- * {@code maxPursuitDistance}.
+ * {@code maxPursuitDistance} (on the post-escape search: the squad's last-known spot is, 0.21.1).
  */
 public class PursuingBehavior implements CopBehavior {
 
@@ -88,7 +90,10 @@ public class PursuingBehavior implements CopBehavior {
 		NpcSquad squad = cop.squadFor(target);
 
 		// Rotation: only ticks spent stuck while nobody in the squad sees the target count toward giving up
-		// (an entity target has no shared squad, so the cop's own sight decides)
+		// (an entity target has no shared squad, so the cop's own sight decides). Squad-level on purpose (0.21.1 r6):
+		// since Keystone 1.15.4 only an NPC that saw him stamps it (tips do not), and no use below acts on his live
+		// position from it: the cuff needs this cop's own line of sight in Cuff_Radius, and the pursuit range only
+		// lifts the lock-on filters for its own look (Keystone takes the live goal from the member's own sight alone)
 		boolean seen       = squad != null ? squad.hasFreshSighting() : perception.acquires(cop, target, alertRange);
 		int     stuckTicks = cop.isNavigationStuck() && !seen ? cop.getPursuitTicks() + 1 : 0;
 		cop.setPursuitTicks(stuckTicks);
@@ -97,10 +102,13 @@ public class PursuingBehavior implements CopBehavior {
 			return;
 		}
 
-		double distance = cop.distanceTo(target);
+		double  distance = cop.distanceTo(target);
+		// A player on the post-escape search is neither cuffed nor shot at (0.16.1 T-187)
+		boolean searched = target instanceof Player hunted && searching.test(hunted.getUniqueId());
 
-		// Hard distance leash — target outran us or teleported beyond our reach
-		if (distance > maxPursuitDistance) {
+		// Hard distance leash — target outran us or teleported beyond our reach. The search's goal is the squad's
+		// last-known spot (0.21.1): a searcher there never leashes off a hidden player 90 blocks away (R4)
+		if (leashDistance(cop, squad, searched, distance) > maxPursuitDistance) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
@@ -111,9 +119,6 @@ public class PursuingBehavior implements CopBehavior {
 				cop.transitionTo(CopState.RETURNING);
 				return;
 			}
-
-			// A player on the post-escape search is neither cuffed nor shot at (0.16.1 T-187)
-			boolean searched = searching.test(player.getUniqueId());
 
 			if (!searched && (seen || perception.allowsLockOn(cop, player)) && distance <= cuffRadius && cop.hasLineOfSight(player)) {
 				if (!ceaseFire(cop) && (cop.getTierConfig().skipCuffing() || cop.isCombatForced())) {
@@ -164,6 +169,14 @@ public class PursuingBehavior implements CopBehavior {
 		retreat.reset(cop);
 		cop.stopNavigation();
 		cop.setPursuitTicks(0);
+	}
+
+	/** How far the leash reads: to the squad's last-known spot on the post-escape search, else {@code distance}. */
+	private static double leashDistance(CopNpc cop, @Nullable NpcSquad squad, boolean searched, double distance) {
+		Location     goal = searched && squad != null ? squad.lastKnownLocation() : null;
+		LivingEntity self = cop.getEntity();
+		if (goal == null || self == null || goal.getWorld() != self.getWorld()) return distance;
+		return self.getLocation().distance(goal);
 	}
 
 	/** The cop's group holds fire on the player this cop is after (0.21.0 standoff / surrender). */

@@ -349,7 +349,8 @@ class OverwatchControllerTest {
 
 		controller.tick(player, group);
 
-		verify(squad).reportSighting(player.getLocation());
+		// a mark by the Marksman at its own sight range (Keystone 1.15.4): members chase only while he still sees
+		verify(squad).reportSighting(marksman, player.getLocation(), 48.0);
 		@SuppressWarnings({"unchecked", "rawtypes"})
 		ArgumentCaptor<Map<String, String>> extra = (ArgumentCaptor) ArgumentCaptor.forClass(Map.class);
 		verify(radio).sayAs(eq(group), eq(marksman), eq("Overwatch_Spotted"), extra.capture());

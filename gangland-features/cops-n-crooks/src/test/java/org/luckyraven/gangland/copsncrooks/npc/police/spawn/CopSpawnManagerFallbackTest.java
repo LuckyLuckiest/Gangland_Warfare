@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -52,10 +53,11 @@ class CopSpawnManagerFallbackTest {
 	private CopSpawnManager spawnManager;
 	/** The Y the world reports as highest everywhere but the suspect's own column. */
 	private int             roofElsewhere;
+	private CopConfigProvider config;
 
 	@BeforeEach
 	void setUp() {
-		CopConfigProvider config = mock(CopConfigProvider.class);
+		config = mock(CopConfigProvider.class);
 		when(config.getMinSpawnDistance()).thenReturn(10.0);
 		when(config.getMaxSpawnDistance()).thenReturn(20.0);
 		when(config.getPhase1MinDistance()).thenReturn(15.0);
@@ -110,6 +112,25 @@ class CopSpawnManagerFallbackTest {
 		});
 
 		assertNull(spawnManager.findRingLocation(player));
+	}
+
+	@Test
+	@DisplayName("0.21.1: the leash margin reads to the leash anchor (the search's last-known spot), not his live spot")
+	void spawnNearPlayer_leashMeasuredToTheAnchor() {
+		roofElsewhere = GROUND_Y - 1;
+		when(config.getPursuitMaxDistance()).thenReturn(80.0); // margin 60
+		CopNpcFactory factory = mock(CopNpcFactory.class);
+		spawnManager.copNpcFactory = factory;
+
+		// the squad's last-known spot is 200 blocks off: no ring spot 10..20 blocks from him is within 60 of it
+		spawnManager.setLeashAnchor(target -> new Location(world, 200.5, GROUND_Y, 0.5));
+		assertNull(spawnManager.spawnNearPlayer(player, 2, loc -> true, MEDIC));
+		verify(factory, never()).createCop(any(), anyInt(), anyBoolean(), any());
+
+		// 30 blocks off: every ring spot is within 60 of it
+		spawnManager.setLeashAnchor(target -> new Location(world, 30.5, GROUND_Y, 0.5));
+		spawnManager.spawnNearPlayer(player, 2, loc -> true, MEDIC);
+		verify(factory).createCop(any(), eq(2), eq(true), eq(MEDIC));
 	}
 
 	@Test

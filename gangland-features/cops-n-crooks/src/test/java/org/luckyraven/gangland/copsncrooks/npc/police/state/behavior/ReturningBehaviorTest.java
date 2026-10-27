@@ -134,6 +134,188 @@ class ReturningBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("R3: a stranded cop in a player's view keeps walking and despawns only once nobody looks")
+	void strandedInView_keepsWalkingUntilOutOfView() {
+		withClock(StuckSettings.DEFAULT);
+		World    world  = cop.getEntity().getWorld();
+		Player   viewer = mock(Player.class);
+		Location eyes   = new Location(world, 0, 65.62, -10, 0f, 0f); // ten blocks south, looking north at him
+		when(viewer.getEyeLocation()).thenAnswer(i -> eyes.clone());
+		when(viewer.hasLineOfSight(cop.getEntity())).thenReturn(true);
+		when(world.getPlayers()).thenReturn(java.util.List.of(viewer));
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+
+		now += StuckSettings.DEFAULT.recycleSeconds() * 1000L;
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+		verify(cop, times(2)).navigateTo(any());
+
+		eyes.setYaw(180f); // he turns away
+		behavior.tick(cop);
+		verify(cop).markForRemoval();
+	}
+
+	/** A real player ten blocks south of the cop, looking north at it with a clear line. */
+	private void watchedFromTheSouth(World world) {
+		watchedFromTheSouth(world, 10);
+	}
+
+	/** A real player {@code blocks} south of the cop, looking north at it with a clear line. */
+	private void watchedFromTheSouth(World world, double blocks) {
+		Player   viewer = mock(Player.class);
+		Location eyes   = new Location(world, 0, 65.62, -blocks, 0f, 0f);
+		when(viewer.getEyeLocation()).thenAnswer(i -> eyes.clone());
+		when(viewer.hasLineOfSight(cop.getEntity())).thenReturn(true);
+		when(world.getPlayers()).thenReturn(java.util.List.of(viewer));
+	}
+
+	@Test
+	@DisplayName("R3 (review 2): past Return.Max_Ticks a stranded cop watched from within 24 blocks still never vanishes")
+	void strandedInView_pastMaxTicks_keptWhileWatchedClose() {
+		withClock(StuckSettings.DEFAULT);
+		watchedFromTheSouth(cop.getEntity().getWorld());
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+		now += StuckSettings.DEFAULT.recycleSeconds() * 1000L;
+		behavior.tick(cop);
+		when(cop.getDespawnTicks()).thenReturn(600); // Return.Max_Ticks
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("0.21.1 r6 (owner ruling): a walker kept past Max_Ticks by a watcher within 24 b goes after Watched_Cap_Seconds")
+	void watchedClose_pastMaxTicks_removedAfterTheWatchedCap() {
+		withClock(StuckSettings.DEFAULT); // code default cap: 60 s
+		watchedFromTheSouth(cop.getEntity().getWorld());
+		behavior.onEnter(cop);
+		when(cop.getDespawnTicks()).thenReturn(600); // Return.Max_Ticks
+		behavior.tick(cop);
+		now += 59_000L;
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+
+		now += 1_000L; // he has stared at it for the whole cap
+		behavior.tick(cop);
+
+		verify(cop).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("0.21.1 r6: Watched_Cap_Seconds 0 keeps the 0.21.1 r5 rule (a close watcher holds it however long)")
+	void watchedCapOff_keptWhileWatched() {
+		withClock(StuckSettings.DEFAULT);
+		World           world  = cop.getEntity().getWorld();
+		CopSpawnManager spawns = mock(CopSpawnManager.class);
+		when(spawns.getSpawnerLocations()).thenReturn(java.util.List.of(new Location(world, 100, 64, 0)));
+		behavior = new ReturningBehavior(spawns, detainmentService, 600, 3.0, StuckSettings.DEFAULT, () -> now, 48.0, 0);
+		watchedFromTheSouth(world);
+		behavior.onEnter(cop);
+		when(cop.getDespawnTicks()).thenReturn(600);
+		behavior.tick(cop);
+		now += 3_600_000L;
+		behavior.tick(cop);
+
+		verify(cop, never()).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("R3 (review 2): past Return.Max_Ticks only the 24-block view holds: a far watcher no longer keeps it")
+	void strandedWatchedFar_pastMaxTicks_removed() {
+		withClock(StuckSettings.DEFAULT);
+		World           world  = cop.getEntity().getWorld();
+		CopSpawnManager spawns = mock(CopSpawnManager.class);
+		when(spawns.getSpawnerLocations()).thenReturn(java.util.List.of(new Location(world, 100, 64, 0)));
+		behavior = new ReturningBehavior(spawns, detainmentService, 600, 3.0, StuckSettings.DEFAULT, () -> now, 48.0);
+		watchedFromTheSouth(world, 40); // inside Visibility_Check_Distance 48, past 24
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+		now += StuckSettings.DEFAULT.recycleSeconds() * 1000L;
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+
+		when(cop.getDespawnTicks()).thenReturn(600);
+		behavior.tick(cop);
+		verify(cop).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("R3: a cop whose way home lies in another world waits out of view, past Max_Ticks too while watched close")
+	void otherWorldStation_inView_waits() {
+		withClock(StuckSettings.DEFAULT);
+		World elsewhere = mock(World.class);
+		when(cop.getSpawnLocation()).thenReturn(new Location(elsewhere, 0, 64, 0));
+		behavior = new ReturningBehavior(mock(CopSpawnManager.class), detainmentService, 600, 3.0,
+		                                 StuckSettings.DEFAULT, () -> now);
+		watchedFromTheSouth(cop.getEntity().getWorld());
+		behavior.onEnter(cop);
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+
+		when(cop.getDespawnTicks()).thenReturn(600);
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("a cop whose way home lies in another world, nobody looking, is removed at once")
+	void otherWorldStation_outOfView_removed() {
+		withClock(StuckSettings.DEFAULT);
+		World elsewhere = mock(World.class);
+		when(cop.getSpawnLocation()).thenReturn(new Location(elsewhere, 0, 64, 0));
+		behavior = new ReturningBehavior(mock(CopSpawnManager.class), detainmentService, 600, 3.0,
+		                                 StuckSettings.DEFAULT, () -> now);
+		behavior.onEnter(cop);
+		behavior.tick(cop);
+
+		verify(cop).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("T-527: with no station a cop home at its own spawn spot stands while watched and despawns once nobody looks")
+	void spawnSpotHome_arrivalWatched_waitsUntilOutOfView() {
+		withClock(StuckSettings.DEFAULT);
+		World world = cop.getEntity().getWorld();
+		when(cop.getSpawnLocation()).thenReturn(new Location(world, 1, 64, 1)); // he stands on it
+		behavior = new ReturningBehavior(mock(CopSpawnManager.class), detainmentService, 600, 3.0,
+		                                 StuckSettings.DEFAULT, () -> now, 48.0);
+		Player   viewer = mock(Player.class);
+		Location eyes   = new Location(world, 0, 65.62, -10, 0f, 0f);
+		when(viewer.getEyeLocation()).thenAnswer(i -> eyes.clone());
+		when(viewer.hasLineOfSight(cop.getEntity())).thenReturn(true);
+		when(world.getPlayers()).thenReturn(java.util.List.of(viewer));
+		behavior.onEnter(cop);
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+
+		eyes.setYaw(180f); // he turns away
+		behavior.tick(cop);
+		verify(cop).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("T-527: a cop reaching a registered station despawns even while watched")
+	void stationArrivalWatched_despawns() {
+		World    world   = mock(World.class);
+		CopSpawnManager spawns = mock(CopSpawnManager.class);
+		when(spawns.getSpawnerLocations()).thenReturn(java.util.List.of(new Location(world, 1, 64, 1)));
+		LivingEntity body = mock(LivingEntity.class);
+		when(body.getWorld()).thenReturn(world);
+		when(body.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+		when(cop.getEntity()).thenReturn(body);
+		watchedFromTheSouth(world);
+		behavior = new ReturningBehavior(spawns, detainmentService, 600, 3.0, StuckSettings.DEFAULT, () -> now, 48.0);
+		behavior.onEnter(cop);
+		behavior.tick(cop);
+
+		verify(cop).markForRemoval();
+	}
+
+	@Test
 	@DisplayName("a return unreachable for less than the window keeps walking")
 	void unreachableShorterThanWindow_keepsWalking() {
 		withClock(StuckSettings.DEFAULT);

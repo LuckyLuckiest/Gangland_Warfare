@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BreatherSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DispatchSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
@@ -341,15 +342,19 @@ class CopManagerDispatchTest {
 		assertEquals(2, group().getCops().size());
 	}
 
-	/** Characterization pin: Dispatch off keeps the 0.15 start (crime-scene seed, no hold), as the pre-change code did. */
+	/**
+	 * Characterization pin: Dispatch off keeps the 0.15 start (crime-scene seed, no hold), as the pre-change code did.
+	 * Flipped 0.21.1 (R4): the seed is a tip of the spot, no longer a sighting.
+	 */
 	@Test
-	@DisplayName("a RESTORE start with dispatch off is a 0.15 start: the crime scene is seeded, no grace")
+	@DisplayName("a RESTORE start with dispatch off is a 0.15 start: the crime scene is seeded as a tip, no grace")
 	void restoreStart_dispatchOff_isTheLegacyStart() {
 		when(fx.provider.getDispatchSettings()).thenReturn(DispatchSettings.DISABLED);
 
 		manager.onWantedStart(player, wanted, WantedCause.RESTORE);
 
-		assertTrue(group().getSquad().hasFreshSighting());
+		assertFalse(group().getSquad().hasFreshSighting());
+		assertEquals(player.getLocation(), group().getSquad().lastKnownLocation());
 		assertEquals(0L, group().getBreatherUntil());
 	}
 
@@ -439,8 +444,13 @@ class CopManagerDispatchTest {
 		verify(fx.spawner).spawnNearPlayer(eq(player), eq(3), any(), eq(POINTMAN)); // 0 = the star's tier (fixture 3)
 	}
 
+	/** R5: the seed a hand-off unit gives, Handoff.Lead_Blocks (24) east of {@code lastSeen} along the +X heading. */
+	private static Location ledOn(Location lastSeen) {
+		return lastSeen.clone().add(HandoffSettings.DEFAULT.leadBlocks(), 0, 0).setDirection(new Vector(1, 0, 0));
+	}
+
 	@Test
-	@DisplayName("with a hand-off bias active, new units carry it and seed the squad with its last sighting + a tip-off")
+	@DisplayName("with a hand-off bias active, new units carry it and seed the squad with its last sighting led along the heading + a tip-off")
 	void biasActive_newUnitsAreSeededWithTipOff() {
 		manager.onWantedStart(player, wanted);
 		Location  lastSeen = new Location(fx.world, 50, 64, 10);
@@ -450,12 +460,51 @@ class CopManagerDispatchTest {
 		manager.spawnTick(playerId, wanted);
 
 		for (PendingUnit unit : spawnedUnits(2)) assertSame(bias, unit.bias());
-		assertEquals(lastSeen, group().getSquad().lastKnownLocation());
+		assertEquals(ledOn(lastSeen), group().getSquad().lastKnownLocation());
 		assertTrue(group().tippedOffWithin(fx.clock[0], 0L));
+		// 0.21.1 (R4): the seed is a tip - no member saw him there, so nobody chases his live position
+		assertFalse(group().getSquad().hasFreshSighting());
 	}
 
 	@Test
-	@DisplayName("a 20 s ETA outlives the 10 s bias: the unit still spawns with it and seeds lastSeen")
+	@DisplayName("units queued at three stars are called off when the level drops before they arrive (cause 4)")
+	void levelDropBeforeArrival_spawnsNoMoreThanTheNewTarget() {
+		northside();
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(1);
+		Wanted three = CopManagerFixture.wanted(3);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		assertEquals(4, group().pendingCount());
+
+		Wanted one = CopManagerFixture.wanted(1);
+		fx.clock[0] = 21_000L;
+		manager.spawnTick(playerId, one);
+
+		verify(fx.spawner, times(1)).spawnUnit(eq(player), any(), any());
+		assertEquals(1, group().getCops().size(), "the one-star target, not the four queued at three stars");
+		assertEquals(0, group().pendingCount(), "the rest were called off, not left to arrive later");
+	}
+
+	@Test
+	@DisplayName("a unit queued before a hand-off spawns under the bias that is active when it arrives")
+	void unitQueuedBeforeHandoff_spawnsUnderTheActiveBias() {
+		northside();
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		Location  lastSeen = new Location(fx.world, 70, 64, 10);
+		SpawnBias bias     = new SpawnBias(new Vector(1, 0, 0), lastSeen, 30_000L, 60.0);
+		group().setBias(bias);
+
+		fx.clock[0] = 21_000L;
+		manager.spawnTick(playerId, wanted);
+
+		for (PendingUnit unit : spawnedUnits(2)) assertSame(bias, unit.bias());
+		assertEquals(ledOn(lastSeen), group().getSquad().lastKnownLocation());
+	}
+
+	@Test
+	@DisplayName("a 20 s ETA outlives the 10 s bias: the unit still spawns with it and seeds its lead")
 	void biasSurvivesALongEta() {
 		northside();
 		manager.onWantedStart(player, wanted);
@@ -469,8 +518,36 @@ class CopManagerDispatchTest {
 		manager.spawnTick(playerId, wanted);
 
 		for (PendingUnit unit : spawnedUnits(2)) assertSame(bias, unit.bias());
-		assertEquals(lastSeen, group().getSquad().lastKnownLocation());
+		assertEquals(ledOn(lastSeen), group().getSquad().lastKnownLocation());
 		assertTrue(group().tippedOffWithin(21_000L, 0L));
+	}
+
+	@Test
+	@DisplayName("T-434: a unit refused a spot is requeued without a bias it only borrowed, so it never outlives the bias")
+	void requeuedUnit_dropsTheBiasOnceItExpired() {
+		northside();
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		Location  crimeScene = group().getSquad().lastKnownLocation();
+		SpawnBias bias       = new SpawnBias(new Vector(1, 0, 0), new Location(fx.world, 70, 64, 10), 30_000L, 60.0);
+		group().setBias(bias);
+		// the first try finds no spot (R6 refused every spot in view); the next ones do
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null)
+		                                               .thenAnswer(inv -> fx.cop(CopState.IDLE, 0, 0));
+
+		fx.clock[0] = 21_000L;
+		manager.spawnTick(playerId, wanted);
+		assertEquals(2, group().pendingCount(), "both units wait for the next run");
+
+		fx.clock[0] = 31_000L;
+		assertNull(group().biasAt(fx.clock[0]), "the bias ran out");
+		manager.spawnTick(playerId, wanted);
+
+		List<PendingUnit> tries = spawnedUnits(3);
+		assertSame(bias, tries.get(0).bias(), "the first try borrowed the active bias");
+		assertNull(tries.get(1).bias(), "the retry spawns without the expired bias");
+		assertNull(tries.get(2).bias());
+		assertEquals(crimeScene, group().getSquad().lastKnownLocation(), "no seed from a bias that ran out");
 	}
 
 	@Test

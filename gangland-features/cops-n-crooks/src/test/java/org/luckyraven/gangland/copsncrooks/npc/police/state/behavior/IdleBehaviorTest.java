@@ -72,6 +72,20 @@ class IdleBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("Keystone 1.15.4: what an idle cop sees it reports as its own mark, at the range it looked with")
+	void seesTarget_marksItselfAtItsOwnSightRange() {
+		NpcSquad spied = org.mockito.Mockito.spy(new NpcSquad());
+		when(cop.squadFor(player)).thenReturn(spied);
+		CopPerception dark = new CopPerception();
+		dark.addSightFactor((c, p) -> 0.5);
+		when(cop.canSee(player, ALERT_RANGE * 0.5)).thenReturn(true);
+
+		new IdleBehavior(ALERT_RANGE, dark).tick(cop);
+
+		verify(spied).reportSighting(cop, new Location(world, 10, 64, 10), ALERT_RANGE * 0.5);
+	}
+
+	@Test
 	@DisplayName("a fresh squad sighting starts the pursuit of a cop that cannot see the target itself")
 	void freshSquadSighting_startsPursuit() {
 		squad.reportSighting(new Location(world, 0, 64, 0));
