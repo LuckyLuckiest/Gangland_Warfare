@@ -140,6 +140,9 @@ Cops:
       Max_Ticks: 600
       # Distance to the station at which the cop considers itself arrived and attempts to despawn (blocks).
       Station_Arrival_Distance: 3.0
+      # Seconds a player within 24 blocks watching a returning cop keeps it past Max_Ticks; then it is removed anyway,
+      # so nobody can pin a walker forever by staring at it. 0 = no cap (watched walkers stay while watched).
+      Watched_Cap_Seconds: 60
 
    # Pathfinding and stuck detection for cops: the cops' own copy of settings.yml NPC_Navigation (civilians keep
    # theirs).
@@ -366,6 +369,10 @@ Cops:
       # Blocks past the squad's last-known spot, along the heading it saw him take, that the units sent after the
       # hand-off head for and search. At most 0.75 x Pursuit.Max_Distance long; a negative value counts as 0.
       Lead_Blocks: 24.0
+      # How far from the suspect's live spot toward that lead the hand-off units spawn, 0.0-1.0 (0.5 = midway, 0 = around
+      # him ahead of the heading as before). Held within Spawn.Max_Distance of him, never in his view; when no hidden
+      # spot fits there the units spawn ahead of the heading as before. Their goal stays the lead.
+      Spawn_Between: 0.5
    # While a suspect of at least Min_Level stars is out of sight, up to Posts cops hold posts on a ring around the zone
    # (Roles first) and watch for him, for at most Max_Seconds.
    Perimeter:

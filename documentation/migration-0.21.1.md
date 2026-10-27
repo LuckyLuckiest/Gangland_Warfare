@@ -56,7 +56,7 @@ edit every leash or loss refill still sounds like a new dispatch. If you changed
 
 ### 3.2 Optional: new keys
 
-0.21.1 adds three keys. The code default applies when one is missing, so an old `cops.yml` works unchanged; add them to
+0.21.1 adds five keys. The code default applies when one is missing, so an old `cops.yml` works unchanged; add them to
 see and tune them:
 
 ```yaml
@@ -65,6 +65,13 @@ Cops:
       # new in 0.21.1: blocks past the squad's last-known spot, along the heading it saw him take, that the units sent
       # after the hand-off head for and search. At most 0.75 x Pursuit.Max_Distance long; a negative value counts as 0.
       Lead_Blocks: 24.0
+      # new in 0.21.1: how far from his live spot toward that lead the hand-off units spawn, 0.0-1.0 (0.5 = midway,
+      # 0 = around him ahead of the heading as before). Never in his view; their goal stays the lead.
+      Spawn_Between: 0.5
+   Return:
+      # ... your existing Max_Ticks and Station_Arrival_Distance ...
+      # new in 0.21.1: seconds a player within 24 blocks watching a returning cop keeps it past Max_Ticks (0 = no cap)
+      Watched_Cap_Seconds: 60
    Patrol:
       # new in 0.21.1: seconds a station waits after losing a beat cop (killed or lost) before a replacement walks out.
       Respawn_Seconds: 30
@@ -77,6 +84,12 @@ Cops:
 After a hand-off ("Lost him heading X. Units ahead, pick him up.") the new units no longer search the spot where he was
 lost: they walk on along the heading the squad saw him take (stopping short of a wall, on dry ground there; over water or lava, or into unloaded chunks, they search the last-known spot) and
 search there. Neither the heading nor that spot uses his live position. `Lead_Blocks: 0` keeps the old behaviour of searching the last-known spot.
+
+Those units now spawn between where he really is and that spot (`Spawn_Between`), so they do not start a long walk
+from far ahead of a suspect who doubled back; spawning near him is what every unit does, and their goal is still the
+spot. `Spawn_Between: 0` keeps the 0.16 spawn ahead of the heading. A returning cop that a player within 24 blocks
+keeps watching now goes `Watched_Cap_Seconds` after `Return.Max_Ticks` anyway; `0` keeps it while watched, as 0.21.1
+did before this key.
 
 ## 4. Text keys
 

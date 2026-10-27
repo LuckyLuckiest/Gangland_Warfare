@@ -436,14 +436,15 @@ player's world:
   of sight to the spot (a block ray, not a facing cone); the hunted player counts at any distance.
 - **Never in front of him (0.21.1).** No unit, refill or post-escape search squad spawns where the hunted player is
   looking: a spot within 60 degrees of his eye direction with a clear line to it is refused on every path, the old
-  spawn rules included (the unit then waits for the next spawn run). A unit with a hand-off heading spawns ahead of him
-  only on hidden spots, so only while he cannot see them. Every spot also stays within 0.75 x
+  spawn rules included (the unit then waits for the next spawn run). A unit sent after a hand-off spawns between him and
+  the spot it heads for, or ahead of him, only on hidden spots, so only while he cannot see them. Every spot also stays within 0.75 x
   `Cops.Pursuit.Max_Distance` (60 blocks) of him, so a fresh cop is not past the pursuit leash the second it spawns.
 - **Lost cops leave (0.21.1).** A cop that gave up the chase beyond `Cops.Pursuit.Max_Distance` is removed as soon as
   no player is looking at it, instead of walking home for up to five minutes. One whose way home is blocked does the
   same: it never vanishes in front of a player (within `Visibility_Check_Distance`, never less than 24 blocks) and keeps
   walking until nobody looks. `Return.Max_Ticks` still ends a walk home that takes too long, but only once nobody
-  within 24 blocks is looking at it. On the post-escape search
+  within 24 blocks is looking at it, or once someone has stared at it from that close for `Return.Watched_Cap_Seconds`
+  (60) past `Max_Ticks`: nobody can pin a walker forever. On the post-escape search
   the leash is measured to the spot the squad is searching, not to where he hides: searchers there are neither sent
   home nor replaced however far off he is, and a replacement only appears within reach of that spot. Nobody saw where the player went, so the
   replacement searches the squad's last-known spot, never where he is now. A level drop calls off units no longer needed before they arrive, and sends home the cops already there beyond the new level's count (the squad's last Commander stays). A new wanted level fields that level's count whatever the last one ended with: walkers still in range are called back only as many as it needs (its Commander first), and cops still hunting beyond it go home, whether the stars went one at a time or all at once. Cops sent home that are still in range are the first called back when the level rises again or a cop falls; one called back is back on duty, so if it gives up the chase later it walks home for good. Cops answering a radio call stay even when they put the squad over its count, and the post-escape search keeps every cop it called back, even one a star drop had marked for home or a backup
@@ -492,8 +493,10 @@ search; a new sighting re-arms it. A posted cop that the suspect attacks drops i
 ### The hand-off
 
 When the suspect outruns the cops that chased him (the pursuers give up and walk home) the squad leader radios his
-heading ("Lost him heading north-east. Units ahead, pick him up.") and the **next units appear ahead of him**: for
-`Handoff.Bias_Seconds` (10) new units spawn within `Cone_Degrees` (60) of the heading. They head where the squad saw
+heading ("Lost him heading north-east. Units ahead, pick him up.") and the **next units appear near him, toward where
+they are sent**: for `Handoff.Bias_Seconds` (10) new units spawn around the point `Spawn_Between` (0.5, midway) of the
+way from where he really is to the spot they head for, held within `Spawn.Max_Distance` of him and never in his view
+(0.21.1); when no hidden spot fits there they spawn within `Cone_Degrees` (60) of the heading as before. They head where the squad saw
 him going: `Lead_Blocks` (24) past his last-known spot along that heading (short of a wall, on dry ground there; over water or lava, a seagrass or kelp bed, a waterlogged block, or into unloaded chunks, they search the last-known spot), and
 search there once they arrive. Neither the heading nor that spot is his live position (0.21.1). A second hand-off with
 no news of him since leads from the same last-known spot again, never on from the first lead. The first unit gives the squad that spot once, and not at all if
@@ -878,6 +881,7 @@ Cops:
    Return:
       Max_Ticks: 600                # AI ticks before a cop with no target is force-despawned (600 ≈ 30 s)
       Station_Arrival_Distance: 3.0 # Blocks from the spawn station at which the cop considers itself arrived and despawns
+      Watched_Cap_Seconds: 60       # 0.21.1: past Max_Ticks a player within 24 blocks keeps it this long at most (0 = no cap)
 ```
 
 ---

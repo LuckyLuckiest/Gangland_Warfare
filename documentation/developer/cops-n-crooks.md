@@ -1223,6 +1223,8 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   world) keeps walking or standing in view and despawns on the first tick nobody looks. The `Return.Max_Ticks` backstop
   (any walk home, review 2) waits for nobody within the 24-block floor (`CopSightlines.watched(body, 0)`, the overdue
   rule `recycles()` applies), so a far AFK bystander no longer keeps a walker forever and no near viewer sees it vanish;
+  r6 (owner ruling): that near view holds it for `Cops.Return.Watched_Cap_Seconds` (60, from the first tick it held
+  it; 0 = no cap, `CopConfigProvider.getReturnWatchedCapSeconds`), then it despawns watched or not;
   arrival at a station despawns regardless. Every removal of a walker that still targets the player past the leash, in
   `spawnTick` or `aiTick` (the R3 release, `recycles()`, `isMarkedForRemoval` after `ReturningBehavior` ended its walk,
   usually reaped by the next AI tick before any spawn run, or `!isValid`), goes through `CopManager.release`, which
@@ -1232,7 +1234,11 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   hand-off). An older stamp is no cause of the fall-away (a squad wiped a minute later). That edge consumes it; a wanted
   start, a wanted end (the search's `keepSquadOnSearch` included) and the controller's disabled/search early return
   clear it. `isEngaged` counts CUFFING and GUARDING with PURSUING/COMBAT (review 2): a landed cuff sends the rest home
-  beside him, which is the chase won, not lost.
+  beside him, which is the chase won, not lost. r6: while the group is engaged only through posts (no cop PURSUING,
+  COMBAT, CUFFING or GUARDING: `HandoffController.closing`), an unexpired stamp is re-stamped every tick, so a release
+  does not age while a post alone holds the chase and he hides near it; running past the post then still hands off
+  (`pa_postHoldsPastBiasSeconds_thenFallsAway_handsOff`). A chase that goes on (a cop chasing) lets it age as before
+  (`staleRelease_thenTheSquadIsWipedAMinuteLater_noHandoff`).
   During the post-escape search
   (`isSearching`) the leash is measured to the squad's last-known spot, the search's goal (`CopManager.leashAnchor`
   for `isStrandedReturning`/`isStranded`, `PursuingBehavior.leashDistance` for the pursuit leash), never his live
@@ -1275,12 +1281,12 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   stranded cops.
 - Tips (Keystone 1.15.4 `reportTip`, no sighting stamp): the wanted start (plus `markTipOff`, which keeps the
   `Dispatch_Wanted` once-per-hunt gate and the evasion hold), the biased spawn seed, and a hit on a cop that has no line
-  of sight to the attacker. The seed (`reportTip(bias.lead(handoffLead()))` plus `markTipOff`) is given once per
+  of sight to the attacker. The seed (`reportTip(bias.lead(CopSpawnManager.handoffLead(provider)))` plus `markTipOff`) is given once per
   hand-off bias and only while no sighting or tip moved the squad's lead since the bias was set
   (`CopGroup.takeBiasSeed`, T-434), so it never rewinds a fresher lead or the hand-off heading sampled from it. Owner
   ruling R5: `SpawnBias.lead(blocks)` is the bias's `lastSeen` (the squad's lead at the hand-off) moved
   `Cops.Handoff.Lead_Blocks` (24) along the bias heading, which `HandoffController` reads from the squad's last-known
-  history, never the live position; `handoffLead()` caps the lead's length at `CopSpawnManager.LEASH_MARGIN x
+  history, never the live position; `CopSpawnManager.handoffLead` caps the lead's length at `CopSpawnManager.LEASH_MARGIN x
   Pursuit.Max_Distance` from that spot (not from the player, whose live position the cap would leak). The lead stops a
   block short of the first solid block on the way (a ray trace at eye height) and stands on ground near his height
   there (`PostRing.standingSpot`), facing the heading; no dry standing room (a pond's or lava lake's bed counts as none:
@@ -1291,14 +1297,41 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   `CopGroup.seedHandoff`, which remembers it: `HandoffController` takes no heading sample while the squad's lead is that
   seed, so a second hand-off with no news since leads from the squad's real last-known spot again (x 20 -> 44, never
   44 -> 68; `secondHandoffWithoutNews_leadsFromTheLastKnownSpotAgain`). The units head for that spot and search it:
-  the tip restarts the search circle at 6 blocks there, once per hand-off (not once per refill). Spawn placement is unchanged: `hiddenRing` ahead of the bias, through `fits` (leash margin and
-  the R6 view gate). Leash release
+  the tip restarts the search circle at 6 blocks there, once per hand-off (not once per refill). Spawn placement
+  (owner ruling T-423, r6): `CopSpawnManager.betweenRing` takes a `hiddenRing` spot within `BETWEEN_RADIUS` (16) of the
+  point `Cops.Handoff.Spawn_Between` (0.5) of the way from his live spot to `bias.lead(handoffLead)`, that point held
+  within `min(Spawn.Max_Distance, LEASH_MARGIN x Pursuit.Max_Distance)` of him, through `fits` (leash margin and the R6
+  view gate); none (or `Spawn_Between: 0`, or a lead in another world) falls back to `hiddenRing` ahead of the bias as
+  before. The ring is still sampled around him (Keystone's rings are Player-centred) and only accepted near the
+  between point. Spawning near his live spot is what every unit does; the goal stays the lead. Leash release
   and recycle never re-tip (above). Only member sightings make `NpcPursuit`
   chase the live position.
+- **0.21.1 r6, Keystone 1.15.4 consumption.** The six sightings by an NPC the cops drive outside `pursue` report that
+  NPC (`NpcSquad.reportSighting(AbstractNpc, Location[, range])`), so members without their own sight chase toward the
+  reported spot only while it still sees him (re-checked on each ask, 1.5 s at most unless reported again; every
+  per-tick caller re-reports): `OverwatchController` and `PerimeterController` with `settings.sightRange()`,
+  `StandoffController.reportPostedSightings` with its `sightRange()`, `IdleBehavior` and `PatrolBehavior` with the
+  perception range they looked with (`CopPerception.rangeFor`: a dark factor would otherwise leave the mark at 64), and
+  `CopManager.onCopAttackedAlert` (a hit the cop has line of sight to) with the two-argument one. The plain
+  `reportSighting(Location)` stays for the two seeds where a cop takes on a target it is fighting (`attackerSquad`,
+  the solo squad). `PursuingBehavior` keeps `squad.hasFreshSighting()` (decided per site): the stuck rotation is
+  squad-level by design and tips no longer stamp it (`stuckWithOnlyATip_stillCountsTowardRotation`); the cuff waiver
+  needs the cop's own line of sight inside `Cuff_Radius`; `CopPerception.pursuitRange` only lifts the lock-on filters
+  for the cop's own look, and Keystone takes the live goal from a member's own sight alone. None acts on a live
+  position the cop did not see (R4). `isInContact()` was not used: it is never true under `Tactics.Enabled: false`.
+- **0.21.1 r6, the pointman freeze.** `CitizensNavigator.run()` stops a walk (`CancelReason.STUCK`) while its end is
+  farther than `localParams.range()` (Citizens `default-range-blocks`, 100 on the test server), and Keystone 1.15.4
+  sets no range and hands Citizens whole route legs (`NpcRoute.legsFrom` splits only at doors and ladders). A hand-off
+  pointman spawned 239 blocks from its lead had its `moveTo` stopped, its planned route's single leg stopped twice
+  ("route walk failed 2 legs"), the goal marked unreachable, and stood until the stuck recycle. The pursuit leash (44
+  blocks to the live player) and the R5 seed were not involved. `CopNpc.pursue` (goal: the squad's last-known spot)
+  and `CopNpc.navigateTo` (stations, perches, posts, beats) set both navigator parameter sets' range to
+  `distance + 32` (`WALK_RANGE_MARGIN`) and back to the server's own range for a near goal. The upstream fix (Keystone
+  capping each walk and leg inside the range) would retire it.
 - `CopSpawnManager.fits(target)` gates every spawn path (`spawnUnit` and `spawnNearPlayer`): within
   `0.75 x Pursuit.Max_Distance` (3D) and not `inViewOf` (60 degree eye cone plus `isOutOfSight` false). The ring
   fallback takes no Keystone predicate, so a ring spot in view returns `null` (the caller retries next run). A biased unit
-  tries `hiddenRing` ahead of the bias before the station spawners.
+  tries `betweenRing`, then `hiddenRing` ahead of the bias, before the station spawners.
 - `EvasionClock.hasLiveCop` also holds for an active `biasAt(now)` or a RETURNING cop still targeting the player past
   `Pursuit.Max_Distance` (`CopManager.isStranded`, the walker the next spawn tick refills), so a whole-squad leash
   pauses the search whichever AI-tick hook runs first. A walker inside the range holds nothing (a leashed cop keeps
