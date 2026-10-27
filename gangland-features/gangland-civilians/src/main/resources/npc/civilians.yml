@@ -505,6 +505,7 @@ Witness:
    # fist or knife kill needs a civilian in front of you. List ids here (e.g. Kill_Civilian) to make them loud anyway.
    Loud_Crimes: []
    # 0.21.1: a crime within this many seconds of the criminal's own shot is loud too; 0 = shots are not noise.
+   # A thrown weapon counts from its blast (the throw plus its Fuse_Time), so a grenade kill is loud.
    Loud_Shot_Seconds: 3
    # 0.21.1: Bartizan weapon categories whose shot is noise for Loud_Shot_Seconds. A melee swing is silent.
    Loud_Weapon_Types:

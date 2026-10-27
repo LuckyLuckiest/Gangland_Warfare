@@ -6,8 +6,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.bartizan.api.event.WeaponShootEvent;
+import org.luckyraven.bartizan.api.weapon.ThrowableWeapon;
 import org.luckyraven.bartizan.api.weapon.Weapon;
 import org.luckyraven.bartizan.api.weapon.WeaponType;
+import org.luckyraven.bartizan.api.weapon.dto.ThrowableData;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.witness.WitnessTestKit;
@@ -84,8 +86,43 @@ class WitnessShotListenerTest {
 		assertEquals(CivilianState.CALLING, away.getCurrentState());
 	}
 
+	@Test
+	@DisplayName("a grenade is heard when it blows up: a kill 3.1 s after the throw (3 s fuse) is still loud")
+	void grenadeKillAfterTheFuseIsLoud() {
+		CivilianNpc away = kit.civilian(10, true, 270f);
+
+		listener.onWeaponShoot(grenade(60, kit.criminal));
+		kit.advanceSeconds(3.1);
+
+		assertEquals(1, kit.witness("Kill_Civilian"));
+		assertEquals(CivilianState.CALLING, away.getCurrentState());
+	}
+
+	@Test
+	@DisplayName("the grenade's window still closes Loud_Shot_Seconds after the blast")
+	void grenadeWindowClosesAfterTheBlast() {
+		CivilianNpc away = kit.civilian(10, true, 270f);
+
+		listener.onWeaponShoot(grenade(60, kit.criminal));
+		kit.advanceSeconds(6.1);
+
+		assertEquals(0, kit.witness("Kill_Civilian"));
+		assertEquals(CivilianState.IDLE, away.getCurrentState());
+	}
+
+	private static WeaponShootEvent grenade(int fuseTicks, LivingEntity shooter) {
+		ThrowableData data = mock(ThrowableData.class);
+		when(data.getFuseTime()).thenReturn(fuseTicks);
+		ThrowableWeapon weapon = mock(ThrowableWeapon.class);
+		when(weapon.getThrowableData()).thenReturn(data);
+		return shot(weapon, WeaponType.THROWABLE, shooter);
+	}
+
 	private static WeaponShootEvent shot(WeaponType type, LivingEntity shooter) {
-		Weapon weapon = mock(Weapon.class);
+		return shot(mock(Weapon.class), type, shooter);
+	}
+
+	private static WeaponShootEvent shot(Weapon weapon, WeaponType type, LivingEntity shooter) {
 		when(weapon.getCategory()).thenReturn(type);
 		WeaponShootEvent event = mock(WeaponShootEvent.class);
 		when(event.getWeapon()).thenReturn(weapon);

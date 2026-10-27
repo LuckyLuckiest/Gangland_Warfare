@@ -88,7 +88,7 @@ Witness:
 
 A file without these keys already gets these values from the code, so this edit only documents them; edit a value to
 change it. `View_Angle: 360.0` restores the 0.20.0 rule (civilians see all round). `Loud_Shot_Seconds: 0` stops
-shots counting as noise; `Loud_Weapon_Types` names the Bartizan weapon categories whose shot is noise (a melee swing is
+shots counting as noise (a throwable counts from its blast, the throw plus its Bartizan `Fuse_Time`); `Loud_Weapon_Types` names the Bartizan weapon categories whose shot is noise (a melee swing is
 not). List a crime id under `Loud_Crimes` (for example `Kill_Civilian`) to make it loud whatever the weapon. `Phone_Item: ""` and `Notice_Particle: ""` turn those off. `Intimidate_Range: 0` turns off
 the right-click.
 
@@ -146,7 +146,7 @@ The Spanish file: `- "Llamada al 911 reporta %crime% cerca de %place%. Sospechos
 ### 4.5 Behaviour that changed
 
 - A silent crime (car theft, a punch) is reported only by a civilian whose view (`View_Angle`) covers you. A loud one
-  (any crime within `Loud_Shot_Seconds` of your own gun or throwable shot, or one in `Loud_Crimes`, none by default)
+  (any crime within `Loud_Shot_Seconds` of your own gunshot or grenade blast, or one in `Loud_Crimes`, none by default)
   makes every civilian in range turn to it
   first, visibly.
 - Notice, dialling, stopped and connected each show and say something (see

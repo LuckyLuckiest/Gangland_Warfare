@@ -668,7 +668,7 @@ class WitnessServiceTest {
 	@DisplayName("a crime within Loud_Shot_Seconds of the criminal's own gunshot is loud; a later one is silent")
 	void crimeRightAfterAGunshotIsLoud() {
 		CivilianNpc away = kit.civilian(10, true, 270f);
-		kit.service.heardShot(kit.criminal, "GUN");
+		kit.service.heardShot(kit.criminal, "GUN", 0L);
 
 		kit.advanceSeconds(2);
 		assertEquals(1, kit.witness("Car_Theft"));

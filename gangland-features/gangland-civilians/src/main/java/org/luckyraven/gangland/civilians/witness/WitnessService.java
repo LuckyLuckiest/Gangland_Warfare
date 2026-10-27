@@ -104,7 +104,7 @@ public final class WitnessService {
 	private final Map<AssaultKey, Long>  lastAssault = new HashMap<>();
 	/** Civilian entity id -> when the criminal stopped its call (hit, scared, intimidated): Scared_Cooldown_Seconds. */
 	private final Map<UUID, Long>        stoppedAt  = new HashMap<>();
-	/** Player id -> when he last fired a weapon: Loud_Shot_Seconds. */
+	/** Player id -> when his last shot was heard (a throwable: its blast, may be ahead of now): Loud_Shot_Seconds. */
 	private final Map<UUID, Long>        lastShot   = new HashMap<>();
 
 	public WitnessService(CivilianService civilians, CrimeService crimes, Supplier<WitnessRules> rules,
@@ -140,11 +140,14 @@ public final class WitnessService {
 
 	/**
 	 * {@code shooter} fired a weapon of Bartizan category {@code weaponType}: when Loud_Weapon_Types lists it (a gun, a
-	 * throwable; never a melee swing by default) his crimes in the next Loud_Shot_Seconds are loud.
+	 * throwable; never a melee swing by default) his crimes in the next Loud_Shot_Seconds are loud. A throwable's noise
+	 * is its blast, {@code fuseMillis} after the throw: the window runs from the throw to Loud_Shot_Seconds after the
+	 * blast (Bartizan fires its explosion damage event only after the victim died, too late to be the noise itself).
 	 */
-	public void heardShot(Player shooter, String weaponType) {
+	public void heardShot(Player shooter, String weaponType, long fuseMillis) {
 		boolean noisy = rules.get().loudWeaponTypes().stream().anyMatch(type -> type.equalsIgnoreCase(weaponType));
-		if (noisy) lastShot.put(shooter.getUniqueId(), now());
+		// max: a gunshot right after the throw must not cut the pending blast's window short
+		if (noisy) lastShot.merge(shooter.getUniqueId(), now() + Math.max(0L, fuseMillis), Math::max);
 	}
 
 	/**
@@ -166,7 +169,7 @@ public final class WitnessService {
 		return Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, cos)))) <= viewAngle / 2.0 + 1.0E-9;
 	}
 
-	/** A crime in Loud_Crimes, or one within Loud_Shot_Seconds of the criminal's own gunshot. */
+	/** A crime in Loud_Crimes, or one before or within Loud_Shot_Seconds of the criminal's own gunshot or blast. */
 	private boolean isLoud(Player criminal, String crimeId, WitnessRules rules, long now) {
 		if (rules.loudCrimes().contains(crimeId)) return true;
 
