@@ -352,14 +352,15 @@ class CopSpawnManagerUnitTest {
 	@Test
 	@DisplayName("T-423 / R6: every spot between him and the lead is in his view: none is taken, the unit falls back ahead")
 	void handoffUnit_betweenSpotsInView_fallBackToTheRingAhead() {
-		// west (toward the lead) lies open in front of him, east is walled off
-		blocked = dir -> dir.getX() > 0;
+		// west (toward the lead) lies open in front of him; only within ~53 degrees of east is walled off, where no
+		// spot of the between disc (16 blocks round x=-8.5) lies
+		blocked = dir -> dir.getX() > 0.6;
 		when(player.getEyeLocation()).thenReturn(new Location(world, 0.5, GROUND_Y + 1.62, 0.5, 90f, 0f)); // looks west
 
 		spawnManager.spawnUnit(player, unit(null, runEastFrom(-40.5)), loc -> true);
 
 		Location spot = ringSpot();
-		assertTrue(spot.getX() > 0.5, "never in his view; the fallback ring ahead (east): " + spot);
+		assertTrue(angle(new Vector(1, 0, 0), spot) <= 60.0, "never in his view; the fallback ring ahead (east): " + spot);
 	}
 
 	@Test
