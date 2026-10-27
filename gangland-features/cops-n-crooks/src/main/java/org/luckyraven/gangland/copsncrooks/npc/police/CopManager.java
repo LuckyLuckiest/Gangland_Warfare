@@ -59,7 +59,7 @@ import static org.luckyraven.gangland.copsncrooks.npc.police.perception.CopSight
 public class CopManager implements BeanLifecycle {
 
 	/** Past twice {@code Recycle_Seconds}, only a view within this many blocks keeps a stranded cop. */
-	private static final double OVERDUE_VIEW_BLOCKS = 24.0;
+	private static final double OVERDUE_VIEW_BLOCKS = CopSightlines.WATCH_MIN_BLOCKS;
 
 	private final JavaPlugin            plugin;
 	@Getter
@@ -327,12 +327,13 @@ public class CopManager implements BeanLifecycle {
 	 */
 	private List<CopNpc> reengageReturning(CopGroup group, Player player, int limit, Predicate<CopNpc> eligible) {
 		double       maxDist = configProvider.getPursuitMaxDistance();
+		Location     anchor  = leashAnchor(group, player);
 		List<CopNpc> walkers = new ArrayList<>();
 		boolean      led     = false;
 		for (CopNpc cop : group.getCops()) {
 			if (cop.isValid() && cop.getCurrentState() != CopState.RETURNING && isCommander(cop)) led = true;
 			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) continue;
-			if (isStrandedReturning(cop, player, maxDist) || !eligible.test(cop)) continue;
+			if (isStrandedReturning(cop, anchor, maxDist) || !eligible.test(cop)) continue;
 			walkers.add(cop);
 		}
 		Location at       = player.getLocation();
@@ -349,6 +350,8 @@ public class CopManager implements BeanLifecycle {
 			}
 			cop.setTargetPlayerId(player.getUniqueId());
 			cop.transitionTo(CopState.PURSUING);
+			// back on duty: a later rotation out of the chase must not read as sent home and bounce it back (D1)
+			group.unmarkSentHome(cop);
 			back.add(cop);
 		}
 		return back;
@@ -762,6 +765,7 @@ public class CopManager implements BeanLifecycle {
 		List<CopNpc> cops    = group.getCops();
 		long         now     = copRadio.now();
 		double       maxDist = configProvider.getPursuitMaxDistance();
+		Location     anchor  = leashAnchor(group, player);
 
 		cops.removeIf(cop -> {
 			if (cop.isMarkedForRemoval() || recycles(cop, group, player, now)) {
@@ -770,7 +774,10 @@ public class CopManager implements BeanLifecycle {
 			}
 			// R3 (T-131/T-149): a leashed walker nobody is looking at leaves the map instead of walking home. No tip (R4):
 			// nobody saw him, so the refill inherits the squad's own lead and its widening search circle
-			if (isStrandedReturning(cop, player, maxDist) && !isWatched(cop)) {
+			if (isStrandedReturning(cop, anchor, maxDist) && !isWatched(cop)) {
+				// the chase leashed out: the hand-off must still see it once this walker is gone (a stood-down one has
+				// no target and is no leash)
+				if (playerId.equals(cop.getTargetPlayerId())) group.setLeashReleased(true);
 				group.release(cop, markManager);
 				return true;
 			}
@@ -804,7 +811,7 @@ public class CopManager implements BeanLifecycle {
 		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count. Nor
 		// is one the group sent home (T-436), but while the group lacks cops the nearest in range comes back first.
 		List<CopNpc> counted = new ArrayList<>(cops.stream().filter(
-				c -> !isStrandedReturning(c, player, maxDist) && !group.isSentHome(c)).toList());
+				c -> !isStrandedReturning(c, anchor, maxDist) && !group.isSentHome(c)).toList());
 		counted.addAll(reengageReturning(group, player, targetCount - counted.size(), group::isSentHome));
 		int currentCount = counted.size();
 		// Each new cop takes the composition's first role no counted cop holds, so a stranded one's role is refilled.
@@ -952,8 +959,19 @@ public class CopManager implements BeanLifecycle {
 			if (group.takeBiasSeed(unit.bias())) {
 				// a tip, not a sighting (R4): no member saw him at the hand-off spot. The units head on along the heading
 				// the squad saw him take, Lead_Blocks past it, and search there (R5)
-				group.seedHandoff(unit.bias().lead(handoffLead()));
+				SpawnBias seed = unit.bias();
+				Location  lead = seed.lead(handoffLead());
+				group.seedHandoff(lead);
 				group.markTipOff(now);
+				if (log.isDebugEnabled()) {
+					Location from = seed.lastSeen();
+					log.debug("HANDOFF_LEAD {} at={},{},{} heading={} dir={},{} from={},{},{}", player.getName(),
+					          lead.getBlockX(), lead.getBlockY(), lead.getBlockZ(),
+					          copRadio.compassWord(from, from.clone().add(seed.heading())),
+					          String.format(Locale.ROOT, "%.2f", seed.heading().getX()),
+					          String.format(Locale.ROOT, "%.2f", seed.heading().getZ()),
+					          from.getBlockX(), from.getBlockY(), from.getBlockZ());
+				}
 			}
 		}
 	}
@@ -1036,7 +1054,7 @@ public class CopManager implements BeanLifecycle {
 			if (inView(player, body, protect)) return false;
 		}
 		// the same bound for bystanders: the spawner's yaw-only check sees through walls to Visibility_Check_Distance
-		if (overdue ? inViewOfBystander(at, body, player, OVERDUE_VIEW_BLOCKS)
+		if (overdue ? CopSightlines.inViewOfPlayers(body, player, OVERDUE_VIEW_BLOCKS)
 		            : spawnManager.isVisibleToOtherPlayers(at, player))
 			return false;
 
@@ -1046,38 +1064,41 @@ public class CopManager implements BeanLifecycle {
 		return true;
 	}
 
-	/**
-	 * A real player other than {@code suspect} has {@code body} {@link CopSightlines#inView} within {@code maxDistance}.
-	 * Citizens NPCs (cops are PLAYER-type, so the walker itself) are in {@code world.getPlayers()} and are skipped.
-	 */
-	private static boolean inViewOfBystander(Location at, LivingEntity body, @Nullable Player suspect,
-	                                         double maxDistance) {
-		if (at.getWorld() == null) return false;
-		for (Player other : at.getWorld().getPlayers())
-			if (!other.equals(suspect) && !other.hasMetadata("NPC") && inView(other, body, maxDistance)) return true;
-		return false;
-	}
-
-	/**
-	 * A real player, the suspect or a bystander, has the cop {@link CopSightlines#inView} (line of sight) within
-	 * {@code max(24, Visibility_Check_Distance)}. Not {@link CopSpawnManager#isVisibleToOtherPlayers}: it counts NPCs.
-	 */
+	/** R3: a real player, the suspect or a bystander, has the cop in view ({@link CopSightlines#watched}). */
 	private boolean isWatched(CopNpc cop) {
 		LivingEntity body = cop.getEntity();
-		if (body == null) return false;
-		double protect = Math.max(OVERDUE_VIEW_BLOCKS, configProvider.getVisibilityCheckDistance());
-		return inViewOfBystander(body.getLocation(), body, null, protect);
+		return body != null && CopSightlines.watched(body, configProvider.getVisibilityCheckDistance());
 	}
 
-	/** A RETURNING cop past {@code Pursuit.Max_Distance} of {@code player}: out of this hunt, the spawn task refills it. */
+	/**
+	 * A RETURNING cop past {@code Pursuit.Max_Distance} of {@code player} ({@link #leashAnchor}): out of this hunt, the
+	 * spawn task refills it.
+	 */
 	public boolean isStranded(CopNpc cop, Player player) {
-		return isStrandedReturning(cop, player, configProvider.getPursuitMaxDistance());
+		return isStrandedReturning(cop, leashAnchor(groups.get(player.getUniqueId()), player),
+		                           configProvider.getPursuitMaxDistance());
 	}
 
-	private static boolean isStrandedReturning(CopNpc cop, Player player, double maxDist) {
+	/** Whether {@code playerId} is on the post-escape search (0.16.1 T-187): zero stars, the squad still looking. */
+	public boolean isSearching(UUID playerId) {
+		return targetingManager.isSearching(playerId);
+	}
+
+	/**
+	 * Where the pursuit leash is measured from: the player, except on the post-escape search, whose goal is the squad's
+	 * last-known spot (0.21.1). Searchers circling that spot never leash off, and are never refilled, for a hidden player
+	 * 90 blocks away: the live position would leak where he hides (R4). As {@code PursuingBehavior}'s own leash.
+	 */
+	private Location leashAnchor(@Nullable CopGroup group, Player player) {
+		Location lastKnown = group == null || !targetingManager.isSearching(player.getUniqueId()) ? null
+		                                                                                         : group.getSquad().lastKnownLocation();
+		return lastKnown != null ? lastKnown : player.getLocation();
+	}
+
+	private static boolean isStrandedReturning(CopNpc cop, Location anchor, double maxDist) {
 		if (cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) return false;
 		Location at = cop.getEntity().getLocation();
-		return at.getWorld() != player.getWorld() || at.distanceSquared(player.getLocation()) > maxDist * maxDist;
+		return at.getWorld() != anchor.getWorld() || at.distanceSquared(anchor) > maxDist * maxDist;
 	}
 
 	/**

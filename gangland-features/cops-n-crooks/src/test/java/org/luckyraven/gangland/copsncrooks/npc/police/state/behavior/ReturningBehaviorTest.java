@@ -134,6 +134,30 @@ class ReturningBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("R3: a stranded cop in a player's view keeps walking and despawns only once nobody looks")
+	void strandedInView_keepsWalkingUntilOutOfView() {
+		withClock(StuckSettings.DEFAULT);
+		World    world  = cop.getEntity().getWorld();
+		Player   viewer = mock(Player.class);
+		Location eyes   = new Location(world, 0, 65.62, -10, 0f, 0f); // ten blocks south, looking north at him
+		when(viewer.getEyeLocation()).thenAnswer(i -> eyes.clone());
+		when(viewer.hasLineOfSight(cop.getEntity())).thenReturn(true);
+		when(world.getPlayers()).thenReturn(java.util.List.of(viewer));
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+
+		now += StuckSettings.DEFAULT.recycleSeconds() * 1000L;
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+		verify(cop, times(2)).navigateTo(any());
+
+		eyes.setYaw(180f); // he turns away
+		behavior.tick(cop);
+		verify(cop).markForRemoval();
+	}
+
+	@Test
 	@DisplayName("a return unreachable for less than the window keeps walking")
 	void unreachableShorterThanWindow_keepsWalking() {
 		withClock(StuckSettings.DEFAULT);

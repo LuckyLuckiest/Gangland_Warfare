@@ -496,8 +496,8 @@ public class CopRadio {
 
 	/**
 	 * A Marksman or Defender whose order puts it on a post other than the fan's centre ({@code ENGAGE} is
-	 * {@link #roleLine}'s) calls it: {@code Overwatch_Set} / {@code Shield_Up}, measured to the hunted target, three
-	 * ack delays out (past the leader's order, the member's ack and an Assault's {@code Flanking}). There is no
+	 * {@link #roleLine}'s) calls it: {@code Overwatch_Set} / {@code Shield_Up}, measured to the hunted target when said
+	 * (0.21.1), three ack delays out (past the leader's order, the member's ack and an Assault's {@code Flanking}). There is no
 	 * arrival signal from the squad, so "reached its post" is approximated: the line goes out only if the cop is then
 	 * within its band of the target ({@link #atPost}). Cooldowns keep it to once per engagement.
 	 */
@@ -507,13 +507,20 @@ public class CopRadio {
 		LivingEntity hunted = voice.hunted(squad);
 		if (key == null || lines.lines(key).isEmpty() || hunted == null) return;
 
-		Location spot = hunted.getLocation();
-		if (directionTo(member, spot).isEmpty()) return;
+		if (directionTo(member, hunted.getLocation()).isEmpty()) return;
 		Map<String, String> extra = new HashMap<>(roleExtras(member));
-		extra.put("direction", directionTo(member, spot));
-		extra.put("distance", distanceTo(member, spot));
-		extra.put("side", sideOf(squad, spot));
-		radio.sayLater(squad, voice, member, key, extra, 3, () -> atPost((CopNpc) member, voice.hunted(squad)));
+		// measured when said, three ack delays out, not at the order: the cop walked to its post meanwhile
+		// ponytail: SquadRadio.sayLater (gangland-api) takes a fixed map and reads it after the relevance check, so the
+		// check fills it; a Supplier<Map> overload there would be the clean seam (an api minor)
+		radio.sayLater(squad, voice, member, key, extra, 3, () -> {
+			LivingEntity now = voice.hunted(squad);
+			if (!atPost((CopNpc) member, now)) return false;
+			Location spot = now.getLocation();
+			extra.put("direction", directionTo(member, spot));
+			extra.put("distance", distanceTo(member, spot));
+			extra.put("side", sideOf(squad, spot));
+			return true;
+		});
 	}
 
 	/** The Defender's front post is up close; a Marksman's is inside its own band (a little slack past the max). */

@@ -177,8 +177,9 @@ Losing your last star by staying out of sight is an escape, but the cops do not 
 - **The end.** The search ends when it runs out, when you are wanted again (the normal wanted HUD takes the bar back),
   or when you die or are arrested. Death and arrest end the cops' hunt at once: the squad stands down and is removed,
   and the bounty bar goes. Quitting removes the squad at once, with no stand-down line. When the search runs out on its
-  own the cops give up, and the chat says so, with the bounty still standing if it is. An admin wanted clear does not
-  end a search that is already running; it runs to its timer (or a reload).
+  own the cops give up, and the chat says so, with the bounty still standing if it is. An admin wanted clear
+  (`/glw wanted clear`) ends a running search too (0.21.1): the bounty bar goes and the cops stand down and walk home.
+  The bounty itself stays.
 - **The bounty is not a second money system.** It is the server-made notoriety of the bounty system: a player who kills
   you can collect it when `Pay_Notoriety` is on, like any other notoriety. With `Pay_Notoriety` on, two players can farm
   it (one escapes, the other kills him and collects); it is off by default, so leave it off unless you police that.

@@ -67,7 +67,8 @@ public class HandoffController {
 		if (config == null) return;   // no cop config loaded (a reload window): skip the tick, keep the state
 
 		HandoffSettings settings = requireNonNullElse(config.getHandoffSettings(), HandoffSettings.DEFAULT);
-		if (!settings.enabled() || group == null || group.getLevel() <= 0) {
+		// the post-escape search runs its group at one star (T-187) but he has none: no hand-off, nobody chases (T-432)
+		if (!settings.enabled() || group == null || group.getLevel() <= 0 || copManager.isSearching(id)) {
 			samples.remove(id);
 			engaged.remove(id);
 			return;
@@ -84,9 +85,13 @@ public class HandoffController {
 		boolean isEngaged   = isEngaged(group, player, maxDistance);
 		if (isEngaged) engaged.add(id);
 		else engaged.remove(id);
+		// a walker released before the posts fell away left the chase as a leash; a cop chasing him since makes it old
+		if (chasing(group)) group.setLeashReleased(false);
 
 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
-		if (window.isEmpty() || !leashedOut(group, id, player, maxDistance)) return;
+		boolean leashed = group.isLeashReleased() || leashedOut(group, id, player, maxDistance);
+		group.setLeashReleased(false);
+		if (window.isEmpty() || !leashed) return;
 
 		Location oldest  = window.peekFirst().at();
 		Location newest  = window.peekLast().at();
@@ -137,7 +142,19 @@ public class HandoffController {
 		return false;
 	}
 
-	/** A cop still hunting this player (target kept: a stood-down chase clears it) is RETURNING beyond the pursuit range. */
+	/** A cop of the group chases or fights him. */
+	private static boolean chasing(CopGroup group) {
+		for (CopNpc cop : List.copyOf(group.getCops())) {
+			CopState state = cop.getCurrentState();
+			if (cop.isValid() && (state == CopState.PURSUING || state == CopState.COMBAT)) return true;
+		}
+		return false;
+	}
+
+	/**
+	 * A cop still hunting this player (target kept: a stood-down chase clears it) is RETURNING beyond the pursuit range,
+	 * or one was and was released out of view on a spawn run since ({@link CopGroup#isLeashReleased}, read by the caller).
+	 */
 	private static boolean leashedOut(CopGroup group, UUID id, Player player, double maxDistance) {
 		for (CopNpc cop : List.copyOf(group.getCops())) {
 			Entity body = cop.getEntity();

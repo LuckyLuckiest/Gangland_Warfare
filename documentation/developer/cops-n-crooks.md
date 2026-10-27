@@ -328,7 +328,7 @@ generic lines. Every kind below has its own `Lines.<Key>` (2-3 variants, English
 | `Medic_Treating` | the medic's channel first progresses, once per treatment (also after being pinned on arrival) | `%member%` `%health%` `%role%` |
 
 `Hit`, `Medic_Moving` and `Patched_Up` gained `%health%` (whole percent, `Patched_Up` after the heal), `%distance%` and
-`%eta%` (rough seconds, `Medic_Moving`: 4.3 blocks/s times the medic's tier `Speed`). A role's radio kind comes from its traits (Commander/Medic flags, a block cone is a Defender, a `FLANK` placement an Assault, a firing band from 12 blocks out a Marksman), the role name only as a fallback, so renamed roles keep their lines. Marksman/Defender lines say `%distance%`/`%direction%` only when the signal carries a spot. A role pool that is muted (`[]`) falls back to the generic line. `Commander_Orders` goes out on the squad's first `CONTACT` as well as on `ENGAGE`; a Marksman's `Overwatch_Set` and a Defender's `Shield_Up` also fire as a follow-up when its flank or push order arrives (distance and direction measured to the hunted target), so they are heard on open ground where no member takes the fan's centre.
+`%eta%` (rough seconds, `Medic_Moving`: 4.3 blocks/s times the medic's tier `Speed`). A role's radio kind comes from its traits (Commander/Medic flags, a block cone is a Defender, a `FLANK` placement an Assault, a firing band from 12 blocks out a Marksman), the role name only as a fallback, so renamed roles keep their lines. Marksman/Defender lines say `%distance%`/`%direction%` only when the signal carries a spot. A role pool that is muted (`[]`) falls back to the generic line. `Commander_Orders` goes out on the squad's first `CONTACT` as well as on `ENGAGE`; a Marksman's `Overwatch_Set` and a Defender's `Shield_Up` also fire as a follow-up when its flank or push order arrives (distance and direction measured to the hunted target when the line is said, three ack delays out, 0.21.1), so they are heard on open ground where no member takes the fan's centre.
 Extras now fill a line before the built-in `%distance%` / `%direction%`, so a caller-measured value wins over the
 speaker-to-spot one. Only `Marksman_Spotted` joins the priority set.
 
@@ -1203,7 +1203,9 @@ registries keep every row (the location is nullable), so their `max + 1` already
 
 **Debug lines** (`log.debug`, read by the acceptance verdicts): `DISPATCH {player} count= station= eta= hold= reason= bias=`,
 `UNIT {player} callsign= tier= role= fromStation= hidden= bias= ahead= at=`, `PERIMETER {player} start|end ...`,
-`HANDOFF {player} heading=`, `EVASION {player} speed= zone= hideout= quiet=` and `EVASION {player} hold=enroute`.
+`HANDOFF {player} heading=`, `HANDOFF_LEAD {player} at=x,y,z heading= dir=dx,dz from=x,y,z` (0.21.1: the seed a hand-off
+unit applied, `from` the bias's last-known spot), `EVASION {player} speed= zone= hideout= quiet=` and
+`EVASION {player} hold=enroute`.
 
 **Radio.** `CopRadio` keeps both constructors; `setPlaceNames` and `placeOf(location)` (place name or `Unknown_Place`) supply
 `%place%` to every line (the voice uses the squad's last-known location, `dispatch` the target's). New overloads:
@@ -1213,8 +1215,18 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
 
 **0.21.1 spawn and dispatch (cnc-cop-ai lane spawn).**
 - `CopManager.spawnTick` releases a stranded RETURNING cop (`isStrandedReturning`) that no real player watches
-  (`isWatched`: `CopSightlines.inView` with line of sight within `max(24, Visibility_Check_Distance)`, Citizens NPCs
-  skipped; not `isVisibleToOtherPlayers`, which counts NPCs and the walker itself). Neither this release nor
+  (`isWatched` -> `CopSightlines.watched`: `inView` with line of sight within `max(24, Visibility_Check_Distance)`,
+  Citizens NPCs skipped; not `isVisibleToOtherPlayers`, which counts NPCs and the walker itself). r5: the same helper
+  gates `ReturningBehavior`'s stranded-on-return despawn (owner ruling R3; the factory passes
+  `Visibility_Check_Distance`), so a walker whose way home is blocked keeps walking in view and despawns on the first
+  tick nobody looks; arrival and the `Return.Max_Ticks` backstop still despawn regardless. A release of a walker that
+  still targets the player sets `CopGroup.leashReleased`: `HandoffController` counts it as leashed out on the next
+  engaged -> not engaged edge (the walker is gone by then when a perimeter post held the chase past its release), clears
+  it on any tick a cop chases or fights him, and consumes it on the edge. During the post-escape search
+  (`isSearching`) the leash is measured to the squad's last-known spot, the search's goal (`CopManager.leashAnchor`
+  for `isStrandedReturning`/`isStranded`, `PursuingBehavior.leashDistance` for the pursuit leash), never his live
+  position; `HandoffController` does nothing for a searched player (T-432: the search group runs at level 1 but he has no
+  stars), so its own distances need no anchor. Neither this release nor
   `recycles()` tips the squad (review r2, R4): no `reportTip`, no `markTipOff`, not even
   `reportTip(lastKnownLocation())`, because `reportTip` re-stamps the search circle back to 6 blocks; the refill
   inherits the squad's own lead and its widening circle (pinned by `strandedReleased_searchCircleKeepsWidening` and
@@ -1238,7 +1250,8 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   `CopGroup.sentHome`: it is out of the counted cops, and while the group lacks cops (a level rise, a casualty) the
   nearest one in range is called back before anything spawns (T-436). Only a new wanted start and `releaseSurplus`
   mark: inside an episode a walker rotated out of a pursuit or leashed is never marked, so the D1 no-bounce rule holds
-  there. `spawnDueUnits` lends a unit queued before a hand-off the group's
+  there. A walker called back loses its mark at once (`CopGroup.unmarkSentHome` in `reengageReturning`), so one the AI
+  rotates out again before any `isSentHome` read is an ordinary walker, never called back a second time (r5). `spawnDueUnits` lends a unit queued before a hand-off the group's
   active bias; a unit refused a spot is requeued without a bias that ran out (T-434). `reengageReturning` skips
   stranded cops.
 - Tips (Keystone 1.15.4 `reportTip`, no sighting stamp): the wanted start (plus `markTipOff`, which keeps the
@@ -1252,7 +1265,8 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   Pursuit.Max_Distance` from that spot (not from the player, whose live position the cap would leak). The lead stops a
   block short of the first solid block on the way (a ray trace at eye height) and stands on ground near his height
   there (`PostRing.standingSpot`), facing the heading; no dry standing room (a pond's or lava lake's bed counts as none:
-  liquids are passable) or an unloaded chunk anywhere in the box the lead spans gives `lastSeen` itself, checked before
+  liquids are passable; r5: so are feet in seagrass, tall seagrass, kelp, a kelp plant, a bubble column or any
+  waterlogged block, `SpawnBias.wet`) or an unloaded chunk anywhere in the box the lead spans gives `lastSeen` itself, checked before
   the ray trace so the trace never loads a chunk on the main thread, so a lead is never underground, under water or
   inside a building he never entered (a breach trigger). The seed goes through
   `CopGroup.seedHandoff`, which remembers it: `HandoffController` takes no heading sample while the squad's lead is that

@@ -91,7 +91,8 @@ public class CopBehaviorFactory {
 		behaviors.put(CopState.RETURNING, new ReturningBehavior(spawnManagerSupplier.get(), detainmentService,
 		                                                        configProvider.getMaxReturnTicks(),
 		                                                        configProvider.getStationArrivalDistance(),
-		                                                        configProvider.getStuckSettings()));
+		                                                        configProvider.getStuckSettings(),
+		                                                        configProvider.getVisibilityCheckDistance()));
 
 		behaviors.put(CopState.POSTED, new PostedBehavior());
 		behaviors.put(CopState.PATROL, new PatrolBehavior(patrolServices));

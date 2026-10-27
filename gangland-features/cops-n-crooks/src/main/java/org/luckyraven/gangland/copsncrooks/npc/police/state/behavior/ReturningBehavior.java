@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopSightlines;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -19,7 +20,8 @@ import java.util.function.LongSupplier;
 /**
  * Cop navigates back to the nearest registered spawn station. {@link #tryDespawn} marks the cop for removal - and it
  * despawns - on arrival, after {@code Return.Max_Ticks}, or once the way home has been unreachable for
- * {@code Stuck.Recycle_Seconds} (a stranded cop would otherwise stand frozen where its target died).
+ * {@code Stuck.Recycle_Seconds} (a stranded cop would otherwise stand frozen where its target died). A stranded cop
+ * in a real player's view stays until nobody looks (owner ruling R3, {@link CopSightlines#watched}).
  * <p>
  * Only a cop sent back because its target was restrained or jailed re-engages: if that target is freed before the cop
  * reaches its station (e.g. via admin command), the cop returns to {@link CopState#COMBAT} when {@code combatForced}
@@ -33,6 +35,8 @@ public class ReturningBehavior implements CopBehavior {
 	private final int               maxReturnTicks;
 	private final double            stationArrivalDistance;
 	private final StuckSettings     stuck;
+	/** {@code Visibility_Check_Distance}: how far a view keeps a stranded cop from vanishing (R3). */
+	private final double            visibilityCheckDistance;
 
 	private Location selectedStation;
 	/**
@@ -46,11 +50,25 @@ public class ReturningBehavior implements CopBehavior {
 
 	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
 	                         double stationArrivalDistance, StuckSettings stuck) {
-		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, System::currentTimeMillis);
+		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, 0.0);
+	}
+
+	/** {@code visibilityCheckDistance} widens the view that keeps a stranded cop past the 24-block floor (R3). */
+	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
+	                         double stationArrivalDistance, StuckSettings stuck, double visibilityCheckDistance) {
+		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, System::currentTimeMillis,
+		     visibilityCheckDistance);
 	}
 
 	ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
 	                  double stationArrivalDistance, StuckSettings stuck, LongSupplier clock) {
+		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, clock, 0.0);
+	}
+
+	private ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
+	                          double stationArrivalDistance, StuckSettings stuck, LongSupplier clock,
+	                          double visibilityCheckDistance) {
+		this.visibilityCheckDistance = visibilityCheckDistance;
 		this.clock                  = clock;
 		this.stuck                  = stuck;
 		this.spawnManager           = spawnManager;
@@ -97,7 +115,8 @@ public class ReturningBehavior implements CopBehavior {
 			cop.navigateTo(selectedStation);
 
 			if (strandedOnReturn(cop)) {
-				tryDespawn(cop);
+				// R3: never vanish before a player's eyes; it keeps walking and goes on the first tick nobody looks
+				if (!CopSightlines.watched(entity, visibilityCheckDistance)) tryDespawn(cop);
 				return;
 			}
 		}
@@ -152,8 +171,8 @@ public class ReturningBehavior implements CopBehavior {
 	}
 
 	/**
-	 * Despawns the cop unconditionally. Pursuit has either reached the station, timed out, or the pursuit leash has
-	 * given up — spawn-cap recovery takes priority over keeping the cop around for bystanders.
+	 * Despawns the cop. Pursuit has either reached the station, timed out, or the way home stayed unreachable; only that
+	 * last one waits for nobody to be looking (R3) - arrival and the timeout backstop despawn regardless.
 	 */
 	private void tryDespawn(CopNpc cop) {
 		cop.markForRemoval();

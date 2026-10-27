@@ -94,6 +94,13 @@ public class CopGroup {
 	@Getter(AccessLevel.NONE)
 	private final Set<CopNpc> sentHome = new HashSet<>();
 
+	/**
+	 * A walker still hunting the target was released out of view past the leash (R3) since a cop of the group last
+	 * chased or fought him: the chase leashed out though no RETURNING cop is left to show it (the hand-off reads it).
+	 */
+	@Setter
+	private boolean leashReleased;
+
 	/** Radio-clock ms of the latest tip-off (a crime-scene start, a hand-off seed); 0 when none. */
 	private long tipOffAt;
 
@@ -150,6 +157,14 @@ public class CopGroup {
 	/** Marks a walker of the group as sent home by it ({@link #sentHome}); the caller turns it RETURNING. */
 	public void markSentHome(CopNpc cop) {
 		sentHome.add(cop);
+	}
+
+	/**
+	 * {@code cop} was called back on duty: it loses the mark at once, so a later rotation out of the chase is an ordinary
+	 * walk home and never a call-back candidate (T-436, D1).
+	 */
+	public void unmarkSentHome(CopNpc cop) {
+		sentHome.remove(cop);
 	}
 
 	/** Whether {@code cop} walks home because the group sent it; a cop back on duty loses the mark. */

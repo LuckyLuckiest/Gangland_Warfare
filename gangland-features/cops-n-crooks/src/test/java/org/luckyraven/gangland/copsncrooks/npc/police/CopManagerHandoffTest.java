@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -101,6 +103,76 @@ class CopManagerHandoffTest {
 		assertTrue(carrying.size() >= 2, "both replacements carry the bias");
 		for (PendingUnit unit : carrying) assertSame(bias, unit.bias());
 		assertEquals(44.0, group.getSquad().lastKnownLocation().getX());
+	}
+
+	@Test
+	@DisplayName("0.21.1: the leashed walker released out of view (R3) before the posts fall away still hands the chase off")
+	void leashedWalkerReleasedBeforeTheEdge_stillHandsOff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group = fx.manager.groupFor(player.getUniqueId());
+		playerAt(10);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		fx.clock[0] += 1_000L;
+		playerAt(20);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+
+		// one cop holds a post by him, the other leashed out and walks home 480 blocks off, still on his trail
+		CopNpc posted = group.getCops().get(0);
+		CopNpc walker = group.getCops().get(1);
+		posted.transitionTo(CopState.POSTED);
+		when(posted.getEntity().getLocation()).thenReturn(new Location(fx.world, 20, 64, 10));
+		walker.transitionTo(CopState.RETURNING);
+		when(walker.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		assertNull(group.biasAt(fx.clock[0]), "the post still holds the chase");
+
+		// the spawn run takes the unwatched walker off the map (R3), its refill still en route; then he runs on and
+		// leaves the post behind
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		assertFalse(group.getCops().contains(walker), "the leashed walker was released");
+		playerAt(120);
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		assertNotNull(group.biasAt(fx.clock[0]), "the chase leashed out: the hand-off fires");
+		verify(fx.radio).sayFromLeader(group, "Handoff", Map.of("direction", "east"), player);
+	}
+
+	@Test
+	@DisplayName("T-432: the post-escape search runs at one star but he has none: a leash there hands nothing off")
+	void postEscapeSearch_leashOut_noHandoff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.setEscapePredicate(cause -> cause == org.luckyraven.gangland.core.wanted.WantedCause.EVASION);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group = fx.manager.groupFor(player.getUniqueId());
+		fx.manager.onWantedEnd(player, org.luckyraven.gangland.core.wanted.WantedCause.EVASION);
+		when(fx.targeting.isSearching(player.getUniqueId())).thenReturn(true);
+		fx.manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(0));
+		assertEquals(1, group.getLevel(), "the search's squad runs at one star (T-187)");
+
+		playerAt(10);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		fx.clock[0] += 1_000L;
+		playerAt(20);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		for (CopNpc cop : group.getCops()) {
+			cop.transitionTo(CopState.RETURNING);
+			when(cop.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
+		}
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		assertNull(group.biasAt(fx.clock[0]));
+		verify(fx.radio, org.mockito.Mockito.never()).sayFromLeader(eq(group), eq("Handoff"), any(), any());
 	}
 
 	/** Seen running east (x=10, x=20), then the chase leashes out with him unseen: the hand-off at x=20, heading east. */

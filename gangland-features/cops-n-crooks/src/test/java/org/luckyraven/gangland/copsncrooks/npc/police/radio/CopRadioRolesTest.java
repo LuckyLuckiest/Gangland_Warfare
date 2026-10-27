@@ -293,6 +293,22 @@ class CopRadioRolesTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1: Overwatch_Set's distance is measured when it is said, three ack delays out, not at the order")
+	void marksmanFlank_overwatchDistance_measuredWhenSaid() {
+		group.add(cop(1, 4, 0, null));
+		CopNpc marksman = cop(2, 6, 0, marksmanRole());
+		group.add(marksman);
+		signal(NpcSquadSignal.FLANK_LEFT, marksman, new Location(world, 6, 64, 12));
+
+		// it walks out to its post before the line goes out
+		when(marksman.getEntity().getLocation()).thenReturn(new Location(world, 20, 64, 0));
+		runTasks();
+
+		Location suspect = new Location(world, 0, 64, 0);
+		verify(bystander).sendMessage("[SWAT-2] OW 20 " + compass(marksman, suspect) + " Marksman");
+	}
+
+	@Test
 	@DisplayName("radio-far 3: a Marksman at its flank post with no line of sight to the suspect does not claim Overwatch_Set")
 	void marksmanFlank_noLineOfSight_noOverwatchFollowUp() {
 		group.add(cop(1, 4, 0, null));

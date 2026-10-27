@@ -2,12 +2,17 @@ package org.luckyraven.gangland.copsncrooks.npc.police.dispatch;
 
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PostRing;
 
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Where reinforcements should appear after a hand-off (set by the hand-off, consumed by dispatch): ahead of the
@@ -24,6 +29,14 @@ public record SpawnBias(Vector heading, Location lastSeen, long until, double co
 
 	/** Eye height the lead's wall check runs at, as {@link PostRing}'s lanes. */
 	private static final double EYE_HEIGHT = 1.6;
+
+	/**
+	 * Blocks that only stand under water: a pond bed full of them reads as passable, not liquid, feet. Plain enum
+	 * constants, not XMaterial: all exist since 1.13, under the 1.16 floor, and XMaterial's class init needs a server.
+	 */
+	private static final Set<Material> UNDERWATER_PLANTS = EnumSet.of(Material.SEAGRASS, Material.TALL_SEAGRASS,
+	                                                                  Material.KELP, Material.KELP_PLANT,
+	                                                                  Material.BUBBLE_COLUMN);
 
 	public SpawnBias {
 		heading  = Objects.requireNonNull(heading, "heading").clone();
@@ -59,9 +72,15 @@ public record SpawnBias(Vector heading, Location lastSeen, long until, double co
 
 		// water and lava are passable, so the standing room found may be a pond's bed: he never went under
 		Location spot = PostRing.standingSpot(world, to.getX(), to.getZ(), lastSeen.getBlockY());
-		if (spot == null || world.getBlockAt(spot.getBlockX(), spot.getBlockY(), spot.getBlockZ()).isLiquid())
+		if (spot == null || wet(world.getBlockAt(spot.getBlockX(), spot.getBlockY(), spot.getBlockZ())))
 			return lastSeen.clone();
 		return spot.setDirection(facing);
+	}
+
+	/** {@code feet} is under water: a liquid, an underwater plant (seagrass, kelp, a bubble column) or waterlogged. */
+	private static boolean wet(Block feet) {
+		if (feet.isLiquid() || UNDERWATER_PLANTS.contains(feet.getType())) return true;
+		return feet.getBlockData() instanceof Waterlogged waterlogged && waterlogged.isWaterlogged();
 	}
 
 	/** Every chunk in the box spanning {@code from} and {@code to} is loaded (a superset of the chunks a line crosses). */

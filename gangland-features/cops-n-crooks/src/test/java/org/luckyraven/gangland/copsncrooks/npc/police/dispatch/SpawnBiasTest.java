@@ -2,8 +2,10 @@ package org.luckyraven.gangland.copsncrooks.npc.police.dispatch;
 
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.junit.jupiter.api.DisplayName;
@@ -109,6 +111,61 @@ class SpawnBiasTest {
 
 		assertEquals(20.0, led.getX(), 1e-9);
 		assertEquals(64.0, led.getY(), 1e-9);
+	}
+
+	/**
+	 * A pond east of x = 40 whose bed is at y = 60, water from 62 to 63, the feet block at 60 and the one at 61 of a
+	 * type ({@code feet}, {@code above} on it): passable, not a liquid, so the bed reads as standing room.
+	 */
+	private static World pondBed(Material feet, Material above) {
+		World world = world((x, z) -> x >= 40 ? 60 : 64);
+		when(world.getBlockAt(anyInt(), anyInt(), anyInt())).thenAnswer(i -> {
+			Block block = mock(Block.class);
+			int   x     = i.getArgument(0);
+			int   y     = i.getArgument(1);
+			when(block.isPassable()).thenReturn(y >= (x >= 40 ? 60 : 64));
+			if (x >= 40 && y == 60) when(block.getType()).thenReturn(feet);
+			else if (x >= 40 && y == 61) when(block.getType()).thenReturn(above);
+			when(block.isLiquid()).thenReturn(x >= 40 && y > 61 && y < 64);
+			return block;
+		});
+		return world;
+	}
+
+	@Test
+	@DisplayName("a seagrass bed east: the plant is not a liquid, but he never went under, so the last-known spot")
+	void aSeagrassBed_isTheLastKnownSpot() {
+		Location led = eastFrom(pondBed(Material.SEAGRASS, Material.WATER)).lead(24);
+
+		assertEquals(20.0, led.getX(), 1e-9);
+		assertEquals(64.0, led.getY(), 1e-9);
+	}
+
+	@Test
+	@DisplayName("a kelp bed east: the last-known spot")
+	void aKelpBed_isTheLastKnownSpot() {
+		Location led = eastFrom(pondBed(Material.KELP_PLANT, Material.KELP)).lead(24);
+
+		assertEquals(20.0, led.getX(), 1e-9);
+		assertEquals(64.0, led.getY(), 1e-9);
+	}
+
+	@Test
+	@DisplayName("a waterlogged block at the bed's feet: the last-known spot")
+	void aWaterloggedFeetBlock_isTheLastKnownSpot() {
+		World world = pondBed(Material.OAK_SIGN, Material.WATER);
+		when(world.getBlockAt(44, 60, 10)).thenAnswer(i -> {
+			Block       block = mock(Block.class);
+			Waterlogged data  = mock(Waterlogged.class);
+			when(data.isWaterlogged()).thenReturn(true);
+			when(block.isPassable()).thenReturn(true);
+			when(block.getBlockData()).thenReturn(data);
+			return block;
+		});
+
+		Location led = eastFrom(world).lead(24);
+
+		assertEquals(20.0, led.getX(), 1e-9);
 	}
 
 	@Test

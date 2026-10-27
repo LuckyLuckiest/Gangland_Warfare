@@ -14,6 +14,7 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.core.wanted.WantedStars;
 
 import org.luckyraven.keystone.bean.Qualifier;
@@ -47,11 +48,21 @@ class WantedClearCommand extends SubArgument {
 
 			if (user == null) return;
 
-			Wanted wanted = user.getWanted();
-			wanted.setLevel(0, WantedCause.ADMIN);
+			clear(player, user.getWanted());
 
 			sender.sendMessage(Messages.WANTED_CLEARED.toString());
 		};
+	}
+
+	/**
+	 * Clears {@code player}'s stars. At zero stars the level does not change, so {@link Wanted#setLevel} fires no end, but
+	 * a module may still hunt him there (cops-n-crooks' post-escape search): the admin clear ends that too (0.21.1).
+	 * The end listeners hold nothing for a player already at zero, so the extra end only stops what still runs.
+	 */
+	static void clear(Player player, Wanted wanted) {
+		boolean wasWanted = wanted.isWanted();
+		wanted.setLevel(0, WantedCause.ADMIN);
+		if (!wasWanted) Bukkit.getPluginManager().callEvent(new WantedEndEvent(player, wanted, WantedCause.ADMIN));
 	}
 
 	private void clearTarget() {
@@ -73,7 +84,7 @@ class WantedClearCommand extends SubArgument {
 				return;
 			}
 
-			targetUser.getWanted().setLevel(0, WantedCause.ADMIN);
+			clear(target, targetUser.getWanted());
 
 			sender.sendMessage(
 					Messages.WANTED_CLEARED_OTHER.toString().replace("%player%", target.getName()));

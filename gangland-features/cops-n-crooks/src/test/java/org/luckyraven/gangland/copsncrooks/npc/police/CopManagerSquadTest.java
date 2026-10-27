@@ -405,6 +405,67 @@ class CopManagerSquadTest {
 		assertEquals(4, countIn(group, CopState.PURSUING), "the cops walking home come back to the search");
 	}
 
+	@Test
+	@DisplayName("T-436 (D1): a cop sent home, called back, then rotated out by its AI walks home, never called back again")
+	void sentHomeCalledBackThenRotated_isNotCalledBackAgain() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.spawnTick(playerId, one);
+		List<CopNpc> sent = group.getCops().stream().filter(c -> c.getCurrentState() == CopState.RETURNING).toList();
+		assertEquals(2, sent.size());
+		manager.spawnTick(playerId, three); // the rise calls both back
+		assertEquals(4, countIn(group, CopState.PURSUING));
+
+		// before the next spawn run the AI rotates one called-back cop out of the chase (stuck, nobody sees him)
+		CopNpc rotated = sent.get(0);
+		rotated.transitionTo(CopState.RETURNING);
+		manager.spawnTick(playerId, three);
+
+		assertEquals(CopState.RETURNING, rotated.getCurrentState(), "a rotated-out cop is never called back (D1)");
+	}
+
+	@Test
+	@DisplayName("D1 control: a cop never sent home and rotated out of the chase keeps walking home")
+	void neverSentHomeRotated_staysReturning() {
+		Wanted three = CopManagerFixture.wanted(3);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group   = manager.groupFor(playerId);
+		CopNpc   rotated = group.getCops().get(0);
+		rotated.transitionTo(CopState.RETURNING);
+
+		manager.spawnTick(playerId, three);
+
+		assertEquals(CopState.RETURNING, rotated.getCurrentState());
+	}
+
+	@Test
+	@DisplayName("0.21.1: on the post-escape search a walker near the last-known spot is no stranded cop, though he hides 120 off")
+	void search_walkerNearTheLastKnownSpot_isNeitherReleasedNorRefilled() {
+		manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		manager.onWantedEnd(player, WantedCause.EVASION);
+		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+		// the squad knew him at the crime scene (10, 10); one searcher walks home from (0, 0), 14 blocks from it
+		CopNpc walker = group.getCops().get(0);
+		walker.transitionTo(CopState.RETURNING);
+		when(player.getLocation()).thenReturn(new Location(fx.world, 130, 64, 10));
+		when(player.getEyeLocation()).thenReturn(new Location(fx.world, 130, 65.62, 10, 0f, 0f));
+
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+
+		assertTrue(group.getCops().contains(walker), "measured to the search's goal, the walker is in range");
+		verify(fx.spawner, times(2)).spawnNearPlayer(any(), anyInt(), any(), any());
+	}
+
 	private static long countIn(CopGroup group, CopState state) {
 		return group.getCops().stream().filter(c -> c.getCurrentState() == state).count();
 	}

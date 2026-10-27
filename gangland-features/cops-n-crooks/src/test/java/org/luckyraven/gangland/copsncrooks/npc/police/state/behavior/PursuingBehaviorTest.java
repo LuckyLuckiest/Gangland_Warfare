@@ -268,6 +268,46 @@ class PursuingBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1: on the post-escape search the leash reads to the squad's last-known spot, not his hidden live spot")
+	void searchingTarget_leashMeasuredToTheLastKnownSpot() {
+		PursuingBehavior searching = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS,
+		                                                  mock(DetainmentService.class), cuffLocks,
+		                                                  RetreatSettings.DEFAULT, now::get,
+		                                                  id -> id.equals(player.getUniqueId()));
+		World        world = mock(World.class);
+		LivingEntity self  = mock(LivingEntity.class);
+		when(self.getWorld()).thenReturn(world);
+		when(self.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+		when(cop.getEntity()).thenReturn(self);
+		squad.reportTip(new Location(world, 10, 64, 0));
+		// he hides 90 blocks off, past the leash; the search circles the spot the squad knew, 10 blocks from this cop
+		when(cop.distanceTo((LivingEntity) player)).thenReturn(MAX_DISTANCE + 10);
+
+		searching.tick(cop);
+
+		verify(cop, never()).transitionTo(CopState.RETURNING);
+	}
+
+	@Test
+	@DisplayName("0.21.1: on the post-escape search a searcher past the leash from the last-known spot still walks home")
+	void searchingTarget_farFromTheLastKnownSpot_rotatesOut() {
+		PursuingBehavior searching = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS,
+		                                                  mock(DetainmentService.class), cuffLocks,
+		                                                  RetreatSettings.DEFAULT, now::get,
+		                                                  id -> id.equals(player.getUniqueId()));
+		World        world = mock(World.class);
+		LivingEntity self  = mock(LivingEntity.class);
+		when(self.getWorld()).thenReturn(world);
+		when(self.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+		when(cop.getEntity()).thenReturn(self);
+		squad.reportTip(new Location(world, MAX_DISTANCE + 10, 64, 0));
+
+		searching.tick(cop);
+
+		verify(cop).transitionTo(CopState.RETURNING);
+	}
+
+	@Test
 	@DisplayName("a suspect on the post-escape search is never cuffed, even in cuff range with the lock free (0.16.1 T-187)")
 	void searchingTarget_isNotCuffed() {
 		PursuingBehavior searching = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS,
