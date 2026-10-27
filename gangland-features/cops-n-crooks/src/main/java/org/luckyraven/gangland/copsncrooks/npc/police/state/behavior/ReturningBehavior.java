@@ -20,8 +20,9 @@ import java.util.function.LongSupplier;
 /**
  * Cop navigates back to the nearest registered spawn station. {@link #tryDespawn} marks the cop for removal - and it
  * despawns - on arrival, after {@code Return.Max_Ticks}, or once the way home has been unreachable for
- * {@code Stuck.Recycle_Seconds} (a stranded cop would otherwise stand frozen where its target died). A stranded cop
- * in a real player's view stays until nobody looks (owner ruling R3, {@link CopSightlines#watched}).
+ * {@code Stuck.Recycle_Seconds} (a stranded cop would otherwise stand frozen where its target died), or at once when
+ * its station is in another world. A stranded cop in a real player's view stays until nobody looks (owner ruling R3,
+ * {@link CopSightlines#watched}); {@code Return.Max_Ticks} still removes it.
  * <p>
  * Only a cop sent back because its target was restrained or jailed re-engages: if that target is freed before the cop
  * reaches its station (e.g. via admin command), the cop returns to {@link CopState#COMBAT} when {@code combatForced}
@@ -98,25 +99,25 @@ public class ReturningBehavior implements CopBehavior {
 
 			if (entity == null) return;
 
-			World world = entity.getWorld();
+			World   world     = entity.getWorld();
+			boolean noWayHome = !world.equals(selectedStation.getWorld());
 
-			if (!world.equals(selectedStation.getWorld())) {
-				tryDespawn(cop);
-				return;
+			if (!noWayHome) {
+				double distance = Math.sqrt(horizontalDistanceSquared(entity.getLocation(), selectedStation));
+
+				if (distance <= stationArrivalDistance) {
+					tryDespawn(cop);
+					return;
+				}
+
+				cop.navigateTo(selectedStation);
+				noWayHome = strandedOnReturn(cop);
 			}
 
-			double distance = Math.sqrt(horizontalDistanceSquared(entity.getLocation(), selectedStation));
-
-			if (distance <= stationArrivalDistance) {
+			// R3: no way home (its station in another world, or unreachable past the stuck window) despawns on the first
+			// tick nobody looks; while watched it keeps walking (or standing) until the Max_Ticks backstop below
+			if (noWayHome && !CopSightlines.watched(entity, visibilityCheckDistance)) {
 				tryDespawn(cop);
-				return;
-			}
-
-			cop.navigateTo(selectedStation);
-
-			if (strandedOnReturn(cop)) {
-				// R3: never vanish before a player's eyes; it keeps walking and goes on the first tick nobody looks
-				if (!CopSightlines.watched(entity, visibilityCheckDistance)) tryDespawn(cop);
 				return;
 			}
 		}
@@ -171,8 +172,9 @@ public class ReturningBehavior implements CopBehavior {
 	}
 
 	/**
-	 * Despawns the cop. Pursuit has either reached the station, timed out, or the way home stayed unreachable; only that
-	 * last one waits for nobody to be looking (R3) - arrival and the timeout backstop despawn regardless.
+	 * Despawns the cop. Pursuit has either reached the station, timed out, or there is no way home (another world, or
+	 * unreachable past the stuck window); only that last one waits for nobody to be looking (R3) - arrival and the
+	 * timeout backstop despawn regardless.
 	 */
 	private void tryDespawn(CopNpc cop) {
 		cop.markForRemoval();

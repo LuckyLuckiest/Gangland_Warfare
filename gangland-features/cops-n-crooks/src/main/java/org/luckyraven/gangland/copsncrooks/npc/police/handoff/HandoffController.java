@@ -71,6 +71,7 @@ public class HandoffController {
 		if (!settings.enabled() || group == null || group.getLevel() <= 0 || copManager.isSearching(id)) {
 			samples.remove(id);
 			engaged.remove(id);
+			if (group != null) group.setLeashReleased(false);
 			return;
 		}
 
@@ -85,10 +86,10 @@ public class HandoffController {
 		boolean isEngaged   = isEngaged(group, player, maxDistance);
 		if (isEngaged) engaged.add(id);
 		else engaged.remove(id);
-		// a walker released before the posts fell away left the chase as a leash; a cop chasing him since makes it old
-		if (chasing(group)) group.setLeashReleased(false);
 
 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
+		// a leashed walker removed before the chase fell away still leashed it out, whoever chased on since: only this
+		// edge (or a wanted start or end, CopManager) consumes the record
 		boolean leashed = group.isLeashReleased() || leashedOut(group, id, player, maxDistance);
 		group.setLeashReleased(false);
 		if (window.isEmpty() || !leashed) return;
@@ -142,18 +143,9 @@ public class HandoffController {
 		return false;
 	}
 
-	/** A cop of the group chases or fights him. */
-	private static boolean chasing(CopGroup group) {
-		for (CopNpc cop : List.copyOf(group.getCops())) {
-			CopState state = cop.getCurrentState();
-			if (cop.isValid() && (state == CopState.PURSUING || state == CopState.COMBAT)) return true;
-		}
-		return false;
-	}
-
 	/**
 	 * A cop still hunting this player (target kept: a stood-down chase clears it) is RETURNING beyond the pursuit range,
-	 * or one was and was released out of view on a spawn run since ({@link CopGroup#isLeashReleased}, read by the caller).
+	 * or one was and a spawn run removed it since ({@link CopGroup#isLeashReleased}, read by the caller).
 	 */
 	private static boolean leashedOut(CopGroup group, UUID id, Player player, double maxDistance) {
 		for (CopNpc cop : List.copyOf(group.getCops())) {

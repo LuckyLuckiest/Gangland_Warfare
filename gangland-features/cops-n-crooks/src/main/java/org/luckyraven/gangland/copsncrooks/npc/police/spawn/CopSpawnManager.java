@@ -32,6 +32,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 @CustomLog
@@ -55,6 +56,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	private final DetainmentService  detainmentService;
 	private final CuffLockRegistry   cuffLockRegistry;
 	private volatile Predicate<UUID> searchGuard = id -> false;
+	/** Where {@link #insideLeash} measures from for a suspect: him, unless {@link #setLeashAnchor} says otherwise. */
+	private volatile Function<Player, Location> leashAnchor = Player::getLocation;
 	private volatile CopPerception   perception  = new CopPerception();
 	private volatile PatrolServices  patrolServices;
 
@@ -283,7 +286,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	/**
 	 * Where a cop may appear for {@code target} (0.21.1): within {@link #LEASH_MARGIN} x {@code Pursuit.Max_Distance}
-	 * of him (3D; no leash configured keeps every distance) and not {@link #inViewOf in his view}.
+	 * of his {@link #setLeashAnchor leash anchor} (3D; no leash configured keeps every distance) and not
+	 * {@link #inViewOf in his view}.
 	 */
 	private Predicate<Location> fits(Player target) {
 		return spot -> insideLeash(spot, target) && !inViewOf(target, spot);
@@ -291,7 +295,7 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	private boolean insideLeash(Location spot, Player target) {
 		double   leash = configProvider.getPursuitMaxDistance() * LEASH_MARGIN;
-		Location at    = target.getLocation();
+		Location at    = leashAnchor.apply(target);
 		if (!(leash > 0)) return true;
 		return Objects.equals(spot.getWorld(), at.getWorld()) && spot.distanceSquared(at) <= leash * leash;
 	}
@@ -387,6 +391,17 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 */
 	public void setSearchGuard(Predicate<UUID> searchGuard) {
 		this.searchGuard = searchGuard;
+	}
+
+	/**
+	 * Where the leash margin of a spawn spot is measured from for a suspect: the point his pursuit leash reads from
+	 * (CopManager: the squad's last-known spot on the post-escape search, else him). The ring and the spawner search
+	 * stay centred on him; only spots also inside that margin are taken.
+	 */
+	// ponytail: Keystone's EntitySpawner rings are Player-centred, so a search far from him gets no spot; a Location-
+	// centred findHiddenSpawnLocation overload upstream would centre search refills on the last-known spot itself
+	public void setLeashAnchor(Function<Player, Location> leashAnchor) {
+		this.leashAnchor = Objects.requireNonNull(leashAnchor, "leashAnchor");
 	}
 
 	/** The sight decisions the cops' behaviours share (0.20.0 seam); read when the factories are rebuilt. */

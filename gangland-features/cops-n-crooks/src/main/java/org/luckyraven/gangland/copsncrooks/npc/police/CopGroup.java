@@ -95,11 +95,19 @@ public class CopGroup {
 	private final Set<CopNpc> sentHome = new HashSet<>();
 
 	/**
-	 * A walker still hunting the target was released out of view past the leash (R3) since a cop of the group last
-	 * chased or fought him: the chase leashed out though no RETURNING cop is left to show it (the hand-off reads it).
+	 * A spawn run removed a walker still hunting the target past the leash (an R3 release, a recycle, or its own walk
+	 * home ending) since the hand-off last looked: the chase leashed out though no RETURNING cop is left to show it. The
+	 * hand-off's engaged -> not engaged edge consumes it; a wanted start or end clears it.
 	 */
 	@Setter
 	private boolean leashReleased;
+
+	/**
+	 * The squad stood down (its {@code Stand_Down} line went out, T-433): it says no more orders, and a line it queued
+	 * before is dropped. The next wanted start clears it.
+	 */
+	@Setter
+	private boolean stoodDown;
 
 	/** Radio-clock ms of the latest tip-off (a crime-scene start, a hand-off seed); 0 when none. */
 	private long tipOffAt;

@@ -105,6 +105,134 @@ class CopManagerHandoffTest {
 		assertEquals(44.0, group.getSquad().lastKnownLocation().getX());
 	}
 
+	/**
+	 * Seen running east (x=10, x=20) with both cops on him; then the second one leashes out and walks home 480 blocks
+	 * off, still on his trail, while the first chases on by him (x=20). Returns {chaser, walker}.
+	 */
+	private CopNpc[] chaseWithALeashedWalker(HandoffController controller, CopGroup group) {
+		playerAt(10);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+		fx.clock[0] += 1_000L;
+		playerAt(20);
+		group.getSquad().reportSighting(player.getLocation());
+		controller.tick(player, group);
+
+		CopNpc chaser = group.getCops().get(0);
+		CopNpc walker = group.getCops().get(1);
+		when(chaser.getEntity().getLocation()).thenReturn(new Location(fx.world, 20, 64, 10));
+		walker.transitionTo(CopState.RETURNING);
+		when(walker.getEntity().getLocation()).thenReturn(new Location(fx.world, 500, 64, 10));
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		return new CopNpc[]{chaser, walker};
+	}
+
+	/** The cops lose him and post by the spot; he runs on to x=120 and leaves every post behind. */
+	private void postsFallAway(HandoffController controller, CopGroup group) {
+		for (CopNpc cop : group.getCops())
+			if (cop.getCurrentState() == CopState.PURSUING) cop.transitionTo(CopState.POSTED);
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		playerAt(120);
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+	}
+
+	@Test
+	@DisplayName("judge r5 Q1: the walker released (R3) while another cop still chases, then the posts fall away: hand-off")
+	void walkerReleasedDuringTheChase_thenPostsFallAway_handsOff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc   walker = chaseWithALeashedWalker(controller, group)[1];
+
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
+		fx.manager.spawnTick(player.getUniqueId(), wanted); // the walker leaves the map while the chaser chases
+		assertFalse(group.getCops().contains(walker), "the leashed walker was released");
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group); // the chaser still chases him
+		postsFallAway(controller, group);
+
+		assertNotNull(group.biasAt(fx.clock[0]), "the chase leashed out: the hand-off fires");
+	}
+
+	@Test
+	@DisplayName("judge r5 Q1c control: the leashed walker still walking home when the posts fall away hands off")
+	void walkerStillThere_thenPostsFallAway_handsOff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group = fx.manager.groupFor(player.getUniqueId());
+		chaseWithALeashedWalker(controller, group);
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		postsFallAway(controller, group);
+
+		assertNotNull(group.biasAt(fx.clock[0]));
+	}
+
+	@Test
+	@DisplayName("0.21.1: a refill chasing from the release tick on does not wipe the leash: when it loses him, hand-off")
+	void walkerReleased_refillChasesAtOnce_thenLosesHim_handsOff() {
+		// dispatch off: the refill spawns in the very run that releases the walker
+		when(fx.provider.getDispatchSettings()).thenReturn(DispatchSettings.DISABLED);
+		when(fx.provider.getBreatherSettings()).thenReturn(BreatherSettings.DISABLED);
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc   walker = chaseWithALeashedWalker(controller, group)[1];
+
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		assertFalse(group.getCops().contains(walker), "the leashed walker was released");
+		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count(),
+		             "the chaser and its refill chase him");
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		postsFallAway(controller, group);
+
+		assertNotNull(group.biasAt(fx.clock[0]), "the leash still stands when the chase falls away");
+	}
+
+	@Test
+	@DisplayName("0.21.1: a leashed walker its walk home took off the map (marked for removal) still hands the chase off")
+	void leashedWalkerMarkedForRemoval_released_stillHandsOff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc   walker = chaseWithALeashedWalker(controller, group)[1];
+		// its walk home ended it (stranded, Max_Ticks or a station) before any R3 release
+		when(walker.isMarkedForRemoval()).thenReturn(true);
+
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		assertFalse(group.getCops().contains(walker), "the marked walker was released");
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		postsFallAway(controller, group);
+
+		assertNotNull(group.biasAt(fx.clock[0]), "the chase leashed out: the hand-off fires");
+	}
+
+	@Test
+	@DisplayName("0.21.1: a leash release recorded in one episode never hands off the next: a wanted start or end clears it")
+	void leashRelease_clearedByWantedStartAndEnd() {
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group = fx.manager.groupFor(player.getUniqueId());
+
+		group.setLeashReleased(true);
+		fx.manager.onWantedEnd(player, org.luckyraven.gangland.core.wanted.WantedCause.ADMIN);
+		assertFalse(group.isLeashReleased(), "a wanted end clears it");
+
+		group.setLeashReleased(true);
+		fx.manager.onWantedStart(player, wanted);
+		assertFalse(group.isLeashReleased(), "a wanted start clears it");
+	}
+
 	@Test
 	@DisplayName("0.21.1: the leashed walker released out of view (R3) before the posts fall away still hands the chase off")
 	void leashedWalkerReleasedBeforeTheEdge_stillHandsOff() {

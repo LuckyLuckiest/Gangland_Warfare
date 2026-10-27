@@ -771,6 +771,41 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("T-433: the Stand_Down marks the squad stood down (its queued orders go quiet); the next wanted start clears it")
+	void wantedEnd_marksStoodDown_untilTheNextStart() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+
+		manager.onWantedEnd(player);
+		assertTrue(group.isStoodDown());
+
+		manager.onWantedStart(player, wanted);
+		assertFalse(group.isStoodDown());
+	}
+
+	@Test
+	@DisplayName("0.21.1: on the post-escape search the spawner's leash anchor is the squad's last-known spot, not him")
+	void searchSpawnAnchor_isTheLastKnownSpot() {
+		@SuppressWarnings("unchecked")
+		org.mockito.ArgumentCaptor<java.util.function.Function<Player, Location>> anchor =
+				org.mockito.ArgumentCaptor.forClass(java.util.function.Function.class);
+		verify(fx.spawner).setLeashAnchor(anchor.capture());
+
+		fx.manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(playerId, wanted);
+		CopGroup group = fx.manager.groupFor(playerId);
+		group.getSquad().reportSighting(new Location(fx.world, 10, 64, 10));
+		when(player.getLocation()).thenReturn(new Location(fx.world, 100, 64, 10));
+		assertEquals(100.0, anchor.getValue().apply(player).getX(), "while wanted: him");
+
+		fx.manager.onWantedEnd(player, WantedCause.EVASION);
+		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+		assertEquals(10.0, anchor.getValue().apply(player).getX(), "on the search: the squad's last-known spot");
+	}
+
+	@Test
 	@DisplayName("one wanted clear (WantedEndEvent then the level change to 0) announces Stand_Down once")
 	void wantedEnd_calledTwice_saysStandDownOnce() {
 		manager.onWantedStart(player, wanted);

@@ -675,6 +675,35 @@ class CopRadioRolesTest {
 	}
 
 	@Test
+	@DisplayName("T-433: a flank queued before 'Suspect cleared' is never said after it, nor its ack")
+	void flankQueuedBeforeTheStandDown_silentAfterIt() {
+		CopNpc leader  = cop(1, 4, 0, null);
+		CopNpc assault = cop(2, 6, 0, assaultRole());
+		group.add(leader);
+		group.add(assault);
+
+		signal(NpcSquadSignal.FLANK_LEFT, assault, new Location(world, 6, 64, 12));
+		group.setStoodDown(true); // the wanted clear: Stand_Down said
+		runTasks();
+
+		verify(bystander, never()).sendMessage(org.mockito.ArgumentMatchers.startsWith("[SWAT-2] FLANK"));
+		verify(bystander, never()).sendMessage("[SWAT-2] Ack line");
+	}
+
+	@Test
+	@DisplayName("T-433: a squad that stood down says no orders or role lines on a signal")
+	void stoodDownSquad_signalSilent() {
+		CopNpc marksman = cop(1, 4, 0, marksmanRole());
+		group.add(marksman);
+		group.setStoodDown(true);
+
+		signal(NpcSquadSignal.ENGAGE, marksman, new Location(world, 14, 64, 0));
+		runTasks();
+
+		verify(bystander, never()).sendMessage(org.mockito.ArgumentMatchers.anyString());
+	}
+
+	@Test
 	@DisplayName("a flank order to a non-Assault cop gets only the ack")
 	void plainFlank_noFlankingLine() {
 		CopNpc leader = cop(1, 4, 0, null);

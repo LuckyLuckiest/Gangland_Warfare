@@ -121,6 +121,9 @@ public class CopManager implements BeanLifecycle {
 		this.spawnTasks          = new ConcurrentHashMap<>();
 		this.activeCombatAlerts  = ConcurrentHashMap.newKeySet();
 		this.copAttackers        = ConcurrentHashMap.newKeySet();
+		// the spawner places a cop inside the leash margin of the same anchor the leash reads from (the search's
+		// last-known spot, 0.21.1), so a search refill is never leashed off on its first tick
+		spawnManager.setLeashAnchor(player -> leashAnchor(groups.get(player.getUniqueId()), player));
 	}
 
 	/**
@@ -149,6 +152,9 @@ public class CopManager implements BeanLifecycle {
 		CopGroup existing = groups.get(playerId);
 		CopGroup group    = groups.computeIfAbsent(playerId, this::newGroup);
 		long     now      = copRadio.now();
+		// a new episode: the squad is on duty again (T-433) and no leash of the last one hands this one off
+		group.setStoodDown(false);
+		group.setLeashReleased(false);
 		// a crime-scene tip counts as fresh as a sighting here: a repeated start right after one stays quiet
 		boolean  fresh    = group.getSquad().hasFreshSighting() ||
 		                    group.tippedOffWithin(now, NpcSquad.SIGHTING_GRACE_MS);
@@ -199,8 +205,9 @@ public class CopManager implements BeanLifecycle {
 		}
 
 		CopGroup group = groups.get(playerId);
+		if (group != null) group.setLeashReleased(false);
 		// WantedEndEvent and the level change to 0 both land here for one clear: announce it once per episode.
-		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) copRadio.sayFromLeader(group, "Stand_Down");
+		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) standDown(group);
 
 		if (cause == WantedCause.DEATH || cause == WantedCause.ARREST) {
 			endSquad(playerId);
@@ -243,7 +250,13 @@ public class CopManager implements BeanLifecycle {
 		removeCopAttacker(playerId);
 
 		CopGroup group = groups.get(playerId);
-		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) copRadio.sayFromLeader(group, "Stand_Down");
+		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) standDown(group);
+	}
+
+	/** The leader says {@code Stand_Down}; the squad then says nothing more, its queued orders included (T-433). */
+	private void standDown(CopGroup group) {
+		copRadio.sayFromLeader(group, "Stand_Down");
+		group.setStoodDown(true);
 	}
 
 	/**
@@ -305,6 +318,7 @@ public class CopManager implements BeanLifecycle {
 		if (group != null) {
 			group.clearCombatAlert();
 			group.clearPending();
+			group.setLeashReleased(false);
 			pendingCalls.removeIf(call -> call.group() == group);
 			for (CopNpc cop : group.getCops()) {
 				if (cop.getCurrentState() == CopState.CUFFING) cop.transitionTo(CopState.PURSUING);
@@ -768,16 +782,13 @@ public class CopManager implements BeanLifecycle {
 		Location     anchor  = leashAnchor(group, player);
 
 		cops.removeIf(cop -> {
-			if (cop.isMarkedForRemoval() || recycles(cop, group, player, now)) {
-				group.release(cop, markManager);
-				return true;
-			}
+			boolean stranded = isStrandedReturning(cop, anchor, maxDist);
 			// R3 (T-131/T-149): a leashed walker nobody is looking at leaves the map instead of walking home. No tip (R4):
 			// nobody saw him, so the refill inherits the squad's own lead and its widening search circle
-			if (isStrandedReturning(cop, anchor, maxDist) && !isWatched(cop)) {
-				// the chase leashed out: the hand-off must still see it once this walker is gone (a stood-down one has
-				// no target and is no leash)
-				if (playerId.equals(cop.getTargetPlayerId())) group.setLeashReleased(true);
+			if (cop.isMarkedForRemoval() || recycles(cop, group, player, now) || (stranded && !isWatched(cop))) {
+				// a leashed walker still on his trail, whichever way it goes: the hand-off must still see the leash once
+				// it is gone (a stood-down one has no target and is no leash)
+				if (stranded && playerId.equals(cop.getTargetPlayerId())) group.setLeashReleased(true);
 				group.release(cop, markManager);
 				return true;
 			}

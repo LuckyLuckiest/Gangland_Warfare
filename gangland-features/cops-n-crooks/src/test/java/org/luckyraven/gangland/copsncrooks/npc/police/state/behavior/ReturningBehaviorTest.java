@@ -157,6 +157,64 @@ class ReturningBehaviorTest {
 		verify(cop).markForRemoval();
 	}
 
+	/** A real player ten blocks south of the cop, looking north at it with a clear line. */
+	private void watchedFromTheSouth(World world) {
+		Player   viewer = mock(Player.class);
+		Location eyes   = new Location(world, 0, 65.62, -10, 0f, 0f);
+		when(viewer.getEyeLocation()).thenAnswer(i -> eyes.clone());
+		when(viewer.hasLineOfSight(cop.getEntity())).thenReturn(true);
+		when(world.getPlayers()).thenReturn(java.util.List.of(viewer));
+	}
+
+	@Test
+	@DisplayName("R3: a watched stranded cop is still removed by the Return.Max_Ticks backstop")
+	void strandedInView_pastMaxTicks_removed() {
+		withClock(StuckSettings.DEFAULT);
+		watchedFromTheSouth(cop.getEntity().getWorld());
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+		now += StuckSettings.DEFAULT.recycleSeconds() * 1000L;
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+
+		when(cop.getDespawnTicks()).thenReturn(600); // Return.Max_Ticks
+		behavior.tick(cop);
+		verify(cop).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("R3: a cop whose way home lies in another world waits out of view; Max_Ticks still removes it")
+	void otherWorldStation_inView_waitsThenBackstop() {
+		withClock(StuckSettings.DEFAULT);
+		World elsewhere = mock(World.class);
+		when(cop.getSpawnLocation()).thenReturn(new Location(elsewhere, 0, 64, 0));
+		behavior = new ReturningBehavior(mock(CopSpawnManager.class), detainmentService, 600, 3.0,
+		                                 StuckSettings.DEFAULT, () -> now);
+		watchedFromTheSouth(cop.getEntity().getWorld());
+		behavior.onEnter(cop);
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+
+		when(cop.getDespawnTicks()).thenReturn(600);
+		behavior.tick(cop);
+		verify(cop).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("a cop whose way home lies in another world, nobody looking, is removed at once")
+	void otherWorldStation_outOfView_removed() {
+		withClock(StuckSettings.DEFAULT);
+		World elsewhere = mock(World.class);
+		when(cop.getSpawnLocation()).thenReturn(new Location(elsewhere, 0, 64, 0));
+		behavior = new ReturningBehavior(mock(CopSpawnManager.class), detainmentService, 600, 3.0,
+		                                 StuckSettings.DEFAULT, () -> now);
+		behavior.onEnter(cop);
+		behavior.tick(cop);
+
+		verify(cop).markForRemoval();
+	}
+
 	@Test
 	@DisplayName("a return unreachable for less than the window keeps walking")
 	void unreachableShorterThanWindow_keepsWalking() {
