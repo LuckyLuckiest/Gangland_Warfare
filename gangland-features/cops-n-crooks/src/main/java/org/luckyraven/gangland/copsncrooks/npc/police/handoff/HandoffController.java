@@ -86,13 +86,17 @@ public class HandoffController {
 		boolean isEngaged   = isEngaged(group, player, maxDistance);
 		if (isEngaged) engaged.add(id);
 		else engaged.remove(id);
+		long biasMs = settings.biasSeconds() * 1000L;
+		// a release that ages past Bias_Seconds while a cop still chases is no cause of a later fall-away (r6 review 2)
+		if (closing(group) && !group.isLeashReleased(now, biasMs)) group.clearLeashReleased();
 
 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
 		// a leashed walker removed shortly before the chase fell away still leashed it out, whoever chased on since; one
-		// older than Bias_Seconds is no cause of this fall-away (a wipe or a stand-off a minute later), unless he has now
-		// left a post of the group behind (0.21.1 r6: posts held the chase since; a post killed or called off is no
-		// leash). Only this edge (or a wanted start or end, CopManager) consumes the record
-		boolean leashed = group.isLeashReleased(now, settings.biasSeconds() * 1000L) ||
+		// older than Bias_Seconds is no cause of this fall-away (a wipe or a stand-off a minute later), unless it never
+		// aged past Bias_Seconds while a cop chased (posts alone held it since) and he has now left a post of the group
+		// behind (0.21.1 r6; a post killed or called off is no leash). Only this edge (or a wanted start or end,
+		// CopManager) consumes the record
+		boolean leashed = group.isLeashReleased(now, biasMs) ||
 		                  group.isLeashReleased(now, Long.MAX_VALUE) && postLeftBehind(group, player, maxDistance) ||
 		                  leashedOut(group, id, player, maxDistance);
 		group.clearLeashReleased();

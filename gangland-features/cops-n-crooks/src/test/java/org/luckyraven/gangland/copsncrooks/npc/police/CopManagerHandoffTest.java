@@ -393,6 +393,61 @@ class CopManagerHandoffTest {
 	}
 
 	@Test
+	@DisplayName("0.21.1 r6 review 2: a minute of chase after the release, then the chaser posts and he runs past: no hand-off")
+	void staleRelease_aMinuteOfChase_thenThePostIsLeftBehind_noHandoff() {
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc[] cops   = chaseWithALeashedWalker(controller, group);
+		CopNpc   chaser = cops[0];
+
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
+		fx.manager.spawnTick(player.getUniqueId(), wanted); // R3 takes the leashed walker off the map
+		assertFalse(group.getCops().contains(cops[1]), "the leashed walker was released");
+		for (int i = 0; i < 60; i++) { // a minute of chase: the release ages out
+			fx.clock[0] += 1_000L;
+			controller.tick(player, group);
+		}
+		chaser.transitionTo(CopState.POSTED); // loses him, posts at x=20
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+		playerAt(120); // he runs past Max_Distance (80) of the post
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		assertNull(group.biasAt(fx.clock[0]), "a release that aged out during the chase hands nothing off");
+	}
+
+	@Test
+	@DisplayName("0.21.1 r6 review 2: a free chaser chases him a minute away from a post after the release, then dies: no hand-off")
+	void staleRelease_freeChaserLeavesThePostBehind_thenIsKilled_noHandoff() {
+		when(fx.provider.getDispatchSettings()).thenReturn(DispatchSettings.DISABLED);
+		when(fx.provider.getBreatherSettings()).thenReturn(BreatherSettings.DISABLED);
+		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);
+		fx.manager.onWantedStart(player, wanted);
+		fx.manager.spawnTick(player.getUniqueId(), wanted);
+		CopGroup group  = fx.manager.groupFor(player.getUniqueId());
+		CopNpc[] cops   = chaseWithALeashedWalker(controller, group);
+		CopNpc   chaser = cops[0];
+
+		fx.manager.spawnTick(player.getUniqueId(), wanted); // the walker is released, a refill arrives
+		assertFalse(group.getCops().contains(cops[1]), "the leashed walker was released");
+		CopNpc refill = group.getCops().stream().filter(c -> c != chaser).findFirst().orElseThrow();
+		refill.transitionTo(CopState.POSTED); // a perimeter post; PerimeterController keeps the last chaser free
+		playerAt(120); // the free chaser chases him on, away from the post
+		for (int i = 0; i < 60; i++) {
+			fx.clock[0] += 1_000L;
+			controller.tick(player, group);
+		}
+		when(chaser.isValid()).thenReturn(false); // the free chaser is killed a minute after the release
+		fx.clock[0] += 1_000L;
+		controller.tick(player, group);
+
+		assertNull(group.biasAt(fx.clock[0]), "a chaser killed a minute after the release lost no leashed chase");
+	}
+
+	@Test
 	@DisplayName("0.21.1: the leashed walker released out of view (R3) before the posts fall away still hands the chase off")
 	void leashedWalkerReleasedBeforeTheEdge_stillHandsOff() {
 		HandoffController controller = new HandoffController(fx.manager, fx.radio, () -> fx.provider);

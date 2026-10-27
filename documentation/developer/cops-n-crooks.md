@@ -1234,10 +1234,14 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   hand-off). An older stamp is no cause of the fall-away (a squad wiped a minute later). That edge consumes it; a wanted
   start, a wanted end (the search's `keepSquadOnSearch` included) and the controller's disabled/search early return
   clear it. `isEngaged` counts CUFFING and GUARDING with PURSUING/COMBAT (review 2): a landed cuff sends the rest home
-  beside him, which is the chase won, not lost. r6 (review 1): a stamp of any age still counts on the edge when a
-  valid POSTED/OVERWATCH cop of the group now stands farther than `Pursuit.Max_Distance` from him
-  (`HandoffController.postLeftBehind`): he left a post that held the chase behind
-  (`pa_postHoldsPastBiasSeconds_thenFallsAway_handsOff`). A post killed or called off is no leash, so a fall-away
+  beside him, which is the chase won, not lost. r6 (review 1): a stamp that did not age past `Bias_Seconds` while a cop
+  chased (PURSUING/COMBAT/CUFFING/GUARDING: `tick` clears a stamp older than that while `closing(group)`, review 2)
+  still counts on the edge, at any age, when a valid POSTED/OVERWATCH cop of the group now stands farther than
+  `Pursuit.Max_Distance` from him (`HandoffController.postLeftBehind`): posts alone held the chase since and he left
+  one behind (`pa_postHoldsPastBiasSeconds_thenFallsAway_handsOff`; a minute of chase before the post, or a free
+  chaser leaving the post behind and then killed, hands nothing off:
+  `staleRelease_aMinuteOfChase_thenThePostIsLeftBehind_noHandoff`,
+  `staleRelease_freeChaserLeavesThePostBehind_thenIsKilled_noHandoff`). A post killed or called off is no leash, so a fall-away
   through its loss keeps the `Bias_Seconds` rule (`postHoldsAMinute_thenThePostIsKilled_noHandoff`,
   `staleRelease_thenTheSquadIsWipedAMinuteLater_noHandoff`). The r6 first cut re-stamped the record while posts held
   the chase, which also handed off on a post killed a minute after the release; it was dropped.
