@@ -276,6 +276,46 @@ class ReturningBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("T-527: with no station a cop home at its own spawn spot stands while watched and despawns once nobody looks")
+	void spawnSpotHome_arrivalWatched_waitsUntilOutOfView() {
+		withClock(StuckSettings.DEFAULT);
+		World world = cop.getEntity().getWorld();
+		when(cop.getSpawnLocation()).thenReturn(new Location(world, 1, 64, 1)); // he stands on it
+		behavior = new ReturningBehavior(mock(CopSpawnManager.class), detainmentService, 600, 3.0,
+		                                 StuckSettings.DEFAULT, () -> now, 48.0);
+		Player   viewer = mock(Player.class);
+		Location eyes   = new Location(world, 0, 65.62, -10, 0f, 0f);
+		when(viewer.getEyeLocation()).thenAnswer(i -> eyes.clone());
+		when(viewer.hasLineOfSight(cop.getEntity())).thenReturn(true);
+		when(world.getPlayers()).thenReturn(java.util.List.of(viewer));
+		behavior.onEnter(cop);
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
+
+		eyes.setYaw(180f); // he turns away
+		behavior.tick(cop);
+		verify(cop).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("T-527: a cop reaching a registered station despawns even while watched")
+	void stationArrivalWatched_despawns() {
+		World    world   = mock(World.class);
+		CopSpawnManager spawns = mock(CopSpawnManager.class);
+		when(spawns.getSpawnerLocations()).thenReturn(java.util.List.of(new Location(world, 1, 64, 1)));
+		LivingEntity body = mock(LivingEntity.class);
+		when(body.getWorld()).thenReturn(world);
+		when(body.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+		when(cop.getEntity()).thenReturn(body);
+		watchedFromTheSouth(world);
+		behavior = new ReturningBehavior(spawns, detainmentService, 600, 3.0, StuckSettings.DEFAULT, () -> now, 48.0);
+		behavior.onEnter(cop);
+		behavior.tick(cop);
+
+		verify(cop).markForRemoval();
+	}
+
+	@Test
 	@DisplayName("a return unreachable for less than the window keeps walking")
 	void unreachableShorterThanWindow_keepsWalking() {
 		withClock(StuckSettings.DEFAULT);

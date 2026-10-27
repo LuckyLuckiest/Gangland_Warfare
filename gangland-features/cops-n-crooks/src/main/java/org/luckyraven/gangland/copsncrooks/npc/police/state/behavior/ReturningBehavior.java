@@ -44,6 +44,8 @@ public class ReturningBehavior implements CopBehavior {
 	private final int               watchedCapSeconds;
 
 	private Location selectedStation;
+	/** Whether {@link #selectedStation} is a registered spawner, not his own spawn spot (T-527). */
+	private boolean  homeIsStation;
 	/**
 	 * Whether this return started because the target was restrained or jailed: only then does a released target pull the
 	 * cop back. Set on entry; behaviours are per cop ({@code CopBehaviorFactory#createBehaviors} runs per spawn).
@@ -128,12 +130,16 @@ public class ReturningBehavior implements CopBehavior {
 				double distance = Math.sqrt(horizontalDistanceSquared(entity.getLocation(), selectedStation));
 
 				if (distance <= stationArrivalDistance) {
-					tryDespawn(cop);
-					return;
+					// T-527: a station swallows him in view; his own spawn spot was only hidden when he spawned, so there
+					// he stands until nobody looks (the backstop and watched cap below still apply)
+					if (homeIsStation || !CopSightlines.watched(entity, visibilityCheckDistance)) {
+						tryDespawn(cop);
+						return;
+					}
+				} else {
+					cop.navigateTo(selectedStation);
+					noWayHome = strandedOnReturn(cop);
 				}
-
-				cop.navigateTo(selectedStation);
-				noWayHome = strandedOnReturn(cop);
 			}
 
 			// R3: no way home (its station in another world, or unreachable past the stuck window) despawns on the first
@@ -205,7 +211,7 @@ public class ReturningBehavior implements CopBehavior {
 	/**
 	 * Despawns the cop. Pursuit has either reached the station, timed out, or there is no way home (another world, or
 	 * unreachable past the stuck window); that one waits for nobody to be looking (R3), the timeout backstop for nobody
-	 * within 24 blocks - arrival despawns regardless.
+	 * within 24 blocks; arrival at a station despawns regardless, arrival at his own spawn spot waits out of view (T-527).
 	 */
 	private void tryDespawn(CopNpc cop) {
 		cop.markForRemoval();
@@ -217,20 +223,18 @@ public class ReturningBehavior implements CopBehavior {
 	 */
 	private Location findNearestStation(CopNpc cop) {
 		List<Location> stations = spawnManager.getSpawnerLocations();
+		LivingEntity   entity   = cop.getEntity();
 
-		if (stations.isEmpty()) {
-			return cop.getSpawnLocation();
-		}
-
-		LivingEntity entity = cop.getEntity();
-
-		if (entity == null) return cop.getSpawnLocation();
+		homeIsStation = false;
+		if (stations.isEmpty() || entity == null) return cop.getSpawnLocation();
 
 		Location copLoc = entity.getLocation();
-
-		return stations.stream()
+		Location nearest = stations.stream()
 				.filter(loc -> loc.getWorld() != null && loc.getWorld().equals(copLoc.getWorld()))
 				.min(Comparator.comparingDouble(loc -> horizontalDistanceSquared(loc, copLoc)))
-				.orElse(cop.getSpawnLocation());
+				.orElse(null);
+
+		homeIsStation = nearest != null;
+		return nearest != null ? nearest : cop.getSpawnLocation();
 	}
 }

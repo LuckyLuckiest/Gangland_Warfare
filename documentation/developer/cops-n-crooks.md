@@ -1232,7 +1232,9 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   rule `recycles()` applies), so a far AFK bystander no longer keeps a walker forever and no near viewer sees it vanish;
   r6 (owner ruling): that near view holds it for `Cops.Return.Watched_Cap_Seconds` (60, from the first tick it held
   it; 0 = no cap, `CopConfigProvider.getReturnWatchedCapSeconds`), then it despawns watched or not;
-  arrival at a station despawns regardless. Every removal of a walker that still targets the player past the leash, in
+  arrival at a registered station despawns regardless, but a cop with no station (home = its own spawn spot, which
+  was only hidden when it spawned) stands there while watched and despawns once nobody looks (T-527, acc9-handoff-lead).
+  Every removal of a walker that still targets the player past the leash, in
   `spawnTick` or `aiTick` (the R3 release, `recycles()`, `isMarkedForRemoval` after `ReturningBehavior` ended its walk,
   usually reaped by the next AI tick before any spawn run, or `!isValid`), goes through `CopManager.release`, which
   stamps `CopGroup.markLeashReleased(now)` (radio clock): `HandoffController` counts it as leashed out on an
