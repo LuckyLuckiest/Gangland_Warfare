@@ -230,12 +230,21 @@ public class WantedHudListener implements Listener {
 		return messages.crimeName(record != null ? record.crimeId() : spotted ? "Spotted" : "Unknown_Crime");
 	}
 
-	/** {@code crime} for the star card: a crime a civilian's 911 call reported says so, {@code Hud.Card.Reported} (0.21.1). */
+	/**
+	 * {@code crime} for the star card, which goes to chat (R1): a crime that landed on a report says who reported it and
+	 * how many saw it ({@code Hud.Card.Reported} 0.21.1; {@code Seen}, {@code Missing}, {@code Scene} 0.21.2).
+	 */
 	private String cardCrime(Player player, WantedLevelChangeEvent event, String crime) {
 		CrimeRecord record = event.getCause() == WantedCause.CRIME ? ledger.lastCrime(player.getUniqueId()) : null;
-		if (record == null || !record.reported()) return crime;
+		if (record == null || record.kind() == null) return crime;
 
-		return messages.format(WantedMessages.Key.CARD_REPORTED, Map.of("crime", crime));
+		WantedMessages.Key key = switch (record.kind()) {
+			case COP -> WantedMessages.Key.CARD_SEEN;
+			case CIVILIAN -> WantedMessages.Key.CARD_REPORTED;
+			case DISPATCH -> WantedMessages.Key.CARD_MISSING;
+			case SCENE -> WantedMessages.Key.CARD_SCENE;
+		};
+		return messages.format(key, Map.of("crime", crime, "count", String.valueOf(record.witnesses())));
 	}
 
 	private String raiseCard(String crime, int newLevel) {

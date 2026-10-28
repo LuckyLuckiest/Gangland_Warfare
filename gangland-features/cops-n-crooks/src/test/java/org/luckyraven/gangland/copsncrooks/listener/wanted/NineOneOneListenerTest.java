@@ -13,6 +13,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.ReportKind;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -65,8 +66,8 @@ class NineOneOneListenerTest {
 		when(places.locate(any())).thenReturn(Optional.of("Docks"));
 		when(names.crimeName("Car_Theft")).thenReturn("Car theft");
 		// commitReported runs the commit it is handed
-		when(ledger.commitReported(any(), any())).thenAnswer(
-				inv -> inv.<java.util.function.BooleanSupplier>getArgument(1).getAsBoolean());
+		when(ledger.commitReported(any(), any(), any())).thenAnswer(
+				inv -> inv.<java.util.function.BooleanSupplier>getArgument(2).getAsBoolean());
 		listener = new NineOneOneListener(crimes, copManager, radio, places, names, ledger);
 	}
 
@@ -102,8 +103,17 @@ class NineOneOneListenerTest {
 		listener.onCalledIn(call("Car_Theft"));
 
 		InOrder order = inOrder(ledger, crimes);
-		order.verify(ledger).commitReported(eq(player), any());
+		order.verify(ledger).commitReported(eq(player), eq(ReportKind.CIVILIAN), any());
 		order.verify(crimes).commit(player, "Car_Theft", at, false, 1);
+	}
+
+	@Test
+	@DisplayName("T-540: the commit carries the call's viewers (caller + watchers still valid), so the head count adds heat")
+	void commitsViewerCount() {
+		listener.onCalledIn(new CivilianCalledInEvent(player, "Car_Theft", at, mock(LivingEntity.class), 3));
+
+		verify(ledger).commitReported(eq(player), eq(ReportKind.CIVILIAN), any());
+		verify(crimes).commit(player, "Car_Theft", at, false, 3);
 	}
 
 	@Test

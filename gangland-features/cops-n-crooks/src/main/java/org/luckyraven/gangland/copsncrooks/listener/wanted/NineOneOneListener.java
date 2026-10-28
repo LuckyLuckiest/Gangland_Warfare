@@ -10,6 +10,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.ReportKind;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -17,7 +18,8 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import java.util.Map;
 
 /**
- * A civilian's 911 call landed: the held crime is committed with one witness (so it passes the gate), the squad is
+ * A civilian's 911 call landed: the held crime is committed with the call's viewers as its witnesses (at least one, so
+ * it passes the gate; 0.21.2 T-540 scores the head count), the squad is
  * tipped off to the crime spot and dispatch radios the Caller_911 line. Dispatch needs no speaker, so the line plays
  * even when the commit has just created the group and no cop has spawned yet (0.21.1, T-345).
  *
@@ -50,8 +52,9 @@ public class NineOneOneListener implements Listener {
 
 		// commit first: it can create the cop group that is looked up below. Inside commitReported, so the star card says
 		// a witness reported it (0.21.1 Q7)
-		boolean committed = ledger.commitReported(criminal, () -> crimes.commit(criminal, event.getCrimeId(),
-		                                                                        event.getAt(), false, 1));
+		boolean committed = ledger.commitReported(criminal, ReportKind.CIVILIAN,
+		                                          () -> crimes.commit(criminal, event.getCrimeId(), event.getAt(), false,
+		                                                              event.getViewers()));
 		if (!committed) return;
 
 		CopGroup group = copManager.groupOf(criminal.getUniqueId());

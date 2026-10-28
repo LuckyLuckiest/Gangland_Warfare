@@ -27,7 +27,12 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
 
 - A crime chained within `Kill_Combo.Reset_After` seconds of the last one is multiplied by `Streak_Bonus` (1.5), only
   while `Kill_Combo.Enable` is true.
-- A crime a cop saw is multiplied by `Seen_By_Cop_Multiplier` (1.5).
+- **Who saw it (0.21.2).** A crime a cop saw is multiplied by `Seen_By_Cop_Multiplier` (1.5); a crime only a civilian
+  reported counts x1.0. Each eyewitness past the first, cop or civilian, adds `Per_Extra_Witness` (0.5) to that
+  multiplier, up to `Max_Extra_Witnesses` (3). The witnesses are counted when the report lands, so a witness killed
+  first counts for nothing. A Kill_Civilian three civilians saw is 100 x 2.0 = 200; once cop reports land (a later
+  0.21.2 stage) one seen by four cops is 100 x 3.0 = 300. For a crime in `Wanted.Witnesses.Crimes` your squad merely having you in sight is not a cop who saw
+  it; for any other crime it still is.
 - A player kill inside a contested turf is multiplied by `Turf_War_Multiplier` (0.5).
 - Hitting the same cop again within `Assault_Repeat_Seconds` (10) is not a new crime.
 - **Not crimes:** a kill in self-defence (see Self-defence below), a crime-free takedown of a player with a bounty
@@ -78,7 +83,9 @@ It is counted only if someone calls it in. A cop saw it when a cop (squad or bea
   next civilian still watching takes over with its own Notice.
 - **Connected.** After `Witness.Call_Seconds` (8): `Yes, police? He's right here, near Docks!`, then the dispatch line
   (even if no cop is out yet), and the crime counts. The squad gets a tip to the crime spot and searches there. The star
-  card in chat names the witness: `Car theft (reported by a witness)`; the title keeps the plain crime name.
+  card in chat names the witnesses: `Car theft (reported by 3 witness(es))` (0.21.2: the caller plus every other
+  civilian who saw it and is still alive when the call lands, and each one past the first adds heat, see above); the
+  title keeps the plain crime name.
 - Nobody saw it and no cop saw it: the gated crime adds no heat.
 - Hitting a civilian publishes `Assault_Civilian` at most once per attacker and civilian every `Assault_Repeat_Seconds` (10).
 

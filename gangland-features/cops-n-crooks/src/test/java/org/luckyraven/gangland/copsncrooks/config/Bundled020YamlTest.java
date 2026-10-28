@@ -120,6 +120,10 @@ class Bundled020YamlTest {
 		assertEquals(ChaseConfig.DEFAULT, ChaseConfig.parse(wanted, report));
 		assertEquals(0.25, ChaseConfig.parse(wanted, report).evasion().noCopInsideSpeed(), "0.21.2 No_Cop_Inside_Speed");
 		assertTrue(keysOf(wanted, "Evasion").contains("No_Cop_Inside_Speed"), "Evasion ships No_Cop_Inside_Speed");
+		assertTrue(keysOf(wanted, "Heat").containsAll(Set.of("Per_Extra_Witness", "Max_Extra_Witnesses")),
+		           "0.21.2 S3: Heat ships Per_Extra_Witness and Max_Extra_Witnesses");
+		assertEquals(0.5, ChaseConfig.parse(wanted, report).heat().perExtraWitness());
+		assertEquals(3, ChaseConfig.parse(wanted, report).heat().maxExtraWitnesses());
 		assertTrue(report.issues().isEmpty(), () -> "bundled wanted.yml has issues: " + report.issues());
 	}
 

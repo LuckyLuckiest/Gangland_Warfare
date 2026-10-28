@@ -10,7 +10,9 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * A civilian's 911 call landed: {@code criminal} did {@code crimeId} at {@code at} and {@code caller} reported it.
- * Fired on the main thread by {@code WitnessService}; cops-n-crooks turns it into the counted crime.
+ * {@code viewers} (0.21.2) is the caller plus every civilian who also saw it and is still alive at landing: the head
+ * count the heat ledger scores. Fired on the main thread by {@code WitnessService}; cops-n-crooks turns it into the
+ * counted crime.
  *
  * @since 0.20.0
  */
@@ -23,13 +25,20 @@ public class CivilianCalledInEvent extends Event {
 	private final String       crimeId;
 	private final Location     at;
 	private final LivingEntity caller;
+	private final int          viewers;
 
+	/** A call with the caller as its only viewer. */
 	public CivilianCalledInEvent(Player criminal, String crimeId, Location at, LivingEntity caller) {
+		this(criminal, crimeId, at, caller, 1);
+	}
+
+	public CivilianCalledInEvent(Player criminal, String crimeId, Location at, LivingEntity caller, int viewers) {
 		super(false);
 		this.criminal = criminal;
 		this.crimeId  = crimeId;
 		this.at       = at.clone();
 		this.caller   = caller;
+		this.viewers  = Math.max(1, viewers);
 	}
 
 	public static HandlerList getHandlerList() {

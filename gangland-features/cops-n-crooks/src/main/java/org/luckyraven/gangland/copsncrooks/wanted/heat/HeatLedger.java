@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.WitnessSettings;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
@@ -49,8 +50,9 @@ public final class HeatLedger {
 	private final Map<UUID, Map<UUID, Long>>   assaults = new ConcurrentHashMap<>();
 
 	private volatile Consumer<Player> starTrigger;
-	/** The criminal whose 911 recommit is running ({@link #commitReported}); main thread only. */
+	/** The criminal whose late report is landing ({@link #commitReported}), and who reported it; main thread only. */
 	private @Nullable UUID            reporting;
+	private @Nullable ReportKind      reportingKind;
 
 	public HeatLedger(ChaseConfigLoader config, UserManager<Player> users, CrimeService crimes,
 	                  Predicate<Player> copSight, Predicate<Location> contestedTurf,
@@ -81,16 +83,18 @@ public final class HeatLedger {
 	}
 
 	/**
-	 * Runs a civilian's 911 recommit: the crime it records for {@code criminal} is marked reported, so the star card
-	 * names the witness (0.21.1 Q7). Nothing else is: a safe alarm, a store hold-up or a crew mate's share commits with a
-	 * witness too, but no civilian phoned it in.
+	 * Runs the commit of a report that landed late: the crime it records for {@code criminal} carries {@code kind}, so
+	 * the star card's chat line names who reported it (0.21.1 Q7, 0.21.2 S3). Nothing else does: a safe alarm, a store
+	 * hold-up or a crew mate's share commits with a witness too, but nobody reported it.
 	 */
-	public boolean commitReported(Player criminal, BooleanSupplier commit) {
-		reporting = criminal.getUniqueId();
+	public boolean commitReported(Player criminal, ReportKind kind, BooleanSupplier commit) {
+		reporting     = criminal.getUniqueId();
+		reportingKind = kind;
 		try {
 			return commit.getAsBoolean();
 		} finally {
-			reporting = null;
+			reporting     = null;
+			reportingKind = null;
 		}
 	}
 
@@ -118,15 +122,16 @@ public final class HeatLedger {
 		    && now - chase.crimes.get(chase.crimes.size() - 1).at() <= window * 1000L) {
 			mult *= heat.streakBonus();
 		}
-		if (event.isSeenByCop() || copSight.test(player)) mult *= heat.seenByCopMultiplier();
+		mult *= witnessFactor(event, heat);
 		if (Crimes.KILL_PLAYER.equals(event.getCrimeId()) && contestedTurf.test(event.getLocation())) {
 			mult *= heat.turfWarMultiplier();
 		}
 
 		double added = weight * mult;
 		chase.heat += added;
-		boolean reported = player.getUniqueId().equals(reporting);
-		chase.crimes.add(new CrimeRecord(event.getCrimeId(), added, now, event.getLocation(), reported));
+		ReportKind kind = player.getUniqueId().equals(reporting) ? reportingKind : null;
+		chase.crimes.add(new CrimeRecord(event.getCrimeId(), added, now, event.getLocation(), kind,
+		                                 event.getWitnesses()));
 
 		int target = heat.starsFor(chase.heat, maxLevel);
 		Consumer<Player> trigger = starTrigger;
@@ -137,6 +142,21 @@ public final class HeatLedger {
 		}
 
 		return added;
+	}
+
+	/**
+	 * Who saw it (0.21.2, PLAN.md section 3): a cop eyewitness is {@code Seen_By_Cop_Multiplier}, anyone else 1.0, and
+	 * each eyewitness past the first adds {@code Per_Extra_Witness}, up to {@code Max_Extra_Witnesses}. The squad's
+	 * fresh sighting stands in for a cop only on a crime the witness gate does not hold (T-538): a gated crime that
+	 * lands was reported, and its report says whether a cop saw it.
+	 */
+	private double witnessFactor(CrimeCommittedEvent event, HeatSettings heat) {
+		WitnessSettings witnesses = config.getWitnesses();
+		boolean         gated     = witnesses.enabled() && witnesses.crimes().contains(event.getCrimeId());
+		boolean         cop       = event.isSeenByCop() || (!gated && copSight.test(event.getPlayer()));
+		int             extra     = Math.min(Math.max(0, event.getWitnesses() - 1), heat.maxExtraWitnesses());
+
+		return (cop ? heat.seenByCopMultiplier() : 1.0) + heat.perExtraWitness() * extra;
 	}
 
 	/** Commits Assault_Cop unless this attacker already hit this victim inside {@code Heat.Assault_Repeat_Seconds}. */

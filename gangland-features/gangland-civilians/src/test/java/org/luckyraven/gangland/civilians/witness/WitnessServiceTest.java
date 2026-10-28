@@ -173,6 +173,37 @@ class WitnessServiceTest {
 	}
 
 	@Test
+	@DisplayName("T-540: the landed call counts its viewers - the caller plus every watcher still valid at landing")
+	void calledInEvent_carriesCallerPlusWatchers() {
+		CivilianNpc caller = kit.civilian(10, true);
+		kit.civilian(12, true);
+		CivilianNpc killed = kit.civilian(14, true);
+		kit.civilian(16, true);
+		kit.witness("Car_Theft");
+
+		// one watcher dies before the call lands: killing a witness lowers the head count
+		kit.advanceSeconds(4);
+		when(killed.isValid()).thenReturn(false);
+		kit.advanceSeconds(4);
+		kit.service.tickCaller(caller);
+
+		assertEquals(1, kit.countEvents(CivilianCalledInEvent.class));
+		assertEquals(3, ((CivilianCalledInEvent) kit.events.get(0)).getViewers());
+	}
+
+	@Test
+	@DisplayName("T-540: a lone caller is one viewer")
+	void calledInEvent_loneCallerIsOneViewer() {
+		CivilianNpc caller = kit.civilian(10, true);
+		kit.witness("Car_Theft");
+
+		kit.advanceSeconds(8);
+		kit.service.tickCaller(caller);
+
+		assertEquals(1, ((CivilianCalledInEvent) kit.events.get(0)).getViewers());
+	}
+
+	@Test
 	@DisplayName("a caller that is no longer valid when the call is due loses the call: no event, reason=lost")
 	void invalidCallerAtLandingLosesCall() {
 		CivilianNpc caller = kit.civilian(10, true);

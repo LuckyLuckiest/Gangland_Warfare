@@ -80,6 +80,7 @@ class ChaseArcListenerTest {
 		config = mock(ChaseConfigLoader.class);
 		when(config.get()).thenReturn(ChaseConfig.DEFAULT);
 		when(config.getGetaway()).thenReturn(GetawaySettings.DEFAULT);
+		when(config.getWitnesses()).thenReturn(org.luckyraven.gangland.copsncrooks.wanted.config.WitnessSettings.DEFAULT);
 
 		clock   = new AtomicLong(1_000_000L);
 		arcs    = new ChaseArcs(clock::get);
@@ -237,7 +238,8 @@ class ChaseArcListenerTest {
 
 		HeatSettings d = HeatSettings.DEFAULT;
 		HeatSettings off = new HeatSettings(false, d.starThresholds(), d.streakBonus(), d.seenByCopMultiplier(),
-		                                    d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights());
+		                                    d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights(),
+		                                    d.perExtraWitness(), d.maxExtraWitnesses());
 		when(config.get()).thenReturn(new ChaseConfig(off, ChaseConfig.DEFAULT.evasion(), ChaseConfig.DEFAULT.hud(),
 		                                              ChaseConfig.DEFAULT.chargeSheet()));
 		listener.onCrime(crime(Crimes.KILL_COP));

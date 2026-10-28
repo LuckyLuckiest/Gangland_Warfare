@@ -37,8 +37,15 @@ Wanted:
       # Multiplier for crimes chained inside Kill_Combo.Reset_After (above). It only applies while
       # Kill_Combo.Enable is true; with the kill combo off no crime is ever treated as chained.
       Streak_Bonus: 1.5
-      # Multiplier when a cop saw the crime
+      # Multiplier when a cop saw the crime. 0.21.2: for a crime in Witnesses.Crimes (below) only a cop who reported it
+      # counts; your squad merely having you in sight does not
       Seen_By_Cop_Multiplier: 1.5
+      # 0.21.2: added to that multiplier (1.0 when no cop saw it) for each eyewitness past the first, cop or civilian,
+      # counted when the report lands, so a witness killed first counts for nothing. 0 = the head count is ignored
+      Per_Extra_Witness: 0.5
+      # 0.21.2: how many eyewitnesses past the first count. With 0.5 and 3, three civilians calling in a civilian kill
+      # give 100 x 2.0 (four cops seeing a cop kill give 150 x 3.0 once cop reports land, a later 0.21.2 stage)
+      Max_Extra_Witnesses: 3
       # Multiplier for a crime inside a contested turf
       Turf_War_Multiplier: 0.5
       # Seconds before hitting the same victim counts as a new assault

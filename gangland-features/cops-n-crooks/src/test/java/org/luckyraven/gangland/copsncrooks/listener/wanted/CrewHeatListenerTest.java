@@ -109,6 +109,7 @@ class CrewHeatListenerTest {
 		when(world.getPlayers()).thenReturn(inWorld);
 		when(config.get()).thenReturn(ChaseConfig.DEFAULT);
 		when(config.getCrewHeat()).thenReturn(CrewHeatSettings.DEFAULT);
+		when(config.getWitnesses()).thenReturn(org.luckyraven.gangland.copsncrooks.wanted.config.WitnessSettings.DEFAULT);
 		when(ledger.record(any())).thenReturn(150.0);
 		when(messages.format(eq(WantedMessages.Key.CREW_HEAT_SHARED), anyMap())).thenReturn("shared-line");
 		when(messages.crimeName(any())).thenReturn("Kill Civilian");
@@ -501,7 +502,9 @@ class CrewHeatListenerTest {
 
 		share(Crimes.KILL_PLAYER);
 
-		double expected = heat.weightOf(Crimes.KILL_PLAYER) * heat.seenByCopMultiplier() * heat.turfWarMultiplier();
+		// 0.21.2 S3: the share carries the crime's own eyewitnesses (3: two past the first), as it carries seenByCop
+		double expected = heat.weightOf(Crimes.KILL_PLAYER) * (heat.seenByCopMultiplier() + 2 * heat.perExtraWitness())
+		                  * heat.turfWarMultiplier();
 		assertEquals(expected, real.heatOf(mate.getUniqueId()), 1e-9);
 		assertNotEquals(actorOwn, real.heatOf(mate.getUniqueId()));
 		assertEquals(Crimes.KILL_PLAYER, real.lastCrime(mate.getUniqueId()).crimeId());

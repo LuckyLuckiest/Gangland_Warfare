@@ -102,7 +102,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		                        n.get("Seen_By_Cop_Multiplier").asDouble().min(0).orDefault(d.seenByCopMultiplier()),
 		                        n.get("Turf_War_Multiplier").asDouble().min(0).orDefault(d.turfWarMultiplier()),
 		                        n.get("Assault_Repeat_Seconds").asInt().min(0).orDefault(d.assaultRepeatSeconds()),
-		                        Map.copyOf(crimes));
+		                        Map.copyOf(crimes),
+		                        n.get("Per_Extra_Witness").asDouble().min(0).orDefault(d.perExtraWitness()),
+		                        n.get("Max_Extra_Witnesses").asInt().min(0).orDefault(d.maxExtraWitnesses()));
 	}
 
 	private static EvasionSettings evasion(@Nullable NodeReader n, ConfigReport report) {

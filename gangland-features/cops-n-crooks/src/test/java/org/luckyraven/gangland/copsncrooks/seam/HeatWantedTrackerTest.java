@@ -99,7 +99,8 @@ class HeatWantedTrackerTest {
 	private void heatOff() {
 		HeatSettings d = HeatSettings.DEFAULT;
 		HeatSettings off = new HeatSettings(false, d.starThresholds(), d.streakBonus(), d.seenByCopMultiplier(),
-		                                    d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights());
+		                                    d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights(),
+		                                    d.perExtraWitness(), d.maxExtraWitnesses());
 		when(config.get()).thenReturn(new ChaseConfig(off, ChaseConfig.DEFAULT.evasion(), ChaseConfig.DEFAULT.hud(),
 		                                              ChaseConfig.DEFAULT.chargeSheet()));
 	}

@@ -337,10 +337,21 @@ public final class WitnessService {
 		detach(call);
 		String place = places.locate(call.at()).orElseGet(messages::witnessUnknownPlace);
 		speak(caller, call.criminal(), "Witness_Landed", Map.of("place", place));
-		hooks.events().accept(new CivilianCalledInEvent(call.criminal(), call.crimeId(), call.at(), caller.getEntity()));
+		int viewers = viewersAtLanding(call);
+		hooks.events().accept(new CivilianCalledInEvent(call.criminal(), call.crimeId(), call.at(), caller.getEntity(),
+		                                                viewers));
 		hooks.debug().accept("CALL_IN " + call.criminal().getName() + " crime=" + call.crimeId() + " caller="
-				                     + caller.getEntity().getName());
+				                     + caller.getEntity().getName() + " viewers=" + viewers);
 		flee(caller, call);
+	}
+
+	/** The caller plus every watcher still alive (0.21.2, T-540): a witness killed before the call lands is not counted. */
+	private static int viewersAtLanding(WitnessCall call) {
+		int viewers = 1;
+		for (CivilianNpc watcher : call.watchers()) {
+			if (watcher.isValid() && watcher.getEntity() != null) viewers++;
+		}
+		return viewers;
 	}
 
 	/**
