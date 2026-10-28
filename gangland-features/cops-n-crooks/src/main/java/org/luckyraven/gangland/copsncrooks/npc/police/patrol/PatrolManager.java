@@ -144,7 +144,8 @@ public class PatrolManager implements BeanLifecycle {
 							break;
 						}
 					}
-					CopNpc cop = spawner.spawnAtLocation(at.clone(), s.tier());
+					// an offsite ring spot gets the 1-tick wall check every ring spawn gets
+					CopNpc cop = spawner.spawnAtLocation(at.clone(), s.tier(), offsite);
 					if (cop == null) {
 						break;
 					}

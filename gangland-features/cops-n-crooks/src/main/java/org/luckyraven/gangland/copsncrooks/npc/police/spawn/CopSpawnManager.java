@@ -396,9 +396,11 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	/**
 	 * Owner ruling T-606 (0.21.2 R3): a spot for a watched station's beat cop that no player has in view, within
-	 * {@code max(24, Visibility_Check_Distance)} of {@code anchor}: the squad units' {@link #hiddenRing} around the
-	 * nearest player to the anchor (out of sight of every player within {@code Visibility_Check_Distance}), the spot
-	 * itself not {@link #watched}. {@code null} when there is no such spot this run (or no player).
+	 * {@code max(24, Visibility_Check_Distance)} of {@code anchor}, the spot itself not {@link #watched}: the squad
+	 * units' {@link #hiddenRing} around the nearest player to the anchor (out of sight of every player within
+	 * {@code Visibility_Check_Distance}), else, as {@link #spawnNearPlayer}, a {@link #findRingLocation ring spot}
+	 * (behind him first) outside every player's view cone (R3 review 1: open ground hides nothing). {@code null} when
+	 * there is no such spot this run (or no player).
 	 */
 	public @Nullable Location unwatchedNear(Location anchor) {
 		World world = anchor.getWorld();
@@ -412,10 +414,17 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		}
 		if (nearest == null) return null;
 
-		double max = Math.max(CopSightlines.WATCH_MIN_BLOCKS, configProvider.getVisibilityCheckDistance());
+		double              max  = Math.max(CopSightlines.WATCH_MIN_BLOCKS, configProvider.getVisibilityCheckDistance());
+		Predicate<Location> near = spot -> horizontalSq(spot, anchor) <= max * max && !watched(spot);
 		// ponytail: Keystone's rings are Player-centred (as betweenRing), so the ring is sampled around the nearest
 		// player and a spot is only accepted near the anchor
-		return hiddenRing(nearest, spot -> horizontalSq(spot, anchor) <= max * max && !watched(spot));
+		Location spot = hiddenRing(nearest, near);
+		if (spot != null) return spot;
+
+		// ponytail: as spawnNearPlayer, the ring search takes no filter, so a spot in view is refused and the next run
+		// retries
+		spot = findRingLocation(nearest);
+		return spot != null && near.test(spot) ? spot : null;
 	}
 
 	private static double horizontalSq(Location a, Location b) {
@@ -453,12 +462,14 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 *
 	 * @param location the spawn location
 	 * @param tier the cop tier
+	 * @param validate run the 1-tick check every ring spot gets (Citizens nudged him into a wall: removed); 0.21.2 R3
+	 *        review 1, a watched station's offsite ring spot
 	 *
 	 * @return the spawned CopNpc, or null on failure
 	 */
 	@Nullable
-	public CopNpc spawnAtLocation(Location location, int tier) {
-		return copNpcFactory.createCop(location, tier);
+	public CopNpc spawnAtLocation(Location location, int tier, boolean validate) {
+		return copNpcFactory.createCop(location, tier, validate);
 	}
 
 	/**

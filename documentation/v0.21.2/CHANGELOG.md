@@ -35,8 +35,8 @@ Upgrade from 0.21.1. Config files are never rewritten: edit them by hand.
 - **One crime, one star announcement.** A crime that raises two stars at once shows one subtitle, one chat card and
   one siren, at the level it ends at, and dispatch names that level (T-583).
 - **Beat cops never appear in view.** A station's beat cop never spawns at a station spot a player has in view (owner
-  ruling R6, T-587); such a station's cop spawns at a nearby spot nobody sees and walks in, so a watched station no
-  longer stays empty (T-606).
+  ruling R6, T-587); such a station's cop spawns at a nearby spot nobody has in view (behind a wall, or on open ground behind the
+  players) and walks in, so a watched station is staffed as soon as such a spot exists, retried every second (T-606).
 - **One cop kill is one crime**, booked when the cop really dies, at the body: a lethal blow no longer also books
   `Assault_Cop` (T-535), the hit cop's own sighting counts (T-536), and a hit the Defender's shield absorbs is never a
   kill (T-544). `Kill_Civilian` is committed where the civilian died (T-550).

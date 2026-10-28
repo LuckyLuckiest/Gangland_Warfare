@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -82,7 +83,7 @@ class PatrolManagerTest {
 
 		Station station = station(1, "Central", anchor);
 		when(stations.all()).thenReturn(List.of(station));
-		when(spawner.spawnAtLocation(any(), anyInt())).thenAnswer(inv -> {
+		when(spawner.spawnAtLocation(any(), anyInt(), anyBoolean())).thenAnswer(inv -> {
 			CopNpc cop = fx.cop(CopState.IDLE, 0, 0, inv.getArgument(0));
 			spawned.add(cop);
 			return cop;
@@ -119,7 +120,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, times(2)).spawnAtLocation(eq(anchor), eq(1));
+		verify(spawner, times(2)).spawnAtLocation(eq(anchor), eq(1), eq(false));
 		assertEquals(2, spawned.size());
 		for (CopNpc cop : spawned) {
 			assertEquals(CopState.PATROL, cop.getCurrentState());
@@ -136,7 +137,7 @@ class PatrolManagerTest {
 		manager.manage();
 		manager.manage();
 
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -147,7 +148,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, times(3)).spawnAtLocation(any(), eq(2));
+		verify(spawner, times(3)).spawnAtLocation(any(), eq(2), anyBoolean());
 	}
 
 	@Test
@@ -157,7 +158,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	/** Flipped 0.21.1 (cause 6): the replacement waits out Respawn_Seconds instead of popping in on the next tick. */
@@ -170,16 +171,16 @@ class PatrolManagerTest {
 
 		manager.manage();
 		verify(spawned.get(0)).destroy(any());
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		assertEquals(1, manager.beatCops().size());
 
 		fx.clock[0] += 29_000;
 		manager.manage();
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 
 		fx.clock[0] += 1_000;
 		manager.manage();
-		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		assertEquals(2, manager.beatCops().size());
 	}
 
@@ -196,11 +197,11 @@ class PatrolManagerTest {
 		manager.manage();
 		fx.clock[0] += 40_000;
 		manager.manage();
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 
 		silent[0] = false;
 		manager.manage();
-		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -231,18 +232,18 @@ class PatrolManagerTest {
 
 		assertEquals(2, manager.respondTo(1, report, 60_000L));
 
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		verify(survivor).navigateTo(report);
 		verify(survivor).setInvestigateUntil(fx.clock[0] + 60_000L);
 		long until = fx.clock[0] + 60_000L;
 
 		fx.clock[0] = lost + 29_000;
 		manager.manage();
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 
 		fx.clock[0] = lost + 30_000;
 		manager.manage();
-		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		CopNpc replacement = spawned.get(2);
 		verify(replacement).navigateTo(report);
 		verify(replacement).setInvestigateUntil(until);
@@ -263,12 +264,12 @@ class PatrolManagerTest {
 
 		fx.clock[0] += 40_000;
 		manager.manage();
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 
 		watched[0] = false;
 		fx.clock[0] += 1_000;
 		manager.manage();
-		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		verify(spawned.get(2)).navigateTo(report);
 	}
 
@@ -285,7 +286,7 @@ class PatrolManagerTest {
 		fx.clock[0] += 30_000;
 		manager.manage();
 
-		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		verify(spawned.get(2), never()).navigateTo(report);
 		verify(spawned.get(2), never()).setInvestigateUntil(anyLong());
 	}
@@ -304,17 +305,17 @@ class PatrolManagerTest {
 
 		fx.clock[0] += 29_000;
 		manager.manage();
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 
 		fx.clock[0] += 1_000;
 		manager.manage();
 
-		verify(spawner).spawnAtLocation(eq(offsite), eq(1));
+		verify(spawner).spawnAtLocation(eq(offsite), eq(1), eq(true));
 		CopNpc replacement = spawned.get(2);
 		assertEquals(CopState.PATROL, replacement.getCurrentState());
 		verify(replacement).setBeatAnchor(anchor);
 		verify(replacement).navigateTo(anchor);
-		verify(spawner, times(2)).spawnAtLocation(eq(anchor), anyInt()); // the first two, before anyone watched
+		verify(spawner, times(2)).spawnAtLocation(eq(anchor), anyInt(), eq(false)); // the first two, before anyone watched
 		assertEquals(2, manager.beatCops().size());
 	}
 
@@ -328,7 +329,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, times(2)).spawnAtLocation(eq(offsite), eq(1));
+		verify(spawner, times(2)).spawnAtLocation(eq(offsite), eq(1), eq(true));
 		for (CopNpc cop : spawned) {
 			verify(cop).setBeatAnchor(anchor);
 			verify(cop).navigateTo(anchor);
@@ -352,7 +353,7 @@ class PatrolManagerTest {
 		fx.clock[0] += 30_000;
 		manager.manage();
 
-		verify(spawner).spawnAtLocation(eq(offsite), eq(1));
+		verify(spawner).spawnAtLocation(eq(offsite), eq(1), eq(true));
 		CopNpc replacement = spawned.get(2);
 		verify(replacement).setBeatAnchor(anchor);
 		verify(replacement).navigateTo(report);
@@ -368,7 +369,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -376,7 +377,7 @@ class PatrolManagerTest {
 	void respondTo_unknownStation_sendsNobody() {
 		assertEquals(0, manager.respondTo(99, fx.at(20, 20), 60_000L));
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -389,7 +390,7 @@ class PatrolManagerTest {
 		manager.aiTick();
 		manager.manage();
 
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		assertEquals(1, manager.beatCops().size());
 	}
 
@@ -428,7 +429,7 @@ class PatrolManagerTest {
 		manager.manage();
 
 		assertEquals(2, manager.beatCops().size());
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -460,7 +461,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 		assertTrue(manager.beatCops().isEmpty());
 	}
 
@@ -472,7 +473,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -487,7 +488,7 @@ class PatrolManagerTest {
 		assertTrue(manager.beatCops().isEmpty());
 		for (CopNpc cop : spawned)
 			verify(cop).destroy(any());
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -499,7 +500,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -513,7 +514,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -525,7 +526,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -545,7 +546,7 @@ class PatrolManagerTest {
 	@Test
 	@DisplayName("a spawner that fails (null) leaves the beat short without an error")
 	void spawnerFailure_tolerated() {
-		when(spawner.spawnAtLocation(any(), anyInt())).thenReturn(null);
+		when(spawner.spawnAtLocation(any(), anyInt(), anyBoolean())).thenReturn(null);
 		online.add(fx.player(1, 1));
 
 		manager.manage();
@@ -560,7 +561,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		verify(spawner, times(2)).watched(anchor); // 0.21.2 R2 (R6): each spawn asks first whether the spot is in view
 		verifyNoMoreInteractions(spawner);
 	}

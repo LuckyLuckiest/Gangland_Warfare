@@ -990,9 +990,10 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
   (30) before a replacement walks out (0.21.1). A beat cop never spawns at a station spot a player within
   `max(24, Visibility_Check_Distance)` is looking at with a clear line (owner ruling R6, 0.21.2). Once it is due (at
   once for the first ones, `Respawn_Seconds` after a loss) a watched station's cop spawns instead at a nearby spot no
-  player has in view (the hidden ring the squad units use, within `max(24, Visibility_Check_Distance)` of the station)
+  player has in view, within `max(24, Visibility_Check_Distance)` of the station (a ring spot behind a wall, as the squad units use, else
+  on open ground a ring spot outside every player's view cone, behind the nearest player first)
   and walks to the station, where his beat begins; a replacement owed to an `Officer_Missing` walks to that spot
-  first. No such spot this second: the next second tries again (owner ruling T-606, 0.21.2 R3). Debug:
+  first. No such spot this second (players looking every way, or no ground): the next second tries again (owner ruling T-606, 0.21.2 R3). Debug:
   `PATROL station=<name> held=watched` (no spot this second), `PATROL station=<name> spawn=offsite at=x,y,z`.
 - **Sighting a wanted player.** With `Cops.Patrol.Report_Wanted: true` a patrol cop who sees a wanted player reports
   that player's position to the squad already hunting them and opens no new call. The radio line for that report is

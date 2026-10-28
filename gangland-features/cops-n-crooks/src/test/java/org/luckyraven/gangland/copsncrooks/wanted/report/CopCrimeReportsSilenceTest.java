@@ -502,7 +502,9 @@ class CopCrimeReportsSilenceTest {
 		verify(radio, never()).sayAs(any(CopGroup.class), eq(there), eq("Scene_Found"), anyMap());
 		assertTrue(debugContains("SCENE grace Crook at=5,64,5 cop=Ann"), debug::toString);
 
+		// R3 review 1: 0 is a hard off, even for a spawn stamp ahead of the scene clock (a backward clock step)
 		when(provider.getCheckInSettings()).thenReturn(new CheckInSettings(true, 10, 20, 32.0, 60, 0, true, true));
+		when(there.getSpawnedAt()).thenReturn(clock.get() + 1_000L);
 		reports.tick();
 		verify(radio, times(1)).sayAs(any(CopGroup.class), eq(there), eq("Scene_Found"), anyMap());
 	}

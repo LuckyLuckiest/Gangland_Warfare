@@ -27,6 +27,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -76,7 +77,7 @@ class PatrolDespawnLogTest {
 		when(station.getName()).thenReturn("Central");
 		when(station.getLocation()).thenReturn(anchor);
 		when(stations.all()).thenReturn(List.of(station));
-		when(spawner.spawnAtLocation(any(), anyInt())).thenAnswer(
+		when(spawner.spawnAtLocation(any(), anyInt(), anyBoolean())).thenAnswer(
 				inv -> fx.cop(CopState.IDLE, 0, 0, inv.getArgument(0)));
 		when(fx.bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
 				.thenReturn(mock(BukkitTask.class));
@@ -108,7 +109,7 @@ class PatrolDespawnLogTest {
 		when(station.getLocation()).thenReturn(anchor);
 		when(stations.all()).thenReturn(List.of(station));
 		List<CopNpc> spawned = new ArrayList<>();
-		when(spawner.spawnAtLocation(any(), anyInt())).thenAnswer(inv -> {
+		when(spawner.spawnAtLocation(any(), anyInt(), anyBoolean())).thenAnswer(inv -> {
 			CopNpc cop = fx.cop(CopState.IDLE, 0, 0, inv.getArgument(0));
 			spawned.add(cop);
 			return cop;

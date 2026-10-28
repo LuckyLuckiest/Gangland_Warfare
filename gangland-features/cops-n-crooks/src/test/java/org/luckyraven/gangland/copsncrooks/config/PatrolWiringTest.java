@@ -54,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -232,7 +233,7 @@ class PatrolWiringTest {
 
 	private CopSpawnManager spawner(PatrolFixture fx) {
 		CopSpawnManager spawner = mock(CopSpawnManager.class);
-		when(spawner.spawnAtLocation(any(), anyInt()))
+		when(spawner.spawnAtLocation(any(), anyInt(), anyBoolean()))
 				.thenAnswer(inv -> fx.cop(CopState.IDLE, 0, 0, inv.getArgument(0)));
 		return spawner;
 	}
@@ -248,18 +249,18 @@ class PatrolWiringTest {
 			npcs.when(() -> NpcSupport.isNpc(any(Entity.class))).thenReturn(false);
 			CopSpawnManager spawner = spawner(fx);
 			managerFor(fx, spawner).manage();
-			verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+			verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 
 			npcs.when(NpcSupport::available).thenReturn(false);
 			CopSpawnManager noCitizens = spawner(fx);
 			managerFor(fx, noCitizens).manage();
-			verify(noCitizens, never()).spawnAtLocation(any(), anyInt());
+			verify(noCitizens, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 
 			npcs.when(NpcSupport::available).thenReturn(true);
 			npcs.when(() -> NpcSupport.isNpc(any(Entity.class))).thenReturn(true);
 			CopSpawnManager npcOnly = spawner(fx);
 			managerFor(fx, npcOnly).manage();
-			verify(npcOnly, never()).spawnAtLocation(any(), anyInt());
+			verify(npcOnly, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 		}
 	}
 

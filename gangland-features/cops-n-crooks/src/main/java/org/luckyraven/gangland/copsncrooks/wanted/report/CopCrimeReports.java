@@ -754,7 +754,8 @@ public final class CopCrimeReports implements BeanLifecycle {
 	 */
 	private boolean inGrace(CopNpc cop, Scene scene, long now, CheckInSettings rules) {
 		long spawnedAt = cop.getSpawnedAt();
-		if (spawnedAt <= 0 || now - spawnedAt >= rules.spawnGraceSeconds() * 1000L) return false;
+		if (rules.spawnGraceSeconds() <= 0 || spawnedAt <= 0 || now - spawnedAt >= rules.spawnGraceSeconds() * 1000L)
+			return false;
 
 		logScene("grace", scene, " cop=" + copRadio.memberName(cop));
 		return true;

@@ -226,7 +226,8 @@ Witness:
 - **Beat cops never appear in view** (owner ruling R6, R2). A station's beat cop, the first ones and every replacement,
   never spawns at a station spot a player within `max(24, Visibility_Check_Distance)` has in front of him with a clear
   line. Since R3 (T-606) such a station is no longer left empty: once its cop is due (at once for the first ones,
-  `Respawn_Seconds` after a loss) he spawns at a nearby spot no player has in view and walks to the station to begin
+  `Respawn_Seconds` after a loss) he spawns at a nearby spot no player has in view (behind a wall, or on open ground outside every player's view cone)
+  and walks to the station to begin
   his beat; with no such spot that second it tries again the next. No new key.
 - **A fresh cop cannot close a scene** (R3, T-601). A cop spawned less than `Check_In.Spawn_Grace_Seconds` (3) ago
   neither counts the kill at a scene nor finds it; after that the usual rules apply. Absent key: 3; 0 restores R2.
