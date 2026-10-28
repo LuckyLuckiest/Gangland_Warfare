@@ -291,7 +291,10 @@ Witness:
     `Pursuit_Presumed`). Otherwise a **scene** opens there: a cop who sees you within `Scene_Radius` of it in
     `Scene_Seconds` counts the kill as seen by a cop (225 heat from 0 stars), else it goes cold with no stars.
   - A cop who saw the body fall (not you) radios `Officer down!` at once, as before, and a scene opens at the body.
-  - A civilian's 911 call about the kill that lands first closes the silence (one commit, no `Officer_Missing`).
+  - A civilian's 911 call about the kill that lands first closes that kill's silence (one commit, no
+    `Officer_Missing`); one landing after the kill was presumed or counted at a scene commits nothing.
+  - A cop who saw the assault on the officer keeps the radio live (no silence): the `Assault_Cop` report stands, one
+    crime. A squad gone between the death and `Officer_Missing` presumes nothing: a scene opens.
   - Leaving, dying, a cuff or an arrest forgets your silences and scenes. A restart forgets them too.
   - `Check_In.Enable: false`, or `Kill_Cop` not in `Witnesses.Crimes`, keeps the 0.21.1 radio.
 

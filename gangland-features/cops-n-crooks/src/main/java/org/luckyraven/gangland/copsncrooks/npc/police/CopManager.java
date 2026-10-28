@@ -887,17 +887,18 @@ public class CopManager implements BeanLifecycle {
 		int targetCount  = Math.min(baseTarget + group.backupExtra(now, backup), configProvider.getMaxCopsPerPlayer());
 		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count. Nor
 		// is one the group sent home (T-436), but while the group lacks cops the nearest in range comes back first.
-		List<CopNpc> counted = new ArrayList<>(cops.stream().filter(
+		// 0.21.2 (T-545): a cop killed unseen holds his slot until dispatch notices: no refill, no wipe, no walker called
+		// back, for a death nobody knows of. currentCount stays the real cops, so a held slot never sends a real cop home
+		// (T-435 below)
+		List<CopRole> held    = silentRoles(group);
+		List<CopNpc>  counted = new ArrayList<>(cops.stream().filter(
 				c -> !isStrandedReturning(c, anchor, maxDist) && !group.isSentHome(c)).toList());
-		counted.addAll(reengageReturning(group, player, targetCount - counted.size(), group::isSentHome));
+		counted.addAll(reengageReturning(group, player, targetCount - counted.size() - held.size(), group::isSentHome));
 		int currentCount = counted.size();
 		// Each new cop takes the composition's first role no counted cop holds, so a stranded one's role is refilled.
 		List<CopRole> composition = configProvider.getSquadComposition(wantedLevel);
 		List<CopRole> liveRoles   = new ArrayList<>();
 		for (CopNpc cop : counted) liveRoles.add(cop.getRole());
-		// 0.21.2 (T-545): a cop killed unseen holds his slot until dispatch notices: no refill, no wipe, for a death
-		// nobody knows of. currentCount stays the real cops, so a held slot never sends a real cop home (T-435 below)
-		List<CopRole> held = silentRoles(group);
 		liveRoles.addAll(held);
 
 		if (!dispatchSettings().enabled() && !breatherSettings().enabled()) {

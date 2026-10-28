@@ -495,6 +495,110 @@ class CopCrimeReportsSilenceTest {
 		assertTrue(reports.silentRoles(replaced).isEmpty(), "a new group never inherits the old one's held slot");
 	}
 
+	// ── one cop kill is one crime (S5 review 1) ─────────────────────────────
+
+	@Test
+	@DisplayName("a cop saw the assault, nobody saw the kill: the assault report stands, the radio stays live, one crime")
+	void assaultReportStands_unseenKill_notSilent_oneCrime() {
+		CopNpc bob = cop("Bob", 10, 90f, true);
+		reports.open(killer, Crimes.ASSAULT_COP, new Location(world, 8, 64, 8), body.getUniqueId());
+		when(bob.canSee(eq(killer), anyDouble())).thenReturn(false);
+		advanceSeconds(1);
+		reports.open(killer, Crimes.KILL_COP, new Location(world, 8, 64, 8), body.getUniqueId());
+		assertTrue(debugContains("REPORT stand Crook crime=Assault_Cop"), debug::toString);
+
+		assertFalse(silent(), "Bob is radioing the assault on him: the squad hears of the death");
+		assertTrue(reports.silentRoles(group).isEmpty());
+
+		advanceSeconds(3);
+		reports.tick();
+		advanceSeconds(20);
+		reports.tick();
+
+		verify(crimes, times(1)).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+		verify(crimes).commit(eq(killer), eq(Crimes.ASSAULT_COP), any(), eq(true), eq(1));
+		verifyDispatch("Officer_Missing", reportAt, 0);
+	}
+
+	@Test
+	@DisplayName("a body seen fall: the scene counts the kill when a cop spots him, then the 911 call commits nothing")
+	void bodySeenScene_committed_then911_noSecondCommit() {
+		CopNpc ann = cop("Ann", 30, 90f, false);
+		when(ann.canSee(eq(body), anyDouble())).thenReturn(true);
+		assertFalse(silent());
+		when(ann.canSee(eq(killer), anyDouble())).thenReturn(true);
+		reports.tick();
+		verify(crimes).commit(killer, Crimes.KILL_COP, new Location(world, 8, 64, 8), true, 1);
+
+		reports.landCivilian(killer, Crimes.KILL_COP, new Location(world, 8, 64, 8), 2);
+
+		verify(crimes, times(1)).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+		verifyDispatch("Caller_911", new Location(world, 8, 64, 8), 0);
+		assertTrue(debugContains("REPORT drop Crook crime=Kill_Cop reporter=CIVILIAN witnesses=2 at=8,64,8 reason=counted"),
+		           debug::toString);
+	}
+
+	@Test
+	@DisplayName("Officer_Missing presumed the kill: a 911 call about it landing later commits nothing")
+	void missingPresumed_then911_noSecondCommit() {
+		assertTrue(silent());
+		advanceSeconds(18);
+		reports.tick();
+		verify(crimes).commit(killer, Crimes.KILL_COP, reportAt, false, 1);
+
+		reports.landCivilian(killer, Crimes.KILL_COP, new Location(world, 8, 64, 8), 1);
+
+		verify(crimes, times(1)).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+	}
+
+	@Test
+	@DisplayName("Officer_Missing presumed the kill: a 911 call about it cut short by his logout is not deferred")
+	void missingPresumed_thenDeferred911_noSecondCommit() {
+		assertTrue(silent());
+		advanceSeconds(18);
+		reports.tick();
+
+		reports.defer(killer, Crimes.KILL_COP, new Location(world, 8, 64, 8), 2, ReportKind.CIVILIAN);
+		reports.onJoin(killer);
+
+		verify(crimes, times(1)).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+	}
+
+	@Test
+	@DisplayName("two cops killed unseen: a 911 call about the second closes his silence, the first stays silent")
+	void twoSilences_911ClosesTheMatchingOne() {
+		assertTrue(silent());
+		CopNpc       second     = mock(CopNpc.class);
+		LivingEntity secondBody = mock(LivingEntity.class);
+		when(secondBody.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(secondBody.getLocation()).thenAnswer(inv -> new Location(world, 40, 64, 40));
+		when(second.getEntity()).thenReturn(secondBody);
+		when(second.getCallsign()).thenReturn("Sid");
+		when(second.getRole()).thenReturn(ASSAULT);
+		when(second.getGroup()).thenReturn(group);
+		when(second.getLastReport()).thenAnswer(inv -> new Location(world, 38, 64, 38));
+		when(second.getLastReportAt()).thenReturn(clock.get() - 2_000L);
+		assertTrue(reports.silentPath(second, secondBody, killer));
+
+		reports.landCivilian(killer, Crimes.KILL_COP, new Location(world, 40, 64, 40), 1);
+
+		assertTrue(debugContains("CHECKIN close Sid"), debug::toString);
+		assertFalse(debugContains("CHECKIN close Vic"), debug::toString);
+		assertEquals(1, reports.silentRoles(group).size(), "Vic still holds his slot");
+	}
+
+	@Test
+	@DisplayName("Pursuit_Presumed re-resolves his group at Officer_Missing: a group gone since opens a scene, no commit")
+	void pursuitPresumed_groupGoneAtMissing_opensScene() {
+		assertTrue(silent());
+		when(copManager.groupOf(killerId)).thenReturn(null);
+		advanceSeconds(18);
+		reports.tick();
+
+		verify(crimes, never()).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+		assertEquals(1, reports.scenes(killerId));
+	}
+
 	@Test
 	@DisplayName("shutdown forgets every silence and scene")
 	void shutdown_forgetsSilencesAndScenes() {

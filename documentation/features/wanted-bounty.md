@@ -97,7 +97,7 @@ replacement appears in front of you.
   check his last position near the Docks.` (where he last checked in, never where you are). Only now does the squad
   record the casualty and request backup; the new units come from your side of that spot and search it. A beat cop's
   station sends its replacement and a second beat cop to walk there. A cop with neither sends nobody.
-- **Presumed.** When his squad was hunting you, dispatch counts the kill now (`Check_In.Pursuit_Presumed`), as one
+- **Presumed.** When his squad was hunting you (and still is), dispatch counts the kill now (`Check_In.Pursuit_Presumed`), as one
   witness without the cop bonus: `Killing an officer (an officer stopped answering)`. 150 heat from 0 stars, one star.
 - **The scene.** Otherwise dispatch opens a scene at that spot for `Scene_Seconds` (60): `Units heading to the Docks`.
   The first unit within 6 blocks says `Scene_Found`. A cop (any cop, even one passing) who sees you within
@@ -107,6 +107,9 @@ replacement appears in front of you.
   scene opens at the body.
 - **A 911 call first.** A civilian who saw it and gets through first closes the silence: dispatch learns of the death
   from the call (the casualty and backup go out then, toward the call's spot), and the kill counts once, as reported.
+  A call that lands after the kill was presumed or counted at the scene adds nothing.
+- **The assault seen.** A cop who saw you hit the officer is already on the radio about it: no silence, the assault
+  report stands and the kill is not counted on top of it.
 - Leaving the server, dying, a cuff or an arrest forgets the silences and scenes about you.
 
 Keys: `cops.yml` `Cops.Check_In.*`. The silent path needs `Kill_Cop` in `Wanted.Witnesses.Crimes`; with

@@ -26,8 +26,8 @@ Upgrade from 0.21.1. Config files are never rewritten: edit them by hand.
 - **A cop killed unseen goes silent.** No cop saw the killer or the body: no `Officer down!`, no backup, his slot stays
   filled. Dispatch says `Radio_Check` 10 s after his last radio check-in and `Officer_Missing` 20 s after it, then
   sends backup toward that spot. When his squad was hunting you the kill counts then; otherwise a scene opens there
-  for 60 s, and a cop who spots you near it counts the kill. A 911 call that lands first closes the silence
-  (T-545, T-546). Keys: `cops.yml` `Cops.Check_In`.
+  for 60 s, and a cop who spots you near it counts the kill. A 911 call that lands first closes the silence, and
+  the kill counts once whichever report lands first (T-545, T-546). Keys: `cops.yml` `Cops.Check_In`.
 - **One cop kill is one crime**, booked when the cop really dies, at the body: a lethal blow no longer also books
   `Assault_Cop` (T-535), the hit cop's own sighting counts (T-536), and a hit the Defender's shield absorbs is never a
   kill (T-544). `Kill_Civilian` is committed where the civilian died (T-550).

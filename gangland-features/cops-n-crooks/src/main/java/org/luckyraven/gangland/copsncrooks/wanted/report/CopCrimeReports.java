@@ -69,7 +69,8 @@ import java.util.function.LongSupplier;
  * check-in + {@code Check_In_Seconds} and {@code Officer_Missing} at + {@code Silent_Seconds}, then records the
  * casualty, sends backup toward that spot (a beat cop's station sends two units) and opens a SCENE there, or, when
  * his group was hunting the killer, counts the kill ({@code Pursuit_Presumed}). A cop who sees the killer near a scene
- * counts the kill; a scene nobody spots him at goes cold. A 911 call about the kill closes the silence first.
+ * counts the kill; a scene nobody spots him at goes cold. A 911 call about the kill closes the silence first. One
+ * kill counts once: a call about a kill Officer_Missing presumed or a scene counted commits nothing (S5 review 1).
  *
  * @since 0.21.2
  */
@@ -163,20 +164,39 @@ public final class CopCrimeReports implements BeanLifecycle {
 		}
 	}
 
-	/** The scene of a cop kill nobody saw: a cop who sees the killer near it counts the kill, until {@code until}. */
+	/**
+	 * The scene of a cop kill nobody saw, at {@code at} (the body, or his last check-in), of the kill at {@code diedAt}:
+	 * a cop who sees the killer near it counts the kill, until {@code until}.
+	 */
 	private static final class Scene {
 
 		private final Player   killer;
 		private final Location at;
+		private final Location diedAt;
 		private final long     until;
 		private       boolean  found;
 
-		private Scene(Player killer, Location at, long until) {
+		private Scene(Player killer, Location at, Location diedAt, long until) {
 			this.killer = killer;
 			this.at     = at;
+			this.diedAt = diedAt;
 			this.until  = until;
 		}
 	}
+
+	/** A cop kill Officer_Missing or a scene already committed: a 911 call about it commits nothing. */
+	private record Counted(UUID killerId, Location diedAt, long since) {
+	}
+
+	/** Blocks between a 911 call's crime spot and a kill's body within which the call is about that kill. */
+	private static final double KILL_SPOT_BLOCKS = 1.0;
+
+	/**
+	 * How long a counted kill waits for a 911 call about it.
+	 * {@code ponytail:} a fixed bound, longer than any call with its hand-overs; a call id on CivilianCalledInEvent
+	 * would make it exact.
+	 */
+	private static final long COUNTED_MILLIS = 5 * 60_000L;
 
 	/** Blocks from a scene within which the first unit there says {@code Scene_Found}. */
 	private static final double SCENE_FOUND_BLOCKS = 6.0;
@@ -201,6 +221,7 @@ public final class CopCrimeReports implements BeanLifecycle {
 	private final List<Case>                  cases    = new ArrayList<>();
 	private final List<Silence>               silences = new ArrayList<>();
 	private final List<Scene>                 scenes   = new ArrayList<>();
+	private final List<Counted>               counted  = new ArrayList<>();
 	private final Map<UUID, List<Deferred>>   deferred = new HashMap<>();
 	private @Nullable Runnable                stopTimer;
 
@@ -326,21 +347,23 @@ public final class CopCrimeReports implements BeanLifecycle {
 		if (rules.enabled()) stampCheckIns(now, rules);
 		for (Silence silence : List.copyOf(silences)) tickSilence(silence, now, rules);
 		for (Scene scene : List.copyOf(scenes)) tickScene(scene, now, rules);
+		counted.removeIf(kill -> now - kill.since() > COUNTED_MILLIS);
 	}
 
 	/**
 	 * {@code cop} was killed by {@code killer} (PLAN.md 2.2), before his squads hear of it: {@code true} when the death
-	 * is silent - Check_In is on, Kill_Cop is held by the witness gate (with the heat ledger on), no cop eyewitness saw
-	 * the killer (his report would be open now: the death booked Kill_Cop just before) and no cop saw the body fall.
+	 * is silent - Check_In is on, Kill_Cop is held by the witness gate (with the heat ledger on), no cop report about
+	 * him is open (a cop eyewitness of the kill, or of the assault on him, which stands: the death booked Kill_Cop just
+	 * before, and that cop is on the radio) and no cop saw the body fall.
 	 * The silence is recorded; the caller takes the cop out of his squads without a radio call. A body a cop saw fall
 	 * opens a scene there and is no silence: the squad radios as before.
 	 */
 	public boolean silentPath(CopNpc cop, LivingEntity body, Player killer) {
-		if (!checkIn().enabled() || !killCopGated() || copSawKill(killer, body.getUniqueId())) return false;
+		if (!checkIn().enabled() || !killCopGated() || copReportOn(killer, body.getUniqueId())) return false;
 
 		Location diedAt = body.getLocation();
 		if (bodySeen(killer, body)) {
-			openScene(killer, diedAt);
+			openScene(killer, diedAt, diedAt);
 			return false;
 		}
 
@@ -401,6 +424,10 @@ public final class CopCrimeReports implements BeanLifecycle {
 	 * within Defer_Minutes. A 911 call cut short by his logout comes here (T-551); nothing is committed now.
 	 */
 	public void defer(Player criminal, String crimeId, Location at, int witnesses, ReportKind kind) {
+		if (Crimes.KILL_COP.equals(crimeId) && consumeCounted(criminal, at)) {
+			log("drop", criminal, crimeId, kind.name(), witnesses, at, " reason=counted");
+			return;
+		}
 		deferred.computeIfAbsent(criminal.getUniqueId(), id -> new ArrayList<>())
 		        .add(new Deferred(crimeId, at.clone(), Math.max(1, witnesses), kind, "",
 		                          now() + config.getWitnesses().deferMinutes() * 60_000L));
@@ -410,31 +437,32 @@ public final class CopCrimeReports implements BeanLifecycle {
 	/**
 	 * A civilian's 911 call landed live (PLAN.md 1.5): the crime is committed as a CIVILIAN report with the call's
 	 * {@code viewers}, through the same landing as a cop's (restrained = dropped, a live sighting kept, Caller_911 about
-	 * the crime spot). A call about a Kill_Cop closes the silence of the cop it reports (0.21.2 S5): dispatch learns of
-	 * the death from the call, so its casualty, backup and response go out now, toward the call's spot, with no
-	 * Officer_Missing line and no second commit.
+	 * the crime spot). A call about a Kill_Cop closes the silence (else the scene) of the kill it reports, the one whose
+	 * body lay at the call's crime spot (0.21.2 S5): dispatch learns of the death from the call, so its casualty, backup
+	 * and response go out now, toward the call's spot, with no Officer_Missing line and no second commit. A call about a
+	 * kill Officer_Missing presumed or a scene counted already commits nothing ({@code REPORT drop ... reason=counted}).
 	 */
-	// ponytail: the call names no victim, so it closes his oldest silence, else his oldest scene; a victim id on
-	// CivilianCalledInEvent would match the exact cop
 	public void landCivilian(Player criminal, String crimeId, Location at, int viewers) {
+		boolean kill    = Crimes.KILL_COP.equals(crimeId);
+		UUID    id      = criminal.getUniqueId();
+		Silence silence = kill ? killAt(silences, id, at, s -> s.killer.getUniqueId(), s -> s.diedAt) : null;
+		Scene   scene   = kill && silence == null ? killAt(scenes, id, at, s -> s.killer.getUniqueId(), s -> s.diedAt)
+		                                          : null;
+		if (kill && silence == null && scene == null && consumeCounted(criminal, at)) {
+			log("drop", criminal, crimeId, ReportKind.CIVILIAN.name(), viewers, at, " reason=counted");
+			return;
+		}
+
 		String refused = land(criminal, ReportKind.CIVILIAN, crimeId, at, viewers, "");
 		log(refused == null ? "land" : "drop", criminal, crimeId, ReportKind.CIVILIAN.name(), viewers, at,
 		    refused == null ? "" : " reason=" + refused);
-		if (!Crimes.KILL_COP.equals(crimeId)) return;
-
-		UUID id = criminal.getUniqueId();
-		for (Silence silence : silences) {
-			if (!silence.killer.getUniqueId().equals(id)) continue;
+		if (silence != null) {
 			silences.remove(silence);
 			logCheckIn("close", silence, now(), " reason=911");
 			discover(silence, at);
-			return;
-		}
-		for (Scene scene : scenes) {
-			if (!scene.killer.getUniqueId().equals(id)) continue;
+		} else if (scene != null) {
 			scenes.remove(scene);
 			logScene("close", scene, " reason=911");
-			return;
 		}
 	}
 
@@ -493,6 +521,7 @@ public final class CopCrimeReports implements BeanLifecycle {
 		deferred.clear();
 		silences.clear();
 		scenes.clear();
+		counted.clear();
 	}
 
 	// ── internals ───────────────────────────────────────────────────────────
@@ -516,9 +545,8 @@ public final class CopCrimeReports implements BeanLifecycle {
 		                                          () -> crimes.commit(killer, crimeId, at, seen, witnesses));
 		if (!committed) return "refused";
 
-		// the commit can create the group (its star trigger runs the wanted start), so it is looked up after.
-		// ponytail: no group (heat under the first star) = no radio line, as the 0.21.1 911 path; S5's group-less
-		// dispatchAt (PLAN.md 2.4) can speak here too
+		// the commit can create the group (its star trigger runs the wanted start), so it is looked up after. No group
+		// (heat under the first star) = no radio line, as the 0.21.1 911 path
 		CopGroup group = copManager.groupOf(killer.getUniqueId());
 		if (group == null) return null;
 
@@ -582,22 +610,25 @@ public final class CopCrimeReports implements BeanLifecycle {
 
 	/**
 	 * Officer_Missing (PLAN.md 2.4): dispatch names his last check-in, learns of the death ({@link #discover}), then
-	 * presumes the kill when his group was hunting the killer (x1.0, one witness, so it passes the witness gate), else
-	 * opens a scene there.
+	 * presumes the kill when his group was hunting the killer and still is his group now (x1.0, one witness, so it
+	 * passes the witness gate), else (a group gone or replaced since counts as none) opens a scene there.
 	 */
 	private void missing(Silence silence, long now, CheckInSettings rules) {
 		silences.remove(silence);
 		logCheckIn("missing", silence, now, "");
 		say(null, silence.killer, silence.lastReport, "Officer_Missing", Map.of("unit", silence.unit));
+		boolean presumed = rules.pursuitPresumed() && silence.hunting &&
+		                   copManager.groupOf(silence.group.getTargetPlayerId()) == silence.group;
 		discover(silence, silence.lastReport);
 
-		if (!rules.pursuitPresumed() || !silence.hunting) {
-			openScene(silence.killer, silence.lastReport);
+		if (!presumed) {
+			openScene(silence.killer, silence.lastReport, silence.diedAt);
 			return;
 		}
 		String refused = land(silence.killer, ReportKind.DISPATCH, Crimes.KILL_COP, silence.lastReport, 1, "");
 		log(refused == null ? "land" : "drop", silence.killer, Crimes.KILL_COP, ReportKind.DISPATCH.name(), 1,
 		    silence.lastReport, refused == null ? "" : " reason=" + refused);
+		if (refused == null) counted.add(new Counted(silence.killer.getUniqueId(), silence.diedAt, now));
 	}
 
 	/**
@@ -632,8 +663,8 @@ public final class CopCrimeReports implements BeanLifecycle {
 		}
 	}
 
-	private void openScene(Player killer, Location at) {
-		Scene scene = new Scene(killer, at.clone(), now() + checkIn().sceneSeconds() * 1000L);
+	private void openScene(Player killer, Location at, Location diedAt) {
+		Scene scene = new Scene(killer, at.clone(), diedAt.clone(), now() + checkIn().sceneSeconds() * 1000L);
 		scenes.add(scene);
 		logScene("open", scene, "");
 		notify(killer, WantedMessages.Key.WITNESS_SCENE_HEADING, Map.of("place", copRadio.placeOf(at)));
@@ -664,6 +695,7 @@ public final class CopCrimeReports implements BeanLifecycle {
 			    scene.at, refused == null ? "" : " reason=" + refused);
 			if (refused != null) return;
 
+			counted.add(new Counted(killer.getUniqueId(), scene.diedAt, now));
 			CopNpc   spotter = eyes.get(0);
 			CopGroup group   = copManager.groupOf(killer.getUniqueId());
 			// a cop has eyes on him: a sighting, not a tip
@@ -718,10 +750,35 @@ public final class CopCrimeReports implements BeanLifecycle {
 		else copRadio.sayAs(voice, speaker, key, merged);
 	}
 
-	/** Whether a cop's report on this kill is open: a cop eyewitness saw the killer. */
-	private boolean copSawKill(Player killer, UUID victimId) {
-		return casesOf(killer).stream().anyMatch(
-				report -> Crimes.KILL_COP.equals(report.crimeId) && victimId.equals(report.victimId));
+	/**
+	 * Whether a cop's report about cop {@code victimId} is open: a cop eyewitness saw his kill, or the assault on him
+	 * (the report that stands when nobody saw the kill): that cop is on the radio, so the death is no silence.
+	 */
+	private boolean copReportOn(Player killer, UUID victimId) {
+		return casesOf(killer).stream().anyMatch(report -> victimId.equals(report.victimId));
+	}
+
+	/** Forgets a counted kill of {@code killer} at {@code at}: {@code true} when the call is about one. */
+	private boolean consumeCounted(Player killer, Location at) {
+		Counted kill = killAt(counted, killer.getUniqueId(), at, Counted::killerId, Counted::diedAt);
+		return kill != null && counted.remove(kill);
+	}
+
+	/** The kill of {@code killerId} whose body lay nearest {@code at}, within {@link #KILL_SPOT_BLOCKS}; else null. */
+	private static <T> @Nullable T killAt(List<T> kills, UUID killerId, Location at, Function<T, UUID> killer,
+	                                      Function<T, Location> spot) {
+		T      nearest = null;
+		double best    = KILL_SPOT_BLOCKS * KILL_SPOT_BLOCKS;
+		for (T kill : kills) {
+			Location there = spot.apply(kill);
+			if (!killerId.equals(killer.apply(kill)) || there.getWorld() != at.getWorld()) continue;
+
+			double distance = there.distanceSquared(at);
+			if (distance > best) continue;
+			nearest = kill;
+			best    = distance;
+		}
+		return nearest;
 	}
 
 	/** A living cop saw {@code body} fall: he sees it (or it is within Witness_Floor) and it is loud or in his cone. */

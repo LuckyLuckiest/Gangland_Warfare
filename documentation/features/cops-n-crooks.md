@@ -253,12 +253,15 @@ player where no cop saw the killer and no cop saw the body fall becomes a **sile
    suspect's side of that spot (no hand-off lead past it) and the squad is tipped there. A beat cop's station spawns
    the held replacement and sends it and the nearest beat cop of the station to walk to the spot. A cop with neither
    (his squad gone since) sends nobody.
-4. When his squad was hunting the killer, the kill counts now (`Pursuit_Presumed`). Otherwise a scene opens at the
+4. When his squad was hunting the killer, and is still his squad, the kill counts now (`Pursuit_Presumed`). Otherwise
+   (his squad gone since counts as none) a scene opens at the
    spot for `Scene_Seconds` (60): the first unit within 6 blocks says `Scene_Found`; a cop who sees the killer while he is
    within `Scene_Radius` (32) of it counts the kill and says `Scene_Suspect`; nobody spots him in time: `Scene_Clear`, no stars.
 
-A cop who saw only the body radios `Officer down!` at once and a scene opens at the body. A civilian's 911 call about
-the kill that lands first closes the silence. A squad's backup spawns on the suspect's side of the
+A cop who saw only the body radios `Officer down!` at once and a scene opens at the body. A cop who saw you hit him
+(an `Assault_Cop` report on the radio) keeps the radio live too: that report stands and the kill is not counted
+again. A civilian's 911 call about the kill that lands first closes that kill's silence (the one whose body lay where
+the call says). One kill counts once: a call landing after `Pursuit_Presumed` or a scene counted it commits nothing. A squad's backup spawns on the suspect's side of the
 spot and is still held to `Pursuit.Max_Distance` (80) of him, so a killer who left more than about 80 blocks from the
 scene is not found there. Only a death starts a silence: a stuck or
 vanished cop always answers. The silent path needs `Kill_Cop` in `wanted.yml` `Witnesses.Crimes` (the heat ledger on);
