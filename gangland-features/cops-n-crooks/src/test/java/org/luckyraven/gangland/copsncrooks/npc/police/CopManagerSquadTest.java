@@ -835,6 +835,63 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("T-542: every cop dead, the wanted ends: nobody is left to say Stand_Down, so dispatch says it to him")
+	void wantedEnd_wipedGroup_dispatchSaysStandDown() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+		group.getCops().clear(); // the AI tick released the dead
+
+		manager.onWantedEnd(player);
+
+		verify(fx.radio).dispatch(eq(group), eq(player), eq("Stand_Down"), anyInt(), any());
+		verify(fx.radio, never()).sayFromLeader(group, "Stand_Down");
+		assertTrue(group.isStoodDown());
+	}
+
+	@Test
+	@DisplayName("T-542: the post-escape search gives up after a wipe: dispatch says Stand_Down")
+	void searchGaveUp_wipedGroup_dispatchSaysStandDown() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+		group.getCops().clear();
+
+		manager.searchGaveUp(playerId);
+
+		verify(fx.radio).dispatch(eq(group), eq(player), eq("Stand_Down"), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("T-542: no cop of the episode ever stood: there is no one to stand down, nothing is said")
+	void wantedEnd_groupNeverStood_saysNoStandDown() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+
+		manager.onWantedEnd(player);
+
+		verify(fx.radio, never()).dispatch(any(), any(), eq("Stand_Down"), anyInt(), any());
+		verify(fx.radio, never()).sayFromLeader(group, "Stand_Down");
+	}
+
+	@Test
+	@DisplayName("T-537: a new wanted start that finds the group empty owes the first response again (hasStood cleared)")
+	void wantedStart_emptyGroup_clearsHasStood() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+		manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
+		manager.onWantedEnd(player, WantedCause.EVASION); // the post-escape search keeps the group
+		group.getCops().clear();
+		assertTrue(group.hasStood());
+
+		manager.onWantedStart(player, wanted);
+
+		assertSame(group, manager.groupFor(playerId));
+		assertFalse(group.hasStood());
+	}
+
+	@Test
 	@DisplayName("T-433: the Stand_Down marks the squad stood down (its queued orders go quiet); the next wanted start clears it")
 	void wantedEnd_marksStoodDown_untilTheNextStart() {
 		manager.onWantedStart(player, wanted);

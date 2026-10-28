@@ -443,6 +443,20 @@ class ChaseConfigTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2: Evasion.No_Cop_Inside_Speed is read, and absent it is 0.25")
+	void noCopInsideSpeed_readAndDefaulted() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig set    = ChaseConfig.parse(wantedRoot("Wanted:\n   Evasion:\n      No_Cop_Inside_Speed: 0.5\n",
+		                                                  report), report);
+		ChaseConfig absent = ChaseConfig.parse(wantedRoot("Wanted:\n   Evasion:\n      Enable: true\n", report), report);
+
+		assertEquals(0.5, set.evasion().noCopInsideSpeed());
+		assertEquals(0.25, absent.evasion().noCopInsideSpeed());
+		assertTrue(report.isEmpty(), report.issues().toString());
+	}
+
+	@Test
 	@DisplayName("the six-argument EvasionSettings constructor carries the default Auto block")
 	void evasionSettings_sixArgConstructor() {
 		EvasionSettings e = new EvasionSettings(true, 3, DropMode.AUTO, List.of(1), List.of(1), 2.0);

@@ -154,6 +154,8 @@ public class CopManager implements BeanLifecycle {
 		// a new episode: the squad is on duty again (T-433) and no leash of the last one hands this one off
 		group.setStoodDown(false);
 		group.clearLeashReleased();
+		// with nobody on the ground the first response is owed again: its units hold the evasion clock (T-537)
+		if (group.isEmpty()) group.clearStood();
 		// a crime-scene tip counts as fresh as a sighting here: a repeated start right after one stays quiet
 		boolean  fresh    = group.getSquad().hasFreshSighting() ||
 		                    group.tippedOffWithin(now, NpcSquad.SIGHTING_GRACE_MS);
@@ -206,7 +208,7 @@ public class CopManager implements BeanLifecycle {
 		CopGroup group = groups.get(playerId);
 		if (group != null) group.clearLeashReleased();
 		// WantedEndEvent and the level change to 0 both land here for one clear: announce it once per episode.
-		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) standDown(group);
+		if (standsDown(group) && stoodDown.add(playerId)) standDown(group, player);
 
 		if (cause == WantedCause.DEATH || cause == WantedCause.ARREST) {
 			endSquad(playerId);
@@ -249,13 +251,31 @@ public class CopManager implements BeanLifecycle {
 		removeCopAttacker(playerId);
 
 		CopGroup group = groups.get(playerId);
-		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) standDown(group);
+		if (standsDown(group) && stoodDown.add(playerId)) standDown(group, Bukkit.getPlayer(playerId));
 	}
 
-	/** The leader says {@code Stand_Down}; the squad then says nothing more, its queued orders included (T-433). */
-	private void standDown(CopGroup group) {
-		copRadio.sayFromLeader(group, "Stand_Down");
+	/** A group with cops, or one whose cops all died (T-542), stands down; one that never fielded a cop has no one to. */
+	private static boolean standsDown(@Nullable CopGroup group) {
+		return group != null && (!group.isEmpty() || group.hasStood());
+	}
+
+	/**
+	 * The leader says {@code Stand_Down}; the squad then says nothing more, its queued orders included (T-433). With no
+	 * cop of the group left to speak (every one dead), dispatch says it to him instead (T-542).
+	 */
+	private void standDown(CopGroup group, @Nullable Player player) {
+		if (hasSpeaker(group)) copRadio.sayFromLeader(group, "Stand_Down");
+		else if (player != null) copRadio.dispatch(group, player, "Stand_Down", 0, "");
 		group.setStoodDown(true);
+	}
+
+	/** Some cop of the group still has a body to speak from ({@code CopRadio.sayFromLeader}'s speaker). */
+	private static boolean hasSpeaker(CopGroup group) {
+		synchronized (group.getCops()) {
+			for (CopNpc cop : group.getCops())
+				if (cop.getEntity() != null) return true;
+		}
+		return false;
 	}
 
 	/**

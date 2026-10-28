@@ -1141,7 +1141,7 @@ Package `org.luckyraven.gangland.copsncrooks.wanted`, configured by `ChaseConfig
 |---|---|---|
 | Crime bus | `CrimeService.commit(player, crimeId, location[, seenByCop, witnesses])` in `gangland-api` | Main thread; fires `CrimeCommittedEvent`; false when a listener cancelled it |
 | Heat | `wanted.heat.HeatLedger`, `CrimeRecord`; `HeatListener` | Records crimes with the multipliers, keeps the per-chase list the charge sheet reads, and replays the core star trigger while heat is above the next threshold. Cleared on `WantedEndEvent` |
-| Kill seam | `seam.HeatWantedTracker` (replaces `KillComboWantedTracker`) | Installed into core's `WantedKillTrackers` holder. Heat on: kills become `Kill_Cop` / `Kill_Player` crimes (`Kill_Civilian` is published by gangland-civilians); heat off: the kill combo or one star per kill. A defender killing inside their own contested turf is dropped first, and `exemptsKill` tells the core to add no kill notoriety or bounty timer either |
+| Kill seam | `seam.HeatWantedTracker` (replaces `KillComboWantedTracker`) | Installed into core's `WantedKillTrackers` holder. Heat on: kills become `Kill_Player` crimes (`Kill_Civilian` is published by gangland-civilians at the victim, 0.21.2 T-550; `Kill_Cop` since 0.21.2 by `CopListener.onCopDeath` through `HeatLedger.reportCopKill` at the body, before `memberDown`, with the killer from `getKiller()` or the player who hit that cop within 5 s, T-544; Assault_Cop is reported one tick after the hit and skipped when the cop is dead by then, T-535/T-536); heat off: the kill combo or one star per kill. A defender killing inside their own contested turf is dropped first, and `exemptsKill` tells the core to add no kill notoriety or bounty timer either |
 | Evasion | `wanted.evasion.EvasionClock` (a `WantedDecayPolicy`), `EvasionListener` | Runs on the cop AI tick; fires `WantedEvasionStateEvent`; drops through `WantedStars.drop(.., EVASION)` |
 | HUD | `wanted.hud.WantedHud`, `StarCard`, `listener.wanted.WantedHudListener` | Boss bar, card, title, siren, ring and compass; a 10-tick timer; reads the events only |
 | Charge sheet | `detainment.intake.JailIntakeService` | Reads `ledger.chaseCrimes` before the ARREST clear |
@@ -1189,8 +1189,14 @@ wanted, cause)` takes the `WantedCause`: a RESTORE start (rejoin) skips the crim
 `breatherUntil = now + Rejoin_Grace_Seconds`. `releaseSurplus` calls queued units off before it sends live cops home.
 `group.unitsEnRoute(now)` is true for a unit up to 10 s past its ETA (a `ponytail:` constant, not a key).
 
-**Evasion hold.** `EvasionClock.hasLiveCop`/`handlesDecay` are also true while `unitsEnRoute`, and `tick` holds (lastTick =
-now, no track, no search) while the group has no valid non-RETURNING cop in the world, so no star drops while units travel.
+**Evasion hold.** Since 0.21.2 (T-537) `handlesDecay` is `Evasion.Enable && groupOf(player) != null`, and `tick` clears
+only when the group is gone or he is no longer wanted. With no valid non-RETURNING cop standing, `noCopHold` pauses the
+clock (lastTick = now, progress kept) for the first response only (`!group.hasStood() && unitsEnRoute`; `hasStood` is set
+by `CopGroup.add` and cleared by a wanted start that finds the group empty) and for cause E (an active `biasAt(now)` or a
+leashed walker). Otherwise he is searched at the squad's last-known spot, never SEEN (a dead squad's last sighting is no
+one's eyes), at `Wanted.Evasion.No_Cop_Inside_Speed` (0.25, floored at 0.01) inside the zone and `Outside_Zone_Speed`
+outside, and the drop is the usual `EVASION`. After a wipe the breather and the ETA no longer hold. The S5 silence hold
+(an unanswered check-in) is not there yet.
 `QuietTrail.tick` sets `group.setBackupHeld(...)`, which makes `requestBackup` and `grantRegroupBackup` refuse.
 
 **Keystone 1.15.0.** Gangland now **requires Keystone 1.15.0**: it uses `EntitySpawner.isOutOfSight(spot, target)` and
@@ -1213,7 +1219,7 @@ unit applied, `from` the bias's last-known spot), `HANDOFF_RING {player} center=
 (0.21.1, T-509: logged just before that unit's `UNIT` line when `Spawn_Between` is above 0; `fallback=true`
 when no hidden spot lay within 16 b of the between point, or the lead is in another world (`center` = his own spot), and
 the unit took the ring ahead or a later step), `EVASION {player} speed= zone= hideout= quiet=` and
-`EVASION {player} hold=enroute`.
+`EVASION {player} hold=enroute|handoff`.
 
 **Radio.** `CopRadio` keeps both constructors; `setPlaceNames` and `placeOf(location)` (place name or `Unknown_Place`) supply
 `%place%` to every line (the voice uses the squad's last-known location, `dispatch` the target's). New overloads:
@@ -1357,7 +1363,7 @@ unioned into a server's own `Priority` list (so an old list still speaks them).
   `0.75 x Pursuit.Max_Distance` (3D) and not `inViewOf` (60 degree eye cone plus `isOutOfSight` false). The ring
   fallback takes no Keystone predicate, so a ring spot in view returns `null` (the caller retries next run). A biased unit
   tries `betweenRing`, then `hiddenRing` ahead of the bias, before the station spawners.
-- `EvasionClock.hasLiveCop` also holds for an active `biasAt(now)` or a RETURNING cop still targeting the player past
+- `EvasionClock.noCopHold` (0.21.1 `hasLiveCop`) also holds for an active `biasAt(now)` or a RETURNING cop still targeting the player past
   `Pursuit.Max_Distance` (`CopManager.isStranded`, the walker the next spawn tick refills), so a whole-squad leash
   pauses the search whichever AI-tick hook runs first. A walker inside the range holds nothing (a leashed cop keeps
   its target, so keying on every walker froze the stars).

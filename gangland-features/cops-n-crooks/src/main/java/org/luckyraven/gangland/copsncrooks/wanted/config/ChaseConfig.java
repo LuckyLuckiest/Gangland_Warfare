@@ -125,7 +125,8 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		                           dropMode(n, report), radius.isEmpty() ? d.searchRadius() : List.copyOf(radius),
 		                           drops.isEmpty() ? d.secondsToDrop() : List.copyOf(drops), outside,
 		                           auto(block(n, "Auto", report), report), hideout(block(n, "Hideout", report), report),
-		                           quietSpeed(block(n, "Quiet_Speed", report), report), maxSpeed);
+		                           quietSpeed(block(n, "Quiet_Speed", report), report), maxSpeed,
+		                           n.get("No_Cop_Inside_Speed").asDouble().min(0).orDefault(d.noCopInsideSpeed()));
 	}
 
 	private static HideoutSettings hideout(@Nullable NodeReader n, ConfigReport report) {

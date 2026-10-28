@@ -101,6 +101,10 @@ Wanted:
          - 60
       # How much faster the timer runs while you are outside the search zone
       Outside_Zone_Speed: 2.0
+      # 0.21.2: how fast the timer runs inside the search zone while no cop stands (every cop dead or walking home):
+      # 0.25 = four times slower, so leaving the zone pays and standing on the bodies does not; floored at 0.01, so
+      # it never freezes
+      No_Cop_Inside_Speed: 0.25
       # While you are inside a hideout (a gang waypoint, or a region tagged hideout) the timer runs this many times
       # faster; set Enable false to make hideouts no different from open ground
       Hideout:

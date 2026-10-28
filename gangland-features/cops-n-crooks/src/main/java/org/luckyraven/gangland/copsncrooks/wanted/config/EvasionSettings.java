@@ -15,17 +15,30 @@ import java.util.List;
  * @param hideout          the search timer's speed inside a hideout.
  * @param quietSpeed       the speed-up for staying quiet.
  * @param maxSpeed         cap on zone x hideout x quiet speed.
+ * @param noCopInsideSpeed the zone speed inside the search zone while no cop stands (0.21.2; floored at 0.01).
  * @since 0.15.0
  */
 public record EvasionSettings(boolean enabled, int lostSightSeconds, DropMode dropMode, List<Integer> searchRadius,
                               List<Integer> secondsToDrop, double outsideZoneSpeed, AutoSettings auto, HideoutSettings hideout,
-                              QuietSpeedSettings quietSpeed, double maxSpeed) {
+                              QuietSpeedSettings quietSpeed, double maxSpeed, double noCopInsideSpeed) {
+	/** The shipped {@code No_Cop_Inside_Speed}. */
+	public static final double DEFAULT_NO_COP_INSIDE_SPEED = 0.25;
+
 	/** The shipped {@code Wanted.Evasion}. */
 	public static final EvasionSettings DEFAULT = new EvasionSettings(true, 3, DropMode.ONE_STAR,
 	                                                                  List.of(40, 60, 90, 130, 180),
 	                                                                  List.of(10, 20, 30, 45, 60), 2.0,
 	                                                                  AutoSettings.DEFAULT, HideoutSettings.DEFAULT,
-	                                                                  QuietSpeedSettings.DEFAULT, 4.0);
+	                                                                  QuietSpeedSettings.DEFAULT, 4.0,
+	                                                                  DEFAULT_NO_COP_INSIDE_SPEED);
+
+	/** The 0.21.1 shape, with the default {@code No_Cop_Inside_Speed}. */
+	public EvasionSettings(boolean enabled, int lostSightSeconds, DropMode dropMode, List<Integer> searchRadius,
+	                       List<Integer> secondsToDrop, double outsideZoneSpeed, AutoSettings auto, HideoutSettings hideout,
+	                       QuietSpeedSettings quietSpeed, double maxSpeed) {
+		this(enabled, lostSightSeconds, dropMode, searchRadius, secondsToDrop, outsideZoneSpeed, auto, hideout,
+		     quietSpeed, maxSpeed, DEFAULT_NO_COP_INSIDE_SPEED);
+	}
 
 	/** The 0.15.2 shape, with the default hideout, quiet-speed and cap. */
 	public EvasionSettings(boolean enabled, int lostSightSeconds, DropMode dropMode, List<Integer> searchRadius,

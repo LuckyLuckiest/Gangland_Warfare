@@ -118,6 +118,8 @@ class Bundled020YamlTest {
 		assertEquals(Set.of("Enable", "Repeat_Seconds"), keysOf(wanted, "Trespass"));
 		assertTrue(keysOf(wanted, "Heat", "Crimes").contains("Evading_Police"), "Heat.Crimes lists Evading_Police");
 		assertEquals(ChaseConfig.DEFAULT, ChaseConfig.parse(wanted, report));
+		assertEquals(0.25, ChaseConfig.parse(wanted, report).evasion().noCopInsideSpeed(), "0.21.2 No_Cop_Inside_Speed");
+		assertTrue(keysOf(wanted, "Evasion").contains("No_Cop_Inside_Speed"), "Evasion ships No_Cop_Inside_Speed");
 		assertTrue(report.issues().isEmpty(), () -> "bundled wanted.yml has issues: " + report.issues());
 	}
 

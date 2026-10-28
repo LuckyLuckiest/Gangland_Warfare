@@ -115,10 +115,15 @@ Keys and messages are listed in [migration-0.20.0.md](../migration-0.20.0.md).
   60 s at 5) and one star drops (or all stars with `Drop_Mode: ALL_STARS`). Outside the zone the clock runs
   `Outside_Zone_Speed` (2x) faster. A sighting, or a shot you fire near a cop, puts you back to "seen"; being cuffed
   pauses it. Cops that are all walking home count as no pursuit.
+  - **No cop standing (0.21.2).** Killing every cop never clears a star. With every cop dead or walking home the search
+    runs on at the squad's last-known spot, but inside the zone it runs at `No_Cop_Inside_Speed` (0.25, four times
+    slower): standing on the bodies does not pay, leaving the zone does. Only the first units of a chase, while they are
+    on their way, and a hand-off in progress pause it.
   - **AUTO mode (0.15.2+).** With `Drop_Mode: AUTO`, the cops judge how the chase went. A rampage loses one star at a time; a small chase loses them all at once. A long quiet chase with no new crime for 90+ seconds also loses them all. Leaving the search zone loses half your stars (rounded up). The next timer gets faster after each drop, and known repeat offenders stay locked to one star. The server learns how long chases typically last and who keeps getting away, so timers adjust over time. Cold starts use guessed numbers; warm servers tune based on play. An upgraded server from 0.15.1 keeps its old `wanted.yml` (no `Auto` block) and reads AUTO defaults, or an admin can copy the new `Auto` block from `plugins/Gangland_Warfare/modules/cops-n-crooks-<version>.jar`.
 - **The fixed decay timer** still runs when no cop is hunting you, and as the safety net otherwise: it starts at `Time`
   (default 120 seconds) and scales up with each star: `time x Amount ^ stars`. While cops hunt, evasion owns decay and the
-  timer drops nothing. `Evasion.Enable: false` gives the timer back full control.
+  timer drops nothing; since 0.21.2 that holds even when every cop is dead. `Evasion.Enable: false` gives the timer back
+  full control.
 - **Dying clears all wanted stars** immediately.
 - Kill combos reset after `Reset_After` seconds of no kills (default 10 seconds).
 

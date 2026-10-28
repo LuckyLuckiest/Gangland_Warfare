@@ -243,7 +243,9 @@ The chase around a wanted player is configured in `copsncrooks/wanted.yml` (heat
 
 - **Evasion reads the squad's sightings.** Every cop in the group shares what it sees. The evasion clock counts "no
   cop has seen you" from the squad's last sighting, and a cop that is walking home (`RETURNING`) does not count as
-  pursuit. When no live hunting cop is left the evasion state turns off and the fixed decay timer takes over.
+  pursuit. Since 0.21.2 no live hunting cop is no escape: the search runs on at the last-known spot at
+  `No_Cop_Inside_Speed` inside the zone, and the fixed decay timer stays off while the squad exists. With every cop
+  dead, dispatch says `Stand_Down` when the chase ends.
 - **Evasion end decisions (0.15.2+).** With `Drop_Mode: ONE_STAR` (the default), every evasion drops one star. With `ALL_STARS`, every evasion drops all. With `AUTO`, the cops judge the chase and decide: a rampage drops one star at a time, a small chase or a long quiet one drops all stars, leaving the zone drops half your stars. The server can learn typical chase lengths and escape habits to tune timers and identify repeat offenders. Full rules in [Wanted & Bounty](./wanted-bounty.md).
 - **Regroup.** When `Regroup.Casualties` (2) cops of one squad die within `Regroup.Window_Seconds` (20), the whole squad
   falls back to cover for at most `Regroup.Fall_Back_Seconds` (15), radios for backup (the regroup grants it itself
