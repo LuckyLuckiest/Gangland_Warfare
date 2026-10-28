@@ -13,12 +13,14 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.events.npc.CopDeathEvent;
 import org.luckyraven.gangland.copsncrooks.events.police.ArrestedEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSupport;
@@ -30,11 +32,33 @@ import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 import org.luckyraven.bartizan.api.raytrace.WeaponRaytracer;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.LongSupplier;
+
 @ListenerHandler
 @RequiredArgsConstructor
 public class CopListener implements Listener {
 
 	private final CopManager copManager;
+	private final HeatLedger ledger;
+
+	/** How long a hit blames its player for a cop death with no killer (Bartizan area damage, BZ-EV-20). */
+	static final long LAST_ATTACKER_MS = 5_000L;
+
+	/** The last player who hit each cop entity, and when; read by {@link #onCopDeath} when the death names no killer. */
+	private final Map<UUID, Hit> lastAttackers = new HashMap<>();
+
+	private LongSupplier clock = System::currentTimeMillis;
+
+	private record Hit(Player attacker, long at) {
+	}
+
+	/** Test seam: the clock the last-attacker window is measured on. */
+	void setClock(LongSupplier clock) {
+		this.clock = clock;
+	}
 
 	/**
 	 * Starts cop pursuit when a player becomes wanted.
@@ -172,7 +196,25 @@ public class CopListener implements Listener {
 		if (cop == null) return;
 
 		// Alert system: put ALL cops for this player into combat mode
+		alert(cop, victim, attacker);
+	}
+
+	/** A player hit {@code cop}: remembered for a killer-less death, then every cop of his group is alerted. */
+	private void alert(CopNpc cop, Entity victim, Player attacker) {
+		long now = clock.getAsLong();
+		lastAttackers.values().removeIf(hit -> now - hit.at() > LAST_ATTACKER_MS);
+		lastAttackers.put(victim.getUniqueId(), new Hit(attacker, now));
 		copManager.onCopAttackedAlert(cop, attacker);
+	}
+
+	/** {@code body}'s killer, else the player who hit it within {@link #LAST_ATTACKER_MS}; {@code null} for nobody. */
+	private @Nullable Player killerOf(LivingEntity body) {
+		Player killer = body.getKiller();
+		Hit    hit    = lastAttackers.remove(body.getUniqueId());
+		// a player-type NPC (a hostile civilian) is no one to book
+		if (killer != null) return NpcSupport.isNpc(killer) ? null : killer;
+		if (hit == null || clock.getAsLong() - hit.at() > LAST_ATTACKER_MS || !hit.attacker().isOnline()) return null;
+		return hit.attacker();
 	}
 
 	/**
@@ -217,7 +259,7 @@ public class CopListener implements Listener {
 		if (shooter instanceof Player attacker && !NpcSupport.isNpc(attacker)) {
 			CopNpc cop = copManager.findCopByEntity(victim);
 			if (cop == null) return;
-			copManager.onCopAttackedAlert(cop, attacker);
+			alert(cop, victim, attacker);
 			return;
 		}
 
@@ -248,9 +290,13 @@ public class CopListener implements Listener {
 		CopNpc cop = copManager.findDyingCop(event.getEntity());
 		if (cop == null) return;
 
+		// 0.21.2 (T-544): the death books Kill_Cop, at the body, before the squad hears of it (the lethal hit used to, in
+		// the core damage listener). No player to blame (a fall, lava, an NPC): no crime, the squad still radios it
+		Player killer = killerOf(event.getEntity());
+		if (killer != null) ledger.reportCopKill(killer, event.getEntity().getLocation());
+
 		// Killing a cop is a crime, which ends a cold trail: release the hold now, because the officer-down and regroup
 		// backup are requested inside memberDown below, before QuietTrail's next tick would see the crime.
-		Player   killer = event.getEntity().getKiller();
 		CopGroup group  = cop.getGroup();
 		if (killer != null && group != null && killer.getUniqueId().equals(group.getTargetPlayerId()))
 			group.setBackupHeld(false);

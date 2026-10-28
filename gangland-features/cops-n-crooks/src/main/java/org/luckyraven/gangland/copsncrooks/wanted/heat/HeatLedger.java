@@ -152,6 +152,16 @@ public final class HeatLedger {
 		crimes.commit(attacker, Crimes.ASSAULT_COP, at);
 	}
 
+	/**
+	 * Commits Kill_Cop for {@code killer} at the body while the heat ledger is on (0.21.2, T-544). The cop's real death
+	 * books it, so a lethal hit a shield absorbs is never a kill; with heat off the core kill combo counts it instead.
+	 */
+	public void reportCopKill(Player killer, @Nullable Location at) {
+		if (!config.get().heat().enabled()) return;
+
+		crimes.commit(killer, Crimes.KILL_COP, at);
+	}
+
 	public void onLevelChanged(UUID playerId, int oldLevel, int newLevel, int maxLevel, WantedCause cause) {
 		HeatSettings heat = config.get().heat();
 

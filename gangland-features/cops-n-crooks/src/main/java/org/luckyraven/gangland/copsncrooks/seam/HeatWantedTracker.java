@@ -96,9 +96,11 @@ public final class HeatWantedTracker implements WantedKillTracker {
 		}
 
 		EntityMark mark = EntityMarks.of(marks.getMark(victim));
-		if (mark == EntityMark.POLICE) {
-			crimes.commit(killer, Crimes.KILL_COP, victim.getLocation());
-		} else if (realPlayer) {
+		// 0.21.2 (T-544): CopListener.onCopDeath books Kill_Cop at the real death, so a lethal hit the Defender's shield
+		// absorbs is never a kill and the core/module listener order no longer matters
+		if (mark == EntityMark.POLICE) return;
+
+		if (realPlayer) {
 			crimes.commit(killer, Crimes.KILL_PLAYER, victim.getLocation());
 		} else if (mark == EntityMark.CIVILIAN && !managedCivilian.test(victim)) {
 			// a gangland-civilians NPC is published by its own death listener (hostile-in-combat exemption); a vanilla

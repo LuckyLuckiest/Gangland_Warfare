@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -276,5 +277,25 @@ class HeatLedgerTest {
 		clock.addAndGet(6_000);
 		ledger.reportAssault(player, victim, location);
 		verify(crimes, times(3)).commit(player, Crimes.ASSAULT_COP, location);
+	}
+
+	@Test
+	@DisplayName("T-544: a cop's death books Kill_Cop at the body while heat is on")
+	void reportCopKill_heatOn_commitsKillCopAtTheBody() {
+		Location body = mock(Location.class);
+
+		ledger.reportCopKill(player, body);
+
+		verify(crimes).commit(player, Crimes.KILL_COP, body);
+	}
+
+	@Test
+	@DisplayName("T-544: with heat off the core kill combo counts the kill, so the death books nothing")
+	void reportCopKill_heatOff_commitsNothing() {
+		heatOff();
+
+		ledger.reportCopKill(player, mock(Location.class));
+
+		verifyNoInteractions(crimes);
 	}
 }

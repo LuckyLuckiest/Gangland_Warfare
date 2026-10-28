@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,6 +16,8 @@ import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+
+import java.util.UUID;
 
 /** Beans of the heat ledger (0.15.0). */
 @Configuration
@@ -47,7 +50,15 @@ public class HeatModuleConfig {
 			Entity entity = cop.getEntity();
 			if (entity == null) return;
 
-			ledger.reportAssault(player, entity.getUniqueId(), player.getLocation());
+			// 0.21.2 (T-535, T-536): one tick later, so a lethal blow books only Kill_Cop (the cop is dead by then) and
+			// the hit cop's own sighting, which CopManager reports after this hook, already counts as seen
+			UUID     copId = entity.getUniqueId();
+			Location at    = player.getLocation();
+			plugin.getServer().getScheduler().runTask(plugin, () -> {
+				if (!entity.isValid() || entity.isDead() || !player.isOnline()) return;
+
+				ledger.reportAssault(player, copId, at);
+			});
 		});
 	}
 }

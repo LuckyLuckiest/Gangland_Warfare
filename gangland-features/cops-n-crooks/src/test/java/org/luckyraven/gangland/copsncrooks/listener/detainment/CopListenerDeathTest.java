@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.listener.detainment;
 
+import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.events.npc.CopDeathEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
@@ -79,7 +82,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
 
-		new CopListener(manager).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
 
 		InOrder order = inOrder(listener, cop);
 		order.verify(listener).onSignal(eq(group.getSquad()), any(NpcSquadSignal.class), eq(cop), any());
@@ -104,7 +107,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(null); // CUFFING: stopNavigation cleared the pursuit's squad
 
-		new CopListener(manager).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
 
 		verify(listener).onSignal(eq(group.getSquad()), any(NpcSquadSignal.class), eq(cop), any());
 		assertFalse(group.getSquad().members().contains(cop));
@@ -132,7 +135,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(attackers);
 
-		new CopListener(manager).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
 
 		verify(listener).onSignal(eq(attackers), any(NpcSquadSignal.class), eq(cop), any());
 		verify(listener, never()).onSignal(eq(group.getSquad()), any(), any(), any());
@@ -165,7 +168,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(null);
 
-		new CopListener(manager).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
 
 		verify(listener).onSignal(eq(group.getSquad()), eq(NpcSquadSignal.MAN_DOWN), eq(cop), any());
 		assertFalse(group.getSquad().members().contains(cop));
@@ -181,7 +184,7 @@ class CopListenerDeathTest {
 		EntityDeathEvent event = deathOf(body);
 		event.getDrops().add(mock(ItemStack.class));
 
-		new CopListener(manager).onCopDeath(event);
+		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(event);
 
 		verify(manager, never()).findCopByEntity(any());
 		assertFalse(event.getDrops().isEmpty());
@@ -197,7 +200,7 @@ class CopListenerDeathTest {
 		when(manager.findDyingCop(body)).thenReturn(cop);
 		when(body.getKiller()).thenReturn(killer);
 
-		new CopListener(manager).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
 
 		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
 		verify(bukkit.pluginManager()).callEvent(captor.capture());
@@ -212,7 +215,7 @@ class CopListenerDeathTest {
 		CopNpc       cop     = mock(CopNpc.class);
 		when(manager.findDyingCop(body)).thenReturn(cop);
 
-		new CopListener(manager).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
 
 		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
 		verify(bukkit.pluginManager()).callEvent(captor.capture());
@@ -244,7 +247,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
 
-		new CopListener(manager).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
 
 		assertEquals(List.of(false), heldAtSignal);
 	}
@@ -267,9 +270,115 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
 
-		new CopListener(manager).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
 
 		assertTrue(group.isBackupHeld());
+	}
+
+	/** A cop of a group of two whose squad radio is {@code radio}; the dying entity is {@code body}. */
+	private static CopNpc copIn(CopManager manager, LivingEntity body, NpcSquadListener radio) {
+		CopNpc   cop   = mock(CopNpc.class);
+		CopGroup group = new CopGroup(UUID.randomUUID());
+		group.setListener(radio);
+		group.add(cop);
+		group.add(mock(CopNpc.class));
+		when(manager.findDyingCop(body)).thenReturn(cop);
+		when(manager.findCopByEntity(body)).thenReturn(cop);
+		when(manager.isCopNpc(body)).thenReturn(true);
+		when(cop.getGroup()).thenReturn(group);
+		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
+		return cop;
+	}
+
+	/** Bartizan's raytrace hit of {@code shooter} on {@code body}. */
+	private static WeaponRaytraceImpactEvent shot(LivingEntity body, Player shooter) {
+		WeaponRaytraceImpactEvent event = mock(WeaponRaytraceImpactEvent.class);
+		when(event.getHitEntity()).thenReturn(body);
+		when(event.getShooter()).thenReturn(shooter);
+		return event;
+	}
+
+	@Test
+	@DisplayName("T-544: a player's kill books Kill_Cop at the body, before the squad hears the cop is down")
+	void playerKill_booksKillCopAtTheBody_beforeManDown() {
+		CopManager       manager = mock(CopManager.class);
+		HeatLedger       ledger  = mock(HeatLedger.class);
+		LivingEntity     body    = mock(LivingEntity.class);
+		Player           killer  = mock(Player.class);
+		Location         at      = mock(Location.class);
+		NpcSquadListener radio   = mock(NpcSquadListener.class);
+		when(killer.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(body.getKiller()).thenReturn(killer);
+		when(body.getLocation()).thenReturn(at);
+		copIn(manager, body, radio);
+
+		new CopListener(manager, ledger).onCopDeath(deathOf(body));
+
+		InOrder order = inOrder(ledger, radio);
+		order.verify(ledger).reportCopKill(killer, at);
+		order.verify(radio).onSignal(any(), eq(NpcSquadSignal.MAN_DOWN), any(), any());
+	}
+
+	@Test
+	@DisplayName("T-544: no player to blame (a fall, lava, an NPC): the squad still hears Man_Down, no Kill_Cop is booked")
+	void nullKiller_keepsMemberDown_noCase() {
+		CopManager       manager = mock(CopManager.class);
+		HeatLedger       ledger  = mock(HeatLedger.class);
+		LivingEntity     body    = mock(LivingEntity.class);
+		NpcSquadListener radio   = mock(NpcSquadListener.class);
+		copIn(manager, body, radio);
+
+		new CopListener(manager, ledger).onCopDeath(deathOf(body));
+
+		verify(radio).onSignal(any(), eq(NpcSquadSignal.MAN_DOWN), any(), any());
+		verify(ledger, never()).reportCopKill(any(), any());
+	}
+
+	@Test
+	@DisplayName("T-544 / BZ-EV-20: a death with no killer is blamed on the player who hit the cop within 5 s")
+	void bartizanKill_nullKiller_usesLastAttacker() {
+		CopManager   manager  = mock(CopManager.class);
+		HeatLedger   ledger   = mock(HeatLedger.class);
+		LivingEntity body     = mock(LivingEntity.class);
+		Player       attacker = mock(Player.class);
+		Location     at       = mock(Location.class);
+		when(attacker.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(attacker.isOnline()).thenReturn(true);
+		when(body.getLocation()).thenReturn(at);
+		copIn(manager, body, mock(NpcSquadListener.class));
+		long[]      now      = {1_000_000L};
+		CopListener listener = new CopListener(manager, ledger);
+		listener.setClock(() -> now[0]);
+
+		listener.onWeaponRaytraceImpact(shot(body, attacker));
+		now[0] += 4_900;
+		listener.onCopDeath(deathOf(body));
+
+		verify(ledger).reportCopKill(attacker, at);
+		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
+		verify(bukkit.pluginManager()).callEvent(captor.capture());
+		assertSame(attacker, captor.getValue().getKiller());
+	}
+
+	@Test
+	@DisplayName("T-544: a hit more than 5 s before the death blames nobody")
+	void lastAttacker_pastFiveSeconds_notBlamed() {
+		CopManager   manager  = mock(CopManager.class);
+		HeatLedger   ledger   = mock(HeatLedger.class);
+		LivingEntity body     = mock(LivingEntity.class);
+		Player       attacker = mock(Player.class);
+		when(attacker.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(attacker.isOnline()).thenReturn(true);
+		copIn(manager, body, mock(NpcSquadListener.class));
+		long[]      now      = {1_000_000L};
+		CopListener listener = new CopListener(manager, ledger);
+		listener.setClock(() -> now[0]);
+
+		listener.onWeaponRaytraceImpact(shot(body, attacker));
+		now[0] += 5_001;
+		listener.onCopDeath(deathOf(body));
+
+		verify(ledger, never()).reportCopKill(any(), any());
 	}
 
 	private static EntityDeathEvent deathOf(LivingEntity body) {
@@ -285,7 +394,7 @@ class CopListenerDeathTest {
 		PlayerDeathEvent  event   = mock(PlayerDeathEvent.class);
 		when(event.getEntity()).thenReturn(player);
 
-		new CopListener(manager).onPlayerDeath(event);
+		new CopListener(manager, mock(HeatLedger.class)).onPlayerDeath(event);
 
 		verify(manager).onWantedEnd(player, WantedCause.DEATH);
 	}
@@ -298,7 +407,7 @@ class CopListenerDeathTest {
 		PlayerDownedEvent event  = mock(PlayerDownedEvent.class);
 		when(event.getPlayer()).thenReturn(player);
 
-		new CopListener(manager).onPlayerDowned(event);
+		new CopListener(manager, mock(HeatLedger.class)).onPlayerDowned(event);
 
 		verify(manager).onWantedEnd(player, WantedCause.DEATH);
 	}

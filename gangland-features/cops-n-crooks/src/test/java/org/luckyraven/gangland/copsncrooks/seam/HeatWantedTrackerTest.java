@@ -233,11 +233,11 @@ class HeatWantedTrackerTest {
 	}
 
 	@Test
-	@DisplayName("heat on: a cop kill commits Kill_Cop")
-	void heatOn_copKill_commitsKillCop() {
+	@DisplayName("heat on: a cop's lethal hit commits nothing: CopListener.onCopDeath books Kill_Cop at the real death (T-544)")
+	void heatOn_copKill_commitsNothing_theDeathBooksIt() {
 		tracker.recordKill(killer, wanted, marked("POLICE"), 0);
 
-		verify(crimes).commit(killer, Crimes.KILL_COP, at);
+		verifyNoInteractions(crimes);
 		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
 	}
 

@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.civilians.events;
 
 import lombok.Getter;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -20,12 +21,20 @@ public class CivilianDeathEvent extends NpcEvent {
 	@Nullable
 	private final Player      killer;
 	private final double      experience;
+	/** Where the civilian died (0.21.2, T-550); {@code null} from the 3-argument constructor. */
+	@Nullable
+	private final Location    location;
 
 	public CivilianDeathEvent(CivilianNpc npc, @Nullable Player killer, double experience) {
+		this(npc, killer, experience, null);
+	}
+
+	public CivilianDeathEvent(CivilianNpc npc, @Nullable Player killer, double experience, @Nullable Location location) {
 		super(npc);
 		this.civilianNpc = npc;
 		this.killer      = killer;
 		this.experience  = experience;
+		this.location    = location;
 	}
 
 	public static HandlerList getHandlerList() {

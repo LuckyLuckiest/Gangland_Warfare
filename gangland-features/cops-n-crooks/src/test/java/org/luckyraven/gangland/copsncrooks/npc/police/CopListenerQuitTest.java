@@ -6,10 +6,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.listener.detainment.CopListener;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
 
 /**
  * {@link CopListener} quit handling (0.16.1 T-187): a player who quits while wanted takes his squad with him instead of
@@ -37,7 +39,7 @@ class CopListenerQuitTest {
 		fx.manager.onWantedStart(player, CopManagerFixture.wanted(2));
 		fx.manager.groupFor(player.getUniqueId()).add(fx.cop(CopState.PURSUING, 0, 0));
 
-		new CopListener(fx.manager).onPlayerQuit(new PlayerQuitEvent(player, "quit"));
+		new CopListener(fx.manager, mock(HeatLedger.class)).onPlayerQuit(new PlayerQuitEvent(player, "quit"));
 
 		assertNull(fx.manager.groupFor(player.getUniqueId()));
 	}

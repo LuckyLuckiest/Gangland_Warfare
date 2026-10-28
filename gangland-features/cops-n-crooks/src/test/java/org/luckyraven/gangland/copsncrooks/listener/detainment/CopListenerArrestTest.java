@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.listener.detainment;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.events.police.ArrestedEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 
@@ -23,7 +24,7 @@ class CopListenerArrestTest {
 		UUID       id      = UUID.randomUUID();
 		when(player.getUniqueId()).thenReturn(id);
 
-		new CopListener(manager).onArrested(new ArrestedEvent(player));
+		new CopListener(manager, mock(HeatLedger.class)).onArrested(new ArrestedEvent(player));
 
 		verify(manager).endSquad(id);
 	}

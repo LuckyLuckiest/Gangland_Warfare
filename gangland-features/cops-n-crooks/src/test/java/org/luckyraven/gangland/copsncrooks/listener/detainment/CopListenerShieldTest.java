@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.bartizan.api.raytrace.WeaponRaytracer;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
@@ -31,7 +32,7 @@ class CopListenerShieldTest {
 	                                                    false, false);
 
 	private final CopManager   copManager = mock(CopManager.class);
-	private final CopListener  listener   = new CopListener(copManager);
+	private final CopListener  listener   = new CopListener(copManager, mock(HeatLedger.class));
 	private final LivingEntity victim     = mock(LivingEntity.class);
 	private final BukkitStatics bukkit    = BukkitStatics.install(); // NpcSupport.isNpc reads the plugin manager
 
