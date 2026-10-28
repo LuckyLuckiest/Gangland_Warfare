@@ -210,6 +210,18 @@ class PursuitReportListenerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 T-545: a silent cop death counts once, when dispatch notices it and re-fires it, not silent")
+	void silentDeath_notCounted() {
+		arcs.start(playerId, WantedCause.CRIME, 3);
+
+		listener.onCopDeath(new CopDeathEvent(cop(), player, true, null));
+		assertEquals(0, arcs.arc(playerId).copsDown());
+
+		listener.onCopDeath(new CopDeathEvent(cop(), player, false, null));
+		assertEquals(1, arcs.arc(playerId).copsDown());
+	}
+
+	@Test
 	@DisplayName("cop kills by the suspect and cuffs of the suspect are counted; a cop killed by someone else, or by no one, is not")
 	void countsCopKillsAndCuffs() {
 		arcs.start(playerId, WantedCause.CRIME, 3);

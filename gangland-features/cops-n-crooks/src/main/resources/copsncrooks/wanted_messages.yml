@@ -217,6 +217,13 @@ Witness:
    Report_Cut: "&aThe radio call never went out."
    # Said when you join and a report on you from while you were away lands
    Deferred: "&7A report on you came in while you were away."
+   # 0.21.2: a cop you killed unseen misses his radio check-in; %unit% is that cop, %seconds% the seconds until
+   # dispatch notices (cops.yml Check_In.Show_Timer)
+   Silent: "&7%unit% &8misses check-in in &e%seconds%s"
+   # 0.21.2: dispatch sends units to the scene of a kill nobody saw; %place% is the scene
+   Scene_Heading: "&eUnits heading to %place%"
+   # 0.21.2: the scene ran out and nobody spotted you there
+   Scene_Cold: "&7The trail went cold."
 # Trackers: a car tagged by a cop; %seconds% is the seconds left on the tag
 Tracker:
    # The car was tagged

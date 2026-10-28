@@ -26,10 +26,12 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
+import java.util.function.IntPredicate;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -60,6 +62,8 @@ public class PatrolManager implements BeanLifecycle {
 	/** When each station last lost a beat cop (radio-clock ms): its replacement waits out {@code Respawn_Seconds}. */
 	private final Map<Integer, Long>                           lostAt     = new LinkedHashMap<>();
 	private       Function<UUID, CopGroup>                     groupLookup = id -> null;
+	/** Stations whose lost beat cop is a silence dispatch has not noticed yet: no replacement (0.21.2, T-545). */
+	private       IntPredicate                                 stationHeld = id -> false;
 
 	/**
 	 * @param players the players that count as "near"
@@ -116,7 +120,8 @@ public class PatrolManager implements BeanLifecycle {
 			}
 			Long lost = lostAt.get(id);
 			// cause 6: a lost beat cop is not replaced the next second in front of whoever took it down
-			boolean respawnReady = lost == null || now - lost >= s.respawnSeconds() * 1000L;
+			// 0.21.2 (T-545): nor while his death is a silence: dispatch does not know he is gone (respondTo sends it)
+			boolean respawnReady = (lost == null || now - lost >= s.respawnSeconds() * 1000L) && !stationHeld.test(id);
 			if (nearest <= s.activationRadius()) {
 				emptySince.remove(id);
 				while (respawnReady && cops.size() < s.copsPerStation()) {
@@ -176,6 +181,67 @@ public class PatrolManager implements BeanLifecycle {
 	/** Where a beat cop finds its target's squad (for the cease-fire); default none. */
 	public void setGroupLookup(Function<UUID, CopGroup> lookup) {
 		this.groupLookup = lookup;
+	}
+
+	/** Which stations hold their replacement back for an open silence ({@code CopCrimeReports.silentStation}). */
+	public void setStationHold(IntPredicate stationHeld) {
+		this.stationHeld = stationHeld;
+	}
+
+	/** The station whose beat {@code cop} walks, empty for a cop of no beat. */
+	public OptionalInt stationOf(CopNpc cop) {
+		for (Map.Entry<Integer, List<CopNpc>> beat : beats.entrySet()) {
+			if (beat.getValue().contains(cop)) return OptionalInt.of(beat.getKey());
+		}
+		return OptionalInt.empty();
+	}
+
+	/**
+	 * Officer_Missing for a beat cop of {@code stationId} (0.21.2, T-545): the replacement his silence held back spawns
+	 * now, and it and the nearest live beat cop of the same station walk to {@code at}, his last check-in. Two units in
+	 * all; fewer when the station has no one else.
+	 *
+	 * @return the units sent
+	 */
+	// ponytail: the walk is the hold: PatrolBehavior wanders only once the navigator is idle, so they reach the spot
+	// (or give up on the path) before walking back to the beat; a timed INVESTIGATE state if they turn back too soon
+	public int respondTo(int stationId, Location at) {
+		Station station = null;
+		for (Station candidate : stations.all()) {
+			if (candidate.getId() == stationId) station = candidate;
+		}
+		List<CopNpc> cops   = beats.get(stationId);
+		Location     anchor = station == null ? null : station.getLocation();
+		if (cops == null || anchor == null || anchor.getWorld() == null) return 0;
+
+		List<CopNpc> sent = new ArrayList<>();
+		lostAt.remove(stationId);
+		PatrolSettings s = settings.get();
+		if (cops.size() < s.copsPerStation()) {
+			CopNpc replacement = spawner.spawnAtLocation(anchor.clone(), s.tier());
+			if (replacement != null) {
+				replacement.transitionTo(CopState.PATROL);
+				cops.add(replacement);
+				sent.add(replacement);
+			}
+		}
+		CopNpc nearest = null;
+		double best    = Double.MAX_VALUE;
+		for (CopNpc cop : cops) {
+			LivingEntity body  = cop.getEntity();
+			Location     there = body == null ? null : body.getLocation();
+			if (sent.contains(cop) || !cop.isValid() || there == null || there.getWorld() != at.getWorld()) continue;
+			double distance = there.distanceSquared(at);
+			if (distance < best) {
+				best    = distance;
+				nearest = cop;
+			}
+		}
+		if (nearest != null) sent.add(nearest);
+		for (CopNpc cop : sent) cop.navigateTo(at);
+		log.debug("PATROL station={} respond={} at={},{},{}", names.getOrDefault(stationId, station.getName()), sent.size(),
+		          at.getBlockX(), at.getBlockY(), at.getBlockZ());
+		return sent.size();
 	}
 
 	/** One AI tick for every live beat cop (called every 10 ticks): resolves each cop's target and runs its behaviour. */

@@ -184,6 +184,63 @@ class PatrolManagerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 T-545: an open silence holds the station's replacement past Respawn_Seconds")
+	void openSilence_holdsStationReplacement() {
+		boolean[] silent = {false};
+		manager.setStationHold(id -> id == 1 && silent[0]);
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		silent[0] = true;
+
+		manager.manage();
+		fx.clock[0] += 40_000;
+		manager.manage();
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+
+		silent[0] = false;
+		manager.manage();
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: the station of a beat cop, none for a cop of no beat")
+	void stationOf_findsTheBeat() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+
+		assertEquals(1, manager.stationOf(spawned.get(0)).getAsInt());
+		assertTrue(manager.stationOf(mock(CopNpc.class)).isEmpty());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: respondTo spawns the held replacement now and sends it and the nearest beat mate there")
+	void respondTo_spawnsReplacementNow_twoUnitsWalkToTheReport() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		CopNpc survivor = spawned.get(1);
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		Location report = fx.at(20, 20);
+
+		assertEquals(2, manager.respondTo(1, report));
+
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+		CopNpc replacement = spawned.get(2);
+		verify(replacement).navigateTo(report);
+		verify(survivor).navigateTo(report);
+		assertEquals(2, manager.beatCops().size());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: respondTo for a station no longer on the map sends nobody")
+	void respondTo_unknownStation_sendsNobody() {
+		assertEquals(0, manager.respondTo(99, fx.at(20, 20)));
+
+		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+	}
+
+	@Test
 	@DisplayName("a beat cop lost in the AI tick starts the same respawn wait")
 	void copLostInAiTick_waitsOutRespawnSeconds() {
 		online.add(fx.player(5, 5));

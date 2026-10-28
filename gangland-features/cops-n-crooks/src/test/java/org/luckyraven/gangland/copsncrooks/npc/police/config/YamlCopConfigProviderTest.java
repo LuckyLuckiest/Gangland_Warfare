@@ -206,6 +206,50 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 S5: Cops.Check_In parses every key; an absent block or key is the plan default")
+	void checkInBlock_parsed() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Check_In:
+				      Enable: false
+				      Check_In_Seconds: 5
+				      Silent_Seconds: 12
+				      Scene_Radius: 16.0
+				      Scene_Seconds: 30
+				      Pursuit_Presumed: false
+				      Show_Timer: false
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+		assertEquals(new CheckInSettings(false, 5, 12, 16.0, 30, false, false), provider.getCheckInSettings());
+
+		CopConfigProvider partial = parse("""
+				Cops:
+				   Check_In:
+				      Silent_Seconds: 30
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+		assertEquals(new CheckInSettings(true, 10, 30, 32.0, 60, true, true), partial.getCheckInSettings());
+
+		CopConfigProvider absent = parse("""
+				Cops:
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+		assertEquals(CheckInSettings.DEFAULT, absent.getCheckInSettings());
+	}
+
+	@Test
 	@DisplayName("Cops.Tiers.<n>.Fire_Rate_Multiplier parses; a tier without it keeps today's per-AI-tick cadence")
 	void tierFireRateMultiplier_parsed() {
 		CopConfigProvider provider = parse("""

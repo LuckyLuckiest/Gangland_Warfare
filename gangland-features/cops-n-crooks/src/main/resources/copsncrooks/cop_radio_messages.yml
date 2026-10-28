@@ -331,6 +331,21 @@ Lines:
    # that cop, %crime% the crime and %place% where it happened, never where the suspect is now.
    Officer_Report:
       - "%reporter% reports %crime% near %place%. All units respond."
+   # 0.21.2: dispatch asks a cop who missed his check-in (cops.yml Check_In); %unit% is that cop.
+   Radio_Check:
+      - "Unit %unit%, status check."
+   # 0.21.2: the cop never answered; %place% is where he last checked in, never where the suspect is now.
+   Officer_Missing:
+      - "Unit %unit% is not answering. Units, check his last position near %place%."
+   # 0.21.2: the first cop at the scene of a kill nobody saw; %place% is the scene.
+   Scene_Found:
+      - "On scene near %place%. Officer down, no sign of the shooter."
+   # 0.21.2: a cop sees the suspect near that scene.
+   Scene_Suspect:
+      - "Suspect spotted near the scene, moving in!"
+   # 0.21.2: the scene ran out with nobody spotted.
+   Scene_Clear:
+      - "Scene near %place% is clear. Suspect is gone."
 
 # 0.20.0: format of a line a gang mate relays to you; %name% is the lookout and %line% the line.
 Lookout_Format: "&8[Lookout %name%] &r%line%"

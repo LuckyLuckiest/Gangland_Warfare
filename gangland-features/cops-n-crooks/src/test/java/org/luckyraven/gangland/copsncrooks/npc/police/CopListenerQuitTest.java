@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.copsncrooks.wanted.report.CopCrimeReports;
 import org.luckyraven.gangland.copsncrooks.listener.detainment.CopListener;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 
@@ -39,7 +40,7 @@ class CopListenerQuitTest {
 		fx.manager.onWantedStart(player, CopManagerFixture.wanted(2));
 		fx.manager.groupFor(player.getUniqueId()).add(fx.cop(CopState.PURSUING, 0, 0));
 
-		new CopListener(fx.manager, mock(HeatLedger.class)).onPlayerQuit(new PlayerQuitEvent(player, "quit"));
+		new CopListener(fx.manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onPlayerQuit(new PlayerQuitEvent(player, "quit"));
 
 		assertNull(fx.manager.groupFor(player.getUniqueId()));
 	}

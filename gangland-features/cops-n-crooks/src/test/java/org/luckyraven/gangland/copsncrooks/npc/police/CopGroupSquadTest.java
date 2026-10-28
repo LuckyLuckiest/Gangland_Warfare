@@ -491,4 +491,18 @@ class CopGroupSquadTest {
 
 		assertEquals(14_000L, group.getBreatherUntil());
 	}
+
+	@Test
+	@DisplayName("0.21.2 T-546: spendBiasSeed blocks the seed even when the squad's lead equals the bias's spot")
+	void spendBiasSeed_blocksSeedEvenWhenLeadEqualsReport() {
+		CopGroup group  = new CopGroup(UUID.randomUUID());
+		Location report = new Location(mock(World.class), 5, 64, 5);
+		group.getSquad().reportTip(report);
+		SpawnBias bias = new SpawnBias(new Vector(1, 0, 0), report, Long.MAX_VALUE, 60.0);
+		group.setBias(bias);
+
+		group.spendBiasSeed();
+
+		assertFalse(group.takeBiasSeed(bias), "Officer_Missing tips the exact spot: no unit leads past it (R5)");
+	}
 }

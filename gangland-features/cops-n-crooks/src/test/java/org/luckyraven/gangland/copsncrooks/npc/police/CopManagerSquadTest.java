@@ -1626,4 +1626,48 @@ class CopManagerSquadTest {
 
 		assertEquals(CopState.PURSUING, responder.getCurrentState(), "a radio responder stays");
 	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: a silent cop's role holds its slot until dispatch notices (dispatch off: the one-pass refill)")
+	void silentCop_holdsRefill_bothDispatchBranches() {
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		when(group.getCops().get(0).isMarkedForRemoval()).thenReturn(true);
+		List<CopRole> held = new java.util.ArrayList<>();
+		held.add(null);
+		manager.setSilentRoles(g -> g == group ? held : List.of());
+
+		manager.spawnTick(playerId, wanted);
+		verify(fx.spawner, times(2)).spawnNearPlayer(any(), anyInt(), any(), any());
+		assertEquals(1, group.getCops().size());
+
+		held.clear();
+		manager.spawnTick(playerId, wanted);
+		verify(fx.spawner, times(3)).spawnNearPlayer(any(), anyInt(), any(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545/T-546: held slots never count toward a release or the episode trim: no real cop is sent home for them")
+	void silentCop_neverCountsTowardRelease_orEpisodeTrim() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.PURSUING);
+		List<CopRole> held = new java.util.ArrayList<>();
+		held.add(null);
+		held.add(null);
+		manager.setSilentRoles(g -> held);
+
+		manager.spawnTick(playerId, one);
+
+		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count(),
+		             "a level drop sends home only the real cops over the target");
+		manager.onWantedStart(player, one);
+		assertEquals(0, group.getPendingRelease(), "the new episode trims against engaged cops only");
+	}
 }

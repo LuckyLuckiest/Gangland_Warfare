@@ -114,6 +114,15 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private @Nullable String                 firstName;
+	/**
+	 * Where this cop last checked in on the radio (0.21.2, T-545): the spot dispatch sends units to when he stops
+	 * answering. {@code null} until the first check-in ({@code CopCrimeReports}' task, within 10 ticks of the spawn).
+	 */
+	@Getter
+	private @Nullable Location               lastReport;
+	/** When he last checked in (ms); 0 before the first check-in. */
+	@Getter
+	private           long                   lastReportAt;
 	/** The navigator's own pathfinding range (Citizens {@code default-range-blocks}), read on the first walk. */
 	private float                            baseWalkRange = Float.NaN;
 
@@ -353,6 +362,12 @@ public class CopNpc extends AbstractNpc {
 		if (lastSquad != null && lastSquad != next) lastSquad.remove(this);
 		lastSquad = next;
 		return next;
+	}
+
+	/** He checks in on the radio from {@code at} at {@code now} (ms) ({@link #getLastReport}). */
+	public void stampReport(Location at, long now) {
+		lastReport   = at.clone();
+		lastReportAt = now;
 	}
 
 	/**

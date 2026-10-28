@@ -492,6 +492,15 @@ public class CopGroup {
 		return Objects.equals(squad.lastKnownLocation(), seedLead);
 	}
 
+	/**
+	 * The latest bias seeds nobody (0.21.2, T-546): Officer_Missing tips the exact spot the dead cop last checked in from,
+	 * and the hand-off's R5 lead must not push the units past it, even when the squad's lead is that very spot (which
+	 * {@link #takeBiasSeed}'s location compare reads as no news).
+	 */
+	public void spendBiasSeed() {
+		seedSpent = true;
+	}
+
 	/** Seeds the squad with a hand-off lead as a tip, no sighting (R4), and remembers it as a lead ({@link #isHandoffSeed}). */
 	public void seedHandoff(Location lead) {
 		squad.reportTip(lead);

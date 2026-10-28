@@ -196,7 +196,9 @@ blocks). Each line plays a short click sound.
   loses sight of them.
 - **Orders and acknowledgements:** the squad leader orders members to push in or take a flank, and the ordered cop
   answers ("Copy.") a moment later. Shooters also call out repositioning, reloading and check-fire.
-- **Casualties:** "Officer down!" when a cop dies, or a leader change when the leader dies.
+- **Casualties:** "Officer down!" when a cop dies, or a leader change when the leader dies. Since 0.21.2 a cop killed
+  where no cop saw the killer or the body says nothing: dispatch asks for him (`Radio_Check`) and reports him missing
+  (`Officer_Missing`) on a timer from his last radio check-in, then sends backup to that spot. See Silent officers below.
 - **Dispatch:** a new wanted level, a tier escalation, and the stand-down when the player is cleared. A landed 911 call
   ("[DISPATCH] 911 caller reports Car theft near the Docks.", `Caller_911`, the crime by its display name) is a dispatch
   line since 0.21.1, so it plays even when the call has just made the player wanted and no cop is out yet. The
@@ -235,6 +237,32 @@ Lines are throttled per squad and per player, so chat never floods. Every line i
 `Radio.Enabled: false` silences the radio for players but keeps responders and backup working.
 
 ---
+
+### Silent officers (0.21.2)
+
+Each cop keeps a last radio check-in: where he was and when. A cop whose squad is in contact checks in every half
+second; any other cop (a beat cop, a squad cop searching) every `Check_In.Check_In_Seconds` (10). A cop killed by a
+player where no cop saw the killer and no cop saw the body fall becomes a **silent unit**:
+
+1. He leaves his squads without `Man_Down`, a casualty or a backup request. His role keeps its slot in the squad, and a
+   beat cop's station holds his replacement, so no refill appears for a death nobody knows of. The chase's evasion
+   clock holds while he is the only cop "on" the suspect.
+2. `Check_In_Seconds` after his last check-in dispatch says `Radio_Check`.
+3. `Silent_Seconds` (20) after it, `Officer_Missing` names his last check-in. The squad records the casualty and
+   requests backup; when it was hunting the killer its cold-trail hold is released, the new units spawn on the
+   suspect's side of that spot (no hand-off lead past it) and the squad is tipped there. A beat cop's station spawns
+   the held replacement and sends it and the nearest beat cop of the station to walk to the spot. A cop with neither
+   (his squad gone since) sends nobody.
+4. When his squad was hunting the killer, the kill counts now (`Pursuit_Presumed`). Otherwise a scene opens at the
+   spot for `Scene_Seconds` (60): the first unit within 6 blocks says `Scene_Found`; a cop who sees the killer while he is
+   within `Scene_Radius` (32) of it counts the kill and says `Scene_Suspect`; nobody spots him in time: `Scene_Clear`, no stars.
+
+A cop who saw only the body radios `Officer down!` at once and a scene opens at the body. A civilian's 911 call about
+the kill that lands first closes the silence. A squad's backup spawns on the suspect's side of the
+spot and is still held to `Pursuit.Max_Distance` (80) of him, so a killer who left more than about 80 blocks from the
+scene is not found there. Only a death starts a silence: a stuck or
+vanished cop always answers. The silent path needs `Kill_Cop` in `wanted.yml` `Witnesses.Crimes` (the heat ledger on);
+`Check_In.Enable: false` restores the 0.21.1 radio.
 
 ## Losing the Cops and the Chase (0.15.0 and 0.15.2)
 
@@ -715,6 +743,14 @@ Cops:
       Extra_Cops: 1                # On top of the wanted-level count, capped by Max_Per_Player
       Duration_Ticks: 600          # 30 s; afterwards the surplus cops that aren't fighting walk home
       Cooldown_Ticks: 1200         # 60 s between requests from one group
+   Check_In:                       # 0.21.2; every key falls back to the value shown
+      Enable: true                 # false = a dead cop's squad radios at once (needs Kill_Cop in Witnesses.Crimes too)
+      Check_In_Seconds: 10         # a cop on patrol checks in this often; Radio_Check this long after his last one
+      Silent_Seconds: 20           # Officer_Missing this long after his last check-in
+      Scene_Radius: 32.0           # the killer seen by any cop this close to the scene: the kill counts
+      Scene_Seconds: 60            # the scene stays open this long, then goes cold (no stars)
+      Pursuit_Presumed: true       # his squad hunted the killer: the kill counts at Officer_Missing
+      Show_Timer: true             # the killer's action bar counts down to Officer_Missing
    Regroup:                        # 0.15.0; every key falls back to the value shown
       Enabled: true
       Casualties: 2                # Cops lost inside Window_Seconds that trigger a pull-back

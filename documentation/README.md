@@ -10,7 +10,8 @@
 
 | Version                                 | Status  | Changelog                                                      |
 |-----------------------------------------|---------|----------------------------------------------------------------|
-| [v0.21.0](./v0.21.0/CHANGELOG.md)       | Current | How it ends: surrender, busted, lockpicks, rescues, crew heat, pursuit report, standoffs, breaches, clean getaway and the city's Most Wanted (needs Keystone 1.15.3, gangland-api 2.7) |
+| [v0.21.2](./v0.21.2/CHANGELOG.md)       | Current | Who saw it: cop eyewitness reports, witness head counts, silent officers and radio check-ins, no free clear by killing every cop (needs Keystone 1.15.4, gangland-api 2.7) |
+| [v0.21.0](./v0.21.0/CHANGELOG.md)       | Released | How it ends: surrender, busted, lockpicks, rescues, crew heat, pursuit report, standoffs, breaches, clean getaway and the city's Most Wanted (needs Keystone 1.15.3, gangland-api 2.7) |
 | [v0.20.0](./v0.20.0/CHANGELOG.md)       | Released | Street crime: witnesses and 911, disguises, patrols and pull-overs, tracker tags, scanner and map, overwatch, store hold-ups, hot-cash bag, fence and crew lookout |
 | [v0.19.0](./v0.19.0/CHANGELOG.md)       | Stable  | Gang & Turf III: player-placed Quartermaster, guard orders Defend/Hold, owner alerts for attacks, deaths and arrests |
 | [v0.18.0](./v0.18.0/CHANGELOG.md)       | Stable  | Gang & Turf II: gang fights in arenas (new module), gang levels with fees, friendly-fire rules, safehouses, rally, guard waves, gang chat and stats (needs Keystone 1.15.3, Host_Api 2.6) |

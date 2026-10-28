@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.copsncrooks.wanted.report.CopCrimeReports;
 import org.luckyraven.gangland.copsncrooks.events.npc.CopDeathEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
@@ -82,7 +83,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
 
-		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		InOrder order = inOrder(listener, cop);
 		order.verify(listener).onSignal(eq(group.getSquad()), any(NpcSquadSignal.class), eq(cop), any());
@@ -107,7 +108,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(null); // CUFFING: stopNavigation cleared the pursuit's squad
 
-		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		verify(listener).onSignal(eq(group.getSquad()), any(NpcSquadSignal.class), eq(cop), any());
 		assertFalse(group.getSquad().members().contains(cop));
@@ -135,7 +136,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(attackers);
 
-		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		verify(listener).onSignal(eq(attackers), any(NpcSquadSignal.class), eq(cop), any());
 		verify(listener, never()).onSignal(eq(group.getSquad()), any(), any(), any());
@@ -168,7 +169,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(null);
 
-		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		verify(listener).onSignal(eq(group.getSquad()), eq(NpcSquadSignal.MAN_DOWN), eq(cop), any());
 		assertFalse(group.getSquad().members().contains(cop));
@@ -184,7 +185,7 @@ class CopListenerDeathTest {
 		EntityDeathEvent event = deathOf(body);
 		event.getDrops().add(mock(ItemStack.class));
 
-		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(event);
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onCopDeath(event);
 
 		verify(manager, never()).findCopByEntity(any());
 		assertFalse(event.getDrops().isEmpty());
@@ -200,7 +201,7 @@ class CopListenerDeathTest {
 		when(manager.findDyingCop(body)).thenReturn(cop);
 		when(body.getKiller()).thenReturn(killer);
 
-		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
 		verify(bukkit.pluginManager()).callEvent(captor.capture());
@@ -215,7 +216,7 @@ class CopListenerDeathTest {
 		CopNpc       cop     = mock(CopNpc.class);
 		when(manager.findDyingCop(body)).thenReturn(cop);
 
-		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
 		verify(bukkit.pluginManager()).callEvent(captor.capture());
@@ -247,7 +248,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
 
-		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		assertEquals(List.of(false), heldAtSignal);
 	}
@@ -270,7 +271,7 @@ class CopListenerDeathTest {
 		when(cop.getGroup()).thenReturn(group);
 		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
 
-		new CopListener(manager, mock(HeatLedger.class)).onCopDeath(deathOf(body));
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		assertTrue(group.isBackupHeld());
 	}
@@ -314,7 +315,7 @@ class CopListenerDeathTest {
 		when(body.getUniqueId()).thenReturn(copId);
 		copIn(manager, body, radio);
 
-		new CopListener(manager, ledger).onCopDeath(deathOf(body));
+		new CopListener(manager, ledger, mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		InOrder order = inOrder(ledger, radio);
 		// 0.21.2 S4: the dead cop is named, so his pending Assault_Cop report is superseded, not booked as well
@@ -331,7 +332,7 @@ class CopListenerDeathTest {
 		NpcSquadListener radio   = mock(NpcSquadListener.class);
 		copIn(manager, body, radio);
 
-		new CopListener(manager, ledger).onCopDeath(deathOf(body));
+		new CopListener(manager, ledger, mock(CopCrimeReports.class)).onCopDeath(deathOf(body));
 
 		verify(radio).onSignal(any(), eq(NpcSquadSignal.MAN_DOWN), any(), any());
 		verify(ledger, never()).reportCopKill(any(), any(), any());
@@ -350,7 +351,7 @@ class CopListenerDeathTest {
 		when(body.getLocation()).thenReturn(at);
 		copIn(manager, body, mock(NpcSquadListener.class));
 		long[]      now      = {1_000_000L};
-		CopListener listener = new CopListener(manager, ledger);
+		CopListener listener = new CopListener(manager, ledger, mock(CopCrimeReports.class));
 		listener.setClock(() -> now[0]);
 
 		listener.onWeaponRaytraceImpact(shot(body, attacker));
@@ -374,7 +375,7 @@ class CopListenerDeathTest {
 		when(attacker.isOnline()).thenReturn(true);
 		copIn(manager, body, mock(NpcSquadListener.class));
 		long[]      now      = {1_000_000L};
-		CopListener listener = new CopListener(manager, ledger);
+		CopListener listener = new CopListener(manager, ledger, mock(CopCrimeReports.class));
 		listener.setClock(() -> now[0]);
 
 		listener.onWeaponRaytraceImpact(shot(body, attacker));
@@ -382,6 +383,71 @@ class CopListenerDeathTest {
 		listener.onCopDeath(deathOf(body));
 
 		verify(ledger, never()).reportCopKill(any(), any(), any());
+	}
+
+	/**
+	 * 0.21.2 S5 (T-545): nobody saw the kill or the body. The cop leaves every squad he is in without a radio call (no
+	 * Man_Down, no casualty, no backup), and the death event is marked silent until dispatch notices.
+	 */
+	@Test
+	@DisplayName("T-545: an unseen death leaves every squad silently, no Man_Down, a silent CopDeathEvent")
+	void unseenDeath_removesFromEverySquad_noManDown_silentEvent_recordsSilence() {
+		CopManager      manager = mock(CopManager.class);
+		CopCrimeReports reports = mock(CopCrimeReports.class);
+		LivingEntity    body    = mock(LivingEntity.class);
+		CopNpc          cop     = mock(CopNpc.class);
+		Player          killer  = mock(Player.class);
+		when(manager.findDyingCop(body)).thenReturn(cop);
+		when(body.getKiller()).thenReturn(killer);
+		when(killer.getUniqueId()).thenReturn(UUID.randomUUID());
+
+		CopGroup         group    = new CopGroup(UUID.randomUUID());
+		NpcSquadListener listener = mock(NpcSquadListener.class);
+		group.setListener(listener);
+		group.add(cop);
+		group.add(mock(CopNpc.class));
+		NpcSquad attackers = group.attackerSquad(UUID.randomUUID(), null);
+		attackers.add(cop);
+		attackers.add(mock(CopNpc.class));
+		when(cop.getGroup()).thenReturn(group);
+		when(cop.getCurrentSquad()).thenReturn(attackers);
+		when(reports.silentPath(cop, body, killer)).thenReturn(true);
+
+		new CopListener(manager, mock(HeatLedger.class), reports).onCopDeath(deathOf(body));
+
+		verify(listener, never()).onSignal(any(), any(NpcSquadSignal.class), any(), any());
+		assertFalse(attackers.members().contains(cop));
+		assertFalse(group.getSquad().members().contains(cop));
+		verify(cop).markForRemoval();
+		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
+		verify(bukkit.pluginManager()).callEvent(captor.capture());
+		assertTrue(captor.getValue().isSilent());
+		assertSame(killer, captor.getValue().getKiller());
+	}
+
+	@Test
+	@DisplayName("T-545: a silent death keeps the cold-trail backup hold: dispatch releases it when it notices")
+	void silent_doesNotReleaseBackupHold() {
+		CopManager      manager = mock(CopManager.class);
+		CopCrimeReports reports = mock(CopCrimeReports.class);
+		LivingEntity    body    = mock(LivingEntity.class);
+		CopNpc          cop     = mock(CopNpc.class);
+		Player          suspect = mock(Player.class);
+		when(manager.findDyingCop(body)).thenReturn(cop);
+
+		CopGroup group = new CopGroup(UUID.randomUUID());
+		when(suspect.getUniqueId()).thenReturn(group.getTargetPlayerId());
+		when(body.getKiller()).thenReturn(suspect);
+		group.add(cop);
+		group.add(mock(CopNpc.class));
+		group.setBackupHeld(true);
+		when(cop.getGroup()).thenReturn(group);
+		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
+		when(reports.silentPath(cop, body, suspect)).thenReturn(true);
+
+		new CopListener(manager, mock(HeatLedger.class), reports).onCopDeath(deathOf(body));
+
+		assertTrue(group.isBackupHeld());
 	}
 
 	private static EntityDeathEvent deathOf(LivingEntity body) {
@@ -397,7 +463,7 @@ class CopListenerDeathTest {
 		PlayerDeathEvent  event   = mock(PlayerDeathEvent.class);
 		when(event.getEntity()).thenReturn(player);
 
-		new CopListener(manager, mock(HeatLedger.class)).onPlayerDeath(event);
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onPlayerDeath(event);
 
 		verify(manager).onWantedEnd(player, WantedCause.DEATH);
 	}
@@ -410,7 +476,7 @@ class CopListenerDeathTest {
 		PlayerDownedEvent event  = mock(PlayerDownedEvent.class);
 		when(event.getPlayer()).thenReturn(player);
 
-		new CopListener(manager, mock(HeatLedger.class)).onPlayerDowned(event);
+		new CopListener(manager, mock(HeatLedger.class), mock(CopCrimeReports.class)).onPlayerDowned(event);
 
 		verify(manager).onWantedEnd(player, WantedCause.DEATH);
 	}

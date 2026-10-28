@@ -21,6 +21,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.copsncrooks.wanted.report.CopCrimeReports;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSupport;
@@ -41,8 +42,9 @@ import java.util.function.LongSupplier;
 @RequiredArgsConstructor
 public class CopListener implements Listener {
 
-	private final CopManager copManager;
-	private final HeatLedger ledger;
+	private final CopManager      copManager;
+	private final HeatLedger      ledger;
+	private final CopCrimeReports reports;
 
 	/** How long a hit blames its player for a cop death with no killer (Bartizan area damage, BZ-EV-20). */
 	static final long LAST_ATTACKER_MS = 5_000L;
@@ -295,19 +297,28 @@ public class CopListener implements Listener {
 		LivingEntity body   = event.getEntity();
 		Player       killer = killerOf(body);
 		if (killer != null) ledger.reportCopKill(killer, body.getLocation(), body.getUniqueId());
+		// 0.21.2 (T-545): no cop saw the killer or the body: a silent unit, dispatch finds out at Officer_Missing
+		boolean silent = killer != null && reports.silentPath(cop, body, killer);
 
 		// Killing a cop is a crime, which ends a cold trail: release the hold now, because the officer-down and regroup
-		// backup are requested inside memberDown below, before QuietTrail's next tick would see the crime.
+		// backup are requested inside memberDown below, before QuietTrail's next tick would see the crime. A silent
+		// death keeps it: dispatch releases it when it notices.
 		CopGroup group  = cop.getGroup();
-		if (killer != null && group != null && killer.getUniqueId().equals(group.getTargetPlayerId()))
+		if (!silent && killer != null && group != null && killer.getUniqueId().equals(group.getTargetPlayerId()))
 			group.setBackupHeld(false);
 
 		NpcSquad squad = cop.getCurrentSquad();
-		if (squad != null) squad.memberDown(cop);
-		if (group != null && group.getSquad() != squad) {
-			NpcSquad groupSquad = group.getSquad();
-			if (squad == null) groupSquad.add(cop); // RETURNING: in no squad, still the group's casualty
-			if (groupSquad.members().contains(cop)) groupSquad.memberDown(cop);
+		if (silent) {
+			// out of every squad he is in, without Man_Down, a casualty or a backup request
+			if (squad != null) squad.remove(cop);
+			if (group != null) group.getSquad().remove(cop);
+		} else {
+			if (squad != null) squad.memberDown(cop);
+			if (group != null && group.getSquad() != squad) {
+				NpcSquad groupSquad = group.getSquad();
+				if (squad == null) groupSquad.add(cop); // RETURNING: in no squad, still the group's casualty
+				if (groupSquad.members().contains(cop)) groupSquad.memberDown(cop);
+			}
 		}
 		cop.markForRemoval();
 
@@ -318,6 +329,6 @@ public class CopListener implements Listener {
 			playerDeathEvent.setKeepInventory(true);
 		}
 
-		Bukkit.getPluginManager().callEvent(new CopDeathEvent(cop, killer));
+		Bukkit.getPluginManager().callEvent(new CopDeathEvent(cop, killer, silent, body.getLocation()));
 	}
 }

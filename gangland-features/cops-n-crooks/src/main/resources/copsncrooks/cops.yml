@@ -242,6 +242,12 @@ Cops:
          - "Caller_911"
          # 0.21.2: a cop eyewitness radios a crime in
          - "Officer_Report"
+         # 0.21.2: a silent officer's check-in and the scene of a kill nobody saw (see Cops.Check_In)
+         - "Radio_Check"
+         - "Officer_Missing"
+         - "Scene_Found"
+         - "Scene_Suspect"
+         - "Scene_Clear"
       # One squad never repeats the same kind of line within this many ticks.
       Cooldown_Ticks:
          Contact: 160
@@ -302,6 +308,12 @@ Cops:
          Caller_911: 100
          # 0.21.2
          Officer_Report: 100
+         # 0.21.2: each silence and scene line is one announcement
+         Radio_Check: 0
+         Officer_Missing: 0
+         Scene_Found: 0
+         Scene_Suspect: 0
+         Scene_Clear: 0
          Suspect_Description: 1200
          Tracker_Tagged: 600
          Tracker_Ping: 400
@@ -321,6 +333,24 @@ Cops:
       Duration_Ticks: 600
       # Minimum gap between two backup requests from one group (1200 = 60 s).
       Cooldown_Ticks: 1200
+   # 0.21.2: a cop killed where no cop saw the killer or the body says nothing on the radio. His slot stays filled until
+   # dispatch notices: Radio_Check at his last check-in + Check_In_Seconds, Officer_Missing at + Silent_Seconds, then
+   # backup is sent toward that spot and a scene opens there. Needs Kill_Cop in wanted.yml Witnesses.Crimes.
+   Check_In:
+      # false = a dead cop's squad radios at once (pre-0.21.2)
+      Enable: true
+      # a cop on patrol checks in this often (a cop in a chase checks in all the time); dispatch asks after this long
+      Check_In_Seconds: 10
+      # seconds after his last check-in that dispatch says Officer_Missing
+      Silent_Seconds: 20
+      # the killer seen by any cop within this many blocks of the scene: the kill counts (seen by that cop)
+      Scene_Radius: 32.0
+      # seconds the scene stays open before the trail goes cold (no stars)
+      Scene_Seconds: 60
+      # the dead cop's squad was hunting the killer: the kill counts at Officer_Missing (x1.0, one witness)
+      Pursuit_Presumed: true
+      # the killer sees the countdown to Officer_Missing on his action bar
+      Show_Timer: true
    # A squad that loses Casualties cops within Window_Seconds falls back to cover (Lines.Regroup) for up to
    # Fall_Back_Seconds, then pushes together (Lines.Regroup_Push) once the whole squad, backup included, is within
    # Arrival_Radius blocks of the suspect. A regroup also grants the backup it waits for (past the Backup cooldown)

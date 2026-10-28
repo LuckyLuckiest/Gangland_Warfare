@@ -255,6 +255,21 @@ Lines:
    # %reporter% es ese policía, %crime% el delito y %place% donde ocurrió, nunca donde está ahora el sospechoso.
    Officer_Report:
       - "%reporter% reporta %crime% cerca de %place%. Que todas las unidades respondan."
+   # 0.21.2: el despacho llama a un policía que no reportó a tiempo (cops.yml Check_In); %unit% es ese policía.
+   Radio_Check:
+      - "Unidad %unit%, informe su estado."
+   # 0.21.2: el policía nunca respondió; %place% es donde reportó por última vez, nunca donde está el sospechoso.
+   Officer_Missing:
+      - "La unidad %unit% no responde. Unidades, revisen su última posición cerca de %place%."
+   # 0.21.2: el primer policía en la escena de una muerte que nadie vio; %place% es la escena.
+   Scene_Found:
+      - "En la escena cerca de %place%. Oficial caído, ni rastro del tirador."
+   # 0.21.2: un policía ve al sospechoso cerca de esa escena.
+   Scene_Suspect:
+      - "¡Sospechoso a la vista cerca de la escena, voy por él!"
+   # 0.21.2: la escena se cerró sin ver a nadie.
+   Scene_Clear:
+      - "La escena cerca de %place% está despejada. El sospechoso se fue."
 
 # 0.20.0: formato de una línea que un compañero de banda te transmite; %name% es el vigía y %line% la línea.
 Lookout_Format: "&8[Vigía %name%] &r%line%"

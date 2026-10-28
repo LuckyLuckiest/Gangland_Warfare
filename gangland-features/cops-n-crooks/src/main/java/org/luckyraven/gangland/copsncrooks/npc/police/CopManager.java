@@ -100,6 +100,8 @@ public class CopManager implements BeanLifecycle {
 	private final List<Function<Entity, @Nullable CopNpc>>     copResolvers     = new CopyOnWriteArrayList<>();
 	/** The crime spot of the late report landing for a player right now, else null (0.21.2, T-543); see setter. */
 	private volatile @Nullable Function<UUID, @Nullable Location> reportedScene;
+	/** The roles of a group's cops killed unseen whose silence dispatch has not noticed yet (0.21.2, T-545). */
+	private volatile Function<CopGroup, List<CopRole>>          silentRoles   = group -> List.of();
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
 	                  CopLoader copLoader, NpcMarkManager markManager,
@@ -204,6 +206,21 @@ public class CopManager implements BeanLifecycle {
 	 */
 	public void setReportedScene(@Nullable Function<UUID, @Nullable Location> reportedScene) {
 		this.reportedScene = reportedScene;
+	}
+
+	/**
+	 * Where the spawn task reads the held slots of {@code group}: a cop killed where nobody saw it still counts as on duty
+	 * until dispatch notices (0.21.2, T-545), so no refill appears for a death nobody knows of. {@code CopCrimeReports}
+	 * works them out from its open silences, so a logout, a 911 call or a group teardown leaves no phantom count.
+	 */
+	public void setSilentRoles(Function<CopGroup, List<CopRole>> silentRoles) {
+		this.silentRoles = silentRoles;
+	}
+
+	/** The roles {@code group} still holds for its silent cops ({@link #setSilentRoles}); empty when none. */
+	public List<CopRole> silentRoles(CopGroup group) {
+		List<CopRole> roles = silentRoles.apply(group);
+		return roles != null ? roles : List.of();
 	}
 
 	/**
@@ -878,10 +895,14 @@ public class CopManager implements BeanLifecycle {
 		List<CopRole> composition = configProvider.getSquadComposition(wantedLevel);
 		List<CopRole> liveRoles   = new ArrayList<>();
 		for (CopNpc cop : counted) liveRoles.add(cop.getRole());
+		// 0.21.2 (T-545): a cop killed unseen holds his slot until dispatch notices: no refill, no wipe, for a death
+		// nobody knows of. currentCount stays the real cops, so a held slot never sends a real cop home (T-435 below)
+		List<CopRole> held = silentRoles(group);
+		liveRoles.addAll(held);
 
 		if (!dispatchSettings().enabled() && !breatherSettings().enabled()) {
 			// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
-			while (currentCount < targetCount) {
+			while (currentCount + held.size() < targetCount) {
 				int     slot   = CopRole.nextSlot(composition, liveRoles);
 				CopRole role   = slot < 0 ? null : composition.get(slot);
 				CopNpc  newCop = spawnManager.spawnNearPlayer(player, slotTier(wantedLevel, slot, tier),
@@ -899,7 +920,7 @@ public class CopManager implements BeanLifecycle {
 				currentCount++;
 			}
 		} else {
-			int lacking = targetCount - currentCount;
+			int lacking = targetCount - currentCount - held.size();
 			// cause 4: units no longer needed (the level dropped, a backup ran out) are called off before they arrive,
 			// newest first, so the queue never holds more than the group lacks
 			group.trimPending(Math.max(0, lacking));

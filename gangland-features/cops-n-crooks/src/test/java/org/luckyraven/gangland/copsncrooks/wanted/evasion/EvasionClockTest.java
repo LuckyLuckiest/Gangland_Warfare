@@ -1278,4 +1278,21 @@ class EvasionClockTest {
 		assertTrue(clock.handlesDecay(player, wanted));
 		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
 	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: an open silence holds the clock while no cop stands: dispatch still thinks its unit is on him")
+	void openSilence_holds() {
+		hunters.clear();
+		unseenMs = 10_000;
+		List<org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole> held = new java.util.ArrayList<>();
+		held.add(null);
+		when(copManager.silentRoles(group)).thenReturn(held);
+
+		tickSeconds(3);
+		assertNull(clock.snapshot(id), "the silent unit holds the clock until Officer_Missing");
+
+		when(copManager.silentRoles(group)).thenReturn(List.of());
+		tickSeconds(1);
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+	}
 }

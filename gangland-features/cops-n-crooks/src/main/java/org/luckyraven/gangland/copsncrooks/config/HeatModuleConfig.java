@@ -53,14 +53,22 @@ public class HeatModuleConfig {
 		return ledger;
 	}
 
-	/** The cop eyewitness reports (0.21.2, PLAN.md section 1); its 10-tick task follows the bean lifecycle. */
+	/**
+	 * The cop eyewitness reports and silent officers (0.21.2, PLAN.md sections 1 and 2); its 10-tick task follows the
+	 * bean lifecycle.
+	 */
 	@Bean
 	public CopCrimeReports copCrimeReports(ChaseConfigLoader config, CopLoader copLoader, CopManager copManager,
 	                                       PatrolManager patrol, CopPerception perception, WitnessService witnesses,
 	                                       HeatLedger ledger, CrimeService crimes, CopRadio copRadio,
 	                                       WantedMessages messages, DetainmentService detainment) {
-		return new CopCrimeReports(config, copLoader, copManager, patrol, perception, witnesses, ledger, crimes, copRadio,
-		                           messages, detainment, CopCrimeReports.Hooks.live(plugin));
+		CopCrimeReports reports = new CopCrimeReports(config, copLoader, copManager, patrol, perception, witnesses, ledger,
+		                                              crimes, copRadio, messages, detainment,
+		                                              CopCrimeReports.Hooks.live(plugin));
+		// 0.21.2 S5 (T-545): a cop killed unseen keeps his slot and his station's replacement until dispatch notices
+		copManager.setSilentRoles(reports::silentRoles);
+		patrol.setStationHold(reports::silentStation);
+		return reports;
 	}
 
 	@PostConstruct

@@ -130,6 +130,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final TacticsConfig   tacticsDefault;
 	private final RadioSettings   radioSettings;
 	private final BackupSettings  backupSettings;
+	private final CheckInSettings checkInSettings;
 	private final RegroupSettings regroupSettings;
 	private final ShotNoiseSettings shotNoiseSettings;
 	private final RetreatSettings retreatSettings;
@@ -237,6 +238,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.tacticsDefault = parseTacticsDefault(cops, report);
 		this.radioSettings  = parseRadioSettings(cops, report);
 		this.backupSettings = parseBackupSettings(cops, report);
+		this.checkInSettings = parseCheckInSettings(cops, report);
 		this.regroupSettings = parseRegroupSettings(cops, report);
 		this.shotNoiseSettings = parseShotNoiseSettings(cops, report);
 		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
@@ -488,6 +490,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public BackupSettings getBackupSettings() {
 		return backupSettings;
+	}
+
+	@Override
+	public CheckInSettings getCheckInSettings() {
+		return checkInSettings;
 	}
 
 	@Override
@@ -1075,6 +1082,21 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 				.orDefault((int) (defaults.cooldownMs() / 50L));
 
 		return new BackupSettings(enabled, extraCops, durationTicks * 50L, cooldownTicks * 50L);
+	}
+
+	private CheckInSettings parseCheckInSettings(@Nullable NodeReader cops, ConfigReport report) {
+		CheckInSettings defaults = CheckInSettings.DEFAULT;
+		MappingNode     section  = cops == null ? null : cops.get("Check_In").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader checkIn = NodeReader.of(section, report);
+		return new CheckInSettings(checkIn.get("Enable").asBool().orDefault(defaults.enabled()),
+		                           checkIn.get("Check_In_Seconds").asInt().min(1).orDefault(defaults.checkInSeconds()),
+		                           checkIn.get("Silent_Seconds").asInt().min(1).orDefault(defaults.silentSeconds()),
+		                           checkIn.get("Scene_Radius").asDouble().min(0.0).orDefault(defaults.sceneRadius()),
+		                           checkIn.get("Scene_Seconds").asInt().min(0).orDefault(defaults.sceneSeconds()),
+		                           checkIn.get("Pursuit_Presumed").asBool().orDefault(defaults.pursuitPresumed()),
+		                           checkIn.get("Show_Timer").asBool().orDefault(defaults.showTimer()));
 	}
 
 	private RegroupSettings parseRegroupSettings(@Nullable NodeReader cops, ConfigReport report) {

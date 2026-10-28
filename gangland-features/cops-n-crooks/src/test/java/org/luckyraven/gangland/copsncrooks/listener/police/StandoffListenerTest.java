@@ -47,6 +47,24 @@ class StandoffListenerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 T-545: a silent death (nobody saw it) is no casualty until dispatch notices it")
+	void silentDeath_noCasualty() {
+		listener.onCopDeath(new CopDeathEvent(cop, mock(Player.class), true, spot));
+
+		verify(controller, never()).recordCasualty(any(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: the death re-fired at discovery counts at the spot he fell, his body long gone")
+	void discoveredDeath_bodyGone_recordsCasualtyAtTheDeathSpot() {
+		when(cop.getEntity()).thenReturn(null);
+
+		listener.onCopDeath(new CopDeathEvent(cop, mock(Player.class), false, spot));
+
+		verify(controller).recordCasualty(target, spot);
+	}
+
+	@Test
 	@DisplayName("a cop death records a casualty for its group target at the cop location")
 	void copDeath_recordsCasualty() {
 		listener.onCopDeath(new CopDeathEvent(cop, mock(Player.class)));

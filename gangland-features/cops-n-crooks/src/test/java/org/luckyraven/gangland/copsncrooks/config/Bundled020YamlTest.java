@@ -90,6 +90,27 @@ class Bundled020YamlTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 S5: bundled cops.yml ships Check_In with the plan defaults; the silence and scene lines are priority, no cooldown")
+	void bundledCops_checkInAndSilenceLines() throws IOException {
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = copsProvider(report);
+
+		assertEquals(org.luckyraven.gangland.copsncrooks.npc.police.config.CheckInSettings.DEFAULT,
+		             provider.getCheckInSettings());
+		assertEquals(new org.luckyraven.gangland.copsncrooks.npc.police.config.CheckInSettings(true, 10, 20, 32.0, 60,
+		                                                                                         true, true),
+		             org.luckyraven.gangland.copsncrooks.npc.police.config.CheckInSettings.DEFAULT);
+		RadioSettings radio = provider.getRadioSettings();
+		for (String key : List.of("Radio_Check", "Officer_Missing", "Scene_Found", "Scene_Suspect", "Scene_Clear")) {
+			assertTrue(radio.isPriority(key), "bundled priority " + key);
+			assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), "code default priority " + key);
+			assertEquals(0L, radio.cooldownFor(key), "bundled cooldown " + key);
+			assertEquals(0L, CopConfigProvider.COP_RADIO_DEFAULTS.cooldownFor(key), "code default cooldown " + key);
+		}
+		assertTrue(report.issues().isEmpty(), () -> "bundled cops.yml has issues: " + report.issues());
+	}
+
+	@Test
 	@DisplayName("bundled cops.yml: the six new radio kinds have Cooldown_Ticks; Overwatch_Spotted and Caller_911 are priority")
 	void bundledCops_radioCooldownsAndPriority() throws IOException {
 		RadioSettings radio = copsProvider(new ConfigReport()).getRadioSettings();

@@ -58,7 +58,8 @@ public class PursuitReportListener implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onCopDeath(CopDeathEvent event) {
 		Player killer = event.getKiller();
-		if (killer != null) {
+		// 0.21.2 (T-545): a silent death counts when dispatch notices it and fires it again
+		if (killer != null && !event.isSilent()) {
 			arcs.copDown(killer.getUniqueId());
 		}
 	}

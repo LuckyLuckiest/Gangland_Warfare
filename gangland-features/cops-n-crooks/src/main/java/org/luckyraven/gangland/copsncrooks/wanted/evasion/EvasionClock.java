@@ -428,14 +428,17 @@ public final class EvasionClock implements WantedDecayPolicy {
 	 *   <li>{@code handoff}: an active hand-off bias, or a leashed walker past {@code Pursuit.Max_Distance} still hunting
 	 *   him, which the next spawn task releases and refills (0.21.1 cause E, T-400/T-412); a walker inside the range is
 	 *   not refilled, so it holds nothing.</li>
+	 *   <li>{@code silence}: a cop of the group killed where nobody saw it, whose silence dispatch has not noticed yet
+	 *   (0.21.2 S5, T-545); it lapses at Officer_Missing, {@code Check_In.Silent_Seconds} past his last check-in.</li>
 	 * </ul>
 	 */
-	// S5 (PLAN.md 4.3): an open silence (reports.silentRoles(group) not empty, bounded by Silent_Seconds) holds here too.
 	private @Nullable String noCopHold(CopGroup group, Player player, long now) {
 		// the rejoin grace (R21) counts too: a RESTORE start tips nothing, so before the spawn task queues its units
 		// nothing else would stop a search ring round his live spot
 		if (!group.hasStood() && (group.unitsEnRoute(now) || now < group.getBreatherUntil())) return "enroute";
 		if (group.biasAt(now) != null || hasLeashedWalker(group, player)) return "handoff";
+		// dispatch still thinks a cop killed unseen is on him
+		if (!copManager.silentRoles(group).isEmpty()) return "silence";
 		return null;
 	}
 

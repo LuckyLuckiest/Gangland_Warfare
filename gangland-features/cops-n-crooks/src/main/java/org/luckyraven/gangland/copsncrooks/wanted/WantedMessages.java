@@ -105,6 +105,10 @@ public class WantedMessages extends LocalizedModuleYaml {
 		WITNESS_COP_CALLING("Witness.Cop_Calling", "&9%reporter% &7is radioing it in - &e%seconds%s"),
 		WITNESS_REPORT_CUT("Witness.Report_Cut", "&aThe radio call never went out."),
 		WITNESS_DEFERRED("Witness.Deferred", "&7A report on you came in while you were away."),
+		// 0.21.2 S5: a silent officer and the scene
+		WITNESS_SILENT("Witness.Silent", "&7%unit% &8misses check-in in &e%seconds%s"),
+		WITNESS_SCENE_HEADING("Witness.Scene_Heading", "&eUnits heading to %place%"),
+		WITNESS_SCENE_COLD("Witness.Scene_Cold", "&7The trail went cold."),
 		TRACKER_TAGGED("Tracker.Tagged", "&cYour car has been tagged. Ditch it."),
 		TRACKER_HUD("Tracker.Hud", "&cTagged &7%seconds%s"),
 		TRESPASS("Trespass", "&cRestricted area!"),

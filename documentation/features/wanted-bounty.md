@@ -84,7 +84,33 @@ his own assault), the crime is loud (the same rule as civilians below; he turns 
 - **Logging out forgives nothing.** A report (a cop's, or a 911 call still running) whose witness is alive when you log
   out lands when you next join, within `Witnesses.Defer_Minutes` (10): `A report on you came in while you were away.`
   A 911 call is handed over at the logout, so nobody can stop it after that.
-- Nobody saw it: `Nobody saw that.` and no heat. (A cop killed out of everyone's sight: stage S5 adds the radio check-in.)
+- Nobody saw it: `Nobody saw that.` and no heat. A cop killed out of everyone's sight is a silent officer (below).
+
+**A silent officer (0.21.2).** Every cop checks in on the radio: all the time while his squad is in contact with
+someone, else every `Check_In.Check_In_Seconds` (10) on patrol. Kill one where no cop sees you and no cop sees the body
+fall, and nobody on the radio knows yet: no `Officer down!`, no backup, and his place in the squad stays filled, so no
+replacement appears in front of you.
+
+- **Radio check.** `Check_In_Seconds` after his last check-in dispatch asks for him: `Unit Officer Bob #1592, status
+  check.`. With `Check_In.Show_Timer` your action bar counts down: `Officer Bob #1592 misses check-in in 9s`.
+- **Officer missing.** `Silent_Seconds` (20) after his last check-in: `Unit Officer Bob #1592 is not answering. Units,
+  check his last position near the Docks.` (where he last checked in, never where you are). Only now does the squad
+  record the casualty and request backup; the new units come from your side of that spot and search it. A beat cop's
+  station sends its replacement and a second beat cop to walk there. A cop with neither sends nobody.
+- **Presumed.** When his squad was hunting you, dispatch counts the kill now (`Check_In.Pursuit_Presumed`), as one
+  witness without the cop bonus: `Killing an officer (an officer stopped answering)`. 150 heat from 0 stars, one star.
+- **The scene.** Otherwise dispatch opens a scene at that spot for `Scene_Seconds` (60): `Units heading to the Docks`.
+  The first unit within 6 blocks says `Scene_Found`. A cop (any cop, even one passing) who sees you within
+  `Scene_Radius` (32) of the scene counts the kill as seen by him, `Killing an officer (spotted near the scene)`, and
+  says `Scene_Suspect`. Nobody spots you before the time runs out: `Scene_Clear`, `The trail went cold.`, no stars.
+- **The body seen.** A cop who did not see you but saw the body fall radios `Officer down!` at once (as before) and a
+  scene opens at the body.
+- **A 911 call first.** A civilian who saw it and gets through first closes the silence: dispatch learns of the death
+  from the call (the casualty and backup go out then, toward the call's spot), and the kill counts once, as reported.
+- Leaving the server, dying, a cuff or an arrest forgets the silences and scenes about you.
+
+Keys: `cops.yml` `Cops.Check_In.*`. The silent path needs `Kill_Cop` in `Wanted.Witnesses.Crimes`; with
+`Check_In.Enable: false` (or `Kill_Cop` not listed) a dead cop's squad radios at once, as in 0.21.1.
 
 - **Who sees it.** The nearest civilian within `Witness.Range` (24 blocks) with line of sight, and (0.21.1) facing the
   crime: `Witness.View_Angle` (180) is the width of its view, so a civilian with its back to you sees nothing. A **loud**
@@ -146,7 +172,8 @@ Keys and messages are listed in [migration-0.20.0.md](../migration-0.20.0.md).
   - **No cop standing (0.21.2).** Killing every cop never clears a star. With every cop dead or walking home the search
     runs on at the squad's last-known spot, but inside the zone it runs at `No_Cop_Inside_Speed` (0.25, four times
     slower): standing on the bodies does not pay, leaving the zone does. Only the first units of a chase, while they are
-    on their way, and a hand-off in progress pause it.
+    on their way, a hand-off in progress, and a cop killed unseen whose silence dispatch has not noticed yet (up to
+    `Check_In.Silent_Seconds`) pause it.
   - **AUTO mode (0.15.2+).** With `Drop_Mode: AUTO`, the cops judge how the chase went. A rampage loses one star at a time; a small chase loses them all at once. A long quiet chase with no new crime for 90+ seconds also loses them all. Leaving the search zone loses half your stars (rounded up). The next timer gets faster after each drop, and known repeat offenders stay locked to one star. The server learns how long chases typically last and who keeps getting away, so timers adjust over time. Cold starts use guessed numbers; warm servers tune based on play. An upgraded server from 0.15.1 keeps its old `wanted.yml` (no `Auto` block) and reads AUTO defaults, or an admin can copy the new `Auto` block from `plugins/Gangland_Warfare/modules/cops-n-crooks-<version>.jar`.
 - **The fixed decay timer** still runs when no cop is hunting you, and as the safety net otherwise: it starts at `Time`
   (default 120 seconds) and scales up with each star: `time x Amount ^ stars`. While cops hunt, evasion owns decay and the
