@@ -542,6 +542,146 @@ class CopCrimeReportsTest {
 	}
 
 	@Test
+	@DisplayName("review r1: restrained at the join (cuffed during the call, jailed by the transit intake): the deferred report is dropped")
+	void deferredReport_restrainedAtJoin_drops() {
+		cop("Bob", 10, 90f);
+		open(Crimes.KILL_COP, UUID.randomUUID());
+		reports.onQuit(killer);
+		reports.defer(killer, Crimes.CAR_THEFT, crimeAt, 2, ReportKind.CIVILIAN);
+		when(detainment.isRestrained(killer)).thenReturn(true);
+
+		reports.onJoin(killer);
+
+		verify(crimes, never()).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+		assertTrue(debugContains("REPORT drop Crook crime=Kill_Cop reporter=Bob witnesses=1 at=1,64,1 reason=restrained"),
+		           debug::toString);
+		assertFalse(notices.contains("Crook|WITNESS_DEFERRED {}"), notices::toString);
+	}
+
+	@Test
+	@DisplayName("review r1: a drop (death, cuff, arrest) also forgets the reports deferred to his next join")
+	void drop_alsoForgetsDeferred() {
+		reports.defer(killer, Crimes.CAR_THEFT, crimeAt, 1, ReportKind.CIVILIAN);
+
+		reports.drop(killer, "arrested");
+		reports.onJoin(killer);
+
+		verify(crimes, never()).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+	}
+
+	@Test
+	@DisplayName("review r1: a cop reporting two crimes keeps glowing until his last report is closed")
+	void reporterOfTwoCases_keepsGlowingUntilTheLast() {
+		CopNpc bob = cop("Bob", 10, 90f);
+		open(Crimes.KILL_CIVILIAN, null);
+		advanceSeconds(1);
+		open(Crimes.CAR_THEFT, null);
+
+		advanceSeconds(2);
+		reports.tick();
+		verify(crimes).commit(killer, Crimes.KILL_CIVILIAN, crimeAt, true, 1);
+		verify(bob.getEntity(), never()).setGlowing(false);
+
+		advanceSeconds(1);
+		reports.tick();
+		verify(crimes).commit(killer, Crimes.CAR_THEFT, crimeAt, true, 1);
+		verify(bob.getEntity()).setGlowing(false);
+	}
+
+	@Test
+	@DisplayName("review r1: a quit after the reporter died defers the report under the next living witness")
+	void quit_reporterDead_defersUnderNextWitness() {
+		CopNpc near = cop("Near", 10, 90f);
+		cop("Far", 20, 90f);
+		open(Crimes.KILL_COP, UUID.randomUUID());
+		kill(near);
+
+		reports.onQuit(killer);
+		reports.onJoin(killer);
+
+		assertTrue(debugContains("REPORT defer Crook crime=Kill_Cop reporter=Far witnesses=1"), debug::toString);
+		verify(radio).dispatchAt(group, crimeAt, killer, "Officer_Report", 0, "",
+		                         Map.of("reporter", "Far", "crime", "Kill Cop"));
+	}
+
+	@Test
+	@DisplayName("review r1: a cop kill only the victim's assault case saw (no cop, no civilian): the case closes silently")
+	void killUnseen_assaultOnlyTheVictimSaw_closesWithoutReportCut() {
+		CopNpc hit = cop("Hit", 3, 270f);
+		when(hit.getTargetPlayerId()).thenReturn(killerId);
+		when(hit.getCurrentState()).thenReturn(CopState.COMBAT);
+		UUID hitId = hit.getEntity().getUniqueId();
+		open(Crimes.ASSAULT_COP, hitId);
+		notices.clear();
+
+		kill(hit);
+		open(Crimes.KILL_COP, hitId);
+		advanceSeconds(3);
+		reports.tick();
+
+		assertEquals(0, reports.pending(killerId));
+		assertEquals(List.of("Crook|WITNESS_NO_WITNESS {}"), notices);
+		verify(crimes, never()).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+	}
+
+	@Test
+	@DisplayName("review r1: a cop kill no cop saw, a civilian called it in: the victim's assault case closes, one crime")
+	void killUnseenByCops_civilianCalls_assaultClosed() {
+		CopNpc hit = cop("Hit", 3, 90f);
+		cop("Bob", 10, 90f);
+		UUID hitId = hit.getEntity().getUniqueId();
+		open(Crimes.ASSAULT_COP, hitId);
+		kill(hit);
+		// Bob looks away by the kill: only civilians see it
+		perception.addSightFactor((cop, target) -> 0.0);
+		when(civilians.witness(killer, Crimes.KILL_COP, crimeAt)).thenReturn(1);
+
+		open(Crimes.KILL_COP, hitId);
+		advanceSeconds(3);
+		reports.tick();
+
+		assertEquals(0, reports.pending(killerId));
+		verify(crimes, never()).commit(eq(killer), eq(Crimes.ASSAULT_COP), any(), anyBoolean(), anyInt());
+		assertTrue(debugContains("REPORT drop Crook crime=Assault_Cop reporter=Hit witnesses=2 at=1,64,1 reason=superseded"),
+		           debug::toString);
+	}
+
+	@Test
+	@DisplayName("review r1: a cop kill nobody saw while another cop saw the assault: the assault still lands, one crime")
+	void killUnseen_anotherCopSawTheAssault_assaultLands() {
+		CopNpc hit = cop("Hit", 3, 90f);
+		cop("Bob", 10, 90f);
+		UUID hitId = hit.getEntity().getUniqueId();
+		open(Crimes.ASSAULT_COP, hitId);
+		kill(hit);
+		perception.addSightFactor((cop, target) -> 0.0);
+
+		open(Crimes.KILL_COP, hitId);
+		advanceSeconds(3);
+		reports.tick();
+
+		verify(crimes).commit(killer, Crimes.ASSAULT_COP, crimeAt, true, 1);
+		verify(crimes, never()).commit(eq(killer), eq(Crimes.KILL_COP), any(), anyBoolean(), anyInt());
+		assertFalse(notices.contains("Crook|WITNESS_NO_WITNESS {}"), notices::toString);
+	}
+
+	@Test
+	@DisplayName("review r1: a squad in live contact keeps its sighting; the landing still names the crime spot")
+	void landing_squadInContact_keepsTheSighting() {
+		cop("Bob", 10, 90f);
+		open(Crimes.KILL_COP, UUID.randomUUID());
+		Location live = new Location(world, 30, 64, 0);
+		squad.reportSighting(live);
+
+		advanceSeconds(3);
+		reports.tick();
+
+		assertEquals(live, squad.lastKnownLocation());
+		verify(radio).dispatchAt(group, crimeAt, killer, "Officer_Report", 0, "",
+		                         Map.of("reporter", "Bob", "crime", "Kill Cop"));
+	}
+
+	@Test
 	@DisplayName("OD-5: a quit with a witness alive defers the report; it lands one join later, within Defer_Minutes")
 	void quit_defersPending_commitsOnJoin_expiresAfterDeferMinutes() {
 		cop("Bob", 10, 90f);

@@ -111,6 +111,22 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 S4 review r1: a late report's start keeps a squad's live sighting, never drags it back to the crime spot")
+	void wantedStart_fromALateReport_squadInContact_keepsTheSighting() {
+		manager.onWantedStart(player, wanted, WantedCause.CRIME);
+		CopGroup group = manager.groupFor(playerId);
+		Location live  = new Location(fx.world, 12, 64, 12);
+		group.getSquad().reportSighting(live);
+		Location scene = new Location(fx.world, 40, 64, -30);
+		manager.setReportedScene(id -> id.equals(playerId) ? scene : null);
+
+		manager.onWantedStart(player, CopManagerFixture.wanted(3), WantedCause.CRIME);
+
+		assertEquals(live, group.getSquad().lastKnownLocation());
+		assertTrue(group.getSquad().hasFreshSighting());
+	}
+
+	@Test
 	@DisplayName("a hit by the target from where the cop cannot see him is a tip; one the cop can see is a sighting (R4)")
 	void copAttacked_withoutLineOfSight_isATip_withItASighting() {
 		manager.onWantedStart(player, wanted);

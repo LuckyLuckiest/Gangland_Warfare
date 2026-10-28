@@ -175,15 +175,26 @@ Witness:
 - **Logging out forgives nothing** (T-551). A cop report with a witness alive, or a civilian's 911 call still running,
   when you log out lands at your next join (one tick after your data loads) within `Defer_Minutes`. 0.21.1 cancelled
   the 911 call. This applies at once, even without the `Crimes` lines. A restart in between forgives it.
-- Death, a cuff or an arrest drops your pending cop reports; being restrained when one would land drops it too. Going
-  down keeps them.
-- The dead cop of a `Kill_Cop` never witnesses it; a cop kill of a cop whose `Assault_Cop` report is pending replaces
-  that report and keeps its deadline, so one cop is one crime.
+  - The 911 call is handed over **at the logout**, with the caller and the watchers alive then; the caller goes back
+    to idle and stops glowing, so nobody can stop that call any more. (PLAN.md 1.4 let the call run out its
+    `Call_Seconds` first; the call would then land on the old, offline player object, or on a player who rejoined
+    inside the call before his data loaded.)
+- Death, a cuff or an arrest drops your pending cop reports and the reports deferred to your next join; being
+  restrained when one would land (at its deadline, or at the join: cuffed during the call and jailed by the transit
+  intake) drops it too. Going down keeps them.
+- **One cop is one crime.** The dead cop of a `Kill_Cop` never witnesses it. A cop kill of a cop whose `Assault_Cop`
+  report is pending replaces that report: a cop saw the kill, the kill keeps the assault's deadline; only a civilian
+  saw it, the 911 call reports the kill and the assault report closes; nobody saw the kill, the assault report still
+  lands if another living cop saw it, else it closes with `Nobody saw that.` (never `The radio call never went out.`).
+- A report that lands while a cop has you in sight leaves the squad's live sighting alone (a late tip never drags a
+  chase back to the crime spot); dispatch still names the crime spot.
+- A report that raises no star (a cop-reported `Car_Theft` is 90 heat) says nothing on the radio, as a 911 call
+  without a star already did in 0.21.1.
 
 ## 3. Debug lines
 
 - (S4) `REPORT open|land|cut|drop|defer <player> crime=<id> reporter=<name> witnesses=<n> at=x,y,z`, with
-  ` reason=<death|cuffed|arrested|restrained|quit>` on a drop or a cut at quit and ` deferred=true` on a landing at a
+  ` reason=<death|cuffed|arrested|restrained|superseded|quit>` on a drop or a cut at quit and ` deferred=true` on a landing at a
   join. `WITNESS <player> crime=<id> callers=<n>` now comes from the report when no cop saw it.
 - (S4, civilians) `CALL_DEFER <player> crime=<id> viewers=<n>`: a 911 call handed over at his logout.
 

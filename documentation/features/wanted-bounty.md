@@ -78,10 +78,12 @@ his own assault), the crime is loud (the same rule as civilians below; he turns 
 - **Cutting it.** Kill the reporter and the next living witness takes over with the same deadline. Kill them all first
   and `The radio call never went out.`: nothing counts.
 - **One crime, one reporter.** A cop report means no civilian is asked. A cop kill of a cop whose assault report is
-  still pending replaces it. Death, a cuff or an arrest drops your pending reports; so does being restrained when one
-  would land. Going down does not.
+  still pending replaces it (a civilian's 911 call about the kill closes it too; a kill nobody saw leaves the assault
+  report to another cop who saw it). Death, a cuff or an arrest drops your pending and deferred reports; so does being
+  restrained when one would land, at its deadline or at your next join. Going down does not.
 - **Logging out forgives nothing.** A report (a cop's, or a 911 call still running) whose witness is alive when you log
   out lands when you next join, within `Witnesses.Defer_Minutes` (10): `A report on you came in while you were away.`
+  A 911 call is handed over at the logout, so nobody can stop it after that.
 - Nobody saw it: `Nobody saw that.` and no heat. (A cop killed out of everyone's sight: stage S5 adds the radio check-in.)
 
 - **Who sees it.** The nearest civilian within `Witness.Range` (24 blocks) with line of sight, and (0.21.1) facing the

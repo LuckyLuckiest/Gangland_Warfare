@@ -146,23 +146,28 @@ public final class CopCrimeReports implements BeanLifecycle {
 
 	/**
 	 * A gated crime nobody reported yet (the witness gate held it): a cop eyewitness opens a report; else a civilian
-	 * who saw it calls 911; else nobody saw it. A Kill_Cop of a cop whose Assault_Cop report is pending replaces that
-	 * report and keeps its deadline. One reporter per crime: a cop report suppresses the civilian call.
+	 * who saw it calls 911; else nobody saw it. One reporter per crime: a cop report suppresses the civilian call.
+	 * <p>
+	 * One cop is one crime: a Kill_Cop of a cop whose Assault_Cop report is pending replaces that report and keeps its
+	 * deadline when a cop saw the kill, and closes it (silently) when a civilian calls the kill in or no other living
+	 * cop saw the assault. Nobody saw the kill but another cop saw the assault: the assault report stands.
 	 */
 	public void open(Player killer, String crimeId, @Nullable Location at, @Nullable UUID victimId) {
-		Location     spot = at != null ? at : killer.getLocation();
-		List<CopNpc> eyes = eyes(killer, crimeId, spot, victimId);
+		Location     spot    = at != null ? at : killer.getLocation();
+		List<CopNpc> eyes    = eyes(killer, crimeId, spot, victimId);
+		Case         assault = Crimes.KILL_COP.equals(crimeId) && victimId != null ? assaultOn(killer, victimId) : null;
 		if (eyes.isEmpty()) {
 			int callers = civilians.witness(killer, crimeId, spot);
 			hooks.debug().accept("WITNESS " + killer.getName() + " crime=" + crimeId + " callers=" + callers);
-			if (callers == 0) notify(killer, WantedMessages.Key.WITNESS_NO_WITNESS, Map.of());
+			boolean assaultStands = assault != null && callers == 0 && seenByAnother(assault, victimId);
+			if (assault != null && !assaultStands) supersede(assault);
+			if (callers == 0 && !assaultStands) notify(killer, WantedMessages.Key.WITNESS_NO_WITNESS, Map.of());
 			return;
 		}
 
 		long landsAt = now() + cops().reportSeconds() * 1000L;
-		Case assault = Crimes.KILL_COP.equals(crimeId) && victimId != null ? assaultOn(killer, victimId) : null;
 		if (assault != null) {
-			close(assault);
+			supersede(assault);
 			landsAt = assault.landsAt;
 		}
 		Case report = new Case(killer, crimeId, spot, victimId, eyes, landsAt);
@@ -230,13 +235,12 @@ public final class CopCrimeReports implements BeanLifecycle {
 			}
 
 			close(report);
-			if (detainment.isRestrained(report.killer)) {
+			String reporter = copRadio.memberName(report.reporter);
+			if (land(report.killer, ReportKind.COP, report.crimeId, report.at, report.witnesses.size(), reporter)) {
+				log("land", report, "");
+			} else {
 				log("drop", report, " reason=restrained");
-				continue;
 			}
-			log("land", report, "");
-			land(report.killer, ReportKind.COP, report.crimeId, report.at, report.witnesses.size(),
-			     copRadio.memberName(report.reporter));
 		}
 
 		for (List<Deferred> waiting : deferred.values()) waiting.removeIf(report -> now > report.until());
@@ -249,6 +253,7 @@ public final class CopCrimeReports implements BeanLifecycle {
 			close(report);
 			log("drop", report, " reason=" + reason);
 		}
+		deferred.remove(killer.getUniqueId());
 	}
 
 	/** The criminal logged out: every pending report with a witness alive waits for his next join (OD-5). */
@@ -278,11 +283,13 @@ public final class CopCrimeReports implements BeanLifecycle {
 		for (Deferred report : waiting) {
 			if (now > report.until()) continue;
 
-			hooks.debug().accept("REPORT land " + killer.getName() + " crime=" + report.crimeId() + " reporter=" +
-			                     (report.reporter().isEmpty() ? report.kind() : plain(report.reporter())) + " witnesses=" +
-			                     report.witnesses() + " at=" + coords(report.at()) + " deferred=true");
-			land(killer, report.kind(), report.crimeId(), report.at(), report.witnesses(), report.reporter());
-			landed = true;
+			boolean in = land(killer, report.kind(), report.crimeId(), report.at(), report.witnesses(),
+			                  report.reporter());
+			hooks.debug().accept("REPORT " + (in ? "land " : "drop ") + killer.getName() + " crime=" + report.crimeId() +
+			                     " reporter=" + (report.reporter().isEmpty() ? report.kind() : plain(report.reporter())) +
+			                     " witnesses=" + report.witnesses() + " at=" + coords(report.at()) +
+			                     (in ? " deferred=true" : " reason=restrained"));
+			landed |= in;
 		}
 		if (landed) notify(killer, WantedMessages.Key.WITNESS_DEFERRED, Map.of());
 	}
@@ -326,23 +333,28 @@ public final class CopCrimeReports implements BeanLifecycle {
 
 	/**
 	 * Commits the reported crime ({@code kind}, {@code witnesses}; seen by a cop only for a cop's report), then tips
-	 * the squad to the crime spot and has dispatch say it there: Officer_Report for a cop's, Caller_911 for a call.
+	 * the squad to the crime spot (unless a cop sees him now: a live sighting beats a late tip) and has dispatch say it
+	 * there: Officer_Report for a cop's, Caller_911 for a call. {@code false}, nothing committed, when he is restrained
+	 * by then (cuffed, in transit, jailed): the arrest settled him, for a report at the deadline and at a join alike.
 	 */
-	private void land(Player killer, ReportKind kind, String crimeId, Location at, int witnesses, String reporter) {
+	private boolean land(Player killer, ReportKind kind, String crimeId, Location at, int witnesses, String reporter) {
+		if (detainment.isRestrained(killer)) return false;
+
 		boolean cop = kind == ReportKind.COP;
 		boolean committed = ledger.commitReported(killer, kind,
 		                                          () -> crimes.commit(killer, crimeId, at, cop, witnesses));
-		if (!committed) return;
+		// the commit can create the group (its star trigger runs the wanted start), so it is looked up after.
+		// ponytail: no group (heat under the first star) = no radio line, as the 0.21.1 911 path; S5's group-less
+		// dispatchAt (PLAN.md 2.4) can speak here too
+		CopGroup group = committed ? copManager.groupOf(killer.getUniqueId()) : null;
+		if (group == null) return true;
 
-		// the commit can create the group (its star trigger runs the wanted start), so it is looked up after
-		CopGroup group = copManager.groupOf(killer.getUniqueId());
-		if (group == null) return;
-
-		group.getSquad().reportTip(at);
+		if (!group.getSquad().hasFreshSighting()) group.getSquad().reportTip(at);
 		Map<String, String> extras = new HashMap<>();
 		extras.put("crime", messages.crimeName(crimeId));
 		if (cop) extras.put("reporter", reporter);
 		copRadio.dispatchAt(group, at, killer, cop ? "Officer_Report" : "Caller_911", 0, "", extras);
+		return true;
 	}
 
 	/** A report whose criminal left: deferred when a witness is still alive, else gone with him. */
@@ -353,12 +365,28 @@ public final class CopCrimeReports implements BeanLifecycle {
 			log("cut", report, " reason=quit");
 			return;
 		}
+		if (!report.witnesses.contains(report.reporter)) report.reporter = report.witnesses.get(0);
 
 		deferred.computeIfAbsent(report.killer.getUniqueId(), id -> new ArrayList<>())
 		        .add(new Deferred(report.crimeId, report.at, report.witnesses.size(), ReportKind.COP,
 		                          copRadio.memberName(report.reporter),
 		                          now() + config.getWitnesses().deferMinutes() * 60_000L));
 		log("defer", report, "");
+	}
+
+	/** A Kill_Cop replaces the victim's assault case: closed with no Report_Cut, one cop is one crime. */
+	private void supersede(Case assault) {
+		close(assault);
+		log("drop", assault, " reason=superseded");
+	}
+
+	/** Whether a living cop other than the victim saw the assault. */
+	private static boolean seenByAnother(Case assault, UUID victimId) {
+		for (CopNpc cop : assault.witnesses) {
+			LivingEntity body = cop.isValid() ? cop.getEntity() : null;
+			if (body != null && !body.getUniqueId().equals(victimId)) return true;
+		}
+		return false;
 	}
 
 	private @Nullable Case assaultOn(Player killer, UUID victimId) {
@@ -373,10 +401,10 @@ public final class CopCrimeReports implements BeanLifecycle {
 		return cases.stream().filter(report -> report.killer.getUniqueId().equals(id)).toList();
 	}
 
-	/** Removes the report and stops its reporter glowing. */
+	/** Removes the report; its reporter stops glowing unless he still reports another one. */
 	private void close(Case report) {
 		cases.remove(report);
-		glow(report.reporter, false);
+		if (cases.stream().noneMatch(other -> other.reporter == report.reporter)) glow(report.reporter, false);
 	}
 
 	private void countdown(Case report) {

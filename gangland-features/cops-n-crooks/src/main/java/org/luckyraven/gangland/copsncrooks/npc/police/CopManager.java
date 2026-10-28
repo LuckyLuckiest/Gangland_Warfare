@@ -178,7 +178,9 @@ public class CopManager implements BeanLifecycle {
 		} else {
 			// 0.21.1 (R4): the crime scene is a tip, no cop saw him there - the squad searches the spot instead of
 			// chasing his live position; the tip-off stamp holds the evasion clock as the old sighting did
-			group.getSquad().reportTip(scene != null ? scene : player.getLocation());
+			// a late report's scene never drags a squad in live contact back to an old spot (0.21.2 S4 review)
+			if (scene == null) group.getSquad().reportTip(player.getLocation());
+			else if (!group.getSquad().hasFreshSighting()) group.getSquad().reportTip(scene);
 			group.markTipOff(now);
 		}
 
