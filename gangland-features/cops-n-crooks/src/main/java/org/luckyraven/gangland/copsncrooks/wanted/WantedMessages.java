@@ -100,6 +100,11 @@ public class WantedMessages extends LocalizedModuleYaml {
 		PATROL_PULL_OVER("Patrol.Pull_Over", "&cBeat cop: &fPull over! Stop within %seconds%s"),
 		PATROL_TICKET("Patrol.Ticket", "&7Ticket: &c%money_symbol%%amount%"),
 		PATROL_FLED("Patrol.Fled", "&cYou fled a traffic stop!"),
+		// 0.21.2 S4: who saw it
+		WITNESS_NO_WITNESS("Witness.No_Witness", "&7Nobody saw that."),
+		WITNESS_COP_CALLING("Witness.Cop_Calling", "&9%reporter% &7is radioing it in - &e%seconds%s"),
+		WITNESS_REPORT_CUT("Witness.Report_Cut", "&aThe radio call never went out."),
+		WITNESS_DEFERRED("Witness.Deferred", "&7A report on you came in while you were away."),
 		TRACKER_TAGGED("Tracker.Tagged", "&cYour car has been tagged. Ditch it."),
 		TRACKER_HUD("Tracker.Hud", "&cTagged &7%seconds%s"),
 		TRESPASS("Trespass", "&cRestricted area!"),

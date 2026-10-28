@@ -240,6 +240,8 @@ Cops:
          # 0.20.0
          - "Overwatch_Spotted"
          - "Caller_911"
+         # 0.21.2: a cop eyewitness radios a crime in
+         - "Officer_Report"
       # One squad never repeats the same kind of line within this many ticks.
       Cooldown_Ticks:
          Contact: 160
@@ -298,6 +300,8 @@ Cops:
          Returning_To_Patrol: 1200
          # 0.20.0
          Caller_911: 100
+         # 0.21.2
+         Officer_Report: 100
          Suspect_Description: 1200
          Tracker_Tagged: 600
          Tracker_Ping: 400

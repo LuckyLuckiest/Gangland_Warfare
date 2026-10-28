@@ -292,8 +292,9 @@ public class CopListener implements Listener {
 
 		// 0.21.2 (T-544): the death books Kill_Cop, at the body, before the squad hears of it (the lethal hit used to, in
 		// the core damage listener). No player to blame (a fall, lava, an NPC): no crime, the squad still radios it
-		Player killer = killerOf(event.getEntity());
-		if (killer != null) ledger.reportCopKill(killer, event.getEntity().getLocation());
+		LivingEntity body   = event.getEntity();
+		Player       killer = killerOf(body);
+		if (killer != null) ledger.reportCopKill(killer, body.getLocation(), body.getUniqueId());
 
 		// Killing a cop is a crime, which ends a cold trail: release the hold now, because the officer-down and regroup
 		// backup are requested inside memberDown below, before QuietTrail's next tick would see the crime.

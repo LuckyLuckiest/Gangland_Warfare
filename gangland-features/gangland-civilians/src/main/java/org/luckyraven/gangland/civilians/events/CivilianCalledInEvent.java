@@ -12,7 +12,8 @@ import org.jetbrains.annotations.NotNull;
  * A civilian's 911 call landed: {@code criminal} did {@code crimeId} at {@code at} and {@code caller} reported it.
  * {@code viewers} (0.21.2) is the caller plus every civilian who also saw it and is still alive at landing: the head
  * count the heat ledger scores. Fired on the main thread by {@code WitnessService}; cops-n-crooks turns it into the
- * counted crime.
+ * counted crime. {@code deferred} (0.21.2, T-551): the criminal logged out while the call ran, with the caller still
+ * alive; nothing may be committed now, cops-n-crooks lands the report at his next join.
  *
  * @since 0.20.0
  */
@@ -26,6 +27,7 @@ public class CivilianCalledInEvent extends Event {
 	private final Location     at;
 	private final LivingEntity caller;
 	private final int          viewers;
+	private final boolean      deferred;
 
 	/** A call with the caller as its only viewer. */
 	public CivilianCalledInEvent(Player criminal, String crimeId, Location at, LivingEntity caller) {
@@ -33,12 +35,18 @@ public class CivilianCalledInEvent extends Event {
 	}
 
 	public CivilianCalledInEvent(Player criminal, String crimeId, Location at, LivingEntity caller, int viewers) {
+		this(criminal, crimeId, at, caller, viewers, false);
+	}
+
+	public CivilianCalledInEvent(Player criminal, String crimeId, Location at, LivingEntity caller, int viewers,
+	                             boolean deferred) {
 		super(false);
 		this.criminal = criminal;
 		this.crimeId  = crimeId;
 		this.at       = at.clone();
 		this.caller   = caller;
 		this.viewers  = Math.max(1, viewers);
+		this.deferred = deferred;
 	}
 
 	public static HandlerList getHandlerList() {

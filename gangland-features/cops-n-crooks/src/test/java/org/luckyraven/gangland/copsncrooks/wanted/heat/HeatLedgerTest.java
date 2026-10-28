@@ -152,11 +152,14 @@ class HeatLedgerTest {
 	}
 
 	@Test
-	@DisplayName("the squad's own sight alone also multiplies by 1.5")
+	@DisplayName("the squad's own sight alone multiplies an ungated crime by 1.5; 0.21.2 S4: a shipped-gated Kill_Cop not")
 	void copSight_aloneAlsoMultiplies() {
 		copSight.set(true);
 
-		assertEquals(225, ledger.record(crime(Crimes.KILL_COP)));
+		assertEquals(150, ledger.record(crime(Crimes.RESISTING_ARREST)));
+		// flipped 0.21.2 S4 (T-541): the bundled Witnesses.Crimes gate Kill_Cop, so only the cop who reports it counts
+		window.set(0);
+		assertEquals(150, ledger.record(crime(Crimes.KILL_COP)));
 	}
 
 	@Test
@@ -307,7 +310,7 @@ class HeatLedgerTest {
 	void reportCopKill_heatOn_commitsKillCopAtTheBody() {
 		Location body = mock(Location.class);
 
-		ledger.reportCopKill(player, body);
+		ledger.reportCopKill(player, body, UUID.randomUUID());
 
 		verify(crimes).commit(player, Crimes.KILL_COP, body);
 	}
@@ -317,9 +320,56 @@ class HeatLedgerTest {
 	void reportCopKill_heatOff_commitsNothing() {
 		heatOff();
 
-		ledger.reportCopKill(player, mock(Location.class));
+		ledger.reportCopKill(player, mock(Location.class), UUID.randomUUID());
 
 		verifyNoInteractions(crimes);
+	}
+
+	@Test
+	@DisplayName("0.21.2 S4: while an Assault_Cop or Kill_Cop commits, currentVictim names the hit cop (the gate's victim)")
+	void currentVictim_namesTheHitCopWhileTheCommitRuns() {
+		UUID                       hit  = UUID.randomUUID();
+		UUID                       dead = UUID.randomUUID();
+		java.util.List<UUID>       seen = new java.util.ArrayList<>();
+		org.mockito.Mockito.doAnswer(inv -> {
+			seen.add(ledger.currentVictim());
+			return true;
+		}).when(crimes).commit(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(),
+		                       org.mockito.ArgumentMatchers.any());
+
+		ledger.reportAssault(player, hit, location);
+		ledger.reportCopKill(player, location, dead);
+
+		assertEquals(java.util.Arrays.asList(hit, dead), seen);
+		assertNull(ledger.currentVictim(), "cleared after the commit");
+	}
+
+	@Test
+	@DisplayName("0.21.2 S4 T-543: inside commitReported the landing crime's spot is the reported scene, for him only")
+	void reportedScene_isTheLandingCrimeSpot_duringTheCommitOnly() {
+		Location scene = mock(Location.class);
+		when(scene.clone()).thenReturn(scene);
+		Player   other = mock(Player.class);
+		when(other.getUniqueId()).thenReturn(UUID.randomUUID());
+		java.util.List<Location> mine   = new java.util.ArrayList<>();
+		java.util.List<Location> theirs = new java.util.ArrayList<>();
+		ledger.setStarTrigger(p -> {
+			mine.add(ledger.reportedScene(playerId));
+			theirs.add(ledger.reportedScene(other.getUniqueId()));
+			wanted.setLevel(wanted.getLevel() + 1);
+		});
+
+		ledger.commitReported(player, ReportKind.COP, () -> {
+			ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, scene, true, 1));
+			return true;
+		});
+
+		assertEquals(List.of(scene), mine);
+		assertEquals(java.util.Arrays.asList((Location) null), theirs);
+		assertNull(ledger.reportedScene(playerId), "cleared after the landing");
+		ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, scene, true, 1));
+		assertTrue(mine.size() > 1, "the plain commit raised a star too");
+		assertNull(mine.get(mine.size() - 1), "a plain commit is no late report: he is placed where he stands");
 	}
 
 	// ── 0.21.2 S3: who saw it (PLAN.md section 3) ───────────────────────────────

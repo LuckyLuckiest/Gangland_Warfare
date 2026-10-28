@@ -101,6 +101,11 @@ class Bundled020YamlTest {
 		}
 		assertTrue(radio.isPriority("Overwatch_Spotted"));
 		assertTrue(radio.isPriority("Caller_911"));
+		// 0.21.2 S4: a cop's report is a dispatch line read right after Man_Down: it must not lose to the player gap
+		assertTrue(radio.isPriority("Officer_Report"));
+		assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority("Officer_Report"));
+		assertEquals(100L * 50L, radio.cooldownFor("Officer_Report"));
+		assertEquals(100L * 50L, CopConfigProvider.COP_RADIO_DEFAULTS.cooldownFor("Officer_Report"));
 		assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority("Overwatch_Spotted"));
 		assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority("Caller_911"));
 	}
@@ -111,10 +116,17 @@ class Bundled020YamlTest {
 		ConfigReport report = new ConfigReport();
 		NodeReader   wanted = wantedRoot(resource("copsncrooks/wanted.yml"), report);
 
-		assertEquals(new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian", "Kill_Civilian")), WitnessSettings.parse(wanted));
+		// 0.21.2 S4 (T-541): Assault_Cop and Kill_Cop are gated too, and Witnesses.Cops / Defer_Minutes ship
+		assertEquals(new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian", "Kill_Civilian", "Assault_Cop",
+		                                               "Kill_Cop"), 10,
+		                                 new WitnessSettings.Cops(3, 180.0, 6.0, List.of(), true)),
+		             WitnessSettings.parse(wanted));
+		assertEquals(WitnessSettings.DEFAULT, WitnessSettings.parse(wanted), "the code default equals the bundled file");
 		assertEquals(new TrespassSettings(true, 60), TrespassSettings.parse(wanted));
 		assertEquals(100, ChaseConfig.parse(wanted, report).heat().weightOf("Evading_Police"));
-		assertEquals(Set.of("Enable", "Crimes"), keysOf(wanted, "Witnesses"));
+		assertEquals(Set.of("Enable", "Defer_Minutes", "Crimes", "Cops"), keysOf(wanted, "Witnesses"));
+		assertEquals(Set.of("Report_Seconds", "View_Angle", "Witness_Floor", "Loud_Crimes", "Reporter_Glow"),
+		             keysOf(wanted, "Witnesses", "Cops"));
 		assertEquals(Set.of("Enable", "Repeat_Seconds"), keysOf(wanted, "Trespass"));
 		assertTrue(keysOf(wanted, "Heat", "Crimes").contains("Evading_Police"), "Heat.Crimes lists Evading_Police");
 		assertEquals(ChaseConfig.DEFAULT, ChaseConfig.parse(wanted, report));

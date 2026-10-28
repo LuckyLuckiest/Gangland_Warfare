@@ -450,6 +450,22 @@ class CopRadioTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 S4 T-543: dispatchAt names the given spot in %place%, still heard around the addressee")
+	void dispatchAt_namesTheSpot_heardAroundTheAddressee() {
+		radio = placeRadio("%crime% near %place%");
+		Player target = player(0, 0);
+		Player near   = listener(5, 0);
+		Player docks  = listener(30, 30);
+		CopGroup g    = new CopGroup(target.getUniqueId());
+
+		assertTrue(radio.dispatchAt(g, new Location(world, 30, 64, 30), target, "Officer_Report", 0, "",
+		                            Map.of("crime", "Cop killing")));
+
+		verify(near).sendMessage("[DISPATCH] Cop killing near the Docks");
+		verify(docks, never()).sendMessage(anyString());
+	}
+
+	@Test
 	@DisplayName("contactLost_namesTheLastKnownPlace: the squad's last sighting, not the suspect's live position")
 	void contactLost_namesTheLastKnownPlace() {
 		radio = placeRadio("lost near %place%");

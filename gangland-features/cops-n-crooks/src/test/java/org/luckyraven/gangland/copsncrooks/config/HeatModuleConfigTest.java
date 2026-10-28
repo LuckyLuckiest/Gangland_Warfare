@@ -135,6 +135,22 @@ class HeatModuleConfigTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 S4 T-543: the ledger bean hands CopManager the scene of a landing report")
+	@SuppressWarnings("unchecked")
+	void heatLedger_wiresTheReportedSceneIntoCopManager() {
+		HeatLedger built = config.heatLedger(mock(org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader.class),
+		                                     mock(org.luckyraven.gangland.core.user.UserManager.class),
+		                                     mock(org.luckyraven.gangland.crime.CrimeService.class), manager,
+		                                     mock(org.luckyraven.gangland.turf.manager.TurfManager.class));
+
+		ArgumentCaptor<java.util.function.Function<UUID, Location>> scene =
+				ArgumentCaptor.forClass(java.util.function.Function.class);
+		verify(manager).setReportedScene(scene.capture());
+		UUID someone = UUID.randomUUID();
+		assertTrue(scene.getValue().apply(someone) == built.reportedScene(someone), "it asks the ledger");
+	}
+
+	@Test
 	@DisplayName("the hook is registered by the bean container: registerAttackedHook is a @PostConstruct")
 	void registerAttackedHook_isAPostConstruct() throws NoSuchMethodException {
 		assertTrue(HeatModuleConfig.class.getMethod("registerAttackedHook").isAnnotationPresent(PostConstruct.class),

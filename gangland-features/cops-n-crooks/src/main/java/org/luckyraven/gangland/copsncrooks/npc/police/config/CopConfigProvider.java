@@ -53,11 +53,13 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					// 0.20.0 street-crime lines (milliseconds; cops.yml Cooldown_Ticks x50)
 					Map.entry("Caller_911", 5000L), Map.entry("Suspect_Description", 60000L),
 					Map.entry("Tracker_Tagged", 30000L), Map.entry("Tracker_Ping", 20000L),
-					Map.entry("Overwatch_Spotted", 10000L), Map.entry("Patrol_Sighting", 20000L)),
+					Map.entry("Overwatch_Spotted", 10000L), Map.entry("Patrol_Sighting", 20000L),
+					// 0.21.2
+					Map.entry("Officer_Report", 5000L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Commander_Down", "Backup", "Resisting", "Dispatch_Wanted",
 			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover", "Hit", "Patched_Up", "Marksman_Spotted",
 			      "Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up",
-			      "Overwatch_Spotted", "Caller_911"),
+			      "Overwatch_Spotted", "Caller_911", "Officer_Report"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
 
 	/**

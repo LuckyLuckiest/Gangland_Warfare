@@ -327,6 +327,10 @@ Lines:
    # 0.20.0: a patrol cop sights the suspect.
    Patrol_Sighting:
       - "Patrol here, I see the suspect at %place%."
+   # 0.21.2: a cop who saw a crime radios it in Report_Seconds later (wanted.yml Witnesses.Cops); %reporter% is
+   # that cop, %crime% the crime and %place% where it happened, never where the suspect is now.
+   Officer_Report:
+      - "%reporter% reports %crime% near %place%. All units respond."
 
 # 0.20.0: format of a line a gang mate relays to you; %name% is the lookout and %line% the line.
 Lookout_Format: "&8[Lookout %name%] &r%line%"

@@ -4,7 +4,7 @@
 #
 # The text of the chase HUD and the charge sheet. & colour codes work. Placeholders in %percent% signs are filled in
 # by the plugin: %stars%, %time%, %arrow%, %distance%, %crime%, %tier%, %stance%, %count% (also the number of stars
-# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%.
+# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%, %reporter%.
 
 # The boss bar and the star card
 Hud:
@@ -207,6 +207,16 @@ Patrol:
    Ticket: "&7Ticket: &c%money_symbol%%amount%"
    # You ran from a traffic stop
    Fled: "&cYou fled a traffic stop!"
+# 0.21.2: who saw your crime (Wanted.Witnesses of wanted.yml), on the action bar. "" turns a line off
+Witness:
+   # A crime that waits for a witness, and nobody saw it
+   No_Witness: "&7Nobody saw that."
+   # A cop saw it and is radioing it in; %reporter% is that cop, %seconds% the seconds until the report lands
+   Cop_Calling: "&9%reporter% &7is radioing it in - &e%seconds%s"
+   # Every cop who saw it is down before the report went out
+   Report_Cut: "&aThe radio call never went out."
+   # Said when you join and a report on you from while you were away lands
+   Deferred: "&7A report on you came in while you were away."
 # Trackers: a car tagged by a cop; %seconds% is the seconds left on the tag
 Tracker:
    # The car was tagged

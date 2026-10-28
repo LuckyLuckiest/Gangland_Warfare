@@ -53,6 +53,10 @@ public final class HeatLedger {
 	/** The criminal whose late report is landing ({@link #commitReported}), and who reported it; main thread only. */
 	private @Nullable UUID            reporting;
 	private @Nullable ReportKind      reportingKind;
+	/** Where the crime landing under {@link #commitReported} was done; main thread only (0.21.2, T-543). */
+	private @Nullable Location        reportingAt;
+	/** The cop hit by the Assault_Cop / Kill_Cop being committed right now; main thread only (0.21.2). */
+	private @Nullable UUID            booking;
 
 	public HeatLedger(ChaseConfigLoader config, UserManager<Player> users, CrimeService crimes,
 	                  Predicate<Player> copSight, Predicate<Location> contestedTurf,
@@ -95,7 +99,21 @@ public final class HeatLedger {
 		} finally {
 			reporting     = null;
 			reportingKind = null;
+			reportingAt   = null;
 		}
+	}
+
+	/**
+	 * The spot of the crime a late report is landing for {@code playerId} right now ({@link #commitReported}), else
+	 * null: the wanted start it causes names and tips that spot, not where he stands now (0.21.2, T-543).
+	 */
+	public @Nullable Location reportedScene(UUID playerId) {
+		return playerId.equals(reporting) ? reportingAt : null;
+	}
+
+	/** The cop the Assault_Cop or Kill_Cop being committed right now hit (the witness gate's victim), else null. */
+	public @Nullable UUID currentVictim() {
+		return booking;
 	}
 
 	/** @return the heat added, 0 when the crime is ignored */
@@ -130,6 +148,7 @@ public final class HeatLedger {
 		double added = weight * mult;
 		chase.heat += added;
 		ReportKind kind = player.getUniqueId().equals(reporting) ? reportingKind : null;
+		if (kind != null) reportingAt = event.getLocation();
 		chase.crimes.add(new CrimeRecord(event.getCrimeId(), added, now, event.getLocation(), kind,
 		                                 event.getWitnesses()));
 
@@ -169,17 +188,27 @@ public final class HeatLedger {
 		if (last != null && now - last < window) return;
 
 		victims.put(victimId, now);
-		crimes.commit(attacker, Crimes.ASSAULT_COP, at);
+		book(attacker, Crimes.ASSAULT_COP, at, victimId);
 	}
 
 	/**
 	 * Commits Kill_Cop for {@code killer} at the body while the heat ledger is on (0.21.2, T-544). The cop's real death
 	 * books it, so a lethal hit a shield absorbs is never a kill; with heat off the core kill combo counts it instead.
 	 */
-	public void reportCopKill(Player killer, @Nullable Location at) {
+	public void reportCopKill(Player killer, @Nullable Location at, @Nullable UUID victimId) {
 		if (!config.get().heat().enabled()) return;
 
-		crimes.commit(killer, Crimes.KILL_COP, at);
+		book(killer, Crimes.KILL_COP, at, victimId);
+	}
+
+	/** Commits a crime against cop {@code victimId}; {@link #currentVictim} names him while the commit runs. */
+	private void book(Player player, String crimeId, @Nullable Location at, @Nullable UUID victimId) {
+		booking = victimId;
+		try {
+			crimes.commit(player, crimeId, at);
+		} finally {
+			booking = null;
+		}
 	}
 
 	public void onLevelChanged(UUID playerId, int oldLevel, int newLevel, int maxLevel, WantedCause cause) {

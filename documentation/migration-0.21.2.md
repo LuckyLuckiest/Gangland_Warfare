@@ -7,7 +7,7 @@ shipped files. **An existing server keeps its old files** (`copsncrooks/wanted.y
 never rewrites them, so every new key below is read with the value shown when it is absent. Edit the files by hand only
 to change those values.
 
-This file grows with each 0.21.2 stage. It covers stages S1, S2 and S3 so far.
+This file grows with each 0.21.2 stage. It covers stages S1, S2, S3 and S4 so far.
 
 **Update `gangland-civilians` and `cops-n-crooks` together.** The 0.21.2 cops-n-crooks jar reads the 911 call's head
 count from the 0.21.2 civilians jar (`CivilianCalledInEvent.getViewers()`). A 0.21.2 cops-n-crooks next to a 0.21.1
@@ -55,8 +55,69 @@ Hud:
 
 - `Reported` existed in 0.21.1 as `"%crime% (reported by a witness)"`. A deployed file keeps that text, which still
   works (it simply names no count). Replace it to show the count.
-- In 0.21.2 S3 only `Reported` can appear: `Seen`, `Missing` and `Scene` are shown once the cop reports, the silent
-  officer and the scene of the later stages land.
+- `Reported` and (0.21.2 S4) `Seen` can appear; `Missing` and `Scene` are shown once the silent officer and the
+  scene of stage S5 land.
+
+### 1.1 Cop eyewitness reports (stage S4)
+
+`copsncrooks/wanted.yml`, under `Wanted.Witnesses`. **The two `Crimes` lines are the switch:** a deployed file lists its
+crimes, so without them a cop crime still counts at once, as in 0.21.1.
+
+```yaml
+Wanted:
+   Witnesses:
+      # a report whose witness is still alive when you log out lands when you next join, within this many minutes
+      Defer_Minutes: 10
+      Crimes:
+         # ... your existing entries ...
+         # 0.21.2: remove these two to count a cop crime at once again
+         - Assault_Cop
+         - Kill_Cop
+      Cops:
+         # seconds the nearest witness takes to radio it in
+         Report_Seconds: 3
+         # full width of a cop's view cone in degrees; 360 = all round
+         View_Angle: 180.0
+         # a cop this close with a clear line of sight sees you whatever the light or sneaking
+         Witness_Floor: 6.0
+         # crimes that turn every cop in range toward the noise (a gunshot is always loud)
+         Loud_Crimes: []
+         # the reporting cop glows while he radios it in
+         Reporter_Glow: true
+```
+
+- Absent: `Defer_Minutes` 10; the whole `Cops` block as shown. A server with no `Witnesses` block at all gets the
+  shipped five crimes, cop crimes included.
+
+`copsncrooks/cops.yml`, under `Cops.Radio`. **Add the priority line:** a file with its own `Priority` list does not get
+the code default, and without it the report can be dropped when another line was just heard.
+
+```yaml
+      Priority:
+         # ... your existing entries ...
+         - "Officer_Report"
+      Cooldown_Ticks:
+         # ... your existing entries ...
+         Officer_Report: 100
+```
+
+`copsncrooks/cop_radio_messages.yml` (and `_es`), under `Lines` (absent = the English shown; `%reporter%` is the cop,
+`%place%` the crime spot):
+
+```yaml
+   Officer_Report:
+      - "%reporter% reports %crime% near %place%. All units respond."
+```
+
+`copsncrooks/wanted_messages.yml` (absent = the English shown; `""` turns a line off):
+
+```yaml
+Witness:
+   No_Witness: "&7Nobody saw that."
+   Cop_Calling: "&9%reporter% &7is radioing it in - &e%seconds%s"
+   Report_Cut: "&aThe radio call never went out."
+   Deferred: "&7A report on you came in while you were away."
+```
 
 ## 2. Behaviour that changed (no edit needed)
 
@@ -88,22 +149,43 @@ Hud:
 - **More witnesses, more heat** (T-540). A crime's heat is now scaled by how many saw it: each eyewitness past the
   first adds `Per_Extra_Witness` (0.5) to the multiplier, up to `Max_Extra_Witnesses` (3). A civilian's 911 call now
   counts the caller plus every other civilian who saw the crime and is still alive when the call lands (it counted 1).
-  From 0 stars, a Kill_Civilian three civilians saw is 200 heat instead of 100. Once cop reports land (stage S4, not
-  in this build yet), a Kill_Cop four cops saw will be 450 (three stars) instead of 225; until then a cop kill or
-  assault commits with no witness count and scores as before. A crime outside `Wanted.Witnesses.Crimes` committed with
+  From 0 stars, a Kill_Civilian three civilians saw is 200 heat instead of 100, and (stage S4, with the two `Crimes`
+  lines) a Kill_Cop four cops saw is 450 (three stars) instead of 225. A crime outside `Wanted.Witnesses.Crimes` committed with
   no witness or one witness scores exactly as before; a held crime with none can lose the squad's x1.5 (next bullet).
   Safe alarms and store hold-ups commit with one witness, so they do not change. A crew mate's share of a crime
   carries the crime's witness count, as it already carried whether a cop saw it.
 - **A held crime no longer gets a hidden x1.5** (T-538). For a crime in `Wanted.Witnesses.Crimes` (with
   `Witnesses.Enable` on), your squad merely having you in sight no longer counts as a cop who saw it. A 911 call is
   therefore always x1.0 plus its head count. Crimes outside the list keep the squad's sighting as before.
-  - **Until stage S4 (not in this build):** the witness gate still lets a held crime through at once when the chasing
-    squad has you in sight or any cop sees you, with no report and no witness count. One your squad has in sight now
-    scores x1.0 where 0.21.1 gave x1.5: a Kill_Civilian in front of the squad is 100 heat, was 150 (one only another
-    cop sees already scored x1.0). S4 replaces both shortcuts with a cop's delayed, named report that carries the x1.5
-    and the head count (PLAN.md, staging S4).
+  - Stage S4 removed the gate's two shortcuts (the squad's sighting, a cop in view): a cop who saw it files a delayed,
+    named report that carries the x1.5 and the head count (below).
+
+- **Stage S4: a cop who saw a gated crime radios it in** (T-538, T-541). The witness gate no longer lets a held crime
+  through at once because your squad has you in sight or a cop sees you. A cop eyewitness (he sees you, and he is
+  fighting or chasing you, the crime is loud, or you are inside his 180-degree view) glows and radios it in after
+  `Report_Seconds` (3): then it counts as seen by a cop (x1.5) with every witness still alive counted, and dispatch says
+  `Officer_Report` about the crime spot. Kill every witness first and nothing counts. **Superseded 0.21.1 note:** a
+  gated crime in front of a cop used to count in the same tick ([migration-0.21.1.md](./migration-0.21.1.md)); it now
+  lands 3 s later (owner decision 11). With no cop eyewitness the civilians' 911 call runs as before; with nobody at
+  all, `Nobody saw that.` and no heat. With the two `Crimes` lines added, a cop killed where no cop and no civilian saw
+  it gives no star at all until stage S5 adds the radio check-in of a silent officer.
+- **Late reports name the crime spot** (T-543). A wanted start caused by a report that landed late (a cop's, a 911
+  call, a deferred one) says `Dispatch_Wanted` about the crime spot and tips the squad there, not where you stand by
+  then. This also applies to 911 calls, which used to name your live position.
+- **Logging out forgives nothing** (T-551). A cop report with a witness alive, or a civilian's 911 call still running,
+  when you log out lands at your next join (one tick after your data loads) within `Defer_Minutes`. 0.21.1 cancelled
+  the 911 call. This applies at once, even without the `Crimes` lines. A restart in between forgives it.
+- Death, a cuff or an arrest drops your pending cop reports; being restrained when one would land drops it too. Going
+  down keeps them.
+- The dead cop of a `Kill_Cop` never witnesses it; a cop kill of a cop whose `Assault_Cop` report is pending replaces
+  that report and keeps its deadline, so one cop is one crime.
 
 ## 3. Debug lines
+
+- (S4) `REPORT open|land|cut|drop|defer <player> crime=<id> reporter=<name> witnesses=<n> at=x,y,z`, with
+  ` reason=<death|cuffed|arrested|restrained|quit>` on a drop or a cut at quit and ` deferred=true` on a landing at a
+  join. `WITNESS <player> crime=<id> callers=<n>` now comes from the report when no cop saw it.
+- (S4, civilians) `CALL_DEFER <player> crime=<id> viewers=<n>`: a 911 call handed over at his logout.
 
 - `CALL_IN <player> crime=<id> caller=<name>` (civilians) now ends with `viewers=<n>`, the head count the crime is
   committed with.

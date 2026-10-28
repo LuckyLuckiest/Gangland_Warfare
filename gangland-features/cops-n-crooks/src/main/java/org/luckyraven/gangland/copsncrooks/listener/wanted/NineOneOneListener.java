@@ -11,6 +11,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.ReportKind;
+import org.luckyraven.gangland.copsncrooks.wanted.report.CopCrimeReports;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -21,7 +22,8 @@ import java.util.Map;
  * A civilian's 911 call landed: the held crime is committed with the call's viewers as its witnesses (at least one, so
  * it passes the gate; 0.21.2 T-540 scores the head count), the squad is
  * tipped off to the crime spot and dispatch radios the Caller_911 line. Dispatch needs no speaker, so the line plays
- * even when the commit has just created the group and no cop has spawned yet (0.21.1, T-345).
+ * even when the commit has just created the group and no cop has spawned yet (0.21.1, T-345). A call whose criminal
+ * logged out is deferred to his next join, never committed while he is away (0.21.2, T-551).
  *
  * @since 0.20.0
  */
@@ -34,21 +36,27 @@ public class NineOneOneListener implements Listener {
 	private final PlaceNames     placeNames;
 	private final WantedMessages messages;
 	private final HeatLedger     ledger;
+	private final CopCrimeReports reports;
 
 	public NineOneOneListener(CrimeService crimes, CopManager copManager, CopRadio copRadio, PlaceNames placeNames,
-	                          WantedMessages messages, HeatLedger ledger) {
+	                          WantedMessages messages, HeatLedger ledger, CopCrimeReports reports) {
 		this.crimes     = crimes;
 		this.copManager = copManager;
 		this.copRadio   = copRadio;
 		this.placeNames = placeNames;
 		this.messages   = messages;
 		this.ledger     = ledger;
+		this.reports    = reports;
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onCalledIn(CivilianCalledInEvent event) {
 		Player criminal = event.getCriminal();
-		if (!criminal.isOnline()) return;
+		if (event.isDeferred() || !criminal.isOnline()) {
+			reports.defer(criminal, event.getCrimeId(), event.getAt(), event.getViewers(),
+			              ReportKind.CIVILIAN);
+			return;
+		}
 
 		// commit first: it can create the cop group that is looked up below. Inside commitReported, so the star card says
 		// a witness reported it (0.21.1 Q7)

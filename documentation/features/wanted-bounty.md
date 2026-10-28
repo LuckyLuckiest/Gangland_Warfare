@@ -30,8 +30,8 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
 - **Who saw it (0.21.2).** A crime a cop saw is multiplied by `Seen_By_Cop_Multiplier` (1.5); a crime only a civilian
   reported counts x1.0. Each eyewitness past the first, cop or civilian, adds `Per_Extra_Witness` (0.5) to that
   multiplier, up to `Max_Extra_Witnesses` (3). The witnesses are counted when the report lands, so a witness killed
-  first counts for nothing. A Kill_Civilian three civilians saw is 100 x 2.0 = 200; once cop reports land (a later
-  0.21.2 stage) one seen by four cops is 100 x 3.0 = 300. For a crime in `Wanted.Witnesses.Crimes` your squad merely having you in sight is not a cop who saw
+  first counts for nothing. A Kill_Civilian three civilians saw is 100 x 2.0 = 200; one seen by four cops is
+  100 x 3.0 = 300, and a Kill_Cop four cops saw is 150 x 3.0 = 450 (three stars). For a crime in `Wanted.Witnesses.Crimes` your squad merely having you in sight is not a cop who saw
   it; for any other crime it still is.
 - A player kill inside a contested turf is multiplied by `Turf_War_Multiplier` (0.5).
 - Hitting the same cop again within `Assault_Repeat_Seconds` (10) is not a new crime.
@@ -61,9 +61,28 @@ exactly as before.
 
 ### Witnesses and 911 calls (0.20.0)
 
-A car theft, an assault on a civilian or (since 0.21.1) the killing of a civilian that no cop saw is not counted at once.
-It is counted only if someone calls it in. A cop saw it when a cop (squad or beat) picks you up at that moment within
-`Alert_Range` (40), or your squad has a fresh sighting of you; then it counts at once. Nothing here is random: every step has a fixed rule and something you can see.
+A car theft, an assault on a civilian, (since 0.21.1) the killing of a civilian and (0.21.2) an assault on or the
+killing of a cop are not counted at once. They count only once someone who saw them reports them: a cop first, else a
+civilian's 911 call. Nothing here is random: every step has a fixed rule and something you can see.
+
+**A cop eyewitness (0.21.2).** A cop (squad or beat) saw it when he can see you (within `Alert_Range` 40 as the dark,
+crowds and sneaking shrink it, or within `Witnesses.Cops.Witness_Floor` 6 blocks with a clear line of sight; a disguise
+does not hide a crime done in front of him) and one of these holds: he is fighting or chasing you (a hit cop witnesses
+his own assault), the crime is loud (the same rule as civilians below; he turns to the noise), or you are inside his
+`Witnesses.Cops.View_Angle` (180) cone. The dead cop of a cop kill never witnesses it.
+
+- **Radioing it in.** The nearest witness glows and your action bar says `Officer Bob is radioing it in - 3s`. After
+  `Report_Seconds` (3) dispatch says `Officer Bob reports Killing an officer near the Docks. All units respond.` (the crime
+  spot, never where you are by then), the squad gets a tip to that spot, and the crime counts as seen by every witness
+  still alive: `Killing an officer (seen by 2 officer(s))` on the chat card.
+- **Cutting it.** Kill the reporter and the next living witness takes over with the same deadline. Kill them all first
+  and `The radio call never went out.`: nothing counts.
+- **One crime, one reporter.** A cop report means no civilian is asked. A cop kill of a cop whose assault report is
+  still pending replaces it. Death, a cuff or an arrest drops your pending reports; so does being restrained when one
+  would land. Going down does not.
+- **Logging out forgives nothing.** A report (a cop's, or a 911 call still running) whose witness is alive when you log
+  out lands when you next join, within `Witnesses.Defer_Minutes` (10): `A report on you came in while you were away.`
+- Nobody saw it: `Nobody saw that.` and no heat. (A cop killed out of everyone's sight: stage S5 adds the radio check-in.)
 
 - **Who sees it.** The nearest civilian within `Witness.Range` (24 blocks) with line of sight, and (0.21.1) facing the
   crime: `Witness.View_Angle` (180) is the width of its view, so a civilian with its back to you sees nothing. A **loud**
@@ -86,10 +105,10 @@ It is counted only if someone calls it in. A cop saw it when a cop (squad or bea
   card in chat names the witnesses: `Car theft (reported by 3 witness(es))` (0.21.2: the caller plus every other
   civilian who saw it and is still alive when the call lands, and each one past the first adds heat, see above); the
   title keeps the plain crime name.
-- Nobody saw it and no cop saw it: the gated crime adds no heat.
+- Nobody saw it and no cop saw it: the gated crime adds no heat (`Witness.No_Witness`, "Nobody saw that.").
 - Hitting a civilian publishes `Assault_Civilian` at most once per attacker and civilian every `Assault_Repeat_Seconds` (10).
 
-Keys: `wanted.yml` `Wanted.Witnesses.Enable` and `Crimes`; `civilians.yml` `Witness.*`; the lines are in
+Keys: `wanted.yml` `Wanted.Witnesses.Enable`, `Crimes`, `Defer_Minutes` and `Cops.*`; `civilians.yml` `Witness.*`; the lines are in
 `civilian_messages.yml`. See [migration-0.20.0.md](../migration-0.20.0.md) and [migration-0.21.1.md](../migration-0.21.1.md).
 
 ### The hot-cash bag (0.20.0)

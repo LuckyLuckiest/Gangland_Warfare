@@ -310,12 +310,15 @@ class CopListenerDeathTest {
 		when(killer.getUniqueId()).thenReturn(UUID.randomUUID());
 		when(body.getKiller()).thenReturn(killer);
 		when(body.getLocation()).thenReturn(at);
+		UUID copId = UUID.randomUUID();
+		when(body.getUniqueId()).thenReturn(copId);
 		copIn(manager, body, radio);
 
 		new CopListener(manager, ledger).onCopDeath(deathOf(body));
 
 		InOrder order = inOrder(ledger, radio);
-		order.verify(ledger).reportCopKill(killer, at);
+		// 0.21.2 S4: the dead cop is named, so his pending Assault_Cop report is superseded, not booked as well
+		order.verify(ledger).reportCopKill(killer, at, copId);
 		order.verify(radio).onSignal(any(), eq(NpcSquadSignal.MAN_DOWN), any(), any());
 	}
 
@@ -331,7 +334,7 @@ class CopListenerDeathTest {
 		new CopListener(manager, ledger).onCopDeath(deathOf(body));
 
 		verify(radio).onSignal(any(), eq(NpcSquadSignal.MAN_DOWN), any(), any());
-		verify(ledger, never()).reportCopKill(any(), any());
+		verify(ledger, never()).reportCopKill(any(), any(), any());
 	}
 
 	@Test
@@ -354,7 +357,7 @@ class CopListenerDeathTest {
 		now[0] += 4_900;
 		listener.onCopDeath(deathOf(body));
 
-		verify(ledger).reportCopKill(attacker, at);
+		verify(ledger).reportCopKill(eq(attacker), eq(at), any());
 		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
 		verify(bukkit.pluginManager()).callEvent(captor.capture());
 		assertSame(attacker, captor.getValue().getKiller());
@@ -378,7 +381,7 @@ class CopListenerDeathTest {
 		now[0] += 5_001;
 		listener.onCopDeath(deathOf(body));
 
-		verify(ledger, never()).reportCopKill(any(), any());
+		verify(ledger, never()).reportCopKill(any(), any(), any());
 	}
 
 	private static EntityDeathEvent deathOf(LivingEntity body) {

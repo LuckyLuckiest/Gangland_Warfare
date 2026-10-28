@@ -4,10 +4,18 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.civilians.witness.WitnessService;
+import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.copsncrooks.wanted.report.CopCrimeReports;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.turf.manager.TurfManager;
@@ -34,12 +42,25 @@ public class HeatModuleConfig {
 	@Bean
 	public HeatLedger heatLedger(ChaseConfigLoader config, @Qualifier("online") UserManager<Player> users,
 	                             CrimeService crimes, CopManager copManager, TurfManager turfs) {
-		return new HeatLedger(config, users, crimes, player -> {
+		HeatLedger ledger = new HeatLedger(config, users, crimes, player -> {
 			CopGroup group = copManager.groupOf(player.getUniqueId());
 			return group != null && group.getSquad().hasFreshSighting();
 		}, location -> HeatLedger.contestedTurfAt(turfs, location) != null,
-		                      () -> config.getKillCombo().chainSeconds(),
-		                      System::currentTimeMillis);
+		                                   () -> config.getKillCombo().chainSeconds(),
+		                                   System::currentTimeMillis);
+		// 0.21.2 (T-543): a wanted start a late report causes names and tips the crime spot, not the live position
+		copManager.setReportedScene(ledger::reportedScene);
+		return ledger;
+	}
+
+	/** The cop eyewitness reports (0.21.2, PLAN.md section 1); its 10-tick task follows the bean lifecycle. */
+	@Bean
+	public CopCrimeReports copCrimeReports(ChaseConfigLoader config, CopLoader copLoader, CopManager copManager,
+	                                       PatrolManager patrol, CopPerception perception, WitnessService witnesses,
+	                                       HeatLedger ledger, CrimeService crimes, CopRadio copRadio,
+	                                       WantedMessages messages, DetainmentService detainment) {
+		return new CopCrimeReports(config, copLoader, copManager, patrol, perception, witnesses, ledger, crimes, copRadio,
+		                           messages, detainment, CopCrimeReports.Hooks.live(plugin));
 	}
 
 	@PostConstruct

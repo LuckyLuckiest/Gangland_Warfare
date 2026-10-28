@@ -251,6 +251,10 @@ Lines:
    # 0.20.0: un policía de patrulla avista al sospechoso.
    Patrol_Sighting:
       - "Patrulla aquí, veo al sospechoso en %place%."
+   # 0.21.2: un policía que vio un delito lo reporta por radio Report_Seconds después (wanted.yml Witnesses.Cops);
+   # %reporter% es ese policía, %crime% el delito y %place% donde ocurrió, nunca donde está ahora el sospechoso.
+   Officer_Report:
+      - "%reporter% reporta %crime% cerca de %place%. Todas las unidades respondan."
 
 # 0.20.0: formato de una línea que un compañero de banda te transmite; %name% es el vigía y %line% la línea.
 Lookout_Format: "&8[Vigía %name%] &r%line%"

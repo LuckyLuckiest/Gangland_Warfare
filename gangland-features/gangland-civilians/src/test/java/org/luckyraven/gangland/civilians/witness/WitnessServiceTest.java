@@ -331,9 +331,11 @@ class WitnessServiceTest {
 	}
 
 	@Test
-	@DisplayName("the criminal quits: every call about them is cancelled and the caller goes back to IDLE")
-	void criminalQuitCancels() {
-		CivilianNpc caller = kit.civilian(10, true);
+	@DisplayName("0.21.2 T-551: the criminal quits with the caller alive: the call is deferred, never forgiven - one "
+	             + "deferred CivilianCalledInEvent (caller + live watchers), the caller back to IDLE, nothing said")
+	void criminalQuit_defersCall() {
+		CivilianNpc caller  = kit.civilian(10, true);
+		CivilianNpc watcher = kit.civilian(15, true);
 		kit.witness("Car_Theft");
 
 		kit.service.onCriminalQuit(kit.criminalId);
@@ -341,21 +343,44 @@ class WitnessServiceTest {
 		assertTrue(kit.service.activeCalls().isEmpty());
 		assertNull(caller.getWitnessCall());
 		assertEquals(CivilianState.IDLE, caller.getCurrentState());
-		assertTrue(kit.debugContains("CALL_CANCEL Bob crime=Car_Theft reason=logout"), kit.debug::toString);
+		assertEquals(CivilianState.IDLE, watcher.getCurrentState());
+		assertEquals(1, kit.countEvents(CivilianCalledInEvent.class));
+		CivilianCalledInEvent event = (CivilianCalledInEvent) kit.events.get(kit.events.size() - 1);
+		assertTrue(event.isDeferred());
+		assertEquals(2, event.getViewers());
+		assertEquals("Car_Theft", event.getCrimeId());
+		assertTrue(kit.debugContains("CALL_DEFER Bob crime=Car_Theft viewers=2"), kit.debug::toString);
 	}
 
 	@Test
-	@DisplayName("a criminal who went offline between ticks cancels the call on the next tick")
-	void offlineCriminalAtTickCancels() {
+	@DisplayName("0.21.2 T-551: a criminal who went offline between ticks defers the call on the next tick")
+	void offlineCriminalAtTick_defersCall() {
 		CivilianNpc caller = kit.civilian(10, true);
 		kit.witness("Car_Theft");
 
 		when(kit.criminal.isOnline()).thenReturn(false);
-		kit.advanceSeconds(8);
+		kit.advanceSeconds(1);
 		kit.service.tickCaller(caller);
 
-		assertEquals(0, kit.countEvents(CivilianCalledInEvent.class));
+		assertEquals(1, kit.countEvents(CivilianCalledInEvent.class));
+		assertTrue(((CivilianCalledInEvent) kit.events.get(kit.events.size() - 1)).isDeferred());
 		assertTrue(kit.service.activeCalls().isEmpty());
+	}
+
+	@Test
+	@DisplayName("0.21.2: loudWithin is the civilians' own shot clock - a gun within Loud_Shot_Seconds, never a melee swing")
+	void loudWithin_isTheShotClock() {
+		assertFalse(kit.service.loudWithin(kit.criminal));
+
+		kit.service.heardShot(kit.criminal, "MELEE", 0L);
+		assertFalse(kit.service.loudWithin(kit.criminal), "a melee swing is silent");
+
+		kit.service.heardShot(kit.criminal, "GUN", 0L);
+		assertTrue(kit.service.loudWithin(kit.criminal));
+		kit.advanceSeconds(3);
+		assertTrue(kit.service.loudWithin(kit.criminal), "the edge of Loud_Shot_Seconds (3) is still loud");
+		kit.advanceSeconds(0.1);
+		assertFalse(kit.service.loudWithin(kit.criminal));
 	}
 
 	// ── Assault_Civilian (P-WIT-6) and the victim ────────────────────────────

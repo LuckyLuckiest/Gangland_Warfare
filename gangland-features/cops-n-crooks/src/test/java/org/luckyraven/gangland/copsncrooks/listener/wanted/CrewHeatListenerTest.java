@@ -571,15 +571,10 @@ class CrewHeatListenerTest {
 	void integ_gatedCrimeNotSharedUntilRecommit() throws ReflectiveOperationException {
 		Player mate = player("Alex", OWN_GANG, 25);
 		npcSupport.when(NpcSupport::available).thenReturn(true);
-		org.luckyraven.gangland.civilians.witness.WitnessService witnesses =
-				mock(org.luckyraven.gangland.civilians.witness.WitnessService.class);
-		when(witnesses.witness(any(), any(), any())).thenReturn(1);
 		when(config.getWitnesses()).thenReturn(org.luckyraven.gangland.copsncrooks.wanted.config.WitnessSettings.DEFAULT);
-		WitnessGateListener gate = new WitnessGateListener(config, witnesses,
-		                                                   mock(org.luckyraven.gangland.copsncrooks.npc.police.CopManager.class),
-		                                                   mock(org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolManager.class),
-		                                                   new org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception(),
-		                                                   mock(org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader.class));
+		WitnessGateListener gate = new WitnessGateListener(config,
+		                                                   mock(org.luckyraven.gangland.copsncrooks.wanted.report.CopCrimeReports.class),
+		                                                   mock(org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger.class));
 
 		CrimeCommittedEvent gated = new CrimeCommittedEvent(actor, Crimes.CAR_THEFT, crimeLoc, false, 0);
 		dispatch(gated, listener, gate);

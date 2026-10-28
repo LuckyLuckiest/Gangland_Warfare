@@ -96,6 +96,21 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 S4 T-543: a start caused by a late report tips and names the crime spot, not his live position")
+	void wantedStart_fromALateReport_tipsAndNamesTheCrimeSpot() {
+		Location scene = new Location(fx.world, 40, 64, -30);
+		manager.setReportedScene(id -> id.equals(playerId) ? scene : null);
+
+		manager.onWantedStart(player, wanted, WantedCause.CRIME);
+
+		CopGroup group = manager.groupFor(playerId);
+		assertEquals(scene, group.getSquad().lastKnownLocation());
+		assertFalse(group.getSquad().hasFreshSighting());
+		verify(fx.radio).dispatchAt(group, scene, player, "Dispatch_Wanted", 2, "SWAT", java.util.Map.of());
+		verify(fx.radio, never()).dispatch(group, player, "Dispatch_Wanted", 2, "SWAT");
+	}
+
+	@Test
 	@DisplayName("a hit by the target from where the cop cannot see him is a tip; one the cop can see is a sighting (R4)")
 	void copAttacked_withoutLineOfSight_isATip_withItASighting() {
 		manager.onWantedStart(player, wanted);

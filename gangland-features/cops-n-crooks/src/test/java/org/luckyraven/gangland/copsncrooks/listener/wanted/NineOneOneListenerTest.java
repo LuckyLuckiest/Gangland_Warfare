@@ -14,6 +14,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.ReportKind;
+import org.luckyraven.gangland.copsncrooks.wanted.report.CopCrimeReports;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -46,6 +47,7 @@ class NineOneOneListenerTest {
 	private final PlaceNames   places     = mock(PlaceNames.class);
 	private final WantedMessages names    = mock(WantedMessages.class);
 	private final HeatLedger     ledger   = mock(HeatLedger.class);
+	private final CopCrimeReports reports = mock(CopCrimeReports.class);
 	private final Player       player     = mock(Player.class);
 	private final UUID         playerId   = UUID.randomUUID();
 	private final Location     at         = new Location(mock(World.class), 100, 64, -20);
@@ -68,7 +70,7 @@ class NineOneOneListenerTest {
 		// commitReported runs the commit it is handed
 		when(ledger.commitReported(any(), any(), any())).thenAnswer(
 				inv -> inv.<java.util.function.BooleanSupplier>getArgument(2).getAsBoolean());
-		listener = new NineOneOneListener(crimes, copManager, radio, places, names, ledger);
+		listener = new NineOneOneListener(crimes, copManager, radio, places, names, ledger, reports);
 	}
 
 	private CivilianCalledInEvent call(String crimeId) {
@@ -154,14 +156,27 @@ class NineOneOneListenerTest {
 	}
 
 	@Test
-	@DisplayName("the criminal went offline before the call landed: nothing is committed")
+	@DisplayName("0.21.2 T-551: the criminal went offline before the call landed: nothing is committed, it is deferred")
 	void offlineCriminalIgnored() {
 		when(player.isOnline()).thenReturn(false);
 
-		listener.onCalledIn(call("Car_Theft"));
+		listener.onCalledIn(new CivilianCalledInEvent(player, "Car_Theft", at, mock(LivingEntity.class), 2));
 
 		verify(crimes, never()).commit(any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(),
 		                               org.mockito.ArgumentMatchers.anyInt());
+		verify(reports).defer(player, "Car_Theft", at, 2, ReportKind.CIVILIAN);
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-551: a call deferred at his quit (he is still online in the quit event) commits nothing now")
+	void deferredCall_defersEvenWhileStillOnline() {
+		listener.onCalledIn(new CivilianCalledInEvent(player, "Car_Theft", at, mock(LivingEntity.class), 3, true));
+
+		verify(crimes, never()).commit(any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(),
+		                               org.mockito.ArgumentMatchers.anyInt());
+		verify(reports).defer(player, "Car_Theft", at, 3, ReportKind.CIVILIAN);
+		verify(radio, never()).dispatch(any(), any(), anyString(), org.mockito.ArgumentMatchers.anyInt(), anyString(),
+		                                anyMap());
 	}
 
 	@Test

@@ -56,6 +56,11 @@ class WantedMessagesOriginKeysTest {
 			{"CARD_REPORTED", "Hud.Card.Reported", "%crime% (reported by %count% witness(es))"},
 			{"CARD_MISSING", "Hud.Card.Missing", "%crime% (an officer stopped answering)"},
 			{"CARD_SCENE", "Hud.Card.Scene", "%crime% (spotted near the scene)"},
+			// 0.21.2 S4: who saw it, on the action bar
+			{"WITNESS_NO_WITNESS", "Witness.No_Witness", "&7Nobody saw that."},
+			{"WITNESS_COP_CALLING", "Witness.Cop_Calling", "&9%reporter% &7is radioing it in - &e%seconds%s"},
+			{"WITNESS_REPORT_CUT", "Witness.Report_Cut", "&aThe radio call never went out."},
+			{"WITNESS_DEFERRED", "Witness.Deferred", "&7A report on you came in while you were away."},
 	};
 
 	private static YamlConfiguration shipped() {

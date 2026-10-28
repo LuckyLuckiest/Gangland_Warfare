@@ -98,6 +98,8 @@ public class CopManager implements BeanLifecycle {
 	private final List<BiConsumer<CopNpc, Player>>             copAttackedHooks = new CopyOnWriteArrayList<>();
 	/** Beat-cop resolvers, asked in order after the group scan; see {@link #addCopResolver}. */
 	private final List<Function<Entity, @Nullable CopNpc>>     copResolvers     = new CopyOnWriteArrayList<>();
+	/** The crime spot of the late report landing for a player right now, else null (0.21.2, T-543); see setter. */
+	private volatile @Nullable Function<UUID, @Nullable Location> reportedScene;
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
 	                  CopLoader copLoader, NpcMarkManager markManager,
@@ -159,8 +161,14 @@ public class CopManager implements BeanLifecycle {
 		// a crime-scene tip counts as fresh as a sighting here: a repeated start right after one stays quiet
 		boolean  fresh    = group.getSquad().hasFreshSighting() ||
 		                    group.tippedOffWithin(now, NpcSquad.SIGHTING_GRACE_MS);
+		// 0.21.2 (T-543): a late report names and tips the crime spot, never where he stands by now (R4)
+		Function<UUID, @Nullable Location> sceneOf = reportedScene;
+		Location                           scene   = sceneOf == null ? null : sceneOf.apply(playerId);
 		if (existing == null || !fresh) {
-			copRadio.dispatch(group, player, "Dispatch_Wanted", wanted.getLevel(), tierNameFor(wanted.getLevel()));
+			if (scene != null)
+				copRadio.dispatchAt(group, scene, player, "Dispatch_Wanted", wanted.getLevel(),
+				                    tierNameFor(wanted.getLevel()), Map.of());
+			else copRadio.dispatch(group, player, "Dispatch_Wanted", wanted.getLevel(), tierNameFor(wanted.getLevel()));
 		}
 		DispatchSettings dispatch = dispatchSettings();
 		if (cause == WantedCause.RESTORE && dispatch.enabled()) {
@@ -170,7 +178,7 @@ public class CopManager implements BeanLifecycle {
 		} else {
 			// 0.21.1 (R4): the crime scene is a tip, no cop saw him there - the squad searches the spot instead of
 			// chasing his live position; the tip-off stamp holds the evasion clock as the old sighting did
-			group.getSquad().reportTip(player.getLocation());
+			group.getSquad().reportTip(scene != null ? scene : player.getLocation());
 			group.markTipOff(now);
 		}
 
@@ -186,6 +194,14 @@ public class CopManager implements BeanLifecycle {
 
 		startSpawnTask(playerId, wanted);
 		startAITask(playerId);
+	}
+
+	/**
+	 * Where a late report (a cop's, a 911 call, a deferred one) puts the crime it lands: the wanted start it causes says
+	 * Dispatch_Wanted about that spot and tips the squad there, not where the player stands by then (0.21.2, T-543, R4).
+	 */
+	public void setReportedScene(@Nullable Function<UUID, @Nullable Location> reportedScene) {
+		this.reportedScene = reportedScene;
 	}
 
 	/**
