@@ -973,6 +973,21 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 T-571: an old/custom Priority list still holds Officer_Report and the five silent-officer keys")
+	void customPriorityList_stillHoldsThe0212DispatchLines() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Radio:
+				      Priority:
+				         - "Contact"
+				""" + TIER_BLOCK);
+
+		for (String key : List.of("Officer_Report", "Radio_Check", "Officer_Missing", "Scene_Found", "Scene_Suspect",
+		                          "Scene_Clear"))
+			assertTrue(provider.getRadioSettings().isPriority(key), key);
+	}
+
+	@Test
 	@DisplayName("Handoff and Post_Up are always priority (once-per-chase lines): code default, bundled list, and an old/custom Priority list (T26)")
 	void handoffAndPostUp_alwaysPriority() throws IOException {
 		String yaml;

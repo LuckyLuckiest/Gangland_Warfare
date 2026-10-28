@@ -441,6 +441,30 @@ class EvasionClockTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 T-586: the search with no cop standing tells him once per episode (Hud.No_Cop_Search); a cop standing never")
+	void noCopSearch_toldOncePerEpisode() {
+		List<Player> told = new java.util.ArrayList<>();
+		clock.setNoCopSearch(told::add);
+		unseenMs = 10_000;
+		tickSeconds(3);
+		assertTrue(told.isEmpty(), "a cop stands: no line");
+
+		hunters.clear();
+		tickSeconds(5);
+		assertEquals(List.of(player), told);
+
+		hunters.add(cop(CopState.PURSUING));
+		tickSeconds(2);
+		hunters.clear();
+		tickSeconds(2);
+		assertEquals(1, told.size(), "once per episode");
+
+		clock.clear(player); // the episode ended
+		tickSeconds(1);
+		assertEquals(2, told.size(), "a new episode tells him again");
+	}
+
+	@Test
 	@DisplayName("T-537 (B4): while a group exists the clock owns the decay, cops or none; without a group the old timer does")
 	void handlesDecay_trueWhileGroupExists() {
 		hunters.clear();

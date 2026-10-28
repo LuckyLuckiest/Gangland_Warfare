@@ -82,8 +82,9 @@ public class WantedHudListener implements Listener {
 	public void onStart(WantedStartEvent event) {
 		// A new wanted start is a new episode: the post-escape search, if any, is over (0.16.1 T-187)
 		search.end(event.getPlayer().getUniqueId());
-		hud.show(event.getPlayer(), event.getWantedLevel(),
-		         Wanted.buildStars(event.getWantedLevel(), event.getWanted().getMaxLevel()));
+		// a start inside a multi-star replay shows the level the commit ends at (0.21.2 R2, T-583)
+		int level = Math.max(event.getWantedLevel(), ledger.raisingTo(event.getPlayer().getUniqueId()));
+		hud.show(event.getPlayer(), level, Wanted.buildStars(level, event.getWanted().getMaxLevel()));
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -92,6 +93,9 @@ public class WantedHudListener implements Listener {
 		int    newLevel = event.getNewLevel();
 		String stars    = Wanted.buildStars(newLevel, event.getWanted().getMaxLevel());
 
+		// 0.21.2 R2 (T-583): one commit crossing two thresholds steps one star at a time; only its last step is told
+		// ponytail: a later step cancelled by another listener leaves the raise untold; a post-replay hook if one does
+		if (newLevel > event.getOldLevel() && newLevel < ledger.raisingTo(player.getUniqueId())) return;
 		if (newLevel > event.getOldLevel()) {
 			String crime = crimeName(player, event);
 			// the witness is named on the card (chat) only; %cause% keeps the subtitle short (R1, 0.21.1 Q7)

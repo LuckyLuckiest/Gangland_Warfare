@@ -372,6 +372,22 @@ class HeatLedgerTest {
 		assertNull(mine.get(mine.size() - 1), "a plain commit is no late report: he is placed where he stands");
 	}
 
+	@Test
+	@DisplayName("0.21.2 T-583: while one commit replays the star trigger every step reads the level it ends at; 0 after")
+	void twoStarCommit_everyStepReadsTheFinalLevel() {
+		List<Integer> seen = new java.util.ArrayList<>();
+		ledger.setStarTrigger(p -> {
+			seen.add(ledger.raisingTo(playerId));
+			wanted.setLevel(wanted.getLevel() + 1);
+		});
+
+		ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, location, true, 2));
+
+		assertEquals(2, wanted.getLevel());
+		assertEquals(List.of(2, 2), seen);
+		assertEquals(0, ledger.raisingTo(playerId), "cleared after the replay");
+	}
+
 	// ── 0.21.2 S3: who saw it (PLAN.md section 3) ───────────────────────────────
 
 	/** Gates the three crimes of the section 3 table, as the plan's bundled Witnesses.Crimes will (S4). */

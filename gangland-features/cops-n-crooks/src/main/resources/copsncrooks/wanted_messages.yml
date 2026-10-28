@@ -24,6 +24,8 @@ Hud:
       Bounty: "&6&lBOUNTY &e%money_symbol%%amount% &7· &cCops still looking"
       # The bar after an escape with no bounty on you
       Bounty_None: "&7Cops still looking"
+   # 0.21.2: said in chat once per chase when the search runs with every cop dead or walking home; '' turns it off
+   No_Cop_Search: "&7No units on you - leave the area"
    # The lines said in chat when the post-escape search starts or ends (Wanted.Post_Escape)
    Announce:
       # The escape with a bounty on you; %money_symbol% and %amount% are the bounty

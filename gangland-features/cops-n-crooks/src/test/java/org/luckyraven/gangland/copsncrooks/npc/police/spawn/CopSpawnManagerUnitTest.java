@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -237,6 +238,18 @@ class CopSpawnManagerUnitTest {
 		assertNotNull(cop);
 		verify(factory, never()).createCop(eq(spawner), anyInt(), anyBoolean(), any());
 		assertTrue(angle(new Vector(0, 0, 1), ringSpot()) >= 60.0, "outside his view cone");
+	}
+
+	@Test
+	@DisplayName("0.21.2 R2 (R6, T-587): a spot is watched while a player within max(24, Visibility_Check_Distance) looks at it with a clear line")
+	void watched_spotInHisViewConeWithAClearLine() {
+		blocked = dir -> false;
+		assertTrue(spawnManager.watched(new Location(world, 0.5, GROUND_Y, 20.5)), "ahead, 20 blocks, clear");
+		assertFalse(spawnManager.watched(new Location(world, 0.5, GROUND_Y, -20.5)), "behind him");
+		assertFalse(spawnManager.watched(new Location(world, 0.5, GROUND_Y, 60.5)), "ahead, past 48 blocks");
+
+		blocked = dir -> true;
+		assertFalse(spawnManager.watched(new Location(world, 0.5, GROUND_Y, 20.5)), "ahead, behind a wall");
 	}
 
 	@Test

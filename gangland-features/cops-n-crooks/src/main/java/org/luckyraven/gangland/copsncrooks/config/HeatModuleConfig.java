@@ -50,6 +50,8 @@ public class HeatModuleConfig {
 		                                   System::currentTimeMillis);
 		// 0.21.2 (T-543): a wanted start a late report causes names and tips the crime spot, not the live position
 		copManager.setReportedScene(ledger::reportedScene);
+		// 0.21.2 R2 (T-583): a start inside a multi-star replay says Dispatch_Wanted at the level the commit ends at
+		copManager.setRaisingTo(ledger::raisingTo);
 		return ledger;
 	}
 

@@ -111,6 +111,9 @@ public final class EvasionClock implements WantedDecayPolicy {
 	private final Set<UUID>           autoFailed = ConcurrentHashMap.newKeySet();
 	/** Players whose clock is holding for units still on their way, so the debug line is logged once per hold. */
 	private final Set<UUID>           holding    = ConcurrentHashMap.newKeySet();
+	/** Players told this episode that no cop is on them ({@link #setNoCopSearch}); forgotten in {@link #clear}. */
+	private final Set<UUID>           noCopTold  = ConcurrentHashMap.newKeySet();
+	private volatile Consumer<Player> noCopSearch = player -> { };
 
 	public EvasionClock(ChaseConfigLoader config, CopManager copManager, DetainmentService detainment,
 	                    WantedStars stars, UserManager<Player> users, HeatLedger ledger, ChaseArcs arcs,
@@ -163,6 +166,7 @@ public final class EvasionClock implements WantedDecayPolicy {
 	 */
 	public void clear(Player player) {
 		holding.remove(player.getUniqueId());
+		noCopTold.remove(player.getUniqueId());
 		Track t = tracks.remove(player.getUniqueId());
 		if (t == null) return;
 		if (t.state == EvasionState.SEEN) arcs.lost(player.getUniqueId());
@@ -170,6 +174,14 @@ public final class EvasionClock implements WantedDecayPolicy {
 		User<Player> user  = users.getUser(player);
 		int          level = user == null ? 0 : user.getWanted().getLevel();
 		callEvent.accept(new WantedEvasionStateEvent(player, EvasionState.OFF, level, 0, null, 0));
+	}
+
+	/**
+	 * Tells a player the search runs with no cop standing ({@code Hud.No_Cop_Search}, 0.21.2 R2, T-586): once per
+	 * episode, the first run the clock searches him with every cop dead or walking home.
+	 */
+	public void setNoCopSearch(Consumer<Player> noCopSearch) {
+		this.noCopSearch = noCopSearch;
 	}
 
 	/** A long jump by command, plugin or portal: this spell can no longer be a clean break. */
@@ -242,6 +254,8 @@ public final class EvasionClock implements WantedDecayPolicy {
 			track.lastTick = now;
 			return;
 		}
+		// past every hold with no cop standing: the search runs on nobody's eyes (T-586)
+		if (!standing && noCopTold.add(id)) noCopSearch.accept(player);
 
 		// A new search starts at the last sighting; one that follows a drop keeps its centre.
 		if (track == null || track.state == EvasionState.SEEN) {

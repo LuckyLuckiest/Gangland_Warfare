@@ -90,6 +90,8 @@ public class PatrolBehavior implements CopBehavior {
 		if (cop.getNpc().getNavigator().isNavigating()) return;
 
 		long now  = services.clock().getAsLong();
+		// 0.21.2 R2 (T-579): a responder holds a silent officer's last check-in until the scene's time is up
+		if (now < cop.getInvestigateUntil()) return;
 		Beat beat = beats.computeIfAbsent(cop, key -> new Beat());
 
 		Entity body = cop.getEntity();

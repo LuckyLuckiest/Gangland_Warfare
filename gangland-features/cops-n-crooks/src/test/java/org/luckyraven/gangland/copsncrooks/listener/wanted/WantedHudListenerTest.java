@@ -239,6 +239,24 @@ class WantedHudListenerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 T-583: one commit whose heat crosses two thresholds sends one subtitle, one cause card and one siren, at the final level")
+	void oneCommitRaisingTwoStars_sendsOneCauseCard() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		when(ledger.raisingTo(player.getUniqueId())).thenReturn(2);
+
+		listener.onLevelChange(change(0, 1, WantedCause.CRIME));
+		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+
+		verify(player).sendTitle(ChatColor.RESET.toString(), "★★☆☆☆", 5, 20, 5);
+		verify(player, never()).sendTitle(anyString(), eq("★☆☆☆☆"), anyInt(), anyInt(), anyInt());
+		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
+		verify(player).sendMessage(chat.capture());
+		assertEquals("Assault on an officer: Sergeant inbound, they still want you in cuffs",
+		             ChatColor.stripColor(chat.getValue()));
+		assertEquals(1, playSoundCalls());
+	}
+
+	@Test
 	@DisplayName("a gain subtitle that still carries %card% shows it there and does not repeat it in chat")
 	void raise_subtitleWithCard_doesNotRepeatTheCardInChat() {
 		TitleCue gain = new TitleCue(true, "", "%stars% %card%", 5, 20, 5);

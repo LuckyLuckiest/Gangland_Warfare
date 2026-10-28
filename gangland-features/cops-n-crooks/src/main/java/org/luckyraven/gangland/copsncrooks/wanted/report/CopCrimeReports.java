@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.wanted.report;
 
 import lombok.CustomLog;
 import net.citizensnpcs.api.npc.NPC;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
@@ -133,7 +134,7 @@ public final class CopCrimeReports implements BeanLifecycle {
 
 	/**
 	 * A cop killed where nobody saw it (PLAN.md 2.2): his radio name, group and station as they were at his death, his
-	 * last check-in, and whether his group was hunting the killer.
+	 * last check-in, whether his group was hunting the killer, and whether he held one of its slots then (T-580).
 	 */
 	private static final class Silence {
 
@@ -147,10 +148,11 @@ public final class CopCrimeReports implements BeanLifecycle {
 		private final @Nullable CopRole  role;
 		private final boolean            hunting;
 		private final Location           diedAt;
+		private final boolean            heldSlot;
 		private       boolean            radioChecked;
 
 		private Silence(CopNpc cop, String unit, @Nullable CopGroup group, OptionalInt station, Player killer,
-		                Location lastReport, long lastReportAt, Location diedAt) {
+		                Location lastReport, long lastReportAt, Location diedAt, boolean heldSlot) {
 			this.cop          = cop;
 			this.unit         = unit;
 			this.group        = group;
@@ -161,6 +163,7 @@ public final class CopCrimeReports implements BeanLifecycle {
 			this.role         = cop.getRole();
 			this.hunting      = group != null && killer.getUniqueId().equals(group.getTargetPlayerId());
 			this.diedAt       = diedAt;
+			this.heldSlot     = heldSlot;
 		}
 	}
 
@@ -377,19 +380,35 @@ public final class CopCrimeReports implements BeanLifecycle {
 			lastAt = now;
 		}
 		Silence silence = new Silence(cop, copRadio.memberName(cop), cop.getGroup(), patrol.stationOf(cop), killer,
-		                              last.clone(), lastAt, diedAt.clone());
+		                              last.clone(), lastAt, diedAt.clone(), heldSlot(cop, killer));
 		silences.add(silence);
 		logCheckIn("silent", silence, now, "");
 		return true;
 	}
 
 	/**
+	 * Whether {@code cop} held one of his group's slots when he died: the spawn task's count (T-580), so not a cop the
+	 * group sent home (a star drop, a backup run out) nor a walker stranded past the leash. Read at the death, while
+	 * his body still stands where he fell.
+	 */
+	private boolean heldSlot(CopNpc cop, Player killer) {
+		CopGroup group = cop.getGroup();
+		if (group == null || group.isSentHome(cop)) return false;
+
+		UUID   targetId = group.getTargetPlayerId();
+		Player target   = killer.getUniqueId().equals(targetId) ? killer : Bukkit.getPlayer(targetId);
+		return target == null || !copManager.isStranded(cop, target);
+	}
+
+	/**
 	 * The roles {@code group} still holds for its cops killed unseen: their slots stay filled until dispatch notices
-	 * (Officer_Missing, a 911 call), so no refill appears for a death nobody knows of (T-545). Never counted as cops
-	 * by a release or an episode trim.
+	 * (Officer_Missing, a 911 call), so no refill appears for a death nobody knows of (T-545). Only a cop who held a
+	 * slot at his death holds one now (T-580); a held cop with no role is a {@code null} entry, still a slot. Never
+	 * counted as cops by a release or an episode trim.
 	 */
 	public List<CopRole> silentRoles(CopGroup group) {
-		return silences.stream().filter(silence -> silence.group == group).map(silence -> silence.role).toList();
+		return silences.stream().filter(silence -> silence.group == group && silence.heldSlot)
+		               .map(silence -> silence.role).toList();
 	}
 
 	/** Whether a beat cop of station {@code stationId} is a silence dispatch has not noticed: no replacement yet. */
@@ -635,7 +654,8 @@ public final class CopCrimeReports implements BeanLifecycle {
 	 * The city learns of the death (Officer_Missing, a 911 call): the CopDeathEvent his silence held back fires; his
 	 * group, still hunting the same suspect, records the casualty and requests backup (its cold-trail hold released when
 	 * it hunts the killer, whose units then spawn on the side of {@code spot} with no hand-off lead past it, the squad
-	 * tipped there, R4); a beat cop's station sends its held replacement and a beat mate to {@code spot}. A cop with
+	 * tipped there, R4); a beat cop's station sends a beat mate to {@code spot} now and its held replacement once
+	 * {@code PatrolManager} may spawn it (R6, T-587), both holding it for {@code Scene_Seconds} (T-579). A cop with
 	 * neither (his group torn down since) sends nobody: the scene is all there is.
 	 */
 	private void discover(Silence silence, Location spot) {
@@ -659,7 +679,7 @@ public final class CopCrimeReports implements BeanLifecycle {
 			if (!group.getSquad().hasFreshSighting()) group.getSquad().reportTip(spot);
 			group.markTipOff(now);
 		} else if (silence.station.isPresent()) {
-			patrol.respondTo(silence.station.getAsInt(), spot);
+			patrol.respondTo(silence.station.getAsInt(), spot, checkIn().sceneSeconds() * 1000L);
 		}
 	}
 

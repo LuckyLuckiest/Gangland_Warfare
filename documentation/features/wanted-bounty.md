@@ -78,8 +78,9 @@ his own assault), the crime is loud (the same rule as civilians below; he turns 
 - **Cutting it.** Kill the reporter and the next living witness takes over with the same deadline. Kill them all first
   and `The radio call never went out.`: nothing counts.
 - **One crime, one reporter.** A cop report means no civilian is asked. A cop kill of a cop whose assault report is
-  still pending replaces it (a civilian's 911 call about the kill closes it too; a kill nobody saw leaves the assault
-  report to another cop who saw it). Death, a cuff or an arrest drops your pending and deferred reports; so does being
+  still pending replaces it when a cop saw the kill (it keeps the assault's deadline). No cop saw the kill: when
+  another living cop saw the assault, the assault report stands and the civilians are not asked; when only the dying
+  cop saw it, the assault report closes and the civilians report the kill (a 911 call), or nobody does. Death, a cuff or an arrest drops your pending and deferred reports; so does being
   restrained when one would land, at its deadline or at your next join. Going down does not.
 - **Logging out forgives nothing.** A report (a cop's, or a 911 call still running) whose witness is alive when you log
   out lands when you next join, within `Witnesses.Defer_Minutes` (10): `A report on you came in while you were away.`
@@ -176,7 +177,8 @@ Keys and messages are listed in [migration-0.20.0.md](../migration-0.20.0.md).
     runs on at the squad's last-known spot, but inside the zone it runs at `No_Cop_Inside_Speed` (0.25, four times
     slower): standing on the bodies does not pay, leaving the zone does. Only the first units of a chase, while they are
     on their way, a hand-off in progress, and a cop killed unseen whose silence dispatch has not noticed yet (up to
-    `Check_In.Silent_Seconds`) pause it.
+    `Check_In.Silent_Seconds`) pause it. The first time in a chase it runs with no cop standing you are told in chat:
+    `No units on you - leave the area` (`Hud.No_Cop_Search`, `""` turns it off).
   - **AUTO mode (0.15.2+).** With `Drop_Mode: AUTO`, the cops judge how the chase went. A rampage loses one star at a time; a small chase loses them all at once. A long quiet chase with no new crime for 90+ seconds also loses them all. Leaving the search zone loses half your stars (rounded up). The next timer gets faster after each drop, and known repeat offenders stay locked to one star. The server learns how long chases typically last and who keeps getting away, so timers adjust over time. Cold starts use guessed numbers; warm servers tune based on play. An upgraded server from 0.15.1 keeps its old `wanted.yml` (no `Auto` block) and reads AUTO defaults, or an admin can copy the new `Auto` block from `plugins/Gangland_Warfare/modules/cops-n-crooks-<version>.jar`.
 - **The fixed decay timer** still runs when no cop is hunting you, and as the safety net otherwise: it starts at `Time`
   (default 120 seconds) and scales up with each star: `time x Amount ^ stars`. While cops hunt, evasion owns decay and the
@@ -226,7 +228,8 @@ A boss bar with the stars (red when a cop sees you, yellow with a countdown whil
 when a star is lost), a star card (the crime, the tier coming and whether it cuffs or shoots; or why a star dropped),
 a title and, when a star is gained, a siren, a particle ring marking the search zone, and a compass pointing the way
 out of the zone (it never shows where the cops are). Switch each off under `Wanted.Hud` (`Boss_Bar`, `Star_Card`, `Title`, `Siren`, `Zone_Ring`, `Compass`);
-the text is in `copsncrooks/wanted_messages.yml`.
+the text is in `copsncrooks/wanted_messages.yml`. One crime that raises two stars at once is announced once, at the
+level it ends at: one subtitle, one card naming the tier of that level, one siren (0.21.2).
 
 The title is set per event under `Wanted.Hud.Title` (`Gain`, `Lost`, `Escaped`), each with its own `Title`, `Subtitle`
 and `Fade_In` / `Stay` / `Fade_Out` in ticks. The shipped default is a small subtitle (the star row and the star card) with no big

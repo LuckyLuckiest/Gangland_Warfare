@@ -28,6 +28,13 @@ Upgrade from 0.21.1. Config files are never rewritten: edit them by hand.
   sends backup toward that spot. When his squad was hunting you the kill counts then; otherwise a scene opens there
   for 60 s, and a cop who spots you near it counts the kill. A 911 call that lands first closes the silence, and
   the kill counts once whichever report lands first (T-545, T-546). Keys: `cops.yml` `Cops.Check_In`.
+  - A dead beat cop's station sends a beat mate to that spot at `Officer_Missing`; its replacement follows once
+    `Respawn_Seconds` (30) have passed, and both hold the spot for `Scene_Seconds` (60) (T-579, T-587). Only a cop who
+    held a slot of the squad holds it while silent, and a silent Commander still leads (T-580, T-581).
+- **One crime, one star announcement.** A crime that raises two stars at once shows one subtitle, one chat card and
+  one siren, at the level it ends at, and dispatch names that level (T-583).
+- **Beat cops never appear in view.** A station's beat cop spawns only while no player has the station spot in view
+  (owner ruling R6, T-587).
 - **One cop kill is one crime**, booked when the cop really dies, at the body: a lethal blow no longer also books
   `Assault_Cop` (T-535), the hit cop's own sighting counts (T-536), and a hit the Defender's shield absorbs is never a
   kill (T-544). `Kill_Civilian` is committed where the civilian died (T-550).
@@ -38,7 +45,8 @@ Upgrade from 0.21.1. Config files are never rewritten: edit them by hand.
 
 - **Killing every cop never clears a star** (T-537). While the cops hunt you, only an escape, an arrest, a death or a
   command lowers your stars. With no cop standing the search runs at the last-known spot at `No_Cop_Inside_Speed`
-  (0.25) inside the zone: leaving the zone pays, standing on the bodies does not.
+  (0.25) inside the zone: leaving the zone pays, standing on the bodies does not. The first time it does, the chat says
+  `No units on you - leave the area` (`Hud.No_Cop_Search`, T-586).
 - `Stand_Down` is heard after a wipe (T-542). Late reports name and tip the crime spot (T-543).
 
 ## Known limits

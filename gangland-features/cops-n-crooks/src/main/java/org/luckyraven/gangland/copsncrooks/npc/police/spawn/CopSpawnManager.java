@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.spawn;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import lombok.CustomLog;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,6 +22,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolServices;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopSightlines;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.station.Station;
@@ -373,6 +375,23 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		Vector toward = spot.toVector().add(new Vector(0, 1.6, 0)).subtract(eye.toVector());
 		if (toward.lengthSquared() == 0) return true;
 		return eye.getDirection().angle(toward) < VIEW_HALF_ANGLE && !isOutOfSight(spot, target);
+	}
+
+	/**
+	 * Owner ruling R6 for a spot with no suspect (a beat station, 0.21.2 R2, T-587): a real player within
+	 * {@code max(24, Visibility_Check_Distance)} has {@code spot} {@link #inViewOf in his view}, so a cop spawned there
+	 * would appear before his eyes. The spawn waits for the first run nobody watches.
+	 */
+	public boolean watched(Location spot) {
+		World world = spot.getWorld();
+		if (world == null) return false;
+
+		double max = Math.max(CopSightlines.WATCH_MIN_BLOCKS, configProvider.getVisibilityCheckDistance());
+		for (Player player : world.getPlayers()) {
+			if (player.hasMetadata("NPC") || player.getLocation().distanceSquared(spot) > max * max) continue;
+			if (inViewOf(player, spot)) return true;
+		}
+		return false;
 	}
 
 	private static double horizontalSq(Location a, Location b) {

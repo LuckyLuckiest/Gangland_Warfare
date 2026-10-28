@@ -1716,4 +1716,40 @@ class CopManagerSquadTest {
 		manager.onWantedStart(player, one);
 		assertEquals(0, group.getPendingRelease(), "the new episode trims against engaged cops only");
 	}
+
+	@Test
+	@DisplayName("0.21.2 T-581: a Commander killed unseen still leads: the sent-home Commander keeps walking home")
+	void silentCommander_stillLeads_noSentHomeCommanderCalledBack() {
+		oneStarWithoutACommander();
+		when(fx.provider.getSquadComposition(3)).thenReturn(List.of(COMMANDER, COMMANDER, POINTMAN, ASSAULT));
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.spawnTick(playerId, one);
+		CopNpc leading = group.getCops().stream().filter(c -> c.getRole() == COMMANDER)
+		                      .filter(c -> c.getCurrentState() == CopState.PURSUING).findFirst().orElseThrow();
+		CopNpc walking = group.getCops().stream().filter(c -> c.getRole() == COMMANDER)
+		                      .filter(c -> c.getCurrentState() == CopState.RETURNING).findFirst().orElseThrow();
+		assertTrue(group.isSentHome(walking));
+		when(leading.isMarkedForRemoval()).thenReturn(true);
+		manager.setSilentRoles(g -> g == group ? List.of(COMMANDER) : List.of());
+
+		manager.spawnTick(playerId, one);
+
+		assertEquals(CopState.RETURNING, walking.getCurrentState(), "nobody knows the Commander died");
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-583: a start inside a two-star replay says Dispatch_Wanted at the level the commit ends at")
+	void wantedStart_insideATwoStarReplay_dispatchesTheFinalLevel() {
+		Wanted one = CopManagerFixture.wanted(1);
+		manager.setRaisingTo(id -> id.equals(playerId) ? 2 : 0);
+
+		manager.onWantedStart(player, one, WantedCause.CRIME);
+
+		verify(fx.radio).dispatch(manager.groupFor(playerId), player, "Dispatch_Wanted", 2, "SWAT");
+		verify(fx.radio, never()).dispatch(any(), any(), eq("Dispatch_Wanted"), eq(1), anyString());
+	}
 }

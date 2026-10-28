@@ -57,6 +57,9 @@ public final class HeatLedger {
 	private @Nullable Location        reportingAt;
 	/** The cop hit by the Assault_Cop / Kill_Cop being committed right now; main thread only (0.21.2). */
 	private @Nullable UUID            booking;
+	/** The player whose star replay is running and the level it ends at ({@link #raisingTo}); main thread only. */
+	private @Nullable UUID            raising;
+	private           int             raisingTarget;
 
 	public HeatLedger(ChaseConfigLoader config, UserManager<Player> users, CrimeService crimes,
 	                  Predicate<Player> copSight, Predicate<Location> contestedTurf,
@@ -116,6 +119,15 @@ public final class HeatLedger {
 		return booking;
 	}
 
+	/**
+	 * The level the star replay running for {@code playerId} right now ends at, else 0 (0.21.2 R2, T-583): one commit
+	 * whose heat crosses two thresholds fires one level change per star, and the HUD and the wanted start read this to
+	 * announce it once, at the final level.
+	 */
+	public int raisingTo(UUID playerId) {
+		return playerId.equals(raising) ? raisingTarget : 0;
+	}
+
 	/** @return the heat added, 0 when the crime is ignored */
 	public double record(CrimeCommittedEvent event) {
 		HeatSettings heat = config.get().heat();
@@ -153,11 +165,20 @@ public final class HeatLedger {
 		                                 event.getWitnesses()));
 
 		int target = heat.starsFor(chase.heat, maxLevel);
-		Consumer<Player> trigger = starTrigger;
-		for (int i = 0; trigger != null && i < maxLevel && wanted.getLevel() < target; i++) {
-			int before = wanted.getLevel();
-			trigger.accept(player);
-			if (wanted.getLevel() == before) break;
+		Consumer<Player> trigger     = starTrigger;
+		UUID             outer       = raising;
+		int              outerTarget = raisingTarget;
+		raising       = player.getUniqueId();
+		raisingTarget = target;
+		try {
+			for (int i = 0; trigger != null && i < maxLevel && wanted.getLevel() < target; i++) {
+				int before = wanted.getLevel();
+				trigger.accept(player);
+				if (wanted.getLevel() == before) break;
+			}
+		} finally {
+			raising       = outer;
+			raisingTarget = outerTarget;
 		}
 
 		return added;

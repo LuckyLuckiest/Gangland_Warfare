@@ -199,7 +199,10 @@ blocks). Each line plays a short click sound.
 - **Casualties:** "Officer down!" when a cop dies, or a leader change when the leader dies. Since 0.21.2 a cop killed
   where no cop saw the killer or the body says nothing: dispatch asks for him (`Radio_Check`) and reports him missing
   (`Officer_Missing`) on a timer from his last radio check-in, then sends backup to that spot. See Silent officers below.
-- **Dispatch:** a new wanted level, a tier escalation, and the stand-down when the player is cleared. A landed 911 call
+- **Dispatch:** a new wanted level, a tier escalation, and the stand-down when the player is cleared. A cop who saw a
+  crime radios it in (`Officer_Report`, 0.21.2: "%reporter% reports %crime% near %place%. All units respond.", spoken by
+  dispatch about the crime spot, never where the player is by then, after `Dispatch_Wanted` when the report raises his
+  first star; a report on a player no squad hunts that raises no star says nothing). A landed 911 call
   ("[DISPATCH] 911 caller reports Car theft near the Docks.", `Caller_911`, the crime by its display name) is a dispatch
   line since 0.21.1, so it plays even when the call has just made the player wanted and no cop is out yet. The
   caller's own lines are in [wanted-bounty.md](./wanted-bounty.md#witnesses-and-911-calls-0200).
@@ -245,14 +248,18 @@ second; any other cop (a beat cop, a squad cop searching) every `Check_In.Check_
 player where no cop saw the killer and no cop saw the body fall becomes a **silent unit**:
 
 1. He leaves his squads without `Man_Down`, a casualty or a backup request. His role keeps its slot in the squad, and a
-   beat cop's station holds his replacement, so no refill appears for a death nobody knows of. The chase's evasion
-   clock holds while he is the only cop "on" the suspect.
+   beat cop's station holds his replacement, so no refill appears for a death nobody knows of. Only a cop who held a
+   slot holds one: a walker the squad sent home, or one stranded past `Pursuit.Max_Distance`, holds none. A silent
+   Commander still leads, so a Commander the squad sent home keeps walking. The chase's evasion clock holds while he
+   is the only cop "on" the suspect.
 2. `Check_In_Seconds` after his last check-in dispatch says `Radio_Check`.
 3. `Silent_Seconds` (20) after it, `Officer_Missing` names his last check-in. The squad records the casualty and
    requests backup; when it was hunting the killer its cold-trail hold is released, the new units spawn on the
-   suspect's side of that spot (no hand-off lead past it) and the squad is tipped there. A beat cop's station spawns
-   the held replacement and sends it and the nearest beat cop of the station to walk to the spot. A cop with neither
-   (his squad gone since) sends nobody.
+   suspect's side of that spot (no hand-off lead past it) and the squad is tipped there. A beat cop's station sends
+   the nearest beat cop of the station to walk to the spot; the held replacement follows once `Respawn_Seconds` (30)
+   have passed since the death, on a second no player has the station spot in view (R6), never at `Officer_Missing`
+   itself. Both hold the spot (no wander, no walk back to the beat) until `Scene_Seconds` (60) after `Officer_Missing`;
+   a replacement that spawns later stays on its beat. A cop with neither (his squad gone since) sends nobody.
 4. When his squad was hunting the killer, and is still his squad, the kill counts now (`Pursuit_Presumed`). Otherwise
    (his squad gone since counts as none) a scene opens at the
    spot for `Scene_Seconds` (60): the first unit within 6 blocks says `Scene_Found`; a cop who sees the killer while he is
@@ -976,7 +983,9 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
   beat point. Beat cops despawn only when nobody is within `Despawn_Radius` (96 blocks) for `Despawn_After_Seconds`
   in a row; a player inside the radius keeps them.
   Tier comes from `Cops.Patrol.Tier` (1 = Officer). A station that loses a beat cop waits `Cops.Patrol.Respawn_Seconds`
-  (30) before a replacement walks out (0.21.1).
+  (30) before a replacement walks out (0.21.1). A beat cop never spawns at a station spot a player within
+  `max(24, Visibility_Check_Distance)` is looking at with a clear line (owner ruling R6, 0.21.2): it waits for the next
+  second nobody looks.
 - **Sighting a wanted player.** With `Cops.Patrol.Report_Wanted: true` a patrol cop who sees a wanted player reports
   that player's position to the squad already hunting them and opens no new call. The radio line for that report is
   `Patrol_Sighting`.

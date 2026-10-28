@@ -213,29 +213,98 @@ class PatrolManagerTest {
 		assertTrue(manager.stationOf(mock(CopNpc.class)).isEmpty());
 	}
 
+	/**
+	 * Flipped 0.21.2 R2 (T-587): the replacement no longer spawns at Officer_Missing (about 13 s after the kill, at the
+	 * station, in the killer's view): it waits out Respawn_Seconds from the loss, then walks to the report and holds it.
+	 */
 	@Test
-	@DisplayName("0.21.2 T-545: respondTo spawns the held replacement now and sends it and the nearest beat mate there")
-	void respondTo_spawnsReplacementNow_twoUnitsWalkToTheReport() {
+	@DisplayName("0.21.2 T-587: respondTo sends the beat mate now; the replacement waits out Respawn_Seconds, then walks there")
+	void respondTo_sendsTheMateNow_replacementWaitsOutRespawnSeconds() {
 		online.add(fx.player(5, 5));
 		manager.manage();
 		CopNpc survivor = spawned.get(1);
 		PatrolFixture.kill(spawned.get(0));
 		manager.manage();
+		long     lost   = fx.clock[0];
 		Location report = fx.at(20, 20);
+		fx.clock[0] += 13_000;
 
-		assertEquals(2, manager.respondTo(1, report));
+		assertEquals(2, manager.respondTo(1, report, 60_000L));
 
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(survivor).navigateTo(report);
+		verify(survivor).setInvestigateUntil(fx.clock[0] + 60_000L);
+		long until = fx.clock[0] + 60_000L;
+
+		fx.clock[0] = lost + 29_000;
+		manager.manage();
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+
+		fx.clock[0] = lost + 30_000;
+		manager.manage();
 		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
 		CopNpc replacement = spawned.get(2);
 		verify(replacement).navigateTo(report);
-		verify(survivor).navigateTo(report);
+		verify(replacement).setInvestigateUntil(until);
 		assertEquals(2, manager.beatCops().size());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-587 (R6): a replacement owed while a player has the station spot in view spawns on the first unwatched run")
+	void respondTo_watchedStation_spawnsOnTheFirstUnwatchedRun() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		Location report = fx.at(20, 20);
+		manager.respondTo(1, report, 60_000L);
+		boolean[] watched = {true};
+		when(spawner.watched(anchor)).thenAnswer(inv -> watched[0]);
+
+		fx.clock[0] += 40_000;
+		manager.manage();
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+
+		watched[0] = false;
+		fx.clock[0] += 1_000;
+		manager.manage();
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+		verify(spawned.get(2)).navigateTo(report);
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-587: a replacement spawned after the scene's hold ran out stays on its beat")
+	void respondTo_holdOver_replacementStaysOnItsBeat() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		Location report = fx.at(20, 20);
+		manager.respondTo(1, report, 20_000L);
+
+		fx.clock[0] += 30_000;
+		manager.manage();
+
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+		verify(spawned.get(2), never()).navigateTo(report);
+		verify(spawned.get(2), never()).setInvestigateUntil(anyLong());
+	}
+
+	@Test
+	@DisplayName("0.21.2 R2 (R6): no beat cop spawns at a station spot a player has in view")
+	void watchedStation_spawnsNobody() {
+		when(spawner.watched(anchor)).thenReturn(true);
+		online.add(fx.player(5, 5));
+
+		manager.manage();
+
+		verify(spawner, never()).spawnAtLocation(any(), anyInt());
 	}
 
 	@Test
 	@DisplayName("0.21.2 T-545: respondTo for a station no longer on the map sends nobody")
 	void respondTo_unknownStation_sendsNobody() {
-		assertEquals(0, manager.respondTo(99, fx.at(20, 20)));
+		assertEquals(0, manager.respondTo(99, fx.at(20, 20), 60_000L));
 
 		verify(spawner, never()).spawnAtLocation(any(), anyInt());
 	}
@@ -422,6 +491,7 @@ class PatrolManagerTest {
 		manager.manage();
 
 		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).watched(anchor); // 0.21.2 R2 (R6): each spawn asks first whether the spot is in view
 		verifyNoMoreInteractions(spawner);
 	}
 

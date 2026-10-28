@@ -189,6 +189,38 @@ class CopCrimeReportsSilenceTest {
 	// ── who goes silent (PLAN.md 2.2) ───────────────────────────────────────
 
 	@Test
+	@DisplayName("0.21.2 T-580: a walker his group sent home holds no slot when he is killed unseen; his death is still silent")
+	void unseenDeath_ofASentHomeWalker_holdsNoSlot() {
+		when(victim.getCurrentState()).thenReturn(CopState.RETURNING);
+		group.markSentHome(victim);
+
+		assertTrue(silent());
+
+		assertTrue(reports.silentRoles(group).isEmpty(), "he was no slot of the hunt");
+		assertTrue(debugContains("CHECKIN silent Vic"), debug::toString);
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-580: a stranded walker past the leash holds no slot when he is killed unseen")
+	void unseenDeath_ofAStrandedWalker_holdsNoSlot() {
+		when(copManager.isStranded(victim, killer)).thenReturn(true);
+
+		assertTrue(silent());
+
+		assertTrue(reports.silentRoles(group).isEmpty(), "the spawn task had already stopped counting him");
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-580: a cop with no role still holds his slot (the whole silence counts, not its role)")
+	void unseenDeath_roleless_stillHoldsASlot() {
+		when(victim.getRole()).thenReturn(null);
+
+		assertTrue(silent());
+
+		assertEquals(1, reports.silentRoles(group).size());
+	}
+
+	@Test
 	@DisplayName("nobody saw the killer or the body: the cop goes silent, his role still holds his group's slot")
 	void unseenDeath_recordsSilence_holdsRole() {
 		assertTrue(silent());
@@ -336,7 +368,8 @@ class CopCrimeReportsSilenceTest {
 		reports.tick();
 
 		assertFalse(reports.silentStation(7));
-		verify(patrol).respondTo(7, reportAt);
+		// 0.21.2 R2 (T-579): the responders hold the spot for the scene's Scene_Seconds (60)
+		verify(patrol).respondTo(7, reportAt, 60_000L);
 	}
 
 	@Test
@@ -349,7 +382,7 @@ class CopCrimeReportsSilenceTest {
 		advanceSeconds(18);
 		reports.tick();
 
-		verify(patrol, never()).respondTo(anyInt(), any());
+		verify(patrol, never()).respondTo(anyInt(), any(), anyLong());
 		assertEquals(1, reports.scenes(killerId));
 		assertTrue(debugContains("SCENE open Crook at=5,64,5"), debug::toString);
 		verify(crimes, never()).commit(any(), anyString(), any(), anyBoolean(), anyInt());

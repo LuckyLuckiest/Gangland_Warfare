@@ -47,10 +47,12 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	/**
 	 * The dispatch-origin lines and the once-per-chase Handoff / Post_Up lines that must never be swallowed by the player
-	 * gap (Ruling R43, T26): added in code so an older cops.yml Priority list is covered too.
+	 * gap (Ruling R43, T26): added in code so an older cops.yml Priority list is covered too. 0.21.2 (T-571): the cop
+	 * report said right after Dispatch_Wanted, and the silent officer's one-shot check-in and scene lines.
 	 */
 	static final Set<String> DISPATCH_PRIORITY = Set.of("Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up",
-	                                                    "Most_Wanted");
+	                                                    "Most_Wanted", "Officer_Report", "Radio_Check",
+	                                                    "Officer_Missing", "Scene_Found", "Scene_Suspect", "Scene_Clear");
 
 	/** One-shot breach and standoff lines: a server's Priority list must never silence them either. */
 	static final Set<String> ONE_SHOT_PRIORITY = Set.of("Stack_Up", "Breach", "Flashbang", "Negotiate",

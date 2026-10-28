@@ -28,6 +28,7 @@ public class WantedMessages extends LocalizedModuleYaml {
 		BAR_WAY("Hud.Bar.Way", "   &f%arrow% %distance%m"),
 		BAR_BOUNTY("Hud.Bar.Bounty", "&6&lBOUNTY &e%money_symbol%%amount% &7· &cCops still looking"),
 		BAR_BOUNTY_NONE("Hud.Bar.Bounty_None", "&7Cops still looking"),
+		HUD_NO_COP_SEARCH("Hud.No_Cop_Search", "&7No units on you - leave the area"),
 		ANNOUNCE_BOUNTY("Hud.Announce.Bounty", "&6&lBOUNTY &e%money_symbol%%amount% &7is on you, the cops are still looking"),
 		ANNOUNCE_NO_BOUNTY("Hud.Announce.No_Bounty", "&7The cops are still looking for you"),
 		ANNOUNCE_GAVE_UP("Hud.Announce.Gave_Up", "&7The cops gave up the search"),

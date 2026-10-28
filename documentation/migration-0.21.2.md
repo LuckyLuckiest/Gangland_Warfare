@@ -40,7 +40,9 @@ Wanted:
       Max_Extra_Witnesses: 3
 ```
 
-- Absent: 0.5 and 3. Set `Per_Extra_Witness: 0` to score every crime as 0.21.1 did whatever the head count.
+- Absent: 0.5 and 3. Set `Per_Extra_Witness: 0` (or `Max_Extra_Witnesses: 0`) to ignore the head count. That does
+  not score every crime as 0.21.1 did: a crime in `Wanted.Witnesses.Crimes` no longer gets the squad's x1.5 for having
+  you in sight (T-538), and a cop crime now lands through a cop's report (section 2).
 
 `copsncrooks/wanted_messages.yml`, under `Hud.Card` (absent = the English shown; `%count%` is how many saw it):
 
@@ -57,6 +59,14 @@ Hud:
   works (it simply names no count). Replace it to show the count.
 - `Reported`, (S4) `Seen` and (S5) `Missing` (a kill dispatch counted when a cop hunting you stopped answering) and
   `Scene` (a cop spotted you near the scene of a kill nobody saw) can appear.
+
+`copsncrooks/wanted_messages.yml`, under `Hud` (absent = the English shown; `""` turns it off):
+
+```yaml
+Hud:
+   # said in chat once per chase when the search runs with every cop dead or walking home
+   No_Cop_Search: "&7No units on you - leave the area"
+```
 
 ### 1.1 Cop eyewitness reports (stage S4)
 
@@ -89,17 +99,9 @@ Wanted:
 - Absent: `Defer_Minutes` 10; the whole `Cops` block as shown. A server with no `Witnesses` block at all gets the
   shipped five crimes, cop crimes included.
 
-`copsncrooks/cops.yml`, under `Cops.Radio`. **Add the priority line:** a file with its own `Priority` list does not get
-the code default, and without it the report can be dropped when another line was just heard.
-
-```yaml
-      Priority:
-         # ... your existing entries ...
-         - "Officer_Report"
-      Cooldown_Ticks:
-         # ... your existing entries ...
-         Officer_Report: 100
-```
+`copsncrooks/cops.yml`, under `Cops.Radio`: **no edit needed.** The code adds `Officer_Report` to the radio's
+priority lines even when the file has its own `Priority` list (as Ruling R43 does for `Most_Wanted`), so the report is
+never dropped because another line was just heard. Its cooldown is 100 ticks when `Cooldown_Ticks` does not name it.
 
 `copsncrooks/cop_radio_messages.yml` (and `_es`), under `Lines` (absent = the English shown; `%reporter%` is the cop,
 `%place%` the crime spot):
@@ -154,29 +156,11 @@ ledger on. **A deployed file without those lines keeps 0.21.1's radio:** a dead 
 | `Check_In.Pursuit_Presumed` | `true` |
 | `Check_In.Show_Timer` | `true` |
 
-`copsncrooks/cops.yml`, under `Cops.Radio`. **Add the five priority lines:** a file with its own `Priority` list does
-not get the code default, and without them `Radio_Check` or `Officer_Missing` can be dropped when another line was just
-heard. Their cooldown is 0 when absent (each is one announcement):
-
-```yaml
-      Priority:
-         # ... your existing entries, and Officer_Report from 1.1 ...
-         - "Radio_Check"
-         - "Officer_Missing"
-         - "Scene_Found"
-         - "Scene_Suspect"
-         - "Scene_Clear"
-      Cooldown_Ticks:
-         # ... your existing entries ...
-         Radio_Check: 0
-         Officer_Missing: 0
-         Scene_Found: 0
-         Scene_Suspect: 0
-         Scene_Clear: 0
-```
-
-All six 0.21.2 radio keys are therefore `Officer_Report` (1.1), `Radio_Check`, `Officer_Missing`, `Scene_Found`,
-`Scene_Suspect` and `Scene_Clear`.
+`copsncrooks/cops.yml`, under `Cops.Radio`: **no edit needed.** The code adds `Radio_Check`, `Officer_Missing`,
+`Scene_Found`, `Scene_Suspect` and `Scene_Clear` to the priority lines even when the file has its own `Priority` list
+(T-571), and their cooldown is 0 when `Cooldown_Ticks` does not name them (each is one announcement). All six 0.21.2
+radio keys are therefore `Officer_Report` (1.1), `Radio_Check`, `Officer_Missing`, `Scene_Found`, `Scene_Suspect` and
+`Scene_Clear`.
 
 `copsncrooks/cop_radio_messages.yml` (and `_es`), under `Lines` (absent = the English shown; `%unit%` is the silent
 cop, `%place%` his last check-in or the scene):
@@ -222,7 +206,8 @@ Witness:
   decay.
 - **The search runs with no cop standing.** With every cop dead or walking home, the clock no longer turns off. It
   searches him at the squad's last-known spot at `No_Cop_Inside_Speed` inside the zone (`Outside_Zone_Speed` outside).
-  At one star he needs 40 s inside the 40-block zone instead of 10 s.
+  At one star he needs 40 s inside the 40-block zone instead of 10 s. The first time in a chase it runs that way he is
+  told in chat: `No units on you - leave the area` (`Hud.No_Cop_Search`, T-586).
   - It still holds, keeping its progress, for the **first response**: units on their way, or the rejoin grace, before
     any cop of the chase has stood in the world (up to 10 s past their ETA), and for a **hand-off in progress** (0.21.1
     cause E).
@@ -230,6 +215,14 @@ Witness:
     the search runs through them at the slow inside speed.
 - **`Stand_Down` is heard after a wipe** (T-542). When a chase ends and no cop of the squad is left to say it, dispatch
   says it to the player. A squad that never put a cop on the ground still says nothing.
+
+- **One crime, one star announcement** (T-583). A crime whose heat crosses two star thresholds at once (common with
+  more witnesses, next bullet) used to announce each star: two subtitles, two chat cause cards (the first naming the
+  lower tier) and a `Dispatch_Wanted` naming the lower level. It now announces once, at the level it ends at, and the
+  squad is sized for that level from the start.
+- **Beat cops never appear in view** (owner ruling R6, R2). A station's beat cop, the first ones and every replacement,
+  spawns only on a second no player within `max(24, Visibility_Check_Distance)` has the station spot in front of him
+  with a clear line; otherwise it waits for the next second nobody looks.
 
 - **More witnesses, more heat** (T-540). A crime's heat is now scaled by how many saw it: each eyewitness past the
   first adds `Per_Extra_Witness` (0.5) to the multiplier, up to `Max_Extra_Witnesses` (3). A civilian's 911 call now
@@ -285,8 +278,16 @@ Witness:
   while he is all dispatch thinks is on you (`hold=silence`, bounded by `Silent_Seconds`). Dispatch says `Radio_Check`
   `Check_In_Seconds` after his last radio check-in and `Officer_Missing` `Silent_Seconds` after it, naming that spot.
   Then the casualty and the backup go out (the cold-trail hold released), the units spawn on your side of that spot and
-  search it, a beat cop's station spawns its replacement and sends it and a second beat cop there, and the death event
-  fires (the standoff casualty and the pursuit report's cops-down count it then, not at the death).
+  search it, a beat cop's station sends a second beat cop there, and the death event fires (the standoff casualty and
+  the pursuit report's cops-down count it then, not at the death). The station's held replacement follows once
+  `Patrol.Respawn_Seconds` (30) have passed since the death and on the first second no player has the station spot in
+  view (owner ruling R6, T-587), never at `Officer_Missing` itself. Both beat cops hold that spot for `Scene_Seconds`
+  (60) from `Officer_Missing` before they walk back to the beat (T-579); a replacement that spawns after that stays on
+  its beat.
+  - Only a cop who held a slot of the squad holds it while he is silent: a walker the squad sent home (a star drop, a
+    backup run out) or one stranded past `Pursuit.Max_Distance` holds none, so the squad refills and calls walkers back
+    for a death it saw as before (T-580). A silent Commander still leads: a Commander the squad sent home keeps walking
+    (T-581).
   - His squad was hunting you: the kill counts at `Officer_Missing`, x1.0 and one witness (150 heat from 0 stars,
     `Pursuit_Presumed`). Otherwise a **scene** opens there: a cop who sees you within `Scene_Radius` of it in
     `Scene_Seconds` counts the kill as seen by a cop (225 heat from 0 stars), else it goes cold with no stars.
@@ -315,6 +316,8 @@ Witness:
 - (S5) `SCENE open|found|seen|clear <player> at=x,y,z` (`SCENE close ... reason=911`); a scene sighting or a presumed
   kill lands as `REPORT land <player> crime=Kill_Cop reporter=SCENE|DISPATCH ...`.
 - (S5) `EVASION <player> hold=silence`: the clock waits for dispatch to notice a silent officer.
-- (S5) `PATROL station=<name> respond=<n> at=x,y,z`: a beat cop's station answers his Officer_Missing.
+- (S5) `PATROL station=<name> respond=<n> at=x,y,z`: a beat cop's station answers his Officer_Missing; `<n>` counts
+  the beat mate sent now and the replacement still owed (it spawns later, logging its own `PATROL station=<name>
+  cops=<n>`).
 - `EVASION <player> hold=enroute` now means the first response only; `hold=handoff` is new (a hand-off bias or a leashed
   walker past `Pursuit.Max_Distance`).

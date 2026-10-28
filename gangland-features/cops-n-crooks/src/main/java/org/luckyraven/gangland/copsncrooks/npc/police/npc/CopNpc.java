@@ -123,6 +123,13 @@ public class CopNpc extends AbstractNpc {
 	/** When he last checked in (ms); 0 before the first check-in. */
 	@Getter
 	private           long                   lastReportAt;
+	/**
+	 * Until when (ms) this beat cop holds the spot he was sent to, a silent officer's last check-in (0.21.2, T-579):
+	 * {@code PatrolBehavior} neither wanders nor walks back to his beat before then. 0 = no hold.
+	 */
+	@Getter
+	@Setter
+	private           long                   investigateUntil;
 	/** The navigator's own pathfinding range (Citizens {@code default-range-blocks}), read on the first walk. */
 	private float                            baseWalkRange = Float.NaN;
 
