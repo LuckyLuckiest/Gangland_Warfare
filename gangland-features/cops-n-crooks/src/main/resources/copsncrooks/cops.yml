@@ -347,6 +347,8 @@ Cops:
       Scene_Radius: 32.0
       # seconds the scene stays open before the trail goes cold (no stars)
       Scene_Seconds: 60
+      # a cop spawned less than this many seconds ago can neither see the killer for the scene nor find it; 0 = off
+      Spawn_Grace_Seconds: 3
       # the dead cop's squad was hunting the killer: the kill counts at Officer_Missing (x1.0, one witness)
       Pursuit_Presumed: true
       # the killer sees the countdown to Officer_Missing on his action bar

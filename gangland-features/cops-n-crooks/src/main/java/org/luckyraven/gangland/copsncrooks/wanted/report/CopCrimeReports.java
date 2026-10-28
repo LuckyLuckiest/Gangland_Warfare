@@ -706,7 +706,8 @@ public final class CopCrimeReports implements BeanLifecycle {
 		double       radius   = rules.sceneRadius();
 		boolean      near     = killerAt.getWorld() == scene.at.getWorld() &&
 		                        killerAt.distanceSquared(scene.at) <= radius * radius;
-		List<CopNpc> eyes     = near ? eyes(killer, Crimes.KILL_COP, killerAt, null) : List.of();
+		List<CopNpc> eyes     = new ArrayList<>(near ? eyes(killer, Crimes.KILL_COP, killerAt, null) : List.of());
+		eyes.removeIf(cop -> inGrace(cop, scene, now, rules));
 		if (!eyes.isEmpty()) {
 			scenes.remove(scene);
 			logScene("seen", scene, "");
@@ -737,12 +738,26 @@ public final class CopCrimeReports implements BeanLifecycle {
 			Location     there = body == null ? null : body.getLocation();
 			if (there == null || there.getWorld() != scene.at.getWorld()) continue;
 			if (there.distanceSquared(scene.at) > SCENE_FOUND_BLOCKS * SCENE_FOUND_BLOCKS) continue;
+			if (inGrace(cop, scene, now, rules)) continue;
 
 			scene.found = true;
 			logScene("found", scene, "");
 			say(cop, killer, scene.at, "Scene_Found", Map.of());
 			return;
 		}
+	}
+
+	/**
+	 * Owner ruling T-601 (0.21.2 R3): {@code cop} was spawned less than {@code Spawn_Grace_Seconds} ago, so he can
+	 * neither see the killer for the scene nor find it; logged (debug) {@code SCENE grace <killer> at=x,y,z cop=<name>}.
+	 * A cop of unknown spawn time (0) has no grace.
+	 */
+	private boolean inGrace(CopNpc cop, Scene scene, long now, CheckInSettings rules) {
+		long spawnedAt = cop.getSpawnedAt();
+		if (spawnedAt <= 0 || now - spawnedAt >= rules.spawnGraceSeconds() * 1000L) return false;
+
+		logScene("grace", scene, " cop=" + copRadio.memberName(cop));
+		return true;
 	}
 
 	/** The killer died, was cuffed, arrested or logged out: his silences and scenes are forgotten. */

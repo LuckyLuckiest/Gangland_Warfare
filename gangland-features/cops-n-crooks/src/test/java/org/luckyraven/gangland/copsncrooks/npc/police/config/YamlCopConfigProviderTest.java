@@ -206,7 +206,7 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
-	@DisplayName("0.21.2 S5: Cops.Check_In parses every key; an absent block or key is the plan default")
+	@DisplayName("0.21.2 S5: Cops.Check_In parses every key (R3: Spawn_Grace_Seconds, T-601); an absent block or key is the plan default")
 	void checkInBlock_parsed() {
 		CopConfigProvider provider = parse("""
 				Cops:
@@ -216,6 +216,7 @@ class YamlCopConfigProviderTest {
 				      Silent_Seconds: 12
 				      Scene_Radius: 16.0
 				      Scene_Seconds: 30
+				      Spawn_Grace_Seconds: 5
 				      Pursuit_Presumed: false
 				      Show_Timer: false
 				   Tiers:
@@ -224,7 +225,7 @@ class YamlCopConfigProviderTest {
 				         Health: 20.0
 				         Damage: 2.0
 				""");
-		assertEquals(new CheckInSettings(false, 5, 12, 16.0, 30, false, false), provider.getCheckInSettings());
+		assertEquals(new CheckInSettings(false, 5, 12, 16.0, 30, 5, false, false), provider.getCheckInSettings());
 
 		CopConfigProvider partial = parse("""
 				Cops:
@@ -236,7 +237,7 @@ class YamlCopConfigProviderTest {
 				         Health: 20.0
 				         Damage: 2.0
 				""");
-		assertEquals(new CheckInSettings(true, 10, 30, 32.0, 60, true, true), partial.getCheckInSettings());
+		assertEquals(new CheckInSettings(true, 10, 30, 32.0, 60, 3, true, true), partial.getCheckInSettings());
 
 		CopConfigProvider absent = parse("""
 				Cops:

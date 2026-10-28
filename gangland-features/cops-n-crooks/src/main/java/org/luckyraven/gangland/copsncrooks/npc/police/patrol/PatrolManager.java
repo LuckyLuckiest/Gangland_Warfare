@@ -131,18 +131,37 @@ public class PatrolManager implements BeanLifecycle {
 			boolean respawnReady = (lost == null || now - lost >= s.respawnSeconds() * 1000L) && !stationHeld.test(id);
 			if (nearest <= s.activationRadius()) {
 				emptySince.remove(id);
-				// owner ruling R6 (0.21.2 R2, T-587): never at a station spot a player has in view; the next run nobody
-				// watches spawns it
-				while (respawnReady && cops.size() < s.copsPerStation() && !spawner.watched(anchor)) {
-					CopNpc cop = spawner.spawnAtLocation(anchor.clone(), s.tier());
+				// owner ruling R6 (0.21.2 R2, T-587): never at a station spot a player has in view; owner ruling T-606
+				// (R3): a watched station is staffed from a nearby spot nobody has in view, its cops walking in; with no
+				// such spot this run the next run tries again
+				while (respawnReady && cops.size() < s.copsPerStation()) {
+					Location at      = anchor;
+					boolean  offsite = spawner.watched(anchor);
+					if (offsite) {
+						at = spawner.unwatchedNear(anchor);
+						if (at == null) {
+							log.debug("PATROL station={} held=watched", station.getName());
+							break;
+						}
+					}
+					CopNpc cop = spawner.spawnAtLocation(at.clone(), s.tier());
 					if (cop == null) {
 						break;
 					}
 					cop.transitionTo(CopState.PATROL);
 					cops.add(cop);
 					log.debug("PATROL station={} cops={}", station.getName(), cops.size());
+					if (offsite) {
+						cop.setBeatAnchor(anchor.clone());
+						log.debug("PATROL station={} spawn=offsite at={},{},{}", station.getName(), at.getBlockX(),
+						          at.getBlockY(), at.getBlockZ());
+					}
 					Response response = owed.remove(id);
-					if (response != null) investigate(cop, response.at(), response.until());
+					if (response != null) {
+						investigate(cop, response.at(), response.until());
+					} else if (offsite) {
+						cop.navigateTo(anchor.clone());
+					}
 				}
 			}
 			if (nearest <= s.despawnRadius()) {

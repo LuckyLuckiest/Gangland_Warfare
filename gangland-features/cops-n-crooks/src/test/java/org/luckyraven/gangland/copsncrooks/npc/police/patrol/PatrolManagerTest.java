@@ -250,7 +250,7 @@ class PatrolManagerTest {
 	}
 
 	@Test
-	@DisplayName("0.21.2 T-587 (R6): a replacement owed while a player has the station spot in view spawns on the first unwatched run")
+	@DisplayName("0.21.2 T-587 (R6): a replacement owed while a player has the station spot in view and no unwatched spot is found spawns on the first unwatched run")
 	void respondTo_watchedStation_spawnsOnTheFirstUnwatchedRun() {
 		online.add(fx.player(5, 5));
 		manager.manage();
@@ -290,8 +290,78 @@ class PatrolManagerTest {
 		verify(spawned.get(2), never()).setInvestigateUntil(anyLong());
 	}
 
+	/** Owner ruling T-606 (0.21.2 R3): a watched station is staffed from an unwatched spot nearby; none this run holds it. */
 	@Test
-	@DisplayName("0.21.2 R2 (R6): no beat cop spawns at a station spot a player has in view")
+	@DisplayName("a station watched past Respawn_Seconds spawns at an unwatched spot and walks in")
+	void watchedStation_pastRespawnSeconds_spawnsAtAnUnwatchedSpotAndWalksIn() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		Location offsite = fx.at(30, 30);
+		when(spawner.watched(anchor)).thenReturn(true);
+		when(spawner.unwatchedNear(anchor)).thenReturn(offsite);
+
+		fx.clock[0] += 29_000;
+		manager.manage();
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+
+		fx.clock[0] += 1_000;
+		manager.manage();
+
+		verify(spawner).spawnAtLocation(eq(offsite), eq(1));
+		CopNpc replacement = spawned.get(2);
+		assertEquals(CopState.PATROL, replacement.getCurrentState());
+		verify(replacement).setBeatAnchor(anchor);
+		verify(replacement).navigateTo(anchor);
+		verify(spawner, times(2)).spawnAtLocation(eq(anchor), anyInt()); // the first two, before anyone watched
+		assertEquals(2, manager.beatCops().size());
+	}
+
+	@Test
+	@DisplayName("0.21.2 R3 T-606: a watched station's first beat cops spawn at once at an unwatched spot and walk in")
+	void watchedStation_firstStaffing_spawnsAtAnUnwatchedSpotAtOnce() {
+		Location offsite = fx.at(-30, 20);
+		when(spawner.watched(anchor)).thenReturn(true);
+		when(spawner.unwatchedNear(anchor)).thenReturn(offsite);
+		online.add(fx.player(5, 5));
+
+		manager.manage();
+
+		verify(spawner, times(2)).spawnAtLocation(eq(offsite), eq(1));
+		for (CopNpc cop : spawned) {
+			verify(cop).setBeatAnchor(anchor);
+			verify(cop).navigateTo(anchor);
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.2 R3 T-606: an owed replacement at a watched station spawns at an unwatched spot and walks to the report, its beat the station")
+	void respondTo_watchedStation_replacementSpawnsOffsiteAndWalksToTheReport() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		Location report = fx.at(20, 20);
+		manager.respondTo(1, report, 60_000L);
+		long     until   = fx.clock[0] + 60_000L;
+		Location offsite = fx.at(-30, 20);
+		when(spawner.watched(anchor)).thenReturn(true);
+		when(spawner.unwatchedNear(anchor)).thenReturn(offsite);
+
+		fx.clock[0] += 30_000;
+		manager.manage();
+
+		verify(spawner).spawnAtLocation(eq(offsite), eq(1));
+		CopNpc replacement = spawned.get(2);
+		verify(replacement).setBeatAnchor(anchor);
+		verify(replacement).navigateTo(report);
+		verify(replacement).setInvestigateUntil(until);
+		verify(replacement, never()).navigateTo(anchor);
+	}
+
+	@Test
+	@DisplayName("0.21.2 R2 (R6): no beat cop spawns at a station spot a player has in view (R3: nor anywhere, with no unwatched spot this run)")
 	void watchedStation_spawnsNobody() {
 		when(spawner.watched(anchor)).thenReturn(true);
 		online.add(fx.player(5, 5));

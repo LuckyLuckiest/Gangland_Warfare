@@ -130,6 +130,19 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private           long                   investigateUntil;
+	/**
+	 * When he was spawned (ms, the wall clock {@code CopCrimeReports} reads): a cop younger than
+	 * {@code Check_In.Spawn_Grace_Seconds} cannot close a scene (0.21.2 R3, owner ruling T-601). 0 = unknown (mocks).
+	 */
+	@Getter
+	private final     long                   spawnedAt;
+	/**
+	 * The station anchor a beat cop walks his beat around when he was spawned elsewhere, at an unwatched spot near a
+	 * watched station (0.21.2 R3, owner ruling T-606); {@code null} = his spawn spot is his beat's centre.
+	 */
+	@Getter
+	@Setter
+	private @Nullable Location               beatAnchor;
 	/** The navigator's own pathfinding range (Citizens {@code default-range-blocks}), read on the first walk. */
 	private float                            baseWalkRange = Float.NaN;
 
@@ -145,6 +158,7 @@ public class CopNpc extends AbstractNpc {
 		this.tierConfig   = tierConfig;
 		this.behaviors    = behaviors;
 		this.combatForced = false;
+		this.spawnedAt    = System.currentTimeMillis();
 	}
 
 	// ── AbstractNpc contract ─────────────────────────────────────────

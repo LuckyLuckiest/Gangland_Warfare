@@ -1097,6 +1097,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                           checkIn.get("Silent_Seconds").asInt().min(1).orDefault(defaults.silentSeconds()),
 		                           checkIn.get("Scene_Radius").asDouble().min(0.0).orDefault(defaults.sceneRadius()),
 		                           checkIn.get("Scene_Seconds").asInt().min(0).orDefault(defaults.sceneSeconds()),
+		                           checkIn.get("Spawn_Grace_Seconds").asInt().min(0)
+		                                  .orDefault(defaults.spawnGraceSeconds()),
 		                           checkIn.get("Pursuit_Presumed").asBool().orDefault(defaults.pursuitPresumed()),
 		                           checkIn.get("Show_Timer").asBool().orDefault(defaults.showTimer()));
 	}

@@ -256,7 +256,7 @@ class CopCrimeReportsSilenceTest {
 	@Test
 	@DisplayName("Check_In off, or Kill_Cop not held by the witness gate: today's path (the squad radios at once)")
 	void checkInOff_orKillCopUngated_keepsTodaysPath() {
-		when(provider.getCheckInSettings()).thenReturn(new CheckInSettings(false, 10, 20, 32.0, 60, true, true));
+		when(provider.getCheckInSettings()).thenReturn(new CheckInSettings(false, 10, 20, 32.0, 60, 3, true, true));
 		assertFalse(silent());
 
 		when(provider.getCheckInSettings()).thenReturn(CheckInSettings.DEFAULT);
@@ -404,7 +404,7 @@ class CopCrimeReportsSilenceTest {
 	@Test
 	@DisplayName("Pursuit_Presumed off: no commit at Officer_Missing, a scene opens instead")
 	void pursuitPresumedOff_opensScene() {
-		when(provider.getCheckInSettings()).thenReturn(new CheckInSettings(true, 10, 20, 32.0, 60, false, true));
+		when(provider.getCheckInSettings()).thenReturn(new CheckInSettings(true, 10, 20, 32.0, 60, 3, false, true));
 		assertTrue(silent());
 		advanceSeconds(18);
 		reports.tick();
@@ -443,7 +443,7 @@ class CopCrimeReportsSilenceTest {
 	@DisplayName("the killer seen outside Scene_Radius counts for nothing")
 	void scene_killerSeenOutsideRadius_noCommit() {
 		openSceneAtReport();
-		when(provider.getCheckInSettings()).thenReturn(new CheckInSettings(true, 10, 20, 2.0, 60, true, true));
+		when(provider.getCheckInSettings()).thenReturn(new CheckInSettings(true, 10, 20, 2.0, 60, 3, true, true));
 		cop("Bob", 10, 90f, true);
 
 		reports.tick();
@@ -464,6 +464,47 @@ class CopCrimeReportsSilenceTest {
 
 		verify(radio, times(1)).sayAs(any(CopGroup.class), eq(there), eq("Scene_Found"), anyMap());
 		assertTrue(debugContains("SCENE found Crook at=5,64,5"), debug::toString);
+	}
+
+	/** Owner ruling T-601 (0.21.2 R3): a cop spawned within Spawn_Grace_Seconds (3) cannot close the scene. */
+	@Test
+	@DisplayName("0.21.2 R3 T-601: a unit spawned this tick does not close the scene; once his grace is over he does")
+	void scene_unitSpawnedThisTick_doesNotCloseTheScene() {
+		openSceneAtReport();
+		CopNpc bob = cop("Bob", 10, 90f, true);
+		when(bob.getSpawnedAt()).thenReturn(clock.get());
+
+		reports.tick();
+		advanceSeconds(2.9);
+		reports.tick();
+
+		verify(crimes, never()).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+		assertEquals(1, reports.scenes(killerId));
+		assertTrue(debugContains("SCENE grace Crook at=5,64,5 cop=Bob"), debug::toString);
+
+		advanceSeconds(0.1);
+		reports.tick();
+
+		verify(crimes).commit(killer, Crimes.KILL_COP, reportAt, true, 1);
+		verify(radio).sayAs(any(CopGroup.class), eq(bob), eq("Scene_Suspect"), anyMap());
+		assertEquals(0, reports.scenes(killerId));
+	}
+
+	@Test
+	@DisplayName("0.21.2 R3 T-601: a unit spawned at the scene does not find it within his grace; Spawn_Grace_Seconds 0 is off")
+	void scene_unitSpawnedAtTheScene_findsItOnlyAfterHisGrace() {
+		openSceneAtReport();
+		CopNpc there = cop("Ann", 0, 270f, false);
+		when(there.getEntity().getLocation()).thenAnswer(inv -> new Location(world, 7, 64, 5));
+		when(there.getSpawnedAt()).thenReturn(clock.get());
+
+		reports.tick();
+		verify(radio, never()).sayAs(any(CopGroup.class), eq(there), eq("Scene_Found"), anyMap());
+		assertTrue(debugContains("SCENE grace Crook at=5,64,5 cop=Ann"), debug::toString);
+
+		when(provider.getCheckInSettings()).thenReturn(new CheckInSettings(true, 10, 20, 32.0, 60, 0, true, true));
+		reports.tick();
+		verify(radio, times(1)).sayAs(any(CopGroup.class), eq(there), eq("Scene_Found"), anyMap());
 	}
 
 	@Test

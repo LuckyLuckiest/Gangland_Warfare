@@ -257,13 +257,16 @@ player where no cop saw the killer and no cop saw the body fall becomes a **sile
    requests backup; when it was hunting the killer its cold-trail hold is released, the new units spawn on the
    suspect's side of that spot (no hand-off lead past it) and the squad is tipped there. A beat cop's station sends
    the nearest beat cop of the station to walk to the spot; the held replacement follows once `Respawn_Seconds` (30)
-   have passed since the death, on a second no player has the station spot in view (R6), never at `Officer_Missing`
-   itself. Both hold the spot (no wander, no walk back to the beat) until `Scene_Seconds` (60) after dispatch learned
+   have passed since the death (at the station spot, or while a player has it in view at a nearby spot nobody sees,
+   T-606), never at `Officer_Missing` itself. Both hold the spot (no wander, no walk back to the beat) until `Scene_Seconds` (60) after dispatch learned
    of the death (`Officer_Missing`, or a 911 call first); a replacement that spawns later stays on its beat. A cop with neither (his squad gone since) sends nobody.
 4. When his squad was hunting the killer, and is still his squad, the kill counts now (`Pursuit_Presumed`). Otherwise
    (his squad gone since counts as none) a scene opens at the
    spot for `Scene_Seconds` (60): the first unit within 6 blocks says `Scene_Found`; a cop who sees the killer while he is
    within `Scene_Radius` (32) of it counts the kill and says `Scene_Suspect`; nobody spots him in time: `Scene_Clear`, no stars.
+   A cop spawned less than `Spawn_Grace_Seconds` (3) ago can do neither: he does not count the kill nor find the
+   scene until his grace is over (owner ruling T-601, 0.21.2 R3; 0 = off). Debug: `SCENE grace <killer> at=x,y,z
+   cop=<name>`.
 
 A cop who saw only the body radios `Officer down!` at once and a scene opens at the body. A cop who saw you hit him
 (an `Assault_Cop` report on the radio) keeps the radio live too: that report stands and the kill is not counted
@@ -759,6 +762,7 @@ Cops:
       Silent_Seconds: 20           # Officer_Missing this long after his last check-in
       Scene_Radius: 32.0           # the killer seen by any cop this close to the scene: the kill counts
       Scene_Seconds: 60            # the scene stays open this long, then goes cold (no stars)
+      Spawn_Grace_Seconds: 3       # a cop spawned this recently neither counts the kill nor finds the scene; 0 = off
       Pursuit_Presumed: true       # his squad hunted the killer: the kill counts at Officer_Missing
       Show_Timer: true             # the killer's action bar counts down to Officer_Missing
    Regroup:                        # 0.15.0; every key falls back to the value shown
@@ -984,8 +988,12 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
   in a row; a player inside the radius keeps them.
   Tier comes from `Cops.Patrol.Tier` (1 = Officer). A station that loses a beat cop waits `Cops.Patrol.Respawn_Seconds`
   (30) before a replacement walks out (0.21.1). A beat cop never spawns at a station spot a player within
-  `max(24, Visibility_Check_Distance)` is looking at with a clear line (owner ruling R6, 0.21.2): it waits for the next
-  second nobody looks.
+  `max(24, Visibility_Check_Distance)` is looking at with a clear line (owner ruling R6, 0.21.2). Once it is due (at
+  once for the first ones, `Respawn_Seconds` after a loss) a watched station's cop spawns instead at a nearby spot no
+  player has in view (the hidden ring the squad units use, within `max(24, Visibility_Check_Distance)` of the station)
+  and walks to the station, where his beat begins; a replacement owed to an `Officer_Missing` walks to that spot
+  first. No such spot this second: the next second tries again (owner ruling T-606, 0.21.2 R3). Debug:
+  `PATROL station=<name> held=watched` (no spot this second), `PATROL station=<name> spawn=offsite at=x,y,z`.
 - **Sighting a wanted player.** With `Cops.Patrol.Report_Wanted: true` a patrol cop who sees a wanted player reports
   that player's position to the squad already hunting them and opens no new call. The radio line for that report is
   `Patrol_Sighting`.

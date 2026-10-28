@@ -394,6 +394,30 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		return false;
 	}
 
+	/**
+	 * Owner ruling T-606 (0.21.2 R3): a spot for a watched station's beat cop that no player has in view, within
+	 * {@code max(24, Visibility_Check_Distance)} of {@code anchor}: the squad units' {@link #hiddenRing} around the
+	 * nearest player to the anchor (out of sight of every player within {@code Visibility_Check_Distance}), the spot
+	 * itself not {@link #watched}. {@code null} when there is no such spot this run (or no player).
+	 */
+	public @Nullable Location unwatchedNear(Location anchor) {
+		World world = anchor.getWorld();
+		if (world == null) return null;
+
+		Player nearest = null;
+		for (Player player : world.getPlayers()) {
+			if (player.hasMetadata("NPC")) continue;
+			if (nearest == null || player.getLocation().distanceSquared(anchor) <
+			                       nearest.getLocation().distanceSquared(anchor)) nearest = player;
+		}
+		if (nearest == null) return null;
+
+		double max = Math.max(CopSightlines.WATCH_MIN_BLOCKS, configProvider.getVisibilityCheckDistance());
+		// ponytail: Keystone's rings are Player-centred (as betweenRing), so the ring is sampled around the nearest
+		// player and a spot is only accepted near the anchor
+		return hiddenRing(nearest, spot -> horizontalSq(spot, anchor) <= max * max && !watched(spot));
+	}
+
 	private static double horizontalSq(Location a, Location b) {
 		double dx = a.getX() - b.getX();
 		double dz = a.getZ() - b.getZ();

@@ -98,7 +98,7 @@ class Bundled020YamlTest {
 		assertEquals(org.luckyraven.gangland.copsncrooks.npc.police.config.CheckInSettings.DEFAULT,
 		             provider.getCheckInSettings());
 		assertEquals(new org.luckyraven.gangland.copsncrooks.npc.police.config.CheckInSettings(true, 10, 20, 32.0, 60,
-		                                                                                         true, true),
+		                                                                                         3, true, true),
 		             org.luckyraven.gangland.copsncrooks.npc.police.config.CheckInSettings.DEFAULT);
 		RadioSettings radio = provider.getRadioSettings();
 		for (String key : List.of("Radio_Check", "Officer_Missing", "Scene_Found", "Scene_Suspect", "Scene_Clear")) {

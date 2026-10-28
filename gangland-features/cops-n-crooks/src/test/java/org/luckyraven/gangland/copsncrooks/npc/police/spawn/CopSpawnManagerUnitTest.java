@@ -253,6 +253,29 @@ class CopSpawnManagerUnitTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 R3 (T-606): a watched station's unwatched spot is a hidden ring spot near the anchor nobody has in view")
+	void unwatchedNear_hiddenRingSpotNearTheAnchor() {
+		Location anchor = new Location(world, 0.5, GROUND_Y, 20.5); // straight ahead of him, clear line: watched
+		blocked = dir -> dir.getX() > 0;                            // only spots east of him are hidden
+		assertTrue(spawnManager.watched(anchor));
+
+		Location spot = spawnManager.unwatchedNear(anchor);
+
+		assertNotNull(spot);
+		assertTrue(spot.getX() > 0.5, "on the hidden side: " + spot);
+		assertTrue(Math.hypot(spot.getX() - anchor.getX(), spot.getZ() - anchor.getZ()) <= 48.0, "near the anchor");
+		assertFalse(spawnManager.watched(spot));
+	}
+
+	@Test
+	@DisplayName("0.21.2 R3 (T-606): every spot near a watched station in plain sight: no spot this run")
+	void unwatchedNear_everySpotInSight_null() {
+		blocked = dir -> false;
+
+		assertNull(spawnManager.unwatchedNear(new Location(world, 0.5, GROUND_Y, 20.5)));
+	}
+
+	@Test
 	@DisplayName("R6: the dispatch-off path (spawnNearPlayer) never takes a spawner straight ahead of him; one behind is fine")
 	void spawnNearPlayer_spawnerInView_skipped_behindTaken() {
 		Location ahead  = new Location(world, 0.5, GROUND_Y, 20.5);  // straight ahead (+Z), clear line

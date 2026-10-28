@@ -11,13 +11,15 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
  * @param silentSeconds   after this long since his last check-in dispatch says {@code Officer_Missing}.
  * @param sceneRadius     the killer seen by any cop within this many blocks of the scene: the kill counts.
  * @param sceneSeconds    how long the scene stays open.
+ * @param spawnGraceSeconds a cop spawned less than this long ago can neither see the killer for the scene nor find it
+ *                        (0.21.2 R3, owner ruling T-601); 0 = off.
  * @param pursuitPresumed the dead cop's group was hunting the killer: the kill counts at {@code Officer_Missing}.
  * @param showTimer       the killer sees the countdown to {@code Officer_Missing} on his action bar.
  * @since 0.21.2
  */
 public record CheckInSettings(boolean enabled, int checkInSeconds, int silentSeconds, double sceneRadius,
-                              int sceneSeconds, boolean pursuitPresumed, boolean showTimer) {
+                              int sceneSeconds, int spawnGraceSeconds, boolean pursuitPresumed, boolean showTimer) {
 
 	/** Equals the shipped cops.yml (PLAN.md owner decisions 2, 6 and 8). */
-	public static final CheckInSettings DEFAULT = new CheckInSettings(true, 10, 20, 32.0, 60, true, true);
+	public static final CheckInSettings DEFAULT = new CheckInSettings(true, 10, 20, 32.0, 60, 3, true, true);
 }

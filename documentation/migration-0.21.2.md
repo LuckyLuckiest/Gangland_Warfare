@@ -140,6 +140,8 @@ ledger on. **A deployed file without those lines keeps 0.21.1's radio:** a dead 
       Scene_Radius: 32.0
       # seconds the scene stays open before the trail goes cold (no stars)
       Scene_Seconds: 60
+      # a cop spawned less than this many seconds ago can neither see the killer for the scene nor find it; 0 = off
+      Spawn_Grace_Seconds: 3
       # the dead cop's squad was hunting the killer: the kill counts at Officer_Missing (x1.0, one witness)
       Pursuit_Presumed: true
       # the killer sees the countdown to Officer_Missing on his action bar
@@ -153,6 +155,7 @@ ledger on. **A deployed file without those lines keeps 0.21.1's radio:** a dead 
 | `Check_In.Silent_Seconds` | `20` (at least 1) |
 | `Check_In.Scene_Radius` | `32.0` |
 | `Check_In.Scene_Seconds` | `60` |
+| `Check_In.Spawn_Grace_Seconds` | `3` (0 = off; R3, T-601) |
 | `Check_In.Pursuit_Presumed` | `true` |
 | `Check_In.Show_Timer` | `true` |
 
@@ -221,8 +224,12 @@ Witness:
   lower tier) and a `Dispatch_Wanted` naming the lower level. It now announces once, at the level it ends at, and the
   squad is sized for that level from the start.
 - **Beat cops never appear in view** (owner ruling R6, R2). A station's beat cop, the first ones and every replacement,
-  spawns only on a second no player within `max(24, Visibility_Check_Distance)` has the station spot in front of him
-  with a clear line; otherwise it waits for the next second nobody looks.
+  never spawns at a station spot a player within `max(24, Visibility_Check_Distance)` has in front of him with a clear
+  line. Since R3 (T-606) such a station is no longer left empty: once its cop is due (at once for the first ones,
+  `Respawn_Seconds` after a loss) he spawns at a nearby spot no player has in view and walks to the station to begin
+  his beat; with no such spot that second it tries again the next. No new key.
+- **A fresh cop cannot close a scene** (R3, T-601). A cop spawned less than `Check_In.Spawn_Grace_Seconds` (3) ago
+  neither counts the kill at a scene nor finds it; after that the usual rules apply. Absent key: 3; 0 restores R2.
 
 - **More witnesses, more heat** (T-540). A crime's heat is now scaled by how many saw it: each eyewitness past the
   first adds `Per_Extra_Witness` (0.5) to the multiplier, up to `Max_Extra_Witnesses` (3). A civilian's 911 call now
@@ -280,8 +287,8 @@ Witness:
   Then the casualty and the backup go out (the cold-trail hold released), the units spawn on your side of that spot and
   search it, a beat cop's station sends a second beat cop there, and the death event fires (the standoff casualty and
   the pursuit report's cops-down count it then, not at the death). The station's held replacement follows once
-  `Patrol.Respawn_Seconds` (30) have passed since the death and on the first second no player has the station spot in
-  view (owner ruling R6, T-587), never at `Officer_Missing` itself. Both beat cops hold that spot for `Scene_Seconds`
+  `Patrol.Respawn_Seconds` (30) have passed since the death, at the station spot or, while a player has it in view,
+  at a nearby spot nobody sees (owner rulings R6 and T-606), never at `Officer_Missing` itself. Both beat cops hold that spot for `Scene_Seconds`
   (60) from the moment dispatch learns of the death (`Officer_Missing`, or a 911 call that closed the silence first)
   before they walk back to the beat (T-579); a replacement that spawns after that stays on its beat.
   - Only a cop who held a slot of the squad holds it while he is silent: a walker the squad sent home (a star drop, a
