@@ -469,6 +469,21 @@ class EvasionClockTest {
 	}
 
 	@Test
+	@DisplayName("T-537: a rejoin before the spawn task queued a unit (no tip, no unit yet) holds for the rejoin grace: no search ring on his live spot")
+	void restoreStart_beforeAUnitIsQueued_holdsForTheRejoinGrace() {
+		hunters.clear();
+		unseenMs = 10_000;
+		when(squad.lastKnownLocation()).thenReturn(null); // a RESTORE start tips nothing (R4)
+		long graceEnd = now[0] + 15_000;
+		when(group.getBreatherUntil()).thenAnswer(inv -> graceEnd);
+
+		tickSeconds(3);
+
+		assertNull(clock.snapshot(id));
+		assertFalse(stateNames().contains(EvasionState.SEARCHING));
+	}
+
+	@Test
 	@DisplayName("T-537: no cop stands and he is outside the zone: Outside_Zone_Speed applies, as with cops")
 	void noCop_outsideTheZone_runsAtOutsideSpeed() {
 		hunters.clear();

@@ -1191,7 +1191,8 @@ wanted, cause)` takes the `WantedCause`: a RESTORE start (rejoin) skips the crim
 
 **Evasion hold.** Since 0.21.2 (T-537) `handlesDecay` is `Evasion.Enable && groupOf(player) != null`, and `tick` clears
 only when the group is gone or he is no longer wanted. With no valid non-RETURNING cop standing, `noCopHold` pauses the
-clock (lastTick = now, progress kept) for the first response only (`!group.hasStood() && unitsEnRoute`; `hasStood` is set
+clock (lastTick = now, progress kept) for the first response only (`!group.hasStood() && (unitsEnRoute || now <
+breatherUntil)`, the rejoin grace included; `hasStood` is set
 by `CopGroup.add` and cleared by a wanted start that finds the group empty) and for cause E (an active `biasAt(now)` or a
 leashed walker). Otherwise he is searched at the squad's last-known spot, never SEEN (a dead squad's last sighting is no
 one's eyes), at `Wanted.Evasion.No_Cop_Inside_Speed` (0.25, floored at 0.01) inside the zone and `Outside_Zone_Speed`

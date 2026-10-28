@@ -43,8 +43,9 @@ Wanted:
 - **The search runs with no cop standing.** With every cop dead or walking home, the clock no longer turns off. It
   searches him at the squad's last-known spot at `No_Cop_Inside_Speed` inside the zone (`Outside_Zone_Speed` outside).
   At one star he needs 40 s inside the 40-block zone instead of 10 s.
-  - It still holds, keeping its progress, for the **first response**: units on their way before any cop of the chase has
-    stood in the world (up to 10 s past their ETA), and for a **hand-off in progress** (0.21.1 cause E).
+  - It still holds, keeping its progress, for the **first response**: units on their way, or the rejoin grace, before
+    any cop of the chase has stood in the world (up to 10 s past their ETA), and for a **hand-off in progress** (0.21.1
+    cause E).
   - **Changed from 0.21.1:** after a wipe the breather and the ETA of the replacement units no longer freeze the clock;
     the search runs through them at the slow inside speed.
 - **`Stand_Down` is heard after a wipe** (T-542). When a chase ends and no cop of the squad is left to say it, dispatch

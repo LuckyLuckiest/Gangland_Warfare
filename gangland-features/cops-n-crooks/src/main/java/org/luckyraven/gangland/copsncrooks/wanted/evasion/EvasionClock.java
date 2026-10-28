@@ -422,8 +422,9 @@ public final class EvasionClock implements WantedDecayPolicy {
 	/**
 	 * Why the clock holds while no cop stands, or {@code null} to search him. Every hold is bounded:
 	 * <ul>
-	 *   <li>{@code enroute}: the first response, units on their way before any cop of the episode stood; it lapses
-	 *   {@code EN_ROUTE_GRACE_MS} past their ETA. After a wipe the breather and the ETA no longer hold (0.21.2).</li>
+	 *   <li>{@code enroute}: the first response, units on their way (or the rejoin grace) before any cop of the episode
+	 *   stood; it lapses {@code EN_ROUTE_GRACE_MS} past their ETA. After a wipe the breather and the ETA no longer hold
+	 *   (0.21.2).</li>
 	 *   <li>{@code handoff}: an active hand-off bias, or a leashed walker past {@code Pursuit.Max_Distance} still hunting
 	 *   him, which the next spawn task releases and refills (0.21.1 cause E, T-400/T-412); a walker inside the range is
 	 *   not refilled, so it holds nothing.</li>
@@ -431,7 +432,9 @@ public final class EvasionClock implements WantedDecayPolicy {
 	 */
 	// S5 (PLAN.md 4.3): an open silence (reports.silentRoles(group) not empty, bounded by Silent_Seconds) holds here too.
 	private @Nullable String noCopHold(CopGroup group, Player player, long now) {
-		if (!group.hasStood() && group.unitsEnRoute(now)) return "enroute";
+		// the rejoin grace (R21) counts too: a RESTORE start tips nothing, so before the spawn task queues its units
+		// nothing else would stop a search ring round his live spot
+		if (!group.hasStood() && (group.unitsEnRoute(now) || now < group.getBreatherUntil())) return "enroute";
 		if (group.biasAt(now) != null || hasLeashedWalker(group, player)) return "handoff";
 		return null;
 	}
