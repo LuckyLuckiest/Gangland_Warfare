@@ -36,12 +36,14 @@ public final class HeatWantedTracker implements WantedKillTracker {
 	private final NpcMarkManager               marks;
 	private final BiPredicate<Player, Location> defendingOwnTurf;
 	private final Predicate<Entity>             managedCivilian;
+	/** A cop NPC: {@code CopListener.onCopDeath} books its Kill_Cop at the real death (T-544). */
+	private final Predicate<Entity>             managedCop;
 
 	private volatile Consumer<Player> wantedTrigger;
 
 	public HeatWantedTracker(ChaseConfigLoader config, HeatLedger ledger, CrimeService crimes, KillCombo killCombo,
 	                         NpcMarkManager marks, BiPredicate<Player, Location> defendingOwnTurf,
-	                         Predicate<Entity> managedCivilian) {
+	                         Predicate<Entity> managedCivilian, Predicate<Entity> managedCop) {
 		this.config           = config;
 		this.ledger           = ledger;
 		this.crimes           = crimes;
@@ -49,6 +51,7 @@ public final class HeatWantedTracker implements WantedKillTracker {
 		this.marks            = marks;
 		this.defendingOwnTurf = defendingOwnTurf;
 		this.managedCivilian  = managedCivilian;
+		this.managedCop       = managedCop;
 	}
 
 	@Override
@@ -96,11 +99,12 @@ public final class HeatWantedTracker implements WantedKillTracker {
 		}
 
 		EntityMark mark = EntityMarks.of(marks.getMark(victim));
-		// 0.21.2 (T-544): CopListener.onCopDeath books Kill_Cop at the real death, so a lethal hit the Defender's shield
-		// absorbs is never a kill and the core/module listener order no longer matters
-		if (mark == EntityMark.POLICE) return;
-
-		if (realPlayer) {
+		// 0.21.2 (T-544): CopListener.onCopDeath books a cop NPC's Kill_Cop at the real death, so a lethal hit the
+		// Defender's shield absorbs is never a kill and the core/module listener order no longer matters; a POLICE-marked
+		// mob that is no cop NPC (a vanilla pillager) has no death listener, so its lethal hit still books it here
+		if (mark == EntityMark.POLICE) {
+			if (!managedCop.test(victim)) crimes.commit(killer, Crimes.KILL_COP, victim.getLocation());
+		} else if (realPlayer) {
 			crimes.commit(killer, Crimes.KILL_PLAYER, victim.getLocation());
 		} else if (mark == EntityMark.CIVILIAN && !managedCivilian.test(victim)) {
 			// a gangland-civilians NPC is published by its own death listener (hostile-in-combat exemption); a vanilla

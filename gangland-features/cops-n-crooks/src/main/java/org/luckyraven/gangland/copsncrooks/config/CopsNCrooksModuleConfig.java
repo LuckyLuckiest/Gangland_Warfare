@@ -445,6 +445,7 @@ public class CopsNCrooksModuleConfig {
 		                                      container.getInstance(CrimeService.class),
 		                                      container.getInstance(KillCombo.class),
 			                                      container.getInstance(NpcMarkManager.class), new DefendingOwnTurf(turfs, gangs),
-			                                      victim -> civilians.getNpc(victim.getUniqueId()) != null));
+			                                      victim -> civilians.getNpc(victim.getUniqueId()) != null,
+			                                      container.getInstance(CopManager.class)::isCopNpc));
 	}
 }

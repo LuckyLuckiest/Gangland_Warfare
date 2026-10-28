@@ -54,6 +54,8 @@ class HeatWantedTrackerTest {
 	private ChaseConfigLoader config;
 	private boolean           defending;
 	private boolean           managedCivilian;
+	/** The POLICE-marked victim is a cop NPC (CopListener books its death); false for a vanilla police-type mob. */
+	private boolean           managedCop = true;
 	private Player            killer;
 	private Wanted            wanted;
 	private Location          at;
@@ -79,7 +81,7 @@ class HeatWantedTrackerTest {
 
 		BiPredicate<Player, Location> defend = (p, l) -> defending;
 		tracker = new HeatWantedTracker(config, ledger, crimes, killCombo, markManager, defend,
-		                                victim -> managedCivilian);
+		                                victim -> managedCivilian, victim -> managedCop);
 
 		combo(true);
 	}
@@ -239,6 +241,16 @@ class HeatWantedTrackerTest {
 
 		verifyNoInteractions(crimes);
 		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
+	}
+
+	@Test
+	@DisplayName("heat on: a POLICE-marked mob that is no cop NPC (a vanilla pillager) has no death listener: its kill still commits Kill_Cop")
+	void heatOn_unmanagedPoliceMob_commitsKillCop() {
+		managedCop = false;
+
+		tracker.recordKill(killer, wanted, marked("POLICE"), 0);
+
+		verify(crimes).commit(killer, Crimes.KILL_COP, at);
 	}
 
 	@Test
