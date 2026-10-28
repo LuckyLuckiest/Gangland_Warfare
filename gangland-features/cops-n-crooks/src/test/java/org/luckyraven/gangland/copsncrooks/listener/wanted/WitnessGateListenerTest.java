@@ -107,9 +107,9 @@ class WitnessGateListenerTest {
 	}
 
 	@Test
-	@DisplayName("flipped 0.21.2 S4 (T-541): a fresh squad sighting or a cop in view no longer lets a gated crime "
-	             + "through in the same tick: it is held and handed to the report")
-	void copSight_noLongerPassesThrough() {
+	@DisplayName("flipped 0.21.2 S4 (T-541): an unreported gated Kill_Civilian is held and handed to the report (the "
+	             + "listener no longer reads the squad sighting or cops in view)")
+	void gatedKillCivilian_heldAndHandedToTheReport() {
 		CrimeCommittedEvent event = crime("Kill_Civilian", false, 0);
 
 		listener.onCrime(event);

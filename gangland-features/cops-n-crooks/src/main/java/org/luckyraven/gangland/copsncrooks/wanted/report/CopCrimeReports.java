@@ -149,19 +149,23 @@ public final class CopCrimeReports implements BeanLifecycle {
 	 * who saw it calls 911; else nobody saw it. One reporter per crime: a cop report suppresses the civilian call.
 	 * <p>
 	 * One cop is one crime: a Kill_Cop of a cop whose Assault_Cop report is pending replaces that report and keeps its
-	 * deadline when a cop saw the kill, and closes it (silently) when a civilian calls the kill in or no other living
-	 * cop saw the assault. Nobody saw the kill but another cop saw the assault: the assault report stands.
+	 * deadline when a cop saw the kill. No cop saw the kill but another living cop saw the assault: the assault report
+	 * stands and the civilians are never asked (a cop report beats a call; killing the caller must not forgive what a
+	 * cop saw). Only the victim saw the assault: it closes silently and the civilians report the kill, if anyone does.
 	 */
 	public void open(Player killer, String crimeId, @Nullable Location at, @Nullable UUID victimId) {
 		Location     spot    = at != null ? at : killer.getLocation();
 		List<CopNpc> eyes    = eyes(killer, crimeId, spot, victimId);
 		Case         assault = Crimes.KILL_COP.equals(crimeId) && victimId != null ? assaultOn(killer, victimId) : null;
 		if (eyes.isEmpty()) {
+			if (assault != null && seenByAnother(assault, victimId)) {
+				log("stand", assault, " reason=unseen_kill");
+				return;
+			}
 			int callers = civilians.witness(killer, crimeId, spot);
 			hooks.debug().accept("WITNESS " + killer.getName() + " crime=" + crimeId + " callers=" + callers);
-			boolean assaultStands = assault != null && callers == 0 && seenByAnother(assault, victimId);
-			if (assault != null && !assaultStands) supersede(assault);
-			if (callers == 0 && !assaultStands) notify(killer, WantedMessages.Key.WITNESS_NO_WITNESS, Map.of());
+			if (assault != null) supersede(assault);
+			if (callers == 0) notify(killer, WantedMessages.Key.WITNESS_NO_WITNESS, Map.of());
 			return;
 		}
 
@@ -235,12 +239,9 @@ public final class CopCrimeReports implements BeanLifecycle {
 			}
 
 			close(report);
-			String reporter = copRadio.memberName(report.reporter);
-			if (land(report.killer, ReportKind.COP, report.crimeId, report.at, report.witnesses.size(), reporter)) {
-				log("land", report, "");
-			} else {
-				log("drop", report, " reason=restrained");
-			}
+			String refused = land(report.killer, ReportKind.COP, report.crimeId, report.at, report.witnesses.size(),
+			                      copRadio.memberName(report.reporter));
+			log(refused == null ? "land" : "drop", report, refused == null ? "" : " reason=" + refused);
 		}
 
 		for (List<Deferred> waiting : deferred.values()) waiting.removeIf(report -> now > report.until());
@@ -269,8 +270,18 @@ public final class CopCrimeReports implements BeanLifecycle {
 		deferred.computeIfAbsent(criminal.getUniqueId(), id -> new ArrayList<>())
 		        .add(new Deferred(crimeId, at.clone(), Math.max(1, witnesses), kind, "",
 		                          now() + config.getWitnesses().deferMinutes() * 60_000L));
-		hooks.debug().accept("REPORT defer " + criminal.getName() + " crime=" + crimeId + " reporter=" + kind +
-		                     " witnesses=" + witnesses + " at=" + coords(at));
+		log("defer", criminal, crimeId, kind.name(), witnesses, at, "");
+	}
+
+	/**
+	 * A civilian's 911 call landed live (PLAN.md 1.5): the crime is committed as a CIVILIAN report with the call's
+	 * {@code viewers}, through the same landing as a cop's (restrained = dropped, a live sighting kept, Caller_911 about
+	 * the crime spot). {@code ponytail:} S5 closes the dead cop's silence here too.
+	 */
+	public void landCivilian(Player criminal, String crimeId, Location at, int viewers) {
+		String refused = land(criminal, ReportKind.CIVILIAN, crimeId, at, viewers, "");
+		log(refused == null ? "land" : "drop", criminal, crimeId, ReportKind.CIVILIAN.name(), viewers, at,
+		    refused == null ? "" : " reason=" + refused);
 	}
 
 	/** His user data is loaded (one tick after it): every report deferred within Defer_Minutes lands now. */
@@ -283,13 +294,12 @@ public final class CopCrimeReports implements BeanLifecycle {
 		for (Deferred report : waiting) {
 			if (now > report.until()) continue;
 
-			boolean in = land(killer, report.kind(), report.crimeId(), report.at(), report.witnesses(),
-			                  report.reporter());
-			hooks.debug().accept("REPORT " + (in ? "land " : "drop ") + killer.getName() + " crime=" + report.crimeId() +
-			                     " reporter=" + (report.reporter().isEmpty() ? report.kind() : plain(report.reporter())) +
-			                     " witnesses=" + report.witnesses() + " at=" + coords(report.at()) +
-			                     (in ? " deferred=true" : " reason=restrained"));
-			landed |= in;
+			String refused = land(killer, report.kind(), report.crimeId(), report.at(), report.witnesses(),
+			                      report.reporter());
+			log(refused == null ? "land" : "drop", killer, report.crimeId(),
+			    report.reporter().isEmpty() ? report.kind().name() : plain(report.reporter()), report.witnesses(),
+			    report.at(), refused == null ? " deferred=true" : " reason=" + refused);
+			landed |= refused == null;
 		}
 		if (landed) notify(killer, WantedMessages.Key.WITNESS_DEFERRED, Map.of());
 	}
@@ -334,27 +344,31 @@ public final class CopCrimeReports implements BeanLifecycle {
 	/**
 	 * Commits the reported crime ({@code kind}, {@code witnesses}; seen by a cop only for a cop's report), then tips
 	 * the squad to the crime spot (unless a cop sees him now: a live sighting beats a late tip) and has dispatch say it
-	 * there: Officer_Report for a cop's, Caller_911 for a call. {@code false}, nothing committed, when he is restrained
-	 * by then (cuffed, in transit, jailed): the arrest settled him, for a report at the deadline and at a join alike.
+	 * there: Officer_Report for a cop's, Caller_911 for a call. {@code null} when it landed, else why nothing was
+	 * committed: {@code restrained} (cuffed, in transit, jailed: the arrest settled him, at the deadline and at a join
+	 * alike) or {@code refused} (the recommit was cancelled).
 	 */
-	private boolean land(Player killer, ReportKind kind, String crimeId, Location at, int witnesses, String reporter) {
-		if (detainment.isRestrained(killer)) return false;
+	private @Nullable String land(Player killer, ReportKind kind, String crimeId, Location at, int witnesses,
+	                              String reporter) {
+		if (detainment.isRestrained(killer)) return "restrained";
 
 		boolean cop = kind == ReportKind.COP;
 		boolean committed = ledger.commitReported(killer, kind,
 		                                          () -> crimes.commit(killer, crimeId, at, cop, witnesses));
+		if (!committed) return "refused";
+
 		// the commit can create the group (its star trigger runs the wanted start), so it is looked up after.
 		// ponytail: no group (heat under the first star) = no radio line, as the 0.21.1 911 path; S5's group-less
 		// dispatchAt (PLAN.md 2.4) can speak here too
-		CopGroup group = committed ? copManager.groupOf(killer.getUniqueId()) : null;
-		if (group == null) return true;
+		CopGroup group = copManager.groupOf(killer.getUniqueId());
+		if (group == null) return null;
 
 		if (!group.getSquad().hasFreshSighting()) group.getSquad().reportTip(at);
 		Map<String, String> extras = new HashMap<>();
 		extras.put("crime", messages.crimeName(crimeId));
 		if (cop) extras.put("reporter", reporter);
 		copRadio.dispatchAt(group, at, killer, cop ? "Officer_Report" : "Caller_911", 0, "", extras);
-		return true;
+		return null;
 	}
 
 	/** A report whose criminal left: deferred when a witness is still alive, else gone with him. */
@@ -430,11 +444,15 @@ public final class CopCrimeReports implements BeanLifecycle {
 		if (text != null && !text.isBlank()) hooks.notifier().accept(killer, text);
 	}
 
-	/** {@code REPORT open|land|cut|drop|defer <player> crime=<id> reporter=<name> witnesses=<n> at=x,y,z}. */
 	private void log(String verb, Case report, String suffix) {
-		hooks.debug().accept("REPORT " + verb + " " + report.killer.getName() + " crime=" + report.crimeId +
-		                     " reporter=" + name(report.reporter) + " witnesses=" + report.witnesses.size() + " at=" +
-		                     coords(report.at) + suffix);
+		log(verb, report.killer, report.crimeId, name(report.reporter), report.witnesses.size(), report.at, suffix);
+	}
+
+	/** {@code REPORT open|land|cut|drop|defer|stand <player> crime=<id> reporter=<name> witnesses=<n> at=x,y,z}. */
+	private void log(String verb, Player killer, String crimeId, String reporter, int witnesses, Location at,
+	                 String suffix) {
+		hooks.debug().accept("REPORT " + verb + " " + killer.getName() + " crime=" + crimeId + " reporter=" + reporter +
+		                     " witnesses=" + witnesses + " at=" + coords(at) + suffix);
 	}
 
 	/** The cop as the radio names him, without colours. */

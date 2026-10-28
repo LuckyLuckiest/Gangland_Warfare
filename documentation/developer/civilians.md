@@ -287,7 +287,8 @@ Speech goes through `CivilianService.shout(speaker, key, "Witness_Format", crimi
 faction shouts: the criminal is the addressee, so he always hears it, and bystanders within `Shouts.Range` hear it too.
 The three keys are in `Shouts.Priority` (shipped YAML and `CiviliansConfig.DEFAULT_SHOUTS`), so no gap drops them.
 `Shouts.Enabled: false` silences the speech; the action bars still show. The cop side
-(`NineOneOneListener`) commits the held crime with one witness and says `Caller_911` through `CopRadio.dispatch`.
+(`NineOneOneListener` → `CopCrimeReports.landCivilian`, 0.21.2) commits the held crime with the call's viewers as
+its witnesses and says `Caller_911` about the crime spot through `CopRadio.dispatchAt`.
 
 ---
 

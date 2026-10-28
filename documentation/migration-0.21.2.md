@@ -184,18 +184,23 @@ Witness:
   intake) drops it too. Going down keeps them.
 - **One cop is one crime.** The dead cop of a `Kill_Cop` never witnesses it. A cop kill of a cop whose `Assault_Cop`
   report is pending replaces that report: a cop saw the kill, the kill keeps the assault's deadline; only a civilian
-  saw it, the 911 call reports the kill and the assault report closes; nobody saw the kill, the assault report still
-  lands if another living cop saw it, else it closes with `Nobody saw that.` (never `The radio call never went out.`).
+  saw the kill but another living cop saw the assault, the assault report stands and lands and the civilians are not
+  asked (a cop report beats a 911 call, so killing the caller never forgives what a cop saw); only the dying cop saw
+  the assault, its report closes and the civilians report the kill (a 911 call), or nobody does (`Nobody saw that.`,
+  never `The radio call never went out.`).
 - A report that lands while a cop has you in sight leaves the squad's live sighting alone (a late tip never drags a
-  chase back to the crime spot); dispatch still names the crime spot.
+  chase back to the crime spot); dispatch still names the crime spot. This holds for a 911 call too: it lands through
+  the same path as a cop report, so a call that lands after you were cuffed during it is dropped as well.
 - A report that raises no star (a cop-reported `Car_Theft` is 90 heat) says nothing on the radio, as a 911 call
   without a star already did in 0.21.1.
 
 ## 3. Debug lines
 
-- (S4) `REPORT open|land|cut|drop|defer <player> crime=<id> reporter=<name> witnesses=<n> at=x,y,z`, with
-  ` reason=<death|cuffed|arrested|restrained|superseded|quit>` on a drop or a cut at quit and ` deferred=true` on a landing at a
-  join. `WITNESS <player> crime=<id> callers=<n>` now comes from the report when no cop saw it.
+- (S4) `REPORT open|land|cut|drop|defer|stand <player> crime=<id> reporter=<name> witnesses=<n> at=x,y,z`, with
+  ` reason=<death|cuffed|arrested|restrained|refused|superseded|quit>` on a drop or a cut at quit (`refused`: the
+  recommit was cancelled, nothing committed) and ` deferred=true` on a landing at a join. A 911 call landing live logs
+  `REPORT land|drop <player> ... reporter=CIVILIAN witnesses=<viewers>`. `REPORT stand ... crime=Assault_Cop ...
+  reason=unseen_kill`: a cop kill no cop saw left the assault report another cop saw in place. `WITNESS <player> crime=<id> callers=<n>` now comes from the report when no cop saw it.
 - (S4, civilians) `CALL_DEFER <player> crime=<id> viewers=<n>`: a 911 call handed over at his logout.
 
 - `CALL_IN <player> crime=<id> caller=<name>` (civilians) now ends with `viewers=<n>`, the head count the crime is

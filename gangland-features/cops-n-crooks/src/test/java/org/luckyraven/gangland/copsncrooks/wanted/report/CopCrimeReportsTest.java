@@ -39,6 +39,7 @@ import java.util.function.BooleanSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -625,8 +626,9 @@ class CopCrimeReportsTest {
 	}
 
 	@Test
-	@DisplayName("review r1: a cop kill no cop saw, a civilian called it in: the victim's assault case closes, one crime")
-	void killUnseenByCops_civilianCalls_assaultClosed() {
+	@DisplayName("review r2: a cop kill no cop saw while another living cop saw the assault: the civilians are never "
+	             + "asked, the assault lands (a cop report beats a call, one cop is one crime)")
+	void killUnseenByCops_anotherCopSawTheAssault_civiliansNotAsked_assaultLands() {
 		CopNpc hit = cop("Hit", 3, 90f);
 		cop("Bob", 10, 90f);
 		UUID hitId = hit.getEntity().getUniqueId();
@@ -637,12 +639,64 @@ class CopCrimeReportsTest {
 		when(civilians.witness(killer, Crimes.KILL_COP, crimeAt)).thenReturn(1);
 
 		open(Crimes.KILL_COP, hitId);
+		// past the 911 call: the would-be caller may be dead by now, a living cop still saw the assault
+		advanceSeconds(10);
+		reports.tick();
+
+		verify(civilians, never()).witness(any(), eq(Crimes.KILL_COP), any());
+		verify(crimes).commit(killer, Crimes.ASSAULT_COP, crimeAt, true, 1);
+		assertFalse(debugContains("reason=superseded"), debug::toString);
+		assertTrue(debug.stream().anyMatch(line -> line.startsWith("REPORT stand Crook crime=Assault_Cop ")
+		                                                   && line.endsWith(" reason=unseen_kill")), debug::toString);
+	}
+
+	@Test
+	@DisplayName("review r2: a cop kill no cop saw, the assault only the victim saw, a civilian calls the kill in: the "
+	             + "assault case closes, one crime")
+	void killUnseenByCops_victimOnlySawAssault_civilianCalls_assaultClosed() {
+		CopNpc hit = cop("Hit", 3, 270f);
+		when(hit.getTargetPlayerId()).thenReturn(killerId);
+		when(hit.getCurrentState()).thenReturn(CopState.COMBAT);
+		UUID hitId = hit.getEntity().getUniqueId();
+		open(Crimes.ASSAULT_COP, hitId);
+		kill(hit);
+		when(civilians.witness(killer, Crimes.KILL_COP, crimeAt)).thenReturn(1);
+
+		open(Crimes.KILL_COP, hitId);
 		advanceSeconds(3);
 		reports.tick();
 
 		assertEquals(0, reports.pending(killerId));
 		verify(crimes, never()).commit(eq(killer), eq(Crimes.ASSAULT_COP), any(), anyBoolean(), anyInt());
-		assertTrue(debugContains("REPORT drop Crook crime=Assault_Cop reporter=Hit witnesses=2 at=1,64,1 reason=superseded"),
+		assertTrue(debugContains("REPORT drop Crook crime=Assault_Cop reporter=Hit witnesses=1 at=1,64,1 reason=superseded"),
+		           debug::toString);
+	}
+
+	@Test
+	@DisplayName("review r2: a report whose commit is refused logs drop reason=refused, not land")
+	void landing_commitRefused_logsRefused() {
+		cop("Bob", 10, 90f);
+		when(crimes.commit(any(), anyString(), any(), anyBoolean(), anyInt())).thenReturn(false);
+		open(Crimes.KILL_COP, UUID.randomUUID());
+
+		advanceSeconds(3);
+		reports.tick();
+
+		assertTrue(debugContains("REPORT drop Crook crime=Kill_Cop reporter=Bob witnesses=1 at=1,64,1 reason=refused"),
+		           debug::toString);
+		assertFalse(debugContains("REPORT land"), debug::toString);
+	}
+
+	@Test
+	@DisplayName("review r2: a deferred report whose commit is refused at the join: no Witness.Deferred line")
+	void deferredReport_commitRefused_noDeferredLine() {
+		when(crimes.commit(any(), anyString(), any(), anyBoolean(), anyInt())).thenReturn(false);
+		reports.defer(killer, Crimes.CAR_THEFT, crimeAt, 2, ReportKind.CIVILIAN);
+
+		reports.onJoin(killer);
+
+		assertFalse(notices.contains("Crook|WITNESS_DEFERRED {}"), notices::toString);
+		assertTrue(debugContains("REPORT drop Crook crime=Car_Theft reporter=CIVILIAN witnesses=2 at=1,64,1 reason=refused"),
 		           debug::toString);
 	}
 
@@ -731,6 +785,68 @@ class CopCrimeReportsTest {
 		verify(crimes).commit(killer, Crimes.CAR_THEFT, crimeAt, false, 3);
 		assertEquals(crimeAt, squad.lastKnownLocation());
 		verify(radio).dispatchAt(eq(group), eq(crimeAt), eq(killer), eq("Caller_911"), eq(0), eq(""), anyMap());
+	}
+
+	// ── a live 911 call (PLAN.md 1.5, review r2: one landing path) ────────
+
+	@Test
+	@DisplayName("a live 911 call commits as a CIVILIAN report with its viewers, tips the squad to the crime spot and "
+	             + "dispatch says Caller_911 there with the crime by name")
+	void liveCall_commitsCivilian_tipsCrimeSpot_radiosCaller911() {
+		reports.landCivilian(killer, Crimes.CAR_THEFT, crimeAt, 3);
+
+		InOrder order = inOrder(ledger, crimes, copManager, radio);
+		order.verify(ledger).commitReported(eq(killer), eq(ReportKind.CIVILIAN), any());
+		order.verify(crimes).commit(killer, Crimes.CAR_THEFT, crimeAt, false, 3);
+		order.verify(copManager).groupOf(killerId);
+		// R4: the call is a tip to the crime spot, not a sighting
+		assertFalse(squad.hasFreshSighting());
+		assertEquals(crimeAt, squad.lastKnownLocation());
+		// %place% is placeOf(crimeAt) inside dispatchAt; %suspect% belongs to the CopRadio extras hook (disguise lane)
+		order.verify(radio).dispatchAt(group, crimeAt, killer, "Caller_911", 0, "", Map.of("crime", "Car Theft"));
+		assertTrue(debugContains("REPORT land Crook crime=Car_Theft reporter=CIVILIAN witnesses=3 at=1,64,1"),
+		           debug::toString);
+	}
+
+	@Test
+	@DisplayName("review r2: a live 911 call while a cop has him in sight keeps the squad's sighting")
+	void liveCall_squadInContact_keepsTheSighting() {
+		Location live = new Location(world, 10, 64, 10);
+		squad.reportSighting(live);
+
+		reports.landCivilian(killer, Crimes.CAR_THEFT, crimeAt, 1);
+
+		assertEquals(live, squad.lastKnownLocation());
+		verify(radio).dispatchAt(group, crimeAt, killer, "Caller_911", 0, "", Map.of("crime", "Car Theft"));
+	}
+
+	@Test
+	@DisplayName("review r2: a live 911 call on a player cuffed during the call commits nothing")
+	void liveCall_restrained_drops() {
+		when(detainment.isRestrained(killer)).thenReturn(true);
+
+		reports.landCivilian(killer, Crimes.CAR_THEFT, crimeAt, 2);
+
+		verify(crimes, never()).commit(any(), anyString(), any(), anyBoolean(), anyInt());
+		verify(radio, never()).dispatchAt(any(), any(), any(), anyString(), anyInt(), anyString(), anyMap());
+		assertTrue(debugContains("REPORT drop Crook crime=Car_Theft reporter=CIVILIAN witnesses=2 at=1,64,1 "
+		                         + "reason=restrained"), debug::toString);
+	}
+
+	@Test
+	@DisplayName("a live 911 call that raises no group (no star) or is refused says nothing on the radio")
+	void liveCall_noGroupOrRefused_noRadio() {
+		when(copManager.groupOf(killerId)).thenReturn(null);
+		reports.landCivilian(killer, Crimes.CAR_THEFT, crimeAt, 1);
+		verify(crimes).commit(killer, Crimes.CAR_THEFT, crimeAt, false, 1);
+
+		when(copManager.groupOf(killerId)).thenReturn(group);
+		when(crimes.commit(any(), anyString(), any(), anyBoolean(), anyInt())).thenReturn(false);
+		reports.landCivilian(killer, Crimes.CAR_THEFT, crimeAt, 1);
+
+		verify(radio, never()).dispatchAt(any(), any(), any(), anyString(), anyInt(), anyString(), anyMap());
+		assertNull(squad.lastKnownLocation());
+		assertTrue(debugContains("reason=refused"), debug::toString);
 	}
 
 	// ── lifecycle (PLAN.md 1.4) ─────────────────────────────────────────────
