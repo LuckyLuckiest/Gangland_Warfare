@@ -282,8 +282,8 @@ Witness:
   the pursuit report's cops-down count it then, not at the death). The station's held replacement follows once
   `Patrol.Respawn_Seconds` (30) have passed since the death and on the first second no player has the station spot in
   view (owner ruling R6, T-587), never at `Officer_Missing` itself. Both beat cops hold that spot for `Scene_Seconds`
-  (60) from `Officer_Missing` before they walk back to the beat (T-579); a replacement that spawns after that stays on
-  its beat.
+  (60) from the moment dispatch learns of the death (`Officer_Missing`, or a 911 call that closed the silence first)
+  before they walk back to the beat (T-579); a replacement that spawns after that stays on its beat.
   - Only a cop who held a slot of the squad holds it while he is silent: a walker the squad sent home (a star drop, a
     backup run out) or one stranded past `Pursuit.Max_Distance` holds none, so the squad refills and calls walkers back
     for a death it saw as before (T-580). A silent Commander still leads: a Commander the squad sent home keeps walking

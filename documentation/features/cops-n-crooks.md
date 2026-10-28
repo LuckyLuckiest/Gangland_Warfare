@@ -258,8 +258,8 @@ player where no cop saw the killer and no cop saw the body fall becomes a **sile
    suspect's side of that spot (no hand-off lead past it) and the squad is tipped there. A beat cop's station sends
    the nearest beat cop of the station to walk to the spot; the held replacement follows once `Respawn_Seconds` (30)
    have passed since the death, on a second no player has the station spot in view (R6), never at `Officer_Missing`
-   itself. Both hold the spot (no wander, no walk back to the beat) until `Scene_Seconds` (60) after `Officer_Missing`;
-   a replacement that spawns later stays on its beat. A cop with neither (his squad gone since) sends nobody.
+   itself. Both hold the spot (no wander, no walk back to the beat) until `Scene_Seconds` (60) after dispatch learned
+   of the death (`Officer_Missing`, or a 911 call first); a replacement that spawns later stays on its beat. A cop with neither (his squad gone since) sends nobody.
 4. When his squad was hunting the killer, and is still his squad, the kill counts now (`Pursuit_Presumed`). Otherwise
    (his squad gone since counts as none) a scene opens at the
    spot for `Scene_Seconds` (60): the first unit within 6 blocks says `Scene_Found`; a cop who sees the killer while he is
