@@ -189,9 +189,10 @@ public class CopManager implements BeanLifecycle {
 		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
 		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
 		// which only guards against a per-tick bounce inside a single episode. Only up to the new level's target (T-435):
-		// the walkers over it keep walking, sent home, and come back first if the group lacks cops later (T-436).
+		// the walkers over it keep walking, sent home, and come back first if the group lacks cops later (T-436). A cop
+		// killed unseen still holds his slot (0.21.2, T-545): one walker fewer comes back for a death nobody knows of.
 		int target = Math.min(spawnManager.getTargetCopCount(wanted.getLevel()), configProvider.getMaxCopsPerPlayer());
-		reengageReturning(group, player, target - engagedCount(group), cop -> true);
+		reengageReturning(group, player, target - engagedCount(group) - silentRoles(group).size(), cop -> true);
 		// The new episode fields its own target, trimmed against the cops engaged now, not against the last episode's
 		// target: a re-spot after a stepwise escape (Drop_Mode ONE_STAR) lands where an all-stars escape does (T-435)
 		group.setPendingRelease(Math.max(0, engagedCount(group) - target));

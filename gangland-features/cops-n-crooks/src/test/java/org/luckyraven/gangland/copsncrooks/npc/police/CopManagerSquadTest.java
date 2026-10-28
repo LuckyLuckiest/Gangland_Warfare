@@ -1673,6 +1673,27 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 T-545: a new episode calls back its target's worth of walkers less the slots a silent cop holds")
+	void silentCop_newEpisodeCallsBackOneWalkerFewer() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.onWantedEnd(player, WantedCause.UNKNOWN);
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.RETURNING);
+		List<CopRole> held = new java.util.ArrayList<>();
+		held.add(null);
+		manager.setSilentRoles(g -> g == group ? held : List.of());
+
+		manager.onWantedStart(player, one);
+
+		assertEquals(1, countIn(group, CopState.PURSUING), "one star's two, one of them the silent cop's held slot");
+	}
+
+	@Test
 	@DisplayName("0.21.2 T-545/T-546: held slots never count toward a release or the episode trim: no real cop is sent home for them")
 	void silentCop_neverCountsTowardRelease_orEpisodeTrim() {
 		Wanted three = CopManagerFixture.wanted(3);
