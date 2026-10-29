@@ -102,7 +102,5 @@ Item:
    Unknown: "&cUnknown item &f%item%&c. Items: &f%items%"
    # No placeholders.
    Needs_Player: "&cThe console must name a player."
-   # Placeholders: %items% (the valid item ids).
-   Usage: "&cUsage: &f/glw cop item <item> [player]&c. Items: &f%items%"
    # No placeholders.
    No_Permission: "&cYou don't have permission to give cop items."

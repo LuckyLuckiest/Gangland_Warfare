@@ -69,7 +69,7 @@ class CommandMessages020Test {
 			JsonObject root = new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
 
 			assertTrue(root.has("cop_item"), "cop_item is missing from commands.json");
-			assertEquals("/glw cop item <police_scanner|scanner_map> [player]",
+			assertEquals("/glw cop item <item> [player]",
 			             root.getAsJsonObject("cop_item").get("usage").getAsString());
 			assertFalse(root.getAsJsonObject("cop_item").get("description").getAsString().isBlank());
 		}

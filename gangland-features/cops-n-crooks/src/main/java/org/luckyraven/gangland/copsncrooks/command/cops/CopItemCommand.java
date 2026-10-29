@@ -85,7 +85,7 @@ class CopItemCommand extends SubArgument {
 		}
 
 		if (itemId == null) {
-			sender.sendMessage(messages.format(CommandMessages.Key.ITEM_USAGE, Map.of("items", String.join(", ", CopsItems.ids()))));
+			sender.sendMessage(messages.usage("/glw cop item <item> [player]"));
 			return;
 		}
 

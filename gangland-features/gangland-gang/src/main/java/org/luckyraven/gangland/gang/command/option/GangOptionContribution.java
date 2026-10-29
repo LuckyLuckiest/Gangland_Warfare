@@ -63,8 +63,11 @@ public final class GangOptionContribution implements CommandContribution {
 	}
 
 	private Argument gangArgument(Tree<Argument> tree) {
-		Argument gang = new Argument(plugin, "gang", tree);
-		Argument rank = new Argument(plugin, "rank", tree);
+		Argument gang = new Argument(plugin, "gang", tree, (argument, sender, args) -> sender.sendMessage(
+				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "/glw option gang <action>")));
+		Argument rank = new Argument(plugin, "rank", tree, (argument, sender, args) -> sender.sendMessage(
+				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
+				                              "/glw option gang rank <target> <rank>")));
 
 		Argument target = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {

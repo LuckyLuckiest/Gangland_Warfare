@@ -24,6 +24,7 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -56,6 +57,8 @@ class CopItemCommandTest {
 		when(items.create("police_scanner")).thenReturn(scanner);
 		when(messages.format(any(CommandMessages.Key.class), anyMap())).thenAnswer(
 				invocation -> invocation.getArgument(0, CommandMessages.Key.class).name());
+
+		when(messages.usage(anyString())).thenAnswer(invocation -> "USAGE " + invocation.getArgument(0, String.class));
 
 		command = new CopItemCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), items, messages, mapView);
 	}
@@ -124,14 +127,14 @@ class CopItemCommandTest {
 	}
 
 	@Test
-	@DisplayName("a missing item id is answered with the usage text (ITEM_USAGE), never Item.Unknown with an empty %item%")
+	@DisplayName("a missing item id is answered with the usage text (Missing Arguments), never Item.Unknown with an empty %item%")
 	void missingItemId_answersUsage() {
 		CommandSender console = sender(false, true);
 		Player        bob     = onlinePlayer("Bob");
 
 		command.give(console, null, "Bob");
 
-		verify(console).sendMessage("ITEM_USAGE");
+		verify(console).sendMessage("USAGE /glw cop item <item> [player]");
 		verify(console, never()).sendMessage("ITEM_UNKNOWN");
 		verify(bob.getInventory(), never()).addItem(any(ItemStack[].class));
 	}

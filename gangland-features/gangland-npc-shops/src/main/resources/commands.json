@@ -49,6 +49,6 @@
 	},
 	"bank_menu": {
 		"usage": "/glw bank menu",
-		"description": "Opens the rich banker panel (Deposit / Withdraw / Upgrade / Rename / Rewards). Phone-banking entry point."
+		"description": "Opens the banker panel: deposit, withdraw, upgrade, rename, rewards."
 	}
 }
