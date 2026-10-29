@@ -4,6 +4,7 @@ import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.command.data.CommandInformation;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.copsncrooks.command.cops.setup.SetupCommand;
 import org.luckyraven.gangland.copsncrooks.command.cops.spawner.CopSpawnerCommand;
@@ -19,9 +20,13 @@ import org.luckyraven.keystone.bean.command.CommandHandler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @CommandHandler
 public class CopCommand extends Command {
+
+	/** A {@code cop_setup_*} or {@code cop_spawner_*} row: documented in commands.json, shown by its parent row only. */
+	private static final Pattern CHILD_ROW = Pattern.compile("cop_(setup|spawner)_.+");
 
 	private final CopService      copService;
 	private final CopSpawnManager copSpawnManager;
@@ -46,13 +51,17 @@ public class CopCommand extends Command {
 		this.copsItems       = copsItems;
 		this.scannerMapView  = scannerMapView;
 
-		var list = getCommands().entrySet()
+		getHelpInfo().addAll(parentPage(getCommands()));
+	}
+
+	/** The rows of the {@code /glw cop} help page, in key order. */
+	static List<CommandInformation> parentPage(Map<String, CommandInformation> commands) {
+		return commands.entrySet()
 				.stream()
-				.filter(entry -> entry.getKey().startsWith("cop"))
+				.filter(entry -> entry.getKey().startsWith("cop") && !CHILD_ROW.matcher(entry.getKey()).matches())
 				.sorted(Map.Entry.comparingByKey())
 				.map(Map.Entry::getValue)
 				.toList();
-		getHelpInfo().addAll(list);
 	}
 
 	@Override

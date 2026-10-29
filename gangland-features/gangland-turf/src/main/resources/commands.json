@@ -17,7 +17,7 @@
 	},
 	"turf_create": {
 		"usage": "/glw turf create <displayName>",
-		"description": "Create a turf from your active wand selection. The id is auto-assigned; the new turf becomes your active selection."
+		"description": "Creates a turf from your wand selection and selects it."
 	},
 	"turf_delete": {
 		"usage": "/glw turf delete",
@@ -33,7 +33,7 @@
 	},
 	"turf_info": {
 		"usage": "/glw turf info [id|name]",
-		"description": "Show a turf card: owner, size, income, state and whether you can attack it. With no argument, the turf you stand in or your active selection."
+		"description": "Shows a turf card. With no argument, the turf you stand in."
 	},
 	"turf_rules": {
 		"usage": "/glw turf rules",
@@ -41,7 +41,7 @@
 	},
 	"turf_show": {
 		"usage": "/glw turf show",
-		"description": "Spawn a particle outline along the edges of your active-selection turf, the turf you're in, or your wand selection."
+		"description": "Outlines your selected or current turf with particles."
 	},
 	"turf_status": {
 		"usage": "/glw turf status",
@@ -49,7 +49,7 @@
 	},
 	"turf_select": {
 		"usage": "/glw turf select [id]",
-		"description": "Mark a turf as your active selection. With no id, selects the turf you're standing inside; pass an id from /glw turf list to pick a remote turf so you can /glw turf tp to it."
+		"description": "Selects a turf. With no id, the turf you stand in."
 	},
 	"turf_tp": {
 		"usage": "/glw turf tp [id]",
@@ -57,23 +57,23 @@
 	},
 	"turf_income": {
 		"usage": "/glw turf income <amount>",
-		"description": "Set the per-interval passive income of your active-selection turf (paid to the owning gang every Income_Interval_Minutes)."
+		"description": "Sets the passive income of your selected turf per interval."
 	},
 	"turf_garrison": {
 		"usage": "/glw turf garrison [count]",
-		"description": "Set the defender garrison stock for your active-selection turf. With no count, prints the current stock."
+		"description": "Sets the defender garrison stock; no count prints it."
 	},
 	"turf_buff": {
 		"usage": "/glw turf buff [powerup_id]",
-		"description": "Activate a powerup catalogue entry on your active-selection turf. With no id, lists the active buffs."
+		"description": "Activates a powerup on your selected turf; no id lists buffs."
 	},
 	"turf_powerupnpc": {
 		"usage": "/glw turf powerupnpc <set|remove>",
-		"description": "Place (where you stand, inside your active-selection turf) or remove the per-turf Quartermaster NPC for your active-selection turf."
+		"description": "Places or removes the Quartermaster NPC of your selected turf."
 	},
 	"turf_quartermaster": {
 		"usage": "/glw turf quartermaster",
-		"description": "Place or move your gang's Quartermaster where you stand, inside a turf your gang owns. Costs Powerup_Npc.Placement_Cost from the gang bank."
+		"description": "Places your gang's Quartermaster where you stand."
 	},
 	"turf_rename": {
 		"usage": "/glw turf rename <name>",
@@ -81,15 +81,15 @@
 	},
 	"map": {
 		"usage": "/glw map",
-		"description": "Show the turf map around you: who owns what and what you can attack. Hover a letter for details, click it for the turf card."
+		"description": "Shows the turf map around you. Hover a letter for details."
 	},
 	"map_auto": {
 		"usage": "/glw map auto",
 		"description": "Turn the auto map on or off: it is sent again when what it shows changes."
 	},
 	"map_hud": {
-		"usage": "/glw map hud <on|off|default>",
-		"description": "on: also show the nearest turf in the action bar outside every turf. off: no turf line. default: the line inside turfs only."
+		"usage": "/glw map hud <mode>",
+		"description": "Turf action-bar line: on, off or default (inside turfs only)."
 	},
 	"map_text": {
 		"usage": "/glw map text",
@@ -101,10 +101,10 @@
 	},
 	"map_zoom": {
 		"usage": "/glw map zoom <in|out>",
-		"description": "Zoom your map in or out: 8, 16, 32 or 64 blocks per cell. Only you see it; it resets when you log out."
+		"description": "Zooms your map: 8, 16, 32 or 64 blocks per cell."
 	},
 	"map_border": {
 		"usage": "/glw map border",
-		"description": "Show the border of the turf you stand in, or the nearest turf, as particles for 10 seconds (only the part near you)."
+		"description": "Shows the border of your turf or the nearest one for 10s."
 	}
 }

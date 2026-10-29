@@ -41,7 +41,7 @@
 	},
 	"jail_setexit": {
 		"usage": "/glw jail setexit [jailId]",
-		"description": "Without jailId: sets the GLOBAL release exit (used by every jail that has no specific exit). With jailId: sets the exit for that specific jail, overriding the global."
+		"description": "Sets the global release exit, or a jail's own exit."
 	},
 	"cop_help": {
 		"usage": "/glw cop help <page>",
@@ -49,11 +49,19 @@
 	},
 	"cop_list": {
 		"usage": "/glw cop list [player]",
-		"description": "Shows the players being chased by cops. The player is optional: with one, shows that player's cops."
+		"description": "Shows players chased by cops, or one player's cops."
 	},
 	"cop_item": {
-		"usage": "/glw cop item <police_scanner|scanner_map> [player]",
-		"description": "Gives a Police Scanner or a Scanner Map to yourself or the named online player."
+		"usage": "/glw cop item <item> [player]",
+		"description": "Gives a Police Scanner or Scanner Map."
+	},
+	"cop_setup": {
+		"usage": "/glw cop setup <action>",
+		"description": "Setup tools: wand, mode, save, list, remove, tp, link."
+	},
+	"cop_spawner": {
+		"usage": "/glw cop spawner <action>",
+		"description": "Cop spawners: set, remove, list, info, teleport."
 	},
 	"cop_spawner_set": {
 		"usage": "/glw cop spawner set",
@@ -69,38 +77,38 @@
 	},
 	"cop_spawner_info": {
 		"usage": "/glw cop spawner info <id>",
-		"description": "Shows the information of the cop spawner with the specified id."
+		"description": "Shows information about the specified cop spawner."
 	},
 	"cop_spawner_teleport": {
 		"usage": "/glw cop spawner teleport <id>",
-		"description": "Teleports the player to the cop spawner with the specified id. The tp alias works too."
+		"description": "Teleports you to the specified cop spawner (alias tp)."
 	},
 	"cop_setup_wand": {
 		"usage": "/glw cop setup wand",
-		"description": "Gives you the setup wand: left-click a block for pos1, right-click for pos2."
+		"description": "Gives the setup wand: left-click pos1, right-click pos2."
 	},
 	"cop_setup_mode": {
-		"usage": "/glw cop setup mode <station|district|hideout|pickup|restricted|breaker>",
-		"description": "Chooses what the next save stores. Station and pickup use pos1 only, the others a cuboid."
+		"usage": "/glw cop setup mode <mode>",
+		"description": "Chooses what the next save stores."
 	},
 	"cop_setup_save": {
 		"usage": "/glw cop setup save <name...>",
-		"description": "Stores the wand selection under a name according to the mode (a station also takes the spawners near it)."
+		"description": "Stores the wand selection under a name."
 	},
 	"cop_setup_list": {
-		"usage": "/glw cop setup list [station|region|point]",
-		"description": "Lists the stations, regions and points, one row each with its kind, id and name. A row's tp goes to it; a player sees its world and coordinates in the hover, the console gets them as text."
+		"usage": "/glw cop setup list [kind]",
+		"description": "Lists stations, regions and points."
 	},
 	"cop_setup_remove": {
-		"usage": "/glw cop setup remove <station|region|point> <id>",
-		"description": "Removes a station, region or point (a station frees its spawners)."
+		"usage": "/glw cop setup remove <kind> <id>",
+		"description": "Removes a station, region or point."
 	},
 	"cop_setup_tp": {
-		"usage": "/glw cop setup tp <station|region|point> <id>",
-		"description": "Teleports you to a station, a point, or the centre of a region."
+		"usage": "/glw cop setup tp <kind> <id>",
+		"description": "Teleports you to a station, region or point."
 	},
 	"cop_setup_link": {
 		"usage": "/glw cop setup link <stationId> <jailId|none>",
-		"description": "Sets the jail a station books arrests into, or none to unlink it."
+		"description": "Sets the jail a station books arrests into."
 	}
 }

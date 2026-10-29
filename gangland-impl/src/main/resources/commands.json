@@ -101,11 +101,11 @@
 	},
 	"bank_deposit": {
 		"usage": "/glw bank deposit <amount> [player]",
-		"description": "Deposits the amount into your bank. The [player] form credits another player's bank and needs gangland.command.bank.admin."
+		"description": "Deposits into your bank. [player] credits another bank (admin)."
 	},
 	"bank_withdraw": {
 		"usage": "/glw bank withdraw <amount> [player]",
-		"description": "Withdraws the amount from your bank. The [player] form debits another player's bank and needs gangland.command.bank.admin."
+		"description": "Withdraws from your bank. [player] debits another bank (admin)."
 	},
 	"bank_balance": {
 		"usage": "/glw bank balance",
@@ -113,7 +113,7 @@
 	},
 	"bank_resetcap": {
 		"usage": "/glw bank resetcap <player|all>",
-		"description": "Admin: resets the daily deposit / withdraw caps for one player, or every bank account when <all> is given."
+		"description": "Admin: resets daily deposit/withdraw caps for a player or all."
 	},
 	"spawn": {
 		"usage": "/glw spawn",

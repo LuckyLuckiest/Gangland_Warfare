@@ -4,6 +4,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.bean.command.CommandHandler;
@@ -12,6 +14,7 @@ import org.luckyraven.gangland.menu.filter.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Generic entry point for list-view filter mutations. Replaces the old domain-specific {@code /glw gang search ...}
@@ -37,6 +40,10 @@ public final class FilterCommand extends Command {
 	private static final String ACTION_SET    = "set";
 	private static final String ACTION_CYCLE  = "cycle";
 	private static final String ACTION_NEXT   = "next";
+
+	/** What each action still needs after its word, for the Missing Arguments usage. */
+	private static final Map<String, String> OPERANDS = Map.of(ACTION_SEARCH, "<text>", ACTION_SET, "<field> <text>",
+	                                                           ACTION_CYCLE, "<field>", ACTION_NEXT, "<field> <options>");
 
 	private final FilterRegistry          registry;
 	private final FilterStore             store;
@@ -72,7 +79,7 @@ public final class FilterCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		// bare /glw filter — nothing to do; rely on tab-completion for discoverability
+		usage(commandSender, null);
 	}
 
 	@Override
@@ -87,9 +94,8 @@ public final class FilterCommand extends Command {
 
 	private OptionalArgument bindingArg() {
 		OptionalArgument binding = new OptionalArgument(getPlugin(), getArgumentTree(),
-		                                                (arg, sender, args) -> {
-															// binding only — no action yet; noop
-														}, sender -> registry.all()
+		                                                (arg, sender, args) -> usage(sender, null),
+		                                                sender -> registry.all()
 				.stream()
 				.map(FilterBinding::id).toList());
 		binding.addSubArgument(actionArg());
@@ -121,6 +127,18 @@ public final class FilterCommand extends Command {
 		                            sender -> List.of("<text>"));
 	}
 
+	/**
+	 * The standard Missing Arguments reply for a filter line that stopped early; {@code action} picks the operands
+	 * that action still needs, or null / an unknown action asks for the action.
+	 */
+	private void usage(CommandSender sender, String action) {
+		String operands = action == null ? null : OPERANDS.get(action.toLowerCase());
+		String tail     = operands == null ? "<action>" : action.toLowerCase() + " " + operands;
+
+		sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
+		                                                 "/glw filter <binding> " + tail));
+	}
+
 	private void handleNoValue(CommandSender sender, String[] args) {
 		// /glw filter <binding> <action>
 		if (!(sender instanceof Player player)) return;
@@ -135,7 +153,10 @@ public final class FilterCommand extends Command {
 				store.set(bindingId, player, current.withSort(binding.nextSort(current.sort())));
 			}
 			case ACTION_CLEAR -> store.set(bindingId, player, binding.empty());
-			default -> { return; }
+			default -> {
+				usage(sender, action);
+				return;
+			}
 		}
 		reopen(player, binding);
 	}
@@ -152,7 +173,7 @@ public final class FilterCommand extends Command {
 		switch (action.toLowerCase()) {
 			case ACTION_SEARCH -> applyText(player, bindingId, binding, "NAME", joinFrom(args, 3));
 			case ACTION_CYCLE -> applyCycle(player, bindingId, binding, value);
-			default -> { return; }
+			default -> usage(sender, action);
 		}
 	}
 

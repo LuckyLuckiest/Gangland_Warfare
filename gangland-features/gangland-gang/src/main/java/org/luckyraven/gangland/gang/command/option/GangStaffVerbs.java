@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.command.sub.gang.GangNameRules;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.chat.ChatSpyService;
@@ -43,8 +44,8 @@ import java.util.function.Consumer;
 @CustomLog
 public final class GangStaffVerbs {
 
-	private static final String BANK_USAGE      = "bank <gang> <balance|give|take|reset> [amount]";
-	private static final String SAFEHOUSE_USAGE = "safehouse <gang> <list|tp|remove> [name]";
+	private static final String BANK_USAGE      = "bank <gang> <action> [amount]";
+	private static final String SAFEHOUSE_USAGE = "safehouse <gang> <action> [name]";
 
 	private final GangManager           gangManager;
 	private final GangMembershipService membership;
@@ -343,7 +344,7 @@ public final class GangStaffVerbs {
 	// ---------------------------------------------------------------- helpers
 
 	private void usage(CommandSender sender, String usage) {
-		sender.sendMessage(messages.text("Staff.Usage", "&cUsage: /glw option gang %usage%", "usage", usage));
+		sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "/glw option gang " + usage));
 	}
 
 	/** The word at {@code index}, or an empty string when the line stopped earlier. */

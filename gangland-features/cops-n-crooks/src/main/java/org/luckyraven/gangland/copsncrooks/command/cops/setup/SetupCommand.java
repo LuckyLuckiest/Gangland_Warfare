@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 public final class SetupCommand extends SubArgument {
 
 	/** The root has no {@code cop_setup_help} entry, so a bare {@code /glw cop setup} sends this usage. */
-	private static final String ROOT_USAGE = "/glw cop setup <wand|mode|save|list|remove|tp|link>";
+	private static final String ROOT_USAGE = "/glw cop setup <action>";
 
 	private final JavaPlugin     plugin;
 	private final Tree<Argument> tree;

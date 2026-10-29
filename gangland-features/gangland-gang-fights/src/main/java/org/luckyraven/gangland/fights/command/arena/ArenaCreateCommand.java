@@ -38,6 +38,6 @@ public final class ArenaCreateCommand extends SubArgument {
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		return (argument, sender, args) -> sender.sendMessage(deps.text().text("Arenas.Name_Invalid"));
+		return (argument, sender, args) -> ArenaDeps.usage(sender, "/glw arena create <name>");
 	}
 }
