@@ -84,7 +84,8 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 					pr.get("Type_Id").asString().orDefault("quartermaster"),
 					radius(pr),
 					pr.get("Display_Name").asString().orDefault("Quartermaster"),
-					placementCost(pr.get("Placement_Cost").asDouble().orDefault(5000.0)));
+					placementCost(pr.get("Placement_Cost").asDouble().orDefault(5000.0)),
+					pr.get("Respawn_Seconds").asInt().min(0).orDefault(TurfPowerupSettings.DEFAULT_RESPAWN_SECONDS));
 		} else {
 			powerupSettings = new TurfPowerupSettings("quartermaster", 32.0, "Quartermaster", 5000.0);
 		}

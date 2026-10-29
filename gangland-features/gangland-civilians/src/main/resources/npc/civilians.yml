@@ -410,9 +410,10 @@ Types:
          Experience: 0
          Items: []
       AI:
+         # Small pacing around the post; the turf module walks him home when he strays past Hold_Radius.
          Wander:
-            Enabled: false
-            Range: 0
+            Enabled: true
+            Range: 4
          Flee_On_Damage:
             Enabled: false
             Flee_Range: 0

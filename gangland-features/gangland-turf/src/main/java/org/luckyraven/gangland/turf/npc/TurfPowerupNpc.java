@@ -12,6 +12,7 @@ import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
+import org.luckyraven.keystone.npc.NpcPost;
 
 import java.util.Set;
 import java.util.UUID;
@@ -45,6 +46,9 @@ public final class TurfPowerupNpc {
 	private Supplier<Set<UUID>> attackerSupplier;
 	private double              targetingRadius = 32.0;
 	private BukkitTask          targetingTask;
+	/** True while walking home to the post: retarget stays quiet so it cannot flip COMBAT back on. */
+	@Getter
+	private boolean             recalled;
 
 	public TurfPowerupNpc(JavaPlugin plugin, TurfPowerupData data, CivilianNpc civilian) {
 		this.plugin   = plugin;
@@ -93,6 +97,24 @@ public final class TurfPowerupNpc {
 		}
 	}
 
+	/** Drops the fight and walks to {@code post}; {@link #retarget()} is silent until {@link #walkHome()} arrives. */
+	void recall(NpcPost post) {
+		recalled = true;
+		civilian.setTargetPlayerId(null);
+		civilian.setTargetEntity(null);
+		if (civilian.getCurrentState() != CivilianState.IDLE) civilian.transitionTo(CivilianState.IDLE);
+		civilian.holdPost(post);
+	}
+
+	/** One tick of the walk home; releases the post and re-arms {@link #retarget()} on arrival. */
+	void walkHome() {
+		if (civilian.getCurrentState() == CivilianState.WANDERING) civilian.transitionTo(CivilianState.IDLE);
+		if (civilian.tickPost()) {
+			civilian.releasePost();
+			recalled = false;
+		}
+	}
+
 	private void startTargetingTask() {
 		if (targetingTask != null) return;
 		targetingTask = Bukkit.getScheduler().runTaskTimer(plugin, this::retarget,
@@ -106,8 +128,8 @@ public final class TurfPowerupNpc {
 		}
 	}
 
-	private void retarget() {
-		if (!isAlive() || attackerSupplier == null) return;
+	void retarget() {
+		if (!isAlive() || attackerSupplier == null || recalled) return;
 		Set<UUID> attackers = attackerSupplier.get();
 		if (attackers == null || attackers.isEmpty()) {
 			civilian.setTargetPlayerId(null);

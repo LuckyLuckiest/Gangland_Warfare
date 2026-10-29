@@ -52,6 +52,7 @@ public final class TurfOwnerAlertListener implements Listener {
 		TurfPowerupNpc qm = powerups.getByCivilian(npc);
 		if (qm != null) {
 			alerts.quartermasterDown(qm.getData().getTurfId(), npc);
+			powerups.onKilled(qm.getData().getTurfId());
 		}
 	}
 
