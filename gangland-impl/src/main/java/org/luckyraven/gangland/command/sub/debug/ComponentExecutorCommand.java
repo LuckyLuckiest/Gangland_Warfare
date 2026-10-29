@@ -4,6 +4,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.extension.CommandContributions;
+import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.command.CommandHandler;
@@ -29,7 +30,13 @@ public final class ComponentExecutorCommand extends Command {
 	}
 
 	@Override
-	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) { }
+	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
+		commandSender.sendMessage(missing("/glw option <action>"));
+	}
+
+	private static String missing(String usage) {
+		return GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), usage);
+	}
 
 	@Override
 	protected void initializeArguments() {
@@ -43,7 +50,9 @@ public final class ComponentExecutorCommand extends Command {
 	protected void help(CommandSender sender, int page) { }
 
 	private Argument resourcePack() {
-		Argument click = new Argument(getPlugin(), "click", getArgumentTree());
+		Argument click = new Argument(getPlugin(), "click", getArgumentTree(),
+		                              (argument, sender, args) -> sender.sendMessage(
+				                              missing("/glw option click <action>")));
 
 		// glw option click resource
 		Argument resource = new Argument(getPlugin(), "resource", getArgumentTree(), (argument, sender, args) -> {

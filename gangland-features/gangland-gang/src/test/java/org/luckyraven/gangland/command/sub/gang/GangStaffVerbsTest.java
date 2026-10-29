@@ -33,6 +33,7 @@ import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
 import org.luckyraven.gangland.gang.safehouse.Safehouse;
 import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
+import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.message.MessageProvider;
@@ -183,6 +184,21 @@ class GangStaffVerbsTest {
 			result.add(node.getData());
 		}
 		return result;
+	}
+
+	@Test
+	@DisplayName("bareGangAndRank_answerMissingArguments")
+	void bareGangAndRank_answerMissingArguments() {
+		Argument rank = child(gangArgument, "rank");
+		for (Object[] row : new Object[][]{{gangArgument, "/glw option gang <action>"},
+		                                   {rank, "/glw option gang rank <target> <rank>"}}) {
+			Argument node = (Argument) row[0];
+			sent.clear();
+			assertTrue(node.getAction() != null, row[1] + " has no action");
+			node.getAction().accept(node, console, new String[]{"option", "gang"});
+			assertEquals(1, sent.size());
+			assertEquals(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), (String) row[1]), sent.get(0));
+		}
 	}
 
 	@Test

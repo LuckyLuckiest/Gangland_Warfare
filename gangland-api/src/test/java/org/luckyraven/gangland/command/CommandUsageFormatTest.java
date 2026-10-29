@@ -34,6 +34,10 @@ class CommandUsageFormatTest {
 
 	private static final Pattern PIPE_PLACEHOLDER = Pattern.compile("\"[^\"]*<[^<>\"]*[|][^<>\"]*[|][^<>\"]*>");
 
+	/** {@code new Argument(plugin, "word", tree)} with no action: Keystone answers "not implemented yet". */
+	private static final Pattern ACTIONLESS_NODE = Pattern.compile(
+			"new Argument\\(\\s*[\\w.]+(\\(\\))?,\\s*\"[^\"]+\",\\s*[\\w.]+(\\(\\))?\\)");
+
 	private static Path root() {
 		Path dir = Path.of("").toAbsolutePath();
 		while (dir != null && !Files.isDirectory(dir.resolve("gangland-features"))) dir = dir.getParent();
@@ -105,5 +109,24 @@ class CommandUsageFormatTest {
 			}
 		}
 		assertTrue(bad.isEmpty(), "pipe lists in sources: " + bad);
+	}
+
+	@Test
+	@DisplayName("noNodeWithoutAction")
+	void noNodeWithoutAction() throws IOException {
+		List<String> bad = new ArrayList<>();
+		try (Stream<Path> walk = Files.walk(root())) {
+			for (Path file : walk.filter(p -> p.toString().endsWith(".java"))
+			                     .filter(p -> p.toString().replace(File.separatorChar, '/').contains("/src/main/java/"))
+			                     .toList()) {
+				List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
+				for (int i = 0; i < lines.size(); i++) {
+					String line = lines.get(i);
+					if (line.contains(".find(")) continue;
+					if (ACTIONLESS_NODE.matcher(line).find()) bad.add(file.getFileName() + ":" + (i + 1));
+				}
+			}
+		}
+		assertTrue(bad.isEmpty(), "Argument nodes with no action: " + bad);
 	}
 }
