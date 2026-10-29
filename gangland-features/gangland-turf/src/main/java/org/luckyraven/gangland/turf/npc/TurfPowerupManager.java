@@ -150,7 +150,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 			double dx = at.getX() - anchor.getX();
 			double dz = at.getZ() - anchor.getZ();
 			if (dx * dx + dz * dz <= radius * radius) continue;
-			qm.recall(new NpcPost(anchor, radius, null));
+			qm.recall(new NpcPost(anchor, radius, null), holding.test(entry.getKey()));
 		}
 	}
 

@@ -46,9 +46,11 @@ public final class TurfPowerupNpc {
 	private Supplier<Set<UUID>> attackerSupplier;
 	private double              targetingRadius = 32.0;
 	private BukkitTask          targetingTask;
-	/** True while walking home to the post: retarget stays quiet so it cannot flip COMBAT back on. */
+	/** True while walking home to the post. */
 	@Getter
 	private boolean             recalled;
+	/** Hold: retarget stays quiet on the walk home so it cannot flip COMBAT back on outside the hold radius. */
+	private boolean             quietRecall;
 
 	public TurfPowerupNpc(JavaPlugin plugin, TurfPowerupData data, CivilianNpc civilian) {
 		this.plugin   = plugin;
@@ -97,9 +99,13 @@ public final class TurfPowerupNpc {
 		}
 	}
 
-	/** Drops the fight and walks to {@code post}; {@link #retarget()} is silent until {@link #walkHome()} arrives. */
-	void recall(NpcPost post) {
-		recalled = true;
+	/**
+	 * Drops the fight and walks to {@code post}. With {@code quiet} (Hold) {@link #retarget()} is silent until
+	 * {@link #walkHome()} arrives; otherwise (Defend, T-629) an attacker in range ends the walk and is engaged.
+	 */
+	void recall(NpcPost post, boolean quiet) {
+		recalled    = true;
+		quietRecall = quiet;
 		civilian.setTargetPlayerId(null);
 		civilian.setTargetEntity(null);
 		if (civilian.getCurrentState() != CivilianState.IDLE) civilian.transitionTo(CivilianState.IDLE);
@@ -135,7 +141,7 @@ public final class TurfPowerupNpc {
 	}
 
 	void retarget() {
-		if (!isAlive() || attackerSupplier == null || recalled) return;
+		if (!isAlive() || attackerSupplier == null || recalled && quietRecall) return;
 		Set<UUID> attackers = attackerSupplier.get();
 		if (attackers == null || attackers.isEmpty()) {
 			civilian.setTargetPlayerId(null);
@@ -157,6 +163,7 @@ public final class TurfPowerupNpc {
 			}
 		}
 		if (closest != null) {
+			if (recalled) cancelRecall();
 			civilian.setTargetPlayerId(closest.getUniqueId());
 			if (civilian.getCurrentState() != CivilianState.COMBAT) {
 				civilian.transitionTo(CivilianState.COMBAT);
