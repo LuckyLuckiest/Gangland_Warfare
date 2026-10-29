@@ -47,7 +47,12 @@
         <plugins>
             <!-- Publishes gangland-core's test classes as a test-jar so sibling modules can share
                  testsupport/BukkitRegistryFixture instead of each duplicating it. Test scope only —
-                 nothing here ever reaches the shaded runtime jar. -->
+                 nothing here ever reaches the shaded runtime jar.
+                 skip=false: test-jar's skip defaults to maven.test.skip, and under -Dmaven.test.skip=true (the IDE's
+                 "gangland_warfare build" run config) the jar was never made, so every module's test-scope
+                 gangland-core:tests dependency failed to resolve. An empty test-jar is enough when tests are off,
+                 but do not `install` with that flag: the empty jar would shadow the real one in ~/.m2 for a later
+                 single-module run without -am. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -56,6 +61,9 @@
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
