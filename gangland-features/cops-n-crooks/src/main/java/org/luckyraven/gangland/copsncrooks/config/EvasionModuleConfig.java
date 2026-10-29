@@ -10,6 +10,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterControl
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.WantedTargetingManager;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
 import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSpotting;
@@ -32,6 +33,8 @@ import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+
+import java.util.Map;
 
 /**
  * Beans of the evasion clock (0.15.0): the clock itself and its two installs; since 0.15.2 also the chase arcs and the
@@ -71,10 +74,18 @@ public class EvasionModuleConfig {
 	public EvasionClock evasionClock(ChaseConfigLoader config, CopManager copManager, DetainmentService detainment,
 	                                 WantedStars wantedStars, @Qualifier("online") UserManager<Player> users,
 	                                 HeatLedger heatLedger, ChaseArcs chaseArcs, ChaseLearner chaseLearner,
-	                                 Hideouts hideouts, QuietTrail quietTrail, TrackerTags trackerTags) {
-		return new EvasionClock(config, copManager, detainment, wantedStars, users, heatLedger, chaseArcs, chaseLearner,
-		                        hideouts, quietTrail, System::currentTimeMillis,
-		                        event -> Bukkit.getPluginManager().callEvent(event), trackerTags::hasLiveTag);
+	                                 Hideouts hideouts, QuietTrail quietTrail, TrackerTags trackerTags,
+	                                 WantedMessages messages) {
+		EvasionClock clock = new EvasionClock(config, copManager, detainment, wantedStars, users, heatLedger, chaseArcs,
+		                                      chaseLearner, hideouts, quietTrail, System::currentTimeMillis,
+		                                      event -> Bukkit.getPluginManager().callEvent(event),
+		                                      trackerTags::hasLiveTag);
+		// 0.21.2 R2 (T-586): "No units on you - leave the area" once per episode; '' turns it off
+		clock.setNoCopSearch(player -> {
+			String line = messages.format(WantedMessages.Key.HUD_NO_COP_SEARCH, Map.of());
+			if (!line.isBlank()) player.sendMessage(line);
+		});
+		return clock;
 	}
 
 	/**

@@ -170,7 +170,8 @@ class CopRadioMessagesTest {
 
 	/** What each caller fills beyond the radio's own %unit%, %target%, %distance%, %direction%, %side%, %tier%, %level%. */
 	private static final Map<String, java.util.Set<String>> CALLER_EXTRAS = Map.ofEntries(
-			Map.entry("Caller_911", java.util.Set.of("crime", "suspect")), Map.entry("Push", java.util.Set.of("member")), Map.entry("Flank_Left", java.util.Set.of("member")),
+			Map.entry("Caller_911", java.util.Set.of("crime", "suspect")),
+			Map.entry("Officer_Report", java.util.Set.of("reporter", "crime", "suspect")), Map.entry("Push", java.util.Set.of("member")), Map.entry("Flank_Left", java.util.Set.of("member")),
 			Map.entry("Flank_Right", java.util.Set.of("member")), Map.entry("Man_Down", java.util.Set.of("member")),
 			Map.entry("Leader_Down", java.util.Set.of("member")),
 			Map.entry("Commander_Down", java.util.Set.of("member")),

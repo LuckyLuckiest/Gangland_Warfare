@@ -70,7 +70,8 @@ public class CivilianDeathListener implements Listener {
 
 		// Fire event — XP reward handled by CivilianDeathRewardListener in gangland-impl
 		Player killer = event.getEntity().getKiller();
-		Bukkit.getPluginManager().callEvent(new CivilianDeathEvent(npc, killer, dropConfig.experience()));
+		Bukkit.getPluginManager().callEvent(new CivilianDeathEvent(npc, killer, dropConfig.experience(),
+		                                                          entity.getLocation()));
 
 		npc.markForRemoval();
 	}

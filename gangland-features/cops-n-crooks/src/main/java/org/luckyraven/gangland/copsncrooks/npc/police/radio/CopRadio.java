@@ -149,6 +149,18 @@ public class CopRadio {
 		                 null, merged);
 	}
 
+	/**
+	 * {@link #dispatch(CopGroup, Player, String, int, String, Map)} about a spot, not the addressee (0.21.2, T-543):
+	 * {@code %place%} names {@code place} (a crime spot, a last report), never his live position (R4). The line is still
+	 * heard around {@code addressee}: he must hear it, and hearing is no tip.
+	 */
+	public boolean dispatchAt(CopGroup group, Location place, Player addressee, String key, int level, String tier,
+	                          Map<String, String> extra) {
+		Map<String, String> merged = new HashMap<>(extra);
+		merged.put("place", placeOf(place));
+		return dispatch(group, addressee, key, level, tier, merged);
+	}
+
 	/** The group's leader (or, with the squad empty, any live cop of the group) speaks {@code key}. */
 	public boolean sayFromLeader(CopGroup group, String key) {
 		return sayFromLeader(group, key, Map.of());

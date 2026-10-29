@@ -53,11 +53,15 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					// 0.20.0 street-crime lines (milliseconds; cops.yml Cooldown_Ticks x50)
 					Map.entry("Caller_911", 5000L), Map.entry("Suspect_Description", 60000L),
 					Map.entry("Tracker_Tagged", 30000L), Map.entry("Tracker_Ping", 20000L),
-					Map.entry("Overwatch_Spotted", 10000L), Map.entry("Patrol_Sighting", 20000L)),
+					Map.entry("Overwatch_Spotted", 10000L), Map.entry("Patrol_Sighting", 20000L),
+					// 0.21.2: each silence and scene line is one announcement
+					Map.entry("Officer_Report", 5000L), Map.entry("Radio_Check", 0L), Map.entry("Officer_Missing", 0L),
+					Map.entry("Scene_Found", 0L), Map.entry("Scene_Suspect", 0L), Map.entry("Scene_Clear", 0L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Commander_Down", "Backup", "Resisting", "Dispatch_Wanted",
 			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover", "Hit", "Patched_Up", "Marksman_Spotted",
 			      "Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up",
-			      "Overwatch_Spotted", "Caller_911"),
+			      "Overwatch_Spotted", "Caller_911", "Officer_Report", "Radio_Check", "Officer_Missing", "Scene_Found",
+			      "Scene_Suspect", "Scene_Clear"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
 
 	/**
@@ -302,6 +306,11 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	/** Backup-request tuning ({@code Cops.Backup}). */
 	default BackupSettings getBackupSettings() {
 		return BackupSettings.DEFAULT;
+	}
+
+	/** Radio check-ins and silent officers ({@code Cops.Check_In}, 0.21.2). */
+	default CheckInSettings getCheckInSettings() {
+		return CheckInSettings.DEFAULT;
 	}
 
 	/** Squad regroup after casualties ({@code Cops.Regroup}). */

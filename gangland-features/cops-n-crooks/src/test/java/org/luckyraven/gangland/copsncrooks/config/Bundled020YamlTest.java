@@ -90,6 +90,27 @@ class Bundled020YamlTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 S5: bundled cops.yml ships Check_In with the plan defaults; the silence and scene lines are priority, no cooldown")
+	void bundledCops_checkInAndSilenceLines() throws IOException {
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = copsProvider(report);
+
+		assertEquals(org.luckyraven.gangland.copsncrooks.npc.police.config.CheckInSettings.DEFAULT,
+		             provider.getCheckInSettings());
+		assertEquals(new org.luckyraven.gangland.copsncrooks.npc.police.config.CheckInSettings(true, 10, 20, 32.0, 60,
+		                                                                                         3, true, true),
+		             org.luckyraven.gangland.copsncrooks.npc.police.config.CheckInSettings.DEFAULT);
+		RadioSettings radio = provider.getRadioSettings();
+		for (String key : List.of("Radio_Check", "Officer_Missing", "Scene_Found", "Scene_Suspect", "Scene_Clear")) {
+			assertTrue(radio.isPriority(key), "bundled priority " + key);
+			assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), "code default priority " + key);
+			assertEquals(0L, radio.cooldownFor(key), "bundled cooldown " + key);
+			assertEquals(0L, CopConfigProvider.COP_RADIO_DEFAULTS.cooldownFor(key), "code default cooldown " + key);
+		}
+		assertTrue(report.issues().isEmpty(), () -> "bundled cops.yml has issues: " + report.issues());
+	}
+
+	@Test
 	@DisplayName("bundled cops.yml: the six new radio kinds have Cooldown_Ticks; Overwatch_Spotted and Caller_911 are priority")
 	void bundledCops_radioCooldownsAndPriority() throws IOException {
 		RadioSettings radio = copsProvider(new ConfigReport()).getRadioSettings();
@@ -101,6 +122,11 @@ class Bundled020YamlTest {
 		}
 		assertTrue(radio.isPriority("Overwatch_Spotted"));
 		assertTrue(radio.isPriority("Caller_911"));
+		// 0.21.2 S4: a cop's report is a dispatch line read right after Man_Down: it must not lose to the player gap
+		assertTrue(radio.isPriority("Officer_Report"));
+		assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority("Officer_Report"));
+		assertEquals(100L * 50L, radio.cooldownFor("Officer_Report"));
+		assertEquals(100L * 50L, CopConfigProvider.COP_RADIO_DEFAULTS.cooldownFor("Officer_Report"));
 		assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority("Overwatch_Spotted"));
 		assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority("Caller_911"));
 	}
@@ -111,13 +137,26 @@ class Bundled020YamlTest {
 		ConfigReport report = new ConfigReport();
 		NodeReader   wanted = wantedRoot(resource("copsncrooks/wanted.yml"), report);
 
-		assertEquals(new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian", "Kill_Civilian")), WitnessSettings.parse(wanted));
+		// 0.21.2 S4 (T-541): Assault_Cop and Kill_Cop are gated too, and Witnesses.Cops / Defer_Minutes ship
+		assertEquals(new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian", "Kill_Civilian", "Assault_Cop",
+		                                               "Kill_Cop"), 10,
+		                                 new WitnessSettings.Cops(3, 180.0, 6.0, List.of(), true)),
+		             WitnessSettings.parse(wanted));
+		assertEquals(WitnessSettings.DEFAULT, WitnessSettings.parse(wanted), "the code default equals the bundled file");
 		assertEquals(new TrespassSettings(true, 60), TrespassSettings.parse(wanted));
 		assertEquals(100, ChaseConfig.parse(wanted, report).heat().weightOf("Evading_Police"));
-		assertEquals(Set.of("Enable", "Crimes"), keysOf(wanted, "Witnesses"));
+		assertEquals(Set.of("Enable", "Defer_Minutes", "Crimes", "Cops"), keysOf(wanted, "Witnesses"));
+		assertEquals(Set.of("Report_Seconds", "View_Angle", "Witness_Floor", "Loud_Crimes", "Reporter_Glow"),
+		             keysOf(wanted, "Witnesses", "Cops"));
 		assertEquals(Set.of("Enable", "Repeat_Seconds"), keysOf(wanted, "Trespass"));
 		assertTrue(keysOf(wanted, "Heat", "Crimes").contains("Evading_Police"), "Heat.Crimes lists Evading_Police");
 		assertEquals(ChaseConfig.DEFAULT, ChaseConfig.parse(wanted, report));
+		assertEquals(0.25, ChaseConfig.parse(wanted, report).evasion().noCopInsideSpeed(), "0.21.2 No_Cop_Inside_Speed");
+		assertTrue(keysOf(wanted, "Evasion").contains("No_Cop_Inside_Speed"), "Evasion ships No_Cop_Inside_Speed");
+		assertTrue(keysOf(wanted, "Heat").containsAll(Set.of("Per_Extra_Witness", "Max_Extra_Witnesses")),
+		           "0.21.2 S3: Heat ships Per_Extra_Witness and Max_Extra_Witnesses");
+		assertEquals(0.5, ChaseConfig.parse(wanted, report).heat().perExtraWitness());
+		assertEquals(3, ChaseConfig.parse(wanted, report).heat().maxExtraWitnesses());
 		assertTrue(report.issues().isEmpty(), () -> "bundled wanted.yml has issues: " + report.issues());
 	}
 

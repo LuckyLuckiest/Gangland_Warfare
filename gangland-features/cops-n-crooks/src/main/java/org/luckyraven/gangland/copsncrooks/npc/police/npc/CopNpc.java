@@ -114,6 +114,35 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private @Nullable String                 firstName;
+	/**
+	 * Where this cop last checked in on the radio (0.21.2, T-545): the spot dispatch sends units to when he stops
+	 * answering. {@code null} until the first check-in ({@code CopCrimeReports}' task, within 10 ticks of the spawn).
+	 */
+	@Getter
+	private @Nullable Location               lastReport;
+	/** When he last checked in (ms); 0 before the first check-in. */
+	@Getter
+	private           long                   lastReportAt;
+	/**
+	 * Until when (ms) this beat cop holds the spot he was sent to, a silent officer's last check-in (0.21.2, T-579):
+	 * {@code PatrolBehavior} neither wanders nor walks back to his beat before then. 0 = no hold.
+	 */
+	@Getter
+	@Setter
+	private           long                   investigateUntil;
+	/**
+	 * When he was spawned (ms, the wall clock {@code CopCrimeReports} reads): a cop younger than
+	 * {@code Check_In.Spawn_Grace_Seconds} cannot close a scene (0.21.2 R3, owner ruling T-601). 0 = unknown (mocks).
+	 */
+	@Getter
+	private final     long                   spawnedAt;
+	/**
+	 * The station anchor a beat cop walks his beat around when he was spawned elsewhere, at an unwatched spot near a
+	 * watched station (0.21.2 R3, owner ruling T-606); {@code null} = his spawn spot is his beat's centre.
+	 */
+	@Getter
+	@Setter
+	private @Nullable Location               beatAnchor;
 	/** The navigator's own pathfinding range (Citizens {@code default-range-blocks}), read on the first walk. */
 	private float                            baseWalkRange = Float.NaN;
 
@@ -129,6 +158,7 @@ public class CopNpc extends AbstractNpc {
 		this.tierConfig   = tierConfig;
 		this.behaviors    = behaviors;
 		this.combatForced = false;
+		this.spawnedAt    = System.currentTimeMillis();
 	}
 
 	// ── AbstractNpc contract ─────────────────────────────────────────
@@ -353,6 +383,12 @@ public class CopNpc extends AbstractNpc {
 		if (lastSquad != null && lastSquad != next) lastSquad.remove(this);
 		lastSquad = next;
 		return next;
+	}
+
+	/** He checks in on the radio from {@code at} at {@code now} (ms) ({@link #getLastReport}). */
+	public void stampReport(Location at, long now) {
+		lastReport   = at.clone();
+		lastReportAt = now;
 	}
 
 	/**

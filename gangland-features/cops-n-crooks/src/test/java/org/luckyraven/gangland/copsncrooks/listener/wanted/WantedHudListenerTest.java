@@ -15,6 +15,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
@@ -30,6 +32,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.ReportKind;
 import org.luckyraven.gangland.copsncrooks.wanted.hud.HudFixtures;
 import org.luckyraven.gangland.copsncrooks.wanted.hud.TitleCue;
 import org.luckyraven.gangland.copsncrooks.events.police.ArrestedEvent;
@@ -236,6 +239,24 @@ class WantedHudListenerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 T-583: one commit whose heat crosses two thresholds sends one subtitle, one cause card and one siren, at the final level")
+	void oneCommitRaisingTwoStars_sendsOneCauseCard() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		when(ledger.raisingTo(player.getUniqueId())).thenReturn(2);
+
+		listener.onLevelChange(change(0, 1, WantedCause.CRIME));
+		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+
+		verify(player).sendTitle(ChatColor.RESET.toString(), "★★☆☆☆", 5, 20, 5);
+		verify(player, never()).sendTitle(anyString(), eq("★☆☆☆☆"), anyInt(), anyInt(), anyInt());
+		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
+		verify(player).sendMessage(chat.capture());
+		assertEquals("Assault on an officer: Sergeant inbound, they still want you in cuffs",
+		             ChatColor.stripColor(chat.getValue()));
+		assertEquals(1, playSoundCalls());
+	}
+
+	@Test
 	@DisplayName("a gain subtitle that still carries %card% shows it there and does not repeat it in chat")
 	void raise_subtitleWithCard_doesNotRepeatTheCardInChat() {
 		TitleCue gain = new TitleCue(true, "", "%stars% %card%", 5, 20, 5);
@@ -262,18 +283,57 @@ class WantedHudListenerTest {
 	}
 
 	@Test
-	@DisplayName("0.21.1 Q7: a raise from a crime a witness phoned in names the witness in the cause")
+	@DisplayName("0.21.1 Q7 / 0.21.2 S3: a raise from a crime a witness phoned in names the witnesses in the cause")
 	void raise_reportedByWitness_namesTheWitness() {
 		WantedHudListener listener = listener(HudSettings.DEFAULT);
 		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
-				new CrimeRecord("Car_Theft", 100, 0L, new Location(mock(World.class), 0, 64, 0), true));
+				new CrimeRecord("Car_Theft", 100, 0L, new Location(mock(World.class), 0, 64, 0), ReportKind.CIVILIAN,
+				                3));
 
 		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
 
 		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
 		verify(player).sendMessage(chat.capture());
-		assertEquals("Car Theft (reported by a witness): Sergeant inbound, they still want you in cuffs",
+		assertEquals("Car Theft (reported by 3 witness(es)): Sergeant inbound, they still want you in cuffs",
 		             ChatColor.stripColor(chat.getValue()));
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@CsvSource({
+			"COP,      Car Theft (seen by 2 officer(s))",
+			"CIVILIAN, Car Theft (reported by 2 witness(es))",
+			"DISPATCH, Car Theft (an officer stopped answering)",
+			"SCENE,    Car Theft (spotted near the scene)",
+	})
+	@DisplayName("0.21.2 S3 (R1): the chat cause line follows the crime's ReportKind; the subtitle stays the crime name")
+	void raise_causeLine_followsReportKind(ReportKind kind, String cause) {
+		TitleCue gain = new TitleCue(true, "", "%stars% %cause%", 5, 20, 5);
+		WantedHudListener listener = listener(cuesWith(true, gain, TitleCue.DEFAULT, TitleCue.DEFAULT));
+		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
+				new CrimeRecord("Car_Theft", 100, 0L, new Location(mock(World.class), 0, 64, 0), kind, 2));
+
+		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+
+		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
+		verify(player).sendMessage(chat.capture());
+		assertEquals(cause + ": Sergeant inbound, they still want you in cuffs", ChatColor.stripColor(chat.getValue()));
+		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
+		assertEquals("★★☆☆☆ Car Theft", ChatColor.stripColor(subtitle.getValue()));
+	}
+
+	@Test
+	@DisplayName("0.21.2 S3: a crime that counted at once keeps the plain crime name in the cause")
+	void raise_unreportedCrime_plainCause() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
+				new CrimeRecord("Car_Theft", 100, 0L, new Location(mock(World.class), 0, 64, 0), null, 4));
+
+		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
+
+		ArgumentCaptor<String> chat = ArgumentCaptor.forClass(String.class);
+		verify(player).sendMessage(chat.capture());
+		assertEquals("Car Theft: Sergeant inbound, they still want you in cuffs", ChatColor.stripColor(chat.getValue()));
 	}
 
 	@Test
@@ -282,7 +342,8 @@ class WantedHudListenerTest {
 		TitleCue gain = new TitleCue(true, "", "%stars% %cause%", 5, 20, 5);
 		WantedHudListener listener = listener(cuesWith(true, gain, TitleCue.DEFAULT, TitleCue.DEFAULT));
 		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
-				new CrimeRecord("Car_Theft", 100, 0L, new Location(mock(World.class), 0, 64, 0), true));
+				new CrimeRecord("Car_Theft", 100, 0L, new Location(mock(World.class), 0, 64, 0), ReportKind.CIVILIAN,
+				                1));
 
 		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
 

@@ -37,8 +37,15 @@ Wanted:
       # Multiplier for crimes chained inside Kill_Combo.Reset_After (above). It only applies while
       # Kill_Combo.Enable is true; with the kill combo off no crime is ever treated as chained.
       Streak_Bonus: 1.5
-      # Multiplier when a cop saw the crime
+      # Multiplier when a cop saw the crime. 0.21.2: for a crime in Witnesses.Crimes (below) only a cop who reported it
+      # counts; your squad merely having you in sight does not
       Seen_By_Cop_Multiplier: 1.5
+      # 0.21.2: added to that multiplier (1.0 when no cop saw it) for each eyewitness past the first, cop or civilian,
+      # counted when the report lands, so a witness killed first counts for nothing. 0 = the head count is ignored
+      Per_Extra_Witness: 0.5
+      # 0.21.2: how many eyewitnesses past the first count. With 0.5 and 3, three civilians calling in a civilian kill
+      # give 100 x 2.0, and four cops seeing a cop kill give 150 x 3.0
+      Max_Extra_Witnesses: 3
       # Multiplier for a crime inside a contested turf
       Turf_War_Multiplier: 0.5
       # Seconds before hitting the same victim counts as a new assault
@@ -101,6 +108,10 @@ Wanted:
          - 60
       # How much faster the timer runs while you are outside the search zone
       Outside_Zone_Speed: 2.0
+      # 0.21.2: how fast the timer runs inside the search zone while no cop stands (every cop dead or walking home):
+      # 0.25 = four times slower, so leaving the zone pays and standing on the bodies does not; floored at 0.01, so
+      # it never freezes
+      No_Cop_Inside_Speed: 0.25
       # While you are inside a hideout (a gang waypoint, or a region tagged hideout) the timer runs this many times
       # faster; set Enable false to make hideouts no different from open ground
       Hideout:
@@ -401,12 +412,16 @@ Wanted:
       Hold_Seconds: 10
       # Minimum gap between title broadcasts server-wide
       Cooldown_Seconds: 120
-   # 0.20.0 witnesses: a civilian who sees one of these crimes calls it in (a 911 call)
+   # 0.20.0 witnesses: a crime listed here counts only once someone who saw it reports it
    Witnesses:
-      # false = no witnesses; only a cop who sees a crime reports it
+      # false = no witnesses: every crime counts at once
       Enable: true
-      # Crimes a witness calls in when no cop sees them (a cop who sees you commit one counts it at once). 0.21.1:
-      # Kill_Civilian too, so a kill neither a cop nor a civilian saw brings no star. A civilian behind you sees a silent
+      # 0.21.2: a report whose witness is still alive when you log out lands when you next join, within this many
+      # minutes; a logout forgives nothing
+      Defer_Minutes: 10
+      # Crimes that wait for a report. 0.21.2: a cop who sees one radios it in after Cops.Report_Seconds (it no longer
+      # counts at once); with no cop eyewitness a civilian who saw it calls 911 (npc/civilians.yml Witness); nobody saw
+      # it = no star. 0.21.1: Kill_Civilian, so a kill nobody saw brings no star. A civilian behind you sees a silent
       # kill (fist, knife) only if it faces you, but a gunshot turns it round first: see Witness.View_Angle and
       # Witness.Loud_Weapon_Types in npc/civilians.yml. Store_Robbery is not listed: the shop's silent alarm already
       # reports it as witnessed.
@@ -414,6 +429,26 @@ Wanted:
          - Car_Theft
          - Assault_Civilian
          - Kill_Civilian
+         # 0.21.2: remove these two to count a cop crime at once again
+         - Assault_Cop
+         - Kill_Cop
+      # 0.21.2: how a cop who saw a crime reports it. He counts as a witness when he can see you (within Alert_Range of
+      # cops.yml, shortened by the dark, crowds and sneaking, or within Witness_Floor with a clear line of sight) and
+      # he is fighting or chasing you, or the crime is loud, or you are inside his view cone. The hit cop witnesses his
+      # own assault; a disguise does not hide a crime done in front of him
+      Cops:
+         # Seconds the nearest witness takes to radio it in. Kill every cop who saw it first and the call never goes out
+         Report_Seconds: 3
+         # Full width of a cop's view cone in degrees; 360 = all round. A fighting or chasing cop and a loud crime
+         # ignore it
+         View_Angle: 180.0
+         # A cop this close with a clear line of sight sees you whatever the light or sneaking
+         Witness_Floor: 6.0
+         # Crimes that turn every cop in range toward the noise. A shot of a Witness.Loud_Weapon_Types weapon within
+         # Witness.Loud_Shot_Seconds (npc/civilians.yml) is always loud; a melee swing never is
+         Loud_Crimes: []
+         # The reporting cop glows while he radios it in
+         Reporter_Glow: true
 
    # 0.20.0 trespass: repeat trespass in a restricted place adds heat
    Trespass:

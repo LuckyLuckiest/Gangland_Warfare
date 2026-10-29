@@ -67,6 +67,16 @@ class CivilianDeathRewardListenerTest {
 	}
 
 	@Test
+	@DisplayName("T-550: Kill_Civilian is committed where the civilian died, not where the killer stands")
+	void commitsAtVictim() {
+		Location body = mock(Location.class);
+
+		listener.onCivilianDeath(new CivilianDeathEvent(npc, killer, 0, body));
+
+		verify(crimes).commit(killer, Crimes.KILL_CIVILIAN, body);
+	}
+
+	@Test
 	@DisplayName("a hostile civilian killed in combat commits nothing")
 	void hostileCivilianInCombat_commitsNothing() {
 		when(npc.isHostile()).thenReturn(true);

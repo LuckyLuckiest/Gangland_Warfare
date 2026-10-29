@@ -74,6 +74,8 @@ class ChaseConfigTest {
 				      Seen_By_Cop_Multiplier: 3.0
 				      Turf_War_Multiplier: 0.25
 				      Assault_Repeat_Seconds: 7
+				      Per_Extra_Witness: 0.75
+				      Max_Extra_Witnesses: 2
 				      Crimes:
 				         Car_Theft: 5
 				   Evasion:
@@ -120,6 +122,8 @@ class ChaseConfigTest {
 		assertEquals(3.0, heat.seenByCopMultiplier());
 		assertEquals(0.25, heat.turfWarMultiplier());
 		assertEquals(7, heat.assaultRepeatSeconds());
+		assertEquals(0.75, heat.perExtraWitness());
+		assertEquals(2, heat.maxExtraWitnesses());
 		assertEquals(5, heat.weightOf("Car_Theft"));
 		assertEquals(450, heat.weightOf("Jailbreak"));
 		EvasionSettings ev = c.evasion();
@@ -165,7 +169,7 @@ class ChaseConfigTest {
 	@Test
 	@DisplayName("a threshold list shorter than the max level is stretched linearly")
 	void heatStarsFor_resizesAShortList() {
-		HeatSettings heat = new HeatSettings(true, List.of(100, 500), 1.5, 1.5, 0.5, 10, Map.of());
+		HeatSettings heat = new HeatSettings(true, List.of(100, 500), 1.5, 1.5, 0.5, 10, Map.of(), 0.5, 3);
 
 		assertEquals(1, heat.starsFor(299, 3));
 		assertEquals(2, heat.starsFor(300, 3));
@@ -440,6 +444,20 @@ class ChaseConfigTest {
 		                             + "      Drop_Mode: ONE_STAR\n      Auto:\n         Respot_Limit: 1\n", quiet),
 		                  quiet);
 		assertTrue(quiet.isEmpty(), quiet.issues().toString());
+	}
+
+	@Test
+	@DisplayName("0.21.2: Evasion.No_Cop_Inside_Speed is read, and absent it is 0.25")
+	void noCopInsideSpeed_readAndDefaulted() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig set    = ChaseConfig.parse(wantedRoot("Wanted:\n   Evasion:\n      No_Cop_Inside_Speed: 0.5\n",
+		                                                  report), report);
+		ChaseConfig absent = ChaseConfig.parse(wantedRoot("Wanted:\n   Evasion:\n      Enable: true\n", report), report);
+
+		assertEquals(0.5, set.evasion().noCopInsideSpeed());
+		assertEquals(0.25, absent.evasion().noCopInsideSpeed());
+		assertTrue(report.isEmpty(), report.issues().toString());
 	}
 
 	@Test

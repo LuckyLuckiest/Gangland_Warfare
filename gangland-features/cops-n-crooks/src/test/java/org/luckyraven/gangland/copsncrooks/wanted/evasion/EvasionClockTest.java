@@ -341,8 +341,8 @@ class EvasionClockTest {
 	}
 
 	@Test
-	@DisplayName("only returning cops: the clock does not handle decay and a tracked player turns OFF")
-	void onlyReturningCops_doesNotHandleDecay_andTurnsOff() {
+	@DisplayName("T-537: only returning cops: the clock still handles decay and the search runs on (no OFF)")
+	void onlyReturningCops_stillHandlesDecay_andKeepsSearching() {
 		unseenMs = 10_000;
 		tickSeconds(1);
 		assertTrue(clock.handlesDecay(player, wanted));
@@ -350,10 +350,10 @@ class EvasionClockTest {
 		// a real walker keeps hunting him (targetPlayerId stays set when it leashes); inside the range it is no refill
 		List<CopNpc> walkingHome = List.of(walker());
 		when(group.getCops()).thenReturn(walkingHome);
-		assertFalse(clock.handlesDecay(player, wanted));
+		assertTrue(clock.handlesDecay(player, wanted), "while the module hunts him the Repeating_Timer takes nothing");
 		tickSeconds(1);
-		assertEquals(EvasionState.OFF, states().get(states().size() - 1).getState());
-		assertNull(clock.snapshot(id));
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertFalse(stateNames().contains(EvasionState.OFF));
 	}
 
 	@Test
@@ -377,18 +377,20 @@ class EvasionClockTest {
 	}
 
 	@Test
-	@DisplayName("a returning walker still targeting him inside Pursuit.Max_Distance holds nothing: no decay hand-over, OFF")
-	void nearWalker_targetingHim_doesNotHandleDecay_andTurnsOff() {
+	@DisplayName("T-537/T-528: a returning walker inside Pursuit.Max_Distance holds nothing: the search keeps its progress at No_Cop_Inside_Speed")
+	void nearWalker_targetingHim_searchRunsAtNoCopSpeed() {
 		unseenMs = 10_000;
 		tickSeconds(5);
+		assertEquals(16, clock.snapshot(id).secondsLeft()); // 4 s of 20 counted at full speed
 		CopNpc near = walker();
 		when(copManager.isStranded(near, player)).thenReturn(false); // the spawn task does not refill it
 		when(group.getCops()).thenReturn(List.of(near));
 
-		assertFalse(clock.handlesDecay(player, wanted), "the Repeating_Timer safety net decays his stars");
+		assertTrue(clock.handlesDecay(player, wanted), "no Repeating_Timer decay while hunted");
 		tickSeconds(1);
-		assertEquals(EvasionState.OFF, states().get(states().size() - 1).getState());
-		assertNull(clock.snapshot(id));
+		// 4.25 s of 20 counted; the 15.75 s left run at 0.25 inside the zone
+		assertEquals(63, clock.snapshot(id).secondsLeft());
+		assertFalse(stateNames().contains(EvasionState.OFF));
 	}
 
 	@Test
@@ -423,8 +425,8 @@ class EvasionClockTest {
 	}
 
 	@Test
-	@DisplayName("a SEARCHING player whose cops are all gone turns OFF once and decay is no longer handled")
-	void emptyGroup_whileSearching_turnsOff() {
+	@DisplayName("T-537: a SEARCHING player whose cops are all dead keeps his search and the clock keeps the decay: killing every cop clears nothing")
+	void emptyGroup_whileSearching_keepsSearching() {
 		unseenMs = 10_000;
 		tickSeconds(2);
 		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
@@ -432,9 +434,104 @@ class EvasionClockTest {
 		when(group.getCops()).thenReturn(List.of());
 		tickSeconds(3);
 
-		assertEquals(1, stateNames().stream().filter(EvasionState.OFF::equals).count());
-		assertNull(clock.snapshot(id));
+		assertFalse(stateNames().contains(EvasionState.OFF));
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertTrue(clock.handlesDecay(player, wanted));
+		verify(stars, never()).drop(any(), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-586: the search with no cop standing tells him once per episode (Hud.No_Cop_Search); a cop standing never")
+	void noCopSearch_toldOncePerEpisode() {
+		List<Player> told = new java.util.ArrayList<>();
+		clock.setNoCopSearch(told::add);
+		unseenMs = 10_000;
+		tickSeconds(3);
+		assertTrue(told.isEmpty(), "a cop stands: no line");
+
+		hunters.clear();
+		tickSeconds(5);
+		assertEquals(List.of(player), told);
+
+		hunters.add(cop(CopState.PURSUING));
+		tickSeconds(2);
+		hunters.clear();
+		tickSeconds(2);
+		assertEquals(1, told.size(), "once per episode");
+
+		clock.clear(player); // the episode ended
+		tickSeconds(1);
+		assertEquals(2, told.size(), "a new episode tells him again");
+	}
+
+	@Test
+	@DisplayName("T-537 (B4): while a group exists the clock owns the decay, cops or none; without a group the old timer does")
+	void handlesDecay_trueWhileGroupExists() {
+		hunters.clear();
+
+		assertTrue(clock.handlesDecay(player, wanted));
+		when(copManager.groupOf(id)).thenReturn(null);
 		assertFalse(clock.handlesDecay(player, wanted));
+	}
+
+	@Test
+	@DisplayName("T-537: no unit ever stands: once the first response lapses he is searched at the last-known spot and escapes by EVASION")
+	void noUnitsEverSpawn_searchesLastKnown_dropsAsEvasion() {
+		hunters.clear();
+		unseenMs = 10_000;
+
+		tickSeconds(1);
+		EvasionSnapshot search = clock.snapshot(id);
+		assertEquals(EvasionState.SEARCHING, search.state());
+		assertEquals(centre, search.zoneCentre(), "the squad's last-known spot, not where he is");
+
+		// level 2: 20 s inside the zone at No_Cop_Inside_Speed 0.25 = 80 s
+		tickSeconds(79);
+		verify(stars, never()).drop(any(), anyInt(), any());
+		tickSeconds(1);
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+	}
+
+	@Test
+	@DisplayName("T-537: a rejoin before the spawn task queued a unit (no tip, no unit yet) holds for the rejoin grace: no search ring on his live spot")
+	void restoreStart_beforeAUnitIsQueued_holdsForTheRejoinGrace() {
+		hunters.clear();
+		unseenMs = 10_000;
+		when(squad.lastKnownLocation()).thenReturn(null); // a RESTORE start tips nothing (R4)
+		long graceEnd = now[0] + 15_000;
+		when(group.getBreatherUntil()).thenAnswer(inv -> graceEnd);
+
+		tickSeconds(3);
+
+		assertNull(clock.snapshot(id));
+		assertFalse(stateNames().contains(EvasionState.SEARCHING));
+	}
+
+	@Test
+	@DisplayName("T-537: no cop stands and he is outside the zone: Outside_Zone_Speed applies, as with cops")
+	void noCop_outsideTheZone_runsAtOutsideSpeed() {
+		hunters.clear();
+		unseenMs = 10_000;
+		playerAt = new Location(world, 100, 64, 100);
+
+		tickSeconds(1);
+
+		assertEquals(10, clock.snapshot(id).secondsLeft()); // 20 s at 2.0
+	}
+
+	@Test
+	@DisplayName("T-537: No_Cop_Inside_Speed 0 is floored at 0.01: the clock still moves, nothing gets stuck")
+	void noCopInsideSpeedZero_isFlooredNotFrozen() {
+		EvasionSettings d = EvasionSettings.DEFAULT;
+		settings = new EvasionSettings(true, 3, DropMode.ONE_STAR, d.searchRadius(), d.secondsToDrop(), 2.0, d.auto(),
+		                               d.hideout(), d.quietSpeed(), d.maxSpeed(), 0.0);
+		hunters.clear();
+		unseenMs = 10_000;
+
+		tickSeconds(1);
+		assertEquals(2000, clock.snapshot(id).secondsLeft());
+		tickSeconds(1);
+		assertEquals(1999, clock.snapshot(id).secondsLeft());
 	}
 
 	@Test
@@ -675,7 +772,7 @@ class EvasionClockTest {
 		List<CopNpc> walkingHome = List.of(walker());
 		when(group.getCops()).thenReturn(walkingHome);
 		tickSeconds(1);
-		assertNull(clock.snapshot(id));
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state()); // T-537: no longer cleared
 
 		List<CopNpc> back = List.of(cop(CopState.PURSUING));
 		when(group.getCops()).thenReturn(back);
@@ -699,7 +796,7 @@ class EvasionClockTest {
 		List<CopNpc> walkingHome = List.of(walker());
 		when(group.getCops()).thenReturn(walkingHome);
 		tickSeconds(1);
-		assertNull(clock.snapshot(id));
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state()); // T-537: no longer cleared
 
 		List<CopNpc> fresh = List.of(cop(CopState.PURSUING));
 		when(group.getCops()).thenReturn(fresh);
@@ -722,7 +819,8 @@ class EvasionClockTest {
 		when(group.getCops()).thenReturn(List.of(dead));
 		tickSeconds(1);
 		long wipedAt = now[0];
-		assertNull(clock.snapshot(id));
+		// T-537: a dead squad sees nothing: the search starts at the wipe instead of the track being cleared
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
 
 		List<CopNpc> fresh = List.of(cop(CopState.PURSUING));
 		when(group.getCops()).thenReturn(fresh);
@@ -1131,23 +1229,24 @@ class EvasionClockTest {
 	}
 
 	@Test
-	@DisplayName("a search under way holds while the squad is wiped and its units travel, and resumes with the first one")
-	void unitsEnRoute_holdAnExistingSearch() {
+	@DisplayName("T-537: after a wipe the search runs through the breather and the ETA at No_Cop_Inside_Speed, then at full speed with the first unit")
+	void wipeAfterStood_searchRunsThroughBreather_insideSpeedQuarter() {
+		when(group.hasStood()).thenReturn(true); // his squad stood, then was wiped: no first-response hold
 		unseenMs = 10_000;
 		tickSeconds(5);
-		int    secondsLeft = clock.snapshot(id).secondsLeft();
-		CopNpc cop         = hunters.remove(0);
+		assertEquals(16, clock.snapshot(id).secondsLeft());
+		CopNpc cop = hunters.remove(0);
 		when(group.unitsEnRoute(anyLong())).thenReturn(true);
 
-		tickSeconds(60);
-		assertEquals(secondsLeft, clock.snapshot(id).secondsLeft());
+		tickSeconds(4);
+		assertEquals(60, clock.snapshot(id).secondsLeft()); // 5 s counted, 15 s left at 0.25
 		verify(stars, never()).drop(any(), anyInt(), any());
 
 		hunters.add(cop);
 		tickSeconds(1);
 
 		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
-		assertEquals(secondsLeft - 1, clock.snapshot(id).secondsLeft());
+		assertEquals(14, clock.snapshot(id).secondsLeft());
 	}
 
 	@Test
@@ -1174,16 +1273,21 @@ class EvasionClockTest {
 	}
 
 	@Test
-	@DisplayName("a unit 11 s past its ETA stops counting: the clock hands decay back (the 0.15 behaviour)")
-	void stuckUnits_releaseOwnership() {
+	@DisplayName("T-537: a unit 11 s past its ETA stops holding the clock, but the clock keeps the decay: it searches instead")
+	void stuckUnits_stopHolding_butTheClockKeepsTheDecay() {
 		hunters.clear();
+		unseenMs = 10_000;
 		long arriveAt = now[0];
 		when(group.unitsEnRoute(anyLong())).thenAnswer(inv -> arriveAt + 10_000 > inv.<Long>getArgument(0));
 
 		now[0] = arriveAt + 9_000;
 		assertTrue(clock.handlesDecay(player, wanted));
+		clock.tick(player, group);
+		assertNull(clock.snapshot(id), "the first response still holds");
 		now[0] = arriveAt + 11_000;
-		assertFalse(clock.handlesDecay(player, wanted));
+		assertTrue(clock.handlesDecay(player, wanted));
+		clock.tick(player, group);
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
 	}
 
 	@Test
@@ -1196,6 +1300,23 @@ class EvasionClockTest {
 		tickSeconds(1);
 
 		assertTrue(clock.handlesDecay(player, wanted));
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: an open silence holds the clock while no cop stands: dispatch still thinks its unit is on him")
+	void openSilence_holds() {
+		hunters.clear();
+		unseenMs = 10_000;
+		List<org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole> held = new java.util.ArrayList<>();
+		held.add(null);
+		when(copManager.silentRoles(group)).thenReturn(held);
+
+		tickSeconds(3);
+		assertNull(clock.snapshot(id), "the silent unit holds the clock until Officer_Missing");
+
+		when(copManager.silentRoles(group)).thenReturn(List.of());
+		tickSeconds(1);
 		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
 	}
 }

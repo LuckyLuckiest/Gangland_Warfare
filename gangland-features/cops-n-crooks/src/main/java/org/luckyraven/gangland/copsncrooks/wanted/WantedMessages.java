@@ -28,6 +28,7 @@ public class WantedMessages extends LocalizedModuleYaml {
 		BAR_WAY("Hud.Bar.Way", "   &f%arrow% %distance%m"),
 		BAR_BOUNTY("Hud.Bar.Bounty", "&6&lBOUNTY &e%money_symbol%%amount% &7· &cCops still looking"),
 		BAR_BOUNTY_NONE("Hud.Bar.Bounty_None", "&7Cops still looking"),
+		HUD_NO_COP_SEARCH("Hud.No_Cop_Search", "&7No units on you - leave the area"),
 		ANNOUNCE_BOUNTY("Hud.Announce.Bounty", "&6&lBOUNTY &e%money_symbol%%amount% &7is on you, the cops are still looking"),
 		ANNOUNCE_NO_BOUNTY("Hud.Announce.No_Bounty", "&7The cops are still looking for you"),
 		ANNOUNCE_GAVE_UP("Hud.Announce.Gave_Up", "&7The cops gave up the search"),
@@ -45,8 +46,12 @@ public class WantedMessages extends LocalizedModuleYaml {
 		CARD_DROP_STILL_HOT("Hud.Card.Drop_Still_Hot", "&eStill hot, one star at a time"),
 		CARD_DROP_KNOWN_FACE("Hud.Card.Drop_Known_Face", "&eThey know your face, one star at a time"),
 		CARD_DROP_NARROW("Hud.Card.Drop_Narrow", "&aThat was close, they are losing you"),
-		// 0.21.1: the crime of a raise a witness reported (a landed 911 call, a silent alarm)
-		CARD_REPORTED("Hud.Card.Reported", "%crime% (reported by a witness)"),
+		// 0.21.1: the crime of a raise a witness reported (a landed 911 call); 0.21.2: %count% is how many saw it
+		CARD_REPORTED("Hud.Card.Reported", "%crime% (reported by %count% witness(es))"),
+		// 0.21.2 S3: the crime of a raise a cop reported, dispatch presumed, or a cop spotted at the scene
+		CARD_SEEN("Hud.Card.Seen", "%crime% (seen by %count% officer(s))"),
+		CARD_MISSING("Hud.Card.Missing", "%crime% (an officer stopped answering)"),
+		CARD_SCENE("Hud.Card.Scene", "%crime% (spotted near the scene)"),
 		SHEET_HEADER("Charge_Sheet.Header", "&8&m-----&r &6&lCHARGE SHEET &8&m-----"),
 		SHEET_CRIME("Charge_Sheet.Crime", "&7- &f%crime% &8x%count%"),
 		SHEET_TOTAL("Charge_Sheet.Total", "&7Fine: &c%money_symbol%%amount%"),
@@ -96,6 +101,15 @@ public class WantedMessages extends LocalizedModuleYaml {
 		PATROL_PULL_OVER("Patrol.Pull_Over", "&cBeat cop: &fPull over! Stop within %seconds%s"),
 		PATROL_TICKET("Patrol.Ticket", "&7Ticket: &c%money_symbol%%amount%"),
 		PATROL_FLED("Patrol.Fled", "&cYou fled a traffic stop!"),
+		// 0.21.2 S4: who saw it
+		WITNESS_NO_WITNESS("Witness.No_Witness", "&7Nobody saw that."),
+		WITNESS_COP_CALLING("Witness.Cop_Calling", "&9%reporter% &7is radioing it in - &e%seconds%s"),
+		WITNESS_REPORT_CUT("Witness.Report_Cut", "&aThe radio call never went out."),
+		WITNESS_DEFERRED("Witness.Deferred", "&7A report on you came in while you were away."),
+		// 0.21.2 S5: a silent officer and the scene
+		WITNESS_SILENT("Witness.Silent", "&7%unit% &8misses check-in in &e%seconds%s"),
+		WITNESS_SCENE_HEADING("Witness.Scene_Heading", "&eUnits heading to %place%"),
+		WITNESS_SCENE_COLD("Witness.Scene_Cold", "&7The trail went cold."),
 		TRACKER_TAGGED("Tracker.Tagged", "&cYour car has been tagged. Ditch it."),
 		TRACKER_HUD("Tracker.Hud", "&cTagged &7%seconds%s"),
 		TRESPASS("Trespass", "&cRestricted area!"),

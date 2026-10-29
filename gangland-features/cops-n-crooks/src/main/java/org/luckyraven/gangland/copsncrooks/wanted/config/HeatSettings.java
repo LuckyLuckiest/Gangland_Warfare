@@ -16,14 +16,16 @@ import java.util.Map;
  * @param turfWarMultiplier    multiplier inside a contested turf.
  * @param assaultRepeatSeconds how often the same assault counts again.
  * @param crimeWeights         heat per crime id.
+ * @param perExtraWitness      (0.21.2) added to the witness multiplier per eyewitness past the first, any role.
+ * @param maxExtraWitnesses    (0.21.2) how many eyewitnesses past the first count.
  * @since 0.15.0
  */
 public record HeatSettings(boolean enabled, List<Integer> starThresholds, double streakBonus,
                            double seenByCopMultiplier, double turfWarMultiplier, int assaultRepeatSeconds,
-                           Map<String, Integer> crimeWeights) {
+                           Map<String, Integer> crimeWeights, double perExtraWitness, int maxExtraWitnesses) {
 	/** The shipped {@code Wanted.Heat}. */
 	public static final HeatSettings DEFAULT = new HeatSettings(true, List.of(100, 250, 450, 700, 1000), 1.5, 1.5, 0.5,
-	                                                            10, defaultCrimes());
+	                                                            10, defaultCrimes(), 0.5, 3);
 
 	private static Map<String, Integer> defaultCrimes() {
 		Map<String, Integer> crimes = new LinkedHashMap<>();

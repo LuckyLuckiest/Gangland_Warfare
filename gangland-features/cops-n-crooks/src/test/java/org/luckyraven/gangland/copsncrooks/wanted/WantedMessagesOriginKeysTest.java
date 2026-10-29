@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -49,11 +50,28 @@ class WantedMessagesOriginKeysTest {
 			{"NEWS_END", "Breaking_News.End", "&4&lBREAKING &fThe %stars% &fchase of %player% is over: %ending%"},
 	};
 
+	/** 0.21.2 S3: the star card's cause line per ReportKind; name, path, shipped text (= fallback). */
+	private static final String[][] REPORT_KEYS = {
+			{"CARD_SEEN", "Hud.Card.Seen", "%crime% (seen by %count% officer(s))"},
+			{"CARD_REPORTED", "Hud.Card.Reported", "%crime% (reported by %count% witness(es))"},
+			{"CARD_MISSING", "Hud.Card.Missing", "%crime% (an officer stopped answering)"},
+			{"CARD_SCENE", "Hud.Card.Scene", "%crime% (spotted near the scene)"},
+			// 0.21.2 S4: who saw it, on the action bar
+			{"WITNESS_NO_WITNESS", "Witness.No_Witness", "&7Nobody saw that."},
+			{"WITNESS_COP_CALLING", "Witness.Cop_Calling", "&9%reporter% &7is radioing it in - &e%seconds%s"},
+			{"WITNESS_REPORT_CUT", "Witness.Report_Cut", "&aThe radio call never went out."},
+			{"WITNESS_DEFERRED", "Witness.Deferred", "&7A report on you came in while you were away."},
+	};
+
 	private static YamlConfiguration shipped() {
 		InputStream in = WantedMessagesOriginKeysTest.class.getClassLoader()
 		                                                   .getResourceAsStream("copsncrooks/wanted_messages.yml");
 		assertNotNull(in, "copsncrooks/wanted_messages.yml must ship in the module jar");
 		return YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
+	}
+
+	private static String[][] allKeys() {
+		return Stream.concat(Arrays.stream(NEW_KEYS), Arrays.stream(REPORT_KEYS)).toArray(String[][]::new);
 	}
 
 	private static WantedMessages.Key key(String name) {
@@ -64,7 +82,7 @@ class WantedMessagesOriginKeysTest {
 	@Test
 	@DisplayName("every new key exists with the agreed path and fallback text")
 	void newKeys_existWithPathAndFallback() {
-		for (String[] row : NEW_KEYS) {
+		for (String[] row : allKeys()) {
 			WantedMessages.Key key = key(row[0]);
 			assertEquals(row[1], key.path, row[0]);
 			assertEquals(row[2], key.fallback, row[0]);
@@ -76,7 +94,7 @@ class WantedMessagesOriginKeysTest {
 	void newKeys_shippedTextEqualsFallback() {
 		YamlConfiguration yaml = shipped();
 
-		for (String[] row : NEW_KEYS) {
+		for (String[] row : allKeys()) {
 			assertEquals(row[2], yaml.getString(row[1]), row[1] + " in wanted_messages.yml");
 		}
 	}

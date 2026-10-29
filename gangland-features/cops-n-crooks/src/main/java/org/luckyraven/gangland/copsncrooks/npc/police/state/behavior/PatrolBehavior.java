@@ -84,12 +84,15 @@ public class PatrolBehavior implements CopBehavior {
 
 	private void walk(CopNpc cop) {
 		var      ps     = services.patrol().get();
-		Location anchor = cop.getSpawnLocation();
+		// 0.21.2 R3 (T-606): a cop spawned off a watched station beats around the station, not his spawn spot
+		Location anchor = cop.getBeatAnchor() != null ? cop.getBeatAnchor() : cop.getSpawnLocation();
 		World    world  = anchor == null ? null : anchor.getWorld();
 		if (world == null) return;
 		if (cop.getNpc().getNavigator().isNavigating()) return;
 
 		long now  = services.clock().getAsLong();
+		// 0.21.2 R2 (T-579): a responder holds a silent officer's last check-in until the scene's time is up
+		if (now < cop.getInvestigateUntil()) return;
 		Beat beat = beats.computeIfAbsent(cop, key -> new Beat());
 
 		Entity body = cop.getEntity();

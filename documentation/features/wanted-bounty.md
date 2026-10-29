@@ -27,7 +27,12 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
 
 - A crime chained within `Kill_Combo.Reset_After` seconds of the last one is multiplied by `Streak_Bonus` (1.5), only
   while `Kill_Combo.Enable` is true.
-- A crime a cop saw is multiplied by `Seen_By_Cop_Multiplier` (1.5).
+- **Who saw it (0.21.2).** A crime a cop saw is multiplied by `Seen_By_Cop_Multiplier` (1.5); a crime only a civilian
+  reported counts x1.0. Each eyewitness past the first, cop or civilian, adds `Per_Extra_Witness` (0.5) to that
+  multiplier, up to `Max_Extra_Witnesses` (3). The witnesses are counted when the report lands, so a witness killed
+  first counts for nothing. A Kill_Civilian three civilians saw is 100 x 2.0 = 200; one seen by four cops is
+  100 x 3.0 = 300, and a Kill_Cop four cops saw is 150 x 3.0 = 450 (three stars). For a crime in `Wanted.Witnesses.Crimes` your squad merely having you in sight is not a cop who saw
+  it; for any other crime it still is.
 - A player kill inside a contested turf is multiplied by `Turf_War_Multiplier` (0.5).
 - Hitting the same cop again within `Assault_Repeat_Seconds` (10) is not a new crime.
 - **Not crimes:** a kill in self-defence (see Self-defence below), a crime-free takedown of a player with a bounty
@@ -56,9 +61,60 @@ exactly as before.
 
 ### Witnesses and 911 calls (0.20.0)
 
-A car theft, an assault on a civilian or (since 0.21.1) the killing of a civilian that no cop saw is not counted at once.
-It is counted only if someone calls it in. A cop saw it when a cop (squad or beat) picks you up at that moment within
-`Alert_Range` (40), or your squad has a fresh sighting of you; then it counts at once. Nothing here is random: every step has a fixed rule and something you can see.
+A car theft, an assault on a civilian, (since 0.21.1) the killing of a civilian and (0.21.2) an assault on or the
+killing of a cop are not counted at once. They count only once someone who saw them reports them: a cop first, else a
+civilian's 911 call. Nothing here is random: every step has a fixed rule and something you can see.
+
+**A cop eyewitness (0.21.2).** A cop (squad or beat) saw it when he can see you (within `Alert_Range` 40 as the dark,
+crowds and sneaking shrink it, or within `Witnesses.Cops.Witness_Floor` 6 blocks with a clear line of sight; a disguise
+does not hide a crime done in front of him) and one of these holds: he is fighting or chasing you (a hit cop witnesses
+his own assault), the crime is loud (the same rule as civilians below; he turns to the noise), or you are inside his
+`Witnesses.Cops.View_Angle` (180) cone. The dead cop of a cop kill never witnesses it.
+
+- **Radioing it in.** The nearest witness glows and your action bar says `Officer Bob is radioing it in - 3s`. After
+  `Report_Seconds` (3) dispatch says `Officer Bob reports Killing an officer near the Docks. All units respond.` (the crime
+  spot, never where you are by then), the squad gets a tip to that spot, and the crime counts as seen by every witness
+  still alive: `Killing an officer (seen by 2 officer(s))` on the chat card.
+- **Cutting it.** Kill the reporter and the next living witness takes over with the same deadline. Kill them all first
+  and `The radio call never went out.`: nothing counts.
+- **One crime, one reporter.** A cop report means no civilian is asked. A cop kill of a cop whose assault report is
+  still pending replaces it when a cop saw the kill (it keeps the assault's deadline). No cop saw the kill: when
+  another living cop saw the assault, the assault report stands and the civilians are not asked; when only the dying
+  cop saw it, the assault report closes and the civilians report the kill (a 911 call), or nobody does. Death, a cuff or an arrest drops your pending and deferred reports; so does being
+  restrained when one would land, at its deadline or at your next join. Going down does not.
+- **Logging out forgives nothing.** A report (a cop's, or a 911 call still running) whose witness is alive when you log
+  out lands when you next join, within `Witnesses.Defer_Minutes` (10): `A report on you came in while you were away.`
+  A 911 call is handed over at the logout, so nobody can stop it after that.
+- Nobody saw it: `Nobody saw that.` and no heat. A cop killed out of everyone's sight is a silent officer (below).
+
+**A silent officer (0.21.2).** Every cop checks in on the radio: all the time while his squad is in contact with
+someone, else every `Check_In.Check_In_Seconds` (10) on patrol. Kill one where no cop sees you and no cop sees the body
+fall, and nobody on the radio knows yet: no `Officer down!`, no backup, and his place in the squad stays filled, so no
+replacement appears in front of you.
+
+- **Radio check.** `Check_In_Seconds` after his last check-in dispatch asks for him: `Unit Officer Bob #1592, status
+  check.`. With `Check_In.Show_Timer` your action bar counts down: `Officer Bob #1592 misses check-in in 9s`.
+- **Officer missing.** `Silent_Seconds` (20) after his last check-in: `Unit Officer Bob #1592 is not answering. Units,
+  check his last position near the Docks.` (where he last checked in, never where you are). Only now does the squad
+  record the casualty and request backup; the new units come from your side of that spot and search it. A beat cop's
+  station sends its replacement and a second beat cop to walk there. A cop with neither sends nobody.
+- **Presumed.** When his squad was hunting you (and still is), dispatch counts the kill now (`Check_In.Pursuit_Presumed`), as one
+  witness without the cop bonus: `Killing an officer (an officer stopped answering)`. 150 heat from 0 stars, one star.
+- **The scene.** Otherwise dispatch opens a scene at that spot for `Scene_Seconds` (60): `Units heading to the Docks`.
+  The first unit within 6 blocks says `Scene_Found`. A cop (any cop, even one passing) who sees you within
+  `Scene_Radius` (32) of the scene counts the kill as seen by him, `Killing an officer (spotted near the scene)`, and
+  says `Scene_Suspect`. Nobody spots you before the time runs out: `Scene_Clear`, `The trail went cold.`, no stars.
+- **The body seen.** A cop who did not see you but saw the body fall radios `Officer down!` at once (as before) and a
+  scene opens at the body.
+- **A 911 call first.** A civilian who saw it and gets through first closes the silence: dispatch learns of the death
+  from the call (the casualty and backup go out then, toward the call's spot), and the kill counts once, as reported.
+  A call that lands after the kill was presumed or counted at the scene adds nothing.
+- **The assault seen.** A cop who saw you hit the officer is already on the radio about it: no silence, the assault
+  report stands and the kill is not counted on top of it.
+- Leaving the server, dying, a cuff or an arrest forgets the silences and scenes about you.
+
+Keys: `cops.yml` `Cops.Check_In.*`. The silent path needs `Kill_Cop` in `Wanted.Witnesses.Crimes`; with
+`Check_In.Enable: false` (or `Kill_Cop` not listed) a dead cop's squad radios at once, as in 0.21.1.
 
 - **Who sees it.** The nearest civilian within `Witness.Range` (24 blocks) with line of sight, and (0.21.1) facing the
   crime: `Witness.View_Angle` (180) is the width of its view, so a civilian with its back to you sees nothing. A **loud**
@@ -78,11 +134,13 @@ It is counted only if someone calls it in. A cop saw it when a cop (squad or bea
   next civilian still watching takes over with its own Notice.
 - **Connected.** After `Witness.Call_Seconds` (8): `Yes, police? He's right here, near Docks!`, then the dispatch line
   (even if no cop is out yet), and the crime counts. The squad gets a tip to the crime spot and searches there. The star
-  card in chat names the witness: `Car theft (reported by a witness)`; the title keeps the plain crime name.
-- Nobody saw it and no cop saw it: the gated crime adds no heat.
+  card in chat names the witnesses: `Car theft (reported by 3 witness(es))` (0.21.2: the caller plus every other
+  civilian who saw it and is still alive when the call lands, and each one past the first adds heat, see above); the
+  title keeps the plain crime name.
+- Nobody saw it and no cop saw it: the gated crime adds no heat (`Witness.No_Witness`, "Nobody saw that.").
 - Hitting a civilian publishes `Assault_Civilian` at most once per attacker and civilian every `Assault_Repeat_Seconds` (10).
 
-Keys: `wanted.yml` `Wanted.Witnesses.Enable` and `Crimes`; `civilians.yml` `Witness.*`; the lines are in
+Keys: `wanted.yml` `Wanted.Witnesses.Enable`, `Crimes`, `Defer_Minutes` and `Cops.*`; `civilians.yml` `Witness.*`; the lines are in
 `civilian_messages.yml`. See [migration-0.20.0.md](../migration-0.20.0.md) and [migration-0.21.1.md](../migration-0.21.1.md).
 
 ### The hot-cash bag (0.20.0)
@@ -115,10 +173,17 @@ Keys and messages are listed in [migration-0.20.0.md](../migration-0.20.0.md).
   60 s at 5) and one star drops (or all stars with `Drop_Mode: ALL_STARS`). Outside the zone the clock runs
   `Outside_Zone_Speed` (2x) faster. A sighting, or a shot you fire near a cop, puts you back to "seen"; being cuffed
   pauses it. Cops that are all walking home count as no pursuit.
+  - **No cop standing (0.21.2).** Killing every cop never clears a star. With every cop dead or walking home the search
+    runs on at the squad's last-known spot, but inside the zone it runs at `No_Cop_Inside_Speed` (0.25, four times
+    slower): standing on the bodies does not pay, leaving the zone does. Only the first units of a chase, while they are
+    on their way, a hand-off in progress, and a cop killed unseen whose silence dispatch has not noticed yet (up to
+    `Check_In.Silent_Seconds`) pause it. The first time in a chase it runs with no cop standing you are told in chat:
+    `No units on you - leave the area` (`Hud.No_Cop_Search`, `""` turns it off).
   - **AUTO mode (0.15.2+).** With `Drop_Mode: AUTO`, the cops judge how the chase went. A rampage loses one star at a time; a small chase loses them all at once. A long quiet chase with no new crime for 90+ seconds also loses them all. Leaving the search zone loses half your stars (rounded up). The next timer gets faster after each drop, and known repeat offenders stay locked to one star. The server learns how long chases typically last and who keeps getting away, so timers adjust over time. Cold starts use guessed numbers; warm servers tune based on play. An upgraded server from 0.15.1 keeps its old `wanted.yml` (no `Auto` block) and reads AUTO defaults, or an admin can copy the new `Auto` block from `plugins/Gangland_Warfare/modules/cops-n-crooks-<version>.jar`.
 - **The fixed decay timer** still runs when no cop is hunting you, and as the safety net otherwise: it starts at `Time`
   (default 120 seconds) and scales up with each star: `time x Amount ^ stars`. While cops hunt, evasion owns decay and the
-  timer drops nothing. `Evasion.Enable: false` gives the timer back full control.
+  timer drops nothing; since 0.21.2 that holds even when every cop is dead. `Evasion.Enable: false` gives the timer back
+  full control.
 - **Dying clears all wanted stars** immediately.
 - Kill combos reset after `Reset_After` seconds of no kills (default 10 seconds).
 
@@ -163,7 +228,8 @@ A boss bar with the stars (red when a cop sees you, yellow with a countdown whil
 when a star is lost), a star card (the crime, the tier coming and whether it cuffs or shoots; or why a star dropped),
 a title and, when a star is gained, a siren, a particle ring marking the search zone, and a compass pointing the way
 out of the zone (it never shows where the cops are). Switch each off under `Wanted.Hud` (`Boss_Bar`, `Star_Card`, `Title`, `Siren`, `Zone_Ring`, `Compass`);
-the text is in `copsncrooks/wanted_messages.yml`.
+the text is in `copsncrooks/wanted_messages.yml`. One crime that raises two stars at once is announced once, at the
+level it ends at: one subtitle, one card naming the tier of that level, one siren (0.21.2).
 
 The title is set per event under `Wanted.Hud.Title` (`Gain`, `Lost`, `Escaped`), each with its own `Title`, `Subtitle`
 and `Fade_In` / `Stay` / `Fade_Out` in ticks. The shipped default is a small subtitle (the star row and the star card) with no big

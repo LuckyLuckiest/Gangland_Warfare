@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -82,7 +83,7 @@ class PatrolManagerTest {
 
 		Station station = station(1, "Central", anchor);
 		when(stations.all()).thenReturn(List.of(station));
-		when(spawner.spawnAtLocation(any(), anyInt())).thenAnswer(inv -> {
+		when(spawner.spawnAtLocation(any(), anyInt(), anyBoolean())).thenAnswer(inv -> {
 			CopNpc cop = fx.cop(CopState.IDLE, 0, 0, inv.getArgument(0));
 			spawned.add(cop);
 			return cop;
@@ -119,7 +120,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, times(2)).spawnAtLocation(eq(anchor), eq(1));
+		verify(spawner, times(2)).spawnAtLocation(eq(anchor), eq(1), eq(false));
 		assertEquals(2, spawned.size());
 		for (CopNpc cop : spawned) {
 			assertEquals(CopState.PATROL, cop.getCurrentState());
@@ -136,7 +137,7 @@ class PatrolManagerTest {
 		manager.manage();
 		manager.manage();
 
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -147,7 +148,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, times(3)).spawnAtLocation(any(), eq(2));
+		verify(spawner, times(3)).spawnAtLocation(any(), eq(2), anyBoolean());
 	}
 
 	@Test
@@ -157,7 +158,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	/** Flipped 0.21.1 (cause 6): the replacement waits out Respawn_Seconds instead of popping in on the next tick. */
@@ -170,17 +171,213 @@ class PatrolManagerTest {
 
 		manager.manage();
 		verify(spawned.get(0)).destroy(any());
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		assertEquals(1, manager.beatCops().size());
 
 		fx.clock[0] += 29_000;
 		manager.manage();
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 
 		fx.clock[0] += 1_000;
 		manager.manage();
-		verify(spawner, times(3)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		assertEquals(2, manager.beatCops().size());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: an open silence holds the station's replacement past Respawn_Seconds")
+	void openSilence_holdsStationReplacement() {
+		boolean[] silent = {false};
+		manager.setStationHold(id -> id == 1 && silent[0]);
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		silent[0] = true;
+
+		manager.manage();
+		fx.clock[0] += 40_000;
+		manager.manage();
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
+
+		silent[0] = false;
+		manager.manage();
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: the station of a beat cop, none for a cop of no beat")
+	void stationOf_findsTheBeat() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+
+		assertEquals(1, manager.stationOf(spawned.get(0)).getAsInt());
+		assertTrue(manager.stationOf(mock(CopNpc.class)).isEmpty());
+	}
+
+	/**
+	 * Flipped 0.21.2 R2 (T-587): the replacement no longer spawns at Officer_Missing (about 13 s after the kill, at the
+	 * station, in the killer's view): it waits out Respawn_Seconds from the loss, then walks to the report and holds it.
+	 */
+	@Test
+	@DisplayName("0.21.2 T-587: respondTo sends the beat mate now; the replacement waits out Respawn_Seconds, then walks there")
+	void respondTo_sendsTheMateNow_replacementWaitsOutRespawnSeconds() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		CopNpc survivor = spawned.get(1);
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		long     lost   = fx.clock[0];
+		Location report = fx.at(20, 20);
+		fx.clock[0] += 13_000;
+
+		assertEquals(2, manager.respondTo(1, report, 60_000L));
+
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
+		verify(survivor).navigateTo(report);
+		verify(survivor).setInvestigateUntil(fx.clock[0] + 60_000L);
+		long until = fx.clock[0] + 60_000L;
+
+		fx.clock[0] = lost + 29_000;
+		manager.manage();
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
+
+		fx.clock[0] = lost + 30_000;
+		manager.manage();
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
+		CopNpc replacement = spawned.get(2);
+		verify(replacement).navigateTo(report);
+		verify(replacement).setInvestigateUntil(until);
+		assertEquals(2, manager.beatCops().size());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-587 (R6): a replacement owed while a player has the station spot in view and no unwatched spot is found spawns on the first unwatched run")
+	void respondTo_watchedStation_spawnsOnTheFirstUnwatchedRun() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		Location report = fx.at(20, 20);
+		manager.respondTo(1, report, 60_000L);
+		boolean[] watched = {true};
+		when(spawner.watched(anchor)).thenAnswer(inv -> watched[0]);
+
+		fx.clock[0] += 40_000;
+		manager.manage();
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
+
+		watched[0] = false;
+		fx.clock[0] += 1_000;
+		manager.manage();
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
+		verify(spawned.get(2)).navigateTo(report);
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-587: a replacement spawned after the scene's hold ran out stays on its beat")
+	void respondTo_holdOver_replacementStaysOnItsBeat() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		Location report = fx.at(20, 20);
+		manager.respondTo(1, report, 20_000L);
+
+		fx.clock[0] += 30_000;
+		manager.manage();
+
+		verify(spawner, times(3)).spawnAtLocation(any(), anyInt(), anyBoolean());
+		verify(spawned.get(2), never()).navigateTo(report);
+		verify(spawned.get(2), never()).setInvestigateUntil(anyLong());
+	}
+
+	/** Owner ruling T-606 (0.21.2 R3): a watched station is staffed from an unwatched spot nearby; none this run holds it. */
+	@Test
+	@DisplayName("a station watched past Respawn_Seconds spawns at an unwatched spot and walks in")
+	void watchedStation_pastRespawnSeconds_spawnsAtAnUnwatchedSpotAndWalksIn() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		Location offsite = fx.at(30, 30);
+		when(spawner.watched(anchor)).thenReturn(true);
+		when(spawner.unwatchedNear(anchor)).thenReturn(offsite);
+
+		fx.clock[0] += 29_000;
+		manager.manage();
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
+
+		fx.clock[0] += 1_000;
+		manager.manage();
+
+		verify(spawner).spawnAtLocation(eq(offsite), eq(1), eq(true));
+		CopNpc replacement = spawned.get(2);
+		assertEquals(CopState.PATROL, replacement.getCurrentState());
+		verify(replacement).setBeatAnchor(anchor);
+		verify(replacement).navigateTo(anchor);
+		verify(spawner, times(2)).spawnAtLocation(eq(anchor), anyInt(), eq(false)); // the first two, before anyone watched
+		assertEquals(2, manager.beatCops().size());
+	}
+
+	@Test
+	@DisplayName("0.21.2 R3 T-606: a watched station's first beat cops spawn at once at an unwatched spot and walk in")
+	void watchedStation_firstStaffing_spawnsAtAnUnwatchedSpotAtOnce() {
+		Location offsite = fx.at(-30, 20);
+		when(spawner.watched(anchor)).thenReturn(true);
+		when(spawner.unwatchedNear(anchor)).thenReturn(offsite);
+		online.add(fx.player(5, 5));
+
+		manager.manage();
+
+		verify(spawner, times(2)).spawnAtLocation(eq(offsite), eq(1), eq(true));
+		for (CopNpc cop : spawned) {
+			verify(cop).setBeatAnchor(anchor);
+			verify(cop).navigateTo(anchor);
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.2 R3 T-606: an owed replacement at a watched station spawns at an unwatched spot and walks to the report, its beat the station")
+	void respondTo_watchedStation_replacementSpawnsOffsiteAndWalksToTheReport() {
+		online.add(fx.player(5, 5));
+		manager.manage();
+		PatrolFixture.kill(spawned.get(0));
+		manager.manage();
+		Location report = fx.at(20, 20);
+		manager.respondTo(1, report, 60_000L);
+		long     until   = fx.clock[0] + 60_000L;
+		Location offsite = fx.at(-30, 20);
+		when(spawner.watched(anchor)).thenReturn(true);
+		when(spawner.unwatchedNear(anchor)).thenReturn(offsite);
+
+		fx.clock[0] += 30_000;
+		manager.manage();
+
+		verify(spawner).spawnAtLocation(eq(offsite), eq(1), eq(true));
+		CopNpc replacement = spawned.get(2);
+		verify(replacement).setBeatAnchor(anchor);
+		verify(replacement).navigateTo(report);
+		verify(replacement).setInvestigateUntil(until);
+		verify(replacement, never()).navigateTo(anchor);
+	}
+
+	@Test
+	@DisplayName("0.21.2 R2 (R6): no beat cop spawns at a station spot a player has in view (R3: nor anywhere, with no unwatched spot this run)")
+	void watchedStation_spawnsNobody() {
+		when(spawner.watched(anchor)).thenReturn(true);
+		online.add(fx.player(5, 5));
+
+		manager.manage();
+
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: respondTo for a station no longer on the map sends nobody")
+	void respondTo_unknownStation_sendsNobody() {
+		assertEquals(0, manager.respondTo(99, fx.at(20, 20), 60_000L));
+
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -193,7 +390,7 @@ class PatrolManagerTest {
 		manager.aiTick();
 		manager.manage();
 
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 		assertEquals(1, manager.beatCops().size());
 	}
 
@@ -232,7 +429,7 @@ class PatrolManagerTest {
 		manager.manage();
 
 		assertEquals(2, manager.beatCops().size());
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -264,7 +461,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 		assertTrue(manager.beatCops().isEmpty());
 	}
 
@@ -276,7 +473,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -291,7 +488,7 @@ class PatrolManagerTest {
 		assertTrue(manager.beatCops().isEmpty());
 		for (CopNpc cop : spawned)
 			verify(cop).destroy(any());
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -303,7 +500,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -317,7 +514,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -329,7 +526,7 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, never()).spawnAtLocation(any(), anyInt());
+		verify(spawner, never()).spawnAtLocation(any(), anyInt(), anyBoolean());
 	}
 
 	@Test
@@ -349,7 +546,7 @@ class PatrolManagerTest {
 	@Test
 	@DisplayName("a spawner that fails (null) leaves the beat short without an error")
 	void spawnerFailure_tolerated() {
-		when(spawner.spawnAtLocation(any(), anyInt())).thenReturn(null);
+		when(spawner.spawnAtLocation(any(), anyInt(), anyBoolean())).thenReturn(null);
 		online.add(fx.player(1, 1));
 
 		manager.manage();
@@ -364,7 +561,8 @@ class PatrolManagerTest {
 
 		manager.manage();
 
-		verify(spawner, times(2)).spawnAtLocation(any(), anyInt());
+		verify(spawner, times(2)).spawnAtLocation(any(), anyInt(), anyBoolean());
+		verify(spawner, times(2)).watched(anchor); // 0.21.2 R2 (R6): each spawn asks first whether the spot is in view
 		verifyNoMoreInteractions(spawner);
 	}
 

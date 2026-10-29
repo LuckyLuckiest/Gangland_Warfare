@@ -47,10 +47,12 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	/**
 	 * The dispatch-origin lines and the once-per-chase Handoff / Post_Up lines that must never be swallowed by the player
-	 * gap (Ruling R43, T26): added in code so an older cops.yml Priority list is covered too.
+	 * gap (Ruling R43, T26): added in code so an older cops.yml Priority list is covered too. 0.21.2 (T-571): the cop
+	 * report said right after Dispatch_Wanted, and the silent officer's one-shot check-in and scene lines.
 	 */
 	static final Set<String> DISPATCH_PRIORITY = Set.of("Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up",
-	                                                    "Most_Wanted");
+	                                                    "Most_Wanted", "Officer_Report", "Radio_Check",
+	                                                    "Officer_Missing", "Scene_Found", "Scene_Suspect", "Scene_Clear");
 
 	/** One-shot breach and standoff lines: a server's Priority list must never silence them either. */
 	static final Set<String> ONE_SHOT_PRIORITY = Set.of("Stack_Up", "Breach", "Flashbang", "Negotiate",
@@ -130,6 +132,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final TacticsConfig   tacticsDefault;
 	private final RadioSettings   radioSettings;
 	private final BackupSettings  backupSettings;
+	private final CheckInSettings checkInSettings;
 	private final RegroupSettings regroupSettings;
 	private final ShotNoiseSettings shotNoiseSettings;
 	private final RetreatSettings retreatSettings;
@@ -237,6 +240,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.tacticsDefault = parseTacticsDefault(cops, report);
 		this.radioSettings  = parseRadioSettings(cops, report);
 		this.backupSettings = parseBackupSettings(cops, report);
+		this.checkInSettings = parseCheckInSettings(cops, report);
 		this.regroupSettings = parseRegroupSettings(cops, report);
 		this.shotNoiseSettings = parseShotNoiseSettings(cops, report);
 		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
@@ -488,6 +492,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public BackupSettings getBackupSettings() {
 		return backupSettings;
+	}
+
+	@Override
+	public CheckInSettings getCheckInSettings() {
+		return checkInSettings;
 	}
 
 	@Override
@@ -1075,6 +1084,23 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 				.orDefault((int) (defaults.cooldownMs() / 50L));
 
 		return new BackupSettings(enabled, extraCops, durationTicks * 50L, cooldownTicks * 50L);
+	}
+
+	private CheckInSettings parseCheckInSettings(@Nullable NodeReader cops, ConfigReport report) {
+		CheckInSettings defaults = CheckInSettings.DEFAULT;
+		MappingNode     section  = cops == null ? null : cops.get("Check_In").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader checkIn = NodeReader.of(section, report);
+		return new CheckInSettings(checkIn.get("Enable").asBool().orDefault(defaults.enabled()),
+		                           checkIn.get("Check_In_Seconds").asInt().min(1).orDefault(defaults.checkInSeconds()),
+		                           checkIn.get("Silent_Seconds").asInt().min(1).orDefault(defaults.silentSeconds()),
+		                           checkIn.get("Scene_Radius").asDouble().min(0.0).orDefault(defaults.sceneRadius()),
+		                           checkIn.get("Scene_Seconds").asInt().min(0).orDefault(defaults.sceneSeconds()),
+		                           checkIn.get("Spawn_Grace_Seconds").asInt().min(0)
+		                                  .orDefault(defaults.spawnGraceSeconds()),
+		                           checkIn.get("Pursuit_Presumed").asBool().orDefault(defaults.pursuitPresumed()),
+		                           checkIn.get("Show_Timer").asBool().orDefault(defaults.showTimer()));
 	}
 
 	private RegroupSettings parseRegroupSettings(@Nullable NodeReader cops, ConfigReport report) {

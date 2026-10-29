@@ -47,6 +47,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
 
 import static java.util.Objects.requireNonNullElse;
 import static org.luckyraven.gangland.copsncrooks.npc.police.perception.CopSightlines.inView;
@@ -98,6 +99,12 @@ public class CopManager implements BeanLifecycle {
 	private final List<BiConsumer<CopNpc, Player>>             copAttackedHooks = new CopyOnWriteArrayList<>();
 	/** Beat-cop resolvers, asked in order after the group scan; see {@link #addCopResolver}. */
 	private final List<Function<Entity, @Nullable CopNpc>>     copResolvers     = new CopyOnWriteArrayList<>();
+	/** The crime spot of the late report landing for a player right now, else null (0.21.2, T-543); see setter. */
+	private volatile @Nullable Function<UUID, @Nullable Location> reportedScene;
+	/** The roles of a group's cops killed unseen whose silence dispatch has not noticed yet (0.21.2, T-545). */
+	private volatile Function<CopGroup, List<CopRole>>          silentRoles   = group -> List.of();
+	/** The level one commit's star replay ends at for a player, 0 outside a replay (0.21.2 R2, T-583); see setter. */
+	private volatile ToIntFunction<UUID>                        raisingTo     = id -> 0;
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
 	                  CopLoader copLoader, NpcMarkManager markManager,
@@ -154,11 +161,20 @@ public class CopManager implements BeanLifecycle {
 		// a new episode: the squad is on duty again (T-433) and no leash of the last one hands this one off
 		group.setStoodDown(false);
 		group.clearLeashReleased();
+		// with nobody on the ground the first response is owed again: its units hold the evasion clock (T-537)
+		if (group.isEmpty()) group.clearStood();
 		// a crime-scene tip counts as fresh as a sighting here: a repeated start right after one stays quiet
 		boolean  fresh    = group.getSquad().hasFreshSighting() ||
 		                    group.tippedOffWithin(now, NpcSquad.SIGHTING_GRACE_MS);
+		// 0.21.2 (T-543): a late report names and tips the crime spot, never where he stands by now (R4)
+		Function<UUID, @Nullable Location> sceneOf = reportedScene;
+		Location                           scene   = sceneOf == null ? null : sceneOf.apply(playerId);
+		// 0.21.2 R2 (T-583): a start inside a multi-star replay is sized and announced at the level the commit ends at
+		int                                level   = Math.max(wanted.getLevel(), raisingTo.applyAsInt(playerId));
 		if (existing == null || !fresh) {
-			copRadio.dispatch(group, player, "Dispatch_Wanted", wanted.getLevel(), tierNameFor(wanted.getLevel()));
+			if (scene != null)
+				copRadio.dispatchAt(group, scene, player, "Dispatch_Wanted", level, tierNameFor(level), Map.of());
+			else copRadio.dispatch(group, player, "Dispatch_Wanted", level, tierNameFor(level));
 		}
 		DispatchSettings dispatch = dispatchSettings();
 		if (cause == WantedCause.RESTORE && dispatch.enabled()) {
@@ -168,22 +184,57 @@ public class CopManager implements BeanLifecycle {
 		} else {
 			// 0.21.1 (R4): the crime scene is a tip, no cop saw him there - the squad searches the spot instead of
 			// chasing his live position; the tip-off stamp holds the evasion clock as the old sighting did
-			group.getSquad().reportTip(player.getLocation());
+			// a late report's scene never drags a squad in live contact back to an old spot (0.21.2 S4 review)
+			if (scene == null) group.getSquad().reportTip(player.getLocation());
+			else if (!group.getSquad().hasFreshSighting()) group.getSquad().reportTip(scene);
 			group.markTipOff(now);
 		}
 
 		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
 		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
 		// which only guards against a per-tick bounce inside a single episode. Only up to the new level's target (T-435):
-		// the walkers over it keep walking, sent home, and come back first if the group lacks cops later (T-436).
-		int target = Math.min(spawnManager.getTargetCopCount(wanted.getLevel()), configProvider.getMaxCopsPerPlayer());
-		reengageReturning(group, player, target - engagedCount(group), cop -> true);
+		// the walkers over it keep walking, sent home, and come back first if the group lacks cops later (T-436). A cop
+		// killed unseen still holds his slot (0.21.2, T-545): one walker fewer comes back for a death nobody knows of.
+		int target = Math.min(spawnManager.getTargetCopCount(level), configProvider.getMaxCopsPerPlayer());
+		reengageReturning(group, player, target - engagedCount(group) - silentRoles(group).size(), cop -> true);
 		// The new episode fields its own target, trimmed against the cops engaged now, not against the last episode's
 		// target: a re-spot after a stepwise escape (Drop_Mode ONE_STAR) lands where an all-stars escape does (T-435)
 		group.setPendingRelease(Math.max(0, engagedCount(group) - target));
 
 		startSpawnTask(playerId, wanted);
 		startAITask(playerId);
+	}
+
+	/**
+	 * Where a late report (a cop's, a 911 call, a deferred one) puts the crime it lands: the wanted start it causes says
+	 * Dispatch_Wanted about that spot and tips the squad there, not where the player stands by then (0.21.2, T-543, R4).
+	 */
+	public void setReportedScene(@Nullable Function<UUID, @Nullable Location> reportedScene) {
+		this.reportedScene = reportedScene;
+	}
+
+	/**
+	 * Where the spawn task reads the held slots of {@code group}: a cop killed where nobody saw it still counts as on duty
+	 * until dispatch notices (0.21.2, T-545), so no refill appears for a death nobody knows of. {@code CopCrimeReports}
+	 * works them out from its open silences, so a logout, a 911 call or a group teardown leaves no phantom count.
+	 */
+	public void setSilentRoles(Function<CopGroup, List<CopRole>> silentRoles) {
+		this.silentRoles = silentRoles;
+	}
+
+	/**
+	 * Where a wanted start reads the level the commit that caused it ends at ({@code HeatLedger.raisingTo}): one crime
+	 * whose heat crosses two thresholds replays the star trigger once per star, so the start fires at the first star
+	 * while the second is a tick away. Dispatch_Wanted and the new episode's target read the final level (T-583).
+	 */
+	public void setRaisingTo(ToIntFunction<UUID> raisingTo) {
+		this.raisingTo = raisingTo;
+	}
+
+	/** The roles {@code group} still holds for its silent cops ({@link #setSilentRoles}); empty when none. */
+	public List<CopRole> silentRoles(CopGroup group) {
+		List<CopRole> roles = silentRoles.apply(group);
+		return roles != null ? roles : List.of();
 	}
 
 	/**
@@ -206,7 +257,7 @@ public class CopManager implements BeanLifecycle {
 		CopGroup group = groups.get(playerId);
 		if (group != null) group.clearLeashReleased();
 		// WantedEndEvent and the level change to 0 both land here for one clear: announce it once per episode.
-		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) standDown(group);
+		if (standsDown(group) && stoodDown.add(playerId)) standDown(group, player);
 
 		if (cause == WantedCause.DEATH || cause == WantedCause.ARREST) {
 			endSquad(playerId);
@@ -249,13 +300,31 @@ public class CopManager implements BeanLifecycle {
 		removeCopAttacker(playerId);
 
 		CopGroup group = groups.get(playerId);
-		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) standDown(group);
+		if (standsDown(group) && stoodDown.add(playerId)) standDown(group, Bukkit.getPlayer(playerId));
 	}
 
-	/** The leader says {@code Stand_Down}; the squad then says nothing more, its queued orders included (T-433). */
-	private void standDown(CopGroup group) {
-		copRadio.sayFromLeader(group, "Stand_Down");
+	/** A group with cops, or one whose cops all died (T-542), stands down; one that never fielded a cop has no one to. */
+	private static boolean standsDown(@Nullable CopGroup group) {
+		return group != null && (!group.isEmpty() || group.hasStood());
+	}
+
+	/**
+	 * The leader says {@code Stand_Down}; the squad then says nothing more, its queued orders included (T-433). With no
+	 * cop of the group left to speak (every one dead), dispatch says it to him instead (T-542).
+	 */
+	private void standDown(CopGroup group, @Nullable Player player) {
+		if (hasSpeaker(group)) copRadio.sayFromLeader(group, "Stand_Down");
+		else if (player != null) copRadio.dispatch(group, player, "Stand_Down", 0, "");
 		group.setStoodDown(true);
+	}
+
+	/** Some cop of the group still has a body to speak from ({@code CopRadio.sayFromLeader}'s speaker). */
+	private static boolean hasSpeaker(CopGroup group) {
+		synchronized (group.getCops()) {
+			for (CopNpc cop : group.getCops())
+				if (cop.getEntity() != null) return true;
+		}
+		return false;
 	}
 
 	/**
@@ -333,7 +402,8 @@ public class CopManager implements BeanLifecycle {
 	 * pass {@code eligible} back into the hunt, nearest first; the eligible ones over the limit are marked sent home
 	 * (T-436). One farther out would leash again on its next tick and restart its walk home (T-131, cause 5): it stays
 	 * RETURNING. A group with no engaged Commander calls its nearest walking Commander back first, even past the limit,
-	 * so the squad's last Commander is never left sent home (T-146). A new episode then trims the others to its target;
+	 * so the squad's last Commander is never left sent home (T-146); a Commander killed unseen still leads until dispatch
+	 * notices (0.21.2 R2, T-581: his held slot is no vacancy). A new episode then trims the others to its target;
 	 * a Commander its composition has no slot for stays as the one cop over it ({@link #releaseSurplus}).
 	 *
 	 * @return the cops called back
@@ -342,7 +412,7 @@ public class CopManager implements BeanLifecycle {
 		double       maxDist = configProvider.getPursuitMaxDistance();
 		Location     anchor  = leashAnchor(group, player);
 		List<CopNpc> walkers = new ArrayList<>();
-		boolean      led     = false;
+		boolean      led     = silentRoles(group).stream().anyMatch(role -> role != null && role.commander());
 		for (CopNpc cop : group.getCops()) {
 			if (cop.isValid() && cop.getCurrentState() != CopState.RETURNING && isCommander(cop)) led = true;
 			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) continue;
@@ -832,18 +902,23 @@ public class CopManager implements BeanLifecycle {
 		int targetCount  = Math.min(baseTarget + group.backupExtra(now, backup), configProvider.getMaxCopsPerPlayer());
 		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count. Nor
 		// is one the group sent home (T-436), but while the group lacks cops the nearest in range comes back first.
-		List<CopNpc> counted = new ArrayList<>(cops.stream().filter(
+		// 0.21.2 (T-545): a cop killed unseen holds his slot until dispatch notices: no refill, no wipe, no walker called
+		// back, for a death nobody knows of. currentCount stays the real cops, so a held slot never sends a real cop home
+		// (T-435 below)
+		List<CopRole> held    = silentRoles(group);
+		List<CopNpc>  counted = new ArrayList<>(cops.stream().filter(
 				c -> !isStrandedReturning(c, anchor, maxDist) && !group.isSentHome(c)).toList());
-		counted.addAll(reengageReturning(group, player, targetCount - counted.size(), group::isSentHome));
+		counted.addAll(reengageReturning(group, player, targetCount - counted.size() - held.size(), group::isSentHome));
 		int currentCount = counted.size();
 		// Each new cop takes the composition's first role no counted cop holds, so a stranded one's role is refilled.
 		List<CopRole> composition = configProvider.getSquadComposition(wantedLevel);
 		List<CopRole> liveRoles   = new ArrayList<>();
 		for (CopNpc cop : counted) liveRoles.add(cop.getRole());
+		liveRoles.addAll(held);
 
 		if (!dispatchSettings().enabled() && !breatherSettings().enabled()) {
 			// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
-			while (currentCount < targetCount) {
+			while (currentCount + held.size() < targetCount) {
 				int     slot   = CopRole.nextSlot(composition, liveRoles);
 				CopRole role   = slot < 0 ? null : composition.get(slot);
 				CopNpc  newCop = spawnManager.spawnNearPlayer(player, slotTier(wantedLevel, slot, tier),
@@ -861,7 +936,7 @@ public class CopManager implements BeanLifecycle {
 				currentCount++;
 			}
 		} else {
-			int lacking = targetCount - currentCount;
+			int lacking = targetCount - currentCount - held.size();
 			// cause 4: units no longer needed (the level dropped, a backup ran out) are called off before they arrive,
 			// newest first, so the queue never holds more than the group lacks
 			group.trimPending(Math.max(0, lacking));

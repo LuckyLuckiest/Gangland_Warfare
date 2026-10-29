@@ -103,7 +103,15 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Tracker_Tagged", List.of("Tracker's on the car. Dispatch has his position.")),
 			Map.entry("Tracker_Ping", List.of("Tracker ping, he's at %place%.")),
 			Map.entry("Overwatch_Spotted", List.of("Overwatch, eyes on. He's %distance% blocks out, %direction%.")),
-			Map.entry("Patrol_Sighting", List.of("Patrol here, I see the suspect at %place%.")));
+			Map.entry("Patrol_Sighting", List.of("Patrol here, I see the suspect at %place%.")),
+			// 0.21.2
+			Map.entry("Officer_Report", List.of("%reporter% reports %crime% near %place%. All units respond.")),
+			Map.entry("Radio_Check", List.of("Unit %unit%, status check.")),
+			Map.entry("Officer_Missing",
+			          List.of("Unit %unit% is not answering. Units, check his last position near %place%.")),
+			Map.entry("Scene_Found", List.of("On scene near %place%. Officer down, no sign of the shooter.")),
+			Map.entry("Scene_Suspect", List.of("Suspect spotted near the scene, moving in!")),
+			Map.entry("Scene_Clear", List.of("Scene near %place% is clear. Suspect is gone.")));
 
 	public CopRadioMessages(FileManager fileManager) {
 		super(fileManager, BASE_NAME);

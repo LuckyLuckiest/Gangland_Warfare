@@ -195,6 +195,35 @@ class PatrolBehaviorTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 R3 T-606: a beat cop spawned off a watched station walks to the station anchor, not back to his spawn spot")
+	void offsiteSpawn_walksTheBeatAroundTheStationAnchor() {
+		Location offsite = fx.at(60, 0);
+		CopNpc   walker  = fx.cop(CopState.PATROL, 60, 0, offsite);
+		when(walker.getBeatAnchor()).thenReturn(anchor);
+
+		behavior.tick(walker);
+
+		verify(walker).navigateTo(anchor);
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-579: a responder holding a silent officer's spot neither walks back nor wanders until the hold ends")
+	void investigateHold_staysAtTheSpot_thenWalksBack() {
+		CopNpc responder = fx.cop(CopState.PATROL, 40, 0, anchor);
+		long   until     = fx.clock[0] + 5_000L;
+		when(responder.getInvestigateUntil()).thenReturn(until);
+
+		for (int i = 0; i < 5; i++) {
+			behavior.tick(responder);
+			fx.clock[0] += 1_000;
+		}
+		verify(responder, never()).navigateTo(any());
+
+		behavior.tick(responder);
+		verify(responder).navigateTo(anchor);
+	}
+
+	@Test
 	@DisplayName("a wanted player in view is reported to their squad and radioed once while the sighting is fresh")
 	void wantedPlayerReportedToSquad() {
 		Player player = playerAt(5, 0);

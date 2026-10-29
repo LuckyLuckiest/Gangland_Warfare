@@ -5,9 +5,12 @@ import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.WitnessSettings;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
@@ -28,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,6 +73,7 @@ class HeatLedgerTest {
 
 		config = mock(ChaseConfigLoader.class);
 		when(config.get()).thenReturn(ChaseConfig.DEFAULT);
+		when(config.getWitnesses()).thenReturn(WitnessSettings.DEFAULT);
 
 		crimes    = mock(CrimeService.class);
 		clock     = new AtomicLong(1_000_000L);
@@ -92,7 +97,8 @@ class HeatLedgerTest {
 	private void heatOff() {
 		HeatSettings d = HeatSettings.DEFAULT;
 		HeatSettings off = new HeatSettings(false, d.starThresholds(), d.streakBonus(), d.seenByCopMultiplier(),
-		                                    d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights());
+		                                    d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights(),
+		                                    d.perExtraWitness(), d.maxExtraWitnesses());
 		when(config.get()).thenReturn(new ChaseConfig(off, ChaseConfig.DEFAULT.evasion(), ChaseConfig.DEFAULT.hud(),
 		                                              ChaseConfig.DEFAULT.chargeSheet()));
 	}
@@ -146,11 +152,14 @@ class HeatLedgerTest {
 	}
 
 	@Test
-	@DisplayName("the squad's own sight alone also multiplies by 1.5")
+	@DisplayName("the squad's own sight alone multiplies an ungated crime by 1.5; 0.21.2 S4: a shipped-gated Kill_Cop not")
 	void copSight_aloneAlsoMultiplies() {
 		copSight.set(true);
 
-		assertEquals(225, ledger.record(crime(Crimes.KILL_COP)));
+		assertEquals(150, ledger.record(crime(Crimes.RESISTING_ARREST)));
+		// flipped 0.21.2 S4 (T-541): the bundled Witnesses.Crimes gate Kill_Cop, so only the cop who reports it counts
+		window.set(0);
+		assertEquals(150, ledger.record(crime(Crimes.KILL_COP)));
 	}
 
 	@Test
@@ -228,21 +237,39 @@ class HeatLedgerTest {
 	}
 
 	@Test
-	@DisplayName("0.21.1 Q7: only the 911 recommit (commitReported) is recorded as reported; an alarm's witness is not")
-	void reportedOnlyForThe911Recommit() {
-		boolean committed = ledger.commitReported(player, () -> {
-			ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 1));
-			return true;
-		});
-		assertTrue(committed);
-		assertTrue(ledger.lastCrime(playerId).reported());
+	@DisplayName("0.21.2 S3: the crime commitReported records carries its ReportKind and witness count; any other has none")
+	void reportKind_storedOnRecord() {
+		for (ReportKind kind : ReportKind.values()) {
+			boolean committed = ledger.commitReported(player, kind, () -> {
+				ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 3));
+				return true;
+			});
+			assertTrue(committed);
+			assertEquals(kind, ledger.lastCrime(playerId).kind());
+			assertEquals(3, ledger.lastCrime(playerId).witnesses());
+		}
 
-		// a store hold-up or a safe alarm commits with one witness too: not a civilian's 911 call
+		// a store hold-up or a safe alarm commits with one witness too: nobody reported it
 		ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 1));
-		assertFalse(ledger.lastCrime(playerId).reported());
+		assertNull(ledger.lastCrime(playerId).kind());
+		assertEquals(1, ledger.lastCrime(playerId).witnesses());
 
 		ledger.record(crime(Crimes.ASSAULT_COP));
-		assertFalse(ledger.lastCrime(playerId).reported());
+		assertNull(ledger.lastCrime(playerId).kind());
+	}
+
+	@Test
+	@DisplayName("0.21.2 S3: a report for another player never marks this player's crime")
+	void reportKind_onlyForTheReportedCriminal() {
+		Player other = mock(Player.class);
+		when(other.getUniqueId()).thenReturn(UUID.randomUUID());
+
+		ledger.commitReported(other, ReportKind.COP, () -> {
+			ledger.record(crime(Crimes.ASSAULT_COP));
+			return true;
+		});
+
+		assertNull(ledger.lastCrime(playerId).kind());
 	}
 
 	@Test
@@ -276,5 +303,200 @@ class HeatLedgerTest {
 		clock.addAndGet(6_000);
 		ledger.reportAssault(player, victim, location);
 		verify(crimes, times(3)).commit(player, Crimes.ASSAULT_COP, location);
+	}
+
+	@Test
+	@DisplayName("T-544: a cop's death books Kill_Cop at the body while heat is on")
+	void reportCopKill_heatOn_commitsKillCopAtTheBody() {
+		Location body = mock(Location.class);
+
+		ledger.reportCopKill(player, body, UUID.randomUUID());
+
+		verify(crimes).commit(player, Crimes.KILL_COP, body);
+	}
+
+	@Test
+	@DisplayName("T-544: with heat off the core kill combo counts the kill, so the death books nothing")
+	void reportCopKill_heatOff_commitsNothing() {
+		heatOff();
+
+		ledger.reportCopKill(player, mock(Location.class), UUID.randomUUID());
+
+		verifyNoInteractions(crimes);
+	}
+
+	@Test
+	@DisplayName("0.21.2 S4: while an Assault_Cop or Kill_Cop commits, currentVictim names the hit cop (the gate's victim)")
+	void currentVictim_namesTheHitCopWhileTheCommitRuns() {
+		UUID                       hit  = UUID.randomUUID();
+		UUID                       dead = UUID.randomUUID();
+		java.util.List<UUID>       seen = new java.util.ArrayList<>();
+		org.mockito.Mockito.doAnswer(inv -> {
+			seen.add(ledger.currentVictim());
+			return true;
+		}).when(crimes).commit(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(),
+		                       org.mockito.ArgumentMatchers.any());
+
+		ledger.reportAssault(player, hit, location);
+		ledger.reportCopKill(player, location, dead);
+
+		assertEquals(java.util.Arrays.asList(hit, dead), seen);
+		assertNull(ledger.currentVictim(), "cleared after the commit");
+	}
+
+	@Test
+	@DisplayName("0.21.2 S4 T-543: inside commitReported the landing crime's spot is the reported scene, for him only")
+	void reportedScene_isTheLandingCrimeSpot_duringTheCommitOnly() {
+		Location scene = mock(Location.class);
+		when(scene.clone()).thenReturn(scene);
+		Player   other = mock(Player.class);
+		when(other.getUniqueId()).thenReturn(UUID.randomUUID());
+		java.util.List<Location> mine   = new java.util.ArrayList<>();
+		java.util.List<Location> theirs = new java.util.ArrayList<>();
+		ledger.setStarTrigger(p -> {
+			mine.add(ledger.reportedScene(playerId));
+			theirs.add(ledger.reportedScene(other.getUniqueId()));
+			wanted.setLevel(wanted.getLevel() + 1);
+		});
+
+		ledger.commitReported(player, ReportKind.COP, () -> {
+			ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, scene, true, 1));
+			return true;
+		});
+
+		assertEquals(List.of(scene), mine);
+		assertEquals(java.util.Arrays.asList((Location) null), theirs);
+		assertNull(ledger.reportedScene(playerId), "cleared after the landing");
+		ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, scene, true, 1));
+		assertTrue(mine.size() > 1, "the plain commit raised a star too");
+		assertNull(mine.get(mine.size() - 1), "a plain commit is no late report: he is placed where he stands");
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-583: while one commit replays the star trigger every step reads the level it ends at; 0 after")
+	void twoStarCommit_everyStepReadsTheFinalLevel() {
+		List<Integer> seen = new java.util.ArrayList<>();
+		ledger.setStarTrigger(p -> {
+			seen.add(ledger.raisingTo(playerId));
+			wanted.setLevel(wanted.getLevel() + 1);
+		});
+
+		ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, location, true, 2));
+
+		assertEquals(2, wanted.getLevel());
+		assertEquals(List.of(2, 2), seen);
+		assertEquals(0, ledger.raisingTo(playerId), "cleared after the replay");
+	}
+
+	// ── 0.21.2 S3: who saw it (PLAN.md section 3) ───────────────────────────────
+
+	/** Gates the three crimes of the section 3 table, as the plan's bundled Witnesses.Crimes will (S4). */
+	private void gateTableCrimes() {
+		when(config.getWitnesses()).thenReturn(new WitnessSettings(true, List.of(Crimes.KILL_COP, Crimes.KILL_CIVILIAN,
+		                                                                         Crimes.ASSAULT_COP)));
+	}
+
+	@ParameterizedTest(name = "{0} seenByCop={1} witnesses={2} -> {3} heat, {4} star(s)")
+	@DisplayName("T-540: the section 3 table - role (cop x1.5, else x1.0) plus 0.5 per eyewitness past the first, capped at 3")
+	@CsvSource({
+			// crime, seenByCop, witnesses, heat, stars     (column of PLAN.md section 3)
+			"Kill_Cop,      false, 1, 150, 1",          // presumed / scene, 1 civ
+			"Kill_Cop,      false, 3, 300, 2",          // 3 civ
+			"Kill_Cop,      true,  1, 225, 1",          // 1 cop
+			"Kill_Cop,      true,  2, 300, 2",          // 2 cops
+			"Kill_Cop,      true,  3, 375, 2",          // 3 cops
+			"Kill_Cop,      true,  4, 450, 3",          // 4+ cops
+			"Kill_Cop,      true,  9, 450, 3",          // 4+ cops: Max_Extra_Witnesses caps the head count
+			"Kill_Civilian, false, 1, 100, 1",          // 1 civ
+			"Kill_Civilian, false, 3, 200, 1",          // 3 civ
+			"Kill_Civilian, true,  1, 150, 1",          // 1 cop
+			"Kill_Civilian, true,  2, 200, 1",          // 2 cops
+			"Kill_Civilian, true,  3, 250, 2",          // 3 cops
+			"Kill_Civilian, true,  4, 300, 2",          // 4+ cops
+			"Assault_Cop,   false, 1, 100, 1",          // 1 civ
+			"Assault_Cop,   false, 3, 200, 1",          // 3 civ
+			"Assault_Cop,   true,  1, 150, 1",          // 1 cop
+			"Assault_Cop,   true,  2, 200, 1",          // 2 cops
+			"Assault_Cop,   true,  3, 250, 2",          // 3 cops
+			"Assault_Cop,   true,  4, 300, 2",          // 4+ cops
+	})
+	void witnessTableRows(String crimeId, boolean seenByCop, int witnesses, double heat, int stars) {
+		gateTableCrimes();
+		// the squad has a fresh sighting: a gated crime must ignore it, so only the event's own flag counts as a cop
+		copSight.set(true);
+
+		assertEquals(heat, ledger.record(new CrimeCommittedEvent(player, crimeId, location, seenByCop, witnesses)));
+		assertEquals(stars, wanted.getLevel());
+	}
+
+	@Test
+	@DisplayName("T-540: two cop kills inside 10 s, each seen by one cop: 225 + 337.5 = 562.5, three stars")
+	void twoSeenCopKillsInTheStreak_reachThreeStars() {
+		ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, location, true, 1));
+		clock.addAndGet(5_000);
+
+		assertEquals(337.5, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, location, true, 1)));
+		assertEquals(562.5, ledger.heatOf(playerId));
+		assertEquals(3, wanted.getLevel());
+	}
+
+	@Test
+	@DisplayName("T-540: zero or one witness scores exactly as before 0.21.2")
+	void oneWitness_unchanged() {
+		assertEquals(150, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, location, false, 0)));
+		ledger.clear(playerId);
+		assertEquals(150, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, location, false, 1)));
+		ledger.clear(playerId);
+		assertEquals(225, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, location, true, 1)));
+	}
+
+	@Test
+	@DisplayName("T-538: a gated crime ignores the squad's 1.5 s sighting; an ungated one keeps it")
+	void gatedCrime_ignoresSquadSight() {
+		copSight.set(true);
+
+		// Kill_Civilian is gated by the shipped Witnesses.Crimes: one civilian's call is x1.0, not a hidden x1.5
+		assertEquals(100, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_CIVILIAN, location, false, 1)));
+		ledger.clear(playerId);
+		// Kill_Player is not gated: the squad watching him still counts as a cop who saw it
+		assertEquals(120, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_PLAYER, location, false, 0)));
+	}
+
+	@Test
+	@DisplayName("T-538 interim (S3 until S4): a held crime the gate lets through on squad sight alone scores x1.0")
+	void heldCrime_squadSightOnly_scoresFlat() {
+		// WitnessGateListener still passes a held crime at once while the squad has a fresh sighting; it arrives with
+		// seenByCop false and no witness. 0.21.1 scored it x1.5 (100 -> 150); S4 replaces that bypass with a cop report.
+		copSight.set(true);
+
+		assertEquals(100, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_CIVILIAN, location, false, 0)));
+		assertEquals(1, wanted.getLevel());
+	}
+
+	@Test
+	@DisplayName("T-538: with Witnesses.Enable false nothing is gated, so the squad's sighting counts for every crime")
+	void witnessesOff_squadSightCountsForListedCrimes() {
+		when(config.getWitnesses()).thenReturn(new WitnessSettings(false, WitnessSettings.DEFAULT.crimes()));
+		copSight.set(true);
+
+		assertEquals(150, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_CIVILIAN, location, false, 0)));
+	}
+
+	@Test
+	@DisplayName("T-540: Per_Extra_Witness 0 ignores the head count; Max_Extra_Witnesses 1 caps it at one extra")
+	void witnessKnobs_zeroIgnores_capLimits() {
+		HeatSettings d    = HeatSettings.DEFAULT;
+		HeatSettings flat = new HeatSettings(true, d.starThresholds(), d.streakBonus(), d.seenByCopMultiplier(),
+		                                     d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights(), 0, 3);
+		when(config.get()).thenReturn(new ChaseConfig(flat, ChaseConfig.DEFAULT.evasion(), ChaseConfig.DEFAULT.hud(),
+		                                              ChaseConfig.DEFAULT.chargeSheet()));
+		assertEquals(150, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, location, false, 4)));
+
+		ledger.clear(playerId);
+		HeatSettings capped = new HeatSettings(true, d.starThresholds(), d.streakBonus(), d.seenByCopMultiplier(),
+		                                       d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights(), 0.5, 1);
+		when(config.get()).thenReturn(new ChaseConfig(capped, ChaseConfig.DEFAULT.evasion(), ChaseConfig.DEFAULT.hud(),
+		                                              ChaseConfig.DEFAULT.chargeSheet()));
+		assertEquals(225, ledger.record(new CrimeCommittedEvent(player, Crimes.KILL_COP, location, false, 4)));
 	}
 }

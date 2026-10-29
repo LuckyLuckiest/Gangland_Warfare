@@ -111,6 +111,9 @@ public final class EvasionClock implements WantedDecayPolicy {
 	private final Set<UUID>           autoFailed = ConcurrentHashMap.newKeySet();
 	/** Players whose clock is holding for units still on their way, so the debug line is logged once per hold. */
 	private final Set<UUID>           holding    = ConcurrentHashMap.newKeySet();
+	/** Players told this episode that no cop is on them ({@link #setNoCopSearch}); forgotten in {@link #clear}. */
+	private final Set<UUID>           noCopTold  = ConcurrentHashMap.newKeySet();
+	private volatile Consumer<Player> noCopSearch = player -> { };
 
 	public EvasionClock(ChaseConfigLoader config, CopManager copManager, DetainmentService detainment,
 	                    WantedStars stars, UserManager<Player> users, HeatLedger ledger, ChaseArcs arcs,
@@ -139,10 +142,14 @@ public final class EvasionClock implements WantedDecayPolicy {
 		this.callEvent  = callEvent;
 	}
 
+	/**
+	 * While the module hunts him (a group exists) this clock owns his stars, cops standing or not: killing every cop never
+	 * hands them to the core's Repeating_Timer decay (0.21.2, T-537). Only an escape, an arrest, a death or a command
+	 * lowers them.
+	 */
 	@Override
 	public boolean handlesDecay(Player player, Wanted wanted) {
-		return config.get().evasion().enabled() &&
-		       hasLiveCop(copManager.groupOf(player.getUniqueId()), player, clock.getAsLong());
+		return config.get().evasion().enabled() && copManager.groupOf(player.getUniqueId()) != null;
 	}
 
 	/** The player's current state, or {@code null} when he is not tracked. */
@@ -159,6 +166,7 @@ public final class EvasionClock implements WantedDecayPolicy {
 	 */
 	public void clear(Player player) {
 		holding.remove(player.getUniqueId());
+		noCopTold.remove(player.getUniqueId());
 		Track t = tracks.remove(player.getUniqueId());
 		if (t == null) return;
 		if (t.state == EvasionState.SEEN) arcs.lost(player.getUniqueId());
@@ -166,6 +174,14 @@ public final class EvasionClock implements WantedDecayPolicy {
 		User<Player> user  = users.getUser(player);
 		int          level = user == null ? 0 : user.getWanted().getLevel();
 		callEvent.accept(new WantedEvasionStateEvent(player, EvasionState.OFF, level, 0, null, 0));
+	}
+
+	/**
+	 * Tells a player the search runs with no cop standing ({@code Hud.No_Cop_Search}, 0.21.2 R2, T-586): once per
+	 * episode, the first run the clock searches him with every cop dead or walking home.
+	 */
+	public void setNoCopSearch(Consumer<Player> noCopSearch) {
+		this.noCopSearch = noCopSearch;
 	}
 
 	/** A long jump by command, plugin or portal: this spell can no longer be a clean break. */
@@ -178,8 +194,8 @@ public final class EvasionClock implements WantedDecayPolicy {
 		EvasionSettings cfg  = config.get().evasion();
 		User<Player>    user = users.getUser(player);
 		long            now  = clock.getAsLong();
-		if (user == null || !cfg.enabled() || !user.getWanted().isWanted() ||
-		    !hasLiveCop(group, player, now)) {
+		// 0.21.2 (T-537): no cop standing is no clear; only the end of the hunt (no group) or of the stars is
+		if (user == null || !cfg.enabled() || !user.getWanted().isWanted() || group == null) {
 			clear(player);
 			return;
 		}
@@ -198,10 +214,13 @@ public final class EvasionClock implements WantedDecayPolicy {
 			if (track != null) track.lastTick = now;
 			return;
 		}
-		// only units still on their way: they own the decay, but nothing counts until the first one stands in the world
-		if (!hasStandingCop(group)) {
+		// No cop stands: the bounded holds below pause the clock (its progress kept); otherwise he is searched at the
+		// last-known spot at No_Cop_Inside_Speed (0.21.2, T-537)
+		boolean standing = hasStandingCop(group);
+		String  hold     = standing ? null : noCopHold(group, player, now);
+		if (hold != null) {
 			if (track != null) track.lastTick = now;
-			if (holding.add(id)) log.debug("EVASION {} hold=enroute", player.getName());
+			if (holding.add(id)) log.debug("EVASION {} hold={}", player.getName(), hold);
 			return;
 		}
 		holding.remove(id);
@@ -210,7 +229,8 @@ public final class EvasionClock implements WantedDecayPolicy {
 		long unseen = group.getSquad().millisSinceSighting();
 		// the squad's latest sighting; meaningless (and never read) before the first one
 		long seenAt = now - unseen;
-		if (unseen < lostMs) {
+		// a dead squad's last sighting is nobody's eyes on him: with no cop standing he is searched, never SEEN
+		if (standing && unseen < lostMs) {
 			boolean seed = arcs.restoreSeed(id, seenAt);
 			if (track == null || track.state != EvasionState.SEEN) {
 				track           = new Track();
@@ -234,6 +254,8 @@ public final class EvasionClock implements WantedDecayPolicy {
 			track.lastTick = now;
 			return;
 		}
+		// past every hold with no cop standing: the search runs on nobody's eyes (T-586)
+		if (!standing && noCopTold.add(id)) noCopSearch.accept(player);
 
 		// A new search starts at the last sighting; one that follows a drop keeps its centre.
 		if (track == null || track.state == EvasionState.SEEN) {
@@ -246,11 +268,11 @@ public final class EvasionClock implements WantedDecayPolicy {
 			}
 			arcs.searchStarted(id);
 			Location last = group.getSquad().lastKnownLocation();
-			startSearch(player, spell, last != null ? last : player.getLocation(), level, cfg, now);
+			startSearch(player, spell, last != null ? last : player.getLocation(), level, cfg, now, standing);
 			return;
 		}
 		if (track.state == EvasionState.EVADED) {
-			startSearch(player, track, track.centre, level, cfg, now);
+			startSearch(player, track, track.centre, level, cfg, now, standing);
 			return;
 		}
 
@@ -261,7 +283,7 @@ public final class EvasionClock implements WantedDecayPolicy {
 		track.level    = level;
 		track.radius   = cfg.radiusFor(level);
 		boolean inside = inside(player, track);
-		Speed   speed  = speed(player, track, cfg, now, inside);
+		Speed   speed  = speed(player, track, cfg, now, inside, standing);
 		if (inside) {
 			track.insideMs += dt;
 		} else {
@@ -296,7 +318,8 @@ public final class EvasionClock implements WantedDecayPolicy {
 		fireCountdown(player, track, need, speed);
 	}
 
-	private void startSearch(Player player, Track track, Location centre, int level, EvasionSettings cfg, long now) {
+	private void startSearch(Player player, Track track, Location centre, int level, EvasionSettings cfg, long now,
+	                         boolean standing) {
 		track.state       = EvasionState.SEARCHING;
 		track.level       = level;
 		track.centre      = centre;
@@ -308,7 +331,7 @@ public final class EvasionClock implements WantedDecayPolicy {
 		track.seenHideout = hideouts.idAt(centre, player.getUniqueId());
 		tracks.put(player.getUniqueId(), track);
 		long need = track.needMs > 0 ? track.needMs : cfg.secondsToDropFor(level) * 1000L;
-		fireCountdown(player, track, need, speed(player, track, cfg, now, inside(player, track)));
+		fireCountdown(player, track, need, speed(player, track, cfg, now, inside(player, track), standing));
 	}
 
 	/** AUTO's hide timer for this spell at {@code level}; 0 (today's {@code Seconds_To_Drop}) in any other mode. */
@@ -395,12 +418,14 @@ public final class EvasionClock implements WantedDecayPolicy {
 	}
 
 	/**
-	 * Zone x hideout x cold trail, capped at {@code Max_Speed}. The zone is 1 inside, {@code Outside_Zone_Speed}
-	 * outside; a hideout counts only when it is not the one that holds the last sighting; the cold trail only ever
-	 * speeds up (a floor of 1 also keeps a failed {@link QuietTrail} from freezing the clock).
+	 * Zone x hideout x cold trail, capped at {@code Max_Speed}. The zone is 1 inside ({@code No_Cop_Inside_Speed} while no
+	 * cop stands, 0.21.2), {@code Outside_Zone_Speed} outside; a hideout counts only when it is not the one that holds the
+	 * last sighting; the cold trail only ever speeds up (a floor of 1 also keeps a failed {@link QuietTrail} from
+	 * freezing the clock). Every factor and the total are floored at 0.01, so the clock never freezes.
 	 */
-	private Speed speed(Player player, Track track, EvasionSettings cfg, long now, boolean inside) {
-		double          zone = inside ? 1.0 : Math.max(0.01, cfg.outsideZoneSpeed());
+	private Speed speed(Player player, Track track, EvasionSettings cfg, long now, boolean inside, boolean standing) {
+		double          zone = inside ? (standing ? 1.0 : Math.max(0.01, cfg.noCopInsideSpeed()))
+		                              : Math.max(0.01, cfg.outsideZoneSpeed());
 		HideoutSettings h    = Objects.requireNonNullElse(cfg.hideout(), HideoutSettings.DEFAULT);
 		PlaceRegion     spot = h.enabled() ? hideouts.at(player) : null;
 		double          hide = spot != null && !spot.id().equals(track.seenHideout) ? h.speed() : 1.0;
@@ -409,14 +434,26 @@ public final class EvasionClock implements WantedDecayPolicy {
 	}
 
 	/**
-	 * A cop stands in the world, or the chase is only between squads: units on their way, an active hand-off bias, or a
-	 * leashed walker past {@code Pursuit.Max_Distance} still hunting him, which the next spawn task releases and refills.
-	 * The last three pause the clock (0.21.1 cause E: a whole-squad leash used to clear the search and throw its
-	 * progress away), whichever AI-tick hook runs first. A walker inside the range is not refilled, so it holds nothing.
+	 * Why the clock holds while no cop stands, or {@code null} to search him. Every hold is bounded:
+	 * <ul>
+	 *   <li>{@code enroute}: the first response, units on their way (or the rejoin grace) before any cop of the episode
+	 *   stood; it lapses {@code EN_ROUTE_GRACE_MS} past their ETA. After a wipe the breather and the ETA no longer hold
+	 *   (0.21.2).</li>
+	 *   <li>{@code handoff}: an active hand-off bias, or a leashed walker past {@code Pursuit.Max_Distance} still hunting
+	 *   him, which the next spawn task releases and refills (0.21.1 cause E, T-400/T-412); a walker inside the range is
+	 *   not refilled, so it holds nothing.</li>
+	 *   <li>{@code silence}: a cop of the group killed where nobody saw it, whose silence dispatch has not noticed yet
+	 *   (0.21.2 S5, T-545); it lapses at Officer_Missing, {@code Check_In.Silent_Seconds} past his last check-in.</li>
+	 * </ul>
 	 */
-	private boolean hasLiveCop(@Nullable CopGroup group, Player player, long now) {
-		return group != null && (hasStandingCop(group) || group.unitsEnRoute(now) || group.biasAt(now) != null ||
-		                         hasLeashedWalker(group, player));
+	private @Nullable String noCopHold(CopGroup group, Player player, long now) {
+		// the rejoin grace (R21) counts too: a RESTORE start tips nothing, so before the spawn task queues its units
+		// nothing else would stop a search ring round his live spot
+		if (!group.hasStood() && (group.unitsEnRoute(now) || now < group.getBreatherUntil())) return "enroute";
+		if (group.biasAt(now) != null || hasLeashedWalker(group, player)) return "handoff";
+		// dispatch still thinks a cop killed unseen is on him
+		if (!copManager.silentRoles(group).isEmpty()) return "silence";
+		return null;
 	}
 
 	private boolean hasLeashedWalker(CopGroup group, Player player) {

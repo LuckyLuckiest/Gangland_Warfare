@@ -102,7 +102,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		                        n.get("Seen_By_Cop_Multiplier").asDouble().min(0).orDefault(d.seenByCopMultiplier()),
 		                        n.get("Turf_War_Multiplier").asDouble().min(0).orDefault(d.turfWarMultiplier()),
 		                        n.get("Assault_Repeat_Seconds").asInt().min(0).orDefault(d.assaultRepeatSeconds()),
-		                        Map.copyOf(crimes));
+		                        Map.copyOf(crimes),
+		                        n.get("Per_Extra_Witness").asDouble().min(0).orDefault(d.perExtraWitness()),
+		                        n.get("Max_Extra_Witnesses").asInt().min(0).orDefault(d.maxExtraWitnesses()));
 	}
 
 	private static EvasionSettings evasion(@Nullable NodeReader n, ConfigReport report) {
@@ -125,7 +127,8 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		                           dropMode(n, report), radius.isEmpty() ? d.searchRadius() : List.copyOf(radius),
 		                           drops.isEmpty() ? d.secondsToDrop() : List.copyOf(drops), outside,
 		                           auto(block(n, "Auto", report), report), hideout(block(n, "Hideout", report), report),
-		                           quietSpeed(block(n, "Quiet_Speed", report), report), maxSpeed);
+		                           quietSpeed(block(n, "Quiet_Speed", report), report), maxSpeed,
+		                           n.get("No_Cop_Inside_Speed").asDouble().min(0).orDefault(d.noCopInsideSpeed()));
 	}
 
 	private static HideoutSettings hideout(@Nullable NodeReader n, ConfigReport report) {

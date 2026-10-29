@@ -26,10 +26,12 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
+import java.util.function.IntPredicate;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -60,6 +62,14 @@ public class PatrolManager implements BeanLifecycle {
 	/** When each station last lost a beat cop (radio-clock ms): its replacement waits out {@code Respawn_Seconds}. */
 	private final Map<Integer, Long>                           lostAt     = new LinkedHashMap<>();
 	private       Function<UUID, CopGroup>                     groupLookup = id -> null;
+	/** Stations whose lost beat cop is a silence dispatch has not noticed yet: no replacement (0.21.2, T-545). */
+	private       IntPredicate                                 stationHeld = id -> false;
+	/** A station's replacement owed to an Officer_Missing ({@link #respondTo}): where it walks and holds, and until when. */
+	private final Map<Integer, Response>                       owed       = new LinkedHashMap<>();
+
+	/** The spot an owed replacement walks to and the end of its hold there (radio-clock ms). */
+	private record Response(Location at, long until) {
+	}
 
 	/**
 	 * @param players the players that count as "near"
@@ -92,6 +102,7 @@ public class PatrolManager implements BeanLifecycle {
 		}
 		long        now  = clock.getAsLong();
 		Set<Integer> live = new HashSet<>();
+		owed.values().removeIf(response -> now >= response.until());
 		for (Station station : stations.all()) {
 			Location anchor = station.getLocation();
 			if (anchor == null || anchor.getWorld() == null) {
@@ -116,17 +127,42 @@ public class PatrolManager implements BeanLifecycle {
 			}
 			Long lost = lostAt.get(id);
 			// cause 6: a lost beat cop is not replaced the next second in front of whoever took it down
-			boolean respawnReady = lost == null || now - lost >= s.respawnSeconds() * 1000L;
+			// 0.21.2 (T-545): nor while his death is a silence: dispatch does not know he is gone (respondTo sends it)
+			boolean respawnReady = (lost == null || now - lost >= s.respawnSeconds() * 1000L) && !stationHeld.test(id);
 			if (nearest <= s.activationRadius()) {
 				emptySince.remove(id);
+				// owner ruling R6 (0.21.2 R2, T-587): never at a station spot a player has in view; owner ruling T-606
+				// (R3): a watched station is staffed from a nearby spot nobody has in view, its cops walking in; with no
+				// such spot this run the next run tries again
 				while (respawnReady && cops.size() < s.copsPerStation()) {
-					CopNpc cop = spawner.spawnAtLocation(anchor.clone(), s.tier());
+					Location at      = anchor;
+					boolean  offsite = spawner.watched(anchor);
+					if (offsite) {
+						at = spawner.unwatchedNear(anchor);
+						if (at == null) {
+							log.debug("PATROL station={} held=watched", station.getName());
+							break;
+						}
+					}
+					// an offsite ring spot gets the 1-tick wall check every ring spawn gets
+					CopNpc cop = spawner.spawnAtLocation(at.clone(), s.tier(), offsite);
 					if (cop == null) {
 						break;
 					}
 					cop.transitionTo(CopState.PATROL);
 					cops.add(cop);
 					log.debug("PATROL station={} cops={}", station.getName(), cops.size());
+					if (offsite) {
+						cop.setBeatAnchor(anchor.clone());
+						log.debug("PATROL station={} spawn=offsite at={},{},{}", station.getName(), at.getBlockX(),
+						          at.getBlockY(), at.getBlockZ());
+					}
+					Response response = owed.remove(id);
+					if (response != null) {
+						investigate(cop, response.at(), response.until());
+					} else if (offsite) {
+						cop.navigateTo(anchor.clone());
+					}
 				}
 			}
 			if (nearest <= s.despawnRadius()) {
@@ -148,6 +184,7 @@ public class PatrolManager implements BeanLifecycle {
 			entry.getValue().forEach(this::destroy);
 			emptySince.remove(entry.getKey());
 			lostAt.remove(entry.getKey());
+			owed.remove(entry.getKey());
 			return true;
 		});
 	}
@@ -176,6 +213,68 @@ public class PatrolManager implements BeanLifecycle {
 	/** Where a beat cop finds its target's squad (for the cease-fire); default none. */
 	public void setGroupLookup(Function<UUID, CopGroup> lookup) {
 		this.groupLookup = lookup;
+	}
+
+	/** Which stations hold their replacement back for an open silence ({@code CopCrimeReports.silentStation}). */
+	public void setStationHold(IntPredicate stationHeld) {
+		this.stationHeld = stationHeld;
+	}
+
+	/** The station whose beat {@code cop} walks, empty for a cop of no beat. */
+	public OptionalInt stationOf(CopNpc cop) {
+		for (Map.Entry<Integer, List<CopNpc>> beat : beats.entrySet()) {
+			if (beat.getValue().contains(cop)) return OptionalInt.of(beat.getKey());
+		}
+		return OptionalInt.empty();
+	}
+
+	/**
+	 * Officer_Missing for a beat cop of {@code stationId} (0.21.2, T-545): the nearest live beat cop of the station walks
+	 * to {@code at}, his last check-in, now, and the replacement his silence held back follows once {@link #manage} may
+	 * spawn it: {@code Respawn_Seconds} after the loss (T-404) and on a run no player has the station spot in view (R6,
+	 * R2 T-587). Both hold the spot for {@code holdMillis} from now (the scene's {@code Scene_Seconds}, T-579):
+	 * {@code PatrolBehavior} neither wanders nor walks back before then. A replacement still unspawned by then stays on
+	 * its beat. Two units in all; fewer when the station has no one else.
+	 *
+	 * @return the units sent, the owed replacement included
+	 */
+	public int respondTo(int stationId, Location at, long holdMillis) {
+		Station station = null;
+		for (Station candidate : stations.all()) {
+			if (candidate.getId() == stationId) station = candidate;
+		}
+		List<CopNpc> cops   = beats.get(stationId);
+		Location     anchor = station == null ? null : station.getLocation();
+		if (cops == null || anchor == null || anchor.getWorld() == null) return 0;
+
+		long until = clock.getAsLong() + holdMillis;
+		int  owing = 0;
+		if (cops.size() < settings.get().copsPerStation()) {
+			owed.put(stationId, new Response(at.clone(), until));
+			owing = 1;
+		}
+		CopNpc nearest = null;
+		double best    = Double.MAX_VALUE;
+		for (CopNpc cop : cops) {
+			LivingEntity body  = cop.getEntity();
+			Location     there = body == null ? null : body.getLocation();
+			if (!cop.isValid() || there == null || there.getWorld() != at.getWorld()) continue;
+			double distance = there.distanceSquared(at);
+			if (distance < best) {
+				best    = distance;
+				nearest = cop;
+			}
+		}
+		if (nearest != null) investigate(nearest, at, until);
+		int sent = owing + (nearest != null ? 1 : 0);
+		log.debug("PATROL station={} respond={} at={},{},{}", names.getOrDefault(stationId, station.getName()), sent,
+		          at.getBlockX(), at.getBlockY(), at.getBlockZ());
+		return sent;
+	}
+
+	private static void investigate(CopNpc cop, Location at, long until) {
+		cop.setInvestigateUntil(until);
+		cop.navigateTo(at);
 	}
 
 	/** One AI tick for every live beat cop (called every 10 ticks): resolves each cop's target and runs its behaviour. */
@@ -256,6 +355,7 @@ public class PatrolManager implements BeanLifecycle {
 		beats.clear();
 		emptySince.clear();
 		lostAt.clear();
+		owed.clear();
 	}
 
 	/** Starts the repeating main-thread task. */

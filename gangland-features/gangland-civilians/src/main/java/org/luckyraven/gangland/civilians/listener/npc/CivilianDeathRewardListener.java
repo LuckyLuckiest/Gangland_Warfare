@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.civilians.listener.npc;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -49,7 +50,9 @@ public class CivilianDeathRewardListener implements Listener {
 
 		CivilianNpc civilianNpc = event.getCivilianNpc();
 		if (!(civilianNpc.isHostile() && civilianNpc.getCurrentState() == CivilianState.COMBAT)) {
-			crimes.commit(killer, Crimes.KILL_CIVILIAN, killer.getLocation());
+			// 0.21.2 (T-550): at the body, like every other kill, so the witness range and the 911 tip centre on the scene
+			Location at = event.getLocation();
+			crimes.commit(killer, Crimes.KILL_CIVILIAN, at != null ? at : killer.getLocation());
 		}
 	}
 }

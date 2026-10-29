@@ -40,9 +40,12 @@ class ChaseConfig020Test {
 	}
 
 	@Test
-	@DisplayName("no Witnesses block, or no Wanted section: enabled, crimes [Car_Theft, Assault_Civilian, Kill_Civilian] (0.21.1 Q1)")
+	@DisplayName("no Witnesses block, or no Wanted section: enabled, crimes [Car_Theft, Assault_Civilian, Kill_Civilian] "
+	             + "(0.21.1 Q1), 0.21.2 S4: and Assault_Cop, Kill_Cop; Defer_Minutes 10, the shipped Cops block")
 	void witnesses_default() {
-		WitnessSettings expected = new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian", "Kill_Civilian"));
+		WitnessSettings expected = new WitnessSettings(true, List.of("Car_Theft", "Assault_Civilian", "Kill_Civilian",
+		                                                             "Assault_Cop", "Kill_Cop"), 10,
+		                                               new WitnessSettings.Cops(3, 180.0, 6.0, List.of(), true));
 
 		assertEquals(expected, WitnessSettings.parse(null));
 		assertEquals(expected, WitnessSettings.parse(wanted("Wanted:\n   Heat:\n      Enabled: true\n",
@@ -50,6 +53,19 @@ class ChaseConfig020Test {
 		assertEquals(expected, WitnessSettings.DEFAULT);
 		// ChaseConfig keeps its five components: the new blocks are read beside it (merge safety with 0.21.0)
 		assertEquals(5, ChaseConfig.class.getRecordComponents().length);
+	}
+
+	@Test
+	@DisplayName("0.21.2 S4: Witnesses reads Defer_Minutes and the Cops block; a missing Cops key is its default")
+	void witnesses_copsBlockAndDeferMinutes() {
+		WitnessSettings parsed = WitnessSettings.parse(wanted(
+				"Wanted:\n   Witnesses:\n      Defer_Minutes: 4\n      Crimes:\n         - Kill_Cop\n"
+				+ "      Cops:\n         Report_Seconds: 5\n         View_Angle: 360.0\n"
+				+ "         Loud_Crimes:\n            - Kill_Cop\n         Reporter_Glow: false\n", new ConfigReport()));
+
+		assertEquals(4, parsed.deferMinutes());
+		assertEquals(List.of("Kill_Cop"), parsed.crimes());
+		assertEquals(new WitnessSettings.Cops(5, 360.0, 6.0, List.of("Kill_Cop"), false), parsed.cops());
 	}
 
 	@Test

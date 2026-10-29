@@ -206,6 +206,51 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 S5: Cops.Check_In parses every key (R3: Spawn_Grace_Seconds, T-601); an absent block or key is the plan default")
+	void checkInBlock_parsed() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Check_In:
+				      Enable: false
+				      Check_In_Seconds: 5
+				      Silent_Seconds: 12
+				      Scene_Radius: 16.0
+				      Scene_Seconds: 30
+				      Spawn_Grace_Seconds: 5
+				      Pursuit_Presumed: false
+				      Show_Timer: false
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+		assertEquals(new CheckInSettings(false, 5, 12, 16.0, 30, 5, false, false), provider.getCheckInSettings());
+
+		CopConfigProvider partial = parse("""
+				Cops:
+				   Check_In:
+				      Silent_Seconds: 30
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+		assertEquals(new CheckInSettings(true, 10, 30, 32.0, 60, 3, true, true), partial.getCheckInSettings());
+
+		CopConfigProvider absent = parse("""
+				Cops:
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+		assertEquals(CheckInSettings.DEFAULT, absent.getCheckInSettings());
+	}
+
+	@Test
 	@DisplayName("Cops.Tiers.<n>.Fire_Rate_Multiplier parses; a tier without it keeps today's per-AI-tick cadence")
 	void tierFireRateMultiplier_parsed() {
 		CopConfigProvider provider = parse("""
@@ -926,6 +971,21 @@ class YamlCopConfigProviderTest {
 		assertTrue(provider.getRadioSettings().isPriority("Dispatch_En_Route"));
 		assertTrue(provider.getRadioSettings().isPriority("Wipe_Refill"));
 		assertFalse(provider.getRadioSettings().isPriority("Man_Down"), "the rest of the list stays as the file wrote it");
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-571: an old/custom Priority list still holds Officer_Report and the five silent-officer keys")
+	void customPriorityList_stillHoldsThe0212DispatchLines() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Radio:
+				      Priority:
+				         - "Contact"
+				""" + TIER_BLOCK);
+
+		for (String key : List.of("Officer_Report", "Radio_Check", "Officer_Missing", "Scene_Found", "Scene_Suspect",
+		                          "Scene_Clear"))
+			assertTrue(provider.getRadioSettings().isPriority(key), key);
 	}
 
 	@Test

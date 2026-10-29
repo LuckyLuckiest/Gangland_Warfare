@@ -117,6 +117,14 @@ public class CopGroup {
 	private       boolean    regrouping;
 	private       long       regroupReadyAt;
 
+	/**
+	 * A cop of the group has stood in the world this episode (0.21.2, T-537): before that, units on their way hold the
+	 * evasion clock (the first response); after a wipe they no longer do. Set by {@link #add}, cleared by
+	 * {@link #clearStood} when a new wanted start finds the group empty.
+	 */
+	@Getter(AccessLevel.NONE)
+	private boolean stood;
+
 	/** A pending unit stops counting as en route this long past its ETA ({@link #unitsEnRoute}). */
 	private static final long EN_ROUTE_GRACE_MS = 10_000L;
 
@@ -160,6 +168,17 @@ public class CopGroup {
 		cops.add(cop);
 		squad.add(cop);
 		cop.setGroup(this);
+		stood = true;
+	}
+
+	/** Whether a cop of the group has stood in the world since the episode began ({@link #stood}). */
+	public boolean hasStood() {
+		return stood;
+	}
+
+	/** A new episode with nobody on the ground: the first response is again owed. */
+	public void clearStood() {
+		stood = false;
 	}
 
 	/** Marks a walker of the group as sent home by it ({@link #sentHome}); the caller turns it RETURNING. */
@@ -442,8 +461,8 @@ public class CopGroup {
 	/**
 	 * Any pending unit with {@code arriveAt + 10_000 > now}.
 	 */
-	// ponytail: a unit overdue by 10 s (it keeps failing to spawn) stops counting, so evasion falls back to 0.15
-	// behaviour instead of holding the stars forever; make it a knob if 10 s proves wrong.
+	// ponytail: a unit overdue by 10 s (it keeps failing to spawn) stops counting, so the evasion clock stops holding for
+	// it and runs the no-cop search (0.21.2) instead of holding the stars forever; make it a knob if 10 s proves wrong.
 	public boolean unitsEnRoute(long now) {
 		for (PendingUnit unit : pending)
 			if (unit.arriveAt() + EN_ROUTE_GRACE_MS > now) return true;
@@ -471,6 +490,15 @@ public class CopGroup {
 		if (unitBias == null || unitBias != seedBias || seedSpent) return false;
 		seedSpent = true;
 		return Objects.equals(squad.lastKnownLocation(), seedLead);
+	}
+
+	/**
+	 * The latest bias seeds nobody (0.21.2, T-546): Officer_Missing tips the exact spot the dead cop last checked in from,
+	 * and the hand-off's R5 lead must not push the units past it, even when the squad's lead is that very spot (which
+	 * {@link #takeBiasSeed}'s location compare reads as no news).
+	 */
+	public void spendBiasSeed() {
+		seedSpent = true;
 	}
 
 	/** Seeds the squad with a hand-off lead as a tip, no sighting (R4), and remembers it as a lead ({@link #isHandoffSeed}). */

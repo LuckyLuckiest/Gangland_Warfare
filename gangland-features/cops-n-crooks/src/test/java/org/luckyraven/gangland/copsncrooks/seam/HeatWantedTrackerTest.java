@@ -54,6 +54,8 @@ class HeatWantedTrackerTest {
 	private ChaseConfigLoader config;
 	private boolean           defending;
 	private boolean           managedCivilian;
+	/** The POLICE-marked victim is a cop NPC (CopListener books its death); false for a vanilla police-type mob. */
+	private boolean           managedCop = true;
 	private Player            killer;
 	private Wanted            wanted;
 	private Location          at;
@@ -79,7 +81,7 @@ class HeatWantedTrackerTest {
 
 		BiPredicate<Player, Location> defend = (p, l) -> defending;
 		tracker = new HeatWantedTracker(config, ledger, crimes, killCombo, markManager, defend,
-		                                victim -> managedCivilian);
+		                                victim -> managedCivilian, victim -> managedCop);
 
 		combo(true);
 	}
@@ -97,7 +99,8 @@ class HeatWantedTrackerTest {
 	private void heatOff() {
 		HeatSettings d = HeatSettings.DEFAULT;
 		HeatSettings off = new HeatSettings(false, d.starThresholds(), d.streakBonus(), d.seenByCopMultiplier(),
-		                                    d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights());
+		                                    d.turfWarMultiplier(), d.assaultRepeatSeconds(), d.crimeWeights(),
+		                                    d.perExtraWitness(), d.maxExtraWitnesses());
 		when(config.get()).thenReturn(new ChaseConfig(off, ChaseConfig.DEFAULT.evasion(), ChaseConfig.DEFAULT.hud(),
 		                                              ChaseConfig.DEFAULT.chargeSheet()));
 	}
@@ -233,12 +236,22 @@ class HeatWantedTrackerTest {
 	}
 
 	@Test
-	@DisplayName("heat on: a cop kill commits Kill_Cop")
-	void heatOn_copKill_commitsKillCop() {
+	@DisplayName("heat on: a cop's lethal hit commits nothing: CopListener.onCopDeath books Kill_Cop at the real death (T-544)")
+	void heatOn_copKill_commitsNothing_theDeathBooksIt() {
+		tracker.recordKill(killer, wanted, marked("POLICE"), 0);
+
+		verifyNoInteractions(crimes);
+		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
+	}
+
+	@Test
+	@DisplayName("heat on: a POLICE-marked mob that is no cop NPC (a vanilla pillager) has no death listener: its kill still commits Kill_Cop")
+	void heatOn_unmanagedPoliceMob_commitsKillCop() {
+		managedCop = false;
+
 		tracker.recordKill(killer, wanted, marked("POLICE"), 0);
 
 		verify(crimes).commit(killer, Crimes.KILL_COP, at);
-		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
 	}
 
 	@Test

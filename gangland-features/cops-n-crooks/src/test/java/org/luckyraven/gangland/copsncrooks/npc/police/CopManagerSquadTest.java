@@ -96,6 +96,37 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("0.21.2 S4 T-543: a start caused by a late report tips and names the crime spot, not his live position")
+	void wantedStart_fromALateReport_tipsAndNamesTheCrimeSpot() {
+		Location scene = new Location(fx.world, 40, 64, -30);
+		manager.setReportedScene(id -> id.equals(playerId) ? scene : null);
+
+		manager.onWantedStart(player, wanted, WantedCause.CRIME);
+
+		CopGroup group = manager.groupFor(playerId);
+		assertEquals(scene, group.getSquad().lastKnownLocation());
+		assertFalse(group.getSquad().hasFreshSighting());
+		verify(fx.radio).dispatchAt(group, scene, player, "Dispatch_Wanted", 2, "SWAT", java.util.Map.of());
+		verify(fx.radio, never()).dispatch(group, player, "Dispatch_Wanted", 2, "SWAT");
+	}
+
+	@Test
+	@DisplayName("0.21.2 S4 review r1: a late report's start keeps a squad's live sighting, never drags it back to the crime spot")
+	void wantedStart_fromALateReport_squadInContact_keepsTheSighting() {
+		manager.onWantedStart(player, wanted, WantedCause.CRIME);
+		CopGroup group = manager.groupFor(playerId);
+		Location live  = new Location(fx.world, 12, 64, 12);
+		group.getSquad().reportSighting(live);
+		Location scene = new Location(fx.world, 40, 64, -30);
+		manager.setReportedScene(id -> id.equals(playerId) ? scene : null);
+
+		manager.onWantedStart(player, CopManagerFixture.wanted(3), WantedCause.CRIME);
+
+		assertEquals(live, group.getSquad().lastKnownLocation());
+		assertTrue(group.getSquad().hasFreshSighting());
+	}
+
+	@Test
 	@DisplayName("a hit by the target from where the cop cannot see him is a tip; one the cop can see is a sighting (R4)")
 	void copAttacked_withoutLineOfSight_isATip_withItASighting() {
 		manager.onWantedStart(player, wanted);
@@ -835,6 +866,63 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("T-542: every cop dead, the wanted ends: nobody is left to say Stand_Down, so dispatch says it to him")
+	void wantedEnd_wipedGroup_dispatchSaysStandDown() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+		group.getCops().clear(); // the AI tick released the dead
+
+		manager.onWantedEnd(player);
+
+		verify(fx.radio).dispatch(eq(group), eq(player), eq("Stand_Down"), anyInt(), any());
+		verify(fx.radio, never()).sayFromLeader(group, "Stand_Down");
+		assertTrue(group.isStoodDown());
+	}
+
+	@Test
+	@DisplayName("T-542: the post-escape search gives up after a wipe: dispatch says Stand_Down")
+	void searchGaveUp_wipedGroup_dispatchSaysStandDown() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+		group.getCops().clear();
+
+		manager.searchGaveUp(playerId);
+
+		verify(fx.radio).dispatch(eq(group), eq(player), eq("Stand_Down"), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("T-542: no cop of the episode ever stood: there is no one to stand down, nothing is said")
+	void wantedEnd_groupNeverStood_saysNoStandDown() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+
+		manager.onWantedEnd(player);
+
+		verify(fx.radio, never()).dispatch(any(), any(), eq("Stand_Down"), anyInt(), any());
+		verify(fx.radio, never()).sayFromLeader(group, "Stand_Down");
+	}
+
+	@Test
+	@DisplayName("T-537: a new wanted start that finds the group empty owes the first response again (hasStood cleared)")
+	void wantedStart_emptyGroup_clearsHasStood() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+		manager.setEscapePredicate(cause -> cause == WantedCause.EVASION);
+		manager.onWantedEnd(player, WantedCause.EVASION); // the post-escape search keeps the group
+		group.getCops().clear();
+		assertTrue(group.hasStood());
+
+		manager.onWantedStart(player, wanted);
+
+		assertSame(group, manager.groupFor(playerId));
+		assertFalse(group.hasStood());
+	}
+
+	@Test
 	@DisplayName("T-433: the Stand_Down marks the squad stood down (its queued orders go quiet); the next wanted start clears it")
 	void wantedEnd_marksStoodDown_untilTheNextStart() {
 		manager.onWantedStart(player, wanted);
@@ -1537,5 +1625,131 @@ class CopManagerSquadTest {
 		manager.spawnTick(playerId, one);
 
 		assertEquals(CopState.PURSUING, responder.getCurrentState(), "a radio responder stays");
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: a silent cop's role holds its slot until dispatch notices (dispatch off: the one-pass refill)")
+	void silentCop_holdsRefill_bothDispatchBranches() {
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		when(group.getCops().get(0).isMarkedForRemoval()).thenReturn(true);
+		List<CopRole> held = new java.util.ArrayList<>();
+		held.add(null);
+		manager.setSilentRoles(g -> g == group ? held : List.of());
+
+		manager.spawnTick(playerId, wanted);
+		verify(fx.spawner, times(2)).spawnNearPlayer(any(), anyInt(), any(), any());
+		assertEquals(1, group.getCops().size());
+
+		held.clear();
+		manager.spawnTick(playerId, wanted);
+		verify(fx.spawner, times(3)).spawnNearPlayer(any(), anyInt(), any(), any());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: a cop killed unseen never calls a cop sent home back: his held slot is no vacancy")
+	void silentCop_neverCallsASentHomeCopBack() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.spawnTick(playerId, one);
+		assertEquals(2, countIn(group, CopState.RETURNING));
+		CopNpc dead = group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).findFirst()
+		                   .orElseThrow();
+		when(dead.isMarkedForRemoval()).thenReturn(true);
+		List<CopRole> held = new java.util.ArrayList<>();
+		held.add(null);
+		manager.setSilentRoles(g -> g == group ? held : List.of());
+
+		manager.spawnTick(playerId, one);
+
+		assertEquals(2, countIn(group, CopState.RETURNING), "nobody knows he died: the walkers keep walking");
+		assertEquals(1, countIn(group, CopState.PURSUING));
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: a new episode calls back its target's worth of walkers less the slots a silent cop holds")
+	void silentCop_newEpisodeCallsBackOneWalkerFewer() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.onWantedEnd(player, WantedCause.UNKNOWN);
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.RETURNING);
+		List<CopRole> held = new java.util.ArrayList<>();
+		held.add(null);
+		manager.setSilentRoles(g -> g == group ? held : List.of());
+
+		manager.onWantedStart(player, one);
+
+		assertEquals(1, countIn(group, CopState.PURSUING), "one star's two, one of them the silent cop's held slot");
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545/T-546: held slots never count toward a release or the episode trim: no real cop is sent home for them")
+	void silentCop_neverCountsTowardRelease_orEpisodeTrim() {
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(4);
+		when(fx.spawner.getTargetCopCount(1)).thenReturn(2);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		for (CopNpc cop : group.getCops()) cop.transitionTo(CopState.PURSUING);
+		List<CopRole> held = new java.util.ArrayList<>();
+		held.add(null);
+		held.add(null);
+		manager.setSilentRoles(g -> held);
+
+		manager.spawnTick(playerId, one);
+
+		assertEquals(2, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.PURSUING).count(),
+		             "a level drop sends home only the real cops over the target");
+		manager.onWantedStart(player, one);
+		assertEquals(0, group.getPendingRelease(), "the new episode trims against engaged cops only");
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-581: a Commander killed unseen still leads: the sent-home Commander keeps walking home")
+	void silentCommander_stillLeads_noSentHomeCommanderCalledBack() {
+		oneStarWithoutACommander();
+		when(fx.provider.getSquadComposition(3)).thenReturn(List.of(COMMANDER, COMMANDER, POINTMAN, ASSAULT));
+		Wanted three = CopManagerFixture.wanted(3);
+		Wanted one   = CopManagerFixture.wanted(1);
+		manager.onWantedStart(player, three);
+		manager.spawnTick(playerId, three);
+		CopGroup group = manager.groupFor(playerId);
+		manager.spawnTick(playerId, one);
+		CopNpc leading = group.getCops().stream().filter(c -> c.getRole() == COMMANDER)
+		                      .filter(c -> c.getCurrentState() == CopState.PURSUING).findFirst().orElseThrow();
+		CopNpc walking = group.getCops().stream().filter(c -> c.getRole() == COMMANDER)
+		                      .filter(c -> c.getCurrentState() == CopState.RETURNING).findFirst().orElseThrow();
+		assertTrue(group.isSentHome(walking));
+		when(leading.isMarkedForRemoval()).thenReturn(true);
+		manager.setSilentRoles(g -> g == group ? List.of(COMMANDER) : List.of());
+
+		manager.spawnTick(playerId, one);
+
+		assertEquals(CopState.RETURNING, walking.getCurrentState(), "nobody knows the Commander died");
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-583: a start inside a two-star replay says Dispatch_Wanted at the level the commit ends at")
+	void wantedStart_insideATwoStarReplay_dispatchesTheFinalLevel() {
+		Wanted one = CopManagerFixture.wanted(1);
+		manager.setRaisingTo(id -> id.equals(playerId) ? 2 : 0);
+
+		manager.onWantedStart(player, one, WantedCause.CRIME);
+
+		verify(fx.radio).dispatch(manager.groupFor(playerId), player, "Dispatch_Wanted", 2, "SWAT");
+		verify(fx.radio, never()).dispatch(any(), any(), eq("Dispatch_Wanted"), eq(1), anyString());
 	}
 }

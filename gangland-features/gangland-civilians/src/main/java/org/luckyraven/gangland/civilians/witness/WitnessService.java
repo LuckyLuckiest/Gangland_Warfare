@@ -154,7 +154,7 @@ public final class WitnessService {
 	 * Whether {@code target} is inside the horizontal cone {@code viewAngle} degrees wide, centred on {@code eye}'s yaw
 	 * (half the angle each side, the edge included). 360 or more sees all round.
 	 */
-	static boolean inView(Location eye, @Nullable Location target, double viewAngle) {
+	public static boolean inView(Location eye, @Nullable Location target, double viewAngle) {
 		if (viewAngle >= 360.0) return true;
 		if (target == null) return false;
 
@@ -169,12 +169,19 @@ public final class WitnessService {
 		return Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, cos)))) <= viewAngle / 2.0 + 1.0E-9;
 	}
 
-	/** A crime in Loud_Crimes, or one before or within Loud_Shot_Seconds of the criminal's own gunshot or blast. */
-	private boolean isLoud(Player criminal, String crimeId, WitnessRules rules, long now) {
-		if (rules.loudCrimes().contains(crimeId)) return true;
-
+	/**
+	 * Whether {@code criminal}'s last loud shot (a Loud_Weapon_Types weapon, see {@link #heardShot}) is within
+	 * Loud_Shot_Seconds: the one loudness rule cops share with civilians (0.21.2). A melee swing is never loud.
+	 */
+	public boolean loudWithin(Player criminal) {
 		Long shot = lastShot.get(criminal.getUniqueId());
-		return rules.loudShotSeconds() > 0 && shot != null && now - shot <= rules.loudShotSeconds() * 1000L;
+		int  secs = rules.get().loudShotSeconds();
+		return secs > 0 && shot != null && now() - shot <= secs * 1000L;
+	}
+
+	/** A crime in Loud_Crimes, or one before or within Loud_Shot_Seconds of the criminal's own gunshot or blast. */
+	private boolean isLoud(Player criminal, String crimeId, WitnessRules rules) {
+		return rules.loudCrimes().contains(crimeId) || loudWithin(criminal);
 	}
 
 	/** Whether the criminal stopped this civilian's call less than Scared_Cooldown_Seconds ago. */
@@ -193,7 +200,7 @@ public final class WitnessService {
 		if (!rules.enabled() || !criminal.isOnline() || at.getWorld() == null) return 0;
 
 		long              now        = now();
-		boolean           loud       = isLoud(criminal, crimeId, rules, now);
+		boolean           loud       = isLoud(criminal, crimeId, rules);
 		Location          criminalAt = criminal.getLocation();
 		UUID              victimId   = recentVictim(criminal);
 		List<CivilianNpc> candidates = new ArrayList<>();
@@ -316,7 +323,7 @@ public final class WitnessService {
 
 		WitnessRules rules = this.rules.get();
 		if (!call.criminal().isOnline()) {
-			cancelCall(caller, CancelReason.LOGOUT);
+			deferOrCancel(call);
 			return;
 		}
 		if (!caller.isValid()) {
@@ -337,10 +344,21 @@ public final class WitnessService {
 		detach(call);
 		String place = places.locate(call.at()).orElseGet(messages::witnessUnknownPlace);
 		speak(caller, call.criminal(), "Witness_Landed", Map.of("place", place));
-		hooks.events().accept(new CivilianCalledInEvent(call.criminal(), call.crimeId(), call.at(), caller.getEntity()));
+		int viewers = viewersAtLanding(call);
+		hooks.events().accept(new CivilianCalledInEvent(call.criminal(), call.crimeId(), call.at(), caller.getEntity(),
+		                                                viewers));
 		hooks.debug().accept("CALL_IN " + call.criminal().getName() + " crime=" + call.crimeId() + " caller="
-				                     + caller.getEntity().getName());
+				                     + caller.getEntity().getName() + " viewers=" + viewers);
 		flee(caller, call);
+	}
+
+	/** The caller plus every watcher still alive (0.21.2, T-540): a witness killed before the call lands is not counted. */
+	private static int viewersAtLanding(WitnessCall call) {
+		int viewers = 1;
+		for (CivilianNpc watcher : call.watchers()) {
+			if (watcher.isValid() && watcher.getEntity() != null) viewers++;
+		}
+		return viewers;
 	}
 
 	/**
@@ -396,12 +414,36 @@ public final class WitnessService {
 		logCancel(call, CancelReason.KILLED);
 	}
 
-	/** The criminal left the server: every call about them is cancelled. */
+	/**
+	 * The criminal left the server: every call about them whose caller is still alive is deferred (0.21.2, T-551), so a
+	 * logout forgives nothing; a call whose caller is gone is cancelled. Nothing is committed here.
+	 */
 	public void onCriminalQuit(UUID criminalId) {
 		lastShot.remove(criminalId);
 		for (WitnessCall call : activeCalls()) {
-			if (call.criminal().getUniqueId().equals(criminalId)) cancelCall(call.caller(), CancelReason.LOGOUT);
+			if (call.criminal().getUniqueId().equals(criminalId)) deferOrCancel(call);
 		}
+	}
+
+	/**
+	 * The criminal is gone mid-call: a live caller hands the report over as a deferred {@link CivilianCalledInEvent}
+	 * (the caller plus the watchers alive now) and goes back to IDLE without a word; cops-n-crooks lands it at his next
+	 * join. A caller already gone cancels the call (reason logout).
+	 */
+	private void deferOrCancel(WitnessCall call) {
+		CivilianNpc caller = call.caller();
+		if (!caller.isValid() || caller.getEntity() == null) {
+			cancelCall(caller, CancelReason.LOGOUT);
+			return;
+		}
+
+		detach(call);
+		int viewers = viewersAtLanding(call);
+		hooks.events().accept(new CivilianCalledInEvent(call.criminal(), call.crimeId(), call.at(), caller.getEntity(),
+		                                                viewers, true));
+		hooks.debug().accept("CALL_DEFER " + call.criminal().getName() + " crime=" + call.crimeId() + " viewers="
+				                     + viewers);
+		caller.transitionTo(CivilianState.IDLE);
 	}
 
 	/** Removes the call from the map and from its caller. */

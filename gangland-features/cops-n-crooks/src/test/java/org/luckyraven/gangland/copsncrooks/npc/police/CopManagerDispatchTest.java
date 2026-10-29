@@ -581,4 +581,49 @@ class CopManagerDispatchTest {
 		assertEquals(0, group.pendingCount());
 		assertFalse(group.unitsEnRoute(fx.clock[0]));
 	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: a silent cop's role holds its slot until dispatch notices (dispatch on: nothing is queued)")
+	void silentCop_holdsRefill_dispatchOn() {
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		when(group().getCops().get(0).isMarkedForRemoval()).thenReturn(true);
+		List<CopRole> held = new ArrayList<>();
+		held.add(null);
+		CopGroup group = group();
+		manager.setSilentRoles(g -> g == group ? held : List.of());
+
+		manager.spawnTick(playerId, wanted);
+		assertEquals(0, group().pendingCount());
+		assertEquals(1, group().getCops().size());
+
+		held.clear();
+		manager.spawnTick(playerId, wanted);
+		assertEquals(2, group().getCops().size());
+	}
+
+	@Test
+	@DisplayName("0.21.2 T-545: a squad killed silently hears Wipe_Refill when dispatch notices, not at the deaths")
+	void wipeRefill_spokenAtDiscovery() {
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		for (CopNpc cop : group().getCops()) when(cop.isMarkedForRemoval()).thenReturn(true);
+		List<CopRole> held = new ArrayList<>();
+		held.add(null);
+		held.add(null);
+		CopGroup group = group();
+		manager.setSilentRoles(g -> g == group ? held : List.of());
+
+		fx.clock[0] = 2_000L;
+		manager.spawnTick(playerId, wanted);
+		verify(fx.radio, never()).dispatch(any(), any(), eq("Wipe_Refill"), anyInt(), anyString(), anyMap());
+		assertEquals(0, group().pendingCount());
+
+		// Officer_Missing: the silences close and the casualty is recorded
+		fx.clock[0] = 20_000L;
+		held.clear();
+		group.recordCasualty(20_000L);
+		manager.spawnTick(playerId, wanted);
+		verify(fx.radio).dispatch(eq(group), eq(player), eq("Wipe_Refill"), eq(2), anyString(), anyMap());
+	}
 }

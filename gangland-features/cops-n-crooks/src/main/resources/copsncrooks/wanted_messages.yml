@@ -4,7 +4,7 @@
 #
 # The text of the chase HUD and the charge sheet. & colour codes work. Placeholders in %percent% signs are filled in
 # by the plugin: %stars%, %time%, %arrow%, %distance%, %crime%, %tier%, %stance%, %count% (also the number of stars
-# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%.
+# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%, %reporter%.
 
 # The boss bar and the star card
 Hud:
@@ -24,6 +24,8 @@ Hud:
       Bounty: "&6&lBOUNTY &e%money_symbol%%amount% &7· &cCops still looking"
       # The bar after an escape with no bounty on you
       Bounty_None: "&7Cops still looking"
+   # 0.21.2: said in chat once per chase when the search runs with every cop dead or walking home; '' turns it off
+   No_Cop_Search: "&7No units on you - leave the area"
    # The lines said in chat when the post-escape search starts or ends (Wanted.Post_Escape)
    Announce:
       # The escape with a bounty on you; %money_symbol% and %amount% are the bounty
@@ -41,8 +43,15 @@ Hud:
       Stance_Cuffs: "they still want you in cuffs"
       # %stance% when the cops shoot first
       Stance_Shoot: "they shoot first"
-      # 0.21.1: %crime% in Raise when a witness reported it (a landed 911 call), not a cop
-      Reported: "%crime% (reported by a witness)"
+      # 0.21.1: %crime% in Raise when a witness reported it (a landed 911 call), not a cop. 0.21.2: %count% is the caller
+      # plus the other civilians who saw it and were still alive when the call landed
+      Reported: "%crime% (reported by %count% witness(es))"
+      # 0.21.2: %crime% in Raise when a cop who saw it radioed it in; %count% is how many saw it
+      Seen: "%crime% (seen by %count% officer(s))"
+      # 0.21.2: %crime% in Raise when dispatch counted it because a cop hunting you stopped answering
+      Missing: "%crime% (an officer stopped answering)"
+      # 0.21.2: %crime% in Raise when a cop spotted you near the scene of a crime nobody saw
+      Scene: "%crime% (spotted near the scene)"
       # A star dropped because you stayed out of sight
       Drop_Evasion: "&aYou stayed out of sight"
       # A star dropped because the timer ran out
@@ -200,6 +209,23 @@ Patrol:
    Ticket: "&7Ticket: &c%money_symbol%%amount%"
    # You ran from a traffic stop
    Fled: "&cYou fled a traffic stop!"
+# 0.21.2: who saw your crime (Wanted.Witnesses of wanted.yml), on the action bar. "" turns a line off
+Witness:
+   # A crime that waits for a witness, and nobody saw it
+   No_Witness: "&7Nobody saw that."
+   # A cop saw it and is radioing it in; %reporter% is that cop, %seconds% the seconds until the report lands
+   Cop_Calling: "&9%reporter% &7is radioing it in - &e%seconds%s"
+   # Every cop who saw it is down before the report went out
+   Report_Cut: "&aThe radio call never went out."
+   # Said when you join and a report on you from while you were away lands
+   Deferred: "&7A report on you came in while you were away."
+   # 0.21.2: a cop you killed unseen misses his radio check-in; %unit% is that cop, %seconds% the seconds until
+   # dispatch notices (cops.yml Check_In.Show_Timer)
+   Silent: "&7%unit% &8misses check-in in &e%seconds%s"
+   # 0.21.2: dispatch sends units to the scene of a kill nobody saw; %place% is the scene
+   Scene_Heading: "&eUnits heading to %place%"
+   # 0.21.2: the scene ran out and nobody spotted you there
+   Scene_Cold: "&7The trail went cold."
 # Trackers: a car tagged by a cop; %seconds% is the seconds left on the tag
 Tracker:
    # The car was tagged

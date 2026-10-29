@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -237,6 +238,68 @@ class CopSpawnManagerUnitTest {
 		assertNotNull(cop);
 		verify(factory, never()).createCop(eq(spawner), anyInt(), anyBoolean(), any());
 		assertTrue(angle(new Vector(0, 0, 1), ringSpot()) >= 60.0, "outside his view cone");
+	}
+
+	@Test
+	@DisplayName("0.21.2 R2 (R6, T-587): a spot is watched while a player within max(24, Visibility_Check_Distance) looks at it with a clear line")
+	void watched_spotInHisViewConeWithAClearLine() {
+		blocked = dir -> false;
+		assertTrue(spawnManager.watched(new Location(world, 0.5, GROUND_Y, 20.5)), "ahead, 20 blocks, clear");
+		assertFalse(spawnManager.watched(new Location(world, 0.5, GROUND_Y, -20.5)), "behind him");
+		assertFalse(spawnManager.watched(new Location(world, 0.5, GROUND_Y, 60.5)), "ahead, past 48 blocks");
+
+		blocked = dir -> true;
+		assertFalse(spawnManager.watched(new Location(world, 0.5, GROUND_Y, 20.5)), "ahead, behind a wall");
+	}
+
+	@Test
+	@DisplayName("0.21.2 R3 (T-606): a watched station's unwatched spot is a hidden ring spot near the anchor nobody has in view")
+	void unwatchedNear_hiddenRingSpotNearTheAnchor() {
+		Location anchor = new Location(world, 0.5, GROUND_Y, 20.5); // straight ahead of him, clear line: watched
+		blocked = dir -> dir.getX() > 0;                            // only spots east of him are hidden
+		assertTrue(spawnManager.watched(anchor));
+
+		Location spot = spawnManager.unwatchedNear(anchor);
+
+		assertNotNull(spot);
+		assertTrue(spot.getX() > 0.5, "on the hidden side: " + spot);
+		assertTrue(Math.hypot(spot.getX() - anchor.getX(), spot.getZ() - anchor.getZ()) <= 48.0, "near the anchor");
+		assertFalse(spawnManager.watched(spot));
+	}
+
+	/** R3 review 1: open ground hides nothing, but a spot behind him is out of his view cone, so R6-safe. */
+	@Test
+	@DisplayName("0.21.2 R3 (T-606): open ground near a watched station: a ring spot behind him that nobody has in view")
+	void unwatchedNear_openGround_spotBehindHim() {
+		Location anchor = new Location(world, 0.5, GROUND_Y, 20.5);
+		blocked = dir -> false;
+		assertTrue(spawnManager.watched(anchor));
+
+		Location spot = spawnManager.unwatchedNear(anchor);
+
+		assertNotNull(spot);
+		assertTrue(angle(new Vector(0, 0, 1), spot) > 90.0, "behind him: " + spot);
+		assertTrue(Math.hypot(spot.getX() - anchor.getX(), spot.getZ() - anchor.getZ()) <= 48.0, "near the anchor");
+		assertFalse(spawnManager.watched(spot));
+	}
+
+	@Test
+	@DisplayName("0.21.2 R3 (T-606): three players on open ground facing 0/120/240 degrees see every ring spot: no spot this run")
+	void unwatchedNear_everyDirectionWatched_null() {
+		blocked = dir -> false;
+		List<Player> three = List.of(player, facing(120f), facing(240f));
+		when(world.getPlayers()).thenReturn(three);
+
+		assertNull(spawnManager.unwatchedNear(new Location(world, 0.5, GROUND_Y, 20.5)));
+	}
+
+	/** A player on {@link #player}'s spot looking along {@code yaw}. */
+	private Player facing(float yaw) {
+		Player other = mock(Player.class);
+		when(other.getWorld()).thenReturn(world);
+		when(other.getLocation()).thenReturn(new Location(world, 0.5, GROUND_Y, 0.5, yaw, 0f));
+		when(other.getEyeLocation()).thenReturn(new Location(world, 0.5, GROUND_Y + 1.62, 0.5, yaw, 0f));
+		return other;
 	}
 
 	@Test

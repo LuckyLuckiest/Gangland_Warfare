@@ -219,4 +219,6 @@ The Spanish file: `- "Llamada al 911 reporta %crime% cerca de %place%. Sospechos
 - A star raised by a civilian's 911 call says so on the chat card: "Car theft (reported by a witness)". The title's
   `%cause%` stays the plain crime name. A store hold-up's silent alarm or a safe alarm is not labelled.
 - A gated crime (now including `Kill_Civilian`) committed in front of a cop counts at once: the gate checks whether any
-  live squad or beat cop picks you up within `Alert_Range` before it waits for a witness.
+  live squad or beat cop picks you up within `Alert_Range` before it waits for a witness. **Superseded in 0.21.2:** a
+  cop who saw it radios it in after `Witnesses.Cops.Report_Seconds` (3), see
+  [migration-0.21.2.md](./migration-0.21.2.md).
