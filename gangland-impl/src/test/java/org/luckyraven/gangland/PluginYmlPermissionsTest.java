@@ -71,6 +71,8 @@ class PluginYmlPermissionsTest {
 			"gangland.command.gang.join",
 			"gangland.command.gang.recruiting",
 			"gangland.command.gang.bounty",
+			"gangland.command.bounty",
+			"gangland.command.bounty.pay",
 			"gangland.command.gang.delete",
 			"gangland.command.gang.rename",
 			"gangland.command.gang.transfer",
@@ -194,7 +196,10 @@ class PluginYmlPermissionsTest {
 			"gangland.command.waypoint.shield",
 			"gangland.command.waypoint.cost",
 			"gangland.command.waypoint.radius",
-			"gangland.command.bank.resetcap");
+			"gangland.command.bank.resetcap",
+			"gangland.command.bounty.set",
+			"gangland.command.bounty.clear",
+			"gangland.command.bounty.remove");
 
 	private static Map<String, Object> permissions;
 
