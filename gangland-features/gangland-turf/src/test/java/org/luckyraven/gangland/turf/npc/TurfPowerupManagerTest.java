@@ -262,6 +262,44 @@ class TurfPowerupManagerTest {
 	}
 
 	@Test
+	@DisplayName("T-629: under Defend a Quartermaster walking home still engages an attacker in range who has not hit him")
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	void defendOrder_recalled_engagesAttackerInRange() throws Exception {
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0));
+		World world = mock(World.class);
+		Location anchor = new Location(world, 0, 64, 0);
+		UUID attackerId = UUID.randomUUID();
+		Player attacker = mock(Player.class);
+		when(attacker.getUniqueId()).thenReturn(attackerId);
+		when(attacker.getLocation()).thenReturn(new Location(world, 14, 64, 0));
+		when(world.getPlayers()).thenReturn((List) List.of(attacker));
+
+		CivilianNpc civilian = qmAt(manager, 1, anchor, new Location(world, 10, 64, 0), CivilianState.IDLE);
+		CivilianState[] state = {CivilianState.IDLE};
+		when(civilian.getCurrentState()).thenAnswer(inv -> state[0]);
+		doAnswer(inv -> {
+			state[0] = inv.getArgument(0);
+			return null;
+		}).when(civilian).transitionTo(any(CivilianState.class));
+		TurfPowerupNpc qm = manager.get(1);
+		Field supplier = TurfPowerupNpc.class.getDeclaredField("attackerSupplier");
+		supplier.setAccessible(true);
+		supplier.set(qm, (java.util.function.Supplier<Set<UUID>>) () -> Set.of(attackerId));
+		java.lang.reflect.Method retarget = TurfPowerupNpc.class.getDeclaredMethod("retarget");
+		retarget.setAccessible(true);
+		manager.bindHold(id -> false, () -> 6.0);
+
+		manager.holdTick();
+		assertTrue(qm.isRecalled(), "out of his post and out of combat: walking home");
+		retarget.invoke(qm);
+
+		assertEquals(CivilianState.COMBAT, state[0], "the attacker in range is engaged on the way home");
+		assertFalse(qm.isRecalled(), "the walk home gives way to the fight");
+		verify(civilian).setTargetPlayerId(attackerId);
+		verify(civilian).releasePost();
+	}
+
+	@Test
 	@DisplayName("T-806: a Quartermaster lost to a chunk unload is queued and spawns again when its chunk loads")
 	void unloadedQuartermaster_respawnsOnChunkLoad() throws Exception {
 		CivilianSpawnManager spawnManager = respawnSpawnManager();
