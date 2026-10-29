@@ -134,7 +134,11 @@ public final class TurfPowerupManager implements BeanLifecycle {
 				continue;
 			}
 			if (qm.isRecalled()) {
-				qm.walkHome();
+				if (!holding.test(entry.getKey()) && qm.getCivilian().getCurrentState() == CivilianState.COMBAT) {
+					qm.cancelRecall();
+				} else {
+					qm.walkHome();
+				}
 				continue;
 			}
 			CivilianNpc civilian = qm.getCivilian();
@@ -158,6 +162,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 		Long due = respawnDue.get(turfId);
 		if (due != null && clock.getAsLong() < due) return;
 		respawnDue.remove(turfId);
+		dead.destroy();
 		byTurfId.remove(turfId);
 		TurfPowerupData data = dead.getData();
 		if (pending.stream().noneMatch(p -> p.getTurfId() == turfId)) pending.add(data);

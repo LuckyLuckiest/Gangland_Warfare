@@ -106,6 +106,12 @@ public final class TurfPowerupNpc {
 		civilian.holdPost(post);
 	}
 
+	/** Gives way to combat: stops walking home so the fight runs and the next out-of-combat tick recalls again. */
+	void cancelRecall() {
+		civilian.releasePost();
+		recalled = false;
+	}
+
 	/** One tick of the walk home; releases the post and re-arms {@link #retarget()} on arrival. */
 	void walkHome() {
 		if (civilian.getCurrentState() == CivilianState.WANDERING) civilian.transitionTo(CivilianState.IDLE);

@@ -186,6 +186,44 @@ class TurfPowerupManagerTest {
 	}
 
 	@Test
+	@DisplayName("Under Defend a recalled Quartermaster that gets attacked drops the recall and fights")
+	void defendOrder_recalledThenAttacked_dropsRecall() throws Exception {
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0));
+		World world = mock(World.class);
+		Location anchor = new Location(world, 0, 64, 0);
+		CivilianNpc civilian = qmAt(manager, 1, anchor, new Location(world, 10, 64, 0), CivilianState.IDLE);
+		manager.bindHold(id -> false, () -> 6.0);
+		manager.holdTick();
+		assertTrue(manager.get(1).isRecalled());
+
+		when(civilian.getCurrentState()).thenReturn(CivilianState.COMBAT);
+		manager.holdTick();
+
+		verify(civilian).releasePost();
+		verify(civilian, never()).tickPost();
+		assertFalse(manager.get(1).isRecalled());
+	}
+
+	@Test
+	@DisplayName("A respawned-over dead wrapper is destroyed so its targeting task does not leak")
+	void revivedQuartermaster_oldWrapperTargetingTaskCancelled() throws Exception {
+		CivilianSpawnManager spawnManager = respawnSpawnManager();
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0), spawnManager);
+		World world = mock(World.class);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(false);
+		deadQm(manager, 1, new Location(world, 20, 64, 20));
+		TurfPowerupNpc dead = manager.get(1);
+		org.bukkit.scheduler.BukkitTask task = mock(org.bukkit.scheduler.BukkitTask.class);
+		Field taskField = TurfPowerupNpc.class.getDeclaredField("targetingTask");
+		taskField.setAccessible(true);
+		taskField.set(dead, task);
+
+		manager.holdTick();
+
+		verify(task).cancel();
+	}
+
+	@Test
 	@DisplayName("Under Hold the leash and retarget never flip COMBAT/IDLE back and forth while walking home")
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	void holdDuringContest_noCombatIdleFlip() throws Exception {

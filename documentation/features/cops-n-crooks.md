@@ -627,6 +627,8 @@ the unloaded world's row).
 
 All commands require appropriate permissions.
 
+Usage lines show short placeholders (`<action>`, `<mode>`); tab completion lists the choices. A bare `/glw cop setup`, `cop spawner` or `cop item` answers `Missing Arguments` with its usage (0.21.3).
+
 ### Spawner Management
 
 | Command                          | Description                                                 |

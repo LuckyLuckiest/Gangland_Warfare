@@ -32,7 +32,7 @@ class CommandUsageFormatTest {
 	/** The longest description of a {@code /glw cop} help row. */
 	private static final int MAX_COP_DESCRIPTION = 60;
 
-	private static final Pattern PIPE_PLACEHOLDER = Pattern.compile("\"[^\"]*<[^<>\"]*[|][^<>\"]*[|][^<>\"]*>");
+	private static final Pattern PIPE_PLACEHOLDER = Pattern.compile("\"[^\"]*<[^<>\"]*[|/][^<>\"]*[|/][^<>\"]*>");
 
 	/** {@code new Argument(plugin, "word", tree)} with no action: Keystone answers "not implemented yet". */
 	private static final Pattern ACTIONLESS_NODE = Pattern.compile(

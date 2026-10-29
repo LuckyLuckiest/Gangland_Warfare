@@ -1,0 +1,57 @@
+[SIZE=7][B]0.21.3 Changelog - Playtest fixes[/B][/SIZE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documentation/migration-0.21.3.md'][B]migration-0.21.3.md[/B][/URL] before you start the server. It lists every hand edit an existing server needs. Upgrade from 0.21.2. Config files are never rewritten: edit them by hand.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Requires[/B][/SIZE]
+
+[LIST]
+[*][B]Keystone 1.15.5[/B] (was 1.15.4). Swap [ICODE]Keystone-1.15.5.jar[/ICODE] into [ICODE]/plugins[/ICODE].
+[*][B]gangland-api 2.7 and module [ICODE]Host_Api[/ICODE] 2.7[/B] (unchanged).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Changed[/B][/SIZE]
+
+[SIZE=5][B]Civilians[/B][/SIZE]
+
+[LIST]
+[*][B]Hostile factions never call 911 or watch a crime.[/B] A civilian type marked [ICODE]Hostile[/ICODE] is no longer a caller, a watcher or an extra eyewitness, and a loud crime does not turn it to face you. Its own faction still reacts to a hit (T-549).
+[*][B]A civilian who is told to flee obeys [ICODE]Flee_On_Damage[/ICODE].[/B] A type with fleeing switched off goes back to idle when its call ends or is stopped, instead of running.
+[/LIST]
+
+[SIZE=5][B]Quartermaster[/B][/SIZE]
+
+[LIST]
+[*][B]He walks back to his post.[/B] A Quartermaster pushed or lured past [ICODE]Garrison.Hold_Radius[/ICODE] walks home: always under Hold orders, and under Defend once the fight is over. Hold orders no longer flip him between fighting and idle every second.
+[*][B]He paces his perimeter.[/B] The shipped [ICODE]quartermaster[/ICODE] type now wanders a few blocks around the post.
+[*][B]He comes back.[/B] One lost to a chunk unload returns when the chunk loads. A killed one returns after [ICODE]Powerup_Npc.Respawn_Seconds[/ICODE] (120; 0 = never until a restart) (T-806).
+[/LIST]
+
+[SIZE=5][B]Commands[/B][/SIZE]
+
+[LIST]
+[*][B]Short usage.[/B] Usage lines show a short placeholder ([ICODE]<action>[/ICODE], [ICODE]<mode>[/ICODE]), never a list of choices; tab completion lists the choices.
+[*][B]One-line help.[/B] Help rows are one short line, and [ICODE]/glw cop help[/ICODE] shows one row each for [ICODE]cop setup[/ICODE] and [ICODE]cop spawner[/ICODE].
+[*][B]A bare command always answers.[/B] [ICODE]/glw option[/ICODE], [ICODE]option click[/ICODE], [ICODE]option gang[/ICODE], [ICODE]option gang rank[/ICODE], [ICODE]option gang bank[/ICODE], [ICODE]option gang safehouse[/ICODE], [ICODE]filter[/ICODE], [ICODE]gang fight[/ICODE], the arena verbs, [ICODE]cop setup[/ICODE], [ICODE]cop spawner[/ICODE] and [ICODE]cop item[/ICODE] now reply Missing Arguments with their usage instead of staying silent or saying "not implemented yet".
+[/LIST]
+
+[SIZE=5][B]Tab completion (Keystone 1.15.5)[/B][/SIZE]
+
+[LIST]
+[*][B]The first tab after [ICODE]/glw [/ICODE] is never empty.[/B] Typing [ICODE]/glw [/ICODE] and pressing tab lists the sub-commands again on Paper and other Brigadier clients (KS-CM-34).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Known limits[/B][/SIZE]
+
+[LIST]
+[*]On a Brigadier client, a half-typed alias that matches no sub-command ([ICODE]/glw gv[/ICODE]) completes nothing. A fully typed alias still runs and completes.
+[*]A Quartermaster whose [ICODE]Hold_Radius[/ICODE] is set below about 4 twitches between pacing and being recalled.
+[*]A respawn timer is kept in memory only; a restart respawns every Quartermaster from the saved list.
+[/LIST]
