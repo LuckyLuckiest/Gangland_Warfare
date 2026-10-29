@@ -8,6 +8,8 @@ import org.bukkit.event.Event;
 import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
+import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
+import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.region.PlaceNames;
@@ -119,6 +121,12 @@ public final class WitnessTestKit {
 		when(entity.getName()).thenReturn("Pedestrian");
 		when(npc.getEntity()).thenReturn(entity);
 		when(npc.isValid()).thenReturn(true);
+		// a type that flees on damage, like the shipped pedestrian; flip ai(npc).fleeEnabled() for one that does not
+		CivilianTypeConfig       type = mock(CivilianTypeConfig.class);
+		CivilianAIBehaviorConfig ai   = mock(CivilianAIBehaviorConfig.class);
+		when(ai.fleeEnabled()).thenReturn(true);
+		when(type.ai()).thenReturn(ai);
+		when(npc.getTypeConfig()).thenReturn(type);
 		when(npc.getCurrentState()).thenAnswer(invocation -> state.get());
 		doAnswer(invocation -> {
 			CivilianState next = invocation.getArgument(0);
@@ -140,6 +148,11 @@ public final class WitnessTestKit {
 		all.add(npc);
 		if (sees) sighted.add(npc);
 		return npc;
+	}
+
+	/** The AI config of {@code npc}'s type (a mock: stub {@code fleeEnabled()} etc. per test). */
+	public static CivilianAIBehaviorConfig ai(CivilianNpc npc) {
+		return npc.getTypeConfig().ai();
 	}
 
 	/** The last transition of {@code npc} into {@code state}, or null. */
