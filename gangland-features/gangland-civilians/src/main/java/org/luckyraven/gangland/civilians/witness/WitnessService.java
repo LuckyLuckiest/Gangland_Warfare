@@ -213,6 +213,9 @@ public final class WitnessService {
 			if (state == CivilianState.FLEEING || state == CivilianState.COMBAT || state == CivilianState.CALLING) {
 				continue;
 			}
+			// a hostile faction (Quartermaster, defenders, gang members) never reports to the police (T-549); skipped
+			// before the loud-crime turn, so it is never a caller, watcher, extra viewer or hand-over heir
+			if (npc.isHostile()) continue;
 			if (entity.getUniqueId().equals(victimId)) continue;
 			if (stillScared(entity.getUniqueId(), rules, now)) continue;
 			// a loud crime turns every free civilian in range to the noise (visibly), so the view cone is met; a silent
@@ -457,8 +460,15 @@ public final class WitnessService {
 				                     + reason.debugName());
 	}
 
-	/** Sends the caller fleeing from the criminal; the call is already detached. */
+	/**
+	 * Sends the caller fleeing from the criminal, or back to IDLE when its type has Flee_On_Damage off; the call is
+	 * already detached.
+	 */
 	private void flee(CivilianNpc caller, WitnessCall call) {
+		if (!caller.getTypeConfig().ai().fleeEnabled()) {
+			caller.transitionTo(CivilianState.IDLE);
+			return;
+		}
 		caller.setLastAttackerLocation(call.criminal().getLocation());
 		caller.transitionTo(CivilianState.FLEEING);
 	}
