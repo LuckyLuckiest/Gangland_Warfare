@@ -40,7 +40,7 @@ public class ItemUniqueCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> sender.sendMessage(
-				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<give/list/info>"));
+				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<action>"));
 	}
 
 	private void initializeArguments() {

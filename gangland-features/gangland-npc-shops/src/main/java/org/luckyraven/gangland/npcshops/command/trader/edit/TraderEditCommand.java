@@ -37,7 +37,7 @@ public class TraderEditCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> sender.sendMessage(
-				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<shop|trait|name>"));
+				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<setting>"));
 	}
 
 	private void initializeArgument() {

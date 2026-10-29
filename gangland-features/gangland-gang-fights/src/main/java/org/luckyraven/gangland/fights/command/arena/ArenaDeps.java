@@ -4,11 +4,13 @@ import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.fights.FightRules;
 import org.luckyraven.gangland.fights.arena.ArenaDrafts;
 import org.luckyraven.gangland.fights.arena.ArenaMessages;
 import org.luckyraven.gangland.fights.arena.ArenaPoint;
 import org.luckyraven.gangland.fights.arena.ArenaRegistry;
+import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.datastructure.Tree;
@@ -28,6 +30,11 @@ record ArenaDeps(ArenaRegistry registry, ArenaDrafts drafts, ArenaMessages text,
 		}
 		sender.sendMessage(text.text("Arenas.Players_Only"));
 		return null;
+	}
+
+	/** The standard Missing Arguments reply; {@code fullUsage} starts with {@code /glw} and uses short placeholders. */
+	static void usage(CommandSender sender, String fullUsage) {
+		sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), fullUsage));
 	}
 
 	static ArenaPoint point(Location at) {

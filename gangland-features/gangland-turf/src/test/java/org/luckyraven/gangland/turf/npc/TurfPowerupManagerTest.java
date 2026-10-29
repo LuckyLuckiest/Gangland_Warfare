@@ -3,6 +3,7 @@ package org.luckyraven.gangland.turf.npc;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,11 +15,20 @@ import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -138,21 +148,224 @@ class TurfPowerupManagerTest {
 		verify(far).setTargetPlayerId(null);
 		verify(far).setTargetEntity(null);
 		verify(far).transitionTo(CivilianState.IDLE);
-		verify(far).navigateTo(anchor);
+		verify(far).holdPost(argThat(post -> post.anchor().equals(anchor) && post.leashRadius() == 6.0));
 		verify(near, never()).setTargetPlayerId(any());
-		verify(near, never()).navigateTo(any());
-		verify(free, never()).navigateTo(any());
+		verify(near, never()).holdPost(any());
+		verify(free, never()).holdPost(any());
+	}
+
+	@Test
+	@DisplayName("Under Defend a Quartermaster out of combat and past the radius walks back to its post, then releases it")
+	void defendOrder_returnsQuartermasterToPost() throws Exception {
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0));
+		World world = mock(World.class);
+		Location anchor = new Location(world, 0, 64, 0);
+		CivilianNpc civilian = qmAt(manager, 1, anchor, new Location(world, 10, 64, 0), CivilianState.IDLE);
+		manager.bindHold(id -> false, () -> 6.0);
+
+		manager.holdTick();
+
+		verify(civilian).holdPost(argThat(post -> post.anchor().equals(anchor)));
+		when(civilian.tickPost()).thenReturn(true);
+		manager.holdTick();
+		verify(civilian).releasePost();
+	}
+
+	@Test
+	@DisplayName("A Quartermaster in combat under Defend is not recalled")
+	void defendOrder_inCombat_isNotRecalled() throws Exception {
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0));
+		World world = mock(World.class);
+		Location anchor = new Location(world, 0, 64, 0);
+		CivilianNpc civilian = qmAt(manager, 1, anchor, new Location(world, 10, 64, 0), CivilianState.COMBAT);
+		manager.bindHold(id -> false, () -> 6.0);
+
+		manager.holdTick();
+
+		verify(civilian, never()).holdPost(any());
+	}
+
+	@Test
+	@DisplayName("Under Defend a recalled Quartermaster that gets attacked drops the recall and fights")
+	void defendOrder_recalledThenAttacked_dropsRecall() throws Exception {
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0));
+		World world = mock(World.class);
+		Location anchor = new Location(world, 0, 64, 0);
+		CivilianNpc civilian = qmAt(manager, 1, anchor, new Location(world, 10, 64, 0), CivilianState.IDLE);
+		manager.bindHold(id -> false, () -> 6.0);
+		manager.holdTick();
+		assertTrue(manager.get(1).isRecalled());
+
+		when(civilian.getCurrentState()).thenReturn(CivilianState.COMBAT);
+		manager.holdTick();
+
+		verify(civilian).releasePost();
+		verify(civilian, never()).tickPost();
+		assertFalse(manager.get(1).isRecalled());
+	}
+
+	@Test
+	@DisplayName("A respawned-over dead wrapper is destroyed so its targeting task does not leak")
+	void revivedQuartermaster_oldWrapperTargetingTaskCancelled() throws Exception {
+		CivilianSpawnManager spawnManager = respawnSpawnManager();
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0), spawnManager);
+		World world = mock(World.class);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(false);
+		deadQm(manager, 1, new Location(world, 20, 64, 20));
+		TurfPowerupNpc dead = manager.get(1);
+		org.bukkit.scheduler.BukkitTask task = mock(org.bukkit.scheduler.BukkitTask.class);
+		Field taskField = TurfPowerupNpc.class.getDeclaredField("targetingTask");
+		taskField.setAccessible(true);
+		taskField.set(dead, task);
+
+		manager.holdTick();
+
+		verify(task).cancel();
+	}
+
+	@Test
+	@DisplayName("Under Hold the leash and retarget never flip COMBAT/IDLE back and forth while walking home")
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	void holdDuringContest_noCombatIdleFlip() throws Exception {
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0));
+		World world = mock(World.class);
+		Location anchor = new Location(world, 0, 64, 0);
+		UUID attackerId = UUID.randomUUID();
+		Player attacker = mock(Player.class);
+		when(attacker.getUniqueId()).thenReturn(attackerId);
+		when(attacker.getLocation()).thenReturn(new Location(world, 14, 64, 0));
+		when(world.getPlayers()).thenReturn((List) List.of(attacker));
+
+		CivilianNpc civilian = qmAt(manager, 1, anchor, new Location(world, 10, 64, 0), CivilianState.COMBAT);
+		List<CivilianState> transitions = new ArrayList<>();
+		CivilianState[] state = {CivilianState.COMBAT};
+		when(civilian.getCurrentState()).thenAnswer(inv -> state[0]);
+		doAnswer(inv -> {
+			state[0] = inv.getArgument(0);
+			transitions.add(state[0]);
+			return null;
+		}).when(civilian).transitionTo(any(CivilianState.class));
+		TurfPowerupNpc qm = manager.get(1);
+		Field supplier = TurfPowerupNpc.class.getDeclaredField("attackerSupplier");
+		supplier.setAccessible(true);
+		supplier.set(qm, (java.util.function.Supplier<Set<UUID>>) () -> Set.of(attackerId));
+		java.lang.reflect.Method retarget = TurfPowerupNpc.class.getDeclaredMethod("retarget");
+		retarget.setAccessible(true);
+		manager.bindHold(id -> true, () -> 6.0);
+
+		for (int i = 0; i < 4; i++) {
+			manager.holdTick();
+			retarget.invoke(qm);
+		}
+
+		assertEquals(List.of(CivilianState.IDLE), transitions, "one IDLE for the recall, never COMBAT again until home");
+	}
+
+	@Test
+	@DisplayName("T-806: a Quartermaster lost to a chunk unload is queued and spawns again when its chunk loads")
+	void unloadedQuartermaster_respawnsOnChunkLoad() throws Exception {
+		CivilianSpawnManager spawnManager = respawnSpawnManager();
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0), spawnManager);
+		World world = mock(World.class);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(false);
+		deadQm(manager, 1, new Location(world, 20, 64, 20));
+
+		manager.holdTick();
+		verify(spawnManager, never()).spawnCivilian(any(Location.class), anyString());
+
+		manager.onChunkLoaded(world, 1, 1);
+
+		verify(spawnManager).spawnCivilian(any(Location.class), anyString());
+		assertTrue(manager.get(1).isAlive());
+	}
+
+	@Test
+	@DisplayName("T-806: a KILLED Quartermaster respawns only after Respawn_Seconds")
+	void killedQuartermaster_respawnsAfterDelay() throws Exception {
+		CivilianSpawnManager spawnManager = respawnSpawnManager();
+		TurfPowerupManager manager = manager(
+				new TurfPowerupSettings("quartermaster", 32.0, "Quartermaster", 5000.0, 120), spawnManager);
+		World world = mock(World.class);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(true);
+		deadQm(manager, 1, new Location(world, 20, 64, 20));
+		long[] now = {1_000L};
+		manager.clock = () -> now[0];
+
+		manager.onKilled(1);
+		manager.holdTick();
+		now[0] += 119_000L;
+		manager.holdTick();
+		verify(spawnManager, never()).spawnCivilian(any(Location.class), anyString());
+
+		now[0] += 2_000L;
+		manager.holdTick();
+
+		verify(spawnManager, times(1)).spawnCivilian(any(Location.class), anyString());
+		assertTrue(manager.get(1).isAlive());
+	}
+
+	@Test
+	@DisplayName("T-806: Respawn_Seconds 0 keeps the old behaviour - a killed Quartermaster stays down")
+	void killedQuartermaster_zeroSecondsNeverRespawns() throws Exception {
+		CivilianSpawnManager spawnManager = respawnSpawnManager();
+		TurfPowerupManager manager = manager(
+				new TurfPowerupSettings("quartermaster", 32.0, "Quartermaster", 5000.0, 0), spawnManager);
+		World world = mock(World.class);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(true);
+		deadQm(manager, 1, new Location(world, 20, 64, 20));
+		long[] now = {1_000L};
+		manager.clock = () -> now[0];
+
+		manager.onKilled(1);
+		now[0] += 100L * 24 * 3600 * 1000;
+		manager.holdTick();
+
+		verify(spawnManager, never()).spawnCivilian(any(Location.class), anyString());
+		assertFalse(manager.get(1).isAlive());
+	}
+
+	private static CivilianSpawnManager respawnSpawnManager() {
+		CivilianSpawnManager spawnManager = mock(CivilianSpawnManager.class);
+		CivilianNpc fresh = mock(CivilianNpc.class, RETURNS_DEEP_STUBS);
+		when(fresh.isValid()).thenReturn(true);
+		when(spawnManager.spawnCivilian(any(Location.class), anyString())).thenReturn(fresh);
+		return spawnManager;
+	}
+
+	private static TurfPowerupManager manager(TurfPowerupSettings settings) {
+		return manager(settings, mock(CivilianSpawnManager.class));
+	}
+
+	@SuppressWarnings("unchecked")
+	private static TurfPowerupManager manager(TurfPowerupSettings settings, CivilianSpawnManager spawnManager) {
+		return new TurfPowerupManager(mock(JavaPlugin.class), mock(IRepository.class), () -> settings, spawnManager);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static void deadQm(TurfPowerupManager manager, int turfId, Location anchor) throws Exception {
+		CivilianNpc civilian = mock(CivilianNpc.class);
+		when(civilian.isValid()).thenReturn(false);
+		TurfPowerupNpc qm = new TurfPowerupNpc(mock(JavaPlugin.class), new TurfPowerupData(turfId, anchor, null),
+		                                       civilian);
+		Field field = TurfPowerupManager.class.getDeclaredField("byTurfId");
+		field.setAccessible(true);
+		((Map<Integer, TurfPowerupNpc>) field.get(manager)).put(turfId, qm);
 	}
 
 	private static CivilianNpc qmAt(TurfPowerupManager manager, int turfId, Location anchor, Location at)
 			throws Exception {
+		return qmAt(manager, turfId, anchor, at, CivilianState.COMBAT);
+	}
+
+	private static CivilianNpc qmAt(TurfPowerupManager manager, int turfId, Location anchor, Location at,
+	                                CivilianState state) throws Exception {
 		CivilianNpc civilian = mock(CivilianNpc.class);
 		LivingEntity body = mock(LivingEntity.class);
 		when(body.getLocation()).thenReturn(at);
 		when(body.getWorld()).thenReturn(anchor.getWorld());
 		when(civilian.getEntity()).thenReturn(body);
 		when(civilian.isValid()).thenReturn(true);
-		when(civilian.getCurrentState()).thenReturn(CivilianState.COMBAT);
+		when(civilian.getCurrentState()).thenReturn(state);
 		TurfPowerupNpc qm = new TurfPowerupNpc(mock(JavaPlugin.class), new TurfPowerupData(turfId, anchor, null),
 		                                       civilian);
 		Field field = TurfPowerupManager.class.getDeclaredField("byTurfId");

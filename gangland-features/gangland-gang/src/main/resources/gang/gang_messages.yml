@@ -291,8 +291,6 @@ Titles:
 # ---------------- Staff ----------------
 # /glw option gang <verb>: staff only, and every verb also runs from the console.
 Staff:
-   # %usage% is the verb with its arguments.
-   Usage: "&cUsage: /glw option gang %usage%"
    Unknown_Gang: "&cNo gang named %gang%."
    Disband_Confirm: "&eThis disbands %gang%. Run &f/glw option gang disband %gang% confirm &eto do it."
    Disbanded: "&aGang %gang% disbanded."

@@ -66,7 +66,7 @@ public class GangAllyCommand extends SubArgument {
 			}
 
 			String options = contributions.hasAny(CONTRIBUTION_PARENT)
-			                 ? "<request/abandon/accept/reject/pending>"
+			                 ? "<action>"
 			                 : "<abandon>";
 			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), options));
 		};

@@ -45,6 +45,6 @@ public final class ArenaTpCommand extends SubArgument {
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		return (argument, sender, args) -> sender.sendMessage(deps.text().text("Arenas.Not_Found", "name", ""));
+		return (argument, sender, args) -> ArenaDeps.usage(sender, "/glw arena tp <name>");
 	}
 }

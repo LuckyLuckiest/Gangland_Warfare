@@ -192,6 +192,84 @@ class WitnessServiceTest {
 	}
 
 	@Test
+	@DisplayName("T-549: a hostile civilian (Quartermaster, defender, gang member) never calls 911, even when nearest")
+	void hostileFaction_neverCalls() {
+		CivilianNpc hostile = kit.civilian(5, true);
+		when(hostile.isHostile()).thenReturn(true);
+		CivilianNpc pedestrian = kit.civilian(10, true);
+
+		assertEquals(1, kit.witness("Car_Theft"));
+
+		assertEquals(CivilianState.IDLE, hostile.getCurrentState());
+		assertNull(hostile.getWitnessCall());
+		assertEquals(CivilianState.CALLING, pedestrian.getCurrentState());
+	}
+
+	@Test
+	@DisplayName("T-549: a lone hostile civilian who sees the crime starts no call")
+	void hostileFaction_aloneStartsNothing() {
+		CivilianNpc hostile = kit.civilian(5, true);
+		when(hostile.isHostile()).thenReturn(true);
+
+		assertEquals(0, kit.witness("Car_Theft"));
+		assertEquals(CivilianState.IDLE, hostile.getCurrentState());
+	}
+
+	@Test
+	@DisplayName("T-549: a hostile civilian in range is no watcher, so it adds no Per_Extra_Witness viewer")
+	void hostileFaction_isNotAViewer() {
+		CivilianNpc caller  = kit.civilian(10, true);
+		CivilianNpc hostile = kit.civilian(12, true);
+		when(hostile.isHostile()).thenReturn(true);
+		kit.witness("Car_Theft");
+
+		kit.advanceSeconds(8);
+		kit.service.tickCaller(caller);
+
+		assertEquals(1, ((CivilianCalledInEvent) kit.events.get(0)).getViewers());
+	}
+
+	@Test
+	@DisplayName("T-549: a loud crime never turns a hostile civilian toward the noise")
+	void hostileFaction_notTurnedByLoudCrime() {
+		CivilianNpc hostile = kit.civilian(10, true, 270f);
+		when(hostile.isHostile()).thenReturn(true);
+		kit.rules = withLoudCrimes(List.of("Kill_Civilian"));
+
+		assertEquals(0, kit.witness("Kill_Civilian"));
+		verify(hostile.getEntity(), never()).teleport(any(Location.class));
+	}
+
+	@Test
+	@DisplayName("a caller whose type has Flee_On_Damage off goes back to IDLE when the call lands, not FLEEING")
+	void callEnd_respectsFleeDisabled() {
+		CivilianNpc caller = kit.civilian(10, true);
+		when(WitnessTestKit.ai(caller).fleeEnabled()).thenReturn(false);
+		kit.witness("Car_Theft");
+
+		kit.advanceSeconds(8);
+		kit.service.tickCaller(caller);
+
+		assertEquals(1, kit.countEvents(CivilianCalledInEvent.class));
+		assertEquals(CivilianState.IDLE, caller.getCurrentState());
+		assertNull(kit.lastTransition(caller, CivilianState.FLEEING));
+	}
+
+	@Test
+	@DisplayName("a scared caller whose type has Flee_On_Damage off goes back to IDLE, not FLEEING")
+	void callStopped_respectsFleeDisabled() {
+		CivilianNpc caller = kit.civilian(10, true);
+		when(WitnessTestKit.ai(caller).fleeEnabled()).thenReturn(false);
+		kit.witness("Car_Theft");
+
+		kit.aiming = true;
+		kit.service.tickCaller(caller);
+
+		assertEquals(CivilianState.IDLE, caller.getCurrentState());
+		assertNull(kit.lastTransition(caller, CivilianState.FLEEING));
+	}
+
+	@Test
 	@DisplayName("T-540: a lone caller is one viewer")
 	void calledInEvent_loneCallerIsOneViewer() {
 		CivilianNpc caller = kit.civilian(10, true);

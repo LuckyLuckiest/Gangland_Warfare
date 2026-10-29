@@ -129,4 +129,21 @@ class QuartermasterYamlTest {
 	void reserveCapPresent() throws IOException {
 		assertTrue(load("/turf/turf_rules.yml").isSet("Garrison.Max_Reserve"));
 	}
+
+	@Test
+	@DisplayName("the quartermaster civilian type ships Wander on with a small range (perimeter movement)")
+	void quartermasterWanders() throws IOException {
+		YamlConfiguration yaml = load("/npc/civilians.yml");
+
+		assertTrue(yaml.getBoolean("Types.quartermaster.AI.Wander.Enabled"), "Wander on");
+		int range = yaml.getInt("Types.quartermaster.AI.Wander.Range");
+		assertTrue(range >= 2 && range <= 6, "small range, was " + range);
+	}
+
+	@Test
+	@DisplayName("turf_npcs.yml ships Powerup_Npc.Respawn_Seconds equal to the in-code default (T-806)")
+	void respawnSecondsShipped() throws IOException {
+		assertEquals(org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings.DEFAULT_RESPAWN_SECONDS,
+		             load("/turf/turf_npcs.yml").getInt("Powerup_Npc.Respawn_Seconds", -1));
+	}
 }

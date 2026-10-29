@@ -41,7 +41,7 @@ public class CivilianSpawnerCommand extends SubArgument {
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
 			String message = GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
-			                                               "<set/setgroup/remove/list/info/teleport>");
+			                                               "<action>");
 			sender.sendMessage(message);
 		};
 	}

@@ -178,17 +178,17 @@ class CivilianDamageListenerTest {
 	}
 
 	@Test
-	@DisplayName("a lethal hit on a HOSTILE caller keeps the call and still rallies its faction (no 0.19 regression)")
+	@DisplayName("T-549: a HOSTILE civilian is never a caller, so a lethal hit sends it to COMBAT and rallies its faction")
 	void hostileLethalHitOnCallerStillAlertsFaction() {
-		CivilianNpc caller = registered(kit.civilian(10, true), true, true);
-		when(caller.getEntity().getHealth()).thenReturn(4.0);
-		kit.witness("Car_Theft");
+		CivilianNpc hostile = registered(kit.civilian(10, true), true, true);
+		when(hostile.getEntity().getHealth()).thenReturn(4.0);
+		assertEquals(0, kit.witness("Car_Theft"), "a hostile faction never calls 911");
 
-		listener.onCivilianDamage(hit(kit.criminal, caller));
+		listener.onCivilianDamage(hit(kit.criminal, hostile));
 
-		verify(kit.civilians).alertFaction(caller, kit.criminal, true);
-		assertEquals(CivilianState.CALLING, caller.getCurrentState());
-		assertNotNull(caller.getWitnessCall());
+		verify(kit.civilians).alertFaction(hostile, kit.criminal, true);
+		assertEquals(CivilianState.COMBAT, hostile.getCurrentState());
+		assertNull(hostile.getWitnessCall());
 	}
 
 	// ── helpers ──────────────────────────────────────────────────────────────

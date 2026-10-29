@@ -168,12 +168,12 @@
 		"description": "Staff: make a member the gang's leader."
 	},
 	"option_gang_bank": {
-		"usage": "/glw option gang bank <gang> <balance|give|take|reset> [amount]",
-		"description": "Staff: read or change a gang bank; every change is logged."
+		"usage": "/glw option gang bank <gang> <action> [amount]",
+		"description": "Staff: gang bank balance, give, take or reset; logged."
 	},
 	"option_gang_safehouse": {
-		"usage": "/glw option gang safehouse <gang> <list|tp|remove> [name]",
-		"description": "Staff: list, visit or remove a gang's safehouses."
+		"usage": "/glw option gang safehouse <gang> <action> [name]",
+		"description": "Staff: gang safehouse list, tp or remove."
 	},
 	"option_gang_stats": {
 		"usage": "/glw option gang stats reset <player>",

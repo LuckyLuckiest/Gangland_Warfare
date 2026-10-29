@@ -40,7 +40,7 @@ public class CopSpawnerCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(commandMessages.usage("/glw cop spawner <set|remove|list|info|teleport>"));
+			sender.sendMessage(commandMessages.usage("/glw cop spawner <action>"));
 		};
 	}
 

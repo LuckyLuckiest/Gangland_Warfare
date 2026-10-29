@@ -67,6 +67,7 @@ what applies to it.
 | `Garrison.Cost_Per_Guard` | `turf_powerups.yml` | `1000` | Price of one guard at the Quartermaster, from the gang bank. A `garrison_discount` boost multiplies it. |
 | `Powerup_Npc.Display_Name` | `turf_npcs.yml` | `Quartermaster` | The Quartermaster's name in panel titles and chat lines. The name over its head comes from `civilians.yml`. |
 | `Powerup_Npc.Placement_Cost` | `turf_npcs.yml` | `5000.0` | Price the owning gang pays to place or move its Quartermaster with `/glw turf quartermaster`. `0` = free. |
+| `Powerup_Npc.Respawn_Seconds` | `turf_npcs.yml` | `120` | Seconds a killed Quartermaster stays down before it respawns at its post. `0` = never until a restart. One lost to a chunk unload returns when the chunk loads. |
 | `Capture.Duration_Seconds` | `turf_settings.yml` | `180` | Seconds for one attacker with nobody against them to fill the bar from 0 to 100. Owned and unclaimed turfs alike. |
 | `Capture.Cooldown_Minutes` | `turf_settings.yml` | `15` | After a capture completes, the turf cannot be contested again for this long. |
 | `Capture.Abandon_Grace_Seconds` | `turf_settings.yml` | `15` | Grace after the challenger leaves the turf before the capture is cancelled as abandoned. |
@@ -130,6 +131,7 @@ are `small_income_boost` (300), `large_income_boost` (1000) and `garrison_discou
 - **Boost catalogue** pages nine boosts at a time.
 - **Owner placement.** The owning gang places its Quartermaster with `/glw turf quartermaster`, standing inside the turf.
   It costs `Powerup_Npc.Placement_Cost` from the gang bank (`0` is free). Staff use `/glw turf powerupnpc` instead, for free.
+- **Post.** He paces a few blocks around his post (`quartermaster` type, `AI.Wander` in `civilians.yml`) and walks back when he strays past `Garrison.Hold_Radius`: always under Hold orders, under Defend once the fight is over. He respawns after `Powerup_Npc.Respawn_Seconds`.
 - **Hub rows.** The hub shows the guards on duty and who may spend: the owning gang buys, allies only look.
 - **Gang tag.** A short tag of the owning gang is drawn on a line above the Quartermaster. It follows owner changes.
 - **Guard orders.** The hub's Guard Orders button (slot 13) switches the guards between Hold and Defend. The owning gang's rank with `gangland.turf.upgrade` may switch it; allies only look. See [Guards](#guards).

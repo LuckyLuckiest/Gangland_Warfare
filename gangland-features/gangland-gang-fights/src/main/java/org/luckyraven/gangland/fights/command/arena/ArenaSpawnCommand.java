@@ -43,6 +43,6 @@ public final class ArenaSpawnCommand extends SubArgument {
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		return (argument, sender, args) -> sender.sendMessage(deps.text().text("Arenas.Spawn_Side_Invalid"));
+		return (argument, sender, args) -> ArenaDeps.usage(sender, "/glw arena spawn <a|b>");
 	}
 }
