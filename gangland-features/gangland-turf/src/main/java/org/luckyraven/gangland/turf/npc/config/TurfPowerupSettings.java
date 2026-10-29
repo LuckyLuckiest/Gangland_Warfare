@@ -10,7 +10,15 @@ package org.luckyraven.gangland.turf.npc.config;
  * D29=B); staff placement is free.
  */
 public record TurfPowerupSettings(String typeId, double targetingRadius, String displayName,
-                                  double placementCost) {
+                                  double placementCost, int respawnSeconds) {
+
+	/** Seconds a killed Quartermaster stays down ({@code Powerup_Npc.Respawn_Seconds}); 0 = it never comes back. */
+	public static final int DEFAULT_RESPAWN_SECONDS = 120;
+
+	/** Settings with the default respawn delay (T-806). */
+	public TurfPowerupSettings(String typeId, double targetingRadius, String displayName, double placementCost) {
+		this(typeId, targetingRadius, displayName, placementCost, DEFAULT_RESPAWN_SECONDS);
+	}
 
 	/** Settings with the default Quartermaster name (W2-Q, TF-38). */
 	public TurfPowerupSettings(String typeId, double targetingRadius) {

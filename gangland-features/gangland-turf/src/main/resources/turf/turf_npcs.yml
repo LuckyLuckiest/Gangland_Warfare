@@ -37,6 +37,9 @@ Powerup_Npc:
    # Price the owning gang pays from its gang bank to place (or move) its Quartermaster with /glw turf quartermaster.
    # Staff placing it with /glw turf powerupnpc set pay nothing. 0 = free. Minimum 0.
    Placement_Cost: 5000.0
+   # Seconds a KILLED Quartermaster stays down before it respawns at its anchor. 0 = it never comes back (until a
+   # restart). A Quartermaster lost to a chunk unload always returns when the chunk loads. Minimum 0.
+   Respawn_Seconds: 120
 # Cop response (T-189): while a cop NPC hits a player standing on a turf their gang protects, the turf's
 # Quartermaster and garrison defenders within range of the cop turn on it. They never start a fight with a cop on
 # their own, and they stop again when the cop dies, the victim leaves or stops being protected, or the cop moves

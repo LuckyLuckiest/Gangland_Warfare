@@ -15,6 +15,7 @@ import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.npc.NpcPost;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntPredicate;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -49,6 +51,10 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	private DoubleSupplier holdRadius = () -> 6.0;
 
 	private final Map<Integer, TurfPowerupNpc>    byTurfId = new HashMap<>();
+	/** T-806: turf id -> epoch millis when a KILLED Quartermaster comes back (Long.MAX_VALUE = never). */
+	private final Map<Integer, Long>             respawnDue = new HashMap<>();
+	/** Clock behind the respawn delay; a test swaps it. */
+	LongSupplier clock = System::currentTimeMillis;
 	/**
 	 * Quartermaster data whose chunk wasn't loaded at spawn-attempt time. Drained by
 	 * {@link #onChunkLoaded(org.bukkit.World, int, int)} as players approach and Bukkit naturally loads chunks.
@@ -92,6 +98,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	@Override
 	public void onClear() {
 		byTurfId.clear();
+		respawnDue.clear();
 		pending.clear();
 	}
 
@@ -100,6 +107,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 		stopHoldTask();
 		despawnAll();
 		byTurfId.clear();
+		respawnDue.clear();
 		pending.clear();
 	}
 
@@ -112,24 +120,57 @@ public final class TurfPowerupManager implements BeanLifecycle {
 		this.holdRadius = radius;
 	}
 
+	/**
+	 * Every {@link #HOLD_PERIOD} ticks: walks a Quartermaster that strayed further than the Hold radius from its anchor
+	 * back to its post (under Hold even mid-fight; under Defend only once it is out of combat), then brings back a
+	 * Quartermaster that a chunk unload or a death took away.
+	 */
 	void holdTick() {
 		double radius = holdRadius.getAsDouble();
-		for (Map.Entry<Integer, TurfPowerupNpc> entry : byTurfId.entrySet()) {
+		for (Map.Entry<Integer, TurfPowerupNpc> entry : new ArrayList<>(byTurfId.entrySet())) {
 			TurfPowerupNpc qm = entry.getValue();
-			if (!holding.test(entry.getKey()) || !qm.isAlive()) continue;
-			Entity body = qm.getCivilian().getEntity();
+			if (!qm.isAlive()) {
+				reviveIfDue(entry.getKey(), qm);
+				continue;
+			}
+			if (qm.isRecalled()) {
+				qm.walkHome();
+				continue;
+			}
+			CivilianNpc civilian = qm.getCivilian();
+			if (!holding.test(entry.getKey()) && civilian.getCurrentState() == CivilianState.COMBAT) continue;
+			Entity body = civilian.getEntity();
 			Location anchor = qm.getData().getSpawnLocation();
 			if (body == null || anchor.getWorld() == null || !anchor.getWorld().equals(body.getWorld())) continue;
 			Location at = body.getLocation();
 			double dx = at.getX() - anchor.getX();
 			double dz = at.getZ() - anchor.getZ();
 			if (dx * dx + dz * dz <= radius * radius) continue;
-			CivilianNpc civilian = qm.getCivilian();
-			civilian.setTargetPlayerId(null);
-			civilian.setTargetEntity(null);
-			if (civilian.getCurrentState() == CivilianState.COMBAT) civilian.transitionTo(CivilianState.IDLE);
-			civilian.navigateTo(anchor);
+			qm.recall(new NpcPost(anchor, radius, null));
 		}
+	}
+
+	/**
+	 * T-806: a dead wrapper is either a KILLED Quartermaster (back after {@code Respawn_Seconds}, never when 0) or one
+	 * Citizens lost to a chunk unload (queued, spawned the moment its chunk loads - at once when it is loaded now).
+	 */
+	private void reviveIfDue(int turfId, TurfPowerupNpc dead) {
+		Long due = respawnDue.get(turfId);
+		if (due != null && clock.getAsLong() < due) return;
+		respawnDue.remove(turfId);
+		byTurfId.remove(turfId);
+		TurfPowerupData data = dead.getData();
+		if (pending.stream().noneMatch(p -> p.getTurfId() == turfId)) pending.add(data);
+		Location loc = data.getSpawnLocation();
+		if (loc.getWorld() != null && loc.getWorld().isChunkLoaded(loc.getBlockX() >> 4, loc.getBlockZ() >> 4)) {
+			onChunkLoaded(loc.getWorld(), loc.getBlockX() >> 4, loc.getBlockZ() >> 4);
+		}
+	}
+
+	/** Called when this turf's Quartermaster was killed: it respawns after {@code Respawn_Seconds}, never when 0. */
+	public void onKilled(int turfId) {
+		int seconds = settings.get().respawnSeconds();
+		respawnDue.put(turfId, seconds <= 0 ? Long.MAX_VALUE : clock.getAsLong() + seconds * 1000L);
 	}
 
 	public void setSpawnHook(Consumer<TurfPowerupNpc> spawnHook) {
@@ -148,6 +189,9 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	public Collection<TurfPowerupData> snapshotData() {
 		List<TurfPowerupData> snap = new ArrayList<>(byTurfId.size());
 		for (TurfPowerupNpc npc : byTurfId.values()) snap.add(npc.getData());
+		for (TurfPowerupData data : pending) {
+			if (!byTurfId.containsKey(data.getTurfId())) snap.add(data);
+		}
 		return snap;
 	}
 
@@ -165,6 +209,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	}
 
 	public void remove(int turfId) {
+		respawnDue.remove(turfId);
 		TurfPowerupNpc existing = byTurfId.remove(turfId);
 		if (existing != null) existing.destroy();
 		// TF-42: drop the queued spawn too, or a chunk load would resurrect a removed Quartermaster.
