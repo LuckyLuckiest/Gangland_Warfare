@@ -169,6 +169,14 @@ public class Bounty {
 		return getPostedAmount().subtract(userPaidBounty.getOrDefault(posterId, Currency.ZERO));
 	}
 
+	/**
+	 * Who put up how much: a copy of the PAID ledger keyed by {@link #posterId(CommandSender)} (a UUID string,
+	 * {@code "console"}, a sender name, or {@code "legacy"}). Take it before {@link #resetBounty()} clears the ledger.
+	 */
+	public Map<String, BigDecimal> stakes() {
+		return Map.copyOf(userPaidBounty);
+	}
+
 	/** The server-made part of the total (auto bounty, kill bounty, timer growth). */
 	public BigDecimal getNotoriety() {
 		BigDecimal rest = amount.subtract(getPostedAmount());
