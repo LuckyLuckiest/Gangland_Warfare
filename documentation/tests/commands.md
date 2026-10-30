@@ -190,6 +190,7 @@ input must be chained `OptionalArgument` nodes with tab-completion — verify ta
 | `/glw wanted`                                                               | Shows wanted level.          | Yes |
 | `/glw wanted add <amount>` / `remove` / `clear` / `clear <player>`          | Wanted adjustments.          | Yes |
 | `/glw bounty set <player> <amount>` / `remove`                              | Bounty set/removed.          | Yes |
+| `/glw bounty pay`                                                           | Bounty paid off, money gone, posters told. | Yes |
 | `/glw respawn`                                                              | Revives a downed player.     | Yes |
 
 - [ ] All rows pass.

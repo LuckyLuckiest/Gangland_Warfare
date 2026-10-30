@@ -383,6 +383,26 @@ A bounty is a monetary reward placed on a player or gang. Any player who kills t
 - Kill bounties stack: each kill earns a base bounty amount, and a multiplier timer can double the reward for
   consecutive kills within a time window.
 
+### Paying off your bounty (0.21.4)
+
+`/glw bounty pay` lets a target buy his own bounty off, RDR2-style.
+
+- **The whole total is paid, notoriety included.** The price is the full bounty: what players posted plus the notoriety
+  the server added. There are no partial payments. The command needs a bounty and enough money in your wallet, and
+  takes it all or nothing.
+- **The money goes to the city.** It is taken from your wallet and deposited nowhere, and no one is refunded, not even
+  the players who posted it. This is by design (docket WB-22). The bounty is cleared, both posted money and notoriety.
+- **Online posters are told.** Every poster who is online gets "`<name>` paid off their bounty. Your `<amount>` stake went
+  to the city." with their own stake. Offline posters, the console and legacy stakes are not told.
+- **Refusals** (nothing is taken, nothing changes):
+  - No bounty on you (or your data is still loading): "You don't have a bounty to pay off."
+  - Not enough money: "You need `<total>` to pay off your bounty."
+- **The sign.** A `[BOUNTY]` sign with `pay` on line 2 does the same thing as the command. `view` on line 2 still opens
+  the bounty view. `clear` still works on signs placed before 0.21.4 and pays the bounty off the same way. A sign with
+  any other line 2 answers "Invalid sign!" instead of erroring (WB-21, LS-22).
+- **Permission.** `gangland.command.bounty.pay` is open to everyone by default. Since the `gangland.command.bounty` root
+  is now a player node too, bare `/glw bounty` (view your own bounty) is open as well. `set` and `clear` stay op.
+
 ### Multiplier
 
 The kill bounty multiplier doubles every **300 seconds** of consecutive activity, up to a configurable cap (default 2×
@@ -400,6 +420,7 @@ with a 20,000 money maximum). This rewards players for sustained hot streaks.
 | `/glw contact [stars]`                | Pay a contact to wipe stars while no cop sees you (0.16.0). |
 | `/glw bounty`                         | View the current bounty on you.           |
 | `/glw bounty set <player> <amount>`   | Place or update a bounty on a player.     |
+| `/glw bounty pay`                     | Pay off your own bounty in full; the money goes to the city (0.21.4). |
 | `/glw bounty clear <player>`          | Remove the bounty you posted on a player. |
 
 ---

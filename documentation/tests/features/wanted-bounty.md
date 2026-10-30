@@ -119,6 +119,19 @@ bounties on other players' heads).
 **S13 Kill with nothing posted**
 - [ ] Kill a five-star player nobody has put money on: you gain a star.
 
+**S14 Bounty pay-off (0.21.4)**
+- [ ] No bounty: `/glw bounty pay` says "You don't have a bounty to pay off." and nothing is taken.
+- [ ] A poster puts 500 on you, you hold 100: `/glw bounty pay` says "You need $500.00 to pay off your bounty." and your
+      wallet and the bounty are unchanged. No "Amount exceeding balance" text.
+- [ ] You hold 1000: `/glw bounty pay` takes 500, says "You paid off your bounty of $500.00. The money went to the
+      city.", and `/glw bounty` shows no bounty. The poster's wallet is unchanged (no refund) and, if online, he is told
+      "<you> paid off their bounty. Your $500.00 stake went to the city."
+- [ ] Two posters (300 and 200) plus notoriety: you pay the whole total; each online poster is told his own stake.
+- [ ] `[BOUNTY]` sign, line 2 `pay`: the same payoff. Line 2 `clear` (old sign): the same. Line 2 `view`: opens the bounty view.
+- [ ] A `[BOUNTY]` sign with line 2 `bogus` or empty: "Invalid sign!" and no error in the console.
+- [ ] The console running `/glw bounty pay` gets the player-only message. A player without `gangland.command.bounty.pay`
+      is refused.
+
 **Rampage (AUTO mode)**
 - [ ] Brandish at a cop, hit a civilian and steal cars four times in the opening: not a rampage (`Rampage_Min_Weight` 80); four kills or
       cop kills still are.

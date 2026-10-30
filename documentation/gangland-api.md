@@ -119,6 +119,19 @@ modules other than gangland-gadget can listen to them without depending on it.
 `SquadRadio` change: a hearer is delivered a line when the existing range terms hold or `voice.overhears(player, squad)`
 is `true`. NPC hearers are still skipped, and the player-gap throttle still applies to overheard lines.
 
+### 0.21.4 (additive, VERSION unchanged)
+
+Bounty pay-off adds to the `2.7` line; nothing was removed or re-signed, and no module changed its `Host_Api`.
+`Messages` constants are read only by `gangland-impl`.
+
+| Addition | Where | Kind |
+|---|---|---|
+| `Messages.BOUNTY_PAID` | `org.luckyraven.gangland.file.configuration` | `Commands.Bounty.Paid` (COMMAND). The payer's pay-off line. |
+| `Messages.BOUNTY_PAID_NOTICE` | same | `Commands.Bounty.Paid_Notice` (COMMAND). The notice to an online poster. |
+| `Messages.NO_BOUNTY_SELF` | same | `Errors.Bounty.No_Bounty_Self` (ERROR). Pay-off with no bounty. |
+| `Messages.BOUNTY_PAY_NO_MONEY` | same | `Errors.Bounty.Pay_No_Money` (ERROR). Pay-off with too little money. |
+| `Bounty.stakes()` | `org.luckyraven.gangland.core.bounty` | Returns an unmodifiable copy of the PAID ledger keyed by poster id (a UUID string, `console`, a sender name or `legacy`). Take it before `resetBounty()` clears the ledger. |
+
 ### Api 2.7 wave 2 (0.20.0, additive, VERSION unchanged)
 
 Wave 2 adds to the same `2.7` line; nothing was removed or re-signed, and no module changed its `Host_Api` for it.
