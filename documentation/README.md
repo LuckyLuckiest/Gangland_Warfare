@@ -10,7 +10,8 @@
 
 | Version                                 | Status  | Changelog                                                      |
 |-----------------------------------------|---------|----------------------------------------------------------------|
-| [v0.21.3](./v0.21.3/CHANGELOG.md)       | Current | Playtest fixes: hostile civilians never call 911, Quartermaster returns to post and respawns, short command usage, first tab never empty (needs Keystone 1.15.5, gangland-api 2.7) |
+| [v0.21.4](./v0.21.4/CHANGELOG.md)       | Current | Bounty pay-off: /glw bounty pay and the pay sign, money goes to the city, online posters told, bounty sign no longer throws (needs Keystone 1.15.5, gangland-api 2.7) |
+| [v0.21.3](./v0.21.3/CHANGELOG.md)       | Previous | Playtest fixes: hostile civilians never call 911, Quartermaster returns to post and respawns, short command usage, first tab never empty (needs Keystone 1.15.5, gangland-api 2.7) |
 | [v0.21.2](./v0.21.2/CHANGELOG.md)       | Previous | Who saw it: cop eyewitness reports, witness head counts, silent officers and radio check-ins, no free clear by killing every cop (needs Keystone 1.15.4, gangland-api 2.7) |
 | [v0.21.0](./v0.21.0/CHANGELOG.md)       | Released | How it ends: surrender, busted, lockpicks, rescues, crew heat, pursuit report, standoffs, breaches, clean getaway and the city's Most Wanted (needs Keystone 1.15.3, gangland-api 2.7) |
 | [v0.20.0](./v0.20.0/CHANGELOG.md)       | Released | Street crime: witnesses and 911, disguises, patrols and pull-overs, tracker tags, scanner and map, overwatch, store hold-ups, hot-cash bag, fence and crew lookout |

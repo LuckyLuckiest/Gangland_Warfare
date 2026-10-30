@@ -52,5 +52,6 @@ children of `gangland.command.player`. The root used to be op-only because it wa
 
 - Players can use `/glw bounty pay`.
 - **Side effect:** bare `/glw bounty` (view your own bounty) is now open to players too.
-- `set` and `clear` stay op. If you want pay-off off for a group, deny `gangland.command.bounty.pay` in your permission
-  plugin. Using a bounty sign has no permission node of its own, as before.
+- `set` and `clear` stay op. Denying `gangland.command.bounty.pay` in your permission plugin blocks the command only.
+  Using a bounty sign has no permission node of its own, as before, so a placed `[BOUNTY]` sign with `pay` (or a legacy
+  `clear`) still pays off for that group. To turn pay-off fully off for a group, also remove or avoid those signs.

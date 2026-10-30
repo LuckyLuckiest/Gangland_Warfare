@@ -397,11 +397,14 @@ A bounty is a monetary reward placed on a player or gang. Any player who kills t
 - **Refusals** (nothing is taken, nothing changes):
   - No bounty on you (or your data is still loading): "You don't have a bounty to pay off."
   - Not enough money: "You need `<total>` to pay off your bounty."
-- **The sign.** A `[BOUNTY]` sign with `pay` on line 2 does the same thing as the command. `view` on line 2 still opens
+- **The sign.** Place a sign with `glw-bounty` on line 1 and `pay` (or `view`) on line 2; it renders as `[BOUNTY]`. A
+  `[BOUNTY]` sign with `pay` on line 2 does the same thing as the command. `view` on line 2 still opens
   the bounty view. `clear` still works on signs placed before 0.21.4 and pays the bounty off the same way. A sign with
   any other line 2 answers "Invalid sign!" instead of erroring (WB-21, LS-22).
 - **Permission.** `gangland.command.bounty.pay` is open to everyone by default. Since the `gangland.command.bounty` root
-  is now a player node too, bare `/glw bounty` (view your own bounty) is open as well. `set` and `clear` stay op.
+  is now a player node too, bare `/glw bounty` (view your own bounty) is open as well. `set` and `clear` stay op. Denying
+  `.pay` blocks the command only: a placed `[BOUNTY]` `pay` (or legacy `clear`) sign still pays off, since sign use has no
+  permission check, so remove or avoid those signs to turn pay-off fully off for a group.
 
 ### Multiplier
 

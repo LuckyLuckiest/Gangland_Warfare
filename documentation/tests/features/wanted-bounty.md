@@ -127,7 +127,7 @@ bounties on other players' heads).
       city.", and `/glw bounty` shows no bounty. The poster's wallet is unchanged (no refund) and, if online, he is told
       "<you> paid off their bounty. Your $500.00 stake went to the city."
 - [ ] Two posters (300 and 200) plus notoriety: you pay the whole total; each online poster is told his own stake.
-- [ ] `[BOUNTY]` sign, line 2 `pay`: the same payoff. Line 2 `clear` (old sign): the same. Line 2 `view`: opens the bounty view.
+- [ ] Sign with `glw-bounty` on line 1 (renders as `[BOUNTY]`), line 2 `pay`: the same payoff. Line 2 `clear` (old sign): the same. Line 2 `view`: opens the bounty view.
 - [ ] A `[BOUNTY]` sign with line 2 `bogus` or empty: "Invalid sign!" and no error in the console.
 - [ ] The console running `/glw bounty pay` gets the player-only message. A player without `gangland.command.bounty.pay`
       is refused.
