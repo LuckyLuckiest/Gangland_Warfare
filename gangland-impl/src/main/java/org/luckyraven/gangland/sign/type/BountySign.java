@@ -38,10 +38,10 @@ public class BountySign implements Sign {
 		SignParser    parser    = new BountyParser(signType);
 
 		// aspect
-		SignAspect wantedAspect = new BountyAspect(plugin, offlineUserManager, userManager, inventoryService);
+		SignAspect bountyAspect = new BountyAspect(plugin, offlineUserManager, userManager, inventoryService);
 
 		// handler
-		List<SignAspect> aspects = List.of(wantedAspect);
+		List<SignAspect> aspects = List.of(bountyAspect);
 		SignHandler      handler = new AspectBasedSignHandler(aspects);
 
 		var definition = SignTypeDefinition.builder()
@@ -79,8 +79,10 @@ public class BountySign implements Sign {
 		return builder.lineFormats(List.of(line1, line2)).build();
 	}
 
+	/** CLEAR is the pre-0.21.4 name of PAY, kept so placed signs keep working; both pay the bounty off. */
 	public enum BountyType {
 		VIEW,
+		PAY,
 		CLEAR;
 	}
 

@@ -184,7 +184,8 @@ When no argument matches, the system provides helpful suggestions:
 | Command             | Permission                | Description                           |
 |---------------------|---------------------------|---------------------------------------|
 | `/glw bank`         | `gangland.command.bank`   | Deposit, withdraw, statement, balance |
-| `/glw bounty`       | `gangland.command.bounty` | Post bounties, view bounty board      |
+| `/glw bounty`       | `gangland.command.bounty` | View your bounty (player node since 0.21.4); `set` and `clear` are op |
+| `/glw bounty pay`   | `gangland.command.bounty.pay` | Pay off your own bounty; the money goes to the city (0.21.4) |
 | `/glw contact`      | `gangland.command.contact` | Pay a contact to wipe stars while no cop sees you (0.16.0) |
 | `/glw fuel`         | `gangland.command.fuel`   | Refuel vehicles/jetpacks              |
 | `/glw gang`         | `gangland.command.gang`   | Create, invite, leave, disband, ally  |
@@ -195,7 +196,7 @@ When no argument matches, the system provides helpful suggestions:
 
 `plugin.yml` is the only place a command node gets `default: true` (Keystone registers every other node with the OP
 default). Open to everyone: the gang verbs, `bank` (`create`, `balance`, `deposit`, `withdraw`, `menu`), `balance`,
-`teleport`, `respawn`, `wanted`, `contact`, `resource`, `filter`, `car` (`list`, `info`), `grapple`, `jetpack`. Runtime
+`teleport`, `respawn`, `wanted`, `contact`, `bounty` (view and `pay`, 0.21.4), `resource`, `filter`, `car` (`list`, `info`), `grapple`, `jetpack`. Runtime
 nodes (`gangland.waypoint.<id>`, `gangland.cars|jetpacks|grapples|uniqueitem.<id>`) are registered open in code; see
 [Permission defaults](#permission-defaults-0171) below. Staff stays op: `balance.admin` (`/glw balance <player>`),
 `bank.admin`, `bank resetcap`, `wanted add|remove|clear`, `car|grapple|jetpack give`, `teleport.cooldown_bypass`,

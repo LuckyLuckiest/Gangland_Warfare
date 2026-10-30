@@ -244,6 +244,8 @@ Commands:
       Lifted: "&a%money_symbol%%amount%&7 ha sido reclamado de tu recompensa.%n%&4&lRecompensa &c%money_symbol%%bounty%"
       Clear: "¡Tu recompensa ha sido eliminada!"
       Claimed: "Cobraste la recompensa de &a%money_symbol%%amount%&7 por &6%player%&7."
+      Paid: "Pagaste tu recompensa de &a%money_symbol%%amount%&7. El dinero fue para la ciudad."
+      Paid_Notice: "&6%player%&7 pagó su recompensa. Tu aporte de &a%money_symbol%%amount%&7 fue para la ciudad."
    Level:
       Experience:
          Add: "Se añadió &b%experience%&7 de experiencia a tu nivel."
@@ -385,6 +387,10 @@ Errors:
       Cannot_Take_Less_Than_Zero: "No puedes retirar una cantidad menor a &ccero&7."
    Bounty:
       Below_Minimum: "La recompensa más pequeña que puedes poner es &c%money_symbol%%minimum%&7."
+      No_Bounty: "Este jugador no tiene una recompensa."
+      User_Set_Bounty: "No estableciste una recompensa para este jugador."
+      No_Bounty_Self: "No tienes una recompensa que pagar."
+      Pay_No_Money: "Necesitas &c%money_symbol%%amount%&7 para pagar tu recompensa."
    Bank:
       Must_Create: "Debes crear un banco para continuar."
       Cannot_Create: "Fondos insuficientes para crear una &ccuenta bancaria&7."
@@ -407,9 +413,6 @@ Errors:
       Parent_Placed: "&b%parent%&7 ya tiene un lugar en la jerarquía de rangos, así que no puede ir por encima de &b%rank%&7."
    Vault:
       Permission_Not_Available: "&cEl servicio de permisos de Vault no está disponible. Instala un plugin de permisos (p. ej. LuckPerms) y Vault para usar esta función."
-   Bounty:
-      No_Bounty: "Este jugador no tiene una recompensa."
-      User_Set_Bounty: "No estableciste una recompensa para este jugador."
    Waypoint:
       Invalid: "Punto de referencia inválido."
       Not_Selected: "No se encontró un punto de referencia seleccionado."

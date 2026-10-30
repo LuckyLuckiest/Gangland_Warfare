@@ -2,7 +2,8 @@ package org.luckyraven.gangland.file.configuration;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,21 +26,21 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * declared {@code Errors.Bounty} twice, which dropped {@code Errors.Bounty.Below_Minimum} (added by WB-02) and made
  * {@code LanguageLoader} report the key as missing on every boot.
  */
-@DisplayName("message_en.yml — no duplicate mapping keys")
+@DisplayName("message files: no duplicate mapping keys")
 class MessageFileDuplicateKeysTest {
 
-	private static final String  RESOURCE = "/message/message_en.yml";
 	private static final Pattern KEY      = Pattern.compile("^(\\s*)([A-Za-z0-9_\\-]+):(.*)$");
 
-	@Test
+	@ParameterizedTest
+	@ValueSource(strings = {"/message/message_en.yml", "/message/message_es.yml"})
 	@DisplayName("every mapping path is declared once")
-	void noDuplicateMappingPaths() throws Exception {
+	void noDuplicateMappingPaths(String resource) throws Exception {
 		Map<String, List<Integer>> occurrences = new LinkedHashMap<>();
 		Deque<int[]>               indents     = new ArrayDeque<>();
 		Deque<String>              keys        = new ArrayDeque<>();
 
 		int lineNumber = 0;
-		for (String line : readResourceLines()) {
+		for (String line : readResourceLines(resource)) {
 			lineNumber++;
 			if (line.isBlank() || line.stripLeading().startsWith("#")) continue;
 
@@ -70,11 +71,12 @@ class MessageFileDuplicateKeysTest {
 		assertEquals(List.of(), duplicates, "duplicate mapping keys silently drop the earlier block");
 	}
 
-	@Test
+	@ParameterizedTest
+	@ValueSource(strings = {"/message/message_en.yml", "/message/message_es.yml"})
 	@DisplayName("Errors.Bounty.Below_Minimum survives a plain YAML load")
-	void bountyBelowMinimumIsLoadable() throws Exception {
+	void bountyBelowMinimumIsLoadable(String resource) throws Exception {
 		YamlConfiguration yaml = new YamlConfiguration();
-		try (InputStream stream = MessageFileDuplicateKeysTest.class.getResourceAsStream(RESOURCE);
+		try (InputStream stream = MessageFileDuplicateKeysTest.class.getResourceAsStream(resource);
 		     InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
 			yaml.load(reader);
 		}
@@ -83,9 +85,9 @@ class MessageFileDuplicateKeysTest {
 		              "the second Errors.Bounty block overrides the first and drops Below_Minimum");
 	}
 
-	private static List<String> readResourceLines() throws Exception {
-		try (InputStream stream = MessageFileDuplicateKeysTest.class.getResourceAsStream(RESOURCE)) {
-			assertNotNull(stream, RESOURCE + " must be on the test classpath");
+	private static List<String> readResourceLines(String resource) throws Exception {
+		try (InputStream stream = MessageFileDuplicateKeysTest.class.getResourceAsStream(resource)) {
+			assertNotNull(stream, resource + " must be on the test classpath");
 			return new String(stream.readAllBytes(), StandardCharsets.UTF_8).lines().toList();
 		}
 	}

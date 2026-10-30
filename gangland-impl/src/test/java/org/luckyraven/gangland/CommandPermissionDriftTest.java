@@ -41,7 +41,7 @@ class CommandPermissionDriftTest {
 			"gangland.command.level", "gangland.command.shop", "gangland.command.option",
 			"gangland.command.reload", "gangland.command.cop", "gangland.command.jail",
 			"gangland.command.civilian", "gangland.command.banker", "gangland.command.trader",
-			"gangland.command.bounty", "gangland.command.cuff", "gangland.command.uncuff",
+			"gangland.command.cuff", "gangland.command.uncuff",
 			"gangland.command.perm",
 			"gangland.command.waypoint.create", "gangland.command.waypoint.delete",
 			"gangland.command.waypoint.type",

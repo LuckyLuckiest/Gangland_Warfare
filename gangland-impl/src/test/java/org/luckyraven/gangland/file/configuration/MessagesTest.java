@@ -218,4 +218,31 @@ class MessagesTest {
 		assertEquals("Wanted_Level.Contact.Used", Messages.CONTACT_USED.getPath());
 		assertEquals("Death.Hospital_Shield", Messages.DEATH_HOSPITAL_SHIELD.getPath());
 	}
+
+	@Test
+	@DisplayName("0.21.4: the bounty pay-off keys resolve in both bundled languages")
+	void bountyPay0214Keys_resolveInEnAndEs() throws java.io.IOException {
+		List<String> paths = List.of("Commands.Bounty.Paid", "Commands.Bounty.Paid_Notice",
+				"Errors.Bounty.No_Bounty_Self", "Errors.Bounty.Pay_No_Money", "Errors.Bounty.Below_Minimum");
+
+		for (String file : List.of("/message/message_en.yml", "/message/message_es.yml")) {
+			YamlConfiguration yaml;
+			try (java.io.Reader reader = new java.io.InputStreamReader(MessagesTest.class.getResourceAsStream(file),
+					java.nio.charset.StandardCharsets.UTF_8)) {
+				yaml = YamlConfiguration.loadConfiguration(reader);
+			}
+			for (String path : paths) {
+				assertTrue(yaml.isString(path), file + " lacks " + path);
+			}
+		}
+	}
+
+	@Test
+	@DisplayName("0.21.4: the bounty pay-off constants map to their yaml paths")
+	void bountyPay0214Constants_mapToPaths() {
+		assertEquals("Commands.Bounty.Paid", Messages.BOUNTY_PAID.getPath());
+		assertEquals("Commands.Bounty.Paid_Notice", Messages.BOUNTY_PAID_NOTICE.getPath());
+		assertEquals("Errors.Bounty.No_Bounty_Self", Messages.NO_BOUNTY_SELF.getPath());
+		assertEquals("Errors.Bounty.Pay_No_Money", Messages.BOUNTY_PAY_NO_MONEY.getPath());
+	}
 }

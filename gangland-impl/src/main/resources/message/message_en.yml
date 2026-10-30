@@ -260,6 +260,8 @@ Commands:
       Lifted: "&a%money_symbol%%amount%&7 has been lifted from your bounty.%n%&4&lBounty &c%money_symbol%%bounty%"
       Clear: "Your bounty was cleared!"
       Claimed: "You claimed the &a%money_symbol%%amount%&7 bounty on &6%player%&7."
+      Paid: "You paid off your bounty of &a%money_symbol%%amount%&7. The money went to the city."
+      Paid_Notice: "&6%player%&7 paid off their bounty. Your &a%money_symbol%%amount%&7 stake went to the city."
    Level:
       Experience:
          Add: "Added &b%experience%&7 exp to your level."
@@ -502,6 +504,8 @@ Errors:
       Below_Minimum: "The smallest bounty you can place is &c%money_symbol%%minimum%&7."
       No_Bounty: "This player doesn't have a bounty."
       User_Set_Bounty: "You didn't set a bounty for this player."
+      No_Bounty_Self: "You don't have a bounty to pay off."
+      Pay_No_Money: "You need &c%money_symbol%%amount%&7 to pay off your bounty."
    Waypoint:
       Invalid: "Invalid waypoint."
       Not_Selected: "No selected waypoint found."

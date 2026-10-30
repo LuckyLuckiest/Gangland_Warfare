@@ -12,10 +12,11 @@ public class BountySignValidator extends AbstractSignValidator {
 
 	@Override
 	protected boolean isValidContent(String content) {
-		String view  = BountySign.BountyType.VIEW.name().toLowerCase();
-		String clear = BountySign.BountyType.CLEAR.name().toLowerCase();
+		for (BountySign.BountyType type : BountySign.BountyType.values()) {
+			if (type.name().equalsIgnoreCase(content)) return true;
+		}
 
-		return content.equalsIgnoreCase(view) || content.equalsIgnoreCase(clear);
+		return false;
 	}
 
 	@Override

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.keystone.economy.Currency;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -350,6 +351,29 @@ class BountyTest {
 
 		assertEquals(1, bounty.size());
 		assertEquals(Currency.of(10), bounty.getPostedAmount());
+	}
+
+	@Test
+	@DisplayName("stakes() is a copy of the PAID ledger keyed by poster, unmodifiable, and survives resetBounty()")
+	void stakes_isACopyKeyedByPoster_andSurvivesReset() {
+		UUID   aliceId = UUID.randomUUID();
+		Bounty bounty  = bounty(0, 0.0);
+		CommandSender console = mock(org.bukkit.command.ConsoleCommandSender.class);
+
+		bounty.addBounty(player(aliceId), Currency.of(500));
+		bounty.addBounty(console, Currency.of(300));
+
+		Map<String, BigDecimal> stakes = bounty.stakes();
+
+		assertEquals(2, stakes.size());
+		assertEquals(Currency.of(500), stakes.get(aliceId.toString()));
+		assertEquals(Currency.of(300), stakes.get("console"));
+		assertThrows(UnsupportedOperationException.class, () -> stakes.put("x", Currency.of(1)));
+
+		bounty.resetBounty();
+
+		assertEquals(2, stakes.size(), "the snapshot is a copy: resetBounty() must not empty it");
+		assertTrue(bounty.stakes().isEmpty());
 	}
 
 	private static CommandSender named(String name) {

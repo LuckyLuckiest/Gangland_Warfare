@@ -1,0 +1,61 @@
+[SIZE=7][B]0.21.4 Changelog - Bounty pay-off[/B][/SIZE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documentation/migration-0.21.4.md'][B]migration-0.21.4.md[/B][/URL] before you start the server. Upgrade from 0.21.3. There is no hand edit: the message files regenerate on first boot, so re-apply any custom wording from the [ICODE]-old[/ICODE] file.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Requires[/B][/SIZE]
+
+[LIST]
+[*][B]Keystone 1.15.5[/B] (unchanged).
+[*][B]gangland-api 2.7 and module [ICODE]Host_Api[/ICODE] 2.7[/B] (unchanged).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Added[/B][/SIZE]
+
+[LIST]
+[*][B][ICODE]/glw bounty pay[/ICODE].[/B] Pay off your own bounty in full. The whole total, posted money plus notoriety, is taken from your wallet and goes to the city: it is deposited nowhere and nobody is refunded. The bounty is cleared. All or nothing: with no bounty ("You don't have a bounty to pay off.") or too little money ("You need $X to pay off your bounty.") nothing is taken.
+[*][B]Posters are told.[/B] Every poster who is online hears that the target paid off and that their own stake went to the city. Offline posters are not told.
+[*][B]The bounty sign pays off with [ICODE]pay[/ICODE].[/B] [ICODE]view[/ICODE] still opens the bounty view; [ICODE]clear[/ICODE] still works on old signs and does the same as [ICODE]pay[/ICODE].
+[*]Help entry [ICODE]bounty_pay[/ICODE] ([ICODE]/glw bounty pay[/ICODE]).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Changed[/B][/SIZE]
+
+[LIST]
+[*][B]Permissions.[/B] [ICODE]gangland.command.bounty.pay[/ICODE] is open to everyone, and so is the [ICODE]gangland.command.bounty[/ICODE] root, which means bare [ICODE]/glw bounty[/ICODE] (view your own bounty) is open too. [ICODE]set[/ICODE] and [ICODE]clear[/ICODE] stay op.
+[*]The sign [ICODE]clear[/ICODE] success line is now the bounty-paid line.
+[*]A bounty sign with no bounty or too little money shows the configured refusal, never raw "Amount exceeding balance" or "Might be missing something!".
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Fixed[/B][/SIZE]
+
+[LIST]
+[*]A bounty sign with unknown or empty line 2 no longer throws; it answers "Invalid sign!" (WB-21, LS-22).
+[*][ICODE]message_es.yml[/ICODE] declared [ICODE]Errors.Bounty[/ICODE] twice, which dropped [ICODE]Below_Minimum[/ICODE] in Spanish. The blocks are merged (T-836).
+[*]Paying off no longer touches a user whose data is still loading (it refuses instead of taking money for a reset that would be overwritten).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Decisions[/B][/SIZE]
+
+[LIST]
+[*]The money goes to the city by the owner's ruling (docket WB-22, by design).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]For developers[/B][/SIZE]
+
+[LIST]
+[*]gangland-api stays 2.7. Additive: four [ICODE]Messages[/ICODE] constants and [ICODE]Bounty.stakes()[/ICODE].
+[/LIST]

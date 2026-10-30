@@ -104,6 +104,11 @@ permissions:
       default: true
    gangland.command.gang.bounty:
       default: true
+   # Bounty pay-off (0.21.4): the root opens bare /glw bounty (own bounty) too; set/clear stay op.
+   gangland.command.bounty:
+      default: true
+   gangland.command.bounty.pay:
+      default: true
    # Player verbs missing from CM-37 (T-307, 0.17.1); staff children (wanted add/remove/clear, car give, bank resetcap) stay op.
    gangland.command.gang.delete:
       default: true
@@ -286,6 +291,8 @@ permissions:
          gangland.command.gang.join: true
          gangland.command.gang.recruiting: true
          gangland.command.gang.bounty: true
+         gangland.command.bounty: true
+         gangland.command.bounty.pay: true
          gangland.inventory.gang_stat: true
          gangland.inventory.gang_info: true
          gangland.inventory.alliance_stat: true

@@ -55,11 +55,13 @@ public final class BountyCommand extends Command {
 	protected void initializeArguments() {
 		BountySetCommand   set   = new BountySetCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
 		BountyClearCommand clear = new BountyClearCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		BountyPayCommand   pay   = new BountyPayCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
 
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(set);
 		arguments.add(clear);
+		arguments.add(pay);
 
 		getArgument().addAllSubArguments(arguments);
 	}

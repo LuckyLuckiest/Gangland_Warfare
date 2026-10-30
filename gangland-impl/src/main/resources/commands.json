@@ -235,6 +235,10 @@
 		"usage": "/glw bounty set <player> <amount>",
 		"description": "Sets a bounty on the player head."
 	},
+	"bounty_pay": {
+		"usage": "/glw bounty pay",
+		"description": "Pay off your own bounty in full. The money goes to the city."
+	},
 	"bounty_remove": {
 		"usage": "/glw bounty remove <player>",
 		"description": "Removes the bounty you set."

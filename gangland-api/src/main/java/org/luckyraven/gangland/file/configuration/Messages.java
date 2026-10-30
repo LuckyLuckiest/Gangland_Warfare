@@ -199,6 +199,8 @@ public enum Messages {
 	BOUNTY_PLAYER_LIFT("Commands.Bounty.Player_Lift", Type.COMMAND),
 	BOUNTY_SET("Commands.Bounty.Bounty_Set", Type.COMMAND),
 	BOUNTY_CLAIMED("Commands.Bounty.Claimed", Type.COMMAND),
+	BOUNTY_PAID("Commands.Bounty.Paid", Type.COMMAND),
+	BOUNTY_PAID_NOTICE("Commands.Bounty.Paid_Notice", Type.COMMAND),
 
 	// commands - level
 	LEVEL_EXP_ADD("Commands.Level.Experience.Add", Type.COMMAND),
@@ -273,6 +275,8 @@ public enum Messages {
 	// errors - bounty
 	NO_BOUNTY("Errors.Bounty.No_Bounty", Type.ERROR),
 	NO_USER_SET_BOUNTY("Errors.Bounty.User_Set_Bounty", Type.ERROR),
+	NO_BOUNTY_SELF("Errors.Bounty.No_Bounty_Self", Type.ERROR),
+	BOUNTY_PAY_NO_MONEY("Errors.Bounty.Pay_No_Money", Type.ERROR),
 
 	// errors - waypoint
 	INVALID_WAYPOINT("Errors.Waypoint.Invalid", Type.ERROR),
