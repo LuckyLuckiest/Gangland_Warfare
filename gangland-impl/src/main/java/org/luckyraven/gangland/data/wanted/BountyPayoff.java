@@ -96,7 +96,7 @@ public final class BountyPayoff {
 	private static void notifyPoster(String id, BigDecimal stake, Player payer) {
 		Player poster = online(id);
 
-		// console, legacy, a sender name, an offline poster or the payer himself: no notice (accepted by the ruling)
+		// console, legacy, a sender name, an offline poster or the payer themselves: no notice (accepted by the ruling)
 		if (poster == null || poster.getUniqueId().equals(payer.getUniqueId())) return;
 
 		poster.sendMessage(Messages.BOUNTY_PAID_NOTICE.toString()
