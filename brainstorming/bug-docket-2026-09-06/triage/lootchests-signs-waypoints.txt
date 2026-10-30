@@ -19,7 +19,7 @@
 19~~P0~~Any player can create a shop sign and there is no break protection~~Check the permission on SignChangeEvent (SIGN_NO_PERM) and add a BlockBreakEvent guard for owner/admin.~~FIXED 0.8.3 wave 3, commit 8a731fd5; SignPermissions + SignProtection listener; SignCreationTest (red-first) + SignProtectionTest
 20~~P2~~Interaction re-parses but never validates signs (negatives honoured)~~Run validateSign in the interact path or validate inside the parser.~~AbstractSignParserTest (pins)
 21~~P3~~Editing a formatted [BUY] sign fails validation~~Strip brackets in validateSignType.~~-
-22~~P2~~Unguarded Enum.valueOf on sign content~~Same as WB-21.~~-
+22~~P2~~Unguarded Enum.valueOf on sign content~~Fixed with WB-21 (same defect, duplicate row): 0.21.4, commit 945b50f3b, merged into master as 1e8c5dfd3~~BountyAspectTest.unknownContent_failsInsteadOfThrowing (red pre-fix)
 23~~P3~~Loot chest events are Cancellable but never checked~~Honour isCancelled after callEvent.~~-
 24~~P2~~cooldown_bypass is registered but force_rank is checked~~Check the registered node.~~-
 25~~P2~~Async CountdownTimer callbacks mutate plain HashMaps~~Use start(false).~~-
