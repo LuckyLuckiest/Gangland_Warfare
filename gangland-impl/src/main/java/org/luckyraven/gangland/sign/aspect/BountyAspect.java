@@ -10,7 +10,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.user.User;
@@ -18,12 +17,13 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.menu.InventoryBuilder;
 import org.luckyraven.gangland.menu.SimplePagedMenu;
 import org.luckyraven.gangland.menu.part.ButtonTags;
+import org.luckyraven.gangland.data.wanted.BountyPayoff;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.sign.type.BountySign;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -41,49 +41,43 @@ public class BountyAspect implements SignAspect {
 
 		if (user == null) return AspectResult.failure(Messages.PLAYER_NOT_FOUND.toString());
 
-		BountySign.BountyType bountyType = BountySign.BountyType.valueOf(sign.getContent().toUpperCase());
+		BountySign.BountyType type = parseType(sign);
 
-		switch (bountyType) {
+		if (type == null) return AspectResult.failure(Messages.SIGN_INVALID.toString(Messages.Type.NO_CHANGE));
+
+		return switch (type) {
 			case VIEW -> {
 				openBountyView(player);
-				return AspectResult.success("Opened bounty view!");
+				yield AspectResult.success("Opened bounty view!");
 			}
-			case CLEAR -> {
-				BigDecimal amount = user.getBounty().getAmount();
+			case PAY, CLEAR -> {
+				BountyPayoff.Result result = BountyPayoff.pay(user);
 
-				try {
-					user.getEconomy().withdrawAmount(amount);
-				} catch (EconomyException exception) {
-					return AspectResult.failure(exception.getMessage());
-				}
-
-				user.getBounty().resetBounty();
-
-				String withdrawn = Messages.WITHDRAW_MONEY_PLAYER.toString(Messages.Type.NO_CHANGE);
-
-				return AspectResult.success(withdrawn.replace("%amount%", Settings.formatAmount(amount)));
+				yield result.paid() ? AspectResult.success(result.rawText()) : AspectResult.failure(result.rawText());
 			}
-			default -> {
-				return AspectResult.failure("Unknown bounty operation type");
-			}
-		}
+		};
 	}
 
 	@Override
 	public boolean canExecute(Player player, ParsedSign sign) {
-		User<Player> user = onlinePlayerUserManager.getUser(player);
+		return onlinePlayerUserManager.getUser(player) != null && parseType(sign) != null;
+	}
 
-		if (user == null) {
-			return false;
+	@Override
+	public String failureReason(Player player, ParsedSign sign) {
+		return parseType(sign) == null ? Messages.SIGN_INVALID.toString(Messages.Type.NO_CHANGE) : null;
+	}
+
+	/** The sign's operation, or {@code null} when its content is not one (a hand-edited or stale sign). */
+	private static BountySign.BountyType parseType(ParsedSign sign) {
+		String content = sign.getContent();
+		if (content == null) return null;
+
+		try {
+			return BountySign.BountyType.valueOf(content.trim().toUpperCase(Locale.ROOT));
+		} catch (IllegalArgumentException exception) {
+			return null;
 		}
-
-		BountySign.BountyType bountyType = BountySign.BountyType.valueOf(sign.getContent().toUpperCase());
-
-		if (bountyType == BountySign.BountyType.CLEAR) {
-			return user.getBounty().hasBounty();
-		}
-
-		return true;
 	}
 
 	@Override
