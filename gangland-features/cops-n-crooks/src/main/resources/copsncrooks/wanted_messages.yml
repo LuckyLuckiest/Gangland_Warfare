@@ -4,7 +4,8 @@
 #
 # The text of the chase HUD and the charge sheet. & colour codes work. Placeholders in %percent% signs are filled in
 # by the plugin: %stars%, %time%, %arrow%, %distance%, %crime%, %tier%, %stance%, %count% (also the number of stars
-# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%, %reporter%, %head%, %items%, %weapon%, %suspect%.
+# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%, %reporter%, %head%,
+# %items%, %weapon%, %suspect%.
 
 # The boss bar and the star card
 Hud:

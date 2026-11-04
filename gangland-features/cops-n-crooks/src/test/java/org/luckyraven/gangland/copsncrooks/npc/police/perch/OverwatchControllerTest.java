@@ -369,7 +369,7 @@ class OverwatchControllerTest {
 
 		controller.tick(player, group);
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
 		verify(radio, never()).sayAs(any(), any(), eq("Overwatch_Spotted"), any());
 	}
 
@@ -381,7 +381,7 @@ class OverwatchControllerTest {
 
 		controller.tick(player, group);
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
 		verify(radio, never()).sayAs(any(), any(), eq("Overwatch_Spotted"), any());
 	}
 
@@ -394,7 +394,7 @@ class OverwatchControllerTest {
 
 		controller.tick(player, group);
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
 	}
 
 	@Test

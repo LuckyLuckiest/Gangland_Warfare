@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
@@ -249,7 +250,7 @@ class PerimeterControllerTest {
 
 		controller.tick(player, group);
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
 		verify(radio, never()).sayAs(any(), any(), eq("Eyes_On"), any());
 		verify(marksman, never()).releasePost();
 		assertEquals(CopState.POSTED, stateOf(marksman));
@@ -265,7 +266,7 @@ class PerimeterControllerTest {
 
 		controller.tick(player, group);
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
 		verify(marksman, never()).releasePost();
 		assertEquals(CopState.POSTED, stateOf(marksman));
 		assertTrue(controller.isActive(playerId));
@@ -441,6 +442,6 @@ class PerimeterControllerTest {
 		verify(radio, never()).sayAs(any(), any(), any(), any());
 		// tick on an inactive player is a no-op too
 		controller.tick(player, null);
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
 	}
 }
