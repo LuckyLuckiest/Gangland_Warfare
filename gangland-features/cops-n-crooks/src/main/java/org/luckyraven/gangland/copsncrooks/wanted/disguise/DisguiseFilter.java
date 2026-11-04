@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.wanted.disguise;
 
 import lombok.CustomLog;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 
@@ -73,6 +74,11 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 	/** Forgets the last logged state for {@code id}: the chase ended. */
 	public void forget(UUID id) {
 		lastState.remove(id);
+	}
+
+	/** The last logged state for {@code id}; tests. */
+	@Nullable String lastState(UUID id) {
+		return lastState.get(id);
 	}
 
 	/** Logs the state only when it changes for this player, then returns {@code allowed}. */

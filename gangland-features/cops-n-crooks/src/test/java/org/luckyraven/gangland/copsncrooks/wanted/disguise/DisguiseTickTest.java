@@ -39,9 +39,12 @@ class DisguiseTickTest {
 	private CopRadio            radio;
 	private CopGroup            group;
 	private NpcSquad            squad;
+	private PoliceOutfit        outfit;
+	private DisguiseFilter      filter;
 	private DisguiseTick        tick;
 	private int                 level;
 	private boolean             searching;
+	private boolean             eyes;
 
 	@BeforeEach
 	void setUp() {
@@ -55,9 +58,11 @@ class DisguiseTickTest {
 		when(radio.sayFromLeader(any(CopGroup.class), anyString())).thenReturn(true);
 		level        = 1;
 		searching    = false;
-		DisguiseFilter filter = new DisguiseFilter(() -> settings, descriptions, new PoliceOutfit(() -> settings, wearer.keys()),
-		                                           p -> level, p -> false, p -> level > 0 || searching);
-		tick = new DisguiseTick(() -> settings, descriptions, filter, radio);
+		eyes         = false;
+		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
+		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> false,
+		                                  p -> level > 0 || searching);
+		tick         = new DisguiseTick(() -> settings, descriptions, filter, outfit, (p, g) -> eyes, radio);
 	}
 
 	@Test
@@ -65,7 +70,7 @@ class DisguiseTickTest {
 	void descriptionFollowsWhileSeen() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		wearer.leatherChest(Color.fromRGB(20, 20, 250));
 		tick.tick(wearer.player, group);
@@ -78,7 +83,6 @@ class DisguiseTickTest {
 	void descriptionFrozenWhileUnseen() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(false);
 
 		wearer.leatherChest(Color.fromRGB(20, 20, 250));
 		tick.tick(wearer.player, group);
@@ -90,7 +94,7 @@ class DisguiseTickTest {
 	@DisplayName("a seen player with no stored description gets one")
 	void seenPlayerWithoutDescriptionGetsOne() {
 		wearer.leatherChest(Color.RED);
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 
@@ -102,7 +106,7 @@ class DisguiseTickTest {
 	void suspectLineSpokenOncePerChange() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 		tick.tick(wearer.player, group);
@@ -121,7 +125,7 @@ class DisguiseTickTest {
 	void unspokenLineIsRetried() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 		when(radio.sayFromLeader(group, LINE)).thenReturn(false, true);
 
 		tick.tick(wearer.player, group);
@@ -136,7 +140,7 @@ class DisguiseTickTest {
 	void nextChaseSaysItAgain() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 		tick.tick(wearer.player, null);
@@ -150,7 +154,7 @@ class DisguiseTickTest {
 	void chaseEndForgetsTheSpokenLine() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 		tick.forget(wearer.id);
@@ -163,7 +167,6 @@ class DisguiseTickTest {
 	@Test
 	@DisplayName("no description known and nobody sees the player: nothing said")
 	void nothingToSay() {
-		when(squad.hasFreshSighting()).thenReturn(false);
 
 		tick.tick(wearer.player, group);
 
@@ -176,7 +179,7 @@ class DisguiseTickTest {
 		settings = new DisguiseSettings(false, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
 		                                settings.outfitMaxLevel(), settings.changesNeeded());
 		wearer.leatherChest(Color.RED);
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 
@@ -210,7 +213,7 @@ class DisguiseTickTest {
 	void drawingAWeaponChangesTheLine() {
 		wearer.leatherChest(Color.RED).hand(null);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 		wearer.hand(Material.DIAMOND_SWORD);
@@ -224,7 +227,7 @@ class DisguiseTickTest {
 	void noRelearnOrRespeakAfterAClear() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 		tick.tick(wearer.player, group);
 		verify(radio, times(1)).sayFromLeader(group, LINE);
 
@@ -256,7 +259,6 @@ class DisguiseTickTest {
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
 		level     = 0;
 		searching = true;
-		when(squad.hasFreshSighting()).thenReturn(false);
 
 		tick.tick(wearer.player, group);
 

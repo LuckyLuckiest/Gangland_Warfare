@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -23,15 +24,19 @@ public class DisguiseTick {
 	private final Supplier<DisguiseSettings>        settings;
 	private final SuspectDescriptions               descriptions;
 	private final DisguiseFilter                    filter;
+	private final PoliceOutfit                      outfit;
+	private final BiPredicate<Player, CopGroup>     eyesOn;
 	private final CopRadio                          radio;
 	private final Map<UUID, String>                 spoken  = new ConcurrentHashMap<>();
 	private final List<Consumer<UUID>>              forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
-	                    CopRadio radio) {
+	                    PoliceOutfit outfit, BiPredicate<Player, CopGroup> eyesOn, CopRadio radio) {
 		this.settings     = settings;
 		this.descriptions = descriptions;
 		this.filter       = filter;
+		this.outfit       = outfit;
+		this.eyesOn       = eyesOn;
 		this.radio        = radio;
 	}
 
@@ -56,7 +61,7 @@ public class DisguiseTick {
 
 		NpcSquad squad = group.getSquad();
 		if (squad != null) {
-			if (squad.hasFreshSighting()) {
+			if (eyesOn.test(player, group) || squad.hasFreshSighting()) {
 				descriptions.store(id, descriptions.describe(player));
 			}
 		}

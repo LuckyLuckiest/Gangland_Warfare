@@ -23,6 +23,7 @@ import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
@@ -64,6 +65,11 @@ public class DisguiseModuleConfig {
 		};
 	}
 
+	/** Whether a cop of {@code group} sees the player now (seam: nobody yet). */
+	static BiPredicate<Player, CopGroup> eyesOf(CopPerception perception, CopLoader copLoader) {
+		return (player, group) -> false;
+	}
+
 	/** Whether the cops still hunt the player: stars above 0, or a post-escape search for them. */
 	static Predicate<Player> huntedOf(UserManager<Player> users, CopManager copManager) {
 		ToIntFunction<Player> level = levelOf(users);
@@ -95,8 +101,9 @@ public class DisguiseModuleConfig {
 
 	@Bean
 	public DisguiseTick disguiseTick(CopLoader copLoader, SuspectDescriptions descriptions, DisguiseFilter filter,
-	                                 CopRadio copRadio) {
-		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, copRadio);
+	                                 PoliceOutfit outfit, CopPerception perception, CopRadio copRadio) {
+		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, outfit, eyesOf(perception, copLoader),
+		                        copRadio);
 	}
 
 	/** Registers the lock-on filter, the AI tick hook and the {@code %suspect%} extras. */

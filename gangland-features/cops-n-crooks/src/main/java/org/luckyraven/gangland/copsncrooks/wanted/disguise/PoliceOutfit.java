@@ -51,8 +51,13 @@ public class PoliceOutfit {
 	/** A crime was committed: blown when the outfit is worn. */
 	public void onCrime(Player player) {
 		if (worn(player)) {
-			blown.add(player.getUniqueId());
+			blow(player.getUniqueId());
 		}
+	}
+
+	/** The outfit no longer fools the cops. */
+	public void blow(UUID playerId) {
+		blown.add(playerId);
 	}
 
 	/** Worn, not blown, and {@code level} within {@code Outfit_Max_Level}; a removed outfit forgets its blown flag. */

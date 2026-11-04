@@ -42,6 +42,7 @@ public class SuspectDescriptions {
 	private final WearableKeys                      keys;
 	private final WantedMessages                    messages;
 	private final Map<UUID, SuspectDescription> byPlayer = new ConcurrentHashMap<>();
+	private final Set<UUID>                     recognised = ConcurrentHashMap.newKeySet();
 
 	public SuspectDescriptions(Supplier<DisguiseSettings> settings, WearableKeys keys, WantedMessages messages) {
 		this.settings = settings;
@@ -127,6 +128,20 @@ public class SuspectDescriptions {
 
 	public void clear(UUID playerId) {
 		byPlayer.remove(playerId);
+		recognised.remove(playerId);
+	}
+
+	/** A cop of the chase saw {@code playerId} on the last AI tick and knew him (0.21.5). */
+	public boolean isRecognised(UUID playerId) {
+		return recognised.contains(playerId);
+	}
+
+	public void setRecognised(UUID playerId, boolean known) {
+		if (known) {
+			recognised.add(playerId);
+		} else {
+			recognised.remove(playerId);
+		}
 	}
 
 	/** The Bartizan wearable key, else a dyed leather piece by colour, else the material; empty for no piece. */
