@@ -1,0 +1,80 @@
+[SIZE=7][B]0.21.5 Changelog - Disguise fix[/B][/SIZE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documentation/migration-0.21.5.md'][B]migration-0.21.5.md[/B][/URL] before you start the server. It lists the hand edits an existing server needs. Upgrade from 0.21.4. Config files are never rewritten: edit them by hand.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Requires[/B][/SIZE]
+
+[LIST]
+[*][B]Keystone 1.15.5[/B] (unchanged).
+[*][B]gangland-api 2.7 and module [ICODE]Host_Api[/ICODE] 2.7[/B] (unchanged). Only the [ICODE]cops-n-crooks[/ICODE] module changes.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Changed[/B][/SIZE]
+
+[SIZE=5][B]The description says what the cops see[/B][/SIZE]
+
+[LIST]
+[*][B]Every worn piece is named.[/B] The radio line lists headwear, chest, legs and boots, the weapon in your hand, and on foot or in a car, for example "Suspect is masked in a carved pumpkin, wearing red jacket, armed with AK-47, on foot." Before, only a mask or the chestplate was named, and the line often read "Suspect is suspect".
+[*][B]Items are named by what they are.[/B] The Bartizan item name comes first, so a police vest is a "police vest", not an "iron chestplate". Armour display names are ignored.
+[*][B]The first 911 call of a chase names the real description,[/B] never "unknown suspect".
+[*][B]Spanish.[/B] New [ICODE]wanted_messages_es.yml[/ICODE]; the radio line becomes "Sospechoso: ...". Item and dye words stay English.
+[/LIST]
+
+[SIZE=5][B]The disguise works as a disguise[/B][/SIZE]
+
+[LIST]
+[*][B]Recognition is live sight.[/B] A cop of the chasing group must see you now and know your look, or have watched you change. The old 1.5 s squad timer no longer switches the disguise off, lifts the pursuit range or waives the cuff gate.
+[*][B][ICODE]Changes_Needed[/ICODE] (2) replaces [ICODE]Match_Needed[/ICODE].[/B] Out of sight, change two of head, chest, legs, boots and on foot / in a car and the cops stop recognising you. The weapon is described but never counts. An old [ICODE]Match_Needed[/ICODE] is ignored with a warning.
+[*][B]The police outfit[/B] fools a fresh squad at once and is blown for the whole chase by a crime in it, or by a cop seeing you put it on. Taking a piece off and on again does not reset it.
+[*][B]Posts are fooled too.[/B] Perimeter posts, the Marksman and standoff posts no longer see through a disguise.
+[*][B]The look is taken at the crime.[/B] A crime reported through the witness gate records what you wore when you did it, not when the report lands seconds later.
+[*][B]An escape keeps the description,[/B] so the post-escape search no longer re-stars any outfit.
+[/LIST]
+
+[SIZE=5][B]The cops tell you[/B][/SIZE]
+
+[LIST]
+[*][B]Chat lines, once per change,[/B] only while a cop of the chase can see you: "The cops recognise you: ...", "The cops don't recognise you.", and "In the police outfit, the cops take you for one of their own." Set a line to [ICODE]''[/ICODE] to turn it off. New debug state [ICODE]DISGUISE <player> state=seen[/ICODE].
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Fixed[/B][/SIZE]
+
+[LIST]
+[*]A player nobody hunts any more (0 stars, no search) was re-described, re-radioed and filtered by a stale description, which made beat cops skip brandish warnings (docket 411, 430).
+[*]Taking one piece of a blown police outfit off for a moment un-blew it (row 848).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Docket[/B][/SIZE]
+
+[LIST]
+[*]Fixed: 333 (posts), 354, 411, 430, 526, 841, 842, 843, 844, 846, 847, 848, 849, 850, 851. Re-ruled: 346, 351 (the cuff gate is recognition).
+[*]Open: 845 (an ungated crime nobody saw still records your look), 852 (item and dye words are English).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Decisions[/B][/SIZE]
+
+[LIST]
+[*]Zero grace: one AI tick (0.5 s) with no group cop seeing you drops recognition.
+[*]The weapon is in the line, so drawing one in view makes the cops radio again, at most once per [ICODE]Suspect_Description[/ICODE] cooldown (1200 ticks).
+[*]Blown lasts the whole chase and clears when nobody hunts you any more, never at a quit.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]For developers[/B][/SIZE]
+
+[LIST]
+[*]gangland-api, Keystone and Bartizan are unchanged. [ICODE]DisguiseSettings.matchNeeded[/ICODE] is now [ICODE]changesNeeded[/ICODE]; [ICODE]CopPerception.pursuitRange[/ICODE] no longer takes a squad.
+[/LIST]

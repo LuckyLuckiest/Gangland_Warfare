@@ -1347,8 +1347,11 @@ also holds `Handoff`, `Post_Up`, `Most_Wanted` and (0.21.2 R2, T-571) `Officer_R
   `reportSighting(Location)` stays for the two seeds where a cop takes on a target it is fighting (`attackerSquad`,
   the solo squad). `PursuingBehavior` keeps `squad.hasFreshSighting()` (decided per site): the stuck rotation is
   squad-level by design and tips no longer stamp it (`stuckWithOnlyATip_stillCountsTowardRotation`); the cuff waiver
-  needs the cop's own line of sight inside `Cuff_Radius`; `CopPerception.pursuitRange` only lifts the lock-on filters
-  for the cop's own look, and Keystone takes the live goal from a member's own sight alone. None acts on a live
+  needs the cop's own line of sight inside `Cuff_Radius`; since 0.21.5 the timer no longer lifts the disguise filter:
+  `CopPerception.pursuitRange(cop, target, base)` takes no squad and is 0 for a player the lock-on filters reject, and the
+  cuff gate reads `allowsLockOn` alone; `DisguiseFilter.allows` is true for a player `DisguiseTick` marked recognised
+  (`SuspectDescriptions.isRecognised`, set each AI tick when a group cop sees him and knows or was watching him), so the
+  squad timer only feeds the stuck rotation. Keystone takes the live goal from a member's own sight alone. None acts on a live
   position the cop did not see (R4). `isInContact()` was not used: it is never true under `Tactics.Enabled: false`.
 - **0.21.1 r6, the pointman freeze.** `CitizensNavigator.run()` stops a walk (`CancelReason.STUCK`) while its end is
   farther than `localParams.range()` (Citizens `default-range-blocks`, 100 on the test server), and Keystone 1.15.4

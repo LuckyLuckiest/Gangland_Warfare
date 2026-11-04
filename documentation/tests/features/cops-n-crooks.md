@@ -135,6 +135,41 @@ permission.
 
 ---
 
+## Disguises and Suspect Description (0.21.5)
+
+Each row needs a wanted player with a cop of the chase (Test Server; Bartizan for the police outfit and the AK-47). Chat
+lines come from `wanted_messages.yml` `Disguise.*`; debug lines need `Cops.Debug` on.
+
+- [ ] **Change out of sight.** Rob in a carved pumpkin + red leather tunic, run, and out of sight take the pumpkin off and
+      change to a blue tunic. Walk past a cop → chat "The cops don't recognise you."; no acquire, no cuff, the radio stays
+      quiet, stars drop on the evasion clock; `DISGUISE <you> state=mismatch`.
+- [ ] **Change too little.** Same, but change only the tunic → chat "The cops recognise you: masked in a carved pumpkin,
+      wearing blue jacket, on foot"; the radio repeats the new look.
+- [ ] **Change in view.** Change while a cop watches → still recognised, and the radio says the new look.
+- [ ] **Out of sight for under 1.5 s.** Change during one blind AI tick (0.5 s) and come back → not recognised (zero grace).
+- [ ] **Police outfit.** Put on `police_helmet` + `police_vest` out of sight at 2 stars or fewer → chat "In the police
+      outfit, the cops take you for one of their own."; cops ignore you; `state=outfit`. Put it on in view instead → the
+      Recognised line with "police helmet, police vest", `state=blown`, blown for the chase. Taking a piece off and on again
+      does not reset it.
+- [ ] **Stars cleared** (sign, bribe, admin, decay) → no "Suspect is ..." line afterwards; at 0 stars beat cops warn for
+      brandishing whatever you wear.
+- [ ] **Post-escape search.** Escape, then on the search change 2 pieces → searchers and perimeter posts walk past, and
+      there is no "Spotted" star.
+- [ ] **A gated crime's look.** Steal a car bare-faced in front of a civilian, then pull on a pumpkin during the 8 s call →
+      the cops get the bare-faced look. Commit it masked and take the mask off before the 3 s cop report lands → the cops
+      get the masked look.
+- [ ] **The first 911 call** of a chase names the real description (for example "Suspect: masked in a carved pumpkin,
+      wearing red jacket, on foot"), never "unknown suspect"; nothing reads "Suspect is suspect".
+- [ ] **Description text.** Four armour pieces + a Bartizan AK-47 → "wearing diamond helmet, red jacket, iron leggings, iron
+      boots, armed with AK-47, on foot"; no armour → "in plain clothes"; a cobblestone in hand → no "armed" part; in a car →
+      "in a car".
+- [ ] **Spanish** (`Settings.Language: es`) → radio "Sospechoso: ..."; chat lines in Spanish; item words stay English (row
+      852).
+- [ ] **Config.** An old `Match_Needed` in `cops.yml` → console warning, ignored; `Changes_Needed: 1` → one changed piece
+      shakes the cops.
+
+---
+
 ## Reload Safety
 
 - [ ] `/glw reload` while cops are pursuing → cops despawn cleanly, spawners re-register, wanted level preserved.
