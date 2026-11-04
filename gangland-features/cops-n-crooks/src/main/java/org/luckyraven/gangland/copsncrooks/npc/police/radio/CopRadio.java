@@ -754,9 +754,13 @@ public class CopRadio {
 				return CopRadio.this.speakerName(npc);
 			}
 
+			private @Nullable UUID huntedId(NpcSquad squad) {
+				return squad == group.getSquad() ? group.getTargetPlayerId() : group.attackerOf(squad);
+			}
+
 			@Override
 			public @Nullable LivingEntity hunted(NpcSquad squad) {
-				UUID id = squad == group.getSquad() ? group.getTargetPlayerId() : group.attackerOf(squad);
+				UUID id = huntedId(squad);
 				if (id == null) return null;
 				Player player = Bukkit.getPlayer(id);
 				if (player != null) return player;
@@ -781,7 +785,7 @@ public class CopRadio {
 			@Override
 			public Map<String, String> extras(NpcSquad squad) {
 				Map<String, String> merged = new HashMap<>();
-				Map<String, String> hooked = extraPlaceholders.apply(null);
+				Map<String, String> hooked = extraPlaceholders.apply(huntedId(squad));
 				if (hooked != null) merged.putAll(hooked);
 				// last-known, never the live position of the suspect; the voice's own keys win
 				merged.putAll(Map.of("tier", group.getTierName(), "level", String.valueOf(group.getLevel()), "place",

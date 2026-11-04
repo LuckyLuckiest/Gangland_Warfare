@@ -11,9 +11,10 @@ import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
 import org.luckyraven.keystone.npc.NpcSquad;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -154,35 +155,6 @@ class DisguiseTickTest {
 	}
 
 	@Test
-	@DisplayName("forget drops the ticked squad so a finished chase's squad is not retained")
-	void forgetDropsTheSquad() {
-		wearer.leatherChest(Color.RED);
-		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(false);
-
-		tick.tick(wearer.player, group);
-		assertTrue(!tick.extras(squad).isEmpty());
-
-		tick.forget(wearer.id);
-
-		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
-		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
-	}
-
-	@Test
-	@DisplayName("no group (chase ended) also drops the ticked squad")
-	void noGroupDropsTheSquad() {
-		wearer.leatherChest(Color.RED);
-		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(false);
-
-		tick.tick(wearer.player, group);
-		tick.tick(wearer.player, null);
-
-		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
-	}
-
-	@Test
 	@DisplayName("no description known and nobody sees the player: nothing said")
 	void nothingToSay() {
 		when(squad.hasFreshSighting()).thenReturn(false);
@@ -207,25 +179,24 @@ class DisguiseTickTest {
 	}
 
 	@Test
-	@DisplayName("%suspect% for a ticked squad is the formatted latest description; an unknown squad has none")
-	void extrasSpeakTheLatestDescription() {
+	@DisplayName("%suspect% for the hunted id is the formatted latest description before any tick; unknown for none")
+	void extrasNameTheHuntedBeforeAnyTick() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(false);
-		tick.tick(wearer.player, group);
 
-		assertEquals("masked in a carved pumpkin, wearing red jacket, on foot", tick.extras(squad).get("suspect"));
-		assertEquals("unknown suspect", tick.extras(mock(NpcSquad.class)).get("suspect"));
+		assertEquals("masked in a carved pumpkin, wearing red jacket, on foot", tick.extras(wearer.id).get("suspect"));
+		assertEquals("unknown suspect", tick.extras((UUID) null).get("suspect"));
+		assertEquals("unknown suspect", tick.extras(UUID.randomUUID()).get("suspect"));
 	}
 
 	@Test
 	@DisplayName("T-342: a fresh squad or Disguise.Enable false still gets a non-empty %suspect% (the Unknown word)")
 	void extrasFallBackToUnknownWord() {
-		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
+		assertEquals("unknown suspect", tick.extras(wearer.id).get("suspect"));
 		settings = new DisguiseSettings(false, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
 		                                settings.outfitMaxLevel(), settings.changesNeeded());
 		tick.tick(wearer.player, group);
-		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
+		assertEquals("unknown suspect", tick.extras(wearer.id).get("suspect"));
 	}
 
 	@Test

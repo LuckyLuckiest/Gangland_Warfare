@@ -24,7 +24,6 @@ public class DisguiseTick {
 	private final SuspectDescriptions               descriptions;
 	private final CopRadio                          radio;
 	private final Map<UUID, String>                 spoken  = new ConcurrentHashMap<>();
-	private final Map<NpcSquad, UUID>               ticked  = new ConcurrentHashMap<>();
 	private final List<Consumer<UUID>>              forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, CopRadio radio) {
@@ -38,7 +37,6 @@ public class DisguiseTick {
 
 		if (group == null) {
 			spoken.remove(id);
-			ticked.values().removeIf(id::equals);
 			return;
 		}
 		if (!settings.get().enabled()) {
@@ -47,7 +45,6 @@ public class DisguiseTick {
 
 		NpcSquad squad = group.getSquad();
 		if (squad != null) {
-			ticked.put(squad, id);
 			if (squad.hasFreshSighting()) {
 				descriptions.store(id, descriptions.describe(player));
 			}
@@ -74,22 +71,13 @@ public class DisguiseTick {
 	/** Forgets the line spoken for {@code playerId}: the chase ended, so the next chase says it again. */
 	public void forget(UUID playerId) {
 		spoken.remove(playerId);
-		ticked.values().removeIf(playerId::equals);
 		forgetHooks.forEach(hook -> hook.accept(playerId));
 	}
 
-	/** The {@code %suspect%} placeholder for the hunted player {@code id} (seam: not wired yet). */
+	/** The {@code %suspect%} placeholder for the hunted player {@code id}; the Unknown word when no description is known. */
 	public Map<String, String> extras(@Nullable UUID id) {
-		return Map.of("suspect", descriptions.unknownText());
-	}
-
-	/** The {@code %suspect%} placeholder for {@code squad}; the Unknown word when no description is known. */
-	public Map<String, String> extras(NpcSquad squad) {
-		UUID               id     = ticked.get(squad);
 		SuspectDescription latest = id == null ? null : descriptions.latest(id);
 
-		return latest == null
-		       ? Map.of("suspect", descriptions.unknownText())
-		       : Map.of("suspect", descriptions.format(latest));
+		return Map.of("suspect", latest == null ? descriptions.unknownText() : descriptions.format(latest));
 	}
 }
