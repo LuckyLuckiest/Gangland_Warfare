@@ -15,6 +15,8 @@ import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescription;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescriptions;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.WearableKeys;
+import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.events.crime.CrimeCommittedEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -48,6 +50,8 @@ class SuspectListenerTest {
 	private PoliceOutfit        outfit;
 	private SuspectListener     listener;
 	private DisguiseTick        tick;
+	private HeatLedger          ledger;
+	private PostEscapeSearch    search;
 
 	@BeforeEach
 	void setUp() {
@@ -71,7 +75,9 @@ class SuspectListenerTest {
 		descriptions = new SuspectDescriptions(() -> DisguiseSettings.DEFAULT, keys, messages);
 		outfit       = new PoliceOutfit(() -> DisguiseSettings.DEFAULT, keys);
 		tick         = mock(DisguiseTick.class);
-		listener     = new SuspectListener(descriptions, outfit, tick);
+		ledger       = mock(HeatLedger.class);
+		search       = mock(PostEscapeSearch.class);
+		listener     = new SuspectListener(descriptions, outfit, tick, ledger, search);
 	}
 
 	private CrimeCommittedEvent crime(boolean cancelled) {

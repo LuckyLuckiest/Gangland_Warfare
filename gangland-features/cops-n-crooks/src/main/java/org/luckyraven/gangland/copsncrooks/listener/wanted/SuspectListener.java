@@ -7,6 +7,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
+import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescription;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescriptions;
@@ -22,11 +24,16 @@ public class SuspectListener implements Listener {
 	private final SuspectDescriptions descriptions;
 	private final PoliceOutfit        outfit;
 	private final DisguiseTick        tick;
+	private final HeatLedger          ledger;
+	private final PostEscapeSearch    search;
 
-	public SuspectListener(SuspectDescriptions descriptions, PoliceOutfit outfit, DisguiseTick tick) {
+	public SuspectListener(SuspectDescriptions descriptions, PoliceOutfit outfit, DisguiseTick tick, HeatLedger ledger,
+	                       PostEscapeSearch search) {
 		this.descriptions = descriptions;
 		this.outfit       = outfit;
 		this.tick         = tick;
+		this.ledger       = ledger;
+		this.search       = search;
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
