@@ -26,6 +26,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -191,13 +192,13 @@ class DisguiseModuleConfigTest {
 	@DisplayName("install supplies %suspect% to the radio through the extras hook")
 	@SuppressWarnings("unchecked")
 	void installRegistersTheExtras() {
-		NpcSquad squad = mock(NpcSquad.class);
-		when(tick.extras(squad)).thenReturn(Map.of("suspect", "x"));
+		UUID id = UUID.randomUUID();
+		when(tick.extras(id)).thenReturn(Map.of("suspect", "x"));
 
 		config.installDisguise();
 
-		ArgumentCaptor<Function<NpcSquad, Map<String, String>>> captor = ArgumentCaptor.forClass(Function.class);
+		ArgumentCaptor<Function<UUID, Map<String, String>>> captor = ArgumentCaptor.forClass(Function.class);
 		verify(radio).setExtraPlaceholders(captor.capture());
-		assertEquals(Map.of("suspect", "x"), captor.getValue().apply(squad));
+		assertEquals(Map.of("suspect", "x"), captor.getValue().apply(id));
 	}
 }

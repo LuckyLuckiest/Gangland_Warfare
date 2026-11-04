@@ -78,6 +78,11 @@ public class DisguiseTick {
 		forgetHooks.forEach(hook -> hook.accept(playerId));
 	}
 
+	/** The {@code %suspect%} placeholder for the hunted player {@code id} (seam: not wired yet). */
+	public Map<String, String> extras(@Nullable UUID id) {
+		return Map.of("suspect", descriptions.unknownText());
+	}
+
 	/** The {@code %suspect%} placeholder for {@code squad}; the Unknown word when no description is known. */
 	public Map<String, String> extras(NpcSquad squad) {
 		UUID               id     = ticked.get(squad);
