@@ -361,6 +361,19 @@ class OverwatchControllerTest {
 	}
 
 	@Test
+	@DisplayName("a perched Marksman the disguise fools does not spot him (row 333)")
+	void disguisedPlayerIsNotSpotted() {
+		CopNpc marksman = perched();
+		when(marksman.canSee(player, 48.0)).thenReturn(true);
+		controller.setLockOn((cop, p) -> false);
+
+		controller.tick(player, group);
+
+		verify(squad, never()).reportSighting(any());
+		verify(radio, never()).sayAs(any(), any(), eq("Overwatch_Spotted"), any());
+	}
+
+	@Test
 	@DisplayName("a perched Marksman who cannot see the suspect reports nothing")
 	void perchedMarksmanWithoutSightReportsNothing() {
 		CopNpc marksman = perched();

@@ -15,6 +15,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.mockito.Mockito;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.standoff.StandoffController;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -50,12 +51,14 @@ class StandoffModuleConfigTest {
 
 		StandoffController built = config.standoffController(mock(CopLoader.class), mock(CopRadio.class),
 		                                                     mock(PerimeterController.class), mock(WantedStars.class),
-		                                                     mock(UserManager.class), mock(DetainmentService.class));
+		                                                     mock(UserManager.class), mock(DetainmentService.class),
+		                                                     mock(CopPerception.class));
 
 		assertNotNull(built);
 		assertTrue(StandoffModuleConfig.class.getMethod("standoffController", CopLoader.class, CopRadio.class,
 		                                                PerimeterController.class, WantedStars.class,
-		                                                UserManager.class, DetainmentService.class)
+		                                                UserManager.class, DetainmentService.class,
+		                                                CopPerception.class)
 		                                     .isAnnotationPresent(Bean.class));
 	}
 
@@ -129,13 +132,13 @@ class StandoffModuleConfigTest {
 		CopGroup             group  = stuckGroup(id);
 
 		config.standoffController(loader, radio, mock(PerimeterController.class), mock(WantedStars.class),
-		                          mock(UserManager.class), cuffs).tick(player, group);
+		                          mock(UserManager.class), cuffs, mock(CopPerception.class)).tick(player, group);
 		verify(group).setStandoffUntil(5_000L + 45_000L);
 
 		when(cuffs.isHandcuffed(player)).thenReturn(true);
 		CopGroup other = stuckGroup(id);
 		config.standoffController(loader, radio, mock(PerimeterController.class), mock(WantedStars.class),
-		                          mock(UserManager.class), cuffs).tick(player, other);
+		                          mock(UserManager.class), cuffs, mock(CopPerception.class)).tick(player, other);
 		verify(other, Mockito.never()).setStandoffUntil(Mockito.anyLong());
 	}
 }

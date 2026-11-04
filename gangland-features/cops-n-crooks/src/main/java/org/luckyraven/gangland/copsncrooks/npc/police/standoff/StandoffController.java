@@ -149,7 +149,7 @@ public class StandoffController {
 		for (CopNpc cop : st.posts) {
 			if (cop == null || !cop.isValid() || cop.getCurrentState() != CopState.POSTED) continue;
 			double range = sightRange();
-			if (cop.canSee(st.player, range)) {
+			if (lockOn.test(cop, st.player) && cop.canSee(st.player, range)) {
 				st.group.getSquad().reportSighting(cop, st.player.getLocation(), range);
 				return;
 			}

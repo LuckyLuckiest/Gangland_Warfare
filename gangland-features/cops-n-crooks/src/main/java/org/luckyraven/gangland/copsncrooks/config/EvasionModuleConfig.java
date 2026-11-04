@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
@@ -112,8 +113,12 @@ public class EvasionModuleConfig {
 	}
 
 	@Bean
-	public PerimeterController perimeterController(CopLoader copLoader, CopManager copManager, CopRadio copRadio) {
-		return new PerimeterController(copLoader::getLoadedProvider, copManager, copRadio, System::currentTimeMillis);
+	public PerimeterController perimeterController(CopLoader copLoader, CopManager copManager, CopRadio copRadio,
+	                                               CopPerception perception) {
+		PerimeterController controller = new PerimeterController(copLoader::getLoadedProvider, copManager, copRadio,
+		                                                         System::currentTimeMillis);
+		controller.setLockOn(perception::allowsLockOn);
+		return controller;
 	}
 
 	@PostConstruct

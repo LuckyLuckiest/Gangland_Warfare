@@ -134,7 +134,7 @@ public class PerimeterController {
 
 		boolean sighted = false;
 		for (CopNpc cop : List.copyOf(perimeter.posts)) {
-			if (!cop.canSee(player, settings.sightRange())) continue;
+			if (!lockOn.test(cop, player) || !cop.canSee(player, settings.sightRange())) continue;
 			sighted = true;
 
 			group.getSquad().reportSighting(cop, player.getLocation(), settings.sightRange());

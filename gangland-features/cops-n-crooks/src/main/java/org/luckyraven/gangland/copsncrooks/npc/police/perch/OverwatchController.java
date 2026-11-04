@@ -216,7 +216,7 @@ public class OverwatchController {
 			}
 		}
 
-		if (watch.posted && cop.canSee(player, settings.sightRange())) {
+		if (watch.posted && lockOn.test(cop, player) && cop.canSee(player, settings.sightRange())) {
 			Location seen = player.getLocation();
 			Location from = cop.getEntity().getLocation();
 			// the Marksman's own mark at the range it looked with (Keystone 1.15.4): members without sight chase toward

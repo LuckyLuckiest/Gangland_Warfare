@@ -5,6 +5,7 @@ import java.util.function.ToIntFunction;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.perch.OverwatchController;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.core.user.User;
@@ -27,9 +28,12 @@ public class OverwatchModuleConfig {
 
 	@Bean
 	public OverwatchController overwatchController(CopLoader copLoader, CopManager copManager, CopRadio copRadio,
-	                                               @Qualifier("online") UserManager<Player> users) {
-		return new OverwatchController(copLoader::getLoadedProvider, copManager, copRadio, System::currentTimeMillis,
-		                               levelOf(users));
+	                                               @Qualifier("online") UserManager<Player> users,
+	                                               CopPerception perception) {
+		OverwatchController controller = new OverwatchController(copLoader::getLoadedProvider, copManager, copRadio,
+		                                                         System::currentTimeMillis, levelOf(users));
+		controller.setLockOn(perception::allowsLockOn);
+		return controller;
 	}
 
 	/** Reads the wanted level; 0 when the player is unknown. */

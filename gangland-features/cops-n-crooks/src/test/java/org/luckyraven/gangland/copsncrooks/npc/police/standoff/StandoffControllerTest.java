@@ -1090,6 +1090,21 @@ class StandoffControllerTest {
 	}
 
 	@Test
+	@DisplayName("a posted cop the disguise fools keeps no sighting on the squad (row 333)")
+	void disguisedPlayerKeepsNoPostedSighting() {
+		List<CopNpc> made = hunters(3, 2);
+		for (CopNpc c : made)
+			when(c.canSee(any(Player.class), anyDouble())).thenReturn(true);
+		controller.setLockOn((cop, p) -> false);
+		tickAt(0);
+
+		tickAt(SEC);
+
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
+		assertTrue(controller.isActive(playerId));
+	}
+
+	@Test
 	@DisplayName("cnc-integ INT-5: PATROL, WARNING and OVERWATCH cops (0.20) are never drafted into a standoff")
 	void integ5_standoffNeverDraftsPatrolWarningOverwatch() {
 		CopNpc patrol    = cop(CopState.valueOf("PATROL"), playerId, 1, 10 * SEC);

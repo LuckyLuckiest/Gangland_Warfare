@@ -239,6 +239,24 @@ class PerimeterControllerTest {
 	}
 
 	@Test
+	@DisplayName("a post the disguise fools does not see him: no sighting, no Eyes_On, the post stays posted (row 333)")
+	void disguisedPlayerIsNotSighted() {
+		chaser("Commander", 1);
+		CopNpc marksman = chaser("Marksman", 2);
+		controller.start(player, centre, 90, 4);
+		when(marksman.canSee(player, 40.0)).thenReturn(true);
+		controller.setLockOn((cop, p) -> false);
+
+		controller.tick(player, group);
+
+		verify(squad, never()).reportSighting(any());
+		verify(radio, never()).sayAs(any(), any(), eq("Eyes_On"), any());
+		verify(marksman, never()).releasePost();
+		assertEquals(CopState.POSTED, stateOf(marksman));
+		assertTrue(controller.isActive(playerId));
+	}
+
+	@Test
 	@DisplayName("a post that cannot see him keeps holding and says nothing")
 	void postWithoutSight_keepsHolding() {
 		chaser("Commander", 1);
