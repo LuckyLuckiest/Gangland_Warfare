@@ -512,4 +512,24 @@ class DisguiseTickTest {
 		assertEquals(2, lines.size(), lines.toString());
 		assertTrue(lines.get(1).contains("police helmet"), lines.get(1));
 	}
+
+	@Test
+	@DisplayName("850: recognised, a new look while the radio is on cooldown: no second line until it is radioed")
+	void newLookIsToldWhenRadioed() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+		when(radio.sayFromLeader(group, LINE)).thenReturn(true, false, false, true);
+		tick.tick(wearer.player, group);
+
+		wearer.leatherChest(Color.fromRGB(20, 20, 250));
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+		assertEquals(1, told().size(), told().toString());
+
+		tick.tick(wearer.player, group);
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("blue jacket"), lines.get(1));
+	}
 }

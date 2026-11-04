@@ -32,7 +32,7 @@ public class DisguiseTick {
 	private final CopRadio                      radio;
 	private final WantedMessages                messages;
 	private final Map<UUID, String>             spoken      = new ConcurrentHashMap<>();
-	private final Map<UUID, String>             told        = new ConcurrentHashMap<>();
+	private final Map<UUID, WantedMessages.Key> told        = new ConcurrentHashMap<>();
 	private final List<Consumer<UUID>>          forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
@@ -84,39 +84,38 @@ public class DisguiseTick {
 				outfit.blow(id);
 			}
 		}
-		if (eyes) {
-			tell(player, known ? WantedMessages.Key.DISGUISE_RECOGNISED
-			                   : filter.outfitHides(player) ? WantedMessages.Key.DISGUISE_OUTFIT
-			                                                : WantedMessages.Key.DISGUISE_UNRECOGNISED);
-		}
+		WantedMessages.Key key = known ? WantedMessages.Key.DISGUISE_RECOGNISED
+		                               : filter.outfitHides(player) ? WantedMessages.Key.DISGUISE_OUTFIT
+		                                                            : WantedMessages.Key.DISGUISE_UNRECOGNISED;
 
 		SuspectDescription latest = descriptions.latest(id);
-		if (latest == null) {
-			return;
-		}
-		String text = descriptions.format(latest);
-		if (text.equals(spoken.get(id))) {
-			return;
-		}
-		if (radio.sayFromLeader(group, LINE)) {
+		String             text   = latest == null ? null : descriptions.format(latest);
+		boolean            aired  = text != null && !text.equals(spoken.get(id)) && radio.sayFromLeader(group, LINE);
+		if (aired) {
 			spoken.put(id, text);
+		}
+		// a new look while recognised is told when it is radioed, so the radio cooldown also paces the chat
+		if (eyes) {
+			tell(player, key, aired && known);
 		}
 	}
 
 	/**
-	 * Chat line for {@code key}, sent when the line differs from the last one told, so a new look while recognised is
-	 * told too; '' in the file turns a line off.
+	 * Chat line for {@code key}, sent when the state changed, or {@code again} (a new look radioed while recognised);
+	 * '' in the file turns a line off.
 	 */
-	private void tell(Player player, WantedMessages.Key key) {
-		UUID               id      = player.getUniqueId();
-		SuspectDescription latest  = descriptions.latest(id);
-		String             suspect = latest == null ? descriptions.unknownText() : descriptions.format(latest);
-		String             line    = messages.format(key, Map.of("suspect", suspect));
-		if (line.equals(told.put(id, line)) || line.isBlank()) {
+	private void tell(Player player, WantedMessages.Key key, boolean again) {
+		UUID id = player.getUniqueId();
+		if (key == told.put(id, key) && !again) {
 			return;
 		}
 
-		player.sendMessage(line);
+		SuspectDescription latest  = descriptions.latest(id);
+		String             suspect = latest == null ? descriptions.unknownText() : descriptions.format(latest);
+		String             line    = messages.format(key, Map.of("suspect", suspect));
+		if (!line.isBlank()) {
+			player.sendMessage(line);
+		}
 	}
 
 	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */

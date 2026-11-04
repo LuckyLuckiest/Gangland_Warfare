@@ -1060,8 +1060,9 @@ legs, boots, the weapon in your hand, and whether you are on foot or in a car. T
 
 ### What you are told
 
-A chat line is sent once per change, and only during a chase while a cop of the chasing group can see you. A line set to
-`''` in `wanted_messages.yml` (`Disguise.*`) turns off.
+A chat line is sent once per change, and only during a chase while a cop of the chasing group can see you. While you
+are recognised, a new look is told when the cops radio it, so the radio's cooldown paces it too. A line set to `''` in
+`wanted_messages.yml` (`Disguise.*`) turns off.
 
 | State | Chat |
 |---|---|
