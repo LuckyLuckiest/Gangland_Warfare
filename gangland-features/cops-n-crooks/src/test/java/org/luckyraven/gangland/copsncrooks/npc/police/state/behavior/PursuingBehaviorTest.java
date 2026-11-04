@@ -507,15 +507,15 @@ class PursuingBehaviorTest {
 	}
 
 	@Test
-	@DisplayName("0.20 seam: a filtered-out player is still pursued at the scaled range while the squad sighting is fresh")
-	void pursueGetsPerceptionRange_filteredFreshKeepsRange() {
+	@DisplayName("842: a filtered-out player is pursued at range 0.0 even while the squad sighting is fresh")
+	void pursueGetsPerceptionRange_filteredFreshIsZero() {
 		CopPerception perception = new CopPerception();
 		perception.addLockOnFilter((c, p) -> false);
 		squad.reportSighting(new Location(mock(World.class), 0, 64, 0));
 
 		withPerception(perception).tick(cop);
 
-		verify(cop).pursue(player, squad, ALERT_RANGE);
+		verify(cop).pursue(player, squad, 0.0);
 	}
 
 	@Test
@@ -560,8 +560,8 @@ class PursuingBehaviorTest {
 	}
 
 	@Test
-	@DisplayName("cnc-integ T-346: a surrendered (cease-fire, fresh sighting) disguised suspect is still cuffed")
-	void integ_surrenderedDisguisedSuspectIsStillCuffed() {
+	@DisplayName("842 (re-rules T-346): a surrendered disguised suspect nobody recognises is not cuffed on the squad timer")
+	void integ_surrenderedUnrecognisedSuspectIsNotCuffed() {
 		ceaseFire(true);
 		CopPerception perception = new CopPerception();
 		perception.addLockOnFilter((c, p) -> false);
@@ -570,6 +570,6 @@ class PursuingBehaviorTest {
 
 		withPerception(perception).tick(cop);
 
-		verify(cop).transitionTo(CopState.CUFFING);
+		verify(cop, never()).transitionTo(CopState.CUFFING);
 	}
 }

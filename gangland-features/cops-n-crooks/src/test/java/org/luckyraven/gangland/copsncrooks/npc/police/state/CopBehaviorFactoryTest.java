@@ -125,6 +125,6 @@ class CopBehaviorFactoryTest {
 		behaviors.get(CopState.PURSUING).tick(cop);
 		behaviors.get(CopState.COMBAT).tick(cop);
 
-		verify(perception, times(2)).pursuitRange(eq(cop), eq((LivingEntity) player), any(), eq(ALERT_RANGE));
+		verify(perception, times(2)).pursuitRange(eq(cop), eq((LivingEntity) player), eq(ALERT_RANGE));
 	}
 }

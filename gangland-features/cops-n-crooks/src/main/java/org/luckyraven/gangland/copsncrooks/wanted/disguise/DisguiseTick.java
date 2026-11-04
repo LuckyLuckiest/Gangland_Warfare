@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
-import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +15,10 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/** The AI tick hook: keeps the description current while seen and radios it once per change (0.20.0 lane disguise). */
+/**
+ * The AI tick hook: a cop of the chase sees him now and knows him (or was already watching him) - recognised; then the
+ * description follows what he wears, and it is radioed once per change (0.20.0 lane disguise, 0.21.5 live sight).
+ */
 public class DisguiseTick {
 
 	private static final String LINE = "Suspect_Description";
@@ -47,22 +49,32 @@ public class DisguiseTick {
 		if (!filter.hunted(player)) {
 			if (descriptions.latest(id) != null || spoken.containsKey(id)) {
 				descriptions.clear(id);
+				// the search giving up fires no WantedEndEvent; kept out of forget so a quit does not un-blow it
+				outfit.clear(id);
 				forget(id);
 			}
 			return;
 		}
 		if (group == null) {
 			spoken.remove(id);
+			descriptions.setRecognised(id, false);
 			return;
 		}
 		if (!settings.get().enabled()) {
 			return;
 		}
 
-		NpcSquad squad = group.getSquad();
-		if (squad != null) {
-			if (eyesOn.test(player, group) || squad.hasFreshSighting()) {
-				descriptions.store(id, descriptions.describe(player));
+		// Behaviours read the flag set here on the previous AI tick (cop.tick runs before the hooks).
+		// ponytail: zero grace - one AI tick (0.5 s) with no group cop seeing him drops recognition;
+		// a recognisedUntil = now + grace is the upgrade if a corner should need longer
+		boolean eyes  = eyesOn.test(player, group);
+		boolean known = eyes && (descriptions.isRecognised(id) || filter.knows(player));
+		descriptions.setRecognised(id, known);
+		if (known) {
+			descriptions.store(id, descriptions.describe(player));
+			// they see him in it: it no longer fools them
+			if (outfit.worn(player)) {
+				outfit.blow(id);
 			}
 		}
 

@@ -11,6 +11,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wear
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -24,7 +25,6 @@ class DisguiseFilterTest {
 	private SuspectDescriptions descriptions;
 	private PoliceOutfit       outfit;
 	private int                level;
-	private boolean            fresh;
 	private boolean            hunted;
 	private DisguiseFilter     filter;
 	private CopNpc             cop;
@@ -36,9 +36,8 @@ class DisguiseFilterTest {
 		descriptions = new SuspectDescriptions(() -> settings, wearer.keys(), DisguiseFixtures.words());
 		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
 		level        = 1;
-		fresh        = false;
 		hunted       = true;
-		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> fresh, p -> hunted);
+		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> hunted);
 		cop          = mock(CopNpc.class);
 	}
 
@@ -68,7 +67,7 @@ class DisguiseFilterTest {
 	}
 
 	@Test
-	@DisplayName("no fresh sighting and two of three changed: the cop may not lock on")
+	@DisplayName("not recognised and two pieces changed: the cop may not lock on")
 	void mismatchWhileUnseenBlocksLockOn() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		crime();
@@ -90,14 +89,44 @@ class DisguiseFilterTest {
 	}
 
 	@Test
-	@DisplayName("a fresh sighting always allows, mismatch or not")
-	void freshSightingAlwaysAllows() {
+	@DisplayName("recognised always allows, mismatch or not")
+	void recognisedAlwaysAllows() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		crime();
 		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
-		fresh = true;
+		descriptions.setRecognised(wearer.id, true);
 
 		assertTrue(filter.allows(cop, wearer.player));
+	}
+
+	@Test
+	@DisplayName("841: the squad timer alone no longer allows a mismatch (the filter no longer reads it)")
+	void timerAloneNoLongerAllows() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		crime();
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+
+		assertFalse(filter.allows(cop, wearer.player));
+	}
+
+	@Test
+	@DisplayName("recognised in the police outfit at 2 stars: allowed")
+	void recognisedBeatsTheOutfit() {
+		dressAsCop();
+		level = 2;
+		descriptions.setRecognised(wearer.id, true);
+
+		assertTrue(filter.allows(cop, wearer.player));
+	}
+
+	@Test
+	@DisplayName("354: the recognised path logs the seen state")
+	void recognisedPathRecordsTheSeenState() {
+		descriptions.setRecognised(wearer.id, true);
+
+		filter.allows(cop, wearer.player);
+
+		assertEquals("seen", filter.lastState(wearer.id));
 	}
 
 	@Test
@@ -137,17 +166,16 @@ class DisguiseFilterTest {
 	}
 
 	@Test
-	@DisplayName("the outfit hides the player even with no description at all and a fresh sighting")
+	@DisplayName("the outfit hides the player even with no description at all")
 	void outfitBeatsEverythingBelow() {
 		dressAsCop();
-		fresh = true;
 
-		assertFalse(filter.allows(cop, wearer.player), "pursuitRange supplies the fresh-sighting clause itself");
+		assertFalse(filter.allows(cop, wearer.player));
 	}
 
 	@Test
-	@DisplayName("a crime committed in the outfit blows it until it is taken off and put on again")
-	void crimeInOutfitBlowsIt() {
+	@DisplayName("848: a crime committed in the outfit blows it for the chase, taken off and put on again or not")
+	void crimeInOutfitBlowsItForTheChase() {
 		dressAsCop();
 		level = 1;
 		assertFalse(filter.allows(cop, wearer.player));
@@ -159,7 +187,7 @@ class DisguiseFilterTest {
 		filter.allows(cop, wearer.player);
 		dressAsCop();
 
-		assertFalse(filter.allows(cop, wearer.player), "re-worn: hidden again");
+		assertTrue(filter.allows(cop, wearer.player), "re-worn: still blown");
 	}
 
 	@Test

@@ -1,14 +1,11 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.perception;
 
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
-import org.luckyraven.keystone.npc.NpcSquad;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -115,7 +112,7 @@ class CopPerceptionTest {
 		when(cop.canSee(zombie, BASE)).thenReturn(true);
 
 		assertEquals(BASE, perception.rangeFor(cop, zombie, BASE));
-		assertEquals(BASE, perception.pursuitRange(cop, zombie, null, BASE));
+		assertEquals(BASE, perception.pursuitRange(cop, zombie, BASE));
 		assertTrue(perception.allowsLockOn(cop, zombie));
 		assertTrue(perception.acquires(cop, zombie, BASE));
 		verify(factor, never()).factor(any(), any());
@@ -124,39 +121,35 @@ class CopPerceptionTest {
 	@Test
 	@DisplayName("pursuitRange with nothing registered is the base; a 0.4 factor scales it")
 	void pursuitRangeNoFiltersIsRangeFor() {
-		assertEquals(BASE, perception.pursuitRange(cop, player, null, BASE));
+		assertEquals(BASE, perception.pursuitRange(cop, player, BASE));
 
 		perception.addSightFactor((c, p) -> 0.4);
-		assertEquals(BASE * 0.4, perception.pursuitRange(cop, player, null, BASE), 1e-9);
+		assertEquals(BASE * 0.4, perception.pursuitRange(cop, player, BASE), 1e-9);
 	}
 
 	@Test
-	@DisplayName("pursuitRange is 0 for a filtered-out player when the squad is stale or absent")
+	@DisplayName("pursuitRange is 0 for a filtered-out player")
 	void pursuitRangeZeroWhenRejectedAndStale() {
 		perception.addLockOnFilter((c, p) -> false);
 
-		assertEquals(0.0, perception.pursuitRange(cop, player, new NpcSquad(), BASE));
-		assertEquals(0.0, perception.pursuitRange(cop, player, null, BASE));
+		assertEquals(0.0, perception.pursuitRange(cop, player, BASE));
 	}
 
 	@Test
-	@DisplayName("pursuitRange keeps the scaled range for a filtered-out player while the squad sighting is fresh")
-	void pursuitRangeKeptWhileSquadFresh() {
+	@DisplayName("842: a filtered-out player gets no pursuit range: no squad sighting timer lifts the filter any more")
+	void rejectedPlayerGetsNoRangeEvenWithAFreshSquad() {
 		perception.addLockOnFilter((c, p) -> false);
 		perception.addSightFactor((c, p) -> 0.5);
-		NpcSquad squad = new NpcSquad();
-		squad.reportSighting(new Location(mock(World.class), 0, 64, 0));
-		assertTrue(squad.hasFreshSighting());
 
-		assertEquals(20.0, perception.pursuitRange(cop, player, squad, BASE), 1e-9);
+		assertEquals(0.0, perception.pursuitRange(cop, player, BASE), 1e-9);
 	}
 
 	@Test
-	@DisplayName("an allowed player is pursued at rangeFor whatever the squad says")
+	@DisplayName("an allowed player is pursued at rangeFor")
 	void pursuitRangeAllowedIgnoresSquad() {
 		perception.addSightFactor((c, p) -> 0.5);
 
-		assertEquals(20.0, perception.pursuitRange(cop, player, new NpcSquad(), BASE), 1e-9);
+		assertEquals(20.0, perception.pursuitRange(cop, player, BASE), 1e-9);
 	}
 
 	@Test

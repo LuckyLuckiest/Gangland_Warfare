@@ -21,9 +21,10 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
-import org.luckyraven.keystone.npc.NpcSquad;
 import org.mockito.ArgumentCaptor;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -127,28 +128,6 @@ class DisguiseModuleConfigTest {
 	}
 
 	@Test
-	@DisplayName("freshSightingOf: false without a squad, else whether the squad has a fresh sighting")
-	void freshSightingFollowsTheSquad() {
-		Player player = mock(Player.class);
-		java.util.UUID id = java.util.UUID.randomUUID();
-		when(player.getUniqueId()).thenReturn(id);
-		var fresh = DisguiseModuleConfig.freshSightingOf(manager);
-
-		when(manager.groupOf(id)).thenReturn(null);
-		assertFalse(fresh.test(player));
-
-		CopGroup group = mock(CopGroup.class);
-		NpcSquad squad = mock(NpcSquad.class);
-		when(group.getSquad()).thenReturn(squad);
-		when(manager.groupOf(id)).thenReturn(group);
-		when(squad.hasFreshSighting()).thenReturn(true);
-		assertTrue(fresh.test(player));
-
-		when(squad.hasFreshSighting()).thenReturn(false);
-		assertFalse(fresh.test(player));
-	}
-
-	@Test
 	@DisplayName("installDisguise is a @PostConstruct")
 	void installIsAPostConstruct() throws NoSuchMethodException {
 		assertTrue(DisguiseModuleConfig.class.getMethod("installDisguise").isAnnotationPresent(PostConstruct.class));
@@ -226,5 +205,32 @@ class DisguiseModuleConfigTest {
 		when(manager.isSearching(id)).thenReturn(false);
 		when(wanted.getLevel()).thenReturn(2);
 		assertTrue(hunted.test(player), "2 stars");
+	}
+
+	@Test
+	@DisplayName("eyesOf: a valid cop of the group who sees the player at the alert range; false before the config loads")
+	void eyesNeedAValidGroupCopWhoSees() {
+		CopLoader loader = mock(CopLoader.class);
+		CopConfigProvider provider = mock(CopConfigProvider.class);
+		when(provider.getAlertRange()).thenReturn(40.0);
+		Player player = mock(Player.class);
+		CopNpc gone  = mock(CopNpc.class);
+		CopNpc valid = mock(CopNpc.class);
+		when(gone.isValid()).thenReturn(false);
+		when(gone.canSee(player, 40.0)).thenReturn(true);
+		when(valid.isValid()).thenReturn(true);
+		CopGroup group = mock(CopGroup.class);
+		when(group.getCops()).thenReturn(Collections.synchronizedList(new ArrayList<>(List.of(gone, valid))));
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader);
+
+		when(loader.getLoadedProvider()).thenReturn(null);
+		when(valid.canSee(player, 40.0)).thenReturn(true);
+		assertFalse(eyes.test(player, group), "config not loaded");
+
+		when(loader.getLoadedProvider()).thenReturn(provider);
+		assertTrue(eyes.test(player, group), "the valid cop sees him");
+
+		when(valid.canSee(player, 40.0)).thenReturn(false);
+		assertFalse(eyes.test(player, group), "only an invalid cop sees him");
 	}
 }

@@ -20,7 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/** The police outfit: worn, and "blown" by a crime committed in it until it comes off (0.20.0 lane disguise). */
+/**
+ * The police outfit: worn, and "blown" by a crime committed in it or by being seen putting it on, for the rest of the
+ * chase: until {@link #clear} (0.20.0 lane disguise, 0.21.5 blown lasts the chase).
+ */
 public class PoliceOutfit {
 
 	private final Supplier<DisguiseSettings> settings;
@@ -60,10 +63,9 @@ public class PoliceOutfit {
 		blown.add(playerId);
 	}
 
-	/** Worn, not blown, and {@code level} within {@code Outfit_Max_Level}; a removed outfit forgets its blown flag. */
+	/** Worn, not blown, and {@code level} within {@code Outfit_Max_Level}. */
 	public boolean hides(Player player, int level) {
 		if (!worn(player)) {
-			blown.remove(player.getUniqueId());
 			return false;
 		}
 		return !blown.contains(player.getUniqueId()) && level <= settings.get().outfitMaxLevel();

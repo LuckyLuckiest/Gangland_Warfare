@@ -22,18 +22,15 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 	private final SuspectDescriptions         descriptions;
 	private final PoliceOutfit                outfit;
 	private final ToIntFunction<Player>       levelOf;
-	private final Predicate<Player>           freshSighting;
 	private final Predicate<Player>           hunted;
 	private final Map<UUID, String>           lastState = new ConcurrentHashMap<>();
 
 	public DisguiseFilter(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, PoliceOutfit outfit,
-	                      ToIntFunction<Player> levelOf, Predicate<Player> freshSighting,
-	                      Predicate<Player> hunted) {
+	                      ToIntFunction<Player> levelOf, Predicate<Player> hunted) {
 		this.settings = settings;
 		this.descriptions = descriptions;
 		this.outfit = outfit;
 		this.levelOf = levelOf;
-		this.freshSighting = freshSighting;
 		this.hunted = hunted;
 	}
 
@@ -42,13 +39,21 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		return hunted.test(player);
 	}
 
+	/** Disabled, or recognised on the last AI tick ({@code seen}), or else {@link #knows}. */
 	public boolean allows(CopNpc cop, Player player) {
-		DisguiseSettings settings = this.settings.get();
-		if (!settings.enabled()) {
+		if (!settings.get().enabled()) {
 			return true;
 		}
+		if (descriptions.isRecognised(player.getUniqueId())) {
+			return report(player, "seen", true);
+		}
+		return knows(player);
+	}
 
-		int level = levelOf.applyAsInt(player);
+	/** Whether a cop who has not been watching him knows him by the description: the outfit, then the match. */
+	public boolean knows(Player player) {
+		DisguiseSettings settings = this.settings.get();
+		int              level    = levelOf.applyAsInt(player);
 		if (outfit.hides(player, level)) {
 			return report(player, "outfit", false);
 		}
@@ -57,13 +62,18 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		}
 
 		SuspectDescription description = descriptions.latest(player.getUniqueId());
-		if (description == null || freshSighting.test(player)) {
+		if (description == null) {
 			return true;
 		}
 
 		boolean blown = outfit.worn(player) && level <= settings.outfitMaxLevel();
 		boolean match = descriptions.matches(player, description, settings.changesNeeded());
 		return report(player, blown ? "blown" : match ? "match" : "mismatch", match);
+	}
+
+	/** The police outfit fools the cops at his wanted level right now. */
+	public boolean outfitHides(Player player) {
+		return outfit.hides(player, levelOf.applyAsInt(player));
 	}
 
 	@Override

@@ -94,7 +94,7 @@ public class CombatBehavior implements CopBehavior {
 		// their firing band, everyone else closes in, routes around obstacles or searches from the last-known position.
 		// squadFor gives the group squad for the group's player and the group's shared squad against anyone else.
 		NpcSquad squad = cop.squadFor(target);
-		cop.pursue(target, squad, perception.pursuitRange(cop, target, squad, alertRange));
+		cop.pursue(target, squad, perception.pursuitRange(cop, target, alertRange));
 	}
 
 	@Override

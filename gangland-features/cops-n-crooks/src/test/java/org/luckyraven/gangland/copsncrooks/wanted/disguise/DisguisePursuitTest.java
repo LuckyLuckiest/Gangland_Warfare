@@ -56,8 +56,7 @@ class DisguisePursuitTest {
 		cop          = mock(CopNpc.class);
 		level        = 1;
 		perception   = new CopPerception();
-		perception.addLockOnFilter(new DisguiseFilter(() -> settings, descriptions, outfit, p -> level,
-		                                              p -> squad.hasFreshSighting(), p -> true));
+		perception.addLockOnFilter(new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> true));
 		when(cop.canSee(eq(wearer.player), anyDouble())).thenReturn(true);
 	}
 
@@ -67,17 +66,20 @@ class DisguisePursuitTest {
 	}
 
 	@Test
-	@DisplayName("swap two pieces unseen: pursuitRange 0; seen: the normal range")
+	@DisplayName("swap two pieces unseen: pursuitRange 0, a fresh squad timer or not; recognised: the normal range")
 	void swapUnseenZeroesPursuitRange() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		crime();
 		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
 
 		when(squad.hasFreshSighting()).thenReturn(false);
-		assertEquals(0.0, perception.pursuitRange(cop, wearer.player, squad, BASE), 1e-9);
+		assertEquals(0.0, perception.pursuitRange(cop, wearer.player, BASE), 1e-9);
 
 		when(squad.hasFreshSighting()).thenReturn(true);
-		assertEquals(BASE, perception.pursuitRange(cop, wearer.player, squad, BASE), 1e-9);
+		assertEquals(0.0, perception.pursuitRange(cop, wearer.player, BASE), 1e-9, "842: the timer lifts nothing");
+
+		descriptions.setRecognised(wearer.id, true);
+		assertEquals(BASE, perception.pursuitRange(cop, wearer.player, BASE), 1e-9);
 	}
 
 	@Test
@@ -87,11 +89,11 @@ class DisguisePursuitTest {
 		crime();
 		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
 		when(squad.hasFreshSighting()).thenReturn(false);
-		assertEquals(0.0, perception.pursuitRange(cop, wearer.player, squad, BASE), 1e-9);
+		assertEquals(0.0, perception.pursuitRange(cop, wearer.player, BASE), 1e-9);
 
 		crime();
 
-		assertEquals(BASE, perception.pursuitRange(cop, wearer.player, squad, BASE), 1e-9);
+		assertEquals(BASE, perception.pursuitRange(cop, wearer.player, BASE), 1e-9);
 	}
 
 	@Test
@@ -107,7 +109,7 @@ class DisguisePursuitTest {
 	}
 
 	@Test
-	@DisplayName("the police outfit at 2 stars: not acquired, and range 0 once the dispatch sighting is stale")
+	@DisplayName("D3: the police outfit at 2 stars: not acquired, and range 0 even while the dispatch sighting is fresh")
 	void outfitHidesFromAcquireAndStalePursuit() {
 		wearer.helmet(Material.IRON_HELMET, "police_helmet").chest(Material.IRON_CHESTPLATE, "police_vest");
 		level = 2;
@@ -115,10 +117,10 @@ class DisguisePursuitTest {
 		assertFalse(perception.acquires(cop, wearer.player, BASE));
 
 		when(squad.hasFreshSighting()).thenReturn(true);
-		assertEquals(BASE, perception.pursuitRange(cop, wearer.player, squad, BASE), 1e-9, "dispatch seed still fresh (D-D5)");
+		assertEquals(0.0, perception.pursuitRange(cop, wearer.player, BASE), 1e-9, "dispatch seed fresh: fooled (D3)");
 
 		when(squad.hasFreshSighting()).thenReturn(false);
-		assertEquals(0.0, perception.pursuitRange(cop, wearer.player, squad, BASE), 1e-9);
+		assertEquals(0.0, perception.pursuitRange(cop, wearer.player, BASE), 1e-9);
 	}
 
 	@Test
@@ -129,7 +131,7 @@ class DisguisePursuitTest {
 		when(squad.hasFreshSighting()).thenReturn(false);
 
 		assertTrue(perception.acquires(cop, wearer.player, BASE));
-		assertEquals(BASE, perception.pursuitRange(cop, wearer.player, squad, BASE), 1e-9);
+		assertEquals(BASE, perception.pursuitRange(cop, wearer.player, BASE), 1e-9);
 	}
 
 	private PursuingBehavior cuffScene(BukkitStatics bukkit) {
@@ -163,8 +165,8 @@ class DisguisePursuitTest {
 	}
 
 	@Test
-	@DisplayName("T-346: the same disguised suspect with a fresh squad sighting is cuffed")
-	void disguisedSuspectWithFreshSightingIsCuffed() {
+	@DisplayName("842: the same disguised suspect with a fresh squad timer but unrecognised is not cuffed")
+	void freshTimerMismatchIsNotCuffed() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		crime();
 		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
@@ -174,15 +176,16 @@ class DisguisePursuitTest {
 			cuffScene(bukkit).tick(cop);
 		}
 
-		org.mockito.Mockito.verify(cop).transitionTo(CopState.CUFFING);
+		org.mockito.Mockito.verify(cop, org.mockito.Mockito.never()).transitionTo(CopState.CUFFING);
 	}
 
 	@Test
-	@DisplayName("D-D5: the police-outfit wearer (2 stars) with a fresh squad sighting is cuffed")
-	void outfitWithFreshSightingIsCuffed() {
+	@DisplayName("346/351: a recognised police-outfit wearer (2 stars) is cuffed")
+	void recognisedOutfitWearerIsCuffed() {
 		wearer.helmet(Material.IRON_HELMET, "police_helmet").chest(Material.IRON_CHESTPLATE, "police_vest");
 		level = 2;
-		when(squad.hasFreshSighting()).thenReturn(true);
+		when(squad.hasFreshSighting()).thenReturn(false);
+		descriptions.setRecognised(wearer.id, true);
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			cuffScene(bukkit).tick(cop);
