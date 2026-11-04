@@ -196,7 +196,7 @@ class DisguiseTickTest {
 	@DisplayName("Disguise.Enable false: no refresh and no line")
 	void disabledDoesNothing() {
 		settings = new DisguiseSettings(false, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
-		                                settings.outfitMaxLevel(), settings.matchNeeded());
+		                                settings.outfitMaxLevel(), settings.changesNeeded());
 		wearer.leatherChest(Color.RED);
 		when(squad.hasFreshSighting()).thenReturn(true);
 
@@ -223,7 +223,7 @@ class DisguiseTickTest {
 	void extrasFallBackToUnknownWord() {
 		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
 		settings = new DisguiseSettings(false, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
-		                                settings.outfitMaxLevel(), settings.matchNeeded());
+		                                settings.outfitMaxLevel(), settings.changesNeeded());
 		tick.tick(wearer.player, group);
 		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
 	}

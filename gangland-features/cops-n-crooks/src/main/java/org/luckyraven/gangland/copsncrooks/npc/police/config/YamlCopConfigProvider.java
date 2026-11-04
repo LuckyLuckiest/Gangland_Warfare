@@ -1447,7 +1447,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                            maskWearables != null ? maskWearables : defaults.maskWearables(),
 		                            policeOutfit != null ? policeOutfit : defaults.policeOutfit(),
 		                            disguise.get("Outfit_Max_Level").asInt().min(0).orDefault(defaults.outfitMaxLevel()),
-		                            disguise.get("Match_Needed").asInt().min(1).orDefault(defaults.matchNeeded()));
+		                            disguise.get("Match_Needed").asInt().min(1).orDefault(defaults.changesNeeded()));
 	}
 
 	private boolean parseLookoutEnabled(@Nullable NodeReader cops, ConfigReport report) {

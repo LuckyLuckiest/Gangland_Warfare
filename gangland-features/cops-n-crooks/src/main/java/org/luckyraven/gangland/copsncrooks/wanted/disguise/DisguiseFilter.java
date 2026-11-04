@@ -50,7 +50,7 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		}
 
 		boolean blown = outfit.worn(player) && level <= settings.outfitMaxLevel();
-		boolean match = descriptions.matches(player, description, settings.matchNeeded());
+		boolean match = descriptions.matches(player, description, settings.changesNeeded());
 		return report(player, blown ? "blown" : match ? "match" : "mismatch", match);
 	}
 

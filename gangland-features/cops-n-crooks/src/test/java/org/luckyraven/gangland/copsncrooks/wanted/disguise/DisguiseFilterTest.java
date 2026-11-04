@@ -118,7 +118,7 @@ class DisguiseFilterTest {
 		crime();
 		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
 		settings = new DisguiseSettings(false, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
-		                                settings.outfitMaxLevel(), settings.matchNeeded());
+		                                settings.outfitMaxLevel(), settings.changesNeeded());
 
 		assertTrue(filter.allows(cop, wearer.player));
 	}
@@ -162,7 +162,7 @@ class DisguiseFilterTest {
 
 	@Test
 	@DisplayName("Match_Needed 3 demands the full look")
-	void matchNeededFromSettings() {
+	void changesNeededFromSettings() {
 		settings = new DisguiseSettings(true, List.of("CARVED_PUMPKIN"), List.of(), List.of(), 2, 3);
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		crime();
