@@ -16,7 +16,15 @@ import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.events.crime.CrimeCommittedEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
-/** Snapshots the suspect description on every crime and forgets it when the chase ends (0.20.0 lane disguise). */
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Snapshots the suspect description on every crime and forgets it when the chase ends (0.20.0 lane disguise). A crime the
+ * witness gate holds keeps the look it was done in, and the report that lands for it records that look (0.21.5); an escape
+ * keeps the description for the post-escape search.
+ */
 @CustomLog
 @ListenerHandler
 public class SuspectListener implements Listener {
@@ -27,6 +35,11 @@ public class SuspectListener implements Listener {
 	private final HeatLedger          ledger;
 	private final PostEscapeSearch    search;
 
+	/** The look at a crime the witness gate held, per crime id: the report that lands for it records this look. */
+	private record Held(SuspectDescription description, boolean outfitWorn) {}
+
+	private final Map<UUID, Map<String, Held>> held = new ConcurrentHashMap<>();
+
 	public SuspectListener(SuspectDescriptions descriptions, PoliceOutfit outfit, DisguiseTick tick, HeatLedger ledger,
 	                       PostEscapeSearch search) {
 		this.descriptions = descriptions;
@@ -36,19 +49,37 @@ public class SuspectListener implements Listener {
 		this.search       = search;
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.MONITOR) // no ignoreCancelled: the gate's cancel is the moment of the crime
 	public void onCrime(CrimeCommittedEvent event) {
 		Player player = event.getPlayer();
+		UUID   id     = player.getUniqueId();
+		if (event.isCancelled()) {
+			// ponytail: one held look per crime id; two reports of one crime id pending at once share the newer look
+			held.computeIfAbsent(id, k -> new ConcurrentHashMap<>())
+			    .put(event.getCrimeId(), new Held(descriptions.describe(player), outfit.worn(player)));
+			return;
+		}
 
-		SuspectDescription stored = descriptions.describe(player);
-		descriptions.store(player.getUniqueId(), stored);
-		outfit.onCrime(player);
+		Map<String, Held> mine = held.get(id);
+		Held              look = mine == null ? null : mine.remove(event.getCrimeId());
+		if (look == null || !ledger.isReporting(id)) {
+			look = new Held(descriptions.describe(player), outfit.worn(player));
+		}
 
-		log.debug("SUSPECT {} desc={}", player.getName(), descriptions.format(stored));
+		descriptions.store(id, look.description());
+		if (look.outfitWorn()) {
+			outfit.blow(id);
+		}
+
+		log.debug("SUSPECT {} desc={}", player.getName(), descriptions.format(look.description()));
 	}
 
 	@EventHandler
 	public void onChaseEnd(WantedEndEvent event) {
+		// an escape keeps the look and the blown outfit for the post-escape search (0.21.5, row 844); the search giving
+		// up clears them in DisguiseTick
+		if (search.isEscape(event.getCause())) return;
+
 		Player player = event.getPlayer();
 
 		descriptions.clear(player.getUniqueId());
@@ -58,6 +89,11 @@ public class SuspectListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onQuit(PlayerQuitEvent event) {
-		tick.forget(event.getPlayer().getUniqueId());
+		UUID id = event.getPlayer().getUniqueId();
+
+		// a report deferred to the next join records the look at the join (D14); the blown outfit stays (D7)
+		descriptions.clear(id);
+		held.remove(id);
+		tick.forget(id);
 	}
 }
