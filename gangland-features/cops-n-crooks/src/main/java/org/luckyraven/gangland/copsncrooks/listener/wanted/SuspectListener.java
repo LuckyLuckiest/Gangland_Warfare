@@ -23,9 +23,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Snapshots the suspect description on every crime and forgets it when the chase ends (0.20.0 lane disguise). A crime the
- * witness gate holds keeps the look it was done in, and the report that lands for it records that look (0.21.5); an escape
- * keeps the description for the post-escape search.
+ * Snapshots the suspect description on every crime and forgets it when the chase ends (0.20.0 lane disguise). A crime
+ * the witness gate holds keeps the look it was done in, and the report that lands for it records that look (0.21.5); an
+ * escape keeps the description for the post-escape search.
  */
 @CustomLog
 @ListenerHandler
@@ -84,9 +84,10 @@ public class SuspectListener implements Listener {
 		}
 
 		descriptions.store(id, look.description());
-		// a crime outside any chase: the blown flag belongs to a chase that ended unseen (a quit, stars cleared offline)
-		// or to a crime that started none; this crime's own blow follows
-		// ponytail: a chase started by crew-share stars passes no crime of his own through here, so it keeps a stale blow
+		// a crime outside any chase: the blown flag belongs to a chase that ended unseen (a quit, stars cleared
+		// offline) or to a crime that started none; this crime's own blow follows
+		// ponytail: a chase started without a crime of his own (crew-share stars, admin-set stars) passes nothing
+		// through here, so it keeps a stale blow; a WantedStartEvent hook ordered against HeatListener is the upgrade
 		if (unhuntedAtCrime.remove(id)) {
 			outfit.clear(id);
 		}
@@ -117,6 +118,7 @@ public class SuspectListener implements Listener {
 		// a report deferred to the next join records the look at the join (D14); the blown outfit stays (D7)
 		descriptions.clear(id);
 		held.remove(id);
+		unhuntedAtCrime.remove(id);
 		tick.forget(id);
 	}
 
