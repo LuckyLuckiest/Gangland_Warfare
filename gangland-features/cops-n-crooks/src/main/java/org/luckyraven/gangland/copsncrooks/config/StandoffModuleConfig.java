@@ -5,6 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.standoff.StandoffController;
@@ -33,9 +34,12 @@ public class StandoffModuleConfig {
 	@Bean
 	public StandoffController standoffController(CopLoader copLoader, CopRadio copRadio, PerimeterController perimeter,
 	                                             WantedStars wantedStars, @Qualifier("online") UserManager<Player> users,
-	                                             DetainmentService detainment) {
-		return new StandoffController(copLoader::getLoadedProvider, copRadio, perimeter, wantedStars, users,
-		                              detainment::isHandcuffed, copRadio::now);
+	                                             DetainmentService detainment, CopPerception perception) {
+		StandoffController controller = new StandoffController(copLoader::getLoadedProvider, copRadio, perimeter,
+		                                                       wantedStars, users, detainment::isHandcuffed,
+		                                                       copRadio::now);
+		controller.setLockOn(perception::allowsLockOn);
+		return controller;
 	}
 
 	@PostConstruct

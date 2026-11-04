@@ -91,9 +91,9 @@ public class PursuingBehavior implements CopBehavior {
 
 		// Rotation: only ticks spent stuck while nobody in the squad sees the target count toward giving up
 		// (an entity target has no shared squad, so the cop's own sight decides). Squad-level on purpose (0.21.1 r6):
-		// since Keystone 1.15.4 only an NPC that saw him stamps it (tips do not), and no use below acts on his live
-		// position from it: the cuff needs this cop's own line of sight in Cuff_Radius, and the pursuit range only
-		// lifts the lock-on filters for its own look (Keystone takes the live goal from the member's own sight alone)
+		// since Keystone 1.15.4 only an NPC that saw him stamps it (tips do not). The stuck count is its only use:
+		// the cuff gate and the pursuit range read the lock-on filters alone, and the disguise filter allows a
+		// recognised player, so the squad timer never cuffs nor sees through a disguise (0.21.5, rows 842, 346/351)
 		boolean seen       = squad != null ? squad.hasFreshSighting() : perception.acquires(cop, target, alertRange);
 		int     stuckTicks = cop.isNavigationStuck() && !seen ? cop.getPursuitTicks() + 1 : 0;
 		cop.setPursuitTicks(stuckTicks);
@@ -120,7 +120,7 @@ public class PursuingBehavior implements CopBehavior {
 				return;
 			}
 
-			if (!searched && (seen || perception.allowsLockOn(cop, player)) && distance <= cuffRadius && cop.hasLineOfSight(player)) {
+			if (!searched && perception.allowsLockOn(cop, player) && distance <= cuffRadius && cop.hasLineOfSight(player)) {
 				if (!ceaseFire(cop) && (cop.getTierConfig().skipCuffing() || cop.isCombatForced())) {
 					cop.transitionTo(CopState.COMBAT);
 					return;
@@ -156,7 +156,7 @@ public class PursuingBehavior implements CopBehavior {
 		if (CombatBehavior.holdsForFieldCare(cop, () -> shooter && retreat.takeCover(cop, target))) return;
 		if (shooter && retreat.takeCover(cop, target)) return;
 
-		cop.pursue(target, squad, perception.pursuitRange(cop, target, squad, alertRange));
+		cop.pursue(target, squad, perception.pursuitRange(cop, target, alertRange));
 	}
 
 	@Override

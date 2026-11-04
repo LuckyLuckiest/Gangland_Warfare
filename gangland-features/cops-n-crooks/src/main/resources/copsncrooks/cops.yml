@@ -902,8 +902,10 @@ Cops:
          - "police_vest"
       # Highest wanted level at which the police outfit still works.
       Outfit_Max_Level: 2
-      # Pieces of head, chest and vehicle that must still match for a cop to keep you (higher = easier to shake).
-      Match_Needed: 2
+      # How many of head, chest, legs, boots and on foot / in a car must differ from the cops' description, changed
+      # while no cop sees you, before they stop recognising you; the weapon is described but never counts. 0.21.5:
+      # replaces Match_Needed (an old Match_Needed is ignored with a warning; Changes_Needed = 4 - Match_Needed)
+      Changes_Needed: 2
    # Lookout: a gang mate who is not wanted relays the police radio he hears.
    Lookout:
       # 0.20.0: false turns the lookout relay off; gang mates then stop relaying police radio.

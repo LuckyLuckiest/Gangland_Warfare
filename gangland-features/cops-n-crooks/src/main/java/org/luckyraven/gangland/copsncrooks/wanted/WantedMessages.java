@@ -114,11 +114,17 @@ public class WantedMessages extends LocalizedModuleYaml {
 		TRACKER_HUD("Tracker.Hud", "&cTagged &7%seconds%s"),
 		TRESPASS("Trespass", "&cRestricted area!"),
 		SUSPECT_UNKNOWN("Suspect.Unknown", "unknown suspect"),
-		SUSPECT_BARE("Suspect.Bare", "suspect"),
 		SUSPECT_ON_FOOT("Suspect.On_Foot", "on foot"),
 		SUSPECT_IN_CAR("Suspect.In_Car", "in a car"),
-		SUSPECT_MASK("Suspect.Mask", "in a %head%"),
-		SUSPECT_FORMAT("Suspect.Format", "%who%%mask%, %chest%, %vehicle%"),
+		// 0.21.5: the description is built from these parts (they replace Bare, Mask and Format)
+		SUSPECT_MASKED("Suspect.Masked", "masked in a %head%"),
+		SUSPECT_WEARING("Suspect.Wearing", "wearing %items%"),
+		SUSPECT_PLAIN("Suspect.Plain", "in plain clothes"),
+		SUSPECT_ARMED("Suspect.Armed", "armed with %weapon%"),
+		// 0.21.5: said in chat when a cop of the chase sees you, once per change; %suspect% is the description the cops have
+		DISGUISE_RECOGNISED("Disguise.Recognised", "&cThe cops recognise you: &7%suspect%"),
+		DISGUISE_UNRECOGNISED("Disguise.Unrecognised", "&aThe cops don't recognise you."),
+		DISGUISE_OUTFIT("Disguise.Outfit", "&9In the police outfit, the cops take you for one of their own."),
 		// 0.20.0 hot-cash bag and fence
 		BAG_HUD("Bag.Hud", "&6Bag: &a%money_symbol%%amount%"),
 		BAG_FULL("Bag.Full", "&cYour bag is full."),

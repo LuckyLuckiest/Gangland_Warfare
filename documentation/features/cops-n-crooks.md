@@ -1019,21 +1019,63 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
   cops then only answer calls. There is no separate patrol switch for them; `Cops.Warning.Enable` and
   `Cops.Pull_Over.Enable` only turn each one off on its own.
 
-## Masks, outfits and disguises (0.20.0)
+## Masks, outfits and disguises (0.20.0, reworked in 0.21.5)
 
-Every reported crime stores a suspect description: head, chest colour, the weapon held, and whether you were on foot or in a
-car. The squad leader radios it (`Suspect_Description`), and the words come from `wanted_messages.yml` (`Suspect.*`).
+The cops know you by the description on the radio. Every reported crime stores a suspect description: your headwear, chest,
+legs, boots, the weapon in your hand, and whether you are on foot or in a car. The squad leader radios it
+(`Suspect_Description`, and `Caller_911` for the call that starts the chase), and the words come from `wanted_messages.yml`
+(`Suspect.*`).
 
-- **Masks.** A mask item in `Cops.Disguise.Mask_Items` (or a Bartizan wearable in `Mask_Wearables`) makes the description
-  "unknown suspect in a <mask>".
-- **Changing clothes.** A cop keeps lock while at least `Match_Needed` (2) pieces of head, chest and vehicle still match; change enough pieces to drop below it while no cop has a fresh sighting of you.
-  Cops then stop locking on to you until they see you again.
-- **The police outfit.** Wearing `Police_Outfit` (`police_helmet` and `police_vest`) at `Outfit_Max_Level` (2) stars or fewer
-  stops cops locking on to you.
-- **Fresh sightings win.** While a cop has a fresh sighting, the description follows what you wear. Changing in plain view
-  does not work.
+- **What the description says.** Each worn piece is named: the Bartizan item key first (`police vest`, not "iron
+  chestplate"), then `<dye> jacket` for a dyed leather tunic or `<dye> leather <piece>`, then the material. Armour display
+  names are ignored, so renaming an item cannot fake a change. Example: `masked in a carved pumpkin, wearing red jacket,
+  armed with AK-47, on foot`. A suspect with nothing on is `in plain clothes`. A weapon is named only when it is one (a
+  Bartizan weapon by its clean name, or a held sword, axe, bow, crossbow or trident); a cobblestone in the hand is not.
+- **Masks.** A mask item in `Cops.Disguise.Mask_Items` (or a Bartizan wearable in `Mask_Wearables`) makes the line
+  `masked in a <mask>`. A mask counts as one head change.
+- **Changing clothes.** Out of every cop's sight, change at least `Changes_Needed` (2) of: headwear, chest, legs, boots,
+  on foot / in a car. The cops then no longer know you: they do not acquire you, pursue you or cuff you, and perimeter
+  posts, the Marksman and standoff posts do not see you either. The weapon is described, so drawing one in view makes the
+  cops radio the new look (at most once per `Suspect_Description` cooldown, 1200 ticks), but it never counts as a change.
+- **Seen changing.** Recognition is live sight, not a timer. A cop of the chasing group who sees you now, and either
+  knows your look or has been watching you, recognises you. If a cop watches you change, he knows you anyway. A blind AI
+  tick (0.5 s) with no group cop seeing you drops recognition at once.
+- **The look from the crime.** A crime someone reports through the witness gate (a 911 call, a cop report) records the look
+  you had at the moment of the crime, not when the report lands 3 or 8 seconds later. Pulling on a mask during the call
+  does not hide the crime, and taking it off before the report lands does not either.
+- **The police outfit.** Wearing `Police_Outfit` (`police_helmet` and `police_vest`) at `Outfit_Max_Level` (2) stars or
+  fewer fools every cop, including posts, from the first tick (a freshly dispatched squad that never watched you put it
+  on is fooled at once). It is blown for the rest of the chase, including the post-escape search, when you commit a crime
+  in it or a cop sees you put it on. Taking a piece off and on again does not reset it. It clears when nobody hunts you
+  any more (chase end or the search giving up), never at a quit. A crime committed while nobody hunts you clears a blow
+  left from before (a chase whose stars were cleared while you were offline, or a crime that started no chase), and
+  then blows it again only if that crime is committed in the outfit.
+- **Escape.** An escape keeps the description through the post-escape search, so searchers and posts walk past a
+  changed look instead of re-starring any outfit.
+- **Nobody hunts you.** At 0 stars with no search running, the description is neither re-learned nor re-radioed, and a
+  stale one no longer filters you: beat cops warn for brandishing whatever you wear.
+- **Quitting.** A quit clears the description and any look held for a report that has not landed yet. A report deferred
+  to the next join records the look at the join.
+- **First 911 call.** The first 911 call of a chase names the real description, never "unknown suspect".
 
-Debug line: `DISGUISE <player> state=<outfit|blown|mismatch|match>` and `SUSPECT <player> desc=<text>`.
+### What you are told
+
+A chat line is sent once per change, and only during a chase while a cop of the chasing group can see you. While you
+are recognised, a new look is told when the cops radio it, so the radio's cooldown paces it too. A line set to `''` in
+`wanted_messages.yml` (`Disguise.*`) turns off.
+
+| State | Chat |
+|---|---|
+| Recognised | `The cops recognise you: <description>` |
+| Not recognised (at least `Changes_Needed` pieces differ, nobody watched the change) | `The cops don't recognise you.` |
+| Outfit holds (police outfit, 2 stars or fewer, not blown) | `In the police outfit, the cops take you for one of their own.` |
+| Outfit blown | the Recognised line, naming the outfit |
+
+The boss bar is unchanged: IN SIGHT while the cops see you, SEARCHING otherwise; stars drop on the evasion clock as usual.
+
+Debug line: `DISGUISE <player> state=<seen|outfit|blown|match|mismatch>` and `SUSPECT <player> desc=<text>`.
+
+Upgrading from 0.21.4: see [`migration-0.21.5.md`](../migration-0.21.5.md). `Match_Needed` is replaced by `Changes_Needed`.
 
 ## Tracker tags (0.20.0)
 

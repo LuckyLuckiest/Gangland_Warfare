@@ -259,6 +259,22 @@ class HeatLedgerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.5: isReporting holds only for the reported criminal, only inside commitReported")
+	void isReportingOnlyInsideCommitReported() {
+		Player other = mock(Player.class);
+		when(other.getUniqueId()).thenReturn(UUID.randomUUID());
+		assertFalse(ledger.isReporting(playerId));
+
+		ledger.commitReported(player, ReportKind.CIVILIAN, () -> {
+			assertTrue(ledger.isReporting(playerId));
+			assertFalse(ledger.isReporting(other.getUniqueId()));
+			return true;
+		});
+
+		assertFalse(ledger.isReporting(playerId));
+	}
+
+	@Test
 	@DisplayName("0.21.2 S3: a report for another player never marks this player's crime")
 	void reportKind_onlyForTheReportedCriminal() {
 		Player other = mock(Player.class);

@@ -1442,12 +1442,16 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		List<String> maskItems     = disguise.get("Mask_Items").asList().ofStrings().orNull();
 		List<String> maskWearables = disguise.get("Mask_Wearables").asList().ofStrings().orNull();
 		List<String> policeOutfit  = disguise.get("Police_Outfit").asList().ofStrings().orNull();
+		if (disguise.has("Match_Needed")) {
+			report.add(Severity.WARNING, locationOf(disguise.get("Match_Needed"), disguise), "Cops.Disguise.Match_Needed",
+			           "replaced by Changes_Needed in 0.21.5 and ignored", "config.note");
+		}
 		return new DisguiseSettings(disguise.get("Enable").asBool().orDefault(defaults.enabled()),
 		                            maskItems != null ? maskItems : defaults.maskItems(),
 		                            maskWearables != null ? maskWearables : defaults.maskWearables(),
 		                            policeOutfit != null ? policeOutfit : defaults.policeOutfit(),
 		                            disguise.get("Outfit_Max_Level").asInt().min(0).orDefault(defaults.outfitMaxLevel()),
-		                            disguise.get("Match_Needed").asInt().min(1).orDefault(defaults.matchNeeded()));
+		                            disguise.get("Changes_Needed").asInt().min(1).orDefault(defaults.changesNeeded()));
 	}
 
 	private boolean parseLookoutEnabled(@Nullable NodeReader cops, ConfigReport report) {

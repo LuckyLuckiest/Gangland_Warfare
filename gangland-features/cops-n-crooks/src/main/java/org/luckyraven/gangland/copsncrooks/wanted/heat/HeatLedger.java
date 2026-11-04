@@ -114,6 +114,14 @@ public final class HeatLedger {
 		return playerId.equals(reporting) ? reportingAt : null;
 	}
 
+	/**
+	 * Whether a late report for {@code playerId} is landing right now ({@link #commitReported}): the crime it commits is
+	 * one the witness gate held, so the suspect's look at that crime is the one recorded (0.21.5, row 843).
+	 */
+	public boolean isReporting(UUID playerId) {
+		return playerId.equals(reporting);
+	}
+
 	/** The cop the Assault_Cop or Kill_Cop being committed right now hit (the witness gate's victim), else null. */
 	public @Nullable UUID currentVictim() {
 		return booking;

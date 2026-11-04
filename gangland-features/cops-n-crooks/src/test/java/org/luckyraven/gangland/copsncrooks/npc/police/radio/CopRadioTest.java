@@ -875,4 +875,22 @@ class CopRadioTest {
 
 		assertEquals(java.util.Set.of("tier", "level", "place"), radio.voice(group).extras(group.getSquad()).keySet());
 	}
+
+	@Test
+	@DisplayName("0.21.5: the extras hook gets the hunted player's id, the attacker's for an attacker squad")
+	void extrasHookGetsTheHuntedId() {
+		AtomicReference<Object> seen     = new AtomicReference<>("untouched");
+		UUID                    attacker = UUID.randomUUID();
+		radio.setExtraPlaceholders(id -> {
+			seen.set(id);
+			return null;
+		});
+
+		radio.voice(group).extras(group.getSquad());
+		assertEquals(group.getTargetPlayerId(), seen.get(), "the group's own squad hunts the wanted player");
+
+		seen.set("untouched");
+		radio.voice(group).extras(group.attackerSquad(attacker, null));
+		assertEquals(attacker, seen.get(), "an attacker squad hunts its attacker");
+	}
 }

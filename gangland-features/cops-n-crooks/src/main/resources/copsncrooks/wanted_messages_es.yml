@@ -1,0 +1,32 @@
+#   +------------------------------------------------------+   #
+# |              File: wanted_messages_es.yml               | #
+#   +------------------------------------------------------+   #
+#
+# Los textos de la persecución en español. Se usa cuando Settings.Language es "es". Una clave que falte aquí se lee
+# de wanted_messages.yml, así que este archivo puede ser parcial. Los códigos de color & funcionan. Los marcadores
+# %entre signos de porcentaje% los rellena el plugin. Los nombres de objetos y tintes siguen en inglés.
+
+# Sospechoso: las palabras con las que un policía describe a un sospechoso; '' quita esa parte
+Suspect:
+   # Sin descripción conocida
+   Unknown: "desconocido"
+   # A pie
+   On_Foot: "a pie"
+   # En un vehículo
+   In_Car: "en un auto"
+   # Un sospechoso enmascarado; %head% es la máscara
+   Masked: "enmascarado con %head%"
+   # Lo que lleva puesto; %items% enumera cabeza, pecho, piernas y botas
+   Wearing: "lleva %items%"
+   # No lleva nada que la policía pueda describir
+   Plain: "sin nada llamativo"
+   # El arma en la mano; %weapon% es su nombre
+   Armed: "armado con %weapon%"
+# Disfraz: se dice en el chat cuando un policía de la persecución te ve, una vez por cambio; '' lo desactiva
+Disguise:
+   # Te reconoce; %suspect% es la descripción que tiene la policía
+   Recognised: "&cLa policía te reconoce: &7%suspect%"
+   # Te ve, pero ya no coincides con la descripción
+   Unrecognised: "&aLa policía no te reconoce."
+   # Te ve con el uniforme de policía y te toma por uno de los suyos
+   Outfit: "&9Con el uniforme, la policía te toma por uno de los suyos."

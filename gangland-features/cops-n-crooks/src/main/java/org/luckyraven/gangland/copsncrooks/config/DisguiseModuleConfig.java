@@ -7,6 +7,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
@@ -23,6 +24,7 @@ import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
@@ -56,12 +58,29 @@ public class DisguiseModuleConfig {
 		};
 	}
 
-	/** Whether the player's squad has a fresh sighting; false when no squad chases them. */
-	static Predicate<Player> freshSightingOf(CopManager copManager) {
-		return player -> {
-			CopGroup group = copManager.groupOf(player.getUniqueId());
-			return group != null && group.getSquad().hasFreshSighting();
+	/** Whether a valid cop of {@code group} sees the player now at the alert range; false before the config loads. */
+	static BiPredicate<Player, CopGroup> eyesOf(CopPerception perception, CopLoader copLoader) {
+		// ponytail: one ray per valid group cop per chased player per AI tick; making Keystone's package-private
+		// NpcSquad.anyEyesOn public would reuse the pursuit marks if this ever shows in timings
+		return (player, group) -> {
+			CopConfigProvider provider = copLoader.getLoadedProvider();
+			if (provider == null) return false;
+
+			double range = provider.getAlertRange();
+			synchronized (group.getCops()) {
+				for (CopNpc cop : group.getCops()) {
+					if (cop.isValid() && perception.sees(cop, player, range)) return true;
+				}
+			}
+			return false;
 		};
+	}
+
+	/** Whether the cops still hunt the player: stars above 0, or a post-escape search for them. */
+	static Predicate<Player> huntedOf(UserManager<Player> users, CopManager copManager) {
+		ToIntFunction<Player> level = levelOf(users);
+
+		return player -> level.applyAsInt(player) > 0 || copManager.isSearching(player.getUniqueId());
 	}
 
 	@Bean
@@ -83,12 +102,15 @@ public class DisguiseModuleConfig {
 	public DisguiseFilter disguiseFilter(CopLoader copLoader, SuspectDescriptions descriptions, PoliceOutfit outfit,
 	                                     CopManager copManager, @Qualifier("online") UserManager<Player> users) {
 		return new DisguiseFilter(settingsOf(copLoader), descriptions, outfit, levelOf(users),
-		                          freshSightingOf(copManager));
+		                          huntedOf(users, copManager));
 	}
 
 	@Bean
-	public DisguiseTick disguiseTick(CopLoader copLoader, SuspectDescriptions descriptions, CopRadio copRadio) {
-		return new DisguiseTick(settingsOf(copLoader), descriptions, copRadio);
+	public DisguiseTick disguiseTick(CopLoader copLoader, SuspectDescriptions descriptions, DisguiseFilter filter,
+	                                 PoliceOutfit outfit, CopPerception perception, CopRadio copRadio,
+	                                 WantedMessages messages) {
+		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, outfit, eyesOf(perception, copLoader),
+		                        copRadio, messages);
 	}
 
 	/** Registers the lock-on filter, the AI tick hook and the {@code %suspect%} extras. */

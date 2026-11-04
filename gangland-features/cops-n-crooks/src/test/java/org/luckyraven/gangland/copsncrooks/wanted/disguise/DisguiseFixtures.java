@@ -51,6 +51,8 @@ final class DisguiseFixtures {
 		private final Map<ItemStack, String> keys = new IdentityHashMap<>();
 		private ItemStack helmet;
 		private ItemStack chest;
+		private ItemStack legs;
+		private ItemStack boots;
 		private ItemStack hand;
 		private boolean   inCar;
 
@@ -60,6 +62,8 @@ final class DisguiseFixtures {
 			when(player.getInventory()).thenReturn(inventory);
 			when(inventory.getHelmet()).thenAnswer(inv -> helmet);
 			when(inventory.getChestplate()).thenAnswer(inv -> chest);
+			when(inventory.getLeggings()).thenAnswer(inv -> legs);
+			when(inventory.getBoots()).thenAnswer(inv -> boots);
 			when(inventory.getItemInMainHand()).thenAnswer(inv -> hand);
 			when(player.getVehicle()).thenAnswer(inv -> inCar ? mock(Entity.class) : null);
 		}
@@ -100,6 +104,25 @@ final class DisguiseFixtures {
 			return this;
 		}
 
+		Wearer legs(Material material) {
+			legs = material == null ? null : item(material);
+			return this;
+		}
+
+		/** A leather leggings piece dyed {@code colour}. */
+		Wearer leatherLegs(Color colour) {
+			legs = item(Material.LEATHER_LEGGINGS);
+			LeatherArmorMeta meta = mock(LeatherArmorMeta.class);
+			when(meta.getColor()).thenReturn(colour);
+			when(legs.getItemMeta()).thenReturn(meta);
+			return this;
+		}
+
+		Wearer boots(Material material) {
+			boots = material == null ? null : item(material);
+			return this;
+		}
+
 		Wearer hand(Material material) {
 			hand = material == null ? null : item(material);
 			return this;
@@ -114,6 +137,8 @@ final class DisguiseFixtures {
 		Wearer naked() {
 			helmet = null;
 			chest  = null;
+			legs   = null;
+			boots  = null;
 			return this;
 		}
 

@@ -18,7 +18,6 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.SightSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.SightModel;
-import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.List;
 import java.util.UUID;
@@ -75,13 +74,11 @@ class SightModuleConfigTest {
 	}
 
 	@Test
-	@DisplayName("squad pursuit and the no-squad branch both use the factor: pursuitRange 16 with a null or stale squad")
+	@DisplayName("the pursuit range uses the factor: pursuitRange 16")
 	void pursuitRangeReachesFactor() {
 		bean();
-		NpcSquad stale = mock(NpcSquad.class);
 
-		assertEquals(16.0, perception.pursuitRange(cop, player, null, 40.0), EPS);
-		assertEquals(16.0, perception.pursuitRange(cop, player, stale, 40.0), EPS);
+		assertEquals(16.0, perception.pursuitRange(cop, player, 40.0), EPS);
 	}
 
 	@Test

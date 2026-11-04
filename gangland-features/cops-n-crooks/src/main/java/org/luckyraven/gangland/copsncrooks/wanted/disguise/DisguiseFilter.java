@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.wanted.disguise;
 
 import lombok.CustomLog;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 
@@ -21,37 +22,58 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 	private final SuspectDescriptions         descriptions;
 	private final PoliceOutfit                outfit;
 	private final ToIntFunction<Player>       levelOf;
-	private final Predicate<Player>           freshSighting;
+	private final Predicate<Player>           hunted;
 	private final Map<UUID, String>           lastState = new ConcurrentHashMap<>();
 
 	public DisguiseFilter(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, PoliceOutfit outfit,
-	                      ToIntFunction<Player> levelOf, Predicate<Player> freshSighting) {
+	                      ToIntFunction<Player> levelOf, Predicate<Player> hunted) {
 		this.settings = settings;
 		this.descriptions = descriptions;
 		this.outfit = outfit;
 		this.levelOf = levelOf;
-		this.freshSighting = freshSighting;
+		this.hunted = hunted;
 	}
 
+	/** Whether the cops still hunt this player: stars above 0, or a post-escape search for them. */
+	public boolean hunted(Player player) {
+		return hunted.test(player);
+	}
+
+	/** Disabled, or recognised on the last AI tick ({@code seen}), or else {@link #knows}. */
 	public boolean allows(CopNpc cop, Player player) {
-		DisguiseSettings settings = this.settings.get();
-		if (!settings.enabled()) {
+		if (!settings.get().enabled()) {
 			return true;
 		}
+		if (descriptions.isRecognised(player.getUniqueId())) {
+			return report(player, "seen", true);
+		}
+		return knows(player);
+	}
 
-		int level = levelOf.applyAsInt(player);
+	/** Whether a cop who has not been watching him knows him by the description: the outfit, then the match. */
+	public boolean knows(Player player) {
+		DisguiseSettings settings = this.settings.get();
+		int              level    = levelOf.applyAsInt(player);
 		if (outfit.hides(player, level)) {
 			return report(player, "outfit", false);
 		}
+		if (!hunted.test(player)) {
+			return true;
+		}
 
 		SuspectDescription description = descriptions.latest(player.getUniqueId());
-		if (description == null || freshSighting.test(player)) {
+		if (description == null) {
 			return true;
 		}
 
 		boolean blown = outfit.worn(player) && level <= settings.outfitMaxLevel();
-		boolean match = descriptions.matches(player, description, settings.matchNeeded());
+		boolean match = descriptions.matches(player, description, settings.changesNeeded());
 		return report(player, blown ? "blown" : match ? "match" : "mismatch", match);
+	}
+
+	/** The police outfit fools the cops at his wanted level right now. */
+	public boolean outfitHides(Player player) {
+		return outfit.hides(player, levelOf.applyAsInt(player));
 	}
 
 	@Override
@@ -62,6 +84,11 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 	/** Forgets the last logged state for {@code id}: the chase ended. */
 	public void forget(UUID id) {
 		lastState.remove(id);
+	}
+
+	/** The last logged state for {@code id}; tests. */
+	@Nullable String lastState(UUID id) {
+		return lastState.get(id);
 	}
 
 	/** Logs the state only when it changes for this player, then returns {@code allowed}. */

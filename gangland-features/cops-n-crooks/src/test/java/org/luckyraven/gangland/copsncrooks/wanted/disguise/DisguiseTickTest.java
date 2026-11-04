@@ -5,17 +5,26 @@ import org.bukkit.Material;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
 import org.luckyraven.keystone.npc.NpcSquad;
 
+import java.util.List;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -23,8 +32,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * P-DIS-1 / P-DIS-5: the AI tick keeps the description current while a cop has a fresh sighting and the squad leader
- * radios {@code Suspect_Description} once per chase and again when the text changes. The line is said through
+ * P-DIS-1 / P-DIS-5: the AI tick keeps the description current while a cop of the chase sees and recognises him, and
+ * the squad leader radios {@code Suspect_Description} once per chase and again when the text changes. The line is said through
  * {@code CopRadio.sayFromLeader(group, "Suspect_Description")}; {@code %suspect%} comes from {@link DisguiseTick#extras}.
  */
 @DisplayName("DisguiseTick - description follows while seen, radioed once per change")
@@ -36,9 +45,15 @@ class DisguiseTickTest {
 	private DisguiseSettings    settings;
 	private SuspectDescriptions descriptions;
 	private CopRadio            radio;
+	private WantedMessages      messages;
 	private CopGroup            group;
 	private NpcSquad            squad;
+	private PoliceOutfit        outfit;
+	private DisguiseFilter      filter;
 	private DisguiseTick        tick;
+	private int                 level;
+	private boolean             searching;
+	private boolean             eyes;
 
 	@BeforeEach
 	void setUp() {
@@ -46,19 +61,25 @@ class DisguiseTickTest {
 		settings     = DisguiseSettings.DEFAULT;
 		descriptions = new SuspectDescriptions(() -> settings, wearer.keys(), DisguiseFixtures.words());
 		radio        = mock(CopRadio.class);
+		messages     = DisguiseFixtures.words();
 		squad        = mock(NpcSquad.class);
 		group        = mock(CopGroup.class);
 		when(group.getSquad()).thenReturn(squad);
 		when(radio.sayFromLeader(any(CopGroup.class), anyString())).thenReturn(true);
-		tick = new DisguiseTick(() -> settings, descriptions, radio);
+		level        = 1;
+		searching    = false;
+		eyes         = false;
+		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
+		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> level > 0 || searching);
+		tick         = new DisguiseTick(() -> settings, descriptions, filter, outfit, (p, g) -> eyes, radio, messages);
 	}
 
 	@Test
-	@DisplayName("while a cop has a fresh sighting the stored description follows what the player wears")
+	@DisplayName("while a cop of the chase sees him the stored description follows what the player wears")
 	void descriptionFollowsWhileSeen() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		wearer.leatherChest(Color.fromRGB(20, 20, 250));
 		tick.tick(wearer.player, group);
@@ -67,11 +88,10 @@ class DisguiseTickTest {
 	}
 
 	@Test
-	@DisplayName("with no fresh sighting the stored description does not change")
+	@DisplayName("with no cop seeing him the stored description does not change")
 	void descriptionFrozenWhileUnseen() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(false);
 
 		wearer.leatherChest(Color.fromRGB(20, 20, 250));
 		tick.tick(wearer.player, group);
@@ -83,7 +103,7 @@ class DisguiseTickTest {
 	@DisplayName("a seen player with no stored description gets one")
 	void seenPlayerWithoutDescriptionGetsOne() {
 		wearer.leatherChest(Color.RED);
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 
@@ -95,7 +115,7 @@ class DisguiseTickTest {
 	void suspectLineSpokenOncePerChange() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 		tick.tick(wearer.player, group);
@@ -114,7 +134,7 @@ class DisguiseTickTest {
 	void unspokenLineIsRetried() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 		when(radio.sayFromLeader(group, LINE)).thenReturn(false, true);
 
 		tick.tick(wearer.player, group);
@@ -129,7 +149,7 @@ class DisguiseTickTest {
 	void nextChaseSaysItAgain() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 		tick.tick(wearer.player, null);
@@ -143,7 +163,7 @@ class DisguiseTickTest {
 	void chaseEndForgetsTheSpokenLine() {
 		wearer.leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 		tick.forget(wearer.id);
@@ -154,38 +174,8 @@ class DisguiseTickTest {
 	}
 
 	@Test
-	@DisplayName("forget drops the ticked squad so a finished chase's squad is not retained")
-	void forgetDropsTheSquad() {
-		wearer.leatherChest(Color.RED);
-		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(false);
-
-		tick.tick(wearer.player, group);
-		assertTrue(!tick.extras(squad).isEmpty());
-
-		tick.forget(wearer.id);
-
-		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
-		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
-	}
-
-	@Test
-	@DisplayName("no group (chase ended) also drops the ticked squad")
-	void noGroupDropsTheSquad() {
-		wearer.leatherChest(Color.RED);
-		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(false);
-
-		tick.tick(wearer.player, group);
-		tick.tick(wearer.player, null);
-
-		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
-	}
-
-	@Test
 	@DisplayName("no description known and nobody sees the player: nothing said")
 	void nothingToSay() {
-		when(squad.hasFreshSighting()).thenReturn(false);
 
 		tick.tick(wearer.player, group);
 
@@ -196,9 +186,9 @@ class DisguiseTickTest {
 	@DisplayName("Disguise.Enable false: no refresh and no line")
 	void disabledDoesNothing() {
 		settings = new DisguiseSettings(false, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
-		                                settings.outfitMaxLevel(), settings.matchNeeded());
+		                                settings.outfitMaxLevel(), settings.changesNeeded());
 		wearer.leatherChest(Color.RED);
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 
@@ -207,38 +197,339 @@ class DisguiseTickTest {
 	}
 
 	@Test
-	@DisplayName("%suspect% for a ticked squad is the formatted latest description; an unknown squad has none")
-	void extrasSpeakTheLatestDescription() {
+	@DisplayName("%suspect% for the hunted id is the formatted latest description before any tick; unknown for none")
+	void extrasNameTheHuntedBeforeAnyTick() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(false);
-		tick.tick(wearer.player, group);
 
-		assertEquals("unknown suspect in a carved pumpkin, red jacket, on foot", tick.extras(squad).get("suspect"));
-		assertEquals("unknown suspect", tick.extras(mock(NpcSquad.class)).get("suspect"));
+		assertEquals("masked in a carved pumpkin, wearing red jacket, on foot", tick.extras(wearer.id).get("suspect"));
+		assertEquals("unknown suspect", tick.extras((UUID) null).get("suspect"));
+		assertEquals("unknown suspect", tick.extras(UUID.randomUUID()).get("suspect"));
 	}
 
 	@Test
 	@DisplayName("T-342: a fresh squad or Disguise.Enable false still gets a non-empty %suspect% (the Unknown word)")
 	void extrasFallBackToUnknownWord() {
-		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
+		assertEquals("unknown suspect", tick.extras(wearer.id).get("suspect"));
 		settings = new DisguiseSettings(false, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
-		                                settings.outfitMaxLevel(), settings.matchNeeded());
+		                                settings.outfitMaxLevel(), settings.changesNeeded());
 		tick.tick(wearer.player, group);
-		assertEquals("unknown suspect", tick.extras(squad).get("suspect"));
+		assertEquals("unknown suspect", tick.extras(wearer.id).get("suspect"));
 	}
 
 	@Test
-	@DisplayName("swapping the held item alone does not re-radio an identical description")
-	void weaponSwapAloneSaysNothing() {
+	@DisplayName("D10: drawing a weapon changes the line, so it is radioed again")
+	void drawingAWeaponChangesTheLine() {
 		wearer.leatherChest(Color.RED).hand(null);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = true;
 
 		tick.tick(wearer.player, group);
 		wearer.hand(Material.DIAMOND_SWORD);
 		tick.tick(wearer.player, group);
 
+		verify(radio, times(2)).sayFromLeader(group, LINE);
+	}
+
+	@Test
+	@DisplayName("411: after a clear, a cop seeing a player nobody hunts neither re-learns nor re-speaks the look")
+	void noRelearnOrRespeakAfterAClear() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+		tick.tick(wearer.player, group);
 		verify(radio, times(1)).sayFromLeader(group, LINE);
+
+		descriptions.clear(wearer.id);
+		tick.forget(wearer.id);
+		level = 0;
+		tick.tick(wearer.player, group);
+
+		assertNull(descriptions.latest(wearer.id));
+		verify(radio, times(1)).sayFromLeader(group, LINE);
+	}
+
+	@Test
+	@DisplayName("a player nobody hunts ticked with no group (shutdown, emptied group) loses the stale description")
+	void unhuntedNullGroupClearsTheDescription() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		level = 0;
+
+		tick.tick(wearer.player, null);
+
+		assertNull(descriptions.latest(wearer.id));
+	}
+
+	@Test
+	@DisplayName("0 stars but still searched for: the description is kept")
+	void searchKeepsTheDescription() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		level     = 0;
+		searching = true;
+
+		tick.tick(wearer.player, group);
+
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	private void dressAsCop() {
+		wearer.helmet(Material.IRON_HELMET, "police_helmet").chest(Material.IRON_CHESTPLATE, "police_vest");
+	}
+
+	@Test
+	@DisplayName("841: the squad timer is fresh but no cop sees him: a change is not learned")
+	void changeOutOfSightIsNotLearnedWhileTimerFresh() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		when(squad.hasFreshSighting()).thenReturn(true);
+		eyes = false;
+
+		wearer.leatherChest(Color.fromRGB(20, 20, 250));
+		tick.tick(wearer.player, group);
+
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("D2: one tick with no cop seeing him drops recognition; a change made then is not learned")
+	void oneBlindTickDropsRecognition() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+
+		eyes = true;
+		tick.tick(wearer.player, group);
+		assertTrue(descriptions.isRecognised(wearer.id), "seen and matching: recognised");
+
+		eyes = false;
+		tick.tick(wearer.player, group);
+		assertFalse(descriptions.isRecognised(wearer.id), "one blind tick: dropped");
+
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+		eyes = true;
+		tick.tick(wearer.player, group);
+
+		assertFalse(descriptions.isRecognised(wearer.id), "two pieces changed out of sight");
+		assertEquals("carved pumpkin", descriptions.latest(wearer.id).head());
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("P-DIS-5: a change made while a cop watches is learned")
+	void changeInPlainViewIsLearned() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+		tick.tick(wearer.player, group);
+
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+		tick.tick(wearer.player, group);
+
+		assertEquals("", descriptions.latest(wearer.id).head());
+		assertEquals("blue jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("D7: the search giving up (no WantedEndEvent) clears a blown outfit")
+	void searchGaveUpClearsBlown() {
+		dressAsCop();
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		outfit.onCrime(wearer.player);
+		assertFalse(outfit.hides(wearer.player, 2), "blown");
+
+		level     = 0;
+		searching = false;
+		tick.tick(wearer.player, group);
+
+		assertTrue(outfit.hides(wearer.player, 2), "nobody hunts him: the outfit fools them again");
+	}
+
+	@Test
+	@DisplayName("D7: a blown outfit with no description (a quit wiped it) is cleared on a tick nobody hunts him")
+	void unhuntedTickClearsBlownWithNoDescription() {
+		dressAsCop();
+		outfit.onCrime(wearer.player);
+		assertNull(descriptions.latest(wearer.id));
+
+		level = 0;
+		tick.tick(wearer.player, null);
+
+		assertTrue(outfit.hides(wearer.player, 2), "nobody hunts him: the outfit fools them again");
+	}
+
+	@Test
+	@DisplayName("D7: putting the police outfit on in view blows it, and a blind tick does not un-blow it")
+	void outfitPutOnInViewIsBlown() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		level = 2;
+		eyes  = true;
+		tick.tick(wearer.player, group);
+
+		dressAsCop();
+		tick.tick(wearer.player, group);
+		assertFalse(outfit.hides(wearer.player, 2), "seen putting it on");
+
+		eyes = false;
+		tick.tick(wearer.player, group);
+		assertFalse(outfit.hides(wearer.player, 2), "still blown after a blind tick");
+	}
+
+	/** Every chat line the player was sent so far. */
+	private List<String> told() {
+		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		verify(wearer.player, atLeast(0)).sendMessage(captor.capture());
+		return captor.getAllValues();
+	}
+
+	@Test
+	@DisplayName("850: three ticks recognised, one Recognised line carrying the description")
+	void toldOnceWhenRecognised() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(1, lines.size(), lines.toString());
+		assertTrue(lines.get(0).contains("The cops recognise you"), lines.get(0));
+		assertTrue(lines.get(0).contains("red jacket"), lines.get(0));
+	}
+
+	@Test
+	@DisplayName("850: recognised, a blind tick, two pieces swapped, a cop sees him: one Unrecognised line")
+	void toldWhenNoLongerRecognised() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+		tick.tick(wearer.player, group);
+
+		eyes = false;
+		tick.tick(wearer.player, group);
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+		eyes = true;
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(0).contains("The cops recognise you"), lines.get(0));
+		assertTrue(lines.get(1).contains("don't recognise"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("850: the police outfit at 2 stars, a cop sees him: one Outfit line")
+	void toldWhenTheOutfitHolds() {
+		dressAsCop();
+		level = 2;
+		eyes  = true;
+
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(1, lines.size(), lines.toString());
+		assertTrue(lines.get(0).contains("police outfit"), lines.get(0));
+	}
+
+	@Test
+	@DisplayName("850: guard - nothing is told while no cop of the chase sees him")
+	void nothingToldWhileUnseen() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		assertTrue(told().isEmpty());
+	}
+
+	@Test
+	@DisplayName("850: a blank line ('' in the file) is never sent")
+	void blankLineIsNotSent() {
+		doReturn("").when(messages).format(any(WantedMessages.Key.class), anyMap());
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+
+		tick.tick(wearer.player, group);
+
+		verify(wearer.player, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("850: guard - forget (a chase ended) lets the next chase be told again")
+	void forgetTellsAgain() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+
+		tick.tick(wearer.player, group);
+		tick.forget(wearer.id);
+		tick.tick(wearer.player, group);
+
+		assertEquals(2, told().size());
+	}
+
+	@Test
+	@DisplayName("850 (scenario 2): only the tunic changed out of sight, seen again: a second Recognised line, new look")
+	void toldAgainWhenRecognisedInANewLook() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+		tick.tick(wearer.player, group);
+
+		eyes = false;
+		tick.tick(wearer.player, group);
+		wearer.leatherChest(Color.fromRGB(20, 20, 250));
+		eyes = true;
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("The cops recognise you"), lines.get(1));
+		assertTrue(lines.get(1).contains("blue jacket"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("850 (scenario 5): recognised, the police outfit put on in view: a Recognised line naming the outfit")
+	void toldTheOutfitWhenSeenPuttingItOn() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		level = 2;
+		eyes  = true;
+		tick.tick(wearer.player, group);
+
+		dressAsCop();
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("police helmet"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("850: recognised, a new look while the radio is on cooldown: no second line until it is radioed")
+	void newLookIsToldWhenRadioed() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+		when(radio.sayFromLeader(group, LINE)).thenReturn(true, false, false, true);
+		tick.tick(wearer.player, group);
+
+		wearer.leatherChest(Color.fromRGB(20, 20, 250));
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+		assertEquals(1, told().size(), told().toString());
+
+		tick.tick(wearer.player, group);
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("blue jacket"), lines.get(1));
 	}
 }

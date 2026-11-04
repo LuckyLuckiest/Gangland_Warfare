@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.wanted.disguise;
 
 import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,23 +33,23 @@ class SuspectDescriptionsTest {
 	}
 
 	@Test
-	@DisplayName("a configured mask material makes an unknown suspect in that mask")
-	void maskMakesUnknownSuspect() {
+	@DisplayName("a configured mask material makes a masked suspect in that mask")
+	void maskMakesAMaskedSuspect() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED).inCar(false);
 
 		SuspectDescription d = descriptions().describe(wearer.player);
 
 		assertTrue(d.masked());
 		assertEquals("carved pumpkin", d.head());
-		assertTrue(descriptions().format(d).startsWith("unknown suspect in a carved pumpkin"), descriptions().format(d));
+		assertTrue(descriptions().format(d).startsWith("masked in a carved pumpkin"), descriptions().format(d));
 	}
 
 	@Test
-	@DisplayName("the whole line reads: unknown suspect in a carved pumpkin, red jacket, on foot")
-	void fullLine() {
+	@DisplayName("the masked line reads: masked in a carved pumpkin, wearing red jacket, on foot")
+	void maskedLine() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 
-		assertEquals("unknown suspect in a carved pumpkin, red jacket, on foot",
+		assertEquals("masked in a carved pumpkin, wearing red jacket, on foot",
 		             descriptions().format(descriptions().describe(wearer.player)));
 	}
 
@@ -65,15 +66,17 @@ class SuspectDescriptionsTest {
 	}
 
 	@Test
-	@DisplayName("a wearable not listed in Mask_Wearables is just a hat: described, not masked")
-	void unlistedWearableIsNotAMask() {
-		wearer.helmet(Material.LEATHER_HELMET, "black_mask");
+	@DisplayName("a Bartizan wearable key names its piece on every slot; an unlisted one is a hat, not a mask")
+	void wearableKeyNamesEveryPiece() {
+		wearer.chest(Material.IRON_CHESTPLATE, "police_vest");
+		assertEquals("police vest", descriptions().describe(wearer.player).chest());
 
+		wearer.helmet(Material.LEATHER_HELMET, "black_mask");
 		SuspectDescription d = descriptions().describe(wearer.player);
 
 		assertFalse(d.masked());
-		assertEquals("leather helmet", d.head());
-		assertTrue(descriptions().format(d).startsWith("suspect"), descriptions().format(d));
+		assertEquals("black mask", d.head());
+		assertTrue(descriptions().format(d).startsWith("wearing black mask"), descriptions().format(d));
 	}
 
 	@Test
@@ -117,22 +120,74 @@ class SuspectDescriptionsTest {
 	}
 
 	@Test
-	@DisplayName("with no chest piece the line leaves no empty slot between commas")
-	void formatSkipsEmptyChest() {
-		assertEquals("suspect, on foot", descriptions().format(descriptions().describe(wearer.player)));
+	@DisplayName("a suspect wearing nothing is in plain clothes")
+	void plainClothesLine() {
+		assertEquals("in plain clothes, on foot", descriptions().format(descriptions().describe(wearer.player)));
 	}
 
 	@Test
-	@DisplayName("the held weapon is its material; empty hands, air and null say so")
-	void weaponText() {
+	@DisplayName("only a weapon is described: a sword is, cobblestone, air and null are not")
+	void onlyAWeaponIsArmed() {
 		wearer.hand(Material.DIAMOND_SWORD);
-		assertEquals("diamond sword", descriptions().describe(wearer.player).weapon());
+		SuspectDescription armed = descriptions().describe(wearer.player);
+		assertEquals("diamond sword", armed.weapon());
+		assertTrue(descriptions().format(armed).contains("armed with diamond sword"), descriptions().format(armed));
+
+		wearer.hand(Material.COBBLESTONE);
+		assertEquals("", descriptions().describe(wearer.player).weapon());
 
 		wearer.hand(Material.AIR);
-		assertEquals(SuspectDescriptions.EMPTY_HANDS, descriptions().describe(wearer.player).weapon());
+		assertEquals("", descriptions().describe(wearer.player).weapon());
 
 		wearer.hand(null);
-		assertEquals(SuspectDescriptions.EMPTY_HANDS, descriptions().describe(wearer.player).weapon());
+		SuspectDescription bare = descriptions().describe(wearer.player);
+		assertEquals("", bare.weapon());
+		assertFalse(descriptions().format(bare).contains("armed"), descriptions().format(bare));
+	}
+
+	@Test
+	@DisplayName("a Bartizan weapon is named by its clean display name")
+	void bartizanWeaponByCleanName() {
+		WearableKeys named = new WearableKeys() {
+			@Override
+			public String keyOf(ItemStack item) {
+				return null;
+			}
+
+			@Override
+			public String weaponNameOf(ItemStack item) {
+				return item == null ? null : "AK-47";
+			}
+		};
+		wearer.hand(Material.STICK);
+
+		SuspectDescriptions subject = new SuspectDescriptions(() -> DisguiseSettings.DEFAULT, named,
+		                                                      DisguiseFixtures.words());
+		SuspectDescription  d       = subject.describe(wearer.player);
+
+		assertEquals("AK-47", d.weapon());
+		assertTrue(subject.format(d).contains("armed with AK-47"), subject.format(d));
+	}
+
+	@Test
+	@DisplayName("legs and boots are described: dyed leather leggings by colour, others by material")
+	void legsAndBootsDescribed() {
+		wearer.leatherLegs(Color.RED).boots(Material.IRON_BOOTS);
+
+		SuspectDescription d = descriptions().describe(wearer.player);
+
+		assertEquals("red leather leggings", d.legs());
+		assertEquals("iron boots", d.feet());
+	}
+
+	@Test
+	@DisplayName("every worn piece and the weapon are in the line: wearing helmet, jacket, leggings, boots, armed with")
+	void fullDetailLine() {
+		wearer.helmet(Material.DIAMOND_HELMET).leatherChest(Color.RED).legs(Material.IRON_LEGGINGS)
+		      .boots(Material.IRON_BOOTS).hand(Material.DIAMOND_SWORD);
+
+		assertEquals("wearing diamond helmet, red jacket, iron leggings, iron boots, armed with diamond sword, on foot",
+		             descriptions().format(descriptions().describe(wearer.player)));
 	}
 
 	@Test
@@ -146,35 +201,50 @@ class SuspectDescriptionsTest {
 	}
 
 	@Test
-	@DisplayName("two of head, chest and vehicle still equal: a match; only one equal: no match")
-	void matchNeedsTwoOfThree() {
-		SuspectDescription stored = new SuspectDescription("carved pumpkin", "red jacket", "", false, true);
+	@DisplayName("one change (the head) is still a match; two changes (head and chest) shake them")
+	void twoChangesShakeThem() {
+		SuspectDescription stored = new SuspectDescription("carved pumpkin", "red jacket", "", "", "", false, true);
 
 		wearer.helmet(null).leatherChest(Color.RED).inCar(false);
-		assertTrue(descriptions().matches(wearer.player, stored, 2), "chest and vehicle still equal");
+		assertTrue(descriptions().matches(wearer.player, stored, 2), "only the head changed");
 
 		wearer.leatherChest(Color.fromRGB(20, 20, 250));
-		assertFalse(descriptions().matches(wearer.player, stored, 2), "only the vehicle equals");
+		assertFalse(descriptions().matches(wearer.player, stored, 2), "head and chest changed");
 	}
 
 	@Test
-	@DisplayName("Match_Needed 3 wants all three; the held weapon never counts")
-	void matchNeededThreeAndWeaponIgnored() {
-		SuspectDescription stored = new SuspectDescription("", "red jacket", "pistol", false, false);
+	@DisplayName("legs and boots count as changes: leggings alone is one, leggings and boots are two")
+	void legsAndBootsCountAsChanges() {
+		SuspectDescription stored = new SuspectDescription("", "red jacket", "iron leggings", "iron boots", "", false,
+		                                                   false);
+		wearer.leatherChest(Color.RED).legs(Material.IRON_LEGGINGS).boots(Material.IRON_BOOTS);
+		assertTrue(descriptions().matches(wearer.player, stored, 2), "nothing changed");
+
+		wearer.legs(Material.DIAMOND_LEGGINGS);
+		assertTrue(descriptions().matches(wearer.player, stored, 2), "the leggings alone are one change");
+
+		wearer.boots(Material.DIAMOND_BOOTS);
+		assertFalse(descriptions().matches(wearer.player, stored, 2), "leggings and boots are two changes");
+	}
+
+	@Test
+	@DisplayName("Changes_Needed 1: any one change shakes them, but the held weapon never counts")
+	void changesNeededOneAndWeaponIgnored() {
+		SuspectDescription stored = new SuspectDescription("", "red jacket", "", "", "pistol", false, false);
 
 		wearer.leatherChest(Color.RED).hand(Material.DIAMOND_SWORD);
-		assertTrue(descriptions().matches(wearer.player, stored, 3), "weapon differs but is descriptive only");
+		assertTrue(descriptions().matches(wearer.player, stored, 1), "weapon differs but is descriptive only");
 
 		wearer.inCar(true);
-		assertFalse(descriptions().matches(wearer.player, stored, 3));
+		assertFalse(descriptions().matches(wearer.player, stored, 1), "a different vehicle is a change");
 	}
 
 	@Test
 	@DisplayName("store, latest and clear keep the newest description per player")
 	void storeLatestClear() {
 		SuspectDescriptions store  = descriptions();
-		SuspectDescription  first  = new SuspectDescription("", "red jacket", "", false, false);
-		SuspectDescription  second = new SuspectDescription("", "blue jacket", "", false, false);
+		SuspectDescription  first  = new SuspectDescription("", "red jacket", "", "", "", false, false);
+		SuspectDescription  second = new SuspectDescription("", "blue jacket", "", "", "", false, false);
 
 		assertNull(store.latest(wearer.id));
 		store.store(wearer.id, first);
@@ -186,15 +256,15 @@ class SuspectDescriptionsTest {
 	}
 
 	@Test
-	@DisplayName("format honours the configured Suspect.Format template")
+	@DisplayName("format honours the configured Suspect.Wearing template")
 	void formatHonoursTemplate() {
 		org.luckyraven.gangland.copsncrooks.wanted.WantedMessages messages = DisguiseFixtures.words();
 		when(messages.format(org.mockito.ArgumentMatchers.eq(
-				org.luckyraven.gangland.copsncrooks.wanted.WantedMessages.Key.SUSPECT_FORMAT),
+				org.luckyraven.gangland.copsncrooks.wanted.WantedMessages.Key.SUSPECT_WEARING),
 		                     org.mockito.ArgumentMatchers.anyMap())).thenReturn("TEMPLATE");
 		SuspectDescriptions subject = new SuspectDescriptions(() -> DisguiseSettings.DEFAULT, item -> null, messages);
 
-		assertTrue(subject.format(new SuspectDescription("", "red jacket", "", false, false)).contains("TEMPLATE"));
+		assertTrue(subject.format(new SuspectDescription("", "red jacket", "", "", "", false, false)).contains("TEMPLATE"));
 	}
 
 	@Test

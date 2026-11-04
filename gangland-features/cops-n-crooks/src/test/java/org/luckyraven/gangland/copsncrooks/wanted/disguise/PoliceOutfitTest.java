@@ -105,8 +105,8 @@ class PoliceOutfitTest {
 	}
 
 	@Test
-	@DisplayName("taking the outfit off and putting it on again clears the blown flag")
-	void reWearingClearsBlown() {
+	@DisplayName("848: taking the outfit off and putting it on again keeps it blown")
+	void blownSurvivesTakingAPieceOff() {
 		dress();
 		PoliceOutfit outfit = outfit();
 		outfit.onCrime(wearer.player);
@@ -115,7 +115,7 @@ class PoliceOutfitTest {
 		assertFalse(outfit.hides(wearer.player, 1), "not worn");
 		dress();
 
-		assertTrue(outfit.hides(wearer.player, 1));
+		assertFalse(outfit.hides(wearer.player, 1));
 	}
 
 	@Test
@@ -154,6 +154,10 @@ class PoliceOutfitTest {
 		assertNull(keys.keyOf(null));
 		assertDoesNotThrow(() -> keys.keyOf(plain));
 		assertNull(keys.keyOf(plain));
+		assertDoesNotThrow(() -> keys.weaponNameOf(null));
+		assertNull(keys.weaponNameOf(null));
+		assertDoesNotThrow(() -> keys.weaponNameOf(plain));
+		assertNull(keys.weaponNameOf(plain));
 	}
 
 	@Test

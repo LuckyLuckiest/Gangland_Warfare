@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.wanted.disguise;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -19,7 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/** The police outfit: worn, and "blown" by a crime committed in it until it comes off (0.20.0 lane disguise). */
+/**
+ * The police outfit: worn, and "blown" by a crime committed in it or by being seen putting it on, for the rest of the
+ * chase: until {@link #clear} (0.20.0 lane disguise, 0.21.5 blown lasts the chase).
+ */
 public class PoliceOutfit {
 
 	private final Supplier<DisguiseSettings> settings;
@@ -50,14 +54,18 @@ public class PoliceOutfit {
 	/** A crime was committed: blown when the outfit is worn. */
 	public void onCrime(Player player) {
 		if (worn(player)) {
-			blown.add(player.getUniqueId());
+			blow(player.getUniqueId());
 		}
 	}
 
-	/** Worn, not blown, and {@code level} within {@code Outfit_Max_Level}; a removed outfit forgets its blown flag. */
+	/** The outfit no longer fools the cops. */
+	public void blow(UUID playerId) {
+		blown.add(playerId);
+	}
+
+	/** Worn, not blown, and {@code level} within {@code Outfit_Max_Level}. */
 	public boolean hides(Player player, int level) {
 		if (!worn(player)) {
-			blown.remove(player.getUniqueId());
 			return false;
 		}
 		return !blown.contains(player.getUniqueId()) && level <= settings.get().outfitMaxLevel();
@@ -67,9 +75,19 @@ public class PoliceOutfit {
 		blown.remove(playerId);
 	}
 
-	/** The Bartizan-backed keys; the only place a Bartizan type is named. */
+	/** The Bartizan-backed keys and weapon names; the only place a Bartizan type is named. */
 	public static WearableKeys bartizanKeys() {
-		return PoliceOutfit::bartizanKeyOf;
+		return new WearableKeys() {
+			@Override
+			public @Nullable String keyOf(@Nullable ItemStack item) {
+				return bartizanKeyOf(item);
+			}
+
+			@Override
+			public @Nullable String weaponNameOf(@Nullable ItemStack item) {
+				return bartizanWeaponNameOf(item);
+			}
+		};
 	}
 
 	private void addKey(Set<String> present, @Nullable ItemStack item) {
@@ -81,7 +99,32 @@ public class PoliceOutfit {
 
 	/** Resolved fresh on every call: Bartizan may enable after this module, or not be installed at all. */
 	private static @Nullable String bartizanKeyOf(@Nullable ItemStack item) {
-		if (item == null || Bukkit.getServer() == null) {
+		if (item == null || bartizan() == null) {
+			return null;
+		}
+		try {
+			return Wearable.getWearableKey(item);
+		} catch (NoClassDefFoundError e) {
+			return null;
+		}
+	}
+
+	/** The weapon's name without colour codes, or {@code null} when {@code item} is no Bartizan weapon. */
+	private static @Nullable String bartizanWeaponNameOf(@Nullable ItemStack item) {
+		BartizanApi api = item == null ? null : bartizan();
+		if (api == null) {
+			return null;
+		}
+		try {
+			String name = api.items().cleanDisplayName(item);
+			return name == null ? null : ChatColor.stripColor(name);
+		} catch (NoClassDefFoundError e) {
+			return null;
+		}
+	}
+
+	private static @Nullable BartizanApi bartizan() {
+		if (Bukkit.getServer() == null) {
 			return null;
 		}
 		try {
@@ -90,10 +133,7 @@ public class PoliceOutfit {
 				return null;
 			}
 			RegisteredServiceProvider<BartizanApi> registration = services.getRegistration(BartizanApi.class);
-			if (registration == null) {
-				return null;
-			}
-			return Wearable.getWearableKey(item);
+			return registration == null ? null : registration.getProvider();
 		} catch (NoClassDefFoundError e) {
 			return null;
 		}

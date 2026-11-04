@@ -10,6 +10,8 @@
 #   %side%      the spot relative to the way the suspect faces
 #   %health%    a cop's health in percent (Hit, Medic_Treating, Patched_Up)
 #   %eta%       seconds the medic needs to reach the patient (Medic_Moving)
+#   %suspect%   the cops' description of the hunted player, e.g. masked in a carved pumpkin, wearing red jacket, on foot
+#               (Suspect_Description, Caller_911); the words come from wanted_messages.yml Suspect.*
 #   %role%      the speaker's role, e.g. Medic, Marksman
 #   %tier%, %level% dispatch lines only
 #   %place%     the named place near the spot (a district, hideout, turf or waypoint), or Unknown_Place

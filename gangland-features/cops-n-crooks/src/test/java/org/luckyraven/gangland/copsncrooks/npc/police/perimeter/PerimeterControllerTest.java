@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
@@ -239,6 +240,24 @@ class PerimeterControllerTest {
 	}
 
 	@Test
+	@DisplayName("a post the disguise fools does not see him: no sighting, no Eyes_On, the post stays posted (row 333)")
+	void disguisedPlayerIsNotSighted() {
+		chaser("Commander", 1);
+		CopNpc marksman = chaser("Marksman", 2);
+		controller.start(player, centre, 90, 4);
+		when(marksman.canSee(player, 40.0)).thenReturn(true);
+		controller.setLockOn((cop, p) -> false);
+
+		controller.tick(player, group);
+
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
+		verify(radio, never()).sayAs(any(), any(), eq("Eyes_On"), any());
+		verify(marksman, never()).releasePost();
+		assertEquals(CopState.POSTED, stateOf(marksman));
+		assertTrue(controller.isActive(playerId));
+	}
+
+	@Test
 	@DisplayName("a post that cannot see him keeps holding and says nothing")
 	void postWithoutSight_keepsHolding() {
 		chaser("Commander", 1);
@@ -247,7 +266,7 @@ class PerimeterControllerTest {
 
 		controller.tick(player, group);
 
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
 		verify(marksman, never()).releasePost();
 		assertEquals(CopState.POSTED, stateOf(marksman));
 		assertTrue(controller.isActive(playerId));
@@ -423,6 +442,6 @@ class PerimeterControllerTest {
 		verify(radio, never()).sayAs(any(), any(), any(), any());
 		// tick on an inactive player is a no-op too
 		controller.tick(player, null);
-		verify(squad, never()).reportSighting(any());
+		verify(squad, never()).reportSighting(any(CopNpc.class), any(Location.class), anyDouble());
 	}
 }

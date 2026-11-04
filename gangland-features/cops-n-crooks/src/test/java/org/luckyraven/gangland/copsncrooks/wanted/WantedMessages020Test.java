@@ -47,10 +47,8 @@ class WantedMessages020Test {
 			Map.entry(WantedMessages.Key.TRACKER_HUD, List.of("%seconds%")),
 			Map.entry(WantedMessages.Key.TRESPASS, List.of()),
 			Map.entry(WantedMessages.Key.SUSPECT_UNKNOWN, List.of()),
-			Map.entry(WantedMessages.Key.SUSPECT_BARE, List.of()),
 			Map.entry(WantedMessages.Key.SUSPECT_ON_FOOT, List.of()),
-			Map.entry(WantedMessages.Key.SUSPECT_IN_CAR, List.of()),
-			Map.entry(WantedMessages.Key.SUSPECT_FORMAT, List.of("%who%", "%mask%", "%chest%", "%vehicle%")));
+			Map.entry(WantedMessages.Key.SUSPECT_IN_CAR, List.of()));
 
 	@TempDir
 	Path tempDir;
@@ -85,10 +83,8 @@ class WantedMessages020Test {
 		assertTrue(WantedMessages.Key.TRACKER_TAGGED.fallback.contains("Your car has been tagged. Ditch it."));
 		assertTrue(WantedMessages.Key.TRESPASS.fallback.contains("Restricted area"));
 		assertEquals("unknown suspect", WantedMessages.Key.SUSPECT_UNKNOWN.fallback);
-		assertEquals("suspect", WantedMessages.Key.SUSPECT_BARE.fallback);
 		assertEquals("on foot", WantedMessages.Key.SUSPECT_ON_FOOT.fallback);
 		assertEquals("in a car", WantedMessages.Key.SUSPECT_IN_CAR.fallback);
-		assertEquals("%who%%mask%, %chest%, %vehicle%", WantedMessages.Key.SUSPECT_FORMAT.fallback);
 	}
 
 	@Test

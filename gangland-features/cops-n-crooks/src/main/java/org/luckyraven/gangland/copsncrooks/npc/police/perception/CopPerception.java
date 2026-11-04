@@ -2,9 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.perception;
 
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
-import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.List;
 import java.util.Objects;
@@ -75,15 +73,12 @@ public class CopPerception {
 
 	/**
 	 * The sight range handed to {@code cop.pursue}: non-player {@code base}; an allowed player {@link #rangeFor};
-	 * a filtered-out player stays visible only while {@code squad} has a fresh sighting, otherwise 0.
+	 * a filtered-out player 0, whatever the squad's sighting timer says (0.21.5, row 842).
 	 */
-	public double pursuitRange(CopNpc cop, LivingEntity target, @Nullable NpcSquad squad, double base) {
+	public double pursuitRange(CopNpc cop, LivingEntity target, double base) {
 		if (!(target instanceof Player)) {
 			return base;
 		}
-		if (allowsLockOn(cop, target)) {
-			return rangeFor(cop, target, base);
-		}
-		return squad != null && squad.hasFreshSighting() ? rangeFor(cop, target, base) : 0.0;
+		return allowsLockOn(cop, target) ? rangeFor(cop, target, base) : 0.0;
 	}
 }

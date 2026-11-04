@@ -4,7 +4,8 @@
 #
 # The text of the chase HUD and the charge sheet. & colour codes work. Placeholders in %percent% signs are filled in
 # by the plugin: %stars%, %time%, %arrow%, %distance%, %crime%, %tier%, %stance%, %count% (also the number of stars
-# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%, %reporter%.
+# a star-drop line reports), %amount%, %paid%, %money_symbol%, %player%, %seconds%, %ending%, %xp%, %reporter%, %head%,
+# %items%, %weapon%, %suspect%.
 
 # The boss bar and the star card
 Hud:
@@ -234,20 +235,30 @@ Tracker:
    Hud: "&cTagged &7%seconds%s"
 # Trespass: the line shown when you enter a restricted area
 Trespass: "&cRestricted area!"
-# Suspect: the words a cop's description of a suspect is built from
+# Suspect: the words a cop's description of a suspect is built from. 0.21.5: '' drops that part
 Suspect:
    # No description known
    Unknown: "unknown suspect"
-   # The bare word for a suspect
-   Bare: "suspect"
    # The suspect is on foot
    On_Foot: "on foot"
    # The suspect is in a car
    In_Car: "in a car"
-   # The mask part of a masked suspect; %head% is what is on the head
-   Mask: "in a %head%"
-   # The whole description; %who% is the word for the suspect, %mask% the mask, %chest% the chest, %vehicle% the vehicle
-   Format: "%who%%mask%, %chest%, %vehicle%"
+   # 0.21.5: a masked suspect; %head% is the mask
+   Masked: "masked in a %head%"
+   # 0.21.5: what the suspect wears; %items% lists the head, chest, legs and boots worn
+   Wearing: "wearing %items%"
+   # 0.21.5: a suspect who wears nothing the cops can describe
+   Plain: "in plain clothes"
+   # 0.21.5: the weapon in the suspect's hand; %weapon% is its name
+   Armed: "armed with %weapon%"
+# 0.21.5 Disguise: said in chat when a cop of the chase sees you, once per change; '' turns a line off
+Disguise:
+   # He knows you; %suspect% is the description the cops have
+   Recognised: "&cThe cops recognise you: &7%suspect%"
+   # He sees you, but you no longer match the description
+   Unrecognised: "&aThe cops don't recognise you."
+   # He sees you in the police outfit and takes you for a cop
+   Outfit: "&9In the police outfit, the cops take you for one of their own."
 
 # 0.20.0 hot-cash bag: the action bar, the bag's messages and the fence's messages
 Bag:
