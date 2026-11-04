@@ -201,27 +201,42 @@ class SuspectDescriptionsTest {
 	}
 
 	@Test
-	@DisplayName("two of head, chest and vehicle still equal: a match; only one equal: no match")
-	void matchNeedsTwoOfThree() {
+	@DisplayName("one change (the head) is still a match; two changes (head and chest) shake them")
+	void twoChangesShakeThem() {
 		SuspectDescription stored = new SuspectDescription("carved pumpkin", "red jacket", "", "", "", false, true);
 
 		wearer.helmet(null).leatherChest(Color.RED).inCar(false);
-		assertTrue(descriptions().matches(wearer.player, stored, 2), "chest and vehicle still equal");
+		assertTrue(descriptions().matches(wearer.player, stored, 2), "only the head changed");
 
 		wearer.leatherChest(Color.fromRGB(20, 20, 250));
-		assertFalse(descriptions().matches(wearer.player, stored, 2), "only the vehicle equals");
+		assertFalse(descriptions().matches(wearer.player, stored, 2), "head and chest changed");
 	}
 
 	@Test
-	@DisplayName("Match_Needed 3 wants all three; the held weapon never counts")
-	void matchNeededThreeAndWeaponIgnored() {
+	@DisplayName("legs and boots count as changes: leggings alone is one, leggings and boots are two")
+	void legsAndBootsCountAsChanges() {
+		SuspectDescription stored = new SuspectDescription("", "red jacket", "iron leggings", "iron boots", "", false,
+		                                                   false);
+		wearer.leatherChest(Color.RED).legs(Material.IRON_LEGGINGS).boots(Material.IRON_BOOTS);
+		assertTrue(descriptions().matches(wearer.player, stored, 2), "nothing changed");
+
+		wearer.legs(Material.DIAMOND_LEGGINGS);
+		assertTrue(descriptions().matches(wearer.player, stored, 2), "the leggings alone are one change");
+
+		wearer.boots(Material.DIAMOND_BOOTS);
+		assertFalse(descriptions().matches(wearer.player, stored, 2), "leggings and boots are two changes");
+	}
+
+	@Test
+	@DisplayName("Changes_Needed 1: any one change shakes them, but the held weapon never counts")
+	void changesNeededOneAndWeaponIgnored() {
 		SuspectDescription stored = new SuspectDescription("", "red jacket", "", "", "pistol", false, false);
 
 		wearer.leatherChest(Color.RED).hand(Material.DIAMOND_SWORD);
-		assertTrue(descriptions().matches(wearer.player, stored, 3), "weapon differs but is descriptive only");
+		assertTrue(descriptions().matches(wearer.player, stored, 1), "weapon differs but is descriptive only");
 
 		wearer.inCar(true);
-		assertFalse(descriptions().matches(wearer.player, stored, 3));
+		assertFalse(descriptions().matches(wearer.player, stored, 1), "a different vehicle is a change");
 	}
 
 	@Test

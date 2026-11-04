@@ -68,16 +68,21 @@ public class SuspectDescriptions {
 		                              weaponText(inventory.getItemInMainHand()), player.getVehicle() != null, masked);
 	}
 
-	/** At least {@code needed} of head, chest and vehicle of {@code player} right now equal those of {@code description}. */
-	public boolean matches(Player player, SuspectDescription description, int needed) {
-		SuspectDescription now   = describe(player);
-		int                equal = 0;
+	/**
+	 * Fewer than {@code changesNeeded} of head, chest, legs, feet and vehicle of {@code player} right now differ from
+	 * those of {@code description}; the weapon is described but never compared.
+	 */
+	public boolean matches(Player player, SuspectDescription description, int changesNeeded) {
+		SuspectDescription now     = describe(player);
+		int                changes = 0;
 
-		if (now.head().equals(description.head())) equal++;
-		if (now.chest().equals(description.chest())) equal++;
-		if (now.inCar() == description.inCar()) equal++;
+		if (!now.head().equals(description.head())) changes++;
+		if (!now.chest().equals(description.chest())) changes++;
+		if (!now.legs().equals(description.legs())) changes++;
+		if (!now.feet().equals(description.feet())) changes++;
+		if (now.inCar() != description.inCar()) changes++;
 
-		return equal >= needed;
+		return changes < changesNeeded;
 	}
 
 	/** The radio text, e.g. {@code masked in a carved pumpkin, wearing red jacket, on foot}. */

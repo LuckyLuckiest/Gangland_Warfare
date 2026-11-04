@@ -161,9 +161,9 @@ class DisguiseFilterTest {
 	}
 
 	@Test
-	@DisplayName("Match_Needed 3 demands the full look")
+	@DisplayName("Changes_Needed 1: taking the mask off alone is enough to shake them")
 	void changesNeededFromSettings() {
-		settings = new DisguiseSettings(true, List.of("CARVED_PUMPKIN"), List.of(), List.of(), 2, 3);
+		settings = new DisguiseSettings(true, List.of("CARVED_PUMPKIN"), List.of(), List.of(), 2, 1);
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		crime();
 

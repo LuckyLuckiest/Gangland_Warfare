@@ -203,7 +203,7 @@ class Bundled020YamlTest {
 		                                 "Sight_Range", "Max_Failures", "Reach_Seconds", "Max_Seconds"));
 		yamlKeys.put("Scanner_Map", Set.of("Enable", "Blocks_Per_Pixel", "Refresh_Ticks", "Show_Hideouts", "Item"));
 		yamlKeys.put("Disguise", Set.of("Enable", "Mask_Items", "Mask_Wearables", "Police_Outfit", "Outfit_Max_Level",
-		                                "Match_Needed"));
+		                                "Changes_Needed"));
 
 		String     cops   = resource("copsncrooks/cops.yml");
 		ConfigReport report = new ConfigReport();

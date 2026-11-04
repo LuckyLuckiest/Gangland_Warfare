@@ -154,7 +154,7 @@ class YamlCopConfigProvider020Test {
 				      Police_Outfit:
 				         - "police_helmet"
 				      Outfit_Max_Level: 1
-				      Match_Needed: 3
+				      Changes_Needed: 1
 				""" + TIERS, report);
 
 		assertEquals(new PatrolSettings(false, 3, 50, 80, 10, 12, 1, 2, 2, false), provider.getPatrolSettings());
@@ -169,9 +169,21 @@ class YamlCopConfigProvider020Test {
 		             provider.getOverwatchSettings());
 		assertEquals(new ScannerMapSettings(false, 2, 20, false, "&aMap", List.of("&7line")),
 		             provider.getScannerMapSettings());
-		assertEquals(new DisguiseSettings(false, List.of("PLAYER_HEAD"), List.of("bandana"), List.of("police_helmet"), 1, 3),
+		assertEquals(new DisguiseSettings(false, List.of("PLAYER_HEAD"), List.of("bandana"), List.of("police_helmet"), 1, 1),
 		             provider.getDisguiseSettings());
 		assertTrue(report.issues().isEmpty(), () -> "unexpected issues: " + report.issues());
+	}
+
+	@Test
+	@DisplayName("an old Match_Needed is ignored with one warning; Changes_Needed keeps its default 2")
+	void legacyMatchNeededWarnsAndIsIgnored() {
+		ConfigReport report = new ConfigReport();
+		CopConfigProvider provider = parse("Cops:\n   Disguise:\n      Match_Needed: 3\n" + TIERS, report);
+
+		assertEquals(2, provider.getDisguiseSettings().changesNeeded());
+		assertEquals(1, report.issues().stream()
+		                      .filter(i -> i.path() != null && i.path().contains("Cops.Disguise.Match_Needed")).count(),
+		             () -> "expected one warning at Cops.Disguise.Match_Needed, got " + report.issues());
 	}
 
 	@Test
