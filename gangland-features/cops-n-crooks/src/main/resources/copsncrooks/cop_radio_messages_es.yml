@@ -238,7 +238,7 @@ Lines:
       - "Llamada al 911 reporta %crime% cerca de %place%. Sospechoso: %suspect%."
    # 0.20.0: un policía describe al sospechoso a la escuadra.
    Suspect_Description:
-      - "El sospechoso es %suspect%."
+      - "Sospechoso: %suspect%."
    # 0.20.0: se coloca un rastreador en el auto del sospechoso.
    Tracker_Tagged:
       - "El rastreador está en el auto. Despacho tiene su posición."

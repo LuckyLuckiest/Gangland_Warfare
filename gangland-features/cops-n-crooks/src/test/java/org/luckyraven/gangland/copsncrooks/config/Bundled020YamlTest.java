@@ -164,7 +164,8 @@ class Bundled020YamlTest {
 	@DisplayName("bundled files use block style only, document every new key, and never call setDefaults/copyDefaults")
 	void bundledFiles_blockStyleAndDocumented() throws IOException {
 		for (String file : List.of("copsncrooks/cops.yml", "copsncrooks/wanted.yml", "copsncrooks/cop_radio_messages.yml",
-		                           "copsncrooks/cop_radio_messages_es.yml", "copsncrooks/wanted_messages.yml")) {
+		                           "copsncrooks/cop_radio_messages_es.yml", "copsncrooks/wanted_messages.yml",
+		                           "copsncrooks/wanted_messages_es.yml")) {
 			String yaml = resource(file);
 
 			assertTrue(yaml.lines().noneMatch(line -> !line.stripLeading().startsWith("#") && line.contains(": {")

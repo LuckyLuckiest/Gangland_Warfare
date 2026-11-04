@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -63,9 +65,39 @@ class WantedMessagesDisguiseKeysTest {
 		assertTrue(yaml.getString("Disguise.Recognised").contains("%suspect%"));
 	}
 
+	@Test
+	@DisplayName("0.21.5: the Spanish file carries every new key, Suspect.Unknown, On_Foot and In_Car, keeps each placeholder, and adds no key the English file lacks")
+	void spanishFileCarriesEveryNewKey() throws IOException {
+		YamlConfiguration english = shipped();
+		YamlConfiguration spanish = load("copsncrooks/wanted_messages_es.yml");
+		List<WantedMessages.Key> keys = List.of(WantedMessages.Key.SUSPECT_MASKED, WantedMessages.Key.SUSPECT_WEARING,
+		                                        WantedMessages.Key.SUSPECT_PLAIN, WantedMessages.Key.SUSPECT_ARMED,
+		                                        WantedMessages.Key.DISGUISE_RECOGNISED,
+		                                        WantedMessages.Key.DISGUISE_UNRECOGNISED,
+		                                        WantedMessages.Key.DISGUISE_OUTFIT, WantedMessages.Key.SUSPECT_UNKNOWN,
+		                                        WantedMessages.Key.SUSPECT_ON_FOOT, WantedMessages.Key.SUSPECT_IN_CAR);
+
+		for (WantedMessages.Key key : keys) {
+			assertTrue(spanish.isString(key.path), key.path + " is missing from wanted_messages_es.yml");
+			Matcher slot = Pattern.compile("%\\w+%").matcher(key.fallback);
+			while (slot.find()) {
+				assertTrue(spanish.getString(key.path).contains(slot.group()), key.path + " lacks " + slot.group());
+			}
+		}
+		for (String path : spanish.getKeys(true)) {
+			if (spanish.isString(path)) {
+				assertTrue(english.isString(path), path + " is in wanted_messages_es.yml but not in the English file");
+			}
+		}
+	}
+
 	private YamlConfiguration shipped() throws IOException {
-		try (InputStream in = Objects.requireNonNull(
-				getClass().getClassLoader().getResourceAsStream("copsncrooks/wanted_messages.yml"))) {
+		return load("copsncrooks/wanted_messages.yml");
+	}
+
+	private YamlConfiguration load(String resource) throws IOException {
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(resource),
+		                                              resource)) {
 			return YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
 		}
 	}

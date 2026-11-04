@@ -81,6 +81,14 @@ class CopRadioMessages020Test {
 		assertTrue(String.join(" ", es.getStringList("Lines.Overwatch_Spotted")).contains("bloques"));
 	}
 
+	@Test
+	@DisplayName("0.21.5: the Spanish suspect line is 'Sospechoso: %suspect%.', so the new description parts fit")
+	void spanishSuspectLineTakesTheNewParts() throws IOException {
+		YamlConfiguration es = shipped("copsncrooks/cop_radio_messages_es.yml");
+
+		assertEquals(List.of("Sospechoso: %suspect%."), es.getStringList("Lines.Suspect_Description"));
+	}
+
 	private YamlConfiguration shipped(String resource) throws IOException {
 		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(resource))) {
 			return YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));

@@ -29,13 +29,15 @@ public class CopsNCrooksYamlConfig {
 	 * cops: tiers and spawning. cop_roles (0.13.0): squad roles, its own file so a server with an older cops.yml
 	 * still gets the commented catalogue. cop_radio_messages(_es) (phase H12): police-radio lines, picked by
 	 * Settings.getLanguagePicked() via CopRadioMessages/LocalizedModuleYaml. wanted/wanted_messages (0.15.0): chase
-	 * tuning (heat, evasion, HUD, charge sheet) and its text. detainment (0.15.1): jail, bail, bribe and sentence
+	 * tuning (heat, evasion, HUD, charge sheet) and its text; wanted_messages_es (0.21.5) is its Spanish variant.
+	 * detainment (0.15.1): jail, bail, bribe and sentence
 	 * knobs, formerly settings.yml Detainment. setup (0.16.0): the admin setup wand's item, outline and messages.
 	 * commands (0.16.1): the replies of the /glw cop, /glw jail and /glw cuff commands; commands_es is the Spanish
 	 * variant, picked by Settings.getLanguagePicked() like cop_radio_messages_es.
 	 */
 	static final String[] FILES = {"cops", "cop_roles", "cop_radio_messages", "cop_radio_messages_es", "wanted",
-	                               "wanted_messages", "detainment", "setup", "commands", "commands_es"};
+	                               "wanted_messages", "wanted_messages_es", "detainment", "setup", "commands",
+	                               "commands_es"};
 
 	private final JavaPlugin plugin;
 

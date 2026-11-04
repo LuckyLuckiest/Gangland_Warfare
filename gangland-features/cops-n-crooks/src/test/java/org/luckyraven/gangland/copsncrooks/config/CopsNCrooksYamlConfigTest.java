@@ -7,6 +7,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -26,6 +27,15 @@ class CopsNCrooksYamlConfigTest {
 			assertTrue(getClass().getClassLoader().getResource(path) != null, path);
 			assertTrue(getClass().getClassLoader().getResource("npc/" + name + ".yml") == null, "npc/" + name);
 		}
+	}
+
+	@Test
+	@DisplayName("0.21.5: registers the Spanish wanted messages beside the English ones")
+	void registersSpanishWantedMessages() {
+		List<String> files = List.of(CopsNCrooksYamlConfig.FILES);
+
+		assertTrue(files.contains("wanted_messages"));
+		assertTrue(files.contains("wanted_messages_es"), "wanted_messages_es is not in FILES");
 	}
 
 	@Test
