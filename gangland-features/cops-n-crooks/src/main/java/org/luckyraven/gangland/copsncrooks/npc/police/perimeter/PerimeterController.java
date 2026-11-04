@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiPredicate;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
@@ -53,6 +54,7 @@ public class PerimeterController {
 	private final Map<UUID, Perimeter> active = new HashMap<>();
 	/** Players whose perimeter ran out; no new one until {@link #end} (SEEN or OFF) clears the mark. */
 	private final Set<UUID>            spent  = new HashSet<>();
+	private BiPredicate<CopNpc, Player> lockOn = (cop, player) -> true;
 
 	public PerimeterController(Supplier<CopConfigProvider> provider, CopManager copManager, CopRadio copRadio,
 	                           LongSupplier clock) {
@@ -60,6 +62,11 @@ public class PerimeterController {
 		this.copManager = copManager;
 		this.copRadio   = copRadio;
 		this.clock      = clock;
+	}
+
+	/** The lock-on filters of {@code CopPerception}: a post a disguise fools does not see the player (row 333). */
+	public void setLockOn(BiPredicate<CopNpc, Player> lockOn) {
+		this.lockOn = lockOn;
 	}
 
 	/** Posts cops around {@code centre}; a no-op when disabled, below {@code Min_Level}, already active or spent. */

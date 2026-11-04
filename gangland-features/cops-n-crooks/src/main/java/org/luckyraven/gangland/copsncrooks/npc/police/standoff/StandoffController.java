@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiPredicate;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -67,6 +68,8 @@ public class StandoffController {
 	private final Predicate<Player>           restrained;
 	private final LongSupplier                clock;
 
+	private BiPredicate<CopNpc, Player> lockOn = (cop, player) -> true;
+
 	private final Map<UUID, State>           active        = new HashMap<>();
 	private final Map<UUID, Deque<Casualty>> casualties    = new HashMap<>();
 	private final Map<UUID, Long>            cooldownUntil = new HashMap<>();
@@ -81,6 +84,11 @@ public class StandoffController {
 		this.users = users;
 		this.restrained = restrained;
 		this.clock = clock;
+	}
+
+	/** The lock-on filters of {@code CopPerception}: a post a disguise fools does not see the player (row 333). */
+	public void setLockOn(BiPredicate<CopNpc, Player> lockOn) {
+		this.lockOn = lockOn;
 	}
 
 	private StandoffSettings settings() {

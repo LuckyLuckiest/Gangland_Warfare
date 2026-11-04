@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
@@ -68,6 +69,8 @@ public class OverwatchController {
 		}
 	}
 
+	private BiPredicate<CopNpc, Player> lockOn = (cop, player) -> true;
+
 	private final Map<UUID, Watch> active = new ConcurrentHashMap<>();
 	/** Players whose overwatch ran out; not restarted until {@link #end} clears the mark. */
 	private final Set<UUID>        spent  = ConcurrentHashMap.newKeySet();
@@ -81,6 +84,11 @@ public class OverwatchController {
 		this.clock      = clock;
 		this.levelOf    = levelOf;
 		this.perches    = perches;
+	}
+
+	/** The lock-on filters of {@code CopPerception}: a post a disguise fools does not see the player (row 333). */
+	public void setLockOn(BiPredicate<CopNpc, Player> lockOn) {
+		this.lockOn = lockOn;
 	}
 
 	/** The production wiring: perches come from {@link PerchFinder}. */
