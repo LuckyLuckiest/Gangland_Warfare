@@ -257,6 +257,97 @@ class SuspectListenerTest {
 		assertTrue(outfit.hides(player, 1), "the next chase starts with an unblown outfit");
 	}
 
+	/** The police outfit on: the test keys name the pumpkin and the tunic police_helmet and police_vest. */
+	private void dressAsCop() {
+		when(helmet.getType()).thenReturn(Material.IRON_HELMET);
+		when(chest.getType()).thenReturn(Material.IRON_CHESTPLATE);
+	}
+
+	@Test
+	@DisplayName("D7: blown, a quit, stars cleared offline, a crime starts a new chase: the outfit fools them again")
+	void quitThenANewChaseUnblowsTheOutfit() throws NoSuchMethodException {
+		dressAsCop();
+		ItemStack wornHelmet = helmet;
+		ItemStack wornChest  = chest;
+		fire(crime(false));
+		listener.onQuit(quit());
+		when(filter.hunted(player)).thenReturn(false);
+		helmet = null;
+		chest  = null;
+
+		fire(crime(false));
+		helmet = wornHelmet;
+		chest  = wornChest;
+
+		assertTrue(outfit.hides(player, 2), "the blow belonged to the last chase");
+	}
+
+	@Test
+	@DisplayName("D7: a crime in the outfit that started no chase does not blow it for the chase a later crime starts")
+	void crimeOutsideAChaseDoesNotBlowTheNextChase() throws NoSuchMethodException {
+		dressAsCop();
+		ItemStack wornHelmet = helmet;
+		ItemStack wornChest  = chest;
+		when(filter.hunted(player)).thenReturn(false);
+		fire(crime(false));
+		helmet = null;
+		chest  = null;
+
+		fire(crime(false));
+		helmet = wornHelmet;
+		chest  = wornChest;
+
+		assertTrue(outfit.hides(player, 2), "the chase started bare-faced");
+	}
+
+	@Test
+	@DisplayName("D7: guard - the crime that starts a chase in the outfit blows it")
+	void crimeStartingAChaseInTheOutfitBlowsIt() throws NoSuchMethodException {
+		dressAsCop();
+		when(filter.hunted(player)).thenReturn(false);
+
+		fire(crime(false));
+
+		assertFalse(outfit.hides(player, 2));
+	}
+
+	@Test
+	@DisplayName("D7: guard - a crime during the chase leaves a blown outfit blown")
+	void crimeInAChaseKeepsTheBlownOutfit() throws NoSuchMethodException {
+		dressAsCop();
+		ItemStack wornHelmet = helmet;
+		ItemStack wornChest  = chest;
+		fire(crime(false));
+		helmet = null;
+		chest  = null;
+
+		fire(crime(false));
+		helmet = wornHelmet;
+		chest  = wornChest;
+
+		assertFalse(outfit.hides(player, 2));
+	}
+
+	@Test
+	@DisplayName("D7: guard - a gated crime from before the chase does not un-blow the outfit at a crime of the chase")
+	void gatedCrimeBeforeTheChaseKeepsTheBlownOutfit() throws NoSuchMethodException {
+		dressAsCop();
+		ItemStack wornHelmet = helmet;
+		ItemStack wornChest  = chest;
+		when(filter.hunted(player)).thenReturn(false);
+		fire(crime(true));
+		when(filter.hunted(player)).thenReturn(true);
+		outfit.blow(id);
+		helmet = null;
+		chest  = null;
+
+		fire(crime(false));
+		helmet = wornHelmet;
+		chest  = wornChest;
+
+		assertFalse(outfit.hides(player, 2), "the gated crime's 'nobody hunted him' ended with it");
+	}
+
 	@Test
 	@DisplayName("a player quitting while wanted drops the tick's squad at MONITOR")
 	void quitForgetsTheSquad() throws Exception {

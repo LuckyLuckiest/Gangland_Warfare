@@ -1029,8 +1029,8 @@ legs, boots, the weapon in your hand, and whether you are on foot or in a car. T
 - **What the description says.** Each worn piece is named: the Bartizan item key first (`police vest`, not "iron
   chestplate"), then `<dye> jacket` for a dyed leather tunic or `<dye> leather <piece>`, then the material. Armour display
   names are ignored, so renaming an item cannot fake a change. Example: `masked in a carved pumpkin, wearing red jacket,
-  armed with AK-47, on foot`. A suspect with nothing on is `in plain clothes`. A weapon is named only when it is one (a Bartizan weapon by its clean
-  name, or a held sword, axe or bow); a cobblestone in the hand is not.
+  armed with AK-47, on foot`. A suspect with nothing on is `in plain clothes`. A weapon is named only when it is one (a
+  Bartizan weapon by its clean name, or a held sword, axe, bow, crossbow or trident); a cobblestone in the hand is not.
 - **Masks.** A mask item in `Cops.Disguise.Mask_Items` (or a Bartizan wearable in `Mask_Wearables`) makes the line
   `masked in a <mask>`. A mask counts as one head change.
 - **Changing clothes.** Out of every cop's sight, change at least `Changes_Needed` (2) of: headwear, chest, legs, boots,
@@ -1047,14 +1047,16 @@ legs, boots, the weapon in your hand, and whether you are on foot or in a car. T
   fewer fools every cop, including posts, from the first tick (a freshly dispatched squad that never watched you put it
   on is fooled at once). It is blown for the rest of the chase, including the post-escape search, when you commit a crime
   in it or a cop sees you put it on. Taking a piece off and on again does not reset it. It clears when nobody hunts you
-  any more (chase end or the search giving up), never at a quit.
+  any more (chase end or the search giving up), never at a quit. A crime committed while nobody hunts you clears a blow
+  left from before (a chase whose stars were cleared while you were offline, or a crime that started no chase), and
+  then blows it again only if that crime is committed in the outfit.
 - **Escape.** An escape keeps the description through the post-escape search, so searchers and posts walk past a
   changed look instead of re-starring any outfit.
 - **Nobody hunts you.** At 0 stars with no search running, the description is neither re-learned nor re-radioed, and a
   stale one no longer filters you: beat cops warn for brandishing whatever you wear.
 - **Quitting.** A quit clears the description and any look held for a report that has not landed yet. A report deferred
   to the next join records the look at the join.
-- **Spoken but not counted.** The first 911 call of a chase names the real description, never "unknown suspect".
+- **First 911 call.** The first 911 call of a chase names the real description, never "unknown suspect".
 
 ### What you are told
 

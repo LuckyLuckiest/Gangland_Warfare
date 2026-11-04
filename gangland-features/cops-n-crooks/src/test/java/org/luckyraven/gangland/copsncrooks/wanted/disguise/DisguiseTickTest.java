@@ -346,6 +346,19 @@ class DisguiseTickTest {
 	}
 
 	@Test
+	@DisplayName("D7: a blown outfit with no description (a quit wiped it) is cleared on a tick nobody hunts him")
+	void unhuntedTickClearsBlownWithNoDescription() {
+		dressAsCop();
+		outfit.onCrime(wearer.player);
+		assertNull(descriptions.latest(wearer.id));
+
+		level = 0;
+		tick.tick(wearer.player, null);
+
+		assertTrue(outfit.hides(wearer.player, 2), "nobody hunts him: the outfit fools them again");
+	}
+
+	@Test
 	@DisplayName("D7: putting the police outfit on in view blows it, and a blind tick does not un-blow it")
 	void outfitPutOnInViewIsBlown() {
 		wearer.leatherChest(Color.RED);
@@ -460,5 +473,43 @@ class DisguiseTickTest {
 		tick.tick(wearer.player, group);
 
 		assertEquals(2, told().size());
+	}
+
+	@Test
+	@DisplayName("850 (scenario 2): only the tunic changed out of sight, seen again: a second Recognised line, new look")
+	void toldAgainWhenRecognisedInANewLook() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+		tick.tick(wearer.player, group);
+
+		eyes = false;
+		tick.tick(wearer.player, group);
+		wearer.leatherChest(Color.fromRGB(20, 20, 250));
+		eyes = true;
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("The cops recognise you"), lines.get(1));
+		assertTrue(lines.get(1).contains("blue jacket"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("850 (scenario 5): recognised, the police outfit put on in view: a Recognised line naming the outfit")
+	void toldTheOutfitWhenSeenPuttingItOn() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		level = 2;
+		eyes  = true;
+		tick.tick(wearer.player, group);
+
+		dressAsCop();
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("police helmet"), lines.get(1));
 	}
 }

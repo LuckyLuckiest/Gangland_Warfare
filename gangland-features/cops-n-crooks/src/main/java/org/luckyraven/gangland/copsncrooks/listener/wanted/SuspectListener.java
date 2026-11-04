@@ -50,9 +50,20 @@ public class SuspectListener implements Listener {
 		this.filter       = filter;
 	}
 
-	/** Before any heat is committed: whether nobody hunted him when this crime began. */
+	/**
+	 * Before any heat is committed (HeatListener and onCrime share MONITOR, in no set order): whether nobody hunted him
+	 * when this crime began, so a blown outfit left from an earlier chase is stale.
+	 */
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onCrimeBegins(CrimeCommittedEvent event) {
+		Player player = event.getPlayer();
+		UUID   id     = player.getUniqueId();
+		// set afresh on every crime: a gated crime's entry must not outlive it into a crime of a chase
+		if (filter.hunted(player)) {
+			unhuntedAtCrime.remove(id);
+		} else {
+			unhuntedAtCrime.add(id);
+		}
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR) // no ignoreCancelled: the gate's cancel is the moment of the crime
@@ -73,15 +84,18 @@ public class SuspectListener implements Listener {
 		}
 
 		descriptions.store(id, look.description());
+		// a crime outside any chase: the blown flag belongs to a chase that ended unseen (a quit, stars cleared offline)
+		// or to a crime that started none; this crime's own blow follows
+		// ponytail: a chase started by crew-share stars passes no crime of his own through here, so it keeps a stale blow
+		if (unhuntedAtCrime.remove(id)) {
+			outfit.clear(id);
+		}
 		if (look.outfitWorn()) {
 			outfit.blow(id);
 		}
 
 		log.debug("SUSPECT {} desc={}", player.getName(), descriptions.format(look.description()));
 	}
-
-	/** The look at a crime the witness gate held, per crime id: the report that lands for it records this look. */
-	private record Held(SuspectDescription description, boolean outfitWorn) {}
 
 	@EventHandler
 	public void onChaseEnd(WantedEndEvent event) {
@@ -105,4 +119,7 @@ public class SuspectListener implements Listener {
 		held.remove(id);
 		tick.forget(id);
 	}
+
+	/** The look at a crime the witness gate held, per crime id: the report that lands for it records this look. */
+	private record Held(SuspectDescription description, boolean outfitWorn) {}
 }

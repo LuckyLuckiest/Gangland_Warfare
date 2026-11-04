@@ -24,16 +24,16 @@ public class DisguiseTick {
 
 	private static final String LINE = "Suspect_Description";
 
-	private final Supplier<DisguiseSettings>        settings;
-	private final SuspectDescriptions               descriptions;
-	private final DisguiseFilter                    filter;
-	private final PoliceOutfit                      outfit;
-	private final BiPredicate<Player, CopGroup>     eyesOn;
-	private final CopRadio                          radio;
-	private final WantedMessages                    messages;
-	private final Map<UUID, String>                 spoken  = new ConcurrentHashMap<>();
-	private final Map<UUID, WantedMessages.Key>     told    = new ConcurrentHashMap<>();
-	private final List<Consumer<UUID>>              forgetHooks = new CopyOnWriteArrayList<>();
+	private final Supplier<DisguiseSettings>    settings;
+	private final SuspectDescriptions           descriptions;
+	private final DisguiseFilter                filter;
+	private final PoliceOutfit                  outfit;
+	private final BiPredicate<Player, CopGroup> eyesOn;
+	private final CopRadio                      radio;
+	private final WantedMessages                messages;
+	private final Map<UUID, String>             spoken      = new ConcurrentHashMap<>();
+	private final Map<UUID, String>             told        = new ConcurrentHashMap<>();
+	private final List<Consumer<UUID>>          forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
 	                    PoliceOutfit outfit, BiPredicate<Player, CopGroup> eyesOn, CopRadio radio,
@@ -52,10 +52,11 @@ public class DisguiseTick {
 
 		// before the group check: shutdown and an emptied group tick with no group (rows 411, 430)
 		if (!filter.hunted(player)) {
+			// the search giving up fires no WantedEndEvent, and a quit wiped the description but kept the blow; kept out
+			// of forget so a quit does not un-blow it
+			outfit.clear(id);
 			if (descriptions.latest(id) != null || spoken.containsKey(id)) {
 				descriptions.clear(id);
-				// the search giving up fires no WantedEndEvent; kept out of forget so a quit does not un-blow it
-				outfit.clear(id);
 				forget(id);
 			}
 			return;
@@ -102,19 +103,20 @@ public class DisguiseTick {
 		}
 	}
 
-	/** Chat line for {@code key}, sent when it differs from the last one told; '' in the file turns a line off. */
+	/**
+	 * Chat line for {@code key}, sent when the line differs from the last one told, so a new look while recognised is told
+	 * too; '' in the file turns a line off.
+	 */
 	private void tell(Player player, WantedMessages.Key key) {
-		UUID id = player.getUniqueId();
-		if (told.put(id, key) == key) {
-			return;
-		}
-
+		UUID               id     = player.getUniqueId();
 		SuspectDescription latest = descriptions.latest(id);
 		String             line   = messages.format(key, Map.of("suspect", latest == null ? descriptions.unknownText()
 		                                                                                   : descriptions.format(latest)));
-		if (!line.isBlank()) {
-			player.sendMessage(line);
+		if (line.equals(told.put(id, line)) || line.isBlank()) {
+			return;
 		}
+
+		player.sendMessage(line);
 	}
 
 	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */
