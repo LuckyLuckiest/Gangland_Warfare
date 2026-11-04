@@ -6,17 +6,19 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFilter;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
-import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
-import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescription;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescriptions;
+import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.events.crime.CrimeCommittedEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,24 +31,28 @@ import java.util.concurrent.ConcurrentHashMap;
 @ListenerHandler
 public class SuspectListener implements Listener {
 
-	private final SuspectDescriptions descriptions;
-	private final PoliceOutfit        outfit;
-	private final DisguiseTick        tick;
-	private final HeatLedger          ledger;
-	private final PostEscapeSearch    search;
-
-	/** The look at a crime the witness gate held, per crime id: the report that lands for it records this look. */
-	private record Held(SuspectDescription description, boolean outfitWorn) {}
-
-	private final Map<UUID, Map<String, Held>> held = new ConcurrentHashMap<>();
+	private final SuspectDescriptions          descriptions;
+	private final PoliceOutfit                 outfit;
+	private final DisguiseTick                 tick;
+	private final HeatLedger                   ledger;
+	private final PostEscapeSearch             search;
+	private final DisguiseFilter               filter;
+	private final Map<UUID, Map<String, Held>> held            = new ConcurrentHashMap<>();
+	private final Set<UUID>                    unhuntedAtCrime = ConcurrentHashMap.newKeySet();
 
 	public SuspectListener(SuspectDescriptions descriptions, PoliceOutfit outfit, DisguiseTick tick, HeatLedger ledger,
-	                       PostEscapeSearch search) {
+	                       PostEscapeSearch search, DisguiseFilter filter) {
 		this.descriptions = descriptions;
 		this.outfit       = outfit;
 		this.tick         = tick;
 		this.ledger       = ledger;
 		this.search       = search;
+		this.filter       = filter;
+	}
+
+	/** Before any heat is committed: whether nobody hunted him when this crime began. */
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onCrimeBegins(CrimeCommittedEvent event) {
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR) // no ignoreCancelled: the gate's cancel is the moment of the crime
@@ -73,6 +79,9 @@ public class SuspectListener implements Listener {
 
 		log.debug("SUSPECT {} desc={}", player.getName(), descriptions.format(look.description()));
 	}
+
+	/** The look at a crime the witness gate held, per crime id: the report that lands for it records this look. */
+	private record Held(SuspectDescription description, boolean outfitWorn) {}
 
 	@EventHandler
 	public void onChaseEnd(WantedEndEvent event) {

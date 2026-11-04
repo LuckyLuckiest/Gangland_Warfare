@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
+import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFilter;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescription;
@@ -54,6 +55,7 @@ class SuspectListenerTest {
 	private DisguiseTick        tick;
 	private HeatLedger          ledger;
 	private PostEscapeSearch    search;
+	private DisguiseFilter      filter;
 
 	@BeforeEach
 	void setUp() {
@@ -79,7 +81,9 @@ class SuspectListenerTest {
 		tick         = mock(DisguiseTick.class);
 		ledger       = mock(HeatLedger.class);
 		search       = mock(PostEscapeSearch.class);
-		listener     = new SuspectListener(descriptions, outfit, tick, ledger, search);
+		filter       = mock(DisguiseFilter.class);
+		when(filter.hunted(player)).thenReturn(true);
+		listener     = new SuspectListener(descriptions, outfit, tick, ledger, search, filter);
 	}
 
 	private CrimeCommittedEvent crime(boolean cancelled) {
@@ -100,6 +104,7 @@ class SuspectListenerTest {
 		                                            .getAnnotation(EventHandler.class);
 		if (event.isCancelled() && handler.ignoreCancelled()) return;
 
+		listener.onCrimeBegins(event);
 		listener.onCrime(event);
 	}
 
