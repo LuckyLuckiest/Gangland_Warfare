@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
@@ -12,6 +13,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
 import org.luckyraven.keystone.npc.NpcSquad;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,7 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -356,5 +361,104 @@ class DisguiseTickTest {
 		eyes = false;
 		tick.tick(wearer.player, group);
 		assertFalse(outfit.hides(wearer.player, 2), "still blown after a blind tick");
+	}
+
+	/** Every chat line the player was sent so far. */
+	private List<String> told() {
+		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		verify(wearer.player, atLeast(0)).sendMessage(captor.capture());
+		return captor.getAllValues();
+	}
+
+	@Test
+	@DisplayName("850: three ticks recognised, one Recognised line carrying the description")
+	void toldOnceWhenRecognised() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(1, lines.size(), lines.toString());
+		assertTrue(lines.get(0).contains("The cops recognise you"), lines.get(0));
+		assertTrue(lines.get(0).contains("red jacket"), lines.get(0));
+	}
+
+	@Test
+	@DisplayName("850: recognised, a blind tick, two pieces swapped, a cop sees him: one Unrecognised line")
+	void toldWhenNoLongerRecognised() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+		tick.tick(wearer.player, group);
+
+		eyes = false;
+		tick.tick(wearer.player, group);
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+		eyes = true;
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(0).contains("The cops recognise you"), lines.get(0));
+		assertTrue(lines.get(1).contains("don't recognise"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("850: the police outfit at 2 stars, a cop sees him: one Outfit line")
+	void toldWhenTheOutfitHolds() {
+		dressAsCop();
+		level = 2;
+		eyes  = true;
+
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		List<String> lines = told();
+		assertEquals(1, lines.size(), lines.toString());
+		assertTrue(lines.get(0).contains("police outfit"), lines.get(0));
+	}
+
+	@Test
+	@DisplayName("850: guard - nothing is told while no cop of the chase sees him")
+	void nothingToldWhileUnseen() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+
+		tick.tick(wearer.player, group);
+		tick.tick(wearer.player, group);
+
+		assertTrue(told().isEmpty());
+	}
+
+	@Test
+	@DisplayName("850: a blank line ('' in the file) is never sent")
+	void blankLineIsNotSent() {
+		doReturn("").when(messages).format(any(WantedMessages.Key.class), anyMap());
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+
+		tick.tick(wearer.player, group);
+
+		verify(wearer.player, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("850: guard - forget (a chase ended) lets the next chase be told again")
+	void forgetTellsAgain() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		eyes = true;
+
+		tick.tick(wearer.player, group);
+		tick.forget(wearer.id);
+		tick.tick(wearer.player, group);
+
+		assertEquals(2, told().size());
 	}
 }

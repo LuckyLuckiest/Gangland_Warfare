@@ -32,6 +32,7 @@ public class DisguiseTick {
 	private final CopRadio                          radio;
 	private final WantedMessages                    messages;
 	private final Map<UUID, String>                 spoken  = new ConcurrentHashMap<>();
+	private final Map<UUID, WantedMessages.Key>     told    = new ConcurrentHashMap<>();
 	private final List<Consumer<UUID>>              forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
@@ -61,6 +62,7 @@ public class DisguiseTick {
 		}
 		if (group == null) {
 			spoken.remove(id);
+			told.remove(id);
 			descriptions.setRecognised(id, false);
 			return;
 		}
@@ -81,6 +83,11 @@ public class DisguiseTick {
 				outfit.blow(id);
 			}
 		}
+		if (eyes) {
+			tell(player, known ? WantedMessages.Key.DISGUISE_RECOGNISED
+			                   : filter.outfitHides(player) ? WantedMessages.Key.DISGUISE_OUTFIT
+			                                                : WantedMessages.Key.DISGUISE_UNRECOGNISED);
+		}
 
 		SuspectDescription latest = descriptions.latest(id);
 		if (latest == null) {
@@ -95,6 +102,21 @@ public class DisguiseTick {
 		}
 	}
 
+	/** Chat line for {@code key}, sent when it differs from the last one told; '' in the file turns a line off. */
+	private void tell(Player player, WantedMessages.Key key) {
+		UUID id = player.getUniqueId();
+		if (told.put(id, key) == key) {
+			return;
+		}
+
+		SuspectDescription latest = descriptions.latest(id);
+		String             line   = messages.format(key, Map.of("suspect", latest == null ? descriptions.unknownText()
+		                                                                                   : descriptions.format(latest)));
+		if (!line.isBlank()) {
+			player.sendMessage(line);
+		}
+	}
+
 	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */
 	public void onForget(Consumer<UUID> hook) {
 		forgetHooks.add(hook);
@@ -103,6 +125,7 @@ public class DisguiseTick {
 	/** Forgets the line spoken for {@code playerId}: the chase ended, so the next chase says it again. */
 	public void forget(UUID playerId) {
 		spoken.remove(playerId);
+		told.remove(playerId);
 		forgetHooks.forEach(hook -> hook.accept(playerId));
 	}
 

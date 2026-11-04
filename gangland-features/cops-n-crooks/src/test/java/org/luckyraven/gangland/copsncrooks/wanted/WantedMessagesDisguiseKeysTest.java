@@ -45,6 +45,24 @@ class WantedMessagesDisguiseKeysTest {
 		}
 	}
 
+	@Test
+	@DisplayName("850: the three Disguise keys have their path, a fallback, and the shipped file text; Recognised carries %suspect%")
+	void disguiseKeysMatchTheShippedFile() throws IOException {
+		YamlConfiguration yaml = shipped();
+		List<WantedMessages.Key> keys = List.of(WantedMessages.Key.DISGUISE_RECOGNISED,
+		                                        WantedMessages.Key.DISGUISE_UNRECOGNISED,
+		                                        WantedMessages.Key.DISGUISE_OUTFIT);
+
+		for (WantedMessages.Key key : keys) {
+			assertTrue(key.path.startsWith("Disguise."), key.path);
+			assertFalse(key.fallback.isBlank(), key + " has a blank fallback");
+			assertTrue(yaml.isString(key.path), key.path + " is missing from wanted_messages.yml");
+			assertEquals(key.fallback, yaml.getString(key.path), key.path);
+		}
+		assertTrue(WantedMessages.Key.DISGUISE_RECOGNISED.fallback.contains("%suspect%"));
+		assertTrue(yaml.getString("Disguise.Recognised").contains("%suspect%"));
+	}
+
 	private YamlConfiguration shipped() throws IOException {
 		try (InputStream in = Objects.requireNonNull(
 				getClass().getClassLoader().getResourceAsStream("copsncrooks/wanted_messages.yml"))) {
