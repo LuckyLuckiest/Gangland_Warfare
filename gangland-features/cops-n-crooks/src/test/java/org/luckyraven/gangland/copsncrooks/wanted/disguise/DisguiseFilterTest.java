@@ -183,4 +183,26 @@ class DisguiseFilterTest {
 
 		assertFalse(filter.test(cop, wearer.player));
 	}
+
+	@Test
+	@DisplayName("430: a player nobody hunts is not filtered by a stale description")
+	void unhuntedPlayerIgnoresAStaleDescription() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		crime();
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+		level  = 0;
+		hunted = false;
+
+		assertTrue(filter.allows(cop, wearer.player));
+	}
+
+	@Test
+	@DisplayName("the police outfit at 0 stars still hides a player nobody hunts")
+	void outfitStillHidesWhenNotHunted() {
+		dressAsCop();
+		level  = 0;
+		hunted = false;
+
+		assertFalse(filter.allows(cop, wearer.player));
+	}
 }

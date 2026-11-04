@@ -38,6 +38,14 @@ public class DisguiseTick {
 	public void tick(Player player, @Nullable CopGroup group) {
 		UUID id = player.getUniqueId();
 
+		// before the group check: shutdown and an emptied group tick with no group (rows 411, 430)
+		if (!filter.hunted(player)) {
+			if (descriptions.latest(id) != null || spoken.containsKey(id)) {
+				descriptions.clear(id);
+				forget(id);
+			}
+			return;
+		}
 		if (group == null) {
 			spoken.remove(id);
 			return;

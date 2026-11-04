@@ -218,4 +218,48 @@ class DisguiseTickTest {
 
 		verify(radio, times(2)).sayFromLeader(group, LINE);
 	}
+
+	@Test
+	@DisplayName("411: after a clear, a fresh sighting of a player nobody hunts neither re-learns nor re-speaks the look")
+	void noRelearnOrRespeakAfterAClear() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		when(squad.hasFreshSighting()).thenReturn(true);
+		tick.tick(wearer.player, group);
+		verify(radio, times(1)).sayFromLeader(group, LINE);
+
+		descriptions.clear(wearer.id);
+		tick.forget(wearer.id);
+		level = 0;
+		tick.tick(wearer.player, group);
+
+		assertNull(descriptions.latest(wearer.id));
+		verify(radio, times(1)).sayFromLeader(group, LINE);
+	}
+
+	@Test
+	@DisplayName("a player nobody hunts ticked with no group (shutdown, emptied group) loses the stale description")
+	void unhuntedNullGroupClearsTheDescription() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		level = 0;
+
+		tick.tick(wearer.player, null);
+
+		assertNull(descriptions.latest(wearer.id));
+	}
+
+	@Test
+	@DisplayName("0 stars but still searched for: the description is kept")
+	void searchKeepsTheDescription() {
+		wearer.leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		level     = 0;
+		searching = true;
+		when(squad.hasFreshSighting()).thenReturn(false);
+
+		tick.tick(wearer.player, group);
+
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
 }

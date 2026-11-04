@@ -201,4 +201,30 @@ class DisguiseModuleConfigTest {
 		verify(radio).setExtraPlaceholders(captor.capture());
 		assertEquals(Map.of("suspect", "x"), captor.getValue().apply(id));
 	}
+
+	@Test
+	@DisplayName("huntedOf: hunted while the player has stars or the cops still search for them")
+	@SuppressWarnings("unchecked")
+	void huntedFollowsStarsAndTheSearch() {
+		UserManager<Player> users = mock(UserManager.class);
+		Player player = mock(Player.class);
+		UUID id = UUID.randomUUID();
+		when(player.getUniqueId()).thenReturn(id);
+		User<Player> user = mock(User.class);
+		Wanted wanted = mock(Wanted.class);
+		when(users.getUser(player)).thenReturn(user);
+		when(user.getWanted()).thenReturn(wanted);
+		var hunted = DisguiseModuleConfig.huntedOf(users, manager);
+
+		when(wanted.getLevel()).thenReturn(0);
+		when(manager.isSearching(id)).thenReturn(false);
+		assertFalse(hunted.test(player), "0 stars, no search");
+
+		when(manager.isSearching(id)).thenReturn(true);
+		assertTrue(hunted.test(player), "0 stars, searched for");
+
+		when(manager.isSearching(id)).thenReturn(false);
+		when(wanted.getLevel()).thenReturn(2);
+		assertTrue(hunted.test(player), "2 stars");
+	}
 }

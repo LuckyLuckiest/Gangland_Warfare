@@ -66,7 +66,9 @@ public class DisguiseModuleConfig {
 
 	/** Whether the cops still hunt the player: stars above 0, or a post-escape search for them. */
 	static Predicate<Player> huntedOf(UserManager<Player> users, CopManager copManager) {
-		return player -> true;
+		ToIntFunction<Player> level = levelOf(users);
+
+		return player -> level.applyAsInt(player) > 0 || copManager.isSearching(player.getUniqueId());
 	}
 
 	@Bean

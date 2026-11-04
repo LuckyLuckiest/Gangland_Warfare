@@ -51,6 +51,9 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		if (outfit.hides(player, level)) {
 			return report(player, "outfit", false);
 		}
+		if (!hunted.test(player)) {
+			return true;
+		}
 
 		SuspectDescription description = descriptions.latest(player.getUniqueId());
 		if (description == null || freshSighting.test(player)) {
