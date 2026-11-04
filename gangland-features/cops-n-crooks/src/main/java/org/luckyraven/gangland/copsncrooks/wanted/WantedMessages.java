@@ -119,6 +119,11 @@ public class WantedMessages extends LocalizedModuleYaml {
 		SUSPECT_IN_CAR("Suspect.In_Car", "in a car"),
 		SUSPECT_MASK("Suspect.Mask", "in a %head%"),
 		SUSPECT_FORMAT("Suspect.Format", "%who%%mask%, %chest%, %vehicle%"),
+		// 0.21.5: the description is built from these parts; Bare, Mask and Format are replaced by them
+		SUSPECT_MASKED("Suspect.Masked", "masked in a %head%"),
+		SUSPECT_WEARING("Suspect.Wearing", "wearing %items%"),
+		SUSPECT_PLAIN("Suspect.Plain", "in plain clothes"),
+		SUSPECT_ARMED("Suspect.Armed", "armed with %weapon%"),
 		// 0.20.0 hot-cash bag and fence
 		BAG_HUD("Bag.Hud", "&6Bag: &a%money_symbol%%amount%"),
 		BAG_FULL("Bag.Full", "&cYour bag is full."),
