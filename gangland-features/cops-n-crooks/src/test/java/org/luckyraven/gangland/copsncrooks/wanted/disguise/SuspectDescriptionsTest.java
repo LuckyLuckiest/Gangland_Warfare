@@ -148,7 +148,7 @@ class SuspectDescriptionsTest {
 	@Test
 	@DisplayName("two of head, chest and vehicle still equal: a match; only one equal: no match")
 	void matchNeedsTwoOfThree() {
-		SuspectDescription stored = new SuspectDescription("carved pumpkin", "red jacket", "", false, true);
+		SuspectDescription stored = new SuspectDescription("carved pumpkin", "red jacket", "", "", "", false, true);
 
 		wearer.helmet(null).leatherChest(Color.RED).inCar(false);
 		assertTrue(descriptions().matches(wearer.player, stored, 2), "chest and vehicle still equal");
@@ -160,7 +160,7 @@ class SuspectDescriptionsTest {
 	@Test
 	@DisplayName("Match_Needed 3 wants all three; the held weapon never counts")
 	void matchNeededThreeAndWeaponIgnored() {
-		SuspectDescription stored = new SuspectDescription("", "red jacket", "pistol", false, false);
+		SuspectDescription stored = new SuspectDescription("", "red jacket", "", "", "pistol", false, false);
 
 		wearer.leatherChest(Color.RED).hand(Material.DIAMOND_SWORD);
 		assertTrue(descriptions().matches(wearer.player, stored, 3), "weapon differs but is descriptive only");
@@ -173,8 +173,8 @@ class SuspectDescriptionsTest {
 	@DisplayName("store, latest and clear keep the newest description per player")
 	void storeLatestClear() {
 		SuspectDescriptions store  = descriptions();
-		SuspectDescription  first  = new SuspectDescription("", "red jacket", "", false, false);
-		SuspectDescription  second = new SuspectDescription("", "blue jacket", "", false, false);
+		SuspectDescription  first  = new SuspectDescription("", "red jacket", "", "", "", false, false);
+		SuspectDescription  second = new SuspectDescription("", "blue jacket", "", "", "", false, false);
 
 		assertNull(store.latest(wearer.id));
 		store.store(wearer.id, first);
@@ -194,7 +194,7 @@ class SuspectDescriptionsTest {
 		                     org.mockito.ArgumentMatchers.anyMap())).thenReturn("TEMPLATE");
 		SuspectDescriptions subject = new SuspectDescriptions(() -> DisguiseSettings.DEFAULT, item -> null, messages);
 
-		assertTrue(subject.format(new SuspectDescription("", "red jacket", "", false, false)).contains("TEMPLATE"));
+		assertTrue(subject.format(new SuspectDescription("", "red jacket", "", "", "", false, false)).contains("TEMPLATE"));
 	}
 
 	@Test

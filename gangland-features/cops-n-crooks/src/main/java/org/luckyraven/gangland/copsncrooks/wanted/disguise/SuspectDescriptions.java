@@ -61,7 +61,7 @@ public class SuspectDescriptions {
 		String head = helmet == null ? "" : words(maskWearable ? wearable : helmet.getType().name());
 		String hand = weaponText(player.getInventory().getItemInMainHand());
 
-		return new SuspectDescription(head, chestText(player.getInventory().getChestplate()), hand,
+		return new SuspectDescription(head, chestText(player.getInventory().getChestplate()), "", "", hand,
 		                              player.getVehicle() != null, masked);
 	}
 
