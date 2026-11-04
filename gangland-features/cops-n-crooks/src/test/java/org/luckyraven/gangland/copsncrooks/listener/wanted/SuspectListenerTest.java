@@ -105,8 +105,8 @@ class SuspectListenerTest {
 		SuspectDescription stored = descriptions.latest(id);
 		assertNotNull(stored);
 		assertTrue(stored.masked());
-		assertEquals("carved pumpkin", stored.head());
-		assertEquals("red jacket", stored.chest());
+		assertEquals("police helmet", stored.head());
+		assertEquals("police vest", stored.chest());
 	}
 
 	@Test

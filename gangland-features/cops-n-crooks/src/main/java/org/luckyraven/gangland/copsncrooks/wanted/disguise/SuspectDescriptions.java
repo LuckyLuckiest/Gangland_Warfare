@@ -4,23 +4,24 @@ import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /** The latest suspect description per player, and how to build, compare and speak one (0.20.0 lane disguise). */
 public class SuspectDescriptions {
-
-	/** The weapon text of a suspect holding nothing. */
-	public static final String EMPTY_HANDS = "empty hands";
 
 	/** The vanilla dye colours and their approximate RGB; a dyed leather jacket is named after the nearest one. */
 	private static final String[] DYE_NAMES = {
@@ -33,6 +34,9 @@ public class SuspectDescriptions {
 			{ 157, 157, 151 }, { 22, 156, 156 }, { 137, 50, 184 }, { 60, 68, 170 },
 			{ 131, 84, 50 }, { 94, 124, 22 }, { 176, 46, 38 }, { 29, 29, 33 }
 	};
+
+	private static final Set<Material> LEATHER_PIECES = Set.of(Material.LEATHER_HELMET, Material.LEATHER_CHESTPLATE,
+	                                                           Material.LEATHER_LEGGINGS, Material.LEATHER_BOOTS);
 
 	private final Supplier<DisguiseSettings>        settings;
 	private final WearableKeys                      keys;
@@ -47,8 +51,9 @@ public class SuspectDescriptions {
 
 	/** What {@code player} looks like right now. */
 	public SuspectDescription describe(Player player) {
-		DisguiseSettings settings = this.settings.get();
-		ItemStack        helmet   = player.getInventory().getHelmet();
+		DisguiseSettings settings  = this.settings.get();
+		PlayerInventory  inventory = player.getInventory();
+		ItemStack        helmet    = inventory.getHelmet();
 		if (helmet != null && helmet.getType() == Material.AIR) {
 			helmet = null;
 		}
@@ -58,11 +63,9 @@ public class SuspectDescriptions {
 		boolean maskItem     = helmet != null && containsIgnoreCase(settings.maskItems(), helmet.getType().name());
 		boolean masked       = maskWearable || maskItem;
 
-		String head = helmet == null ? "" : words(maskWearable ? wearable : helmet.getType().name());
-		String hand = weaponText(player.getInventory().getItemInMainHand());
-
-		return new SuspectDescription(head, chestText(player.getInventory().getChestplate()), "", "", hand,
-		                              player.getVehicle() != null, masked);
+		return new SuspectDescription(pieceText(helmet), pieceText(inventory.getChestplate()),
+		                              pieceText(inventory.getLeggings()), pieceText(inventory.getBoots()),
+		                              weaponText(inventory.getItemInMainHand()), player.getVehicle() != null, masked);
 	}
 
 	/** At least {@code needed} of head, chest and vehicle of {@code player} right now equal those of {@code description}. */
@@ -77,19 +80,36 @@ public class SuspectDescriptions {
 		return equal >= needed;
 	}
 
-	/** The radio text, e.g. {@code unknown suspect in a carved pumpkin, red jacket, on foot}. */
+	/** The radio text, e.g. {@code masked in a carved pumpkin, wearing red jacket, on foot}. */
 	public String format(SuspectDescription description) {
-		String who  = text(description.masked() ? WantedMessages.Key.SUSPECT_UNKNOWN : WantedMessages.Key.SUSPECT_BARE);
-		String mask = description.masked()
-		              ? " " + messages.format(WantedMessages.Key.SUSPECT_MASK, Map.of("head", description.head())) : "";
-		String vehicle = text(description.inCar() ? WantedMessages.Key.SUSPECT_IN_CAR
-		                                          : WantedMessages.Key.SUSPECT_ON_FOOT);
-		String line = messages.format(WantedMessages.Key.SUSPECT_FORMAT, Map.of("who", who, "mask", mask,
-		                                                                        "chest", description.chest(),
-		                                                                        "vehicle", vehicle));
+		List<String> parts = new ArrayList<>();
 
-		// an empty chest leaves ", , " behind
-		return description.chest().isEmpty() ? line.replace(", , ", ", ") : line;
+		if (description.masked()) {
+			parts.add(messages.format(WantedMessages.Key.SUSPECT_MASKED, Map.of("head", description.head())));
+		}
+
+		List<String> worn = new ArrayList<>();
+		if (!description.masked() && !description.head().isEmpty()) {
+			worn.add(description.head());
+		}
+		for (String piece : List.of(description.chest(), description.legs(), description.feet())) {
+			if (!piece.isEmpty()) {
+				worn.add(piece);
+			}
+		}
+		if (!worn.isEmpty()) {
+			parts.add(messages.format(WantedMessages.Key.SUSPECT_WEARING, Map.of("items", String.join(", ", worn))));
+		} else if (!description.masked()) {
+			parts.add(text(WantedMessages.Key.SUSPECT_PLAIN));
+		}
+
+		if (!description.weapon().isEmpty()) {
+			parts.add(messages.format(WantedMessages.Key.SUSPECT_ARMED, Map.of("weapon", description.weapon())));
+		}
+		parts.add(text(description.inCar() ? WantedMessages.Key.SUSPECT_IN_CAR : WantedMessages.Key.SUSPECT_ON_FOOT));
+
+		// '' in a template drops that part
+		return parts.stream().filter(part -> !part.isBlank()).collect(Collectors.joining(", "));
 	}
 
 	public void store(UUID playerId, SuspectDescription description) {
@@ -104,22 +124,39 @@ public class SuspectDescriptions {
 		byPlayer.remove(playerId);
 	}
 
-	private String weaponText(@Nullable ItemStack hand) {
-		if (hand == null || hand.getType() == Material.AIR) {
-			return EMPTY_HANDS;
-		}
-		return words(hand.getType().name());
-	}
-
-	private String chestText(@Nullable ItemStack chest) {
-		if (chest == null || chest.getType() == Material.AIR) {
+	/** The Bartizan wearable key, else a dyed leather piece by colour, else the material; empty for no piece. */
+	private String pieceText(@Nullable ItemStack piece) {
+		if (piece == null || piece.getType() == Material.AIR) {
 			return "";
 		}
-		if (chest.getType() == Material.LEATHER_CHESTPLATE && chest.getItemMeta() instanceof LeatherArmorMeta meta
-		    && meta.getColor() != null) {
-			return nearestDye(meta.getColor()) + " jacket";
+		String key = keys.keyOf(piece);
+		if (key != null) {
+			return words(key);
 		}
-		return words(chest.getType().name());
+
+		Material type = piece.getType();
+		if (LEATHER_PIECES.contains(type) && piece.getItemMeta() instanceof LeatherArmorMeta meta
+		    && meta.getColor() != null) {
+			String dye = nearestDye(meta.getColor());
+			return type == Material.LEATHER_CHESTPLATE ? dye + " jacket" : dye + " " + words(type.name());
+		}
+		return words(type.name());
+	}
+
+	/** A Bartizan weapon by its clean name, else a held sword, axe or bow; anything else is not described. */
+	private String weaponText(@Nullable ItemStack hand) {
+		if (hand == null || hand.getType() == Material.AIR) {
+			return "";
+		}
+		String name = keys.weaponNameOf(hand);
+		if (name != null && !name.isBlank()) {
+			return name.strip();
+		}
+
+		String type = hand.getType().name();
+		boolean weapon = type.endsWith("_SWORD") || type.endsWith("_AXE") || type.equals("BOW")
+		                 || type.equals("CROSSBOW") || type.equals("TRIDENT");
+		return weapon ? words(type) : "";
 	}
 
 	/** The Unknown word alone, for when no description is known. */

@@ -154,6 +154,10 @@ class PoliceOutfitTest {
 		assertNull(keys.keyOf(null));
 		assertDoesNotThrow(() -> keys.keyOf(plain));
 		assertNull(keys.keyOf(plain));
+		assertDoesNotThrow(() -> keys.weaponNameOf(null));
+		assertNull(keys.weaponNameOf(null));
+		assertDoesNotThrow(() -> keys.weaponNameOf(plain));
+		assertNull(keys.weaponNameOf(plain));
 	}
 
 	@Test

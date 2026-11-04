@@ -1,0 +1,54 @@
+package org.luckyraven.gangland.copsncrooks.wanted;
+
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/** 0.21.5 disguise wave: the suspect-description parts have a path, a fallback with their slot and the shipped text. */
+@DisplayName("WantedMessages - 0.21.5 suspect description keys")
+class WantedMessagesDisguiseKeysTest {
+
+	/** Key -> the slot its text must carry. */
+	private static final Map<WantedMessages.Key, List<String>> SUSPECT_KEYS = Map.of(
+			WantedMessages.Key.SUSPECT_MASKED, List.of("%head%"),
+			WantedMessages.Key.SUSPECT_WEARING, List.of("%items%"),
+			WantedMessages.Key.SUSPECT_PLAIN, List.of(),
+			WantedMessages.Key.SUSPECT_ARMED, List.of("%weapon%"));
+
+	@Test
+	@DisplayName("the four new Suspect keys have their path, a fallback with their slot, and the shipped file text")
+	void suspectKeysMatchTheShippedFile() throws IOException {
+		YamlConfiguration yaml = shipped();
+
+		for (Map.Entry<WantedMessages.Key, List<String>> entry : SUSPECT_KEYS.entrySet()) {
+			WantedMessages.Key key = entry.getKey();
+
+			assertTrue(key.path.startsWith("Suspect."), key.path);
+			assertFalse(key.fallback.isBlank(), key + " has a blank fallback");
+			for (String slot : entry.getValue()) {
+				assertTrue(key.fallback.contains(slot), key + " lacks " + slot);
+			}
+			assertTrue(yaml.isString(key.path), key.path + " is missing from wanted_messages.yml");
+			assertEquals(key.fallback, yaml.getString(key.path), key.path);
+		}
+	}
+
+	private YamlConfiguration shipped() throws IOException {
+		try (InputStream in = Objects.requireNonNull(
+				getClass().getClassLoader().getResourceAsStream("copsncrooks/wanted_messages.yml"))) {
+			return YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
+		}
+	}
+}
