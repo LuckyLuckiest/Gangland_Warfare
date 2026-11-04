@@ -22,13 +22,16 @@ public class DisguiseTick {
 
 	private final Supplier<DisguiseSettings>        settings;
 	private final SuspectDescriptions               descriptions;
+	private final DisguiseFilter                    filter;
 	private final CopRadio                          radio;
 	private final Map<UUID, String>                 spoken  = new ConcurrentHashMap<>();
 	private final List<Consumer<UUID>>              forgetHooks = new CopyOnWriteArrayList<>();
 
-	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, CopRadio radio) {
+	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
+	                    CopRadio radio) {
 		this.settings     = settings;
 		this.descriptions = descriptions;
+		this.filter       = filter;
 		this.radio        = radio;
 	}
 

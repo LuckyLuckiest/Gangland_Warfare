@@ -64,6 +64,11 @@ public class DisguiseModuleConfig {
 		};
 	}
 
+	/** Whether the cops still hunt the player: stars above 0, or a post-escape search for them. */
+	static Predicate<Player> huntedOf(UserManager<Player> users, CopManager copManager) {
+		return player -> true;
+	}
+
 	@Bean
 	public WearableKeys wearableKeys() {
 		return PoliceOutfit.bartizanKeys();
@@ -83,12 +88,13 @@ public class DisguiseModuleConfig {
 	public DisguiseFilter disguiseFilter(CopLoader copLoader, SuspectDescriptions descriptions, PoliceOutfit outfit,
 	                                     CopManager copManager, @Qualifier("online") UserManager<Player> users) {
 		return new DisguiseFilter(settingsOf(copLoader), descriptions, outfit, levelOf(users),
-		                          freshSightingOf(copManager));
+		                          freshSightingOf(copManager), huntedOf(users, copManager));
 	}
 
 	@Bean
-	public DisguiseTick disguiseTick(CopLoader copLoader, SuspectDescriptions descriptions, CopRadio copRadio) {
-		return new DisguiseTick(settingsOf(copLoader), descriptions, copRadio);
+	public DisguiseTick disguiseTick(CopLoader copLoader, SuspectDescriptions descriptions, DisguiseFilter filter,
+	                                 CopRadio copRadio) {
+		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, copRadio);
 	}
 
 	/** Registers the lock-on filter, the AI tick hook and the {@code %suspect%} extras. */

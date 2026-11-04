@@ -57,7 +57,7 @@ class DisguisePursuitTest {
 		level        = 1;
 		perception   = new CopPerception();
 		perception.addLockOnFilter(new DisguiseFilter(() -> settings, descriptions, outfit, p -> level,
-		                                              p -> squad.hasFreshSighting()));
+		                                              p -> squad.hasFreshSighting(), p -> true));
 		when(cop.canSee(eq(wearer.player), anyDouble())).thenReturn(true);
 	}
 

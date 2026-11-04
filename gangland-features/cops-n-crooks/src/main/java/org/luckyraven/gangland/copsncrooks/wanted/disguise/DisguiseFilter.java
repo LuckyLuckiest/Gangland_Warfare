@@ -22,15 +22,23 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 	private final PoliceOutfit                outfit;
 	private final ToIntFunction<Player>       levelOf;
 	private final Predicate<Player>           freshSighting;
+	private final Predicate<Player>           hunted;
 	private final Map<UUID, String>           lastState = new ConcurrentHashMap<>();
 
 	public DisguiseFilter(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, PoliceOutfit outfit,
-	                      ToIntFunction<Player> levelOf, Predicate<Player> freshSighting) {
+	                      ToIntFunction<Player> levelOf, Predicate<Player> freshSighting,
+	                      Predicate<Player> hunted) {
 		this.settings = settings;
 		this.descriptions = descriptions;
 		this.outfit = outfit;
 		this.levelOf = levelOf;
 		this.freshSighting = freshSighting;
+		this.hunted = hunted;
+	}
+
+	/** Whether the cops still hunt this player: stars above 0, or a post-escape search for them. */
+	public boolean hunted(Player player) {
+		return hunted.test(player);
 	}
 
 	public boolean allows(CopNpc cop, Player player) {

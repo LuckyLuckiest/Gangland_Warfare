@@ -40,6 +40,8 @@ class DisguiseTickTest {
 	private CopGroup            group;
 	private NpcSquad            squad;
 	private DisguiseTick        tick;
+	private int                 level;
+	private boolean             searching;
 
 	@BeforeEach
 	void setUp() {
@@ -51,7 +53,11 @@ class DisguiseTickTest {
 		group        = mock(CopGroup.class);
 		when(group.getSquad()).thenReturn(squad);
 		when(radio.sayFromLeader(any(CopGroup.class), anyString())).thenReturn(true);
-		tick = new DisguiseTick(() -> settings, descriptions, radio);
+		level        = 1;
+		searching    = false;
+		DisguiseFilter filter = new DisguiseFilter(() -> settings, descriptions, new PoliceOutfit(() -> settings, wearer.keys()),
+		                                           p -> level, p -> false, p -> level > 0 || searching);
+		tick = new DisguiseTick(() -> settings, descriptions, filter, radio);
 	}
 
 	@Test

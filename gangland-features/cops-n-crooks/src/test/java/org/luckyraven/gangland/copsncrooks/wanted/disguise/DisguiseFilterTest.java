@@ -25,6 +25,7 @@ class DisguiseFilterTest {
 	private PoliceOutfit       outfit;
 	private int                level;
 	private boolean            fresh;
+	private boolean            hunted;
 	private DisguiseFilter     filter;
 	private CopNpc             cop;
 
@@ -36,7 +37,8 @@ class DisguiseFilterTest {
 		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
 		level        = 1;
 		fresh        = false;
-		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> fresh);
+		hunted       = true;
+		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> fresh, p -> hunted);
 		cop          = mock(CopNpc.class);
 	}
 
