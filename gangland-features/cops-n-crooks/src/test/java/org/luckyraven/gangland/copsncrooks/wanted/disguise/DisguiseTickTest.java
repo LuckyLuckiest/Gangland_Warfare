@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
 import org.luckyraven.keystone.npc.NpcSquad;
 
@@ -39,6 +40,7 @@ class DisguiseTickTest {
 	private DisguiseSettings    settings;
 	private SuspectDescriptions descriptions;
 	private CopRadio            radio;
+	private WantedMessages      messages;
 	private CopGroup            group;
 	private NpcSquad            squad;
 	private PoliceOutfit        outfit;
@@ -54,6 +56,7 @@ class DisguiseTickTest {
 		settings     = DisguiseSettings.DEFAULT;
 		descriptions = new SuspectDescriptions(() -> settings, wearer.keys(), DisguiseFixtures.words());
 		radio        = mock(CopRadio.class);
+		messages     = DisguiseFixtures.words();
 		squad        = mock(NpcSquad.class);
 		group        = mock(CopGroup.class);
 		when(group.getSquad()).thenReturn(squad);
@@ -63,7 +66,7 @@ class DisguiseTickTest {
 		eyes         = false;
 		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
 		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> level > 0 || searching);
-		tick         = new DisguiseTick(() -> settings, descriptions, filter, outfit, (p, g) -> eyes, radio);
+		tick         = new DisguiseTick(() -> settings, descriptions, filter, outfit, (p, g) -> eyes, radio, messages);
 	}
 
 	@Test

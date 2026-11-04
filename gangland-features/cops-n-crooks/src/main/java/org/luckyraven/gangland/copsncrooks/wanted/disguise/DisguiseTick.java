@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 
 import java.util.List;
 import java.util.Map;
@@ -29,17 +30,20 @@ public class DisguiseTick {
 	private final PoliceOutfit                      outfit;
 	private final BiPredicate<Player, CopGroup>     eyesOn;
 	private final CopRadio                          radio;
+	private final WantedMessages                    messages;
 	private final Map<UUID, String>                 spoken  = new ConcurrentHashMap<>();
 	private final List<Consumer<UUID>>              forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
-	                    PoliceOutfit outfit, BiPredicate<Player, CopGroup> eyesOn, CopRadio radio) {
+	                    PoliceOutfit outfit, BiPredicate<Player, CopGroup> eyesOn, CopRadio radio,
+	                    WantedMessages messages) {
 		this.settings     = settings;
 		this.descriptions = descriptions;
 		this.filter       = filter;
 		this.outfit       = outfit;
 		this.eyesOn       = eyesOn;
 		this.radio        = radio;
+		this.messages     = messages;
 	}
 
 	public void tick(Player player, @Nullable CopGroup group) {

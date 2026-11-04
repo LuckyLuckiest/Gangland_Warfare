@@ -107,9 +107,10 @@ public class DisguiseModuleConfig {
 
 	@Bean
 	public DisguiseTick disguiseTick(CopLoader copLoader, SuspectDescriptions descriptions, DisguiseFilter filter,
-	                                 PoliceOutfit outfit, CopPerception perception, CopRadio copRadio) {
+	                                 PoliceOutfit outfit, CopPerception perception, CopRadio copRadio,
+	                                 WantedMessages messages) {
 		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, outfit, eyesOf(perception, copLoader),
-		                        copRadio);
+		                        copRadio, messages);
 	}
 
 	/** Registers the lock-on filter, the AI tick hook and the {@code %suspect%} extras. */
