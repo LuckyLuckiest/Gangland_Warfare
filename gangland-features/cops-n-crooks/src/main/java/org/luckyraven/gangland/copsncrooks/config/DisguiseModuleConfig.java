@@ -9,6 +9,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
@@ -26,6 +27,7 @@ import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 
+import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -73,7 +75,8 @@ public class DisguiseModuleConfig {
 	}
 
 	/** Whether a valid cop of {@code group} sees the player now at the alert range; false before the config loads. */
-	static BiPredicate<Player, CopGroup> eyesOf(CopPerception perception, CopLoader copLoader) {
+	static BiPredicate<Player, CopGroup> eyesOf(CopPerception perception, CopLoader copLoader,
+	                                            SuspectDescriptions descriptions, Supplier<List<CopNpc>> witnesses) {
 		// ponytail: one ray per valid group cop per chased player per AI tick; making Keystone's package-private
 		// NpcSquad.anyEyesOn public would reuse the pursuit marks if this ever shows in timings
 		return (player, group) -> {
@@ -88,6 +91,11 @@ public class DisguiseModuleConfig {
 			}
 			return false;
 		};
+	}
+
+	/** The cops that can witness a disguise change; the squads only for now. */
+	static Supplier<List<CopNpc>> witnessesOf(CopManager copManager, PatrolManager patrol) {
+		return copManager::liveCops;
 	}
 
 	/** Whether the cops still hunt the player: stars above 0, or a post-escape search for them. */
@@ -124,9 +132,10 @@ public class DisguiseModuleConfig {
 	@Bean
 	public DisguiseTick disguiseTick(CopLoader copLoader, SuspectDescriptions descriptions, DisguiseFilter filter,
 	                                 PoliceOutfit outfit, CopPerception perception, CopRadio copRadio,
-	                                 WantedMessages messages) {
-		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, outfit, eyesOf(perception, copLoader),
-		                        copRadio, messages);
+	                                 WantedMessages messages, CopManager copManager, PatrolManager patrol) {
+		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, outfit,
+		                        eyesOf(perception, copLoader, descriptions, witnessesOf(copManager, patrol)), copRadio,
+		                        messages);
 	}
 
 	/** Registers the lock-on filter, the AI tick hook and the {@code %suspect%} extras. */

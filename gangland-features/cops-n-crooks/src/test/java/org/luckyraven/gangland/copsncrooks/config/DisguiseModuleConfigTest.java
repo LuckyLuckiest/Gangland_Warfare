@@ -258,7 +258,7 @@ class DisguiseModuleConfigTest {
 		when(valid.isValid()).thenReturn(true);
 		CopGroup group = mock(CopGroup.class);
 		when(group.getCops()).thenReturn(Collections.synchronizedList(new ArrayList<>(List.of(gone, valid))));
-		var eyes = DisguiseModuleConfig.eyesOf(perception, loader);
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, null, null);
 
 		when(loader.getLoadedProvider()).thenReturn(null);
 		when(valid.canSee(player, 40.0)).thenReturn(true);
