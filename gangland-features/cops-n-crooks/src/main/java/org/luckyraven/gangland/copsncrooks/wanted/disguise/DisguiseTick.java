@@ -127,13 +127,17 @@ public class DisguiseTick {
 		}
 	}
 
-	/** A cop was looking at the player: the memory starts now, and the next cop to see them learns what they wear then. */
+	/**
+	 * A cop was looking at the player: the memory starts now, and the next cop to see them learns what they wear then.
+	 */
 	public void witnessed(Player player) {
 		descriptions.setRecognised(player.getUniqueId(), true);
 		lastSeen.put(player.getUniqueId(), radio.now());
 	}
 
-	/** An escape ends the memory; the description and the blown outfit stay for the search. The next sighting is told. */
+	/**
+	 * An escape ends the memory; the description and the blown outfit stay for the search. The next sighting is told.
+	 */
 	public void escaped(UUID id) {
 		descriptions.setRecognised(id, false);
 		lastSeen.remove(id);
