@@ -12,12 +12,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * The AI tick hook: a cop of the chase sees the player and knows them - recognised; then the description follows what
+ * The AI tick hook: a cop sees the player and knows them - recognised; then the description follows what
  * they wear, and it is radioed once per change (0.20.0 lane disguise, 0.21.5 live sight). Recognition outlives the
  * sighting by the memory for the player's stars ({@link DisguiseFilter#memoryMillis}, 0.21.6): a change made inside it
  * is learned at the next sighting, and only a sighting teaches the cops anything.
@@ -30,7 +30,7 @@ public class DisguiseTick {
 	private final SuspectDescriptions           descriptions;
 	private final DisguiseFilter                filter;
 	private final PoliceOutfit                  outfit;
-	private final BiPredicate<Player, CopGroup> eyesOn;
+	private final Predicate<Player>            eyesOn;
 	private final CopRadio                      radio;
 	private final WantedMessages                messages;
 	private final Map<UUID, String>             spoken      = new ConcurrentHashMap<>();
@@ -39,7 +39,7 @@ public class DisguiseTick {
 	private final List<Consumer<UUID>>          forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
-	                    PoliceOutfit outfit, BiPredicate<Player, CopGroup> eyesOn, CopRadio radio,
+	                    PoliceOutfit outfit, Predicate<Player> eyesOn, CopRadio radio,
 	                    WantedMessages messages) {
 		this.settings     = settings;
 		this.descriptions = descriptions;
@@ -76,7 +76,7 @@ public class DisguiseTick {
 		Long    seen  = lastSeen.get(id);
 		// the memory for the stars now; a flag only counts with a clock inside it, so a stale one holds nobody
 		boolean held  = was && seen != null && now - seen < filter.memoryMillis(player);
-		boolean eyes  = group != null && eyesOn.test(player, group);
+		boolean eyes  = eyesOn.test(player);
 		boolean known = held || (eyes && filter.knows(player));
 		descriptions.setRecognised(id, known);
 		// only a cop who sees the player learns anything

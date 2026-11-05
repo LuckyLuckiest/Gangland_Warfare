@@ -80,7 +80,7 @@ class DisguiseTickTest {
 		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
 		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> level > 0 || searching,
 		                          p -> difficulty);
-		tick         = new DisguiseTick(() -> settings, descriptions, filter, outfit, (p, g) -> eyes, radio, messages);
+		tick         = new DisguiseTick(() -> settings, descriptions, filter, outfit, p -> eyes, radio, messages);
 	}
 
 	@Test
@@ -453,6 +453,18 @@ class DisguiseTickTest {
 		seenAt(500);
 
 		assertFalse(descriptions.isRecognised(wearer.id));
+	}
+
+	@Test
+	@DisplayName("860 (R3): a cop outside any group has eyes on him, so a tick with no group learns the look")
+	void aBeatCopSeesHimWithNoGroup() {
+		wearer.leatherChest(Color.RED);
+		eyes = true;
+
+		tick.tick(wearer.player, null);
+
+		assertTrue(descriptions.isRecognised(wearer.id), "a cop watching, group or not");
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
 	}
 
 	@Test

@@ -11,11 +11,15 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.WarningSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.patrol.PatrolManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFilter;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
+import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescriptions;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
@@ -25,8 +29,6 @@ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.mockito.ArgumentCaptor;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,9 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /** Disguise wiring: the live settings supplier, and the three installs (lock-on filter, AI tick hook, radio extras). */
@@ -244,30 +248,151 @@ class DisguiseModuleConfigTest {
 		assertTrue(hunted.test(player), "2 stars");
 	}
 
-	@Test
-	@DisplayName("eyesOf: a valid cop of the group who sees the player at the alert range; false before the config loads")
-	void eyesNeedAValidGroupCopWhoSees() {
-		CopLoader loader = mock(CopLoader.class);
-		CopConfigProvider provider = mock(CopConfigProvider.class);
-		when(provider.getAlertRange()).thenReturn(40.0);
+	/** A live cop at {@code distance} from {@code player}, hunting {@code target} (may be null) in {@code state}. */
+	private static CopNpc cop(Player player, UUID target, CopState state, double distance) {
+		CopNpc cop = mock(CopNpc.class);
+		when(cop.isValid()).thenReturn(true);
+		when(cop.getTargetPlayerId()).thenReturn(target);
+		when(cop.getCurrentState()).thenReturn(state);
+		when(cop.distanceTo(player)).thenReturn(distance);
+		return cop;
+	}
+
+	private static Player playerWithId() {
 		Player player = mock(Player.class);
-		CopNpc gone  = mock(CopNpc.class);
-		CopNpc valid = mock(CopNpc.class);
+		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+		return player;
+	}
+
+	private static CopConfigProvider providerWithRanges(double alert, double warning) {
+		CopConfigProvider provider = mock(CopConfigProvider.class);
+		when(provider.getAlertRange()).thenReturn(alert);
+		when(provider.getWarningSettings()).thenReturn(new WarningSettings(true, warning, 5, 30));
+		return provider;
+	}
+
+	private static CopLoader loaderWithRanges(double alert, double warning) {
+		CopConfigProvider provider = providerWithRanges(alert, warning);
+		CopLoader         loader   = mock(CopLoader.class);
+		when(loader.getLoadedProvider()).thenReturn(provider);
+		return loader;
+	}
+
+	@Test
+	@DisplayName("860 eyesOf: a cop hunting him with a clear ray counts, in any group; false before the config loads")
+	void eyesCountAHuntingCop() {
+		CopConfigProvider provider = providerWithRanges(40.0, 12.0);
+		CopLoader loader = mock(CopLoader.class);
+		Player player = playerWithId();
+		UUID id = player.getUniqueId();
+		CopNpc gone  = cop(player, id, CopState.PURSUING, 5.0);
+		CopNpc valid = cop(player, id, CopState.PURSUING, 5.0);
 		when(gone.isValid()).thenReturn(false);
 		when(gone.canSee(player, 40.0)).thenReturn(true);
-		when(valid.isValid()).thenReturn(true);
-		CopGroup group = mock(CopGroup.class);
-		when(group.getCops()).thenReturn(Collections.synchronizedList(new ArrayList<>(List.of(gone, valid))));
-		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, null, null);
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, mock(SuspectDescriptions.class),
+		                                       () -> List.of(gone, valid));
 
 		when(loader.getLoadedProvider()).thenReturn(null);
 		when(valid.canSee(player, 40.0)).thenReturn(true);
-		assertFalse(eyes.test(player, group), "config not loaded");
+		assertFalse(eyes.test(player), "config not loaded");
 
 		when(loader.getLoadedProvider()).thenReturn(provider);
-		assertTrue(eyes.test(player, group), "the valid cop sees him");
+		assertTrue(eyes.test(player), "the valid cop sees him, whatever the group");
 
 		when(valid.canSee(player, 40.0)).thenReturn(false);
-		assertFalse(eyes.test(player, group), "only an invalid cop sees him");
+		assertFalse(eyes.test(player), "only an invalid cop sees him");
+	}
+
+	@Test
+	@DisplayName("859 eyesOf: while recognised a hunting cop has the bare ray; the sight factors only stop a first pick-up")
+	void eyesFollowTheBareRayWhileRecognised() {
+		CopLoader loader = loaderWithRanges(40.0, 12.0);
+		CopPerception dim = new CopPerception();
+		dim.addSightFactor((cop, target) -> 0.25);
+		Player player = playerWithId();
+		UUID id = player.getUniqueId();
+		CopNpc cop = cop(player, id, CopState.PURSUING, 20.0);
+		when(cop.canSee(player, 40.0)).thenReturn(true);
+		when(cop.canSee(player, 10.0)).thenReturn(false);
+		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
+		var eyes = DisguiseModuleConfig.eyesOf(dim, loader, descriptions, () -> List.of(cop));
+
+		when(descriptions.isRecognised(id)).thenReturn(false);
+		assertFalse(eyes.test(player), "not recognised: the factor shrinks 40 to 10, the ray stops short");
+
+		when(descriptions.isRecognised(id)).thenReturn(true);
+		assertTrue(eyes.test(player), "recognised: the bare ray to the alert range");
+	}
+
+	@Test
+	@DisplayName("860 eyesOf: a cop not hunting him notices as a patrol does: warning range, sight factors on")
+	void anotherCopNoticesAsAPatrolDoes() {
+		CopLoader loader = loaderWithRanges(40.0, 12.0);
+		double[] factor = {1.0};
+		CopPerception patrol = new CopPerception();
+		patrol.addSightFactor((cop, target) -> factor[0]);
+		Player player = playerWithId();
+		CopNpc beat = cop(player, null, CopState.PATROL, 8.0);
+		when(beat.canSee(player, 12.0)).thenReturn(true);
+		when(beat.canSee(player, 40.0)).thenReturn(true);
+		when(beat.canSee(player, 3.0)).thenReturn(false);
+		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
+		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
+		var eyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(beat));
+
+		assertTrue(eyes.test(player), "factor 1, a clear ray inside the warning range");
+
+		factor[0] = 0.25;
+		assertFalse(eyes.test(player), "recognised or not, a cop not hunting him has no bare ray");
+
+		factor[0] = 1.0;
+		CopNpc far = cop(player, null, CopState.PATROL, 30.0);
+		when(far.canSee(player, 12.0)).thenReturn(true);
+		var farEyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(far));
+		assertFalse(farEyes.test(player), "30 blocks is past the warning range");
+		verify(far, never()).canSee(any(), anyDouble());
+	}
+
+	@Test
+	@DisplayName("860 eyesOf: a cop walking home never counts")
+	void aCopWalkingHomeNeverCounts() {
+		CopLoader loader = loaderWithRanges(40.0, 12.0);
+		Player player = playerWithId();
+		UUID id = player.getUniqueId();
+		CopNpc cop = cop(player, id, CopState.PURSUING, 5.0);
+		when(cop.canSee(player, 40.0)).thenReturn(true);
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, mock(SuspectDescriptions.class), () -> List.of(cop));
+
+		assertTrue(eyes.test(player), "pursuing: counts");
+
+		when(cop.getCurrentState()).thenReturn(CopState.RETURNING);
+		assertFalse(eyes.test(player), "returning: does not");
+	}
+
+	@Test
+	@DisplayName("eyesOf: a cop out of range costs no sight lookup (the factors run only for cops in range)")
+	void aCopOutOfRangeCostsNoSightLookup() {
+		CopLoader loader = loaderWithRanges(40.0, 12.0);
+		CopPerception counting = new CopPerception();
+		CopPerception.SightFactor factor = mock(CopPerception.SightFactor.class);
+		counting.addSightFactor(factor);
+		Player player = playerWithId();
+		CopNpc cop = cop(player, player.getUniqueId(), CopState.PURSUING, 41.0);
+		var eyes = DisguiseModuleConfig.eyesOf(counting, loader, mock(SuspectDescriptions.class), () -> List.of(cop));
+
+		assertFalse(eyes.test(player));
+		verifyNoInteractions(factor);
+	}
+
+	@Test
+	@DisplayName("860 witnessesOf: squad cops and beat cops")
+	void witnessesAreSquadAndBeatCops() {
+		CopNpc squadCop = mock(CopNpc.class);
+		CopNpc beatCop  = mock(CopNpc.class);
+		when(manager.liveCops()).thenReturn(List.of(squadCop));
+		PatrolManager patrol = mock(PatrolManager.class);
+		when(patrol.beatCops()).thenReturn(List.of(beatCop));
+
+		assertEquals(List.of(squadCop, beatCop), DisguiseModuleConfig.witnessesOf(manager, patrol).get());
 	}
 }
