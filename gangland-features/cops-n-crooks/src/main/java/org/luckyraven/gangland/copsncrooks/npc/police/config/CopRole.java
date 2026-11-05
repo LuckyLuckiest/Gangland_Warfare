@@ -155,7 +155,7 @@ public record CopRole(
 		                         Gear.wear(worn.leggings(), tier.leggings()), Gear.wear(worn.boots(), tier.boots()),
 		                         difficulty,
 		                         new TacticsConfig(engagement, tier.tactics().formationArc()),
-		                         tier.fireRateMultiplier() * fireRateScale);
+		                         tier.fireRateMultiplier() * fireRateScale, tier.ignoreDarkness());
 	}
 
 	/**
