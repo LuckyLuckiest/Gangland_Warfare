@@ -63,7 +63,13 @@ public class DisguiseModuleConfig {
 
 	/** The Difficulty of the tier for his stars; NORMAL before the config loads. */
 	static Function<Player, NpcDifficulty> difficultyOf(CopLoader copLoader, ToIntFunction<Player> level) {
-		return player -> NpcDifficulty.NORMAL;
+		return player -> {
+			CopConfigProvider provider = copLoader.getLoadedProvider();
+			// max(1, ...): getTierConfig(0) answers the TOP tier, and a post-escape search is level 0
+			CopTierConfig tier = provider == null ? null : provider.getTierConfig(Math.max(1, level.applyAsInt(player)));
+
+			return tier == null || tier.difficulty() == null ? NpcDifficulty.NORMAL : tier.difficulty();
+		};
 	}
 
 	/** Whether a valid cop of {@code group} sees the player now at the alert range; false before the config loads. */

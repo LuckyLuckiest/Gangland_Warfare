@@ -35,6 +35,7 @@
 #     Boots:        Armor piece for the feet slot; leave blank for none
 #   Difficulty:     Combat profile that scales aim error, reaction time, fire rate, and melee
 #                   damage. One of EASY, NORMAL, HARD, DEADLY. Defaults to NORMAL when omitted.
+#                   Also picks the row of Cops.Disguise.By_Difficulty: how hard the cops are to fool.
 #   Tactics:        Per-tier squad-tactics override, read over Cops.Tactics below (see its own comments).
 #   Fire_Rate_Multiplier: Gun cadence as a fraction of the weapon's own (player) fire rate, on top of the
 #                   Difficulty's fire rate. 1.0 = as fast as a player holding the gun; 0.1 = a tenth as often.
@@ -902,10 +903,41 @@ Cops:
          - "police_vest"
       # Highest wanted level at which the police outfit still works.
       Outfit_Max_Level: 2
-      # How many of head, chest, legs, boots and on foot / in a car must differ from the cops' description, changed
-      # while no cop sees you, before they stop recognising you; the weapon is described but never counts. 0.21.5:
-      # replaces Match_Needed (an old Match_Needed is ignored with a warning; Changes_Needed = 4 - Match_Needed)
+      # How many of head, chest, legs, boots and on foot / in a car must differ from the cops' description before they
+      # stop recognising you; the weapon is described but never counts. 0.21.6: the base count, By_Difficulty adds to
+      # it. 0.21.5: replaces Match_Needed (an old Match_Needed is ignored with a warning; Changes_Needed = 4 - Match_Needed)
       Changes_Needed: 2
+      # 0.21.6: how hard the cops are to fool. The row is the Difficulty of the tier for your stars (Cops.Tiers), not of
+      # the cop who sees you; a role's Difficulty_Bonus does not count. The cops remember you for Memory_Seconds after a
+      # cop hunting you last had a clear line to you within Alert_Range, or any other cop noticed you within
+      # Patrol.Warning.Range. Dark, crowds and sneaking do not shake a cop hunting you who knows you, only a first
+      # pick-up. Change inside that time and the next cop to see you learns the new look. A cop's crime report starts
+      # it; an escape ends it.
+      By_Difficulty:
+         # 1 and 2 stars in the shipped tiers
+         Easy:
+            # Added to Changes_Needed. A total above 5 means clothes alone never fool this difficulty
+            Extra_Changes: 0
+            # Seconds no cop may see you before a new look can fool them. At least 1; keep it above the AI tick
+            Memory_Seconds: 3.0
+         # 3 stars in the shipped tiers
+         Normal:
+            # As Easy
+            Extra_Changes: 0
+            # As Easy
+            Memory_Seconds: 5.0
+         # 4 stars in the shipped tiers
+         Hard:
+            # As Easy
+            Extra_Changes: 1
+            # As Easy
+            Memory_Seconds: 10.0
+         # 5 stars in the shipped tiers
+         Deadly:
+            # As Easy
+            Extra_Changes: 2
+            # As Easy
+            Memory_Seconds: 20.0
    # Lookout: a gang mate who is not wanted relays the police radio he hears.
    Lookout:
       # 0.20.0: false turns the lookout relay off; gang mates then stop relaying police radio.

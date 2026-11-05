@@ -9,6 +9,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
@@ -21,6 +22,7 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
@@ -37,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -125,6 +128,40 @@ class DisguiseModuleConfigTest {
 		when(wanted.getLevel()).thenReturn(3);
 		when(user.getWanted()).thenReturn(wanted);
 		assertEquals(3, level.applyAsInt(player));
+	}
+
+	@Test
+	@DisplayName("difficultyOf: the tier for his stars; level 0 asks tier 1; NORMAL for a null provider or tier")
+	void difficultyFollowsTheTierForHisStars() {
+		CopLoader loader = mock(CopLoader.class);
+		CopConfigProvider provider = mock(CopConfigProvider.class);
+		CopTierConfig deadly = mock(CopTierConfig.class);
+		CopTierConfig easy   = mock(CopTierConfig.class);
+		CopTierConfig bare   = mock(CopTierConfig.class);
+		when(deadly.difficulty()).thenReturn(NpcDifficulty.DEADLY);
+		when(easy.difficulty()).thenReturn(NpcDifficulty.EASY);
+		when(provider.getTierConfig(5)).thenReturn(deadly);
+		when(provider.getTierConfig(1)).thenReturn(easy);
+		when(provider.getTierConfig(3)).thenReturn(bare);
+		Player player = mock(Player.class);
+		int[] level = {5};
+		var difficulty = DisguiseModuleConfig.difficultyOf(loader, p -> level[0]);
+
+		when(loader.getLoadedProvider()).thenReturn(null);
+		assertEquals(NpcDifficulty.NORMAL, difficulty.apply(player), "config not loaded");
+
+		when(loader.getLoadedProvider()).thenReturn(provider);
+		assertEquals(NpcDifficulty.DEADLY, difficulty.apply(player), "5 stars");
+
+		level[0] = 0;
+		assertEquals(NpcDifficulty.EASY, difficulty.apply(player), "a post-escape search reads tier 1");
+		verify(provider, never()).getTierConfig(0);
+
+		level[0] = 3;
+		assertEquals(NpcDifficulty.NORMAL, difficulty.apply(player), "a tier with no difficulty");
+
+		level[0] = 2;
+		assertEquals(NpcDifficulty.NORMAL, difficulty.apply(player), "no such tier");
 	}
 
 	@Test

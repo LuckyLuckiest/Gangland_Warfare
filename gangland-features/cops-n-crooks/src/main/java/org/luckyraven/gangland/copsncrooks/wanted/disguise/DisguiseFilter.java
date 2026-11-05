@@ -82,8 +82,8 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		}
 
 		boolean blown = outfit.worn(player) && level <= settings.outfitMaxLevel();
-		boolean match = descriptions.matches(player, description, settings.changesNeeded());
-		return report(player, blown ? "blown" : match ? "match" : "mismatch", match);
+		boolean match = descriptions.matches(player, description, changesNeeded(player));
+		return report(player, blown ? "blown" : match ? "match" : "mismatch", blown || match);
 	}
 
 	/** The police outfit fools the cops at his wanted level right now. */
