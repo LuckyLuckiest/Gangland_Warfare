@@ -56,6 +56,7 @@ class DisguiseTickTest {
 	private boolean             searching;
 	private boolean             eyes;
 	private NpcDifficulty       difficulty;
+	private long                now;
 
 	@BeforeEach
 	void setUp() {
@@ -68,6 +69,8 @@ class DisguiseTickTest {
 		group        = mock(CopGroup.class);
 		when(group.getSquad()).thenReturn(squad);
 		when(radio.sayFromLeader(any(CopGroup.class), anyString())).thenReturn(true);
+		now          = 0;
+		when(radio.now()).thenAnswer(i -> now);
 		level        = 1;
 		searching    = false;
 		eyes         = false;

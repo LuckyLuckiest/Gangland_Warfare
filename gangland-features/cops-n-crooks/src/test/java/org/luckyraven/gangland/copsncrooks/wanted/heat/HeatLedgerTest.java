@@ -275,6 +275,28 @@ class HeatLedgerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.6: isCopReporting holds only for the reported criminal, only inside a cop's own report")
+	void isCopReportingOnlyForACopsOwnReport() {
+		Player other = mock(Player.class);
+		when(other.getUniqueId()).thenReturn(UUID.randomUUID());
+		assertFalse(ledger.isCopReporting(playerId));
+
+		ledger.commitReported(player, ReportKind.COP, () -> {
+			assertTrue(ledger.isCopReporting(playerId));
+			assertFalse(ledger.isCopReporting(other.getUniqueId()));
+			return true;
+		});
+		for (ReportKind kind : List.of(ReportKind.CIVILIAN, ReportKind.DISPATCH, ReportKind.SCENE)) {
+			ledger.commitReported(player, kind, () -> {
+				assertFalse(ledger.isCopReporting(playerId), kind.name());
+				return true;
+			});
+		}
+
+		assertFalse(ledger.isCopReporting(playerId));
+	}
+
+	@Test
 	@DisplayName("0.21.2 S3: a report for another player never marks this player's crime")
 	void reportKind_onlyForTheReportedCriminal() {
 		Player other = mock(Player.class);

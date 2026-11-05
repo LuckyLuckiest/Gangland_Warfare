@@ -122,6 +122,11 @@ public final class HeatLedger {
 		return playerId.equals(reporting);
 	}
 
+	/** Whether the late report landing for {@code playerId} right now is a cop's own. */
+	public boolean isCopReporting(UUID playerId) {
+		return playerId.equals(reporting) && reportingKind == ReportKind.COP;
+	}
+
 	/** The cop the Assault_Cop or Kill_Cop being committed right now hit (the witness gate's victim), else null. */
 	public @Nullable UUID currentVictim() {
 		return booking;

@@ -118,6 +118,14 @@ public class DisguiseTick {
 		}
 	}
 
+	/** A cop was looking at the player: the memory starts now, and the next cop to see them learns what they wear then. */
+	public void witnessed(Player player) {
+	}
+
+	/** An escape ends the memory; the description and the blown outfit stay for the search. The next sighting is told. */
+	public void escaped(UUID id) {
+	}
+
 	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */
 	public void onForget(Consumer<UUID> hook) {
 		forgetHooks.add(hook);
