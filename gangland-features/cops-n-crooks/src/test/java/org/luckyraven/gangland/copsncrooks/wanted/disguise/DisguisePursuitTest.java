@@ -9,6 +9,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
@@ -56,7 +57,7 @@ class DisguisePursuitTest {
 		cop          = mock(CopNpc.class);
 		level        = 1;
 		perception   = new CopPerception();
-		perception.addLockOnFilter(new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> true));
+		perception.addLockOnFilter(new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> true, p -> NpcDifficulty.EASY));
 		when(cop.canSee(eq(wearer.player), anyDouble())).thenReturn(true);
 	}
 

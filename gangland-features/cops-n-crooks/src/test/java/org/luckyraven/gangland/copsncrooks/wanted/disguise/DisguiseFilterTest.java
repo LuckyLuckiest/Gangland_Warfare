@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ class DisguiseFilterTest {
 	private PoliceOutfit       outfit;
 	private int                level;
 	private boolean            hunted;
+	private NpcDifficulty      difficulty;
 	private DisguiseFilter     filter;
 	private CopNpc             cop;
 
@@ -37,7 +39,8 @@ class DisguiseFilterTest {
 		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
 		level        = 1;
 		hunted       = true;
-		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> hunted);
+		difficulty   = NpcDifficulty.EASY;
+		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> hunted, p -> difficulty);
 		cop          = mock(CopNpc.class);
 	}
 
@@ -75,6 +78,22 @@ class DisguiseFilterTest {
 		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
 
 		assertFalse(filter.allows(cop, wearer.player));
+	}
+
+	@Test
+	@DisplayName("EASY and NORMAL keep the base two changes: one piece is still him, two are not")
+	void easyAndNormalKeepTwoChanges() {
+		for (NpcDifficulty each : List.of(NpcDifficulty.EASY, NpcDifficulty.NORMAL)) {
+			difficulty = each;
+			wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+			crime();
+
+			wearer.helmet(null);
+			assertTrue(filter.allows(cop, wearer.player), each + ": one piece");
+
+			wearer.leatherChest(Color.fromRGB(20, 20, 250));
+			assertFalse(filter.allows(cop, wearer.player), each + ": two pieces");
+		}
 	}
 
 	@Test

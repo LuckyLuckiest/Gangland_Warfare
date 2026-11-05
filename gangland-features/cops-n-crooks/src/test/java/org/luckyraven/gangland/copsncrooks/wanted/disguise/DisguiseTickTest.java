@@ -11,6 +11,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.List;
@@ -54,6 +55,7 @@ class DisguiseTickTest {
 	private int                 level;
 	private boolean             searching;
 	private boolean             eyes;
+	private NpcDifficulty       difficulty;
 
 	@BeforeEach
 	void setUp() {
@@ -69,8 +71,10 @@ class DisguiseTickTest {
 		level        = 1;
 		searching    = false;
 		eyes         = false;
+		difficulty   = NpcDifficulty.EASY;
 		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
-		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> level > 0 || searching);
+		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> level > 0 || searching,
+		                          p -> difficulty);
 		tick         = new DisguiseTick(() -> settings, descriptions, filter, outfit, (p, g) -> eyes, radio, messages);
 	}
 

@@ -6,6 +6,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
@@ -23,8 +24,10 @@ import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
@@ -56,6 +59,11 @@ public class DisguiseModuleConfig {
 
 			return user.getWanted().getLevel();
 		};
+	}
+
+	/** The Difficulty of the tier for his stars; NORMAL before the config loads. */
+	static Function<Player, NpcDifficulty> difficultyOf(CopLoader copLoader, ToIntFunction<Player> level) {
+		return player -> NpcDifficulty.NORMAL;
 	}
 
 	/** Whether a valid cop of {@code group} sees the player now at the alert range; false before the config loads. */
@@ -101,8 +109,10 @@ public class DisguiseModuleConfig {
 	@Bean
 	public DisguiseFilter disguiseFilter(CopLoader copLoader, SuspectDescriptions descriptions, PoliceOutfit outfit,
 	                                     CopManager copManager, @Qualifier("online") UserManager<Player> users) {
-		return new DisguiseFilter(settingsOf(copLoader), descriptions, outfit, levelOf(users),
-		                          huntedOf(users, copManager));
+		ToIntFunction<Player> level = levelOf(users);
+
+		return new DisguiseFilter(settingsOf(copLoader), descriptions, outfit, level, huntedOf(users, copManager),
+		                          difficultyOf(copLoader, level));
 	}
 
 	@Bean
