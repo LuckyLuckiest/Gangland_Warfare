@@ -121,7 +121,8 @@ public class DisguiseTick {
 
 		SuspectDescription latest  = descriptions.latest(id);
 		String             suspect = latest == null ? descriptions.unknownText() : descriptions.format(latest);
-		String             line    = messages.format(key, Map.of("suspect", suspect));
+		String             line    = messages.format(key, Map.of("suspect", suspect, "changes",
+		                                                                String.valueOf(filter.changesNeeded(player))));
 		if (!line.isBlank()) {
 			player.sendMessage(line);
 		}

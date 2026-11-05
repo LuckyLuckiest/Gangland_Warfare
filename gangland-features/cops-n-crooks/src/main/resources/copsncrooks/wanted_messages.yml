@@ -251,7 +251,7 @@ Suspect:
    Plain: "in plain clothes"
    # 0.21.5: the weapon in the suspect's hand; %weapon% is its name
    Armed: "armed with %weapon%"
-# 0.21.5 Disguise: said in chat when a cop of the chase sees you, once per change; '' turns a line off
+# 0.21.5 Disguise: said in chat when a cop sees you, once per change; '' turns a line off
 Disguise:
    # He knows you; %suspect% is the description the cops have
    Recognised: "&cThe cops recognise you: &7%suspect%"
@@ -259,6 +259,9 @@ Disguise:
    Unrecognised: "&aThe cops don't recognise you."
    # He sees you in the police outfit and takes you for a cop
    Outfit: "&9In the police outfit, the cops take you for one of their own."
+   # 0.21.6: said once when no cop has seen you for the memory (Cops.Disguise.By_Difficulty); %suspect% is what they want,
+   # %changes% is how many pieces must differ at your stars
+   Lost: "&eThe cops lost you. They want: &7%suspect%&e. %changes% of head, chest, legs, boots, on foot / in a car must differ."
 
 # 0.20.0 hot-cash bag: the action bar, the bag's messages and the fence's messages
 Bag:
