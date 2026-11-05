@@ -76,15 +76,15 @@ public class DisguiseModuleConfig {
 	}
 
 	/**
-	 * Whether a cop has eyes on the player: one hunting them counts to the alert range, and while they are known the bare
-	 * ray is enough; any other live cop notices as a patrol does, at the warning range with the sight factors on. A
-	 * cop walking home never counts. False before the config loads.
+	 * Whether a cop has eyes on the player: one hunting them counts to the alert range, and while they are known the
+	 * bare ray is enough; any other live cop notices as a patrol does, at the warning range with the sight factors on.
+	 * A cop walking home never counts. False before the config loads.
 	 */
 	static Predicate<Player> eyesOf(CopPerception perception, CopLoader copLoader, SuspectDescriptions descriptions,
 	                                Supplier<List<CopNpc>> witnesses) {
-		// ponytail: every live squad and beat cop per hunted player per AI tick. The distance check runs first and every
-		// factor is at most 1 (SightModel), so light and crowd lookups only run for cops in range. A per-tick snapshot
-		// is the upgrade if this ever shows in timings
+		// ponytail: every live squad and beat cop per hunted player per AI tick. The distance check runs first and
+		// every factor is at most 1 (SightModel), so light and crowd lookups only run for cops in range. A per-tick
+		// snapshot is the upgrade if this ever shows in timings
 		return player -> {
 			CopConfigProvider provider = copLoader.getLoadedProvider();
 			if (provider == null) return false;
