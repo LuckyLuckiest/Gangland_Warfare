@@ -69,6 +69,9 @@ public class SuspectDescriptions {
 		                              weaponText(inventory.getItemInMainHand()), player.getVehicle() != null, masked);
 	}
 
+	/** Head, chest, legs, feet and vehicle: the most pieces that can differ. */
+	public static final int COMPARED_PIECES = 5;
+
 	/**
 	 * Fewer than {@code changesNeeded} of head, chest, legs, feet and vehicle of {@code player} right now differ from
 	 * those of {@code description}; the weapon is described but never compared.

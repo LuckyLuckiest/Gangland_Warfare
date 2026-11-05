@@ -17,6 +17,7 @@ import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -705,7 +706,7 @@ class DisguiseTickTest {
 	}
 
 	@Test
-	@DisplayName("850: recognised, the memory runs out, two pieces swapped, seen again: one Unrecognised line")
+	@DisplayName("850, 865: recognised, the memory runs out (Lost), two pieces swapped, seen again: one Unrecognised line")
 	void toldWhenNoLongerRecognised() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
@@ -722,9 +723,130 @@ class DisguiseTickTest {
 		tick.tick(wearer.player, group);
 
 		List<String> lines = told();
-		assertEquals(2, lines.size(), lines.toString());
+		assertEquals(3, lines.size(), lines.toString());
 		assertTrue(lines.get(0).contains("The cops recognise you"), lines.get(0));
-		assertTrue(lines.get(1).contains("don't recognise"), lines.get(1));
+		assertTrue(lines.get(1).contains("lost you"), lines.get(1));
+		assertTrue(lines.get(2).contains("don't recognise"), lines.get(2));
+	}
+
+	@Test
+	@DisplayName("865: seen, then the memory runs out unseen: one Lost line naming the look and the pieces")
+	void toldOnceWhenTheCopsLoseHim() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		blindAt(3000);
+		blindAt(3500);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("lost you"), lines.get(1));
+		assertTrue(lines.get(1).contains("2 of head"), lines.get(1));
+		assertTrue(lines.get(1).contains("carved pumpkin"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("865: the Lost line names the count for the difficulty")
+	void lostNamesTheCountForTheDifficulty() {
+		difficulty = NpcDifficulty.DEADLY;
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		blindAt(20000);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("4 of head"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("865: Lost, then a cop sees him in the same look: Recognised is told again")
+	void toldRecognisedAgainAfterLost() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		blindAt(3000);
+		seenAt(3500);
+
+		List<String> lines = told();
+		assertEquals(3, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("lost you"), lines.get(1));
+		assertTrue(lines.get(2).contains("The cops recognise you"), lines.get(2));
+	}
+
+	@Test
+	@DisplayName("865: guard - the police outfit at its star cap decides, so no Lost line; the next sighting says Outfit")
+	void noLostWhileTheOutfitHides() {
+		level = 2;
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		dressAsCop();
+		blindAt(3000);
+
+		assertEquals(1, told().size(), told().toString());
+
+		seenAt(3500);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("police outfit"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("865: a blown police outfit is known whatever else changes, so no Lost line")
+	void noLostInABlownOutfit() {
+		dressAsCop();
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		outfit.onCrime(wearer.player);
+		seenAt(0);
+		assertTrue(descriptions.isRecognised(wearer.id), "blown: known");
+
+		blindAt(3000);
+
+		assertEquals(1, told().size(), told().toString());
+	}
+
+	@Test
+	@DisplayName("865: Changes_Needed plus Extra_Changes above the five compared pieces: clothes never fool, so no Lost line")
+	void noLostWhenClothesCannotFool() {
+		difficulty = NpcDifficulty.DEADLY;
+		settings   = new DisguiseSettings(true, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
+		                                  settings.outfitMaxLevel(), settings.changesNeeded(),
+		                                  Map.of(NpcDifficulty.DEADLY, new DisguiseSettings.Recognition(5, 20.0)));
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		blindAt(20000);
+
+		assertFalse(descriptions.isRecognised(wearer.id), "the memory ran out");
+		assertEquals(1, told().size(), told().toString());
+	}
+
+	@Test
+	@DisplayName("865: a tick with no group still says Lost")
+	void lostIsToldWithNoGroup() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		now  = 3000;
+		eyes = false;
+		tick.tick(wearer.player, null);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("lost you"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("865: guard - nothing is said while the memory runs")
+	void noLostInsideTheMemory() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		blindAt(2999);
+
+		assertEquals(1, told().size(), told().toString());
 	}
 
 	@Test

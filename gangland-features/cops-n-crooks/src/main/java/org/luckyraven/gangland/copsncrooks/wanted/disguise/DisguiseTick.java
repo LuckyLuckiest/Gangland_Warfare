@@ -78,6 +78,7 @@ public class DisguiseTick {
 		boolean held  = was && seen != null && now - seen < filter.memoryMillis(player);
 		boolean eyes  = eyesOn.test(player);
 		boolean known = held || (eyes && filter.knows(player));
+		boolean lost  = was && !known;
 		descriptions.setRecognised(id, known);
 		// only a cop who sees the player learns anything
 		if (eyes && known) {
@@ -106,6 +107,9 @@ public class DisguiseTick {
 		// a new look while recognised is told when it is radioed, so the radio cooldown also paces the chat
 		if (eyes) {
 			tell(player, key, aired && known);
+		} else if (lost && filter.changeCanFool(player)) {
+			// ponytail: no pacing; hiding and showing repeatedly can say Lost and Recognised once per memory
+			tell(player, WantedMessages.Key.DISGUISE_LOST, false);
 		}
 	}
 

@@ -54,6 +54,14 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		return settings.get().memoryMillis(difficulty.apply(player));
 	}
 
+	/**
+	 * Whether clothes can fool the cops from here: no police outfit decides at his stars, and the count is reachable.
+	 */
+	public boolean changeCanFool(Player player) {
+		boolean outfitDecides = outfit.worn(player) && levelOf.applyAsInt(player) <= settings.get().outfitMaxLevel();
+		return !outfitDecides && changesNeeded(player) <= SuspectDescriptions.COMPARED_PIECES;
+	}
+
 	/** Disabled, or recognised on the last AI tick ({@code seen}), or else {@link #knows}. */
 	public boolean allows(CopNpc cop, Player player) {
 		if (!settings.get().enabled()) {
