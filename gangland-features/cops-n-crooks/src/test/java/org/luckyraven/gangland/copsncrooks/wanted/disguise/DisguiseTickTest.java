@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -959,5 +961,118 @@ class DisguiseTickTest {
 		List<String> lines = told();
 		assertEquals(2, lines.size(), lines.toString());
 		assertTrue(lines.get(1).contains("blue jacket"), lines.get(1));
+	}
+
+	/** The cop the player hits; {@code ray} is whether that cop has a line to them. */
+	private CopNpc hitCop(boolean ray) {
+		CopNpc cop = mock(CopNpc.class);
+		when(cop.hasLineOfSight(wearer.player)).thenReturn(ray);
+		return cop;
+	}
+
+	@Test
+	@DisplayName("864: hitting a cop who sees the player: recognised at once, and the next sighting learns the look")
+	void hittingACopInSightRecognisesHim() {
+		describedInPumpkinAndJacket();
+		swapPumpkinAndJacket();
+
+		tick.exposed(hitCop(true), wearer.player);
+		assertTrue(descriptions.isRecognised(wearer.id), "recognised by the hit");
+
+		seenAt(500);
+		assertTrue(descriptions.isRecognised(wearer.id), "still known when seen");
+		assertEquals("blue jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("864 (scenario 22): hit and duck behind a wall: past the memory, the same look is still known")
+	void hitThenDuckIsStillKnownAfterTheMemory() {
+		describedInPumpkinAndJacket();
+		swapPumpkinAndJacket();
+
+		tick.exposed(hitCop(true), wearer.player);
+		blindAt(500);
+		blindAt(4000);
+		assertFalse(descriptions.isRecognised(wearer.id), "the memory ran out unseen");
+
+		seenAt(5000);
+		assertTrue(descriptions.isRecognised(wearer.id), "the cops want the look that hit their man");
+	}
+
+	@Test
+	@DisplayName("864 (scenario 23): a shot from cover: the hit cop has no ray, another cop sees the player: recognised")
+	void anotherCopSeeingTheHitCounts() {
+		describedInPumpkinAndJacket();
+		swapPumpkinAndJacket();
+		eyes = true;
+
+		tick.exposed(hitCop(false), wearer.player);
+
+		assertTrue(descriptions.isRecognised(wearer.id));
+		assertEquals("blue jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("864: a hit in the police outfit, seen: the outfit is blown and a blind tick does not un-blow it")
+	void hitInTheOutfitBlowsIt() {
+		dressAsCop();
+
+		tick.exposed(hitCop(true), wearer.player);
+		blindAt(500);
+
+		assertFalse(outfit.hides(wearer.player, 1));
+	}
+
+	@Test
+	@DisplayName("864 (scenario 24): a hit in the police outfit at 0 stars: the cop may fire back, no flag is set")
+	void hittingACopInTheOutfitAtZeroStarsBlowsIt() {
+		level = 0;
+		dressAsCop();
+		CopNpc cop = hitCop(true);
+
+		tick.exposed(cop, wearer.player);
+
+		assertTrue(filter.allows(cop, wearer.player), "no free attack once the fire gate is on");
+		assertFalse(descriptions.isRecognised(wearer.id));
+		assertNull(descriptions.latest(wearer.id));
+	}
+
+	@Test
+	@DisplayName("864: crew-share stars and no description: the hit stores one, so the next unhunted tick clears the flag")
+	void hitWithNoDescriptionLeavesNoStaleFlag() {
+		tick.exposed(hitCop(true), wearer.player);
+		assertNotNull(descriptions.latest(wearer.id));
+
+		level = 0;
+		tick.tick(wearer.player, null);
+
+		assertFalse(descriptions.isRecognised(wearer.id));
+	}
+
+	@Test
+	@DisplayName("864: a hit no cop sees changes nothing by itself")
+	void hittingACopUnseenChangesNothing() {
+		describedInPumpkinAndJacket();
+		dressAsCop();
+
+		tick.exposed(hitCop(false), wearer.player);
+
+		assertFalse(descriptions.isRecognised(wearer.id));
+		assertTrue(outfit.hides(wearer.player, 1));
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("864: with disguises off a hit changes nothing")
+	void hitWithDisguisesOffChangesNothing() {
+		settings = new DisguiseSettings(false, settings.maskItems(), settings.maskWearables(), settings.policeOutfit(),
+		                                settings.outfitMaxLevel(), settings.changesNeeded());
+		dressAsCop();
+
+		tick.exposed(hitCop(true), wearer.player);
+
+		assertFalse(descriptions.isRecognised(wearer.id));
+		assertTrue(outfit.hides(wearer.player, 1));
+		assertNull(descriptions.latest(wearer.id));
 	}
 }

@@ -545,8 +545,8 @@ class PursuingBehaviorTest {
 	}
 
 	@Test
-	@DisplayName("0.20 seam: filters never stop a ranged cop firing at the player it is pursuing")
-	void filterNeverStopsFiring() {
+	@DisplayName("863: a ranged cop holds fire on a player the filters refuse")
+	void refusedLockOnHoldsFire() {
 		when(cop.isRangedAttacker()).thenReturn(true);
 		when(cop.hasLineOfSight(player)).thenReturn(true);
 		when(cop.canAttack()).thenReturn(true);
@@ -556,7 +556,7 @@ class PursuingBehaviorTest {
 
 		withPerception(perception).tick(cop);
 
-		verify(cop).attack(player);
+		verify(cop, never()).attack(player);
 	}
 
 	@Test

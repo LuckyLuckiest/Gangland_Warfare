@@ -150,8 +150,26 @@ public class DisguiseTick {
 		told.remove(id);
 	}
 
-	/** A cop-attacked hook. */
+	/**
+	 * A cop-attacked hook. Seen hitting a cop: the outfit is blown, and if the player is hunted they are known in what
+	 * they wear.
+	 */
 	public void exposed(CopNpc cop, Player attacker) {
+		if (!settings.get().enabled() || (!cop.hasLineOfSight(attacker) && !eyesOn.test(attacker))) {
+			return;
+		}
+
+		UUID id = attacker.getUniqueId();
+		// before the hunted check: at 0 stars this is what lets the cop fire back
+		if (outfit.worn(attacker)) {
+			outfit.blow(id);
+		}
+		if (!filter.hunted(attacker)) {
+			return;
+		}
+
+		descriptions.store(id, descriptions.describe(attacker));
+		witnessed(attacker);
 	}
 
 	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */

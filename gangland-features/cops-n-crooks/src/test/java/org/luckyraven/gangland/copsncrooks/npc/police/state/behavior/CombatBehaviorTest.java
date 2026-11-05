@@ -426,8 +426,8 @@ class CombatBehaviorTest {
 	}
 
 	@Test
-	@DisplayName("0.20 seam: lock-on filters never stop a cop firing at a target it is already fighting")
-	void filterNeverStopsFiring() {
+	@DisplayName("863: a cop in COMBAT holds fire on a player the filters refuse")
+	void refusedLockOnHoldsFire() {
 		NpcSquad squad  = new NpcSquad();
 		Player   player = combatPlayer(squad);
 		CopPerception perception = new CopPerception();
@@ -436,6 +436,42 @@ class CombatBehaviorTest {
 		new CombatBehavior(COMBAT_RANGE, ALERT_RANGE, mock(DetainmentService.class), RetreatSettings.DEFAULT,
 		                   perception).tick(cop);
 
-		verify(cop).attack(player);
+		verify(cop, never()).attack(player);
+	}
+
+	@Test
+	@DisplayName("863: a forced COMBAT cop holding fire stays in COMBAT and searches at range 0")
+	void refusedLockOnStillSearchesAtRangeZero() {
+		NpcSquad squad  = new NpcSquad();
+		Player   player = combatPlayer(squad);
+		when(cop.isCombatForced()).thenReturn(true);
+		CopPerception perception = new CopPerception();
+		perception.addLockOnFilter((c, p) -> false);
+
+		new CombatBehavior(COMBAT_RANGE, ALERT_RANGE, mock(DetainmentService.class), RetreatSettings.DEFAULT,
+		                   perception).tick(cop);
+
+		verify(cop, never()).attack(player);
+		verify(cop, never()).transitionTo(any());
+		verify(cop).pursue(player, squad, 0.0);
+	}
+
+	@Test
+	@DisplayName("863: the fire gate is for players: an entity target is still fired on")
+	void entityTargetIsStillFiredOn() {
+		LivingEntity civilian = mock(LivingEntity.class);
+		when(civilian.isValid()).thenReturn(true);
+		when(cop.getTargetEntity()).thenReturn(civilian);
+		when(cop.squadFor(civilian)).thenReturn(new NpcSquad());
+		when(cop.distanceTo(civilian)).thenReturn(2.0);
+		when(cop.canAttack()).thenReturn(true);
+		when(cop.hasLineOfSight(civilian)).thenReturn(true);
+		CopPerception perception = new CopPerception();
+		perception.addLockOnFilter((c, p) -> false);
+
+		new CombatBehavior(COMBAT_RANGE, ALERT_RANGE, mock(DetainmentService.class), RetreatSettings.DEFAULT,
+		                   perception).tick(cop);
+
+		verify(cop).attackEntity(civilian);
 	}
 }
