@@ -152,7 +152,7 @@ public class DisguiseModuleConfig {
 		                        messages);
 	}
 
-	/** Registers the lock-on filter, the AI tick hook and the {@code %suspect%} extras. */
+	/** Registers the lock-on filter, the AI tick and cop-attacked hooks and the {@code %suspect%} extras. */
 	@PostConstruct
 	public void installDisguise() {
 		DisguiseFilter filter = container.getInstance(DisguiseFilter.class);
@@ -160,7 +160,9 @@ public class DisguiseModuleConfig {
 
 		DisguiseTick tick = container.getInstance(DisguiseTick.class);
 		tick.onForget(filter::forget);
-		container.getInstance(CopManager.class).addAiTickHook(tick::tick);
+		CopManager manager = container.getInstance(CopManager.class);
+		manager.addAiTickHook(tick::tick);
+		manager.addCopAttackedHook(tick::exposed);
 		container.getInstance(CopRadio.class).setExtraPlaceholders(tick::extras);
 	}
 }

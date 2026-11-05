@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 
@@ -147,6 +148,10 @@ public class DisguiseTick {
 		descriptions.setRecognised(id, false);
 		lastSeen.remove(id);
 		told.remove(id);
+	}
+
+	/** A cop-attacked hook. */
+	public void exposed(CopNpc cop, Player attacker) {
 	}
 
 	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */

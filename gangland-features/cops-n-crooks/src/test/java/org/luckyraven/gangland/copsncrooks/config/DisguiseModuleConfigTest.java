@@ -209,6 +209,22 @@ class DisguiseModuleConfigTest {
 	}
 
 	@Test
+	@DisplayName("864: install registers the cop-attacked hook that tells the disguise a cop was hit")
+	@SuppressWarnings("unchecked")
+	void installRegistersTheAttackHook() {
+		config.installDisguise();
+
+		ArgumentCaptor<BiConsumer<CopNpc, Player>> captor = ArgumentCaptor.forClass(BiConsumer.class);
+		verify(manager).addCopAttackedHook(captor.capture());
+		CopNpc cop = mock(CopNpc.class);
+		Player player = mock(Player.class);
+
+		captor.getValue().accept(cop, player);
+
+		verify(tick).exposed(cop, player);
+	}
+
+	@Test
 	@DisplayName("install supplies %suspect% to the radio through the extras hook")
 	@SuppressWarnings("unchecked")
 	void installRegistersTheExtras() {
