@@ -17,8 +17,10 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * The AI tick hook: a cop of the chase sees him now and knows him (or was already watching him) - recognised; then the
- * description follows what he wears, and it is radioed once per change (0.20.0 lane disguise, 0.21.5 live sight).
+ * The AI tick hook: a cop of the chase sees the player and knows them - recognised; then the description follows what
+ * they wear, and it is radioed once per change (0.20.0 lane disguise, 0.21.5 live sight). Recognition outlives the
+ * sighting by the memory for the player's stars ({@link DisguiseFilter#memoryMillis}, 0.21.6): a change made inside it
+ * is learned at the next sighting, and only a sighting teaches the cops anything.
  */
 public class DisguiseTick {
 
@@ -33,6 +35,7 @@ public class DisguiseTick {
 	private final WantedMessages                messages;
 	private final Map<UUID, String>             spoken      = new ConcurrentHashMap<>();
 	private final Map<UUID, WantedMessages.Key> told        = new ConcurrentHashMap<>();
+	private final Map<UUID, Long>               lastSeen    = new ConcurrentHashMap<>();
 	private final List<Consumer<UUID>>          forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
@@ -61,23 +64,24 @@ public class DisguiseTick {
 			}
 			return;
 		}
-		if (group == null) {
-			spoken.remove(id);
-			told.remove(id);
-			descriptions.setRecognised(id, false);
-			return;
-		}
 		if (!settings.get().enabled()) {
 			return;
 		}
 
 		// Behaviours read the flag set here on the previous AI tick (cop.tick runs before the hooks).
-		// ponytail: zero grace - one AI tick (0.5 s) with no group cop seeing him drops recognition;
-		// a recognisedUntil = now + grace is the upgrade if a corner should need longer
-		boolean eyes  = eyesOn.test(player, group);
-		boolean known = eyes && (descriptions.isRecognised(id) || filter.knows(player));
+		// ponytail: wall clock; an AI stall longer than the memory (under about 3 TPS at 3 s) reads a swap in view as
+		// unseen, a tick counter is the upgrade if that ever shows
+		long    now   = radio.now();
+		boolean was   = descriptions.isRecognised(id);
+		Long    seen  = lastSeen.get(id);
+		// the memory for the stars now; a flag only counts with a clock inside it, so a stale one holds nobody
+		boolean held  = was && seen != null && now - seen < filter.memoryMillis(player);
+		boolean eyes  = group != null && eyesOn.test(player, group);
+		boolean known = held || (eyes && filter.knows(player));
 		descriptions.setRecognised(id, known);
-		if (known) {
+		// only a cop who sees the player learns anything
+		if (eyes && known) {
+			lastSeen.put(id, now);
 			descriptions.store(id, descriptions.describe(player));
 			// they see him in it: it no longer fools them
 			if (outfit.worn(player)) {
@@ -90,9 +94,14 @@ public class DisguiseTick {
 
 		SuspectDescription latest = descriptions.latest(id);
 		String             text   = latest == null ? null : descriptions.format(latest);
-		boolean            aired  = text != null && !text.equals(spoken.get(id)) && radio.sayFromLeader(group, LINE);
+		boolean            aired  = group != null && text != null && !text.equals(spoken.get(id))
+		                            && radio.sayFromLeader(group, LINE);
 		if (aired) {
 			spoken.put(id, text);
+		}
+		// no squad to say it: the next squad says it again
+		if (group == null) {
+			spoken.remove(id);
 		}
 		// a new look while recognised is told when it is radioed, so the radio cooldown also paces the chat
 		if (eyes) {
@@ -120,10 +129,15 @@ public class DisguiseTick {
 
 	/** A cop was looking at the player: the memory starts now, and the next cop to see them learns what they wear then. */
 	public void witnessed(Player player) {
+		descriptions.setRecognised(player.getUniqueId(), true);
+		lastSeen.put(player.getUniqueId(), radio.now());
 	}
 
 	/** An escape ends the memory; the description and the blown outfit stay for the search. The next sighting is told. */
 	public void escaped(UUID id) {
+		descriptions.setRecognised(id, false);
+		lastSeen.remove(id);
+		told.remove(id);
 	}
 
 	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */
@@ -135,6 +149,7 @@ public class DisguiseTick {
 	public void forget(UUID playerId) {
 		spoken.remove(playerId);
 		told.remove(playerId);
+		lastSeen.remove(playerId);
 		forgetHooks.forEach(hook -> hook.accept(playerId));
 	}
 

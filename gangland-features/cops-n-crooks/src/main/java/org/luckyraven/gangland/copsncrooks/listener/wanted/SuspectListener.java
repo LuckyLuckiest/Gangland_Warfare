@@ -25,7 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Snapshots the suspect description on every crime and forgets it when the chase ends (0.20.0 lane disguise). A crime
  * the witness gate holds keeps the look it was done in, and the report that lands for it records that look (0.21.5); an
- * escape keeps the description for the post-escape search.
+ * escape keeps the description for the post-escape search. A cop's own report starts the recognition memory, and an
+ * escape ends it (0.21.6).
  */
 @CustomLog
 @ListenerHandler
@@ -77,9 +78,10 @@ public class SuspectListener implements Listener {
 			return;
 		}
 
-		Map<String, Held> mine = held.get(id);
-		Held              look = mine == null ? null : mine.remove(event.getCrimeId());
-		if (look == null || !ledger.isReporting(id)) {
+		Map<String, Held> mine    = held.get(id);
+		Held              look    = mine == null ? null : mine.remove(event.getCrimeId());
+		boolean           landing = look != null && ledger.isReporting(id);
+		if (!landing) {
 			look = new Held(descriptions.describe(player), outfit.worn(player));
 		}
 
@@ -90,9 +92,16 @@ public class SuspectListener implements Listener {
 		// through here, so it keeps a stale blow; a WantedStartEvent hook ordered against HeatListener is the upgrade
 		if (unhuntedAtCrime.remove(id)) {
 			outfit.clear(id);
+			// a flag left by a report under the first star is as stale as the blow
+			descriptions.setRecognised(id, false);
 		}
 		if (look.outfitWorn()) {
 			outfit.blow(id);
+		}
+		// a cop saw the crime and radioed it: the player stays known from here, so a swap during the report is seen if
+		// a cop still has eyes
+		if (landing && ledger.isCopReporting(id)) {
+			tick.witnessed(player);
 		}
 
 		log.debug("SUSPECT {} desc={}", player.getName(), descriptions.format(look.description()));
@@ -102,9 +111,11 @@ public class SuspectListener implements Listener {
 	public void onChaseEnd(WantedEndEvent event) {
 		// an escape keeps the look and the blown outfit for the post-escape search (0.21.5, row 844); the search giving
 		// up clears them in DisguiseTick
-		if (search.isEscape(event.getCause())) return;
-
 		Player player = event.getPlayer();
+		if (search.isEscape(event.getCause())) {
+			tick.escaped(player.getUniqueId());
+			return;
+		}
 
 		descriptions.clear(player.getUniqueId());
 		outfit.clear(player.getUniqueId());

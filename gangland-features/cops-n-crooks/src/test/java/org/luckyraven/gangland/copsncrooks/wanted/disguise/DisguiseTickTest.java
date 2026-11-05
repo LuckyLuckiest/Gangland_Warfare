@@ -5,6 +5,8 @@ import org.bukkit.Material;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
@@ -299,27 +301,310 @@ class DisguiseTickTest {
 		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
 	}
 
-	@Test
-	@DisplayName("D2: one tick with no cop seeing him drops recognition; a change made then is not learned")
-	void oneBlindTickDropsRecognition() {
-		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
-		descriptions.store(wearer.id, descriptions.describe(wearer.player));
-
+	/** Advances the clock to {@code time} and ticks with a cop seeing the player. */
+	private void seenAt(long time) {
+		now  = time;
 		eyes = true;
 		tick.tick(wearer.player, group);
-		assertTrue(descriptions.isRecognised(wearer.id), "seen and matching: recognised");
+	}
 
+	/** Advances the clock to {@code time} and ticks with no cop seeing the player. */
+	private void blindAt(long time) {
+		now  = time;
 		eyes = false;
 		tick.tick(wearer.player, group);
-		assertFalse(descriptions.isRecognised(wearer.id), "one blind tick: dropped");
+	}
 
+	/** Pumpkin and red jacket, stored as the description: two pieces to change. */
+	private void describedInPumpkinAndJacket() {
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+	}
+
+	/** All four armour slots, stored as the description. */
+	private void describedInFullArmour() {
+		wearer.helmet(Material.CARVED_PUMPKIN)
+		      .leatherChest(Color.RED)
+		      .legs(Material.IRON_LEGGINGS)
+		      .boots(Material.IRON_BOOTS);
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+	}
+
+	private void swapPumpkinAndJacket() {
 		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
-		eyes = true;
-		tick.tick(wearer.player, group);
+	}
+
+	@Test
+	@DisplayName("857: one blind tick keeps recognition, and a change made then is learned at the next sighting")
+	void oneBlindTickKeepsRecognition() {
+		describedInPumpkinAndJacket();
+
+		seenAt(0);
+		assertTrue(descriptions.isRecognised(wearer.id), "seen and matching: recognised");
+
+		blindAt(500);
+		assertTrue(descriptions.isRecognised(wearer.id), "one blind tick");
+
+		swapPumpkinAndJacket();
+		seenAt(1000);
+
+		assertTrue(descriptions.isRecognised(wearer.id), "two pieces changed inside the memory");
+		assertEquals("", descriptions.latest(wearer.id).head());
+		assertEquals("blue jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@ParameterizedTest
+	@CsvSource({"EASY, 3000", "NORMAL, 5000", "HARD, 10000", "DEADLY, 20000"})
+	@DisplayName("857: the memory lasts Memory_Seconds for the difficulty, and ends exactly there")
+	void memoryLastsPerDifficulty(NpcDifficulty row, long memory) {
+		difficulty = row;
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		blindAt(memory - 1);
+		assertTrue(descriptions.isRecognised(wearer.id), "a millisecond short of the memory");
+
+		blindAt(memory);
+		assertFalse(descriptions.isRecognised(wearer.id), "the memory ran out");
+	}
+
+	@Test
+	@DisplayName("857: DEADLY, four pieces off late in the memory, seen: learned")
+	void changeInsideTheMemoryIsLearnedAtDeadly() {
+		difficulty = NpcDifficulty.DEADLY;
+		describedInFullArmour();
+		seenAt(0);
+
+		blindAt(19500);
+		wearer.naked();
+		seenAt(19500);
+
+		assertTrue(descriptions.isRecognised(wearer.id));
+		assertEquals("", descriptions.latest(wearer.id).head());
+		assertEquals("", descriptions.latest(wearer.id).feet());
+	}
+
+	@Test
+	@DisplayName("857: a glimpse inside the memory restarts it")
+	void glimpseRestartsTheMemory() {
+		difficulty = NpcDifficulty.DEADLY;
+		describedInPumpkinAndJacket();
+		seenAt(0);
+		blindAt(15000);
+		seenAt(19000);
+
+		blindAt(38000);
+		assertTrue(descriptions.isRecognised(wearer.id), "19 s after the glimpse");
+
+		blindAt(39000);
+		assertFalse(descriptions.isRecognised(wearer.id), "20 s after the glimpse");
+	}
+
+	@Test
+	@DisplayName("857 (scenario 4): seen and blind alternating never drops recognition")
+	void flickerNeverDrops() {
+		describedInPumpkinAndJacket();
+
+		for (long time = 0; time <= 10000; time += 500) {
+			if (time % 1000 == 0) {
+				seenAt(time);
+			} else {
+				blindAt(time);
+			}
+			assertTrue(descriptions.isRecognised(wearer.id), "at " + time);
+		}
+	}
+
+	@Test
+	@DisplayName("D7 (scenario 12): the police outfit put on inside the memory and then seen is blown")
+	void outfitPutOnInsideTheMemoryIsBlown() {
+		level = 2;
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		blindAt(500);
+		dressAsCop();
+		seenAt(1000);
+
+		assertFalse(outfit.hides(wearer.player, 2));
+	}
+
+	@Test
+	@DisplayName("857: a flag left with a clock past the memory (the AI task stopped) is not inherited")
+	void staleFlagWithAnExpiredDeadlineIsNotInherited() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		swapPumpkinAndJacket();
+		seenAt(60000);
+
+		assertFalse(descriptions.isRecognised(wearer.id));
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("857 (scenario 15): forget drops the memory, so a new chase inherits no recognition")
+	void forgetDropsTheMemory() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		tick.forget(wearer.id);
+		swapPumpkinAndJacket();
+		seenAt(500);
+
+		assertFalse(descriptions.isRecognised(wearer.id));
+	}
+
+	@Test
+	@DisplayName("861 (R5): a tick with no group keeps the memory, then it lapses")
+	void noGroupKeepsTheMemoryThenLapses() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+		eyes = false;
+
+		now = 500;
+		tick.tick(wearer.player, null);
+		assertTrue(descriptions.isRecognised(wearer.id), "inside the memory");
+
+		now = 3000;
+		tick.tick(wearer.player, null);
+		assertFalse(descriptions.isRecognised(wearer.id), "past the memory");
+	}
+
+	@Test
+	@DisplayName("857: the memory reads the stars now: rising stars extend it, falling stars lapse it")
+	void memoryReadsTheStarsNow() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		difficulty = NpcDifficulty.DEADLY;
+		blindAt(15000);
+		assertTrue(descriptions.isRecognised(wearer.id), "20 s at DEADLY");
+
+		difficulty = NpcDifficulty.EASY;
+		blindAt(15500);
+		assertFalse(descriptions.isRecognised(wearer.id), "back to 3 s at EASY");
+	}
+
+	@Test
+	@DisplayName("869 (R11): a cop's report starts the memory, so a swap during it is learned at the next sighting")
+	void witnessedThenSwappedAndSeenIsLearned() {
+		describedInPumpkinAndJacket();
+
+		tick.witnessed(wearer.player);
+		swapPumpkinAndJacket();
+		seenAt(500);
+
+		assertTrue(descriptions.isRecognised(wearer.id));
+		assertEquals("blue jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("869: a cop's report and no cop in sight: the memory lapses and the look at the crime stands")
+	void witnessedAndBlindLapsesAndTheHeldLookStands() {
+		describedInPumpkinAndJacket();
+
+		tick.witnessed(wearer.player);
+		swapPumpkinAndJacket();
+		blindAt(500);
+		assertTrue(descriptions.isRecognised(wearer.id), "inside the memory");
+
+		blindAt(3000);
+
+		assertFalse(descriptions.isRecognised(wearer.id), "past the memory");
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("O11: an escape ends the memory; the description stays for the search")
+	void escapeEndsTheMemory() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		tick.escaped(wearer.id);
+		swapPumpkinAndJacket();
+		seenAt(500);
+
+		assertFalse(descriptions.isRecognised(wearer.id));
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("O11: a cop who still knows the player after an escape says so")
+	void aSightingAfterAnEscapeIsTold() {
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		tick.escaped(wearer.id);
+		seenAt(500);
+
+		List<String> lines = told();
+		assertEquals(2, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("The cops recognise you"), lines.get(1));
+	}
+
+	@Test
+	@DisplayName("guard: the memory lapsed, then two pieces changed: the next cop is fooled")
+	void memoryLapsedThenChangeFools() {
+		describedInPumpkinAndJacket();
+
+		seenAt(0);
+		assertTrue(descriptions.isRecognised(wearer.id), "seen and matching: recognised");
+
+		blindAt(3000);
+		assertFalse(descriptions.isRecognised(wearer.id), "the memory ran out");
+
+		swapPumpkinAndJacket();
+		seenAt(3000);
 
 		assertFalse(descriptions.isRecognised(wearer.id), "two pieces changed out of sight");
 		assertEquals("carved pumpkin", descriptions.latest(wearer.id).head());
 		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("guard: past the DEADLY memory, four pieces fool them")
+	void fourPiecesAfterTheDeadlyMemoryFool() {
+		difficulty = NpcDifficulty.DEADLY;
+		describedInFullArmour();
+		seenAt(0);
+
+		blindAt(20000);
+		wearer.naked();
+		seenAt(20000);
+
+		assertFalse(descriptions.isRecognised(wearer.id));
+		assertEquals("carved pumpkin", descriptions.latest(wearer.id).head());
+	}
+
+	@Test
+	@DisplayName("guard: past the DEADLY memory, three pieces are recognised and the new look is learned")
+	void threePiecesAfterTheDeadlyMemoryAreLearned() {
+		difficulty = NpcDifficulty.DEADLY;
+		describedInFullArmour();
+		seenAt(0);
+
+		blindAt(20000);
+		wearer.helmet(null).chest(null).legs(null);
+		seenAt(20000);
+
+		assertTrue(descriptions.isRecognised(wearer.id));
+		assertEquals("", descriptions.latest(wearer.id).head());
+		assertEquals("", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("guard: held and blind, no cop learns anything and nothing is blown")
+	void heldBlindLearnsAndBlowsNothing() {
+		level = 2;
+		describedInPumpkinAndJacket();
+		seenAt(0);
+
+		dressAsCop();
+		blindAt(500);
+
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+		assertTrue(outfit.hides(wearer.player, 2));
 	}
 
 	@Test
@@ -408,16 +693,18 @@ class DisguiseTickTest {
 	}
 
 	@Test
-	@DisplayName("850: recognised, a blind tick, two pieces swapped, a cop sees him: one Unrecognised line")
+	@DisplayName("850: recognised, the memory runs out, two pieces swapped, seen again: one Unrecognised line")
 	void toldWhenNoLongerRecognised() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
 		descriptions.store(wearer.id, descriptions.describe(wearer.player));
 		eyes = true;
 		tick.tick(wearer.player, group);
 
+		now  = 3000;
 		eyes = false;
 		tick.tick(wearer.player, group);
 		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+		now  = 3500;
 		eyes = true;
 		tick.tick(wearer.player, group);
 		tick.tick(wearer.player, group);

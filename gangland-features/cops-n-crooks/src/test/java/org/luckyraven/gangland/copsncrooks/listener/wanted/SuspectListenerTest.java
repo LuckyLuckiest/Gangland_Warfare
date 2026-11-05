@@ -186,6 +186,66 @@ class SuspectListenerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.6 (869): a cop's report landing starts the memory; the description is still the held look")
+	void copReportStartsTheMemory() throws NoSuchMethodException {
+		fire(crime(true));
+		helmet = null;
+		when(ledger.isReporting(id)).thenReturn(true);
+		when(ledger.isCopReporting(id)).thenReturn(true);
+
+		fire(crime(false));
+
+		verify(tick).witnessed(player);
+		assertTrue(descriptions.latest(id).masked(), "the pumpkin was on at the crime");
+	}
+
+	@Test
+	@DisplayName("0.21.6 (O13): guard - a 911 call or dispatch landing starts no memory")
+	void civilianAndDispatchReportsStartNoMemory() throws NoSuchMethodException {
+		fire(crime(true));
+		when(ledger.isReporting(id)).thenReturn(true);
+		when(ledger.isCopReporting(id)).thenReturn(false);
+
+		fire(crime(false));
+
+		verify(tick, never()).witnessed(player);
+	}
+
+	@Test
+	@DisplayName("0.21.6 (D14): guard - a cop's report deferred to a join has no held look and starts no memory")
+	void copReportWithNoHeldLookStartsNoMemory() throws NoSuchMethodException {
+		when(ledger.isReporting(id)).thenReturn(true);
+		when(ledger.isCopReporting(id)).thenReturn(true);
+
+		fire(crime(false));
+
+		verify(tick, never()).witnessed(player);
+	}
+
+	@Test
+	@DisplayName("0.21.6 (O11): an escape tells the tick, and keeps the description for the search")
+	void escapeTellsTheTick() {
+		listener.onCrime(crime(false));
+		when(search.isEscape(WantedCause.EVASION)).thenReturn(true);
+
+		listener.onChaseEnd(end(WantedCause.EVASION));
+
+		verify(tick).escaped(id);
+		assertNotNull(descriptions.latest(id));
+	}
+
+	@Test
+	@DisplayName("0.21.6: a crime outside any chase clears a recognition flag left by an earlier report")
+	void crimeOutsideAChaseClearsAStaleFlag() throws NoSuchMethodException {
+		descriptions.setRecognised(id, true);
+		when(filter.hunted(player)).thenReturn(false);
+
+		fire(crime(false));
+
+		assertFalse(descriptions.isRecognised(id));
+	}
+
+	@Test
 	@DisplayName("0.21.5 (D14): a quit clears the description and the held looks")
 	void quitClearsTheDescription() throws NoSuchMethodException {
 		listener.onCrime(crime(false));
