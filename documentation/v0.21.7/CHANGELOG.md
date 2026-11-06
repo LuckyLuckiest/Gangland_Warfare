@@ -84,7 +84,7 @@ Upgrade from 0.21.5 or 0.21.6. Config files are never rewritten: edit them by ha
 ## Docket
 
 Fixed: 880, 881, 882, 883, 884, 886, 888, 889, 890, 899, 902, 903, 904, 910. Open by decision: 885 (a rival's hit or an answer to a cop sets wanted on a
-standing guard; watch it on the Test Server), 886 (hitting or killing an idle guard is a crime, by owner ruling),
+standing guard; watch it on the Test Server),
 887 (a discount of 0.5 or lower lets an alt account farm the bounty once the buff lapses), 891 (a wanted member can shelter
 on the turf, and each fight can pull more cops; watch it on the Test Server). Still open: 298 for contest batches sharing a
 post, and 628 (crowd cover).
