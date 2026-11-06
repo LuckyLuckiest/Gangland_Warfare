@@ -65,7 +65,8 @@ public class CivilianDamageListener implements Listener {
 
 			if (npc.isHostile() && ai.combatEnabled()) {
 				npc.setTargetPlayerId(playerAttacker.getUniqueId());
-				if (!keepCall && npc.getCurrentState() != CivilianState.COMBAT) {
+				// a killing blow leaves the state alone: the death event judges the crime on the state before it (T-886)
+				if (!lethal && npc.getCurrentState() != CivilianState.COMBAT) {
 					npc.transitionTo(CivilianState.COMBAT);
 				}
 				civilianService.alertFaction(npc, playerAttacker, true);
