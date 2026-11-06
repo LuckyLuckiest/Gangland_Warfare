@@ -138,7 +138,7 @@ class PowerupRegistryLoaderTest {
 	@Test
 	void toughnessAndWaves_belowOneNanOrInfinite_skippedWithWarning() throws Exception {
 		for (String type : new String[] {"GUARD_TOUGHNESS", "BIGGER_GUARD_WAVES"}) {
-			for (String bad : new String[] {"0.9", "-3"}) {
+			for (String bad : new String[] {"0.9", "-3", ".nan", ".inf", "1e999"}) {
 				warnings.clear();
 				PowerupRegistry registry = loadWith(entry("x", type, bad, ""));
 				assertTrue(!registry.exists("x"), type + " " + bad);
@@ -149,7 +149,7 @@ class PowerupRegistryLoaderTest {
 
 	@Test
 	void reinforcements_outsideZeroOneNanOrInfinite_skippedWithWarning() throws Exception {
-		for (String bad : new String[] {"0", "-1", "1.5"}) {
+		for (String bad : new String[] {"0", "-1", "1.5", ".nan", ".inf", "1e999"}) {
 			warnings.clear();
 			PowerupRegistry registry = loadWith(entry("x", "FASTER_REINFORCEMENTS", bad, ""));
 			assertTrue(!registry.exists("x"), bad);

@@ -18,7 +18,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * <ul>
  *   <li>{@link EffectType#INCOME_MULTIPLIER} — multiplied (stacking 1.25 × 1.25 = 1.5625).</li>
  *   <li>{@link EffectType#GARRISON_DISCOUNT} — multiplied (stacking 0.8 × 0.8 = 0.64).</li>
- *   <li>{@link EffectType#CAPTURE_DEFENSE_BONUS} — summed (additive, e.g. 1.0 + 1.0 = 2.0 phantom defenders).</li>
+ *   <li>{@link EffectType#GUARD_TOUGHNESS}, {@link EffectType#BIGGER_GUARD_WAVES} and
+ *       {@link EffectType#FASTER_REINFORCEMENTS} — multiplied.</li>
+ *   <li>{@link EffectType#CAPTURE_DEFENSE_BONUS} — retired since 0.17.0 and kept only for old rows; summed.</li>
  * </ul>
  */
 @CustomLog

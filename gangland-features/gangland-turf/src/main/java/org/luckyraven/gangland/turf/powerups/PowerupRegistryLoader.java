@@ -125,7 +125,7 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 	private PowerupDefinition parseDefinition(String id, NodeReader r) {
 		String displayName     = r.get("Display_Name").asString().orDefault(id);
 		String effectTypeRaw   = r.get("Effect_Type").asString().required().orDefault("");
-		double magnitude       = r.get("Magnitude").asDouble().required().orDefault(1.0);
+		double magnitude       = r.get("Magnitude").asDouble().required().orDefault(Double.NaN);
 		int    durationSeconds = r.get("Duration_Seconds").asInt().min(1).required().orDefault(60);
 		String costRaw         = r.get("Cost").asString().orDefault("0");
 
@@ -168,6 +168,9 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 			}
 			default -> {
 			}
+		}
+		if (Double.isNaN(magnitude)) {
+			magnitude = 1.0;
 		}
 
 		if (effectType == EffectType.CAPTURE_DEFENSE_BONUS) {

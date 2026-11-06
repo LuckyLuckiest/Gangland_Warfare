@@ -23,12 +23,13 @@
 #   INCOME_MULTIPLIER     Magnitude is the multiplier on the per-interval payout. 1.25 → +25% income.
 #   GARRISON_DISCOUNT     Magnitude is the multiplier on the guard price (Garrison.Cost_Per_Guard below). 0.8 → 20% off.
 #                         The result is clamped to 10-100% of the full price; a Magnitude outside (0, 1] warns at load.
-#   GUARD_TOUGHNESS      Magnitude is the multiplier on guard health, standing guards too. 1.5 -> 50% more health. At least 1.
-#   BIGGER_GUARD_WAVES   Magnitude is the multiplier on Wave_Size and Max_Alive in a contest. 1.5 -> half again as many.
-#                        At least 1. It only spends guards the turf already owns.
-#   FASTER_REINFORCEMENTS Magnitude is the multiplier on the wait before replacement guards arrive. 0.5 -> half the wait.
-#                        Between 0 (exclusive) and 1. An entry outside these ranges is skipped with a warning; one above
-#                        its Limits value is kept and clamped where it is applied.
+#   GUARD_TOUGHNESS       Magnitude is the multiplier on guard health, standing guards too. 1.5 -> 50% more health.
+#                         At least 1.
+#   BIGGER_GUARD_WAVES    Magnitude is the multiplier on Wave_Size and Max_Alive in a contest. 1.5 -> half again as many.
+#                         At least 1. It only spends guards the turf already owns.
+#   FASTER_REINFORCEMENTS Magnitude is the multiplier on the wait before replacement guards arrive. 0.5 -> half the
+#                         wait. Between 0 (exclusive) and 1. An entry outside these ranges is skipped with a warning;
+#                         one above its Limits value is kept and clamped where it is applied.
 #   CAPTURE_DEFENSE_BONUS retired in 0.17.0 (guards on the capture bar replaced it). An entry that still uses it is
 #                         skipped with a warning.
 #

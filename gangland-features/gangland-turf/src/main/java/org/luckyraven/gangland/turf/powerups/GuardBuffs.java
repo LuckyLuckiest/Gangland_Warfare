@@ -7,8 +7,8 @@ import org.bukkit.entity.LivingEntity;
 
 /**
  * The pure rules behind the three guard powerups, kept apart so each is tested alone. A buff magnitude is read from
- * YAML and from the stacked product of running buffs, so every rule treats a non-finite or out-of-range value as "no
- * buff" (1.0) rather than trusting it.
+ * YAML and from the stacked product of running buffs, so {@code up} and {@code wait} treat a non-finite or out-of-range
+ * value as "no buff" (1.0); {@code applyHealth} and {@code scale} expect an already clamped multiplier.
  */
 public final class GuardBuffs {
 
