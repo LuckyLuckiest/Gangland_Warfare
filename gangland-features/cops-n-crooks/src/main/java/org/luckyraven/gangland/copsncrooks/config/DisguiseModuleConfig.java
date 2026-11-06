@@ -1,5 +1,10 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
@@ -80,14 +85,13 @@ public class DisguiseModuleConfig {
 
 	/**
 	 * Whether a cop has eyes on the player: one hunting them counts to the alert range (a Marksman on overwatch to his
-	 * sight range), and while they are known the bare ray is enough, or no ray at all within {@code witnessFloor}: glass
-	 * and iron bars stop the ray, so a cop at a window would otherwise be blind (live run DIS-WINDOW, DIS-BARS), and that
-	 * also means through a wall at that range. Past the floor glass and bars still blind a cop (docket 897, O12).
+	 * sight range), and while they are known the bare ray is enough, or a look through glass, iron bars and fences
+	 * ({@link #seesThroughPanes}). A wall hides them at any range, and a first pick-up needs the ray.
 	 * Any other live cop notices as a patrol does, at the warning range with the sight factors on, so the boss bar and
 	 * the memory agree. A cop walking home never counts. False before the config loads.
 	 */
 	static Predicate<Player> eyesOf(CopPerception perception, CopLoader copLoader, SuspectDescriptions descriptions,
-	                                Supplier<List<CopNpc>> witnesses, DoubleSupplier witnessFloor) {
+	                                Supplier<List<CopNpc>> witnesses) {
 		// ponytail: every live squad and beat cop per hunted player per AI tick. The distance check runs first and
 		// every factor is at most 1 (SightModel), so light and crowd lookups only run for cops in range. A per-tick
 		// snapshot is the upgrade if this ever shows in timings
@@ -102,13 +106,43 @@ public class DisguiseModuleConfig {
 
 				boolean hunting = id.equals(cop.getTargetPlayerId());
 				double  range   = hunting ? huntingRange(provider, cop) : provider.getWarningSettings().range();
-				double  distance = cop.distanceTo(player);
-				if (distance > range) continue;
-				if (hunting && watching && distance <= witnessFloor.getAsDouble()) return true;
-				if (hunting && watching ? cop.canSee(player, range) : perception.sees(cop, player, range)) return true;
+				if (cop.distanceTo(player) > range) continue;
+				if (hunting && watching ? cop.canSee(player, range) || seesThroughPanes(cop, player)
+				                        : perception.sees(cop, player, range)) return true;
 			}
 			return false;
 		};
+	}
+
+	/**
+	 * Whether only glass, iron bars, fences and open space lie between the cop's eyes and the player's: the eye-to-eye
+	 * ray stops at all of them (live DIS-WINDOW, DIS-BARS), so a cop at a window would otherwise be blind (docket 897).
+	 */
+	static boolean seesThroughPanes(CopNpc cop, Player player) {
+		LivingEntity body = cop.getEntity();
+		if (body == null) return false;
+
+		Location from  = body.getEyeLocation();
+		Location to    = player.getEyeLocation();
+		World    world = from.getWorld();
+		if (world == null || !world.equals(to.getWorld())) return false;
+
+		// ponytail: a quarter-block march can step past a block corner the real ray would clip; good enough for a look
+		int steps = (int) Math.ceil(from.distance(to) * 4);
+		for (int step = 1; step < steps; step++) {
+			double part  = (double) step / steps;
+			Block  block = world.getBlockAt(Location.locToBlock(from.getX() + (to.getX() - from.getX()) * part),
+			                                Location.locToBlock(from.getY() + (to.getY() - from.getY()) * part),
+			                                Location.locToBlock(from.getZ() + (to.getZ() - from.getZ()) * part));
+			if (!block.isPassable() && !isSeeThrough(block.getType())) return false;
+		}
+		return true;
+	}
+
+	private static boolean isSeeThrough(Material material) {
+		String name = material.name();
+
+		return name.contains("GLASS") || name.contains("FENCE") || name.equals("IRON_BARS");
 	}
 
 	/** How far a cop hunting the player counts: the alert range, or a Marksman's sight range while on overwatch. */
@@ -172,7 +206,7 @@ public class DisguiseModuleConfig {
 		DoubleSupplier witnessFloor = witnessFloorOf(chaseConfig);
 
 		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, outfit,
-		                        eyesOf(perception, copLoader, descriptions, witnessesOf(copManager, patrol), witnessFloor),
+		                        eyesOf(perception, copLoader, descriptions, witnessesOf(copManager, patrol)),
 		                        copRadio, messages, witnessFloor);
 	}
 

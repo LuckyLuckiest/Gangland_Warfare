@@ -911,10 +911,9 @@ Cops:
       # the cop who sees you; a role's Difficulty_Bonus does not count. The cops remember you for Memory_Seconds after a
       # cop hunting you last had a clear line to you within Alert_Range, or any other cop noticed you within
       # Patrol.Warning.Range. Dark, crowds and sneaking do not shake a cop hunting you who knows you, only a first
-      # pick-up. While they know you, a cop hunting you within Wanted.Witnesses.Cops.Witness_Floor (wanted.yml) counts
-      # with no clear line at all: glass, iron bars and walls do not hide you from them at that range; past it glass
-      # and iron bars do. Change inside that time and the next cop to see you learns the new look. A cop's crime report
-      # starts it; an escape ends it.
+      # pick-up. While they know you, a cop hunting you also sees through glass, iron bars and fences; a wall, a closed
+      # door or leaves hide you at any range. Change inside that time and the next cop to see you learns the new look.
+      # A cop's crime report starts it; an escape ends it.
       By_Difficulty:
          # 1 and 2 stars in the shipped tiers
          Easy:

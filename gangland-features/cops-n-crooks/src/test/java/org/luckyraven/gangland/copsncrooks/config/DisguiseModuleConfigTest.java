@@ -1,10 +1,17 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
@@ -38,6 +45,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -45,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -328,7 +337,7 @@ class DisguiseModuleConfigTest {
 		when(gone.isValid()).thenReturn(false);
 		when(gone.canSee(player, 40.0)).thenReturn(true);
 		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, mock(SuspectDescriptions.class),
-		                                       () -> List.of(gone, valid), () -> 6.0);
+		                                       () -> List.of(gone, valid));
 
 		when(loader.getLoadedProvider()).thenReturn(null);
 		when(valid.canSee(player, 40.0)).thenReturn(true);
@@ -353,7 +362,7 @@ class DisguiseModuleConfigTest {
 		when(cop.canSee(player, 40.0)).thenReturn(true);
 		when(cop.canSee(player, 10.0)).thenReturn(false);
 		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
-		var eyes = DisguiseModuleConfig.eyesOf(dim, loader, descriptions, () -> List.of(cop), () -> 6.0);
+		var eyes = DisguiseModuleConfig.eyesOf(dim, loader, descriptions, () -> List.of(cop));
 
 		when(descriptions.isRecognised(id)).thenReturn(false);
 		assertFalse(eyes.test(player), "not recognised: the factor shrinks 40 to 10, the ray stops short");
@@ -376,7 +385,7 @@ class DisguiseModuleConfigTest {
 		when(beat.canSee(player, 3.0)).thenReturn(false);
 		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
 		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
-		var eyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(beat), () -> 6.0);
+		var eyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(beat));
 
 		assertTrue(eyes.test(player), "factor 1, a clear ray inside the warning range");
 
@@ -386,7 +395,7 @@ class DisguiseModuleConfigTest {
 		factor[0] = 1.0;
 		CopNpc far = cop(player, null, CopState.PATROL, 30.0);
 		when(far.canSee(player, 12.0)).thenReturn(true);
-		var farEyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(far), () -> 6.0);
+		var farEyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(far));
 		assertFalse(farEyes.test(player), "30 blocks is past the warning range");
 		verify(far, never()).canSee(any(), anyDouble());
 	}
@@ -400,7 +409,7 @@ class DisguiseModuleConfigTest {
 		CopNpc cop = cop(player, id, CopState.PURSUING, 5.0);
 		when(cop.canSee(player, 40.0)).thenReturn(true);
 		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, mock(SuspectDescriptions.class),
-		                                       () -> List.of(cop), () -> 6.0);
+		                                       () -> List.of(cop));
 
 		assertTrue(eyes.test(player), "pursuing: counts");
 
@@ -418,7 +427,7 @@ class DisguiseModuleConfigTest {
 		Player player = playerWithId();
 		CopNpc cop = cop(player, player.getUniqueId(), CopState.PURSUING, 41.0);
 		var eyes = DisguiseModuleConfig.eyesOf(counting, loader, mock(SuspectDescriptions.class),
-		                                       () -> List.of(cop), () -> 6.0);
+		                                       () -> List.of(cop));
 
 		assertFalse(eyes.test(player));
 		verifyNoInteractions(factor);
@@ -434,7 +443,7 @@ class DisguiseModuleConfigTest {
 		when(marksman.canSee(player, 48.0)).thenReturn(true);
 		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
 		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
-		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(marksman), () -> 6.0);
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(marksman));
 
 		assertTrue(eyes.test(player));
 	}
@@ -449,13 +458,13 @@ class DisguiseModuleConfigTest {
 		when(marksman.canSee(player, 60.0)).thenReturn(true);
 		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
 		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
-		assertTrue(DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(marksman), () -> 6.0)
+		assertTrue(DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(marksman))
 		                               .test(player), "Alert_Range 60 is the larger");
 
 		CopLoader shorter = loaderWithRanges(40.0, 12.0);
 		CopNpc pursuing = cop(player, player.getUniqueId(), CopState.PURSUING, 45.0);
 		when(pursuing.canSee(player, 48.0)).thenReturn(true);
-		assertFalse(DisguiseModuleConfig.eyesOf(perception, shorter, descriptions, () -> List.of(pursuing), () -> 6.0)
+		assertFalse(DisguiseModuleConfig.eyesOf(perception, shorter, descriptions, () -> List.of(pursuing))
 		                                .test(player), "not on overwatch: Alert_Range");
 	}
 
@@ -476,64 +485,71 @@ class DisguiseModuleConfigTest {
 		return new WitnessSettings(true, List.of(), 10, new WitnessSettings.Cops(3, 180.0, floor, List.of(), true));
 	}
 
-	@Test
-	@DisplayName("871 eyesOf: while recognised a hunting cop within Witness_Floor counts with no ray: glass, bars, a wall")
-	void aHuntingCopWithinTheFloorCountsWithNoRay() {
-		CopLoader loader = loaderWithRanges(40.0, 12.0);
+	@ParameterizedTest
+	@EnumSource(value = Material.class, names = {"GLASS", "GLASS_PANE", "RED_STAINED_GLASS", "IRON_BARS", "OAK_FENCE"})
+	@DisplayName("897 eyesOf: while recognised a hunting cop looks through glass, bars and a fence at any range")
+	void aHuntingCopLooksThroughAPane(Material pane) {
 		Player player = playerWithId();
-		CopNpc cop = cop(player, player.getUniqueId(), CopState.PURSUING, 5.7);
-		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
-		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
-		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(cop), () -> 6.0);
+		CopNpc cop = wallBetween(player, CopState.PURSUING, player.getUniqueId(), 30.0, pane);
 
-		assertTrue(eyes.test(player), "5.7 blocks, the ray stopped");
+		assertTrue(eyes(player, cop, true).test(player), "30 blocks, the ray stopped, " + pane);
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = Material.class, names = {"STONE", "OAK_DOOR", "OAK_LEAVES"})
+	@DisplayName("897 eyesOf: a wall, a closed door or leaves hide the player from a cop however close, the floor is gone")
+	void aWallHidesThePlayerHoweverClose(Material wall) {
+		Player player = playerWithId();
+		CopNpc cop = wallBetween(player, CopState.PURSUING, player.getUniqueId(), 3.0, wall);
+
+		assertFalse(eyes(player, cop, true).test(player), "3 blocks through " + wall);
 	}
 
 	@Test
-	@DisplayName("871 eyesOf: the floor is the Witness_Floor of the moment, and past it the ray decides")
-	void pastTheFloorTheRayDecides() {
-		CopLoader loader = loaderWithRanges(40.0, 12.0);
+	@DisplayName("897 eyesOf: guard - no first pick-up through glass: a cop who does not know them needs the ray")
+	void aPaneIsOnlyForARecognisedPlayer() {
 		Player player = playerWithId();
-		CopNpc cop = cop(player, player.getUniqueId(), CopState.PURSUING, 7.0);
-		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
-		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
-		double[] floor = {6.0};
-		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(cop), () -> floor[0]);
+		CopNpc cop = wallBetween(player, CopState.PURSUING, player.getUniqueId(), 5.0, Material.GLASS);
 
-		assertFalse(eyes.test(player), "7 blocks, floor 6, the ray stopped");
-
-		when(cop.canSee(player, 40.0)).thenReturn(true);
-		assertTrue(eyes.test(player), "7 blocks, floor 6, a clear ray");
-
-		when(cop.canSee(player, 40.0)).thenReturn(false);
-		floor[0] = 8.0;
-		assertTrue(eyes.test(player), "the floor raised to 8 by a reload");
+		assertFalse(eyes(player, cop, false).test(player));
 	}
 
 	@Test
-	@DisplayName("871 eyesOf: no first pick-up through a wall: a cop who does not know them needs the ray inside the floor")
-	void theFloorIsOnlyForARecognisedPlayer() {
-		CopLoader loader = loaderWithRanges(40.0, 12.0);
+	@DisplayName("897 eyesOf: guard - a beat cop keeps the patrol rule behind glass, so the boss bar and the memory agree")
+	void aBeatCopDoesNotLookThroughAPane() {
 		Player player = playerWithId();
-		CopNpc cop = cop(player, player.getUniqueId(), CopState.PURSUING, 5.0);
-		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
-		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(false);
-		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(cop), () -> 6.0);
+		CopNpc beat = wallBetween(player, CopState.PATROL, null, 5.0, Material.GLASS);
 
-		assertFalse(eyes.test(player));
+		assertFalse(eyes(player, beat, true).test(player), "5 blocks, recognised, the ray stopped");
 	}
 
-	@Test
-	@DisplayName("871 eyesOf: a beat cop keeps the patrol rule inside the floor, so the boss bar and the memory agree")
-	void aBeatCopHasNoFloor() {
-		CopLoader loader = loaderWithRanges(40.0, 12.0);
-		Player player = playerWithId();
-		CopNpc beat = cop(player, null, CopState.PATROL, 5.0);
+	/** {@code eyesOf} on one cop, with the player recognised or not. */
+	private Predicate<Player> eyes(Player player, CopNpc cop, boolean recognised) {
 		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
-		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
-		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(beat), () -> 6.0);
+		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(recognised);
 
-		assertFalse(eyes.test(player), "5 blocks, recognised, the ray stopped");
+		return DisguiseModuleConfig.eyesOf(perception, loaderWithRanges(40.0, 12.0), descriptions, () -> List.of(cop));
+	}
+
+	/** A cop {@code distance} blocks off along x with one block of {@code wall} halfway and open air around it. */
+	private static CopNpc wallBetween(Player player, CopState state, UUID target, double distance, Material wall) {
+		Block air = mock(Block.class);
+		when(air.isPassable()).thenReturn(true);
+		Block between = mock(Block.class);
+		when(between.getType()).thenReturn(wall);
+
+		int        wallX = (int) (distance / 2);
+		World      world = mock(World.class);
+		when(world.getBlockAt(anyInt(), anyInt(), anyInt()))
+				.thenAnswer(call -> call.getArgument(0, Integer.class) == wallX ? between : air);
+
+		LivingEntity body = mock(LivingEntity.class);
+		when(body.getEyeLocation()).thenReturn(new Location(world, distance + 0.5, 1.62, 0.5));
+		when(player.getEyeLocation()).thenReturn(new Location(world, 0.5, 1.62, 0.5));
+
+		CopNpc cop = cop(player, target, state, distance);
+		when(cop.getEntity()).thenReturn(body);
+		return cop;
 	}
 
 	@Test
