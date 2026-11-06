@@ -110,6 +110,32 @@ class QuartermasterYamlTest {
 	}
 
 	@Test
+	@DisplayName("the menu pass keys and changed defaults of DESIGN 7 are shipped; Buffs_Effect is gone")
+	void menuPassKeys() throws IOException {
+		YamlConfiguration yaml = load("/turf/turf_messages.yml");
+		Map<String, String> expected = new java.util.LinkedHashMap<>();
+		expected.put("Buffs_Does", "&7Effect: %effect%");
+		expected.put("Effect_Income", "&a+%percent%% &fturf income");
+		expected.put("Effect_Discount", "&a%percent%% off &fnew guards");
+		expected.put("Effect_Toughness", "&a+%percent%% &fhealth on your guards while it runs");
+		expected.put("Effect_Waves", "&a+%percent%% &fguards fighting at once in a contest");
+		expected.put("Effect_Reinforcements", "&fReplacements arrive &a%percent%% &fsooner");
+		expected.put("Buffs_Active", "&aActive: &f%time% &aleft");
+		expected.put("Buffs_Stack", "&7Buying again stacks, up to a limit.");
+		expected.put("Title_Menu", "&5%npc%");
+		expected.put("Title_Buffs", "&5Timed Buffs");
+		expected.put("Title_Garrison", "&5Garrison");
+		expected.put("Place_Title", "&5Place the %npc%");
+		expected.put("Buffs_Duration", "&7Duration: &b%time%");
+
+		for (Map.Entry<String, String> entry : expected.entrySet()) {
+			assertEquals(entry.getValue(), yaml.getString("Quartermaster." + entry.getKey()), entry.getKey());
+		}
+		assertTrue(!yaml.isSet("Quartermaster.Buffs_Effect"), "Buffs_Effect is gone");
+		assertTrue(!yaml.isSet("Garrison.Returned"), "Garrison.Returned is gone");
+	}
+
+	@Test
 	@DisplayName("turf_npcs.yml names the Quartermaster (TF-38)")
 	void powerupNameKeyPresent() throws IOException {
 		assertTrue(load("/turf/turf_npcs.yml").isSet("Powerup_Npc.Display_Name"));

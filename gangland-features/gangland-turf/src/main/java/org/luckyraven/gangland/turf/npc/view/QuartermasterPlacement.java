@@ -18,7 +18,6 @@ import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
-import org.luckyraven.keystone.inventory.component.FillComponent;
 import org.luckyraven.keystone.inventory.component.ItemComponent;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import org.luckyraven.keystone.inventory.flow.Panel;
@@ -126,7 +125,7 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 
 	@Override
 	public String title(TurfPowerupFlowSession session) {
-		return messages.text("Quartermaster.Place_Title", "&8&l[&6&lPlace %npc%&8&l]",
+		return messages.text("Quartermaster.Place_Title", "&5Place the %npc%",
 		                     "npc", session.getNpcDisplayName());
 	}
 
@@ -153,8 +152,7 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		// the ring comes with the menu pass (task M); until then only the fill is drawn
-		builder.fill(FillComponent.of(MenuStyle.material(style.get().fillItem(), Material.BLACK_STAINED_GLASS_PANE)).name(" "));
+		style.get().decorate(builder);
 	}
 
 	/** Re-checks everything, takes the price from the gang bank and places the Quartermaster at the player. */

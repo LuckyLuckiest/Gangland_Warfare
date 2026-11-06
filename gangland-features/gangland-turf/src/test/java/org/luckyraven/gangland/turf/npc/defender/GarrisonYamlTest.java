@@ -80,5 +80,6 @@ class GarrisonYamlTest {
 				new StringReader(YamlFixture.shipped("/turf/turf_messages.yml")));
 
 		assertTrue(yaml.isSet("Garrison.Wave"));
+		assertFalse(yaml.isSet("Garrison.Returned"));
 	}
 }
