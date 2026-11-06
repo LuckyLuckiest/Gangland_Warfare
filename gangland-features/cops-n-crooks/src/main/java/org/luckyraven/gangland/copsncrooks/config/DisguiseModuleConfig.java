@@ -13,6 +13,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.perception.CopPerception;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
+import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFilter;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
@@ -30,6 +31,7 @@ import org.luckyraven.keystone.npc.NpcDifficulty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -77,11 +79,13 @@ public class DisguiseModuleConfig {
 
 	/**
 	 * Whether a cop has eyes on the player: one hunting them counts to the alert range, and while they are known the
-	 * bare ray is enough; any other live cop notices as a patrol does, at the warning range with the sight factors on.
-	 * A cop walking home never counts. False before the config loads.
+	 * bare ray is enough, or no ray at all within {@code witnessFloor}: glass and iron bars stop the ray, so a cop at a
+	 * window would otherwise be blind (live run DIS-WINDOW, DIS-BARS), and that also means through a wall at that range.
+	 * Any other live cop notices as a patrol does, at the warning range with the sight factors on, so the boss bar and
+	 * the memory agree. A cop walking home never counts. False before the config loads.
 	 */
 	static Predicate<Player> eyesOf(CopPerception perception, CopLoader copLoader, SuspectDescriptions descriptions,
-	                                Supplier<List<CopNpc>> witnesses) {
+	                                Supplier<List<CopNpc>> witnesses, DoubleSupplier witnessFloor) {
 		// ponytail: every live squad and beat cop per hunted player per AI tick. The distance check runs first and
 		// every factor is at most 1 (SightModel), so light and crowd lookups only run for cops in range. A per-tick
 		// snapshot is the upgrade if this ever shows in timings
@@ -96,7 +100,9 @@ public class DisguiseModuleConfig {
 
 				boolean hunting = id.equals(cop.getTargetPlayerId());
 				double  range   = hunting ? provider.getAlertRange() : provider.getWarningSettings().range();
-				if (cop.distanceTo(player) > range) continue;
+				double  distance = cop.distanceTo(player);
+				if (distance > range) continue;
+				if (hunting && watching && distance <= witnessFloor.getAsDouble()) return true;
 				if (hunting && watching ? cop.canSee(player, range) : perception.sees(cop, player, range)) return true;
 			}
 			return false;
@@ -146,10 +152,13 @@ public class DisguiseModuleConfig {
 	@Bean
 	public DisguiseTick disguiseTick(CopLoader copLoader, SuspectDescriptions descriptions, DisguiseFilter filter,
 	                                 PoliceOutfit outfit, CopPerception perception, CopRadio copRadio,
-	                                 WantedMessages messages, CopManager copManager, PatrolManager patrol) {
+	                                 WantedMessages messages, CopManager copManager, PatrolManager patrol,
+	                                 ChaseConfigLoader chaseConfig) {
+		DoubleSupplier witnessFloor = () -> chaseConfig.getWitnesses().cops().witnessFloor();
+
 		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, outfit,
-		                        eyesOf(perception, copLoader, descriptions, witnessesOf(copManager, patrol)), copRadio,
-		                        messages);
+		                        eyesOf(perception, copLoader, descriptions, witnessesOf(copManager, patrol), witnessFloor),
+		                        copRadio, messages);
 	}
 
 	/** Registers the lock-on filter, the AI tick and cop-attacked hooks and the {@code %suspect%} extras. */

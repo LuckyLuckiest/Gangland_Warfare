@@ -306,7 +306,7 @@ class DisguiseModuleConfigTest {
 		when(gone.isValid()).thenReturn(false);
 		when(gone.canSee(player, 40.0)).thenReturn(true);
 		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, mock(SuspectDescriptions.class),
-		                                       () -> List.of(gone, valid));
+		                                       () -> List.of(gone, valid), () -> 6.0);
 
 		when(loader.getLoadedProvider()).thenReturn(null);
 		when(valid.canSee(player, 40.0)).thenReturn(true);
@@ -331,7 +331,7 @@ class DisguiseModuleConfigTest {
 		when(cop.canSee(player, 40.0)).thenReturn(true);
 		when(cop.canSee(player, 10.0)).thenReturn(false);
 		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
-		var eyes = DisguiseModuleConfig.eyesOf(dim, loader, descriptions, () -> List.of(cop));
+		var eyes = DisguiseModuleConfig.eyesOf(dim, loader, descriptions, () -> List.of(cop), () -> 6.0);
 
 		when(descriptions.isRecognised(id)).thenReturn(false);
 		assertFalse(eyes.test(player), "not recognised: the factor shrinks 40 to 10, the ray stops short");
@@ -354,7 +354,7 @@ class DisguiseModuleConfigTest {
 		when(beat.canSee(player, 3.0)).thenReturn(false);
 		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
 		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
-		var eyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(beat));
+		var eyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(beat), () -> 6.0);
 
 		assertTrue(eyes.test(player), "factor 1, a clear ray inside the warning range");
 
@@ -364,7 +364,7 @@ class DisguiseModuleConfigTest {
 		factor[0] = 1.0;
 		CopNpc far = cop(player, null, CopState.PATROL, 30.0);
 		when(far.canSee(player, 12.0)).thenReturn(true);
-		var farEyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(far));
+		var farEyes = DisguiseModuleConfig.eyesOf(patrol, loader, descriptions, () -> List.of(far), () -> 6.0);
 		assertFalse(farEyes.test(player), "30 blocks is past the warning range");
 		verify(far, never()).canSee(any(), anyDouble());
 	}
@@ -377,7 +377,8 @@ class DisguiseModuleConfigTest {
 		UUID id = player.getUniqueId();
 		CopNpc cop = cop(player, id, CopState.PURSUING, 5.0);
 		when(cop.canSee(player, 40.0)).thenReturn(true);
-		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, mock(SuspectDescriptions.class), () -> List.of(cop));
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, mock(SuspectDescriptions.class),
+		                                       () -> List.of(cop), () -> 6.0);
 
 		assertTrue(eyes.test(player), "pursuing: counts");
 
@@ -394,10 +395,71 @@ class DisguiseModuleConfigTest {
 		counting.addSightFactor(factor);
 		Player player = playerWithId();
 		CopNpc cop = cop(player, player.getUniqueId(), CopState.PURSUING, 41.0);
-		var eyes = DisguiseModuleConfig.eyesOf(counting, loader, mock(SuspectDescriptions.class), () -> List.of(cop));
+		var eyes = DisguiseModuleConfig.eyesOf(counting, loader, mock(SuspectDescriptions.class),
+		                                       () -> List.of(cop), () -> 6.0);
 
 		assertFalse(eyes.test(player));
 		verifyNoInteractions(factor);
+	}
+
+	@Test
+	@DisplayName("871 eyesOf: while recognised a hunting cop within Witness_Floor counts with no ray: glass, bars, a wall")
+	void aHuntingCopWithinTheFloorCountsWithNoRay() {
+		CopLoader loader = loaderWithRanges(40.0, 12.0);
+		Player player = playerWithId();
+		CopNpc cop = cop(player, player.getUniqueId(), CopState.PURSUING, 5.7);
+		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
+		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(cop), () -> 6.0);
+
+		assertTrue(eyes.test(player), "5.7 blocks, the ray stopped");
+	}
+
+	@Test
+	@DisplayName("871 eyesOf: the floor is the Witness_Floor of the moment, and past it the ray decides")
+	void pastTheFloorTheRayDecides() {
+		CopLoader loader = loaderWithRanges(40.0, 12.0);
+		Player player = playerWithId();
+		CopNpc cop = cop(player, player.getUniqueId(), CopState.PURSUING, 7.0);
+		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
+		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
+		double[] floor = {6.0};
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(cop), () -> floor[0]);
+
+		assertFalse(eyes.test(player), "7 blocks, floor 6, the ray stopped");
+
+		when(cop.canSee(player, 40.0)).thenReturn(true);
+		assertTrue(eyes.test(player), "7 blocks, floor 6, a clear ray");
+
+		when(cop.canSee(player, 40.0)).thenReturn(false);
+		floor[0] = 8.0;
+		assertTrue(eyes.test(player), "the floor raised to 8 by a reload");
+	}
+
+	@Test
+	@DisplayName("871 eyesOf: no first pick-up through a wall: a cop who does not know them needs the ray inside the floor")
+	void theFloorIsOnlyForARecognisedPlayer() {
+		CopLoader loader = loaderWithRanges(40.0, 12.0);
+		Player player = playerWithId();
+		CopNpc cop = cop(player, player.getUniqueId(), CopState.PURSUING, 5.0);
+		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
+		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(false);
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(cop), () -> 6.0);
+
+		assertFalse(eyes.test(player));
+	}
+
+	@Test
+	@DisplayName("871 eyesOf: a beat cop keeps the patrol rule inside the floor, so the boss bar and the memory agree")
+	void aBeatCopHasNoFloor() {
+		CopLoader loader = loaderWithRanges(40.0, 12.0);
+		Player player = playerWithId();
+		CopNpc beat = cop(player, null, CopState.PATROL, 5.0);
+		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
+		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(beat), () -> 6.0);
+
+		assertFalse(eyes.test(player), "5 blocks, recognised, the ray stopped");
 	}
 
 	@Test
