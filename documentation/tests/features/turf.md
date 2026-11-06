@@ -207,6 +207,8 @@ placeholders).
 
 - `gangland-turf` - the map, HUD, placeholders, enter messages and turf card all read the same
   `CaptureEligibility` reason; a change there shows up on every surface at once.
+- `gangland-turf` guards - one 5-tick loop (the deployer, fed by `GarrisonRoster`) spawns, trims and reaps the standing
+  guards of every stocked turf, and reads the guard boosts live. A change there moves every turf's guards at once.
 - `gangland-gadget` and Bartizan - their priority-10 action-bar lines win over the turf line; check the HUD items above
   after any change to `ActionBarManager` priorities.
 - Plaque - the `turf-` placeholders depend on the impl prefix line `turf-` in `GanglandPlaceholder`.
@@ -241,6 +243,30 @@ placeholders).
 - [ ] Dynmap layer colours after a capture: the rectangle takes the new owner's colour at once; a turf created in the last 30 seconds appears on the layer.
 - [ ] Server without dynmap boots normally, and the map commands still work.
 - [ ] `/glw turf buff` on a turf does not change the gang bank balance (TF-31, by design: staff tool).
+
+## 0.21.7 Manual Checks (Standing guards, guard boosts, Quartermaster panels)
+
+The unit tests cover the rules. These need a live server with Citizens. Use a turf of 40 by 40 with a Quartermaster, owned
+by the tester's gang, and a second account in a rival gang.
+
+- [ ] Standing guards: with the turf selected, set the stock to 3 with `/glw turf garrison 3`. Within a second three guards stand, each near a different post, with no contest running. `/glw turf garrison` still prints 3.
+- [ ] Set the stock to 10: five guards stand, one per post, and the Garrison panel reads `Owned 10/12`, `On duty 5`, `In reserve 5`.
+- [ ] Buy one guard in the Garrison panel at stock 3: a fourth guard takes its own post, and the chat says it takes its post on the turf. Stock 4.
+- [ ] Buy one guard at stock 10: the chat says it waits in the reserve. Stock 11, five on duty.
+- [ ] Walk 300 blocks away and back: the guards are gone while unloaded, and on return there are exactly five, with no doubles.
+- [ ] Contest kill: the rival kills one guard during a contest. The count falls by one, a bounty drops at the guard's feet, and a replacement arrives after 20 seconds.
+- [ ] Peace kill: the rival kills a guard with no contest running. The count does not change, no bounty drops, and a replacement arrives after 20 seconds. The owner gets the guard-down alert.
+- [ ] Contest ends abandoned: the guards shout and walk home. After 8 seconds, any guard past the standing five leaves. The rest stay at their posts and do not walk back toward the old rival.
+- [ ] `/glw reload` and a server restart: the count is unchanged, and five guards stand again within a second of the owner returning to the turf.
+- [ ] Guard Toughness active (`/glw turf buff guard_toughness`): each standing guard's maximum health rises by half. When the buff ends, the maximum falls back, no guard dies, and a hurt guard keeps its share of health.
+- [ ] Bigger Guard Waves during a contest: up to 9 guards fight at once with stock 12. The count falls only on kills.
+- [ ] Faster Reinforcements: a replacement after a kill in a contest arrives after 10 seconds, not 20.
+- [ ] Cop hits the owner on the turf with no contest: the standing guards within range go for the cop. When the order is set to Hold, the same hit draws no answer from the guards.
+- [ ] Hitting an idle rival guard records an assault against the attacker, and killing one with no contest running records a killing. Both stay crimes by design.
+- [ ] Four Quartermaster panels (hub, Timed Buffs, Garrison, Place the Quartermaster): border and fill show, no attribute or potion text on any icon, effect lines read as words, and an active buff shows its time left.
+- [ ] On a server whose `turf/turf_powerups.yml` predates 0.21.7: the catalogue has no guard boosts. Copy the three from the migration guide in, restart, and confirm the catalogue shows them with their icons.
+- [ ] A powerup with an unknown `Icon` and a `Magnitude: .nan` entry: one warning each at boot, no crash, the bad icon falls back, the NaN entry is left out.
+- [ ] A server without Citizens: boot is clean, the stock is unchanged, nothing spawns.
 
 ---
 

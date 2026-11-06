@@ -1,0 +1,114 @@
+[SIZE=7][B]0.21.7 Changelog - Turf garrison[/B][/SIZE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documentation/migration-0.21.7.md'][B]migration-0.21.7.md[/B][/URL] before you start the server. [B]Existing servers: copy the three new powerups into [ICODE]turf/turf_powerups.yml[/ICODE][/B], or the Quartermaster will not sell them. Every other new key has a code default. Upgrade from 0.21.5 or 0.21.6. Config files are never rewritten: edit them by hand to tune.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Requires[/B][/SIZE]
+
+[LIST]
+[*][B]Keystone 1.15.5[/B] (unchanged).
+[*][B]gangland-api and module [ICODE]Host_Api[/ICODE][/B] (unchanged). The [ICODE]gangland-turf[/ICODE] and [ICODE]cops-n-crooks[/ICODE] module jars change.
+[*][B]Bartizan:[/B] the build floor is 0.6.0 (the pom, unchanged).
+[*][B]Citizens[/B] (soft): guards need it. Without it nothing spawns and nothing is spent.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Changed[/B][/SIZE]
+
+[SIZE=5][B]Bought guards stand on the turf[/B][/SIZE]
+
+[LIST]
+[*][B]Stock means guards owned.[/B] A bought guard stands at one of the turf's posts as soon as the area is loaded, with no contest needed. With stock 10 and the default [ICODE]Standing_Cap[/ICODE] of 5, five guards stand, one per post, and five wait in reserve. Above 5 the guards share posts.
+[*][B]Only a contest kill costs stock.[/B] A guard killed while a contest runs leaves the stock and pays its bounty. A guard killed with no contest running is free, pays no bounty, and comes back after [ICODE]Wave_Cooldown_Seconds[/ICODE]. A guard lost to a chunk unload, a [ICODE]/glw reload[/ICODE] or a restart comes back free as soon as its area loads.
+[*][B]Contests top up from stock.[/B] The guards already standing fight on, and replacements come in waves of [ICODE]Wave_Size[/ICODE] up to [ICODE]Max_Alive[/ICODE]. Nothing doubles and nothing flaps: a capture that starts does not spawn a second set of guards.
+[*][B]Guards stay on the turf.[/B] Survivors no longer return to a reserve after a contest. They walk home and stay at their posts. Surplus guards above [ICODE]Standing_Cap[/ICODE] leave [ICODE]Stand_Down_Seconds[/ICODE] after a fight.
+[*][B]The Garrison panel counts guards owned.[/B] It shows [ICODE]Owned n/max[/ICODE], [ICODE]On duty[/ICODE] and [ICODE]In reserve[/ICODE]. [ICODE]Garrison.Max_Reserve[/ICODE] is the cap on guards owned, standing or in reserve.
+[*][B]Owners are told[/B] of a contest top-up with the wave line. A peace-time respawn is silent.
+[/LIST]
+
+[SIZE=5][B]Guards answer cops at all times[/B][/SIZE]
+
+[LIST]
+[*]A standing guard answers a cop who hits a gang member on the turf, in peace as well as in a contest. The [B]Hold[/B] order still keeps guards off cops, and a cop whose stray hit lands on a guard is dropped within a quarter second.
+[/LIST]
+
+[SIZE=5][B]Hitting an idle guard is still a crime[/B][/SIZE]
+
+[LIST]
+[*]Hitting an idle rival guard still commits assault, and killing one that is not fighting still commits a killing. No code change: the guards are idle most of the time now, so this decides who dares attack a turf.
+[/LIST]
+
+[SIZE=5][B]Three guard powerups[/B][/SIZE]
+
+[LIST]
+[*][B]Guard Toughness[/B] ([ICODE]guard_toughness[/ICODE], 2000): guards have 1.5 times the health while it runs, standing guards too. Current health keeps its share. When it ends, health falls back and no guard dies.
+[*][B]Bigger Guard Waves[/B] ([ICODE]bigger_guard_waves[/ICODE], 3000): 1.5 times [ICODE]Wave_Size[/ICODE] and [ICODE]Max_Alive[/ICODE] during a contest. It only spends guards the turf already owns.
+[*][B]Faster Reinforcements[/B] ([ICODE]faster_reinforcements[/ICODE], 1500): half the wait before replacements arrive, in a contest and outside one.
+[*]Buying again stacks, up to [ICODE]Limits[/ICODE] ([ICODE]Max_Guard_Toughness[/ICODE] 3.0, [ICODE]Max_Guard_Waves[/ICODE] 2.0, [ICODE]Min_Reinforcement_Wait[/ICODE] 0.25). Out-of-range values are skipped or clamped with a console warning at load.
+[/LIST]
+
+[SIZE=5][B]Quartermaster panels[/B][/SIZE]
+
+[LIST]
+[*][B]Oriel look.[/B] Each panel has a border and a fill from [ICODE]turf_settings.yml[/ICODE] ([ICODE]Menu.Border_Item[/ICODE], [ICODE]Menu.Fill_Item[/ICODE]) and an Oriel-style title.
+[*][B]Readable lore.[/B] Icons carry no attribute or potion text. The catalogue shows the friendly effect ("+50% health on your guards while it runs") instead of the raw enum, [ICODE]Duration[/ICODE], [ICODE]Cost[/ICODE], and the time left on an active buff. A boost bought from the panel is named by its display name in chat.
+[*][B]Catalogue pages hold 21 boosts.[/B]
+[/LIST]
+
+[SIZE=5][B]Config[/B][/SIZE]
+
+[LIST]
+[*][B]New [ICODE]Garrison.Standing_Cap[/ICODE][/B] ([ICODE]turf/turf_npcs.yml[/ICODE], default 5). [ICODE]0[/ICODE] keeps the old behaviour, where guards appear only in a contest.
+[*][B]Removed [ICODE]Defender.Lifespan_Seconds[/ICODE].[/B] Guards no longer expire.
+[*][ICODE]Garrison.Stand_Down_Seconds[/ICODE] now means how long surplus guards stay after a fight.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Fixed[/B][/SIZE]
+
+[LIST]
+[*]Bought guards never appeared until a rival started a capture, so a solo owner saw nothing for the money (row 880).
+[*]A late garrison save could land after a turf was removed and bring its guards back for the next owner (row 881).
+[*]A guard that a chunk reload left untracked could survive the recall (row 882).
+[*]A contest refund after a turf was deleted wrote a stock row for the deleted id (row 883).
+[*]A guard that vanished mid-contest cost stock for its replacement (row 884).
+[*]Buff lore printed the raw [ICODE]Effect_Type[/ICODE] and chat printed the powerup id (row 888).
+[*]The Quartermaster panels had no border, and icons showed attribute and potion tooltips (row 889).
+[*]Two comments described the buff code wrongly (row 890).
+[*]A cop's killing blow on a guard paid the guard bounty.
+[*]A guard that was not fighting kept a remembered player as its target after a fight.
+[*]A recycled guard could walk to a post in an unloaded chunk.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Docket[/B][/SIZE]
+
+[LIST]
+[*]Fixed: 880, 881, 882, 883, 884, 888, 889, 890.
+[*]Open by decision: 885 (a rival's hit or an answer to a cop sets wanted on a standing guard; watch it on the Test Server), 886 (hitting or killing an idle guard is a crime, by owner ruling), 887 (a discount of 0.5 or lower lets an alt account farm the bounty once the buff lapses), 891 (a wanted member can shelter on the turf, and each fight can pull more cops; watch it on the Test Server).
+[*]Still open: 298 for contest batches sharing a post, and 628 (crowd cover).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Decisions and open items[/B][/SIZE]
+
+[LIST]
+[*][B]The numbers are tuning, not measurement.[/B] [ICODE]Standing_Cap[/ICODE] 5, the three prices, the 1.5 multipliers and the 20 s wave cooldown are reasoned defaults. Change them in YAML.
+[*][B]The owner's visual check is still open.[/B] Open all four Quartermaster panels: the border and fill, no attribute or potion text on any icon, the friendly effect wording, the time left on an active buff, and the three new powerups after you copy them in.
+[*][B]Safe-house risk (row 891).[/B] Peace deaths are free and guards answer cops at all times, so a wanted member can hide behind the guards. Watch how often this pulls more cops in on the Test Server. The one-line gate, if it plays badly, is a contest check in the cop answer.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]For developers[/B][/SIZE]
+
+[LIST]
+[*]gangland-api, Keystone and Bartizan are unchanged. [ICODE]GarrisonRoster[/ICODE] is the new bean that reconciles every stocked turf and reads the buffs live. [ICODE]TurfDefenderDeployer[/ICODE] runs the one 5-tick loop that spawns, trims and reaps guards. [ICODE]TurfDefenderConfig[/ICODE] gains [ICODE]standingCap[/ICODE] and loses [ICODE]lifespanSeconds[/ICODE]. [ICODE]GuardBuffs[/ICODE] holds the pure rules for the three effects. The turf menus share a [ICODE]MenuStyle[/ICODE] seam. The friendly-fire handlers for guards and the owner move from cops to the turf module.
+[/LIST]
