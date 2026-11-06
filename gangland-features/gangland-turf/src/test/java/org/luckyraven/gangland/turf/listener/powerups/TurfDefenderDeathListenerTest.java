@@ -109,7 +109,7 @@ class TurfDefenderDeathListenerTest {
 	}
 
 	@Test
-	@DisplayName("noKiller_nothing: a fall, a cop or the lifespan pays no one")
+	@DisplayName("noKiller_nothing: a fall or a cop pays no one")
 	void noKiller_nothing() {
 		listener.onCivilianDeath(new CivilianDeathEvent(npc, null, 0.0));
 

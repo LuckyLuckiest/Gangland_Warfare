@@ -61,10 +61,9 @@ public final class GarrisonRoster {
 		Gang owner = gangs.findById(turf.getOwnerGangId());
 		String tag = owner == null ? GuardCallsign.tag("", "")
 		                           : GuardCallsign.tag(GangDisplayNameResolver.resolve(owner), owner.getName());
-		String wave = "&7%count% guards took their posts at &f%turf%&7.";
 		TurfGarrison garrison = new TurfGarrison(turfId, turf.getRegion(), configOf(turfId), tag,
 		                                         () -> garrisons.count(turfId), n -> garrisons.consume(turfId, n),
-		                                         n -> tellOwners(turf, "Garrison.Wave", wave, n));
+		                                         n -> tellWave(turf, n));
 		// T-700: the owner paid for these guards, so a rival's bounty is a share of that price
 		// (ponytail: today's price, not the historical purchase price; the stock is a bare count)
 		garrison.funded(turf.getOwnerGangId(), guardPrice(turfId));
@@ -98,12 +97,13 @@ public final class GarrisonRoster {
 		return price.max(BigDecimal.ONE).intValue();
 	}
 
-	/** One of the owner's garrison lines to its online members. */
-	private void tellOwners(Turf turf, String key, String fallback, int count) {
+	/** Tells the owner's online members that a wave took its posts. */
+	private void tellWave(Turf turf, int count) {
 		Integer ownerId = turf.getOwnerGangId();
 		Gang    owner   = ownerId == null ? null : gangs.findById(ownerId);
 		if (owner == null) return;
-		String line = text.text(key, fallback, "turf", turf.getDisplayName(), "count", count);
+		String line = text.text("Garrison.Wave", "&7%count% guards took their posts at &f%turf%&7.",
+		                        "turf", turf.getDisplayName(), "count", count);
 		if (line == null || line.isEmpty()) return;
 		for (Member member : owner.getMembers()) {
 			Player player = Bukkit.getPlayer(member.getUuid());

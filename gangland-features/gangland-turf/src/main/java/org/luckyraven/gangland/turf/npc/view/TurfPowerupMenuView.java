@@ -24,8 +24,8 @@ import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 
 /**
  * Root panel of the Quartermaster flow. Shows turf-state at a glance (owner, garrison stock, active buffs, gang bank
- * balance) and offers two navigation buttons that switch to the buff catalogue or garrison sub-panels. Empty slots are
- * padded with the configured global inventory-fill item (matches BankerMenuView style). Every line comes from the
+ * balance) and offers two navigation buttons that switch to the buff catalogue or garrison sub-panels. Empty slots take
+ * the border and fill of {@code turf_settings.yml Menu} through {@code MenuStyle}. Every line comes from the
  * turf module's {@code Quartermaster:} section (W2-Q).
  */
 @CustomLog

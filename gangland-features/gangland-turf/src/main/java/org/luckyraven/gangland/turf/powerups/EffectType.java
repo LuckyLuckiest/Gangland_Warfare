@@ -12,8 +12,7 @@ public enum EffectType {
 	 */
 	INCOME_MULTIPLIER,
 	/**
-	 * Tilts the unclaimed-Phase-2 / owned-turf tug-of-war in the defender's favour. Magnitude is the bonus added to the
-	 * defender side of the per-tick {@code net} count — e.g. 1.0 effectively adds one phantom defender.
+	 * Retired in 0.17.0, kept only so old rows load; guards on the capture bar replaced it.
 	 */
 	CAPTURE_DEFENSE_BONUS,
 	/**

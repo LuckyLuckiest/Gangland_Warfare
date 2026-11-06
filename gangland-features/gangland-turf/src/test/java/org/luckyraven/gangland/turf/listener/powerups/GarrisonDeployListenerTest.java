@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.turf.listener.powerups;
 
-import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,12 +27,10 @@ import org.luckyraven.gangland.turf.support.InMemoryGarrisonRepository;
 import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class GarrisonDeployListenerTest {

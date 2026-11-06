@@ -14,7 +14,7 @@ import java.util.Locale;
  * and side clamps; existing turfs are never changed by these keys), {@code Capture:} (the 0.17.0 capture window, the
  * wake-up shield, presence, the clamp, the stall and the guard weight), {@code Turf_Cap:} (how many turfs a gang may
  * hold per level), {@code Income:} (the idle window, the boost cap and the gang XP per payout) and {@code Garrison:}
- * (the reserve cap). A bad value falls back to its default or is clamped; {@code /glw reload} re-reads the file.
+ * (the cap on guards owned). A bad value falls back to its default or is clamped; {@code /glw reload} re-reads the file.
  */
 @CustomLog
 public class TurfRules implements FileInitializer {

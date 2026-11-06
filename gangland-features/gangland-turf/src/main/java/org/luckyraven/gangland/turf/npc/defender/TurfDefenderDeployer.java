@@ -289,7 +289,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	 * comes here after {@code dressAs}, so the role has already set its health and that becomes the guard's base;
 	 * rescaling from the stored base means a stack and an expiry never drift. Package-private for tests.
 	 */
-	void track(int turfId, CivilianNpc npc, long deployedAt) {
+	void track(int turfId, CivilianNpc npc) {
 		Group group = byTurfId.computeIfAbsent(turfId, k -> new Group(Set::of, 32.0));
 		LivingEntity entity = npc.getEntity();
 		UUID entityId = entity == null ? null : entity.getUniqueId();
@@ -297,7 +297,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		if (baseHealth > 0 && group.toughness != 1.0) {
 			GuardBuffs.applyHealth(entity, baseHealth, group.toughness);
 		}
-		group.defenders.add(new TrackedDefender(npc, deployedAt, entityId, baseHealth));
+		group.defenders.add(new TrackedDefender(npc, entityId, baseHealth));
 		group.deployed++;
 		turfByNpc.put(npc, turfId);
 		if (entityId != null) {
@@ -443,6 +443,8 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		while (!group.defenders.isEmpty()) {
 			TrackedDefender surplus = Collections.max(group.defenders, Comparator.comparingInt(d -> numberOf(d.npc)));
 			if (group.defenders.size() <= target && numberOf(surplus.npc) <= target) return;
+			// ponytail: the body lives until CivilianService's next tick (AI_Tick_Rate) but is untracked now, so a killing
+			// blow there drops civilian cash with no debit (T-901); hold the entity mapping until it is gone if that matters
 			surplus.npc.markForRemoval();
 			untrack(surplus);
 			group.defenders.remove(surplus);
@@ -546,7 +548,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			return false;
 		}
 		dressAs(npc, garrison, number);
-		track(turfId, npc, now);
+		track(turfId, npc);
 		return true;
 	}
 
@@ -598,7 +600,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			group.defenders.remove(d);
 			group.deployed--;
 			dressAs(fresh, garrison, number);
-			track(turfId, fresh, d.deployedAt());
+			track(turfId, fresh);
 			recycledAt.put(fresh, now);
 			log.debug("Turf {}: stuck guard {} recycled at another post", turfId, number);
 		}
@@ -823,7 +825,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	}
 
 	/** @param baseHealth the guard's role health, what Toughness scales from; -1 with no attribute (never rescaled) */
-	private record TrackedDefender(CivilianNpc npc, long deployedAt, UUID entityId, double baseHealth) {
+	private record TrackedDefender(CivilianNpc npc, UUID entityId, double baseHealth) {
 	}
 
 	/**

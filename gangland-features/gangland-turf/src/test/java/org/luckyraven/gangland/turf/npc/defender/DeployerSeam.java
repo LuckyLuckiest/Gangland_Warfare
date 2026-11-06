@@ -73,6 +73,6 @@ public final class DeployerSeam {
 	}
 
 	public static void track(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc) {
-		deployer.track(turfId, npc, System.currentTimeMillis());
+		deployer.track(turfId, npc);
 	}
 }

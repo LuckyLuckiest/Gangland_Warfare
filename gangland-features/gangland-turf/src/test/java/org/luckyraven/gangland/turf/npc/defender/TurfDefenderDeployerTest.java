@@ -423,7 +423,7 @@ class TurfDefenderDeployerTest {
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			bukkit.statics().when(() -> Bukkit.getWorld("world")).thenReturn(world);
 			deployer.startGarrison(garrison, () -> challengers.keySet());
-			deployer.track(1, guard, System.currentTimeMillis());
+			deployer.track(1, guard);
 			deployer.tick();
 		}
 		return guard;
@@ -1636,6 +1636,6 @@ class TurfDefenderDeployerTest {
 	}
 
 	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc) {
-		deployer.track(turfId, npc, System.currentTimeMillis());
+		deployer.track(turfId, npc);
 	}
 }

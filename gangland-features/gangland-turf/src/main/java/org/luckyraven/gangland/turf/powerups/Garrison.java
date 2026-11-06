@@ -4,9 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Pre-purchased defender stock for a single turf. Owner-keyed (one row per turf): when an enemy starts a capture, the
- * configured number of defenders is deployed and {@code count} is decremented by however many actually spawned.
- * Persisted so a server restart preserves whatever the owner paid for.
+ * Pre-purchased defender stock for a single turf, one row per turf. {@code count} is guards owned, standing or in
+ * reserve; only a contest kill, a purchase, the admin setter or an owner-change wipe changes it. Persisted so a server restart preserves whatever the owner paid for.
  */
 @Getter
 @Setter
