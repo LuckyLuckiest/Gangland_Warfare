@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -56,11 +57,17 @@ class QuartermasterYamlTest {
 	}
 
 	@Test
-	@DisplayName("the shipped Reserve_Full line says the cap counts guards on duty too (T-268)")
-	void reserveFull_namesWhatIsCounted() throws IOException {
-		String line = load("/turf/turf_messages.yml").getString("Quartermaster.Reserve_Full");
+	@DisplayName("garrisonKeys_ownedNotStockOrReserve: the Owned keys ship, the stock and reserve keys are gone")
+	void garrisonKeys_ownedNotStockOrReserve() throws IOException {
+		YamlConfiguration yaml = load("/turf/turf_messages.yml");
 
-		assertTrue(line.contains("on duty"), line);
+		for (String key : new String[]{"Garrison_Owned", "Garrison_In_Reserve", "Garrison_Where_One", "Garrison_Where_Two",
+		                               "Bought_Guard_Post", "Bought_Guard_Reserve", "Owned_Full"}) {
+			assertTrue(yaml.isSet("Quartermaster." + key), key);
+		}
+		for (String key : new String[]{"Garrison_Stock", "Garrison_Reserve", "Reserve_Full"}) {
+			assertFalse(yaml.isSet("Quartermaster." + key), key);
+		}
 	}
 
 	@Test

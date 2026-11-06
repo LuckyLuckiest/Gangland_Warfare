@@ -7,6 +7,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.config.TurfRules;
@@ -16,6 +17,7 @@ import org.luckyraven.gangland.turf.powerups.EffectType;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 import org.luckyraven.keystone.economy.EconomyHandler;
+import org.luckyraven.gangland.turf.npc.defender.GarrisonComposition;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.support.TurfTextFixture;
@@ -36,6 +38,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -173,22 +177,27 @@ class TurfPowerupGarrisonViewTest {
 	}
 
 	@Test
-	@DisplayName("guards still in the field count against the reserve: stock 0 + 12 alive is refused (r2)")
-	void reserveCap_countsDeployedGuards() {
-		when(garrisons.count(TURF_ID)).thenReturn(0);
-		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(12);
+	@DisplayName("cap_countsOwnedOnly: owned guards, standing or not, are all that count against Max_Reserve")
+	void cap_countsOwnedOnly() {
+		when(garrisons.count(TURF_ID)).thenReturn(12);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(5);
 
 		view.attemptBuy(flow, viewer, session);
 
 		assertUnpaid();
 		verify(garrisons, never()).add(anyInt(), anyInt());
+
+		when(garrisons.count(TURF_ID)).thenReturn(11);
+		view.attemptBuy(flow, viewer, session);
+
+		assertPaid("1000");
+		verify(garrisons).add(TURF_ID, 1);
 	}
 
 	@Test
-	@DisplayName("a buy is allowed while stock plus deployed guards is under Max_Reserve")
+	@DisplayName("a buy is allowed while the guards owned are under Max_Reserve")
 	void reserveCap_underCapStillBuys() {
 		when(garrisons.count(TURF_ID)).thenReturn(4);
-		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(7);
 
 		view.attemptBuy(flow, viewer, session);
 
@@ -262,31 +271,79 @@ class TurfPowerupGarrisonViewTest {
 	}
 
 	@Test
-	@DisplayName("the next wave is capped by Wave_Size, the stock and Max_Alive minus guards on duty (W7-H)")
-	void nextWave_cappedByWaveStockAndMaxAlive() {
+	@DisplayName("nextWave_excludesStanding: only the reserve (owned minus alive) can top up a contest")
+	void nextWave_excludesStanding() {
 		TurfDefenderConfig config = new TurfDefenderConfig("turf_defender", 32.0, 3, 6, 20, 8, 16);
 
-		assertEquals(1, TurfPowerupGarrisonView.nextWave(1, 0, config));
-		assertEquals(3, TurfPowerupGarrisonView.nextWave(10, 0, config));
 		assertEquals(1, TurfPowerupGarrisonView.nextWave(10, 5, config));
-		assertEquals(0, TurfPowerupGarrisonView.nextWave(10, 6, config));
+		assertEquals(0, TurfPowerupGarrisonView.nextWave(5, 5, config));
+		assertEquals(3, TurfPowerupGarrisonView.nextWave(12, 5, config.withWaves(3, 9, 20)));
 		assertEquals(0, TurfPowerupGarrisonView.nextWave(0, 0, config));
 	}
 
 	@Test
-	@DisplayName("the info lore shows guards on duty, the reserve against the cap and the next wave (T-822)")
-	void infoLore_showsOnDutyReserveAndNextWave() {
-		when(garrisons.count(TURF_ID)).thenReturn(4);
-		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(2);
+	@DisplayName("infoLore_ownedDutyReserve: Owned n/max, On duty, In reserve, the where lines, no stock or reserve line")
+	void infoLore_ownedDutyReserve() {
+		when(garrisons.count(TURF_ID)).thenReturn(10);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(5);
 		when(rules.getMaxReserve()).thenReturn(12);
 
 		List<String> lore = view.infoLore(session.getTurf(), session.getOwnerGang());
 
-		assertTrue(lore.contains("Quartermaster.Garrison_On_Duty"));
-		assertTrue(lore.contains("Quartermaster.Garrison_Reserve"));
-		assertTrue(lore.contains("Quartermaster.Garrison_Next_Wave"));
-		verify(messages).text(eq("Quartermaster.Garrison_Reserve"), anyString(), eq("count"), eq(6), eq("max"), eq(12));
-		verify(messages).text(eq("Quartermaster.Garrison_Next_Wave"), anyString(), eq("count"), eq(3));
+		verify(messages).text(eq("Quartermaster.Garrison_Owned"), anyString(), eq("count"), eq(10), eq("max"), eq(12));
+		verify(messages).text(eq("Quartermaster.Garrison_On_Duty"), anyString(), eq("count"), eq(5));
+		verify(messages).text(eq("Quartermaster.Garrison_In_Reserve"), anyString(), eq("count"), eq(5));
+		verify(messages).text(eq("Quartermaster.Garrison_Next_Wave"), anyString(), eq("count"), eq(1));
+		assertTrue(lore.contains("Quartermaster.Garrison_Where_One"));
+		assertTrue(lore.contains("Quartermaster.Garrison_Where_Two"));
+		assertTrue(lore.stream().noneMatch(l -> l.equals("Quartermaster.Garrison_Stock")
+		                                         || l.equals("Quartermaster.Garrison_Reserve")));
+		int bank = lore.indexOf("Quartermaster.Garrison_Bank");
+		assertEquals("Quartermaster.Garrison_Where_One", lore.get(bank + 2));
+		assertEquals("Quartermaster.Garrison_Where_Two", lore.get(bank + 3));
+	}
+
+	@Test
+	@DisplayName("infoLore_reserveClampsAtZero: more standing than owned shows In reserve 0")
+	void infoLore_reserveClampsAtZero() {
+		when(garrisons.count(TURF_ID)).thenReturn(3);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(5);
+
+		view.infoLore(session.getTurf(), session.getOwnerGang());
+
+		verify(messages).text(eq("Quartermaster.Garrison_In_Reserve"), anyString(), eq("count"), eq(0));
+	}
+
+	@Test
+	@DisplayName("bought_saysPostOrReserve: Bought_Guard, then Post up to Standing_Cap and Reserve above it")
+	void bought_saysPostOrReserve() {
+		when(garrisons.count(TURF_ID)).thenReturn(5);
+		view.attemptBuy(flow, viewer, session);
+		InOrder order = inOrder(viewer);
+		order.verify(viewer).sendMessage("Quartermaster.Bought_Guard");
+		order.verify(viewer).sendMessage("Quartermaster.Bought_Guard_Post");
+		verify(viewer, never()).sendMessage("Quartermaster.Bought_Guard_Reserve");
+
+		clearInvocations(viewer);
+		when(garrisons.count(TURF_ID)).thenReturn(6);
+		view.attemptBuy(flow, viewer, session);
+		order = inOrder(viewer);
+		order.verify(viewer).sendMessage("Quartermaster.Bought_Guard");
+		order.verify(viewer).sendMessage("Quartermaster.Bought_Guard_Reserve");
+		verify(viewer, never()).sendMessage("Quartermaster.Bought_Guard_Post");
+	}
+
+	@Test
+	@DisplayName("bought_readsConfiguredStandingCap: with Standing_Cap 2 the third guard waits in reserve")
+	void bought_readsConfiguredStandingCap() {
+		waves.set(new TurfDefenderConfig("turf_defender", 32.0, 3, 6, 20, 8, 16,
+				GarrisonComposition.NONE, 0.5, 12, 6.0, 2));
+		when(garrisons.count(TURF_ID)).thenReturn(3);
+
+		view.attemptBuy(flow, viewer, session);
+
+		verify(viewer).sendMessage("Quartermaster.Bought_Guard_Reserve");
+		verify(viewer, never()).sendMessage("Quartermaster.Bought_Guard_Post");
 	}
 
 	@Test
@@ -309,10 +366,9 @@ class TurfPowerupGarrisonViewTest {
 	}
 
 	@Test
-	@DisplayName("a full reserve tells the owner the cap instead of Click to add (T-823)")
+	@DisplayName("a turf owning Max_Reserve guards tells the owner the cap instead of Click to add (T-823)")
 	void buyLine_fullReserve_ownerSeesFull() {
-		when(garrisons.count(TURF_ID)).thenReturn(10);
-		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(2);
+		when(garrisons.count(TURF_ID)).thenReturn(12);
 
 		assertEquals("Quartermaster.Garrison_Buy_Full", view.buyLine(session, true));
 	}
@@ -321,9 +377,21 @@ class TurfPowerupGarrisonViewTest {
 	@DisplayName("a reserve under the cap keeps the click line (T-823)")
 	void buyLine_underCap_ownerSeesClick() {
 		when(garrisons.count(TURF_ID)).thenReturn(3);
-		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(0);
 
 		assertEquals("Quartermaster.Garrison_Buy_Click", view.buyLine(session, true));
+	}
+
+	@Test
+	@DisplayName("buyLine counts guards owned only: 11 owned with 5 standing still clicks, 12 owned is full")
+	void buyLine_countsOwnedOnly() {
+		when(garrisons.count(TURF_ID)).thenReturn(11);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(5);
+
+		assertEquals("Quartermaster.Garrison_Buy_Click", view.buyLine(session, true));
+
+		when(garrisons.count(TURF_ID)).thenReturn(12);
+
+		assertEquals("Quartermaster.Garrison_Buy_Full", view.buyLine(session, true));
 	}
 
 	@Test
@@ -358,9 +426,15 @@ class TurfPowerupGarrisonViewTest {
 			TurfMessages empty = TurfTextFixture.emptyMessages(emptyDir, legacy);
 			String[][] keys = {
 					{"Quartermaster.Garrison_On_Duty", "&7On duty: &f%count%"},
-					{"Quartermaster.Garrison_Reserve", "&7Reserve: &f%count%&7/&f%max% &8(stock and on duty)"},
-					{"Quartermaster.Garrison_Next_Wave", "&7Next wave: up to &f%count% &7guards, no extra cost"},
-					{"Quartermaster.Garrison_Buy_Full", "&cReserve full: &f%max% &cguards."}
+					{"Quartermaster.Garrison_Owned", "&7Owned: &f%count%&7/&f%max%"},
+					{"Quartermaster.Garrison_In_Reserve", "&7In reserve: &f%count%"},
+					{"Quartermaster.Garrison_Where_One", "&7Guards stand on the turf while the"},
+					{"Quartermaster.Garrison_Where_Two", "&7area is loaded. The rest wait in reserve."},
+					{"Quartermaster.Bought_Guard_Post", "&7It takes its post on &f%turf% &7within a second while the area is loaded."},
+					{"Quartermaster.Bought_Guard_Reserve", "&7It waits in the reserve and joins when &f%turf% &7is attacked."},
+					{"Quartermaster.Owned_Full", "&cThis turf already has %max% guards."},
+					{"Quartermaster.Garrison_Next_Wave", "&7Contest top-up: up to &f%count% &7guards, no extra cost"},
+					{"Quartermaster.Garrison_Buy_Full", "&cThis turf already owns &f%max% &cguards."}
 			};
 			for (String[] key : keys) {
 				assertEquals(empty.text(key[0], key[1]), shipped.text(key[0], key[1]), key[0]);
