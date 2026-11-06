@@ -45,6 +45,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
@@ -99,6 +100,8 @@ public class CopManager implements BeanLifecycle {
 	private final List<BiConsumer<CopNpc, Player>>             copAttackedHooks = new CopyOnWriteArrayList<>();
 	/** Beat-cop resolvers, asked in order after the group scan; see {@link #addCopResolver}. */
 	private final List<Function<Entity, @Nullable CopNpc>>     copResolvers     = new CopyOnWriteArrayList<>();
+	/** Told when the cops stop hunting a player; see {@link #addCopAttackerReleaseHook}. */
+	private final List<Consumer<UUID>>                         attackerReleaseHooks = new CopyOnWriteArrayList<>();
 	/** The crime spot of the late report landing for a player right now, else null (0.21.2, T-543); see setter. */
 	private volatile @Nullable Function<UUID, @Nullable Location> reportedScene;
 	/** The roles of a group's cops killed unseen whose silence dispatch has not noticed yet (0.21.2, T-545). */
@@ -546,6 +549,17 @@ public class CopManager implements BeanLifecycle {
 		}
 	}
 
+	/** Tells the hooks the cops stopped hunting {@code playerId}; a hook that throws is logged and skipped. */
+	private void releaseAttacker(UUID playerId) {
+		for (Consumer<UUID> hook : attackerReleaseHooks) {
+			try {
+				hook.accept(playerId);
+			} catch (RuntimeException exception) {
+				log.warn("attacker-release hook failed: " + exception);
+			}
+		}
+	}
+
 	/**
 	 * Checks if there's an active combat alert for a given player.
 	 *
@@ -751,6 +765,14 @@ public class CopManager implements BeanLifecycle {
 	/** Registers a hook run first thing when a player hits a cop; a hook that throws is logged and skipped. */
 	public void addCopAttackedHook(BiConsumer<CopNpc, Player> hook) {
 		copAttackedHooks.add(hook);
+	}
+
+	/**
+	 * Registers a hook told when the cops stop hunting a player (the search gave up, the squad ended, the stars were
+	 * cleared): a cop in no group, which {@link #removeCopAttacker} cannot reach, drops the player here.
+	 */
+	public void addCopAttackerReleaseHook(Consumer<UUID> hook) {
+		attackerReleaseHooks.add(Objects.requireNonNull(hook, "hook"));
 	}
 
 	private void runAiTickHooks(Player player, @Nullable CopGroup group) {

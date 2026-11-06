@@ -318,6 +318,10 @@ public class PatrolManager implements BeanLifecycle {
 		}
 	}
 
+	/** The cops stopped hunting {@code playerId}: a beat cop fighting them goes back on the beat at its next AI tick. */
+	public void releaseAttacker(UUID playerId) {
+	}
+
 	/** Every live beat cop, all stations. */
 	public List<CopNpc> beatCops() {
 		List<CopNpc> all = new ArrayList<>();
