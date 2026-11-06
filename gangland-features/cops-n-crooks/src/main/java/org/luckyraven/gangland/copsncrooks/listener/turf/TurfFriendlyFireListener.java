@@ -3,12 +3,11 @@ package org.luckyraven.gangland.copsncrooks.listener.turf;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.luckyraven.gangland.civilians.listener.civilian.CivilianDamageListener;
+import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
@@ -16,23 +15,15 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
-import org.luckyraven.gangland.turf.data.Turf;
-import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 
 /**
- * Cancels friendly fire from the owning gang against the per-turf Quartermaster and any defenders deployed for the same
- * turf. Runs at {@link EventPriority#HIGH} so the cancel lands before {@link CivilianDamageListener}'s MONITOR-priority
- * self-defense trigger can flip the civilian into COMBAT mode against an ally.
+ * Cancels Bartizan weapon-impact friendly fire from turf NPCs, so a defender or Quartermaster's round never hits a
+ * protected player of the turf's owning or allied gang. The Bukkit damage half (owner hits and guard-on-guard) lives in
+ * the turf module's {@code TurfGuardFriendlyFireListener}, so it works on a server with no cops module. Only the two
+ * {@link WeaponRaytraceImpactEvent} handlers need Bartizan, so only they stay here.
  *
- * <p>The match is resolved both ways:
- * <ul>
- *   <li>The damaged entity must be a Quartermaster (via {@link TurfPowerupManager#getByEntity}) or a defender
- *       (via {@link TurfDefenderDeployer#findOwningTurfId}) — anything else this listener ignores.</li>
- *   <li>The damager must be a {@link Player} (or a projectile shot by one) whose gang id matches the turf's
- *       owning gang id.</li>
- * </ul>
- * Damage from non-owning gangs (the actual attackers) passes through untouched and the civilian's normal
+ * <p>Damage from non-owning gangs (the actual attackers) passes through untouched and the civilian's normal
  * self-defense kicks in as designed.
  */
 @ListenerHandler
@@ -45,34 +36,9 @@ public final class TurfFriendlyFireListener implements Listener {
 	private final UserLookupContract   users;
 	private final GangMembership       membership;
 
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onDamage(EntityDamageByEntityEvent event) {
-		Entity damaged = event.getEntity();
-
-		int turfId = resolveTurfId(damaged);
-		if (turfId < 0) return;
-
-		Turf turf = turfs.get(turfId);
-		if (turf == null || turf.isUnclaimed()) return;
-		int ownerGangId = turf.getOwnerGangId();
-
-		Player attacker = resolvePlayerAttacker(event.getDamager());
-		if (attacker == null) return;
-
-		User<Player> user = users.findByPlayer(attacker);
-		if (user == null || !user.hasGang()) return;
-
-		// Friendly = same gang OR allied gang. Allies share the turf's NPCs so attacks between them never
-		// flip the civilian into self-defense, and damage is fully cancelled (matches gang-allies' existing
-		// no-damage rule against each other).
-		if (!isFriendly(user.getGangId(), ownerGangId)) return;
-
-		event.setCancelled(true);
-	}
-
 	/**
-	 * Mirrors {@link #onDamage} on the canonical weapon-impact event so weapons whose damage path bypasses
-	 * {@link EntityDamageByEntityEvent} (flamethrower fire ticks, biological clouds, melee custom handlers, etc.) are
+	 * Mirrors the Bukkit owner-hit rule on the canonical weapon-impact event so weapons whose damage path bypasses
+	 * {@code EntityDamageByEntityEvent} (flamethrower fire ticks, biological clouds, melee custom handlers, etc.) are
 	 * still cancelled when the shooter is a friendly. Cancelling here short-circuits the raytracer's
 	 * {@code impactHandler} branch before {@code setFireTicks} / potion application runs.
 	 */
@@ -99,18 +65,13 @@ public final class TurfFriendlyFireListener implements Listener {
 	}
 
 	/**
-	 * Stray rounds: a defender or Quartermaster that fires at a cop often has a protected member standing in the line
-	 * of fire, so the shot must not hit that member. Cancels when the shooter is a turf NPC of the turf and the victim is
-	 * a player of its owning or allied gang.
+	 * Stray rounds: a defender or Quartermaster that fires at a cop often has a protected member standing in the line of
+	 * fire, so the shot must not hit that member. Cancels when the shooter is a turf NPC of the turf and the victim is a
+	 * player of its owning or allied gang.
 	 */
 	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
 	public void onNpcWeaponImpact(WeaponRaytraceImpactEvent event) {
 		if (isNpcFriendlyFire(event.getShooter(), event.getHitEntity())) event.setCancelled(true);
-	}
-
-	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-	public void onNpcDamage(EntityDamageByEntityEvent event) {
-		if (isNpcFriendlyFire(resolveShooter(event.getDamager()), event.getEntity())) event.setCancelled(true);
 	}
 
 	private boolean isNpcFriendlyFire(Entity shooter, Entity victim) {
@@ -147,16 +108,5 @@ public final class TurfFriendlyFireListener implements Listener {
 		TurfPowerupNpc qm = powerupNpcs.getByEntity(damaged);
 		if (qm != null) return qm.getData().getTurfId();
 		return defenders.findOwningTurfId(damaged);
-	}
-
-	private Player resolvePlayerAttacker(Entity damager) {
-		if (damager instanceof Player p) return p;
-		if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) return p;
-		return null;
-	}
-
-	private Entity resolveShooter(Entity damager) {
-		if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) return shooter;
-		return damager;
 	}
 }
