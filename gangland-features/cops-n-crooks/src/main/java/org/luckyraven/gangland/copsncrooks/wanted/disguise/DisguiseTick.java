@@ -172,6 +172,15 @@ public class DisguiseTick {
 		witnessed(attacker);
 	}
 
+	/** A report finished landing and the stars are known: under the first star no chase followed. */
+	public void reportLanded(Player player) {
+	}
+
+	/** When a cop who saw the player last learned what they wear, or null: a later report must not rewind that look. */
+	public @Nullable Long learnedAt(UUID id) {
+		return null;
+	}
+
 	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */
 	public void onForget(Consumer<UUID> hook) {
 		forgetHooks.add(hook);

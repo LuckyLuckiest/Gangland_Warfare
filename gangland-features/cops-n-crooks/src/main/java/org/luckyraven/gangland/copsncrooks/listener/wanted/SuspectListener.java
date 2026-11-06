@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFilter;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
@@ -74,7 +75,7 @@ public class SuspectListener implements Listener {
 		if (event.isCancelled()) {
 			// ponytail: one held look per crime id; two reports of one crime id pending at once share the newer look
 			held.computeIfAbsent(id, k -> new ConcurrentHashMap<>())
-			    .put(event.getCrimeId(), new Held(descriptions.describe(player), outfit.worn(player)));
+			    .put(event.getCrimeId(), new Held(descriptions.describe(player), outfit.worn(player), tick.learnedAt(id)));
 			return;
 		}
 
@@ -82,7 +83,7 @@ public class SuspectListener implements Listener {
 		Held              look    = mine == null ? null : mine.remove(event.getCrimeId());
 		boolean           landing = look != null && ledger.isReporting(id);
 		if (!landing) {
-			look = new Held(descriptions.describe(player), outfit.worn(player));
+			look = new Held(descriptions.describe(player), outfit.worn(player), null);
 		}
 
 		descriptions.store(id, look.description());
@@ -134,5 +135,5 @@ public class SuspectListener implements Listener {
 	}
 
 	/** The look at a crime the witness gate held, per crime id: the report that lands for it records this look. */
-	private record Held(SuspectDescription description, boolean outfitWorn) {}
+	private record Held(SuspectDescription description, boolean outfitWorn, @Nullable Long learnedAt) {}
 }

@@ -19,6 +19,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFilter;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescriptions;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -56,6 +57,7 @@ class DisguiseModuleConfigTest {
 	private CopPerception  perception;
 	private DisguiseFilter filter;
 	private DisguiseTick   tick;
+	private HeatLedger     ledger;
 	private DisguiseModuleConfig config;
 
 	@BeforeEach
@@ -65,6 +67,7 @@ class DisguiseModuleConfigTest {
 		perception = new CopPerception();
 		filter     = mock(DisguiseFilter.class);
 		tick       = mock(DisguiseTick.class);
+		ledger     = mock(HeatLedger.class);
 
 		DependencyContainer container = new DependencyContainer();
 		container.registerInstance(CopManager.class, manager);
@@ -72,6 +75,7 @@ class DisguiseModuleConfigTest {
 		container.registerInstance(CopPerception.class, perception);
 		container.registerInstance(DisguiseFilter.class, filter);
 		container.registerInstance(DisguiseTick.class, tick);
+		container.registerInstance(HeatLedger.class, ledger);
 
 		config = new DisguiseModuleConfig(mock(JavaPlugin.class), container);
 	}
@@ -222,6 +226,21 @@ class DisguiseModuleConfigTest {
 		captor.getValue().accept(cop, player);
 
 		verify(tick).exposed(cop, player);
+	}
+
+	@Test
+	@DisplayName("install tells the tick when a report has finished landing")
+	@SuppressWarnings("unchecked")
+	void installRegistersTheReportLandedHook() {
+		config.installDisguise();
+
+		ArgumentCaptor<java.util.function.Consumer<Player>> captor = ArgumentCaptor.forClass(java.util.function.Consumer.class);
+		verify(ledger).setReportLanded(captor.capture());
+		Player player = mock(Player.class);
+
+		captor.getValue().accept(player);
+
+		verify(tick).reportLanded(player);
 	}
 
 	@Test

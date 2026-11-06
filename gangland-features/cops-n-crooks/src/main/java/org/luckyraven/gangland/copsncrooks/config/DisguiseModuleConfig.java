@@ -19,6 +19,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescriptions;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.WearableKeys;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.bean.Bean;
@@ -172,6 +173,7 @@ public class DisguiseModuleConfig {
 		CopManager manager = container.getInstance(CopManager.class);
 		manager.addAiTickHook(tick::tick);
 		manager.addCopAttackedHook(tick::exposed);
+		container.getInstance(HeatLedger.class).setReportLanded(tick::reportLanded);
 		container.getInstance(CopRadio.class).setExtraPlaceholders(tick::extras);
 	}
 }

@@ -50,6 +50,7 @@ public final class HeatLedger {
 	private final Map<UUID, Map<UUID, Long>>   assaults = new ConcurrentHashMap<>();
 
 	private volatile Consumer<Player> starTrigger;
+	private volatile @Nullable Consumer<Player> reportLanded;
 	/** The criminal whose late report is landing ({@link #commitReported}), and who reported it; main thread only. */
 	private @Nullable UUID            reporting;
 	private @Nullable ReportKind      reportingKind;
@@ -87,6 +88,11 @@ public final class HeatLedger {
 	/** The core star handler, replayed until the stars match the heat. */
 	public void setStarTrigger(@Nullable Consumer<Player> trigger) {
 		this.starTrigger = trigger;
+	}
+
+	/** Told once a report has finished landing and every handler of its crime has run, stars included. */
+	public void setReportLanded(@Nullable Consumer<Player> hook) {
+		this.reportLanded = hook;
 	}
 
 	/**
