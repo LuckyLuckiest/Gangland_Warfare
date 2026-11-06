@@ -23,8 +23,19 @@
 #   INCOME_MULTIPLIER     Magnitude is the multiplier on the per-interval payout. 1.25 → +25% income.
 #   GARRISON_DISCOUNT     Magnitude is the multiplier on the guard price (Garrison.Cost_Per_Guard below). 0.8 → 20% off.
 #                         The result is clamped to 10-100% of the full price; a Magnitude outside (0, 1] warns at load.
+#   GUARD_TOUGHNESS       Magnitude is the multiplier on guard health, standing guards too. 1.5 -> 50% more health.
+#                         At least 1.
+#   BIGGER_GUARD_WAVES    Magnitude is the multiplier on Wave_Size and Max_Alive in a contest. 1.5 -> half again as many.
+#                         At least 1. It only spends guards the turf already owns.
+#   FASTER_REINFORCEMENTS Magnitude is the multiplier on the wait before replacement guards arrive. 0.5 -> half the
+#                         wait. Between 0 (exclusive) and 1. An entry outside these ranges is skipped with a warning;
+#                         one above its Limits value is kept and clamped where it is applied.
 #   CAPTURE_DEFENSE_BONUS retired in 0.17.0 (guards on the capture bar replaced it). An entry that still uses it is
 #                         skipped with a warning.
+#
+# Icon (optional) is the panel item, any item material name. A sword or potion shows its vanilla tooltip. Missing or
+# unknown falls back to a default per effect. Description (optional) is the lore under the name, with & colour codes.
+# Buying the same boost twice stacks it, up to the Limits at the bottom of the file.
 #
 # Cost is paid out of the owning gang's bank when the buff is activated. The prices here are the shipped defaults.
 # The reserve cap on guards per turf is turf_rules.yml Garrison.Max_Reserve.
@@ -33,6 +44,10 @@ Powerups:
    # Income boost, 1.25 times the payout for an hour.
    small_income_boost:
       Display_Name: "&aSmall Income Boost"
+      Icon: GOLD_NUGGET
+      Description:
+         - "&7More money from this turf"
+         - "&7for an hour."
       # Price in the gang bank.
       Cost: 300
       Effect_Type: INCOME_MULTIPLIER
@@ -41,6 +56,10 @@ Powerups:
    # Income boost, 1.75 times the payout for an hour.
    large_income_boost:
       Display_Name: "&2Large Income Boost"
+      Icon: GOLD_INGOT
+      Description:
+         - "&7A lot more money from this turf"
+         - "&7for an hour."
       # Price in the gang bank.
       Cost: 1000
       Effect_Type: INCOME_MULTIPLIER
@@ -49,11 +68,58 @@ Powerups:
    # Cheaper guards at the Quartermaster for half an hour.
    garrison_discount:
       Display_Name: "&bGarrison Discount"
+      Icon: EMERALD
+      Description:
+         - "&7New guards cost less"
+         - "&7while this runs."
       # Price in the gang bank.
       Cost: 2500
       Effect_Type: GARRISON_DISCOUNT
       Magnitude: 0.8
       Duration_Seconds: 1800
+   # Guards have 1.5 times the health while this runs, standing ones too. Current health keeps its share, and when it
+   # ends health falls back without ever killing a guard.
+   guard_toughness:
+      Display_Name: "&cGuard Toughness"
+      Icon: IRON_BLOCK
+      Description:
+         - "&7Your guards, standing or new,"
+         - "&7are tougher while this runs."
+      Cost: 2000
+      Effect_Type: GUARD_TOUGHNESS
+      Magnitude: 1.5
+      Duration_Seconds: 1800
+   # 1.5 times Wave_Size and Max_Alive during a contest. Spends only guards already bought.
+   bigger_guard_waves:
+      Display_Name: "&6Bigger Guard Waves"
+      Icon: BELL
+      Description:
+         - "&7More of your bought guards fight"
+         - "&7at once during a contest."
+      Cost: 3000
+      Effect_Type: BIGGER_GUARD_WAVES
+      Magnitude: 1.5
+      Duration_Seconds: 1800
+   # Half the wait before replacement guards arrive, in a contest and outside one.
+   faster_reinforcements:
+      Display_Name: "&bFaster Reinforcements"
+      Icon: CLOCK
+      Description:
+         - "&7Replacement guards arrive"
+         - "&7sooner after one falls."
+      Cost: 1500
+      Effect_Type: FASTER_REINFORCEMENTS
+      Magnitude: 0.5
+      Duration_Seconds: 1800
+
+# The most a stack of guard boosts can do, however many are running. Read where the boost is applied.
+Limits:
+   # Most health multiplier from Guard Toughness. Minimum 1.0. Total health never passes 1024.
+   Max_Guard_Toughness: 3.0
+   # Most multiplier on Wave_Size and Max_Alive from Bigger Guard Waves. Minimum 1.0.
+   Max_Guard_Waves: 2.0
+   # Shortest wait as a share of Wave_Cooldown_Seconds from Faster Reinforcements. Between 0 and 1.
+   Min_Reinforcement_Wait: 0.25
 
 # Guards bought at the Quartermaster ("Garrison" panel). They hold the capture bar and fight attackers.
 Garrison:
