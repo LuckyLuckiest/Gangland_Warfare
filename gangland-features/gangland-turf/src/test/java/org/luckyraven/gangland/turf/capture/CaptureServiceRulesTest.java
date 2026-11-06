@@ -444,4 +444,44 @@ class CaptureServiceRulesTest {
 		assertEquals(TurfState.IDLE, h.state().getState());
 		assertEquals(TurfCaptureFailedEvent.Reason.DEFENDED, onlyFailure(h));
 	}
+
+	@Test
+	@DisplayName("T-246 with standing guards: five stand on tick 1, the bar never moved, so the contest stays CONTESTING")
+	void standingGuards_tickOne_staysContesting() {
+		W2R2Harness h = new W2R2Harness(20, W2R2Harness.rules(0, 0, 0, 4));
+		h.gang(1);
+		h.gang(2);
+		h.ownedBy(1);
+		h.guards.put(1, 5);
+		h.join(2);
+
+		h.tick(T0);
+		h.tick(T0 + 1_000L);
+
+		assertEquals(TurfState.CONTESTING, h.state().getState());
+		assertEquals(4, h.state().getGuardsCounted(), "Guard_Weight_Cap holds with standing guards");
+		assertTrue(h.failedReasons().isEmpty());
+	}
+
+	@Test
+	@DisplayName("a turf stays capturable: once the standing guards are killed a solo rival fills the bar")
+	void standingGuards_turfCapturableAfterKills() {
+		W2R2Harness h = new W2R2Harness(20, W2R2Harness.rules(0, 0, 0, 4));
+		h.gang(1);
+		h.gang(2);
+		h.ownedBy(1);
+		h.guards.put(1, 5);
+		h.join(2);
+		h.tick(T0);
+		assertEquals(0.0, h.state().getCaptureProgress(), 1e-9);
+
+		h.guards.put(1, 0);
+		boolean captured = false;
+		for (int second = 1; second <= 25 && !captured; second++) {
+			h.tick(T0 + second * 1_000L);
+			captured = h.lastEvents.stream().anyMatch(TurfCapturedEvent.class::isInstance);
+		}
+
+		assertTrue(captured, "the bar filled at " + h.state().getCaptureProgress());
+	}
 }

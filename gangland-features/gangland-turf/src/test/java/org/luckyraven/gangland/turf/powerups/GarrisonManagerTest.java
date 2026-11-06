@@ -4,8 +4,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.turf.support.InMemoryGarrisonRepository;
+import org.mockito.ArgumentCaptor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Proves {@link GarrisonManager#add(int, int)} / {@link GarrisonManager#consume(int, int)} clamping. Ties to the
@@ -41,12 +50,11 @@ class GarrisonManagerTest {
 	}
 
 	@Test
-	@DisplayName("stockChangesKeepTheOrder: add, consume and refund leave the order alone")
+	@DisplayName("stockChangesKeepTheOrder: add and consume leave the order alone")
 	void stockChangesKeepTheOrder() {
 		manager.setHolding(5, true);
 		manager.add(5, 3);
 		manager.consume(5, 1);
-		manager.refund(5, 1, 12);
 
 		assertTrue(manager.holding(5));
 	}
@@ -168,18 +176,41 @@ class GarrisonManagerTest {
 	}
 
 	@Test
-	@DisplayName("refund_addsBackCapped: survivors return to the reserve, never past Max_Reserve")
-	void refund_addsBackCapped() {
-		manager.add(1, 3);
+	@DisplayName("stockedTurfIds: only rows with stock, as a copy")
+	void stockedTurfIds_skipsZero() {
+		manager.add(1, 2);
+		manager.add(2, 1);
+		manager.consume(2, 1);
+		manager.setHolding(3, true);
 
-		assertEquals(2, manager.refund(1, 2, 12));
-		assertEquals(5, manager.count(1));
+		List<Integer> ids = manager.stockedTurfIds();
 
-		manager.add(1, 6);
-		assertEquals(1, manager.refund(1, 4, 12), "11 + 4 stops at 12");
-		assertEquals(12, manager.count(1));
-		assertEquals(0, manager.refund(1, 3, 12), "full reserve takes nothing");
-		assertEquals(0, manager.refund(1, 0, 12));
-		assertEquals(0, manager.refund(1, -2, 12));
+		assertEquals(List.of(1), ids);
+		manager.add(4, 1);
+		assertEquals(List.of(1), ids, "a copy, safe to hold while a purchase lands");
+	}
+
+	@Test
+	@DisplayName("T-881: remove zeroes the instance before the delete, so an async save landing late writes a harmless row")
+	void remove_lateUpsertWritesZero() {
+		GarrisonRepositoryContract slow = mock(GarrisonRepositoryContract.class);
+		GarrisonManager            live = new GarrisonManager(slow);
+		live.add(5, 3);
+		live.setHolding(5, true);
+		ArgumentCaptor<Garrison> handed = ArgumentCaptor.forClass(Garrison.class);
+		verify(slow, atLeastOnce()).save(handed.capture());
+		Garrison queued = handed.getValue();
+		List<String> atDelete = new ArrayList<>();
+		doAnswer(call -> {
+			Garrison row = call.getArgument(0);
+			atDelete.add(row.getCount() + "/" + row.isHold());
+			return null;
+		}).when(slow).delete(any());
+
+		live.remove(5);
+
+		assertEquals(List.of("0/false"), atDelete);
+		assertEquals(0, queued.getCount(), "the instance a queued save still holds");
+		assertFalse(queued.isHold());
 	}
 }

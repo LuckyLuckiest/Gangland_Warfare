@@ -95,7 +95,7 @@ class TurfPowerupGarrisonViewTest {
 		messages = mock(TurfMessages.class);
 		when(messages.text(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
 		when(messages.text(anyString(), anyString(), any(Object[].class))).thenAnswer(invocation -> invocation.getArgument(0));
-		waves = new AtomicReference<>(new TurfDefenderConfig("turf_defender", 32.0, 600));
+		waves = new AtomicReference<>(new TurfDefenderConfig("turf_defender", 32.0));
 		view = new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules,
 		                                   aliveGuards, turfId -> {
 			                                       waveIds.add(turfId);
@@ -239,7 +239,7 @@ class TurfPowerupGarrisonViewTest {
 	@Test
 	@DisplayName("the next wave is capped by Wave_Size, the stock and Max_Alive minus guards on duty (W7-H)")
 	void nextWave_cappedByWaveStockAndMaxAlive() {
-		TurfDefenderConfig config = new TurfDefenderConfig("turf_defender", 32.0, 600, 3, 6, 20, 8, 16);
+		TurfDefenderConfig config = new TurfDefenderConfig("turf_defender", 32.0, 3, 6, 20, 8, 16);
 
 		assertEquals(1, TurfPowerupGarrisonView.nextWave(1, 0, config));
 		assertEquals(3, TurfPowerupGarrisonView.nextWave(10, 0, config));
@@ -268,7 +268,7 @@ class TurfPowerupGarrisonViewTest {
 	@DisplayName("the next-wave line reads the live turf_npcs.yml Garrison knobs, not a snapshot (W7-H)")
 	void infoLore_readsLiveConfig() {
 		when(garrisons.count(TURF_ID)).thenReturn(4);
-		waves.set(new TurfDefenderConfig("turf_defender", 32.0, 600, 1, 6, 20, 8, 16));
+		waves.set(new TurfDefenderConfig("turf_defender", 32.0, 1, 6, 20, 8, 16));
 
 		view.infoLore(session.getTurf(), session.getOwnerGang());
 

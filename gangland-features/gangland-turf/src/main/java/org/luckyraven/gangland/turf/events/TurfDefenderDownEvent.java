@@ -5,9 +5,9 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * A guard deployed for a turf died (not expired, not recalled). Fired by TurfDefenderDeployer once per tick in which at
- * least one of the turf's guards went down. remaining = guards of the turf still alive, deployed = guards deployed for
- * the turf since its group was created (the size to compare "half the guards" against).
+ * A guard died during a contest (not vanished, not recalled). Fired by TurfDefenderDeployer once per tick in which at
+ * least one of the turf's guards went down. remaining = guards of the turf still alive, deployed = guards standing
+ * since the contest began (the size to compare "half the guards" against).
  */
 public final class TurfDefenderDownEvent extends Event {
 

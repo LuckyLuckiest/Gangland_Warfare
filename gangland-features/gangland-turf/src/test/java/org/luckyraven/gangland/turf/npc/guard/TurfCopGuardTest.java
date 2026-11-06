@@ -20,6 +20,7 @@ import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.defender.DeployerSeam;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -28,7 +29,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -571,6 +574,68 @@ class TurfCopGuardTest {
 		guard.onCopHitPlayer(cop, victim);
 
 		assertEquals(List.of("1:" + victimId), calls);
+	}
+
+	@Test
+	@DisplayName("ruling 3: no contest running, a standing guard in range answers the cop (real deployer, real peace group)")
+	void peace_guardsAnswer() {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       victim = victim(spot, UUID.randomUUID());
+		whenVictimOn(victim, spot, turf1, 1);
+		defenders = DeployerSeam.deployer();
+		DeployerSeam.standing(defenders, DeployerSeam.garrison(1, new AtomicInteger(10), 1, 1000));
+		CivilianNpc standing = npcAt(5, true);
+		DeployerSeam.track(defenders, 1, standing);
+		when(powerups.civilianNpcsOf(1)).thenReturn(List.of());
+
+		guard(enabledConfig()).onCopHitPlayer(cop, victim);
+
+		verify(standing).addEntityTargetToFront(cop);
+		verify(standing).transitionTo(CivilianState.COMBAT);
+	}
+
+	@Test
+	@DisplayName("ruling 3: during a contest the guards answer the cop as well (real deployer, contested group)")
+	void contest_guardsAnswer() {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       victim = victim(spot, UUID.randomUUID());
+		whenVictimOn(victim, spot, turf1, 1);
+		defenders = DeployerSeam.deployer();
+		defenders.startGarrison(DeployerSeam.garrison(1, new AtomicInteger(10), 1, 1000), Set::of);
+		CivilianNpc fighting = npcAt(5, true);
+		DeployerSeam.track(defenders, 1, fighting);
+		when(powerups.civilianNpcsOf(1)).thenReturn(List.of());
+
+		guard(enabledConfig()).onCopHitPlayer(cop, victim);
+
+		verify(fighting).addEntityTargetToFront(cop);
+		verify(fighting).transitionTo(CivilianState.COMBAT);
+	}
+
+	@Test
+	@DisplayName("ruling 3: under Hold a standing guard leaves the cop alone and the owners still hear of the hit")
+	void peace_holdOrder_guardsLeaveCopAlone() {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       victim = victim(spot, UUID.randomUUID());
+		whenVictimOn(victim, spot, turf1, 1);
+		defenders = DeployerSeam.deployer();
+		DeployerSeam.standing(defenders, DeployerSeam.garrison(1, new AtomicInteger(10), 1, 1000));
+		CivilianNpc standing = npcAt(5, true);
+		DeployerSeam.track(defenders, 1, standing);
+		when(powerups.civilianNpcsOf(1)).thenReturn(List.of());
+
+		List<String> calls = new ArrayList<>();
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.bindHolding(id -> id == 1);
+		guard.bindProtectedHit((turf, hit) -> calls.add("hit"));
+		guard.onCopHitPlayer(cop, victim);
+
+		assertEquals(1, calls.size());
+		verify(standing, never()).addEntityTargetToFront(cop);
+		verify(standing, never()).transitionTo(CivilianState.COMBAT);
 	}
 
 	@Test
