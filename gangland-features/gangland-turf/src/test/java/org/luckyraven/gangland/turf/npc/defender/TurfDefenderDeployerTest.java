@@ -495,6 +495,20 @@ class TurfDefenderDeployerTest {
 	}
 
 	@Test
+	@DisplayName("TF-46: without Citizens a stocked turf builds no group: no spawn, no debit")
+	void noCitizens_buildsNoGroup() {
+		try (Rig rig = new Rig(10)) {
+			rig.deployer.setCitizensAvailable(() -> false);
+
+			rig.ticks(3);
+
+			assertTrue(rig.groups().isEmpty());
+			assertEquals(0, rig.spawned.size());
+			assertEquals(10, rig.stock.get());
+		}
+	}
+
+	@Test
 	@DisplayName("T-298 standing: the five guards stand at the five distinct posts")
 	void peaceSpawn_oneGuardPerPost() {
 		try (Rig rig = new Rig(10)) {

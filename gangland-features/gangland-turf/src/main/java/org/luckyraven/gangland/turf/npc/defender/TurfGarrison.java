@@ -70,7 +70,7 @@ public final class TurfGarrison {
 	}
 
 	/** Guards that should stand: at most the stock and {@code Max_Alive}, and outside a contest at most the cap. */
-	static int target(int stock, boolean contested, TurfDefenderConfig c) {
+	public static int target(int stock, boolean contested, TurfDefenderConfig c) {
 		return contested ? Math.min(stock, c.maxAlive()) : Math.min(stock, Math.min(c.standingCap(), c.maxAlive()));
 	}
 
