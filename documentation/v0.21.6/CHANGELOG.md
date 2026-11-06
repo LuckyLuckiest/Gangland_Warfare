@@ -30,9 +30,11 @@ code default. Upgrade from 0.21.5. Config files are never rewritten: edit them b
   only stop a first pick-up now.
 - **Any other cop counts as a patrol does,** within `Patrol.Warning.Range` (12): a beat cop watching a swap counts, and the
   squad does not have to exist yet. A cop walking home never counts.
-- **Glass and iron bars no longer hide you from a cop at the window.** They stop the sight line (measured live), so while
-  the cops know you a hunting cop within `Wanted.Witnesses.Cops.Witness_Floor` (6) counts with no line at all. That also
-  means a cop within 6 blocks sees through a wall; a first pick-up still needs the line. A fence does not stop the line.
+- **Glass and iron bars no longer hide you from a cop up close.** They stop the sight line (measured live), so while the
+  cops know you a hunting cop within `Wanted.Witnesses.Cops.Witness_Floor` (6) counts with no line at all. That also
+  means a cop within 6 blocks sees through a wall; a first pick-up still needs the line. **Past 6 blocks glass and bars
+  still hide you:** a cop looking through a pane from 7 blocks has no line, and a swap behind it can fool them. A fence
+  does not stop the line.
 - **A cop's own report starts the memory,** so a swap in front of the reporting cop is seen. An escape ends it.
 
 ### The fire gate
@@ -40,7 +42,11 @@ code default. Upgrade from 0.21.5. Config files are never rewritten: edit them b
 - **Cops hold fire on a player they do not recognise,** at every star level, and keep searching. "The cops don't recognise
   you" is now true at 3 stars and up. This reverses the 0.20.0 rule that filters never stop firing.
 - **Hitting a cop in sight gives you away at once,** and blows a worn police outfit (a 0-star attacker in it is fired back
-  on). A hit and a duck behind a wall still pays.
+  on). A hit and a duck behind a wall still pays. Within `Witness_Floor` (6) the cop you hit knows who did it with no line
+  at all, so a shot past a slab or a grenade over a wall from that close counts too.
+- **A beat cop does not stay on you.** One you have fooled walks past and goes back on the beat. One you hit also goes back
+  when the cops stop hunting you (the search gives up, the squad ends, your stars are cleared), so it never opens fire on
+  a 0-star player later.
 
 ### The cops tell you
 
@@ -59,12 +65,21 @@ code default. Upgrade from 0.21.5. Config files are never rewritten: edit them b
 - `CopRole.overlay` lost `Ignore_Darkness` (row 856).
 - A swap in front of the cop reporting a crime fooled that cop (row 869).
 - The last cop in range dying or an emptied group reset recognition (row 861).
+- A late report stored the old crime look over a look the cops learned after the crime, so a swap they saw could still fool
+  them (row 868).
+- A hit beat cop stayed in combat for the player's whole session: passive while the filter refused, and firing again once
+  the stars were gone (row 892).
+- A cop's report that raised no star left a recognition flag behind (row 893).
+- A hit in the police outfit at 0 stars was forgotten while an old squad walked home (row 894).
+- A hit on a nearby cop with a blocked sight line was free (row 895).
+- A Marksman on overwatch at 40-48 blocks did not count, so the chat said the cops lost you while he watched (row 896).
 
 ## Docket
 
-Fixed: 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 869, 871. Open by design (P3): 866 (an unrecognised suspect is
-not re-checked at arm's length), 867 (any vehicle or empty slot counts as a changed piece), 870 (the breach acts on the
-last-known spot). Open: 868 (a late report stores the held crime look over a newer one).
+Fixed: 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 868, 869, 871, 892, 893, 894, 895, 896. Open by design (P3): 866
+(an unrecognised suspect is not re-checked at arm's length), 867 (any vehicle or empty slot counts as a changed piece), 870
+(the breach acts on the last-known spot). Open: 897 (glass and bars past 6 blocks, an owner ruling on O12), 898 (TNT and pets
+credit no player, so they do not re-identify one).
 
 ## Decisions and open items
 
@@ -72,11 +87,13 @@ last-known spot). Open: 868 (a late report stores the held crime look over a new
   player get the memory on foot at 3, 4 and 5 stars? The top rows may only be reachable by car. Numbers change in YAML only.
 - The boss bar and the memory can disagree: a hunting cop at night past the sight factor range, or behind glass inside
   6 blocks, keeps the memory while the bar reads SEARCHING.
-- `Witness_Floor` is one key for two rules: tuning it for crime reports also moves the disguise rule.
+- `Witness_Floor` is one key for three rules: tuning it for crime reports also moves the disguise memory and the hit rule.
+- **Open for the owner (O12):** past `Witness_Floor` glass and bars still hide you, and inside it a wall does not. A ray that
+  only stops on solid blocks would close both; it stays out until the owner rules (row 897).
 - The Lost line reveals the exact moment the memory runs out. That is the point: it teaches the rule.
 
 ## For developers
 
 - gangland-api, Keystone and Bartizan are unchanged. `DisguiseSettings` gains `byDifficulty` and the 6-argument
   constructor stays; `DisguiseFilter` takes a difficulty function; `DisguiseModuleConfig.eyesOf` takes the descriptions, a
-  witness supplier and the `Witness_Floor`. See [developer/cops-n-crooks.md](../developer/cops-n-crooks.md).
+  witness supplier and the `Witness_Floor`; `DisguiseTick` takes the `Witness_Floor`. See [developer/cops-n-crooks.md](../developer/cops-n-crooks.md).

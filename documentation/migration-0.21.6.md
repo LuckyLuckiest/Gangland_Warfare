@@ -90,11 +90,15 @@ The shipped Spanish file already has it. `wanted.yml` only gains a comment on `W
   cop, another player's squad) counts as a patrol does, within `Patrol.Warning.Range` (12). A cop walking home never
   counts. The squad no longer has to exist: a beat cop alone can watch a swap.
 - **Within `Wanted.Witnesses.Cops.Witness_Floor` (6) a hunting cop counts with no line at all** while the cops know the
-  player, because glass and iron bars stop the sight line. It also means a cop within 6 blocks sees through a wall.
-  `Witness_Floor` is one key for two rules, so tuning it for crime reports moves this one too.
+  player, because glass and iron bars stop the sight line. It also means a cop within 6 blocks sees through a wall. Past
+  6 blocks glass and bars still hide the player (docket 897, an owner ruling on O12). `Witness_Floor` is one key for three
+  rules, so tuning it for crime reports also moves this one and the hit rule below. A Marksman on overwatch counts to the
+  larger of `Alert_Range` and his `Sight_Range`.
 - **No fire on an unrecognised player.** Cops hold fire at 3 stars and up as well, and keep searching. A vanilla entity
   target is still fired on. Hitting a cop in sight of any cop gives the player away at once and blows a police outfit
-  (a 0-star attacker in the outfit is fired back on). This reverses the 0.20.0 rule that filters never stop firing.
+  (a 0-star attacker in the outfit is fired back on). Within `Witness_Floor` the cop hit counts with no line at all. This
+  reverses the 0.20.0 rule that filters never stop firing. A beat cop the filters refuse walks past and goes back on its
+  beat, and a hit beat cop also goes back when the cops stop hunting the player.
 - **A cop's own report starts the memory.** A swap in front of the reporting cop is seen. A civilian's report or the 911
   call does not start it. An **escape ends the memory**; the post-escape search reads EASY.
 - **A blown police outfit never fools,** whatever else changed.

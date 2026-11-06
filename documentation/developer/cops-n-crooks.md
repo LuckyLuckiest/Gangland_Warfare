@@ -1377,7 +1377,13 @@ also holds `Handoff`, `Post_Up`, `Most_Wanted` and (0.21.2 R2, T-571) `Officer_R
     seer, squads mix tiers, and the chat count must be true for every cop.
   - `witnessed(player)` (called by `SuspectListener` on a `COP` landing) starts the memory; `escaped(id)` ends it and
     restarts `told`; `exposed(cop, attacker)` is the cop-attacked hook (`CopManager.addCopAttackedHook`): seen by the
-    victim or any cop, it blows a worn outfit and, if hunted, stores the look and starts the memory.
+    victim or any cop, or with the victim within `Witness_Floor` whatever the ray, it blows a worn outfit and, if hunted,
+    stores the look and starts the memory. `reportLanded(player)` (`HeatLedger.setReportLanded`, run after
+    `commitReported` with the stars known) drops the memory of a report that raised no star; `DisguiseFilter.allows` only
+    trusts the flag while hunted. `learnedAt(id)` is stamped where a cop saw the look (a sighted tick, `exposed`), not by a
+    report: a held look keeps its value, and `SuspectListener` skips the landing's store when it moved. The not-hunted
+    branch clears the blow only with chase state to end, so a 0-star hit survives a squad walking home and the blow a
+    quit keeps waits for the next crime outside a chase.
   - `DisguiseFilter.knows` is `blown || match`, so a blown outfit is known whatever else changed. `changeCanFool` gates
     the Lost line (`Disguise.Lost`, said once on the tick the memory runs out unseen, also with no group);
     `changesNeeded(Player)` fills `%changes%`.
@@ -1387,9 +1393,13 @@ also holds `Handoff`, `Post_Up`, `Most_Wanted` and (0.21.2 R2, T-571) `Officer_R
     `Wanted.Witnesses.Cops.Witness_Floor` with no ray at all (a `DoubleSupplier` the bean reads live from
     `ChaseConfigLoader`; the same key `CopCrimeReports` uses for crime reports, so tuning it moves both). Any other cop
     uses `perception.sees` at `Patrol.Warning.Range` with the sight factors on. The Witness_Floor rule is its own commit.
+    Past the floor glass and bars still stop the ray (docket 897, O12). A cop in `OVERWATCH` counts to the larger of
+    `Alert_Range` and `OverwatchSettings.sightRange`.
   - Fire gate: `PursuingBehavior` and `CombatBehavior` fire at a player only when `allowsLockOn`; a refused lock-on keeps
     the search walking at range 0. `CopPerception.pursuitRange` is 0 for a refused player. `BreachController` has no such
-    gate (docket 870).
+    gate (docket 870). A beat cop has no search to walk: `PatrolManager.aiTick` sends a `COMBAT` cop the filters refuse back
+    to `PATROL`. `CopManager.addCopAttackerReleaseHook` (run by `removeCopAttacker` and a stars-cleared `onWantedEnd`,
+    not by an escape) reaches `PatrolManager.releaseAttacker`, since a beat cop is in no group.
   - `CopRole.overlay` passes `tier.ignoreDarkness()` as the 18th `CopTierConfig` argument (it dropped it before).
 - `CopSpawnManager.fits(target)` gates every spawn path (`spawnUnit` and `spawnNearPlayer`): within
   `0.75 x Pursuit.Max_Distance` (3D) and not `inViewOf` (60 degree eye cone plus `isOutOfSight` false). The ring

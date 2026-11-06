@@ -79,9 +79,10 @@ public class DisguiseModuleConfig {
 	}
 
 	/**
-	 * Whether a cop has eyes on the player: one hunting them counts to the alert range, and while they are known the
-	 * bare ray is enough, or no ray at all within {@code witnessFloor}: glass and iron bars stop the ray, so a cop at a
-	 * window would otherwise be blind (live run DIS-WINDOW, DIS-BARS), and that also means through a wall at that range.
+	 * Whether a cop has eyes on the player: one hunting them counts to the alert range (a Marksman on overwatch to his
+	 * sight range), and while they are known the bare ray is enough, or no ray at all within {@code witnessFloor}: glass
+	 * and iron bars stop the ray, so a cop at a window would otherwise be blind (live run DIS-WINDOW, DIS-BARS), and that
+	 * also means through a wall at that range. Past the floor glass and bars still blind a cop (docket 897, O12).
 	 * Any other live cop notices as a patrol does, at the warning range with the sight factors on, so the boss bar and
 	 * the memory agree. A cop walking home never counts. False before the config loads.
 	 */

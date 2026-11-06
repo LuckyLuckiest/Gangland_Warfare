@@ -134,7 +134,7 @@ public class SuspectDescriptions {
 		recognised.remove(playerId);
 	}
 
-	/** A cop of the chase saw {@code playerId} on the last AI tick and knew him (0.21.5). */
+	/** A cop saw {@code playerId} and knew them within the memory for their stars (0.21.6). */
 	public boolean isRecognised(UUID playerId) {
 		return recognised.contains(playerId);
 	}

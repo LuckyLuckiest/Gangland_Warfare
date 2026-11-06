@@ -1065,7 +1065,9 @@ legs, boots, the weapon in your hand, and whether you are on foot or in a car. T
     crowds and sneaking only stop a **first** pick-up, they no longer shake a cop with a clear line. Within
     `Wanted.Witnesses.Cops.Witness_Floor` (6, `wanted.yml`) such a cop counts with **no line at all** while the cops
     know you: glass and iron bars stop the sight line (measured live), so a cop at a window would otherwise be blind. It
-    also means a cop within 6 blocks sees through a wall. A first pick-up still needs the line.
+    also means a cop within 6 blocks sees through a wall. A first pick-up still needs the line. **Past 6 blocks glass and
+    bars still hide you**: a cop looking through a pane from 7 blocks has no line, and a swap behind it can fool them. A
+    Marksman on overwatch counts to the larger of `Alert_Range` and his `Sight_Range`.
   - **Any other** live cop (a beat cop, another player's squad) counts as a patrol does: `Patrol.Warning.Range` (12) with
     the sight factors on. A beat cop inside it already reports you to the squad, so the boss bar and the memory agree.
   - There is no view cone, so a cop facing away counts.
@@ -1073,19 +1075,23 @@ legs, boots, the weapon in your hand, and whether you are on foot or in a car. T
   the search. So "The cops don't recognise you" is true at 3 stars and up too. Vanilla entity targets are still fired on.
   **Hitting a cop** in sight of that cop or any cop gives you away at once: a police outfit is blown (hunted or not, so a
   0-star attacker in the outfit is fired back on), and if you are hunted you are known in what you wear, so a hit and a
-  duck behind a wall still pays. A hit from out of every cop's sight changes nothing by itself.
+  duck behind a wall still pays. Within `Witness_Floor` (6) the cop you hit knows who did it with no line at all, so a shot
+  past a slab or a grenade over a wall from that close counts too. A hit from farther off, out of every cop's sight,
+  changes nothing by itself. A beat cop you have fooled walks past and goes back on its beat; one you hit also goes back
+  when the cops stop hunting you (the search gives up, the squad ends, your stars are cleared).
 - **A cop's own report starts the memory.** When a cop reports a crime, the memory starts at the landing, so a swap in front
   of the reporting cop is seen. A report from a civilian or the 911 call does not start it: nobody with a badge saw the
   change, so a swap during it still pays.
 - **The look from the crime.** A crime someone reports through the witness gate (a 911 call, a cop report) records the look
   you had at the moment of the crime, not when the report lands 3 or 8 seconds later. Pulling on a mask during the call
-  does not hide the crime, and taking it off before the report lands does not either.
+  does not hide the crime, and taking it off before the report lands does not either. A look a cop learned by seeing you
+  after the crime stands: the report does not rewind it.
 - **The police outfit.** Wearing `Police_Outfit` (`police_helmet` and `police_vest`) at `Outfit_Max_Level` (2) stars or
   fewer fools every cop, including posts, from the first tick (a freshly dispatched squad that never watched you put it
   on is fooled at once). It is blown for the rest of the chase, including the post-escape search, when you commit a crime
   in it, hit a cop in it in sight, or a cop sees you put it on. **A blown outfit never fools**: it is known whatever else
-  changed. Taking a piece off and on again does not reset it. It clears when nobody hunts you any more (chase end or the
-  search giving up), never at a quit. A crime committed while nobody hunts you clears a blow left from before (a chase
+  changed. Taking a piece off and on again does not reset it. It clears when a chase ends (chase end or the search giving
+  up), never at a quit. A crime committed while nobody hunts you clears a blow left from before (a hit at 0 stars, a chase
   whose stars were cleared while you were offline, or a crime that started no chase), and then blows it again only if
   that crime is committed in the outfit.
 - **Escape.** An escape keeps the description through the post-escape search, so searchers and posts walk past a changed

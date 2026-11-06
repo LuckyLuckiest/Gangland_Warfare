@@ -31,7 +31,7 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [LIST]
 [*][B]A cop hunting you counts to [ICODE]Alert_Range[/ICODE] with the bare line[/B] while the cops know you: darkness, crowds and sneaking only stop a first pick-up now.
 [*][B]Any other cop counts as a patrol does,[/B] within [ICODE]Patrol.Warning.Range[/ICODE] (12): a beat cop watching a swap counts, and the squad does not have to exist yet. A cop walking home never counts.
-[*][B]Glass and iron bars no longer hide you from a cop at the window.[/B] They stop the sight line (measured live), so while the cops know you a hunting cop within [ICODE]Wanted.Witnesses.Cops.Witness_Floor[/ICODE] (6) counts with no line at all. That also means a cop within 6 blocks sees through a wall; a first pick-up still needs the line. A fence does not stop the line.
+[*][B]Glass and iron bars no longer hide you from a cop up close.[/B] They stop the sight line (measured live), so while the cops know you a hunting cop within [ICODE]Wanted.Witnesses.Cops.Witness_Floor[/ICODE] (6) counts with no line at all. That also means a cop within 6 blocks sees through a wall; a first pick-up still needs the line. [B]Past 6 blocks glass and bars still hide you:[/B] a cop looking through a pane from 7 blocks has no line, and a swap behind it can fool them. A fence does not stop the line.
 [*][B]A cop's own report starts the memory,[/B] so a swap in front of the reporting cop is seen. An escape ends it.
 [/LIST]
 
@@ -39,7 +39,8 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 
 [LIST]
 [*][B]Cops hold fire on a player they do not recognise,[/B] at every star level, and keep searching. "The cops don't recognise you" is now true at 3 stars and up. This reverses the 0.20.0 rule that filters never stop firing.
-[*][B]Hitting a cop in sight gives you away at once,[/B] and blows a worn police outfit (a 0-star attacker in it is fired back on). A hit and a duck behind a wall still pays.
+[*][B]Hitting a cop in sight gives you away at once,[/B] and blows a worn police outfit (a 0-star attacker in it is fired back on). A hit and a duck behind a wall still pays. Within [ICODE]Witness_Floor[/ICODE] (6) the cop you hit knows who did it with no line at all, so a shot past a slab or a grenade over a wall from that close counts too.
+[*][B]A beat cop does not stay on you.[/B] One you have fooled walks past and goes back on the beat. One you hit also goes back when the cops stop hunting you (the search gives up, the squad ends, your stars are cleared), so it never opens fire on a 0-star player later.
 [/LIST]
 
 [SIZE=5][B]The cops tell you[/B][/SIZE]
@@ -62,6 +63,12 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [*][ICODE]CopRole.overlay[/ICODE] lost [ICODE]Ignore_Darkness[/ICODE] (row 856).
 [*]A swap in front of the cop reporting a crime fooled that cop (row 869).
 [*]The last cop in range dying or an emptied group reset recognition (row 861).
+[*]A late report stored the old crime look over a look the cops learned after the crime, so a swap they saw could still fool them (row 868).
+[*]A hit beat cop stayed in combat for the player's whole session: passive while the filter refused, and firing again once the stars were gone (row 892).
+[*]A cop's report that raised no star left a recognition flag behind (row 893).
+[*]A hit in the police outfit at 0 stars was forgotten while an old squad walked home (row 894).
+[*]A hit on a nearby cop with a blocked sight line was free (row 895).
+[*]A Marksman on overwatch at 40-48 blocks did not count, so the chat said the cops lost you while he watched (row 896).
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -69,9 +76,9 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [SIZE=6][B]Docket[/B][/SIZE]
 
 [LIST]
-[*]Fixed: 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 869, 871.
+[*]Fixed: 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 868, 869, 871, 892, 893, 894, 895, 896.
 [*]Open by design (P3): 866 (an unrecognised suspect is not re-checked at arm's length), 867 (any vehicle or empty slot counts as a changed piece), 870 (the breach acts on the last-known spot).
-[*]Open: 868 (a late report stores the held crime look over a newer one).
+[*]Open: 897 (glass and bars past 6 blocks, an owner ruling on O12), 898 (TNT and pets credit no player, so they do not re-identify one).
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -81,7 +88,8 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [LIST]
 [*]The memory and piece numbers are reasoned tuning, not measured over a long play session. [B]Open for the playtest:[/B] can the player get the memory on foot at 3, 4 and 5 stars? The top rows may only be reachable by car. Numbers change in YAML only.
 [*]The boss bar and the memory can disagree: a hunting cop at night past the sight factor range, or behind glass inside 6 blocks, keeps the memory while the bar reads SEARCHING.
-[*][ICODE]Witness_Floor[/ICODE] is one key for two rules: tuning it for crime reports also moves the disguise rule.
+[*][ICODE]Witness_Floor[/ICODE] is one key for three rules: tuning it for crime reports also moves the disguise memory and the hit rule.
+[*][B]Open for the owner (O12):[/B] past [ICODE]Witness_Floor[/ICODE] glass and bars still hide you, and inside it a wall does not. A ray that only stops on solid blocks would close both; it stays out until the owner rules (row 897).
 [*]The Lost line reveals the exact moment the memory runs out. That is the point: it teaches the rule.
 [/LIST]
 
@@ -90,5 +98,5 @@ Read [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documen
 [SIZE=6][B]For developers[/B][/SIZE]
 
 [LIST]
-[*]gangland-api, Keystone and Bartizan are unchanged. [ICODE]DisguiseSettings[/ICODE] gains [ICODE]byDifficulty[/ICODE] and the 6-argument constructor stays; [ICODE]DisguiseFilter[/ICODE] takes a difficulty function; [ICODE]DisguiseModuleConfig.eyesOf[/ICODE] takes the descriptions, a witness supplier and the [ICODE]Witness_Floor[/ICODE].
+[*]gangland-api, Keystone and Bartizan are unchanged. [ICODE]DisguiseSettings[/ICODE] gains [ICODE]byDifficulty[/ICODE] and the 6-argument constructor stays; [ICODE]DisguiseFilter[/ICODE] takes a difficulty function; [ICODE]DisguiseModuleConfig.eyesOf[/ICODE] takes the descriptions, a witness supplier and the [ICODE]Witness_Floor[/ICODE]; [ICODE]DisguiseTick[/ICODE] takes the [ICODE]Witness_Floor[/ICODE].
 [/LIST]

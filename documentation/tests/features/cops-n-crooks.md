@@ -183,7 +183,17 @@ lines come from `wanted_messages.yml` `Disguise.*`; debug lines need `Cops.Debug
 - [ ] **Change in view.** A cop has an unbroken line, swap four pieces → still recognised, the new look radioed.
 - [ ] **Glass, bars and fence.** Recognised, a hunting cop within 6 blocks behind a window or iron bars, swap two pieces,
       come out past the memory → recognised (the cop counts through it at that range); a fence changes nothing (the
-      line clears it). Live: DIS-WINDOW, DIS-BARS, DIS-FENCE. A wall of stone within 6 blocks counts the same.
+      line clears it). Live: DIS-WINDOW, DIS-BARS, DIS-FENCE. A wall of stone within 6 blocks counts the same. Past 6
+      blocks glass and bars still hide you (docket 897): REVIEW with the owner.
+- [ ] **Hit from close, no line.** Disguised, a grenade over a wall or a shot past a slab hits a cop within 6 blocks →
+      recognised in what you wear; the same from 10 blocks with no other cop in sight changes nothing.
+- [ ] **A fooled beat cop.** Disguised at 1+ stars, shoot a beat cop in view, then earn a new disguise → he walks past and
+      goes back on his beat. Escape instead with him still after you → when the search gives up he goes back and never
+      fires at 0 stars.
+- [ ] **Late report, new look.** Recognised, a gated crime in look A, swap to B in view, break line before the report
+      lands, wait past the memory → the Lost line names B, and B is known at the next sighting.
+- [ ] **Overwatch at 45 blocks.** A Marksman on his perch sees you at 40-48 blocks → the bar says seen and no Lost line
+      comes.
 - [ ] **DIS-ESCAPE-3 / -4 / -5 (owner playtest, REVIEW).** A real squad at 3, 4 and 5 stars, on foot, then by car: can you
       get the memory on foot, and how? The numbers change in YAML only (`By_Difficulty`).
 - [ ] **Police outfit.** Put on `police_helmet` + `police_vest` out of sight at 2 stars or fewer → chat "In the police
