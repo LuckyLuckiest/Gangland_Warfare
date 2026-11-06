@@ -227,7 +227,7 @@ placeholders).
 
 ## 0.18.0 Manual Checks (Guards, map zoom and border, dynmap)
 
-- [ ] Two guard waves with Citizens: a capture on a turf with six guards in stock brings the first wave of three to its posts; after a guard falls a top-up follows after the cooldown; the owners get the `took their posts` line each time.
+- [ ] Two guard waves with Citizens: a capture on a turf with six guards in stock brings the first wave of three to its posts; after a guard falls a top-up follows after the cooldown; the owners get the `reinforced` line each time.
 - [ ] No stock spent without Citizens: on a server without Citizens, start a capture; `/glw turf garrison` on that turf shows the same count afterwards.
 - [ ] Guards walk back after a chase past the edge: chase a guard beyond the 16-block margin; it walks to a post and stops targeting.
 - [ ] Survivors return after a failed attack: defend a capture and let it fail; the count goes back to the reserve (capped at 12) and the owners get the `back in the reserve` line.

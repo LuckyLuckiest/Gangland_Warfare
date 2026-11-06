@@ -102,7 +102,7 @@ public final class GarrisonRoster {
 		Integer ownerId = turf.getOwnerGangId();
 		Gang    owner   = ownerId == null ? null : gangs.findById(ownerId);
 		if (owner == null) return;
-		String line = text.text("Garrison.Wave", "&7%count% guards took their posts at &f%turf%&7.",
+		String line = text.text("Garrison.Wave", "&7Guards at &f%turf% &7reinforced: &f+%count%",
 		                        "turf", turf.getDisplayName(), "count", count);
 		if (line == null || line.isEmpty()) return;
 		for (Member member : owner.getMembers()) {

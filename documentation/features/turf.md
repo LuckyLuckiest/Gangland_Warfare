@@ -161,7 +161,7 @@ nothing is spent.
 - **Top-ups.** Each guard that falls is owed a replacement. Replacements come in waves of up to `Wave_Size`, at most
   `Garrison.Max_Alive` (6) guards stand at once, and a top-up waits `Garrison.Wave_Cooldown_Seconds` (20) after the last
   fall. A top-up never takes more than the reserve holds.
-- **Owners are told** when a wave takes its posts: `N guards took their posts at <turf>` (`Garrison.Wave` in
+- **Owners are told** when a wave takes its posts: `Guards at <turf> reinforced: +N` (`Garrison.Wave` in
   `turf_messages.yml`).
 
 ### Targets, leash and stand-down

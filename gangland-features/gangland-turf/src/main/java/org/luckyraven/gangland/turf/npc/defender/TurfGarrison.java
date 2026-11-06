@@ -112,7 +112,7 @@ public final class TurfGarrison {
 	}
 
 	/**
-	 * How many guards to spawn now: what is owed, at most one wave, at most the reserve, never past {@code maxAlive}
+	 * How many guards to spawn now: the gap to the target, at most one wave, at most the reserve, never past {@code maxAlive}
 	 * standing, and nothing until the cooldown since the last loss has run out.
 	 */
 	public static int toSpawn(int stock, int alive, int maxAlive, int waveSize, int owed, long lastLossAt, long now,

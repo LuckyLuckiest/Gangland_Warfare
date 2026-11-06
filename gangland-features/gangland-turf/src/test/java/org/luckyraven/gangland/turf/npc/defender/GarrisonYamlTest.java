@@ -14,7 +14,6 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Garrison YAML - the shipped keys load into TurfDefenderConfig")
 class GarrisonYamlTest {
@@ -79,7 +78,7 @@ class GarrisonYamlTest {
 		YamlConfiguration yaml = YamlConfiguration.loadConfiguration(
 				new StringReader(YamlFixture.shipped("/turf/turf_messages.yml")));
 
-		assertTrue(yaml.isSet("Garrison.Wave"));
+		assertEquals("&7Guards at &f%turf% &7reinforced: &f+%count%", yaml.getString("Garrison.Wave"));
 		assertFalse(yaml.isSet("Garrison.Returned"));
 	}
 }

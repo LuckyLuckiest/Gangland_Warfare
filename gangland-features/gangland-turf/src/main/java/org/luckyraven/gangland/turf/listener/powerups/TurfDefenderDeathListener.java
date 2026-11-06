@@ -19,6 +19,7 @@ import org.luckyraven.gangland.item.money.MoneyItemFactory;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer.GuardBounty;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.npc.NpcSupport;
 
 import java.util.function.ObjIntConsumer;
 
@@ -56,7 +57,8 @@ public final class TurfDefenderDeathListener implements Listener {
 		defenders.markKilled(npc);
 
 		Player killer = event.getKiller();
-		if (killer == null) return;
+		// a cop is a Citizens PLAYER entity, and no one collects a bounty for its kill
+		if (killer == null || NpcSupport.isNpc(killer)) return;
 		GuardBounty bounty = defenders.bountyOf(npc);
 		if (bounty == null || bounty.ownerGangId() < 0 || bounty.amount() <= 0) return;
 

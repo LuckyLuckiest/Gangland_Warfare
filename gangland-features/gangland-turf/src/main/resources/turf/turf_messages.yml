@@ -247,7 +247,7 @@ Alerts:
 # ---------------- Garrison: lines to the owners while their guards defend (W3-B) ----------------
 Garrison:
    # To the owning gang's online members when a wave of guards takes its posts. %turf%, %count%.
-   Wave: "&7%count% guards took their posts at &f%turf%&7."
+   Wave: "&7Guards at &f%turf% &7reinforced: &f+%count%"
 # end Garrison
 
 # ---------------- Income: the payout line and the turf cap line (W2-N2) ----------------
@@ -449,7 +449,7 @@ Quartermaster:
    # Garrison panel (W7-H): guards alive on the turf now. %count%.
    Garrison_On_Duty: "&7On duty: &f%count%"
    # Guards a contest top-up sends from the reserve (already paid for). %count%.
-   Garrison_Next_Wave: "&7Contest top-up: up to &f%count% &7guards, no extra cost"
+   Garrison_Next_Wave: "&7Contest top-up: &f+%count%&7, no extra cost"
    # Buy button lore when the turf owns the cap. %max%.
    Garrison_Buy_Full: "&cThis turf already owns &f%max% &cguards."
 # end Quartermaster

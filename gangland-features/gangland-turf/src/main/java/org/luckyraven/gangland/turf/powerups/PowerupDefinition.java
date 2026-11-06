@@ -36,13 +36,8 @@ public record PowerupDefinition(String id,
 
 	/** The configured icon, else the default for the effect. The loader has already checked a configured icon. */
 	public Material iconMaterial() {
-		if (icon != null) {
-			Material material = XMaterial.matchXMaterial(icon).map(XMaterial::get).orElse(null);
-			if (material != null) {
-				return material;
-			}
-		}
-		return defaultIcon(effectType);
+		return icon == null ? defaultIcon(effectType)
+		                    : XMaterial.matchXMaterial(icon).map(XMaterial::get).orElse(defaultIcon(effectType));
 	}
 
 	public static Material defaultIcon(EffectType effectType) {

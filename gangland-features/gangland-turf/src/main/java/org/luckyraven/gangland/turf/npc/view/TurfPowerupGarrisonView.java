@@ -10,7 +10,6 @@ import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
-import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.EffectType;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
@@ -36,8 +35,9 @@ import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.refusal;
 /**
  * Garrison sub-panel: the guards the turf owns and the price of one more guard, paid from the gang bank. The guard holds
  * the capture bar and fights attackers. Every purchase runs {@link QuartermasterAccess#denyKey} first (TF-19, TF-45),
- * then affordability, then the owned-guards cap ({@code turf_rules.yml} Garrison.Max_Reserve), then withdraws from the owner gang. The price is
- * {@code turf_powerups.yml} Garrison.Cost_Per_Guard times any active garrison_discount (TF-17, TF-02).
+ * then affordability, then the owned-guards cap ({@code turf_rules.yml} Garrison.Max_Reserve), then withdraws from the
+ * owner gang. The price is {@code turf_powerups.yml} Garrison.Cost_Per_Guard times any active garrison_discount (TF-17,
+ * TF-02).
  * The info item shows guards owned against Garrison.Max_Reserve, on duty, in reserve and the contest top-up size; a
  * top-up spends guards already paid for, never money.
  */
@@ -117,7 +117,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		lore.add(messages.text("Quartermaster.Garrison_In_Reserve", "&7In reserve: &f%count%",
 		                       "count", Math.max(0, stock - alive)));
 		lore.add(messages.text("Quartermaster.Garrison_Next_Wave",
-		                       "&7Contest top-up: up to &f%count% &7guards, no extra cost",
+		                       "&7Contest top-up: &f+%count%&7, no extra cost",
 		                       "count", nextWave(stock, alive, waves.apply(turfId))));
 		lore.add(messages.text("Quartermaster.Garrison_Per_Guard", "&7Per defender: &6%money%",
 		                       "money", money(price(turfId))));

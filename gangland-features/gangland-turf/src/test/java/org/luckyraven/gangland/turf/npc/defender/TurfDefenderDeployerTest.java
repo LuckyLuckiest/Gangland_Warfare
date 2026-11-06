@@ -1386,6 +1386,67 @@ class TurfDefenderDeployerTest {
 		}
 	}
 
+	@Test
+	@DisplayName("a player id left on a guard that is no longer fighting is forgotten in peace, so he must hit again to be fought")
+	void peaceIdleGuard_forgetsARememberedPlayer() {
+		try (Rig rig = new Rig(5)) {
+			rig.ticks(2);
+			CivilianNpc guard = rig.spawned.get(0);
+			UUID rival = UUID.randomUUID();
+			guard.setTargetPlayerId(rival);
+			guard.transitionTo(CivilianState.COMBAT);
+
+			rig.ticks(1);
+
+			assertEquals(rival, guard.getTargetPlayerId());
+
+			// what CivilianDamageListener.clearCivilianTargets leaves when the rival dies: IDLE, id kept
+			guard.transitionTo(CivilianState.IDLE);
+			rig.ticks(1);
+
+			assertNull(guard.getTargetPlayerId());
+		}
+	}
+
+	@Test
+	@DisplayName("T-902: a stuck guard is not recycled to a known post whose chunk has unloaded")
+	void recycleStuck_noPostLoaded_staysPut() {
+		try (Rig rig = new Rig(5, new CuboidRegion("world", 1600, 1600, 2000, 2000))) {
+			rig.ticks(2);
+			assertEquals(5, rig.spawned.size());
+			CivilianNpc stuck = rig.spawned.get(0);
+			when(stuck.millisUnreachable()).thenReturn(60_000L);
+			rig.contest();
+			rig.loaded((x, z) -> false);
+
+			rig.ticks(1);
+
+			assertEquals(5, rig.spawned.size());
+			verify(stuck, never()).markForRemoval();
+		}
+	}
+
+	@Test
+	@DisplayName("T-902: a stuck guard is recycled to the post whose chunk is loaded, read in chunk coordinates")
+	void recycleStuck_goesToTheLoadedPost() {
+		try (Rig rig = new Rig(5, new CuboidRegion("world", 1600, 1600, 2000, 2000))) {
+			rig.ticks(2);
+			CivilianNpc stuck = rig.spawned.get(0);
+			when(stuck.millisUnreachable()).thenReturn(60_000L);
+			rig.contest();
+			Location open = rig.spawnedAt.get(4);
+			int chunkX = open.getBlockX() >> 4;
+			int chunkZ = open.getBlockZ() >> 4;
+			rig.loaded((x, z) -> x == chunkX && z == chunkZ);
+
+			rig.ticks(1);
+
+			assertEquals(6, rig.spawned.size());
+			assertEquals(open.getBlockX(), rig.spawnedAt.get(5).getBlockX());
+			assertEquals(open.getBlockZ(), rig.spawnedAt.get(5).getBlockZ());
+		}
+	}
+
 	// ---- Fixture ----
 
 	/**

@@ -269,16 +269,6 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		return live;
 	}
 
-	/**
-	 * Bound to {@link CivilianService} via constructor injection so it stays referenced — used to acknowledge the
-	 * dependency chain even though deploys go through {@link CivilianSpawnManager}. Civilians spawned via the spawn
-	 * manager auto-register with the service's tick loop.
-	 */
-	@SuppressWarnings("unused")
-	public CivilianService getCivilianService() {
-		return civilianService;
-	}
-
 	/** How many guards of {@code turfId} are alive and valid right now (0 when none stand). */
 	public int aliveCount(int turfId) {
 		return liveDefenders(turfId).size();
@@ -443,8 +433,9 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		while (!group.defenders.isEmpty()) {
 			TrackedDefender surplus = Collections.max(group.defenders, Comparator.comparingInt(d -> numberOf(d.npc)));
 			if (group.defenders.size() <= target && numberOf(surplus.npc) <= target) return;
-			// ponytail: the body lives until CivilianService's next tick (AI_Tick_Rate) but is untracked now, so a killing
-			// blow there drops civilian cash with no debit (T-901); hold the entity mapping until it is gone if that matters
+			// ponytail: here, in recycleStuck and in recall the body lives until CivilianService's next tick (AI_Tick_Rate)
+			// but is untracked now, so a killing blow there drops civilian cash with no debit (T-901); hold the entity
+			// mapping until the body is gone if that matters
 			surplus.npc.markForRemoval();
 			untrack(surplus);
 			group.defenders.remove(surplus);
@@ -498,7 +489,9 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		for (int number = 1; number <= target && spawned < toSpawn; number++) {
 			if (taken.contains(number)) continue;
 			// ponytail: a post over lava or in water can kill a guard repeatedly; free in peace, and the 60 s alert
-			// tells the owner
+			// tells the owner. A number maps to a fixed spot, so on a turf wider than the loaded range a small stock can
+			// stand out of sight of an owner at another spot (T-907); let a free number take a loaded spot if that
+			// matters
 			Post post = spots.get((number - 1) % spots.size());
 			if (post == null) continue;
 			if (!spawnAt(turfId, group, garrison, world, post, number, now)) break;
@@ -586,15 +579,20 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			long last = recycledAt.getOrDefault(d.npc, -1L);
 			if (!GuardRecycle.due(stuck, seconds, last, now, seen)) continue;
 
-			Post post = GuardRecycle.elsewhere(garrison.posts, at.getX(), at.getZ(), eyes,
-			                                   (p, eye) -> sees(guardWorld, p, eye));
+			// known posts include unloaded chunks, and a ray or a spawn there would load one (T-902)
+			Post post = GuardRecycle.elsewhere(
+					garrison.posts.stream()
+					              .filter(p -> guardWorld.isChunkLoaded((int) Math.floor(p.x()) >> 4,
+					                                                    (int) Math.floor(p.z()) >> 4))
+					              .toList(),
+					at.getX(), at.getZ(), eyes, (p, eye) -> sees(guardWorld, p, eye));
 			CivilianNpc fresh = post == null ? null : spawnManager.spawnCivilian(
 					new Location(guardWorld, post.x(), post.y(), post.z()), garrison.config.typeId());
 			if (fresh == null) {
 				recycledAt.put(d.npc, now);
 				continue;
 			}
-			int number = numberByNpc.getOrDefault(d.npc, 0);
+			int number = numberOf(d.npc);
 			d.npc.markForRemoval();
 			untrack(d);
 			group.defenders.remove(d);
@@ -744,6 +742,8 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			if (npc.getPost() != null) npc.releasePost();
 			return;
 		}
+		// the fight is over: a rival who died keeps his id here, and idle would re-engage him on sight (ruling 4)
+		npc.setTargetPlayerId(null);
 		// an admin who points Type_Id at a wandering type; the shipped type has Wander off
 		if (npc.getCurrentState() == CivilianState.WANDERING) npc.transitionTo(CivilianState.IDLE);
 		LivingEntity body = npc.getEntity();

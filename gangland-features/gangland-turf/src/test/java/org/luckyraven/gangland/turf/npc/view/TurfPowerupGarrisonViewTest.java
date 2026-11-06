@@ -446,7 +446,7 @@ class TurfPowerupGarrisonViewTest {
 					{"Quartermaster.Bought_Guard_Post", "&7It takes its post on &f%turf% &7shortly while the area is loaded."},
 					{"Quartermaster.Bought_Guard_Reserve", "&7It waits in the reserve and joins when &f%turf% &7is attacked."},
 					{"Quartermaster.Owned_Full", "&cThis turf already has %max% guards."},
-					{"Quartermaster.Garrison_Next_Wave", "&7Contest top-up: up to &f%count% &7guards, no extra cost"},
+					{"Quartermaster.Garrison_Next_Wave", "&7Contest top-up: &f+%count%&7, no extra cost"},
 					{"Quartermaster.Garrison_Buy_Full", "&cThis turf already owns &f%max% &cguards."}
 			};
 			for (String[] key : keys) {
