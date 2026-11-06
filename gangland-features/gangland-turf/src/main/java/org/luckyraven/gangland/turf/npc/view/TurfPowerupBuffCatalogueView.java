@@ -84,7 +84,7 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 
 	@Override
 	public String title(TurfPowerupFlowSession session) {
-		return messages.text("Quartermaster.Title_Buffs", "&5Timed Buffs");
+		return messages.text("Quartermaster.Title_Buffs", "&5Timed Buffs", "npc", session.getNpcDisplayName());
 	}
 
 	@Override

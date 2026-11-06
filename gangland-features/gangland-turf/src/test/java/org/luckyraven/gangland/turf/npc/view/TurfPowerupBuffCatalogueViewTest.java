@@ -7,6 +7,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.powerups.ActiveTurfBuff;
 import org.luckyraven.gangland.turf.support.TurfTextFixture;
+import org.luckyraven.gangland.turf.support.CaptureFixtures;
+import org.luckyraven.gangland.turf.support.YamlFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gang.Gang;
@@ -48,10 +50,6 @@ import static org.mockito.Mockito.when;
 @DisplayName("TurfPowerupBuffCatalogueView - paging and purchase re-check")
 class TurfPowerupBuffCatalogueViewTest {
 
-	private static List<PowerupDefinition> twelve() {
-		return boosts(25);
-	}
-
 	private static List<PowerupDefinition> boosts(int count) {
 		List<PowerupDefinition> defs = new ArrayList<>();
 		for (int i = 0; i < count; i++) {
@@ -68,7 +66,7 @@ class TurfPowerupBuffCatalogueViewTest {
 	@Test
 	@DisplayName("25 boosts make two pages: 21 on the first, four on the second (TF-18)")
 	void pages_twentyOneAPage() {
-		List<PowerupDefinition> all = twelve();
+		List<PowerupDefinition> all = boosts(25);
 
 		assertEquals(2, TurfPowerupBuffCatalogueView.pages(all.size()));
 		assertEquals(21, TurfPowerupBuffCatalogueView.page(all, 0).size());
@@ -111,7 +109,7 @@ class TurfPowerupBuffCatalogueViewTest {
 		TurfPowerupBuffCatalogueView view = new TurfPowerupBuffCatalogueView(registry, buffs, access,
 		                                                                     mock(TurfMessages.class), null,
 		                                                                     () -> MenuStyle.DEFAULT);
-		view.attemptBuy(flow, viewer, session, twelve().get(0));
+		view.attemptBuy(flow, viewer, session, boosts(25).get(0));
 
 		verify(flow).end();
 		assertEquals(0, new BigDecimal("50000").compareTo(bank.getAmount()));
@@ -194,7 +192,7 @@ class TurfPowerupBuffCatalogueViewTest {
 	@Test
 	@DisplayName("render_pageOneOf25: 21 boosts on 10-16, 19-25 and 28-34, page info 40, Next 42, no Previous")
 	void render_pageOneOf25() {
-		PowerupRegistry registry = registryOf(twelve());
+		PowerupRegistry registry = registryOf(boosts(25));
 
 		try (PanelProbe probe = new PanelProbe(plainView(registry), sessionWithBank(0))) {
 			Set<Integer> expected = new TreeSet<>(Set.of(36, 40, 42, 44));
@@ -207,6 +205,53 @@ class TurfPowerupBuffCatalogueViewTest {
 			assertEquals(Material.PAPER, probe.type(40));
 			assertEquals(Material.ARROW, probe.type(42));
 		}
+	}
+
+	@Test
+	@DisplayName("render_pageTwoOf25: four boosts, Previous on 38, no Next")
+	void render_pageTwoOf25() {
+		PowerupRegistry registry = registryOf(boosts(25));
+		TurfPowerupFlowSession session = sessionWithBank(0);
+		session.setBuffPage(1);
+
+		try (PanelProbe probe = new PanelProbe(plainView(registry), session)) {
+			assertEquals(Set.of(10, 11, 12, 13, 36, 38, 40, 44), probe.items.keySet());
+			assertEquals(Material.ARROW, probe.type(38));
+		}
+	}
+
+	@Test
+	@DisplayName("oldFile_titleAndDuration: an old %npc% title and %seconds% line still render without literals")
+	void oldFile_titleAndDuration() throws Exception {
+		String old = "Quartermaster:" + System.lineSeparator()
+		             + "   Title_Buffs: \"&8&l[&b&lBuffs &8- &6%npc%&8&l]\"" + System.lineSeparator()
+		             + "   Buffs_Duration: \"&7Duration: &b%seconds%s\"" + System.lineSeparator();
+		try (var settings = TurfTextFixture.stubMoneySymbol()) {
+			Path dir = Files.createDirectories(tempDir.resolve("old" + System.nanoTime()));
+			TurfMessages messages = new TurfMessages(YamlFixture.fileManager(dir, "turf_messages", old),
+			                                         mock(TurfMessageContract.class),
+			                                         CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
+			ActiveBuffManager buffs = mock(ActiveBuffManager.class);
+			when(buffs.active(TURF_ID)).thenReturn(List.of());
+			TurfPowerupBuffCatalogueView view = realView(registryOf(boost("x", EffectType.INCOME_MULTIPLIER, 1.5)),
+			                                             buffs, messages);
+			TurfPowerupFlowSession session = sessionWithBank(0);
+
+			assertTrue(!view.title(session).contains("%npc%"), view.title(session));
+			try (PanelProbe probe = new PanelProbe(view, session)) {
+				List<String> lore = probe.lore(probe.items.keySet().iterator().next());
+				assertTrue(lore.stream().anyMatch(line -> line.contains("600s")), lore.toString());
+			}
+		}
+	}
+
+	@Test
+	@DisplayName("title_passesNpcPair: the buff title carries the Quartermaster name for old files")
+	void title_passesNpcPair() {
+		TurfMessages messages = mock(TurfMessages.class);
+		TurfPowerupBuffCatalogueView view = realView(registryOf(boosts(1)), mock(ActiveBuffManager.class), messages);
+		view.title(sessionWithBank(0));
+		verify(messages).text("Quartermaster.Title_Buffs", "&5Timed Buffs", "npc", "Quartermaster");
 	}
 
 	@Test
@@ -255,38 +300,38 @@ class TurfPowerupBuffCatalogueViewTest {
 	private void assertFriendly(EffectType type, double magnitude, String expected) throws Exception {
 		List<String> lore = idleLoreOf(boost("x", type, magnitude));
 
-		assertTrue(lore.stream().anyMatch(line -> line.contains(expected)), expected + " in " + lore);
+		assertTrue(lore.stream().anyMatch(line -> line.replaceAll("[§&][0-9a-fk-or]", "").equals(expected)), expected + " in " + lore);
 		assertTrue(lore.stream().noneMatch(line -> line.contains("_") || line.contains(type.name())), lore.toString());
 	}
 
 	@Test
 	@DisplayName("effectLine_friendlyWording_noEnumName: income 1.5 reads +50%")
 	void effectLine_income() throws Exception {
-		assertFriendly(EffectType.INCOME_MULTIPLIER, 1.5, "+50%");
+		assertFriendly(EffectType.INCOME_MULTIPLIER, 1.5, "Effect: +50% turf income");
 	}
 
 	@Test
 	@DisplayName("effectLine_friendlyWording_noEnumName: discount 0.5 reads 50% off")
 	void effectLine_discount() throws Exception {
-		assertFriendly(EffectType.GARRISON_DISCOUNT, 0.5, "50% off");
+		assertFriendly(EffectType.GARRISON_DISCOUNT, 0.5, "Effect: 50% off new guards");
 	}
 
 	@Test
 	@DisplayName("effectLine_friendlyWording_noEnumName: toughness 1.5 reads +50%")
 	void effectLine_toughness() throws Exception {
-		assertFriendly(EffectType.GUARD_TOUGHNESS, 1.5, "+50%");
+		assertFriendly(EffectType.GUARD_TOUGHNESS, 1.5, "Effect: +50% health on your guards while it runs");
 	}
 
 	@Test
 	@DisplayName("effectLine_friendlyWording_noEnumName: waves 1.5 reads +50%")
 	void effectLine_waves() throws Exception {
-		assertFriendly(EffectType.BIGGER_GUARD_WAVES, 1.5, "+50%");
+		assertFriendly(EffectType.BIGGER_GUARD_WAVES, 1.5, "Effect: +50% guards fighting at once in a contest");
 	}
 
 	@Test
 	@DisplayName("effectLine_friendlyWording_noEnumName: reinforcements 0.5 reads 50% sooner")
 	void effectLine_reinforcements() throws Exception {
-		assertFriendly(EffectType.FASTER_REINFORCEMENTS, 0.5, "50%");
+		assertFriendly(EffectType.FASTER_REINFORCEMENTS, 0.5, "Effect: Replacements arrive 50% sooner");
 	}
 
 	@Test

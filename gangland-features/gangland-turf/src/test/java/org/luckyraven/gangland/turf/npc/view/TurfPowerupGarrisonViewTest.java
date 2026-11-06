@@ -341,6 +341,13 @@ class TurfPowerupGarrisonViewTest {
 	}
 
 	@Test
+	@DisplayName("title_passesNpcPair: the garrison title carries the Quartermaster name for old files")
+	void title_passesNpcPair() {
+		view.title(session);
+		verify(messages).text("Quartermaster.Title_Garrison", "&5Garrison", "npc", "Quartermaster");
+	}
+
+	@Test
 	@DisplayName("the view's fallback literals equal the shipped turf_messages.yml lines (W7-H)")
 	void fallbacksEqualShippedYaml() throws Exception {
 		try (var settings = TurfTextFixture.stubMoneySymbol()) {

@@ -67,7 +67,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 
 	@Override
 	public String title(TurfPowerupFlowSession session) {
-		return messages.text("Quartermaster.Title_Garrison", "&5Garrison");
+		return messages.text("Quartermaster.Title_Garrison", "&5Garrison", "npc", session.getNpcDisplayName());
 	}
 
 	@Override
