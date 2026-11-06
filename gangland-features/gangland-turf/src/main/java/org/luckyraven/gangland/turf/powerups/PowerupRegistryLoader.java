@@ -10,6 +10,9 @@ import org.luckyraven.keystone.persistence.config.FileHandlerReader;
 import org.luckyraven.keystone.persistence.config.MappingNode;
 import org.luckyraven.keystone.persistence.config.NodeReader;
 
+import com.cryptomorin.xseries.XMaterial;
+import org.bukkit.Material;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -61,6 +64,7 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
 
 		readGarrisonCost(root, report);
+		readLimits(root, report);
 
 		MappingNode powerupsNode = root.get(POWERUPS_KEY).asMapping().required().orNull();
 		if (powerupsNode == null) {
@@ -137,6 +141,35 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 			log.warn("turf_powerups.yml {}: GARRISON_DISCOUNT Magnitude {} is outside (0, 1]; guard prices are clamped to 10-100% of Cost_Per_Guard", id, magnitude);
 		}
 
+		PowerupRegistry.GuardLimits limits = registry.guardLimits();
+		switch (effectType) {
+			case GUARD_TOUGHNESS, BIGGER_GUARD_WAVES -> {
+				if (!Double.isFinite(magnitude) || magnitude < 1.0) {
+					log.warn("turf_powerups.yml {}: {} Magnitude {} must be at least 1 and finite - skipping", id,
+					         effectType, magnitude);
+					return null;
+				}
+				double limit = effectType == EffectType.GUARD_TOUGHNESS ? limits.maxToughness() : limits.maxWaves();
+				if (magnitude > limit) {
+					log.warn("turf_powerups.yml {}: {} Magnitude {} is above the limit {}; it is clamped there", id,
+					         effectType, magnitude, limit);
+				}
+			}
+			case FASTER_REINFORCEMENTS -> {
+				if (!Double.isFinite(magnitude) || magnitude <= 0.0 || magnitude > 1.0) {
+					log.warn("turf_powerups.yml {}: FASTER_REINFORCEMENTS Magnitude {} must be in (0, 1] - skipping", id,
+					         magnitude);
+					return null;
+				}
+				if (magnitude < limits.minWait()) {
+					log.warn("turf_powerups.yml {}: FASTER_REINFORCEMENTS Magnitude {} is below the limit {}; it is clamped there",
+					         id, magnitude, limits.minWait());
+				}
+			}
+			default -> {
+			}
+		}
+
 		if (effectType == EffectType.CAPTURE_DEFENSE_BONUS) {
 			log.warn("{} has no effect since 0.17.0 - guards on the capture bar replaced it; entry skipped", id);
 			return null;
@@ -158,6 +191,47 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 			log.warn("Powerup '{}' has Cost 0 - it activates for free", id);
 		}
 
-		return new PowerupDefinition(id, displayName, cost, effectType, magnitude, durationSeconds);
+		String       icon        = readIcon(id, effectType, r.get("Icon").asString().orDefault(""));
+		List<String> description = r.get("Description").asList().ofStrings().orEmpty();
+
+		return new PowerupDefinition(id, displayName, cost, effectType, magnitude, durationSeconds, icon, description);
+	}
+
+	/** The icon name when it is an item material, else null (the default of the effect), warning if it was set. */
+	private static String readIcon(String id, EffectType effectType, String raw) {
+		if (raw.isBlank()) {
+			return null;
+		}
+		Material material = XMaterial.matchXMaterial(raw.trim()).map(XMaterial::get).orElse(null);
+		if (material == null || !material.isItem()) {
+			log.warn("turf_powerups.yml {}: Icon '{}' is not an item material; using {}", id, raw,
+			         PowerupDefinition.defaultIcon(effectType));
+			return null;
+		}
+		return raw.trim();
+	}
+
+	/** {@code Limits}: each key out of range or non-finite warns and keeps the code default. */
+	private void readLimits(NodeReader root, ConfigReport report) {
+		PowerupRegistry.GuardLimits defaults = PowerupRegistry.GuardLimits.DEFAULT;
+		MappingNode                 node     = root.get("Limits").asMapping().orNull();
+		if (node == null) {
+			registry.setGuardLimits(defaults);
+			return;
+		}
+		NodeReader r = NodeReader.of(node, report);
+		registry.setGuardLimits(new PowerupRegistry.GuardLimits(
+				limit(r, "Max_Guard_Toughness", defaults.maxToughness(), 1.0, Double.MAX_VALUE),
+				limit(r, "Max_Guard_Waves", defaults.maxWaves(), 1.0, Double.MAX_VALUE),
+				limit(r, "Min_Reinforcement_Wait", defaults.minWait(), Math.nextUp(0.0), 1.0)));
+	}
+
+	private static double limit(NodeReader r, String key, double fallback, double min, double max) {
+		double value = r.get(key).asDouble().orDefault(fallback);
+		if (!Double.isFinite(value) || value < min || value > max) {
+			log.warn("turf_powerups.yml Limits.{} {} is out of range; using {}", key, value, fallback);
+			return fallback;
+		}
+		return value;
 	}
 }
