@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.turf.npc.view;
 
-import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -61,14 +60,13 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 	private final TurfMessages                  messages;
 	private final Supplier<TurfPowerupSettings> settings;
 	private final BooleanSupplier               citizens;
-	private final String                        fillItem;
-	private final String                        fillName;
+	private final Supplier<MenuStyle>           style;
 
 	public QuartermasterPlacement(JavaPlugin plugin, InventoryService inventoryService, TurfManager turfs,
 	                              GangLookupContract gangs, UserLookupContract users, QuartermasterAccess access,
 	                              TurfPowerupManager npcs, TurfMessages messages,
 	                              Supplier<TurfPowerupSettings> settings, BooleanSupplier citizens,
-	                              String fillItem, String fillName) {
+	                              Supplier<MenuStyle> style) {
 		this.plugin           = plugin;
 		this.inventoryService = inventoryService;
 		this.turfs            = turfs;
@@ -79,8 +77,7 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 		this.messages         = messages;
 		this.settings         = settings;
 		this.citizens         = citizens;
-		this.fillItem         = fillItem;
-		this.fillName         = fillName;
+		this.style            = style;
 	}
 
 	/**
@@ -156,7 +153,8 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+		// the ring comes with the menu pass (task M); until then only the fill is drawn
+		builder.fill(FillComponent.of(MenuStyle.material(style.get().fillItem(), Material.BLACK_STAINED_GLASS_PANE)).name(" "));
 	}
 
 	/** Re-checks everything, takes the price from the gang bank and places the Quartermaster at the player. */
@@ -252,9 +250,5 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 			                                   "&cGang record missing — contact an admin.");
 			default -> QuartermasterAccess.refusal(messages, key);
 		};
-	}
-
-	private static Material materialOf(String name) {
-		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 }

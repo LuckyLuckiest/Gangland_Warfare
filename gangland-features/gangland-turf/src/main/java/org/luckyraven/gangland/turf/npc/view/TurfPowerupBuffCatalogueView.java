@@ -1,12 +1,12 @@
 package org.luckyraven.gangland.turf.npc.view;
 
-import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.PowerupDefinition;
@@ -22,6 +22,7 @@ import org.luckyraven.keystone.item.ItemBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.refusal;
@@ -50,8 +51,8 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 	private final ActiveBuffManager   buffs;
 	private final QuartermasterAccess access;
 	private final TurfMessages        messages;
-	private final String              fillItem;
-	private final String              fillName;
+	private final TurfMessageContract durations;
+	private final Supplier<MenuStyle> style;
 
 	/** Number of pages for {@code count} boosts; an empty catalogue still has one page. */
 	static int pages(int count) {
@@ -131,7 +132,8 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+		// the ring comes with the menu pass (task M); until then only the fill is drawn
+		builder.fill(FillComponent.of(MenuStyle.material(style.get().fillItem(), Material.BLACK_STAINED_GLASS_PANE)).name(" "));
 	}
 
 	private ItemBuilder buffItem(PowerupDefinition def, TurfPowerupFlowSession session) {
@@ -199,9 +201,5 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 	private String cannotAfford(PowerupDefinition def) {
 		return messages.text("Quartermaster.Cannot_Afford", "&cYour gang bank can't cover &f%money%&c.",
 		                     "money", money(def.cost()));
-	}
-
-	private static Material materialOf(String name) {
-		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 }

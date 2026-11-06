@@ -23,6 +23,7 @@ import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.IntUnaryOperator;
@@ -62,6 +63,7 @@ class TurfPowerupGarrisonViewTest {
 	private TurfPowerupGarrisonView   view;
 	private TurfMessages              messages;
 	private AtomicReference<TurfDefenderConfig> waves;
+	private final List<Integer>                 waveIds = new ArrayList<>();
 
 	@TempDir(cleanup = CleanupMode.NEVER)
 	Path tempDir;
@@ -95,7 +97,10 @@ class TurfPowerupGarrisonViewTest {
 		when(messages.text(anyString(), anyString(), any(Object[].class))).thenAnswer(invocation -> invocation.getArgument(0));
 		waves = new AtomicReference<>(new TurfDefenderConfig("turf_defender", 32.0, 600));
 		view = new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules,
-		                                   aliveGuards, waves::get, messages, "STONE", "&7");
+		                                   aliveGuards, turfId -> {
+			                                       waveIds.add(turfId);
+			                                       return waves.get();
+		                                   }, messages, () -> MenuStyle.DEFAULT);
 	}
 
 	@Test
@@ -268,6 +273,14 @@ class TurfPowerupGarrisonViewTest {
 		view.infoLore(session.getTurf(), session.getOwnerGang());
 
 		verify(messages).text(eq("Quartermaster.Garrison_Next_Wave"), anyString(), eq("count"), eq(1));
+	}
+
+	@Test
+	@DisplayName("the next-wave line asks for the viewed turf's own waves")
+	void infoLore_asksForItsOwnTurf() {
+		view.infoLore(session.getTurf(), session.getOwnerGang());
+
+		assertEquals(List.of(TURF_ID), waveIds);
 	}
 
 	@Test

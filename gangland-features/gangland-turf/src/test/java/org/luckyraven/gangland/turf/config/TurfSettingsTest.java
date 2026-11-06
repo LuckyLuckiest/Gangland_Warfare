@@ -4,6 +4,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.turf.npc.view.MenuStyle;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 
@@ -134,5 +135,30 @@ class TurfSettingsTest {
 		module.set("Capture.Progress_Milestones", List.of());
 
 		assertEquals(List.of(25, 50, 75), load().getCaptureProgressMilestones());
+	}
+
+	@Test
+	@DisplayName("menuStyle falls back to the default panel items when the keys are missing")
+	void menuStyle_defaultsWhenKeysMissing() {
+		assertEquals(MenuStyle.DEFAULT, load().menuStyle());
+	}
+
+	@Test
+	@DisplayName("menuStyle reads Menu.Border_Item and Menu.Fill_Item")
+	void menuStyle_readsKeys() {
+		module.set("Menu.Border_Item", "STONE");
+		module.set("Menu.Fill_Item", "DIRT");
+
+		assertEquals(new MenuStyle("STONE", "DIRT"), load().menuStyle());
+	}
+
+	@Test
+	@DisplayName("the shipped file carries the Menu keys at the default panel items")
+	void shippedMenuStyle() throws Exception {
+		loadShippedDefaults();
+
+		assertEquals(MenuStyle.DEFAULT, load().menuStyle());
+		assertEquals("BLACK_STAINED_GLASS_PANE", module.getString("Menu.Border_Item"));
+		assertEquals("GRAY_STAINED_GLASS_PANE", module.getString("Menu.Fill_Item"));
 	}
 }

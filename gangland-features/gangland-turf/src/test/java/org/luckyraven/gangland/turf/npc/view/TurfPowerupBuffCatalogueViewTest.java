@@ -89,7 +89,8 @@ class TurfPowerupBuffCatalogueViewTest {
 		when(access.denyKey(viewer, session)).thenReturn("Quartermaster.Owner_Changed");
 
 		TurfPowerupBuffCatalogueView view = new TurfPowerupBuffCatalogueView(registry, buffs, access,
-		                                                                     mock(TurfMessages.class), "STONE", "&7");
+		                                                                     mock(TurfMessages.class), null,
+		                                                                     () -> MenuStyle.DEFAULT);
 		view.attemptBuy(flow, viewer, session, twelve().get(0));
 
 		verify(flow).end();

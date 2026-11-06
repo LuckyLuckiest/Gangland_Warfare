@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.turf.npc.view;
 
-import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
@@ -27,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 
@@ -57,10 +57,9 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	private final QuartermasterAccess  access;
 	private final TurfRules            rules;
 	private final IntUnaryOperator     aliveGuards;
-	private final Supplier<TurfDefenderConfig> waves;
+	private final IntFunction<TurfDefenderConfig> waves;
 	private final TurfMessages         messages;
-	private final String               fillItem;
-	private final String               fillName;
+	private final Supplier<MenuStyle> style;
 
 	@Override
 	public int rows(TurfPowerupFlowSession session) {
@@ -90,7 +89,8 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+		// the ring comes with the menu pass (task M); until then only the fill is drawn
+		builder.fill(FillComponent.of(MenuStyle.material(style.get().fillItem(), Material.BLACK_STAINED_GLASS_PANE)).name(" "));
 	}
 
 	/**
@@ -119,7 +119,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		lore.add(messages.text("Quartermaster.Garrison_Reserve", "&7Reserve: &f%count%&7/&f%max% &8(stock and on duty)",
 		                       "count", stock + alive, "max", rules.getMaxReserve()));
 		lore.add(messages.text("Quartermaster.Garrison_Next_Wave", "&7Next wave: up to &f%count% &7guards, no extra cost",
-		                       "count", nextWave(stock, alive, waves.get())));
+		                       "count", nextWave(stock, alive, waves.apply(turfId))));
 		lore.add(messages.text("Quartermaster.Garrison_Per_Guard", "&7Per defender: &6%money%",
 		                       "money", money(price(turfId))));
 		lore.add(" ");
@@ -229,9 +229,5 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	private String cannotAfford(BigDecimal price) {
 		return messages.text("Quartermaster.Cannot_Afford", "&cYour gang bank can't cover &f%money%&c.",
 		                     "money", money(price));
-	}
-
-	private static Material materialOf(String name) {
-		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 }

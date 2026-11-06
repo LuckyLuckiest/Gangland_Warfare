@@ -57,6 +57,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	private static final double EYE_HEIGHT = 1.6;
 	private static final double AT_POST_SQUARED = 4.0;
 
+	private GarrisonRoster             roster;
 	private final JavaPlugin           plugin;
 	private final CivilianService      civilianService;
 	private final CivilianSpawnManager spawnManager;
@@ -108,6 +109,11 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		killed.clear();
 		numberByNpc.clear();
 		recycledAt.clear();
+	}
+
+	/** Task G reconciles from this roster; the seam only holds it. */
+	public void bindRoster(GarrisonRoster roster) {
+		this.roster = roster;
 	}
 
 	/** W7-F: whether a turf's guards are on the Hold order; unbound, every turf defends. */

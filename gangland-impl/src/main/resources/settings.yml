@@ -141,7 +141,7 @@ Database:
 # Settings.getInventoryFillItem/Name/LineItem/LineName/NextPage/PreviousPage/HomePage() caller across the whole
 # reactor before touching this block and found it still load-bearing for many already-shipped G4/G5/WS4 files
 # that never imported org.luckyraven.gangland.inventory.* in the first place (BankerSettingsImpl/TraderSettingsImpl
-# in npc-shops, TurfModuleConfig, GanglandShopUiSettings + ShopAdminView in gangland-impl, every Banker/Trader
+# in npc-shops, GanglandShopUiSettings + ShopAdminView in gangland-impl, every Banker/Trader
 # view's own settings.getInventoryFillItem()/getInventoryFillName() delegation) — none of those are in the CUT
 # gate's 22-file `org.luckyraven.gangland.inventory.*` grep scope, so deleting this block now would break the
 # build well outside this gate's boundary. The 22 files this gate actually touched use their own local default
