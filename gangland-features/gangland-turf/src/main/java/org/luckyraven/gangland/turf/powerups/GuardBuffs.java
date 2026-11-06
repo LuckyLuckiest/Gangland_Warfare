@@ -35,7 +35,7 @@ public final class GuardBuffs {
 	}
 
 	public static int scale(int base, double m) {
-		return Math.max(1, (int) Math.round(base * m));
+		return Math.max(1, (int) Math.min(Integer.MAX_VALUE, Math.round(base * m)));
 	}
 
 	/** The MAX_HEALTH base value, or -1 with no attribute. */

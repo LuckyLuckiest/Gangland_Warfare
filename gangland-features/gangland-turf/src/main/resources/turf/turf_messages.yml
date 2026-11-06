@@ -59,8 +59,8 @@ Map:
    Hover_Pays: "&7Pays &f%money_symbol%%amount% &7per %time%"
    # A turf with no income.
    Hover_Dormant: "&7Pays &fnothing &7(dormant)"
-   # Owning gang only: %count% = guards in reserve on the turf.
-   Hover_Guards: "&7Your guards: &f%count% &7in reserve"
+   # Owning gang only: %count% = guards owned, standing or in reserve.
+   Hover_Guards: "&7Your guards: &f%count% &7owned"
    # Admins only, plain text, never a click. %id% = the turf id.
    Hover_Admin_Tp: "&7Admin: &f/glw turf tp %id%"
    # Hover of the plus. %place% = the turf under you or Hover_You_No_Turf, %x% and %z% = your block, %facing% = compass.
@@ -323,7 +323,7 @@ Quartermaster:
    Menu_Garrison_Lore_2: "&7Guards hold the capture bar"
    # Garrison button lore, line 3.
    Menu_Garrison_Lore_3: "&7and fight attackers on this turf."
-   # Garrison button lore, line 4. %count% = guards in reserve.
+   # Garrison button lore, line 4. %count% = guards owned.
    Menu_Garrison_Stock: "&7Current stock: &f%count%"
    # Menu line: this turf's guards alive in the field right now. %count% = guard count.
    Menu_On_Duty: "&7Guards on duty: &f%count%"
@@ -401,7 +401,7 @@ Quartermaster:
    # Chat when the gang bank cannot cover a purchase. %money% = the price.
    Cannot_Afford: "&cYour gang bank can't cover &f%money%&c."
    # Chat after Bought_Guard when the guard fits a post. %turf% = turf name.
-   Bought_Guard_Post: "&7It takes its post on &f%turf% &7within a second while the area is loaded."
+   Bought_Guard_Post: "&7It takes its post on &f%turf% &7shortly while the area is loaded."
    # Chat after Bought_Guard when every post is taken. %turf% = turf name.
    Bought_Guard_Reserve: "&7It waits in the reserve and joins when &f%turf% &7is attacked."
    # Chat when the turf owns the most guards it can. %max% = turf_rules.yml Garrison.Max_Reserve.

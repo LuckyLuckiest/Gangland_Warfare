@@ -10,6 +10,7 @@ import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
+import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.EffectType;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
@@ -216,10 +217,10 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		         viewer.getName(), gang.getName(), "a guard", money(price), turfId, turf.getDisplayName());
 		viewer.sendMessage(messages.text("Quartermaster.Bought_Guard", "&aBought &f1 &adefender for &f%turf%&a.",
 		                                 "turf", turf.getDisplayName()));
-		boolean standing = garrisons.count(turfId) <= waves.apply(turfId).standingCap();
+		boolean standing = garrisons.count(turfId) <= TurfGarrison.target(Integer.MAX_VALUE, false, waves.apply(turfId));
 		viewer.sendMessage(standing
 		                   ? messages.text("Quartermaster.Bought_Guard_Post",
-		                                   "&7It takes its post on &f%turf% &7within a second while the area is loaded.",
+		                                   "&7It takes its post on &f%turf% &7shortly while the area is loaded.",
 		                                   "turf", turf.getDisplayName())
 		                   : messages.text("Quartermaster.Bought_Guard_Reserve",
 		                                   "&7It waits in the reserve and joins when &f%turf% &7is attacked.",

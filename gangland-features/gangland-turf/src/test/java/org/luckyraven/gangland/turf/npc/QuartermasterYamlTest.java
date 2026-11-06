@@ -71,6 +71,16 @@ class QuartermasterYamlTest {
 	}
 
 	@Test
+	@DisplayName("hoverGuards_saysOwned: the map hover counts guards owned, in the YAML and the code fallback")
+	void hoverGuards_saysOwned() throws IOException {
+		String line = "&7Your guards: &f%count% &7owned";
+
+		assertEquals(line, load("/turf/turf_messages.yml").getString("Map.Hover_Guards"));
+		assertTrue(Files.readString(Path.of("src/main/java/org/luckyraven/gangland/turf/map/TurfMapService.java"))
+		                 .contains("\"Map.Hover_Guards\", \"" + line + "\""), "code fallback");
+	}
+
+	@Test
 	@DisplayName("every in-code Quartermaster fallback in the turf module equals the shipped turf_messages.yml line (T-801)")
 	void fallbacksMatchShippedYaml() throws IOException {
 		YamlConfiguration   yaml      = load("/turf/turf_messages.yml");
@@ -155,6 +165,9 @@ class QuartermasterYamlTest {
 
 		assertTrue(yaml.isSet("Garrison.Cost_Per_Guard"));
 		assertTrue(!yaml.isSet("Powerups.reinforced_defense"));
+		assertEquals(3.0, yaml.getDouble("Limits.Max_Guard_Toughness"));
+		assertEquals(2.0, yaml.getDouble("Limits.Max_Guard_Waves"));
+		assertEquals(0.25, yaml.getDouble("Limits.Min_Reinforcement_Wait"));
 	}
 
 	@Test

@@ -51,6 +51,7 @@ class GuardBuffsTest {
 	void scale_neverBelowOne() {
 		assertEquals(5, GuardBuffs.scale(3, 1.5));
 		assertEquals(1, GuardBuffs.scale(1, 0.1));
+		assertEquals(Integer.MAX_VALUE, GuardBuffs.scale(6, 1e10), "past int range it caps, never wraps");
 	}
 
 	@Test

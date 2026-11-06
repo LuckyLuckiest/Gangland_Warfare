@@ -347,6 +347,19 @@ class TurfPowerupGarrisonViewTest {
 	}
 
 	@Test
+	@DisplayName("bought_postNeedsAStandingSlot: with Standing_Cap above Max_Alive the guard past Max_Alive waits in reserve")
+	void bought_postNeedsAStandingSlot() {
+		waves.set(new TurfDefenderConfig("turf_defender", 32.0, 3, 6, 20, 8, 16,
+				GarrisonComposition.NONE, 0.5, 12, 6.0, 8));
+		when(garrisons.count(TURF_ID)).thenReturn(7);
+
+		view.attemptBuy(flow, viewer, session);
+
+		verify(viewer).sendMessage("Quartermaster.Bought_Guard_Reserve");
+		verify(viewer, never()).sendMessage("Quartermaster.Bought_Guard_Post");
+	}
+
+	@Test
 	@DisplayName("the next-wave line reads the live turf_npcs.yml Garrison knobs, not a snapshot (W7-H)")
 	void infoLore_readsLiveConfig() {
 		when(garrisons.count(TURF_ID)).thenReturn(4);
@@ -430,7 +443,7 @@ class TurfPowerupGarrisonViewTest {
 					{"Quartermaster.Garrison_In_Reserve", "&7In reserve: &f%count%"},
 					{"Quartermaster.Garrison_Where_One", "&7Guards stand on the turf while the"},
 					{"Quartermaster.Garrison_Where_Two", "&7area is loaded. The rest wait in reserve."},
-					{"Quartermaster.Bought_Guard_Post", "&7It takes its post on &f%turf% &7within a second while the area is loaded."},
+					{"Quartermaster.Bought_Guard_Post", "&7It takes its post on &f%turf% &7shortly while the area is loaded."},
 					{"Quartermaster.Bought_Guard_Reserve", "&7It waits in the reserve and joins when &f%turf% &7is attacked."},
 					{"Quartermaster.Owned_Full", "&cThis turf already has %max% guards."},
 					{"Quartermaster.Garrison_Next_Wave", "&7Contest top-up: up to &f%count% &7guards, no extra cost"},

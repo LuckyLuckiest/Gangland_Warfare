@@ -13,8 +13,8 @@ package org.luckyraven.gangland.turf.npc.defender;
  * @param waveCooldownSeconds seconds after a guard falls before the next top-up
  * @param standDownSeconds seconds after a fight before guards past {@code standingCap} leave
  * @param leashMargin blocks past the turf edge a guard may chase before walking back to a post
- * @param composition the roles the guards take in spawn order ({@code Garrison.Composition})
- * @param bountyShare share of a guard's price paid to a rival who kills it ({@code Garrison.Bounty_Share}, 0 = off)
+ * @param composition the roles the guards take by number ({@code Garrison.Composition})
+ * @param bountyShare share of a guard's price paid to a rival who kills it during a contest ({@code Garrison.Bounty_Share}, 0 = off)
  * @param recycleSeconds unreachable and unseen for this long and a guard reappears at another post
  * 		({@code Garrison.Recycle_Seconds}, 0 = off)
  * @param holdRadius blocks around its post a guard keeps to under the Hold order ({@code Garrison.Hold_Radius})
@@ -65,10 +65,10 @@ public record TurfDefenderConfig(String typeId, double targetingRadius, int wave
 		     DEFAULT_STAND_DOWN_SECONDS, DEFAULT_LEASH_MARGIN);
 	}
 
-	/** A copy with the buffed wave numbers; everything else, {@code standingCap} included, stays. */
+	/** A copy with the buffed wave numbers; {@code standingCap} stays within the unbuffed {@code maxAlive}, the rest stays. */
 	public TurfDefenderConfig withWaves(int waveSize, int maxAlive, int waveCooldownSeconds) {
 		return new TurfDefenderConfig(typeId, targetingRadius, waveSize, maxAlive, waveCooldownSeconds,
 		                              standDownSeconds, leashMargin, composition, bountyShare, recycleSeconds,
-		                              holdRadius, standingCap);
+		                              holdRadius, Math.min(standingCap, this.maxAlive));
 	}
 }

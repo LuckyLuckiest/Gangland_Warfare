@@ -61,7 +61,7 @@ placeholders).
 
 - [ ] Hover a rival turf's letter: the tooltip shows the turf name, the owner, the state, the reason sentence and the
   pay per interval; it does NOT show the rival's guard count or the rival's members' online times.
-- [ ] Hover your own turf's letter: the tooltip shows the same facts plus your guards in reserve and your own gang's
+- [ ] Hover your own turf's letter: the tooltip shows the same facts plus your guards owned and your own gang's
   last-online time.
 - [ ] As an admin (op), hover a turf's letter: the tooltip shows `/glw turf tp <id>` as text; there is no click action
   for it.

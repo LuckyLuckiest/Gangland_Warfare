@@ -361,7 +361,7 @@ The `+` is your cell. Every row is 41 cells wide.
 
 - **Hover a letter:** the turf name, the owner (or `Unclaimed`), the state (`Quiet`, or `Under attack by Rats, 62 %`),
   the reason sentence, and what the turf pays per interval (or `dormant`, from W2). Your own gang's last-online time, and your
-  own turf's guards in reserve, show only for your gang. Other gangs' online times and guards never show.
+  own turf's guards owned, show only for your gang. Other gangs' online times and guards never show.
 - **Admins** also see `/glw turf tp <id>` in the hover text. It is text, not a click.
 - **Hover the `+` cell:** the turf under you, your coordinates and your facing.
 - **Click a letter:** runs `/glw turf info <id>`.

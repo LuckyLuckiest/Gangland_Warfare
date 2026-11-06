@@ -84,6 +84,20 @@ class GarrisonRosterTest {
 	}
 
 	@Test
+	@DisplayName("Bigger Waves never raises the peace target when Max_Alive is below Standing_Cap")
+	void configOf_buffNeverRaisesPeaceTarget() {
+		TurfNpcsConfigLoader loader = mock(TurfNpcsConfigLoader.class);
+		when(loader.getDefenderConfig()).thenReturn(new TurfDefenderConfig("turf_defender", 32.0, 3, 3, 20, 8, 16,
+				GarrisonComposition.NONE, 0.5, 12, 6.0, 5));
+		GarrisonRoster small = new GarrisonRoster(turfs, garrisons, loader, mock(GangLookupContract.class),
+		                                          mock(TurfMessages.class), new PowerupRegistry(), buffs);
+		buff(EffectType.BIGGER_GUARD_WAVES, 2.0);
+
+		assertEquals(6, small.configOf(1).maxAlive());
+		assertEquals(3, TurfGarrison.target(10, false, small.configOf(1)));
+	}
+
+	@Test
 	@DisplayName("garrisonOf records the owner and today's discounted guard price, clamped like the panel's")
 	void garrisonOf_setsFundedPrice() {
 		ownedTurf();
