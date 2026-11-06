@@ -442,7 +442,8 @@ Wanted:
          # Full width of a cop's view cone in degrees; 360 = all round. A fighting or chasing cop and a loud crime
          # ignore it
          View_Angle: 180.0
-         # A cop this close with a clear line of sight sees you whatever the light or sneaking
+         # A cop this close with a clear line of sight sees you whatever the light or sneaking. 0.21.6: a cop you hit
+         # from this close knows who did it with no line at all (cops.yml Cops.Disguise)
          Witness_Floor: 6.0
          # Crimes that turn every cop in range toward the noise. A shot of a Witness.Loud_Weapon_Types weapon within
          # Witness.Loud_Shot_Seconds (npc/civilians.yml) is always loud; a melee swing never is

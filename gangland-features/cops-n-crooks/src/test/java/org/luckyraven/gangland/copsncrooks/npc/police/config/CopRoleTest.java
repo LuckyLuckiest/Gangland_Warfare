@@ -59,6 +59,16 @@ class CopRoleTest {
 	}
 
 	@Test
+	@DisplayName("overlay keeps the tier's Ignore_Darkness: a role cop still ignores the dark (row 856)")
+	void overlay_keepsIgnoreDarkness() {
+		CopTierConfig tier = new CopTierConfig(4, "&1Swat", 30.0, 4.0, 1.2, 4.0, true, false, List.of("rifle"),
+		                                       List.of(), null, null, null, null, NpcDifficulty.HARD,
+		                                       TacticsConfig.DEFAULT, 0.1, true);
+
+		assertTrue(role("Marksman").overlay(tier).ignoreDarkness());
+	}
+
+	@Test
 	@DisplayName("overlay keeps a LEGACY tier LEGACY even when the role sets Strafe_Degrees")
 	void overlay_keepsLegacyEngagement() {
 		CopTierConfig tier = tier(new TacticsConfig(NpcEngagement.LEGACY, 270.0));

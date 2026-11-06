@@ -186,6 +186,170 @@ class SuspectListenerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.6 (869): a cop's report landing starts the memory; the description is still the held look")
+	void copReportStartsTheMemory() throws NoSuchMethodException {
+		fire(crime(true));
+		helmet = null;
+		when(ledger.isReporting(id)).thenReturn(true);
+		when(ledger.isCopReporting(id)).thenReturn(true);
+
+		fire(crime(false));
+
+		verify(tick).witnessed(player);
+		assertTrue(descriptions.latest(id).masked(), "the pumpkin was on at the crime");
+	}
+
+	/** A listener on a real {@link DisguiseTick}, clock {@code now[0]}, a cop with eyes on the player while {@code eyes[0]}. */
+	private SuspectListener withRealTick(long[] now, boolean[] eyes, DisguiseTick[] built) {
+		org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio radio =
+				mock(org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.class);
+		when(radio.now()).thenAnswer(inv -> now[0]);
+		WantedMessages messages = mock(WantedMessages.class);
+		when(messages.format(any(WantedMessages.Key.class), anyMap())).thenReturn("x");
+		DisguiseFilter real = new DisguiseFilter(() -> DisguiseSettings.DEFAULT, descriptions, outfit, p -> 1, p -> true,
+		                                         p -> org.luckyraven.keystone.npc.NpcDifficulty.EASY);
+		built[0] = new DisguiseTick(() -> DisguiseSettings.DEFAULT, descriptions, real, outfit, p -> eyes[0], radio,
+		                            messages, () -> 6.0);
+		return new SuspectListener(descriptions, outfit, built[0], ledger, search, filter);
+	}
+
+	@Test
+	@DisplayName("868: a late report does not rewind a look the cops learned after the crime, past the memory too")
+	void lateReportKeepsTheLookLearnedSinceTheCrime() throws NoSuchMethodException {
+		long[]         now   = {0};
+		boolean[]      eyes  = {true};
+		DisguiseTick[] real  = new DisguiseTick[1];
+		listener = withRealTick(now, eyes, real);
+		descriptions.store(id, descriptions.describe(player));
+		real[0].witnessed(player);
+		real[0].tick(player, null);
+
+		now[0] = 100;
+		fire(crime(true));
+		helmet = null;
+		chest  = null;
+		now[0] = 500;
+		real[0].tick(player, null);
+		assertFalse(descriptions.latest(id).masked(), "the cops saw the swap");
+
+		eyes[0] = false;
+		now[0]  = 3100;
+		when(ledger.isReporting(id)).thenReturn(true);
+		when(ledger.isCopReporting(id)).thenReturn(true);
+		fire(crime(false));
+		assertFalse(descriptions.latest(id).masked(), "the landing does not rewind it");
+
+		now[0] = 10000;
+		real[0].tick(player, null);
+		assertFalse(descriptions.isRecognised(id), "the memory lapsed");
+		assertFalse(descriptions.latest(id).masked(), "they want what they last saw");
+
+		eyes[0] = true;
+		now[0]  = 10500;
+		real[0].tick(player, null);
+		assertTrue(descriptions.isRecognised(id), "the same look is not fooling anybody");
+	}
+
+	@Test
+	@DisplayName("868: guard - a report of a crime no cop has seen the player since stores the crime's look")
+	void lateReportWithNoSightingSinceStoresTheCrimeLook() throws NoSuchMethodException {
+		long[]         now   = {0};
+		boolean[]      eyes  = {true};
+		DisguiseTick[] real  = new DisguiseTick[1];
+		listener = withRealTick(now, eyes, real);
+		descriptions.store(id, descriptions.describe(player));
+		real[0].witnessed(player);
+		real[0].tick(player, null);
+
+		now[0] = 100;
+		fire(crime(true));
+		helmet  = null;
+		eyes[0] = false;
+		now[0]  = 500;
+		real[0].tick(player, null);
+
+		now[0] = 3100;
+		when(ledger.isReporting(id)).thenReturn(true);
+		fire(crime(false));
+
+		assertTrue(descriptions.latest(id).masked(), "nobody saw the change");
+	}
+
+	@Test
+	@DisplayName("868: guard - two reports land in order: the first report teaches no look, so the later crime's look stands")
+	void twoReportsLeaveTheLaterCrimeLook() throws NoSuchMethodException {
+		long[]         now   = {0};
+		boolean[]      eyes  = {false};
+		DisguiseTick[] real  = new DisguiseTick[1];
+		listener = withRealTick(now, eyes, real);
+		Location where = mock(Location.class);
+		CrimeCommittedEvent first = new CrimeCommittedEvent(player, "Car_Theft", where, true, 0);
+		first.setCancelled(true);
+		fire(first);
+		helmet = null;
+		now[0] = 100;
+		CrimeCommittedEvent second = new CrimeCommittedEvent(player, "Assault_Civilian", where, true, 0);
+		second.setCancelled(true);
+		fire(second);
+
+		when(ledger.isReporting(id)).thenReturn(true);
+		when(ledger.isCopReporting(id)).thenReturn(true);
+		now[0] = 3000;
+		fire(new CrimeCommittedEvent(player, "Car_Theft", where, true, 0));
+		assertTrue(descriptions.latest(id).masked(), "the first crime's look");
+
+		now[0] = 3100;
+		fire(new CrimeCommittedEvent(player, "Assault_Civilian", where, true, 0));
+		assertFalse(descriptions.latest(id).masked(), "the second crime's look");
+	}
+
+	@Test
+	@DisplayName("0.21.6 (O13): guard - a 911 call or dispatch landing starts no memory")
+	void civilianAndDispatchReportsStartNoMemory() throws NoSuchMethodException {
+		fire(crime(true));
+		when(ledger.isReporting(id)).thenReturn(true);
+		when(ledger.isCopReporting(id)).thenReturn(false);
+
+		fire(crime(false));
+
+		verify(tick, never()).witnessed(player);
+	}
+
+	@Test
+	@DisplayName("0.21.6 (D14): guard - a cop's report deferred to a join has no held look and starts no memory")
+	void copReportWithNoHeldLookStartsNoMemory() throws NoSuchMethodException {
+		when(ledger.isReporting(id)).thenReturn(true);
+		when(ledger.isCopReporting(id)).thenReturn(true);
+
+		fire(crime(false));
+
+		verify(tick, never()).witnessed(player);
+	}
+
+	@Test
+	@DisplayName("0.21.6 (O11): an escape tells the tick, and keeps the description for the search")
+	void escapeTellsTheTick() {
+		listener.onCrime(crime(false));
+		when(search.isEscape(WantedCause.EVASION)).thenReturn(true);
+
+		listener.onChaseEnd(end(WantedCause.EVASION));
+
+		verify(tick).escaped(id);
+		assertNotNull(descriptions.latest(id));
+	}
+
+	@Test
+	@DisplayName("0.21.6: a crime outside any chase clears a recognition flag left by an earlier report")
+	void crimeOutsideAChaseClearsAStaleFlag() throws NoSuchMethodException {
+		descriptions.setRecognised(id, true);
+		when(filter.hunted(player)).thenReturn(false);
+
+		fire(crime(false));
+
+		assertFalse(descriptions.isRecognised(id));
+	}
+
+	@Test
 	@DisplayName("0.21.5 (D14): a quit clears the description and the held looks")
 	void quitClearsTheDescription() throws NoSuchMethodException {
 		listener.onCrime(crime(false));

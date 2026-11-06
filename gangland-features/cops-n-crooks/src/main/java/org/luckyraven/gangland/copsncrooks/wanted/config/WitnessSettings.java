@@ -24,6 +24,7 @@ public record WitnessSettings(boolean enabled, List<String> crimes, int deferMin
 	 * @param reportSeconds seconds a cop eyewitness takes to radio a crime in.
 	 * @param viewAngle     full width of a cop's view cone in degrees; 360 or more sees all round.
 	 * @param witnessFloor  a cop this close with line of sight sees the criminal whatever the light or sneaking.
+	 *                      A cop hit from this close knows who did it with no line.
 	 * @param loudCrimes    crimes that turn every cop in range toward the noise.
 	 * @param reporterGlow  whether the reporting cop glows while he radios it in.
 	 */

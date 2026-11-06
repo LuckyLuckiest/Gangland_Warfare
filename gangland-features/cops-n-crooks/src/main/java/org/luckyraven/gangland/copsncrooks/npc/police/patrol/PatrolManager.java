@@ -301,7 +301,8 @@ public class PatrolManager implements BeanLifecycle {
 				live = false;
 			}
 			CopState state = cop.getCurrentState();
-			if (state == CopState.COMBAT && live) {
+			// a cop the filters refuse has been fooled: unlike a squad cop there is no search to walk, so it walks past
+			if (state == CopState.COMBAT && live && perception.allowsLockOn(cop, target)) {
 				cop.tick(target);
 			} else if (state == CopState.WARNING) {
 				cop.tick(live ? target : null);
@@ -315,6 +316,17 @@ public class PatrolManager implements BeanLifecycle {
 				cop.transitionTo(CopState.PATROL);
 				cop.tick(null);
 			}
+		}
+	}
+
+	/** The cops stopped hunting {@code playerId}: a beat cop fighting them goes back on the beat at its next AI tick. */
+	public void releaseAttacker(UUID playerId) {
+		for (CopNpc cop : beatCops()) {
+			if (cop.getCurrentState() != CopState.COMBAT || !playerId.equals(cop.getTargetPlayerId())) {
+				continue;
+			}
+			cop.setTargetPlayerId(null);
+			cop.setCombatForced(false);
 		}
 	}
 

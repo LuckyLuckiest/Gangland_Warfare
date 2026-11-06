@@ -135,18 +135,67 @@ permission.
 
 ---
 
-## Disguises and Suspect Description (0.21.5)
+## Disguises and Suspect Description (0.21.6)
 
 Each row needs a wanted player with a cop of the chase (Test Server; Bartizan for the police outfit and the AK-47). Chat
 lines come from `wanted_messages.yml` `Disguise.*`; debug lines need `Cops.Debug` on.
 
-- [ ] **Change out of sight.** Rob in a carved pumpkin + red leather tunic, run, and out of sight take the pumpkin off and
-      change to a blue tunic. Walk past a cop → chat "The cops don't recognise you."; no acquire, no cuff, the radio stays
-      quiet, stars drop on the evasion clock; `DISGUISE <you> state=mismatch`.
-- [ ] **Change too little.** Same, but change only the tunic → chat "The cops recognise you: masked in a carved pumpkin,
-      wearing blue jacket, on foot"; the radio repeats the new look.
-- [ ] **Change in view.** Change while a cop watches → still recognised, and the radio says the new look.
-- [ ] **Out of sight for under 1.5 s.** Change during one blind AI tick (0.5 s) and come back → not recognised (zero grace).
+- [ ] **Cover blink, 1 star.** Step behind a trunk for 0.5 s, swap two pieces, step out → still recognised, the radio says
+      the new look, no "don't recognise" line (failed in 0.21.5). Live: DIS-BLINK.
+- [ ] **Sneak tap or dark, clear line.** Night road, cop 13 blocks away in view, hold shift, swap two pieces → still
+      recognised.
+- [ ] **Beat cop watching, squad far away.** 1 star, daylight, beat cop 8 blocks away, swap two pieces → still recognised
+      when the squad arrives. Live: DIS-WITNESS.
+- [ ] **Flicker.** Run along a lamp-lined street, seen and blind alternating → recognition never drops at any difficulty.
+- [ ] **Last watcher killed.** 2 stars, kill the only cop in range, swap → cops arriving within 3 s learn the look; arriving
+      after it, they are fooled.
+- [ ] **Real disguise, EASY (1-2 stars).** Out of every line for 3 s → chat "The cops lost you. They want: ... 2 of head,
+      chest, legs, boots, on foot / in a car must differ." once. Two pieces changed, then a cop sees you → "The cops
+      don't recognise you.", no acquire, no cuff, stars drop on the evasion clock; `DISGUISE <you> state=mismatch`. Live:
+      DIS-SWAP.
+- [ ] **Too little, EASY.** Same with one piece → "The cops recognise you: ..." with the new look; the swap is wasted.
+- [ ] **NORMAL, 3 stars.** 5 s and two pieces → a gun cop in view holds fire and walks past.
+- [ ] **HARD, 4 stars.** 10 s and two pieces → recognised; 10 s and three pieces → fooled.
+- [ ] **DEADLY, 5 stars.** 19.5 s and four pieces → recognised, new look learned; 20 s and three pieces → recognised; 20 s
+      and four pieces → fooled, one "don't recognise" line. Live: DIS-DEADLY. On foot, see DIS-ESCAPE-3/4/5 below.
+- [ ] **Fight back.** Disguised, hit a cop who can see you → recognised at once, fired on at the next tick, and the look you
+      wear is the one they now want. A hit from out of every cop's sight changes nothing by itself.
+- [ ] **Outfit in the window.** 2 stars, recognised, put the police outfit on behind a corner and be seen within 3 s →
+      Recognised naming the outfit, blown. Put it on after the memory ends → the Outfit line, cops ignore you.
+- [ ] **Blown means blown.** Blown, taken off in view, re-worn out of sight past the memory → still known.
+- [ ] **Relog is no escape.** Quit and rejoin with a changed look at stars → no description, known at first sight.
+- [ ] **New chase, same player.** A chase ends and a new one starts within the old memory → no recognition is inherited.
+- [ ] **Stars rise.** Disguised with two pieces at 2 stars, reach 4 → the next sighting recognises you (line told).
+- [ ] **Swap in front of the reporter.** 0 stars, kill a civilian 8 blocks from a beat cop, swap two pieces while the
+      report is pending, stay in view → when it lands, "The cops recognise you" naming the new look (failed in 0.21.5).
+- [ ] **Swap in front of the reporter, in a chase.** Disguised and unrecognised, a gated crime in view, a swap during the
+      3 s → same.
+- [ ] **A 911 call on an unseen swap.** As above with no cop in sight and a civilian calling → the crime's look stands, two
+      pieces fool the first cop who comes. This one is earned.
+- [ ] **Hit and duck.** Disguised, shoot a cop, be behind a wall within 0.5 s, wait past the memory, step out in the same
+      look → recognised. A kill inside the 3 s report counts the same.
+- [ ] **Shot from cover.** A projectile over a wall hits a cop with no line, a second cop 10 blocks away sees you →
+      recognised.
+- [ ] **Police outfit, 0 stars.** Shoot a beat cop while wearing the outfit → he fires back; the outfit stays blown until
+      your next crime outside a chase clears it.
+- [ ] **Squad lost, a beat cop nearby.** Beat cop at 30 blocks → the bar goes to SEARCHING and the Lost line comes. Beat cop
+      at 10 blocks with a clear line → he reports, the bar stays on IN SIGHT, no Lost line.
+- [ ] **Change in view.** A cop has an unbroken line, swap four pieces → still recognised, the new look radioed.
+- [ ] **Glass, bars and fence.** Recognised, a hunting cop 7 or more blocks off behind a window, iron bars or a fence, swap
+      two pieces, come out past the memory → recognised. Live: DIS-WINDOW, DIS-BARS, DIS-FENCE (runs `cop-dis-*--pr1`).
+- [ ] **A wall hides you up close.** Recognised, a hunting cop 4 blocks off behind a 4-high stone wall → the Lost line comes
+      after the memory (the control of the same runs).
+- [ ] **Hit from close, no line.** Disguised, a grenade over a wall or a shot past a slab hits a cop within 6 blocks →
+      recognised in what you wear; the same from 10 blocks with no other cop in sight changes nothing.
+- [ ] **A fooled beat cop.** Disguised at 1+ stars, shoot a beat cop in view, then earn a new disguise → he walks past and
+      goes back on his beat. Escape instead with him still after you → when the search gives up he goes back and never
+      fires at 0 stars.
+- [ ] **Late report, new look.** Recognised, a gated crime in look A, swap to B in view, break line before the report
+      lands, wait past the memory → the Lost line names B, and B is known at the next sighting.
+- [ ] **Overwatch at 45 blocks.** A Marksman on his perch sees you at 40-48 blocks → the bar says seen and no Lost line
+      comes.
+- [ ] **DIS-ESCAPE-3 / -4 / -5 (owner playtest, REVIEW).** A real squad at 3, 4 and 5 stars, on foot, then by car: can you
+      get the memory on foot, and how? The numbers change in YAML only (`By_Difficulty`).
 - [ ] **Police outfit.** Put on `police_helmet` + `police_vest` out of sight at 2 stars or fewer → chat "In the police
       outfit, the cops take you for one of their own."; cops ignore you; `state=outfit`. Put it on in view instead → the
       Recognised line with "police helmet, police vest", `state=blown`, blown for the chase. Taking a piece off and on again
@@ -167,6 +216,8 @@ lines come from `wanted_messages.yml` `Disguise.*`; debug lines need `Cops.Debug
       852).
 - [ ] **Config.** An old `Match_Needed` in `cops.yml` → console warning, ignored; `Changes_Needed: 1` → one changed piece
       shakes the cops.
+      A `By_Difficulty` block with `Extra_Changes` and `Memory_Seconds` per Easy/Normal/Hard/Deadly → the pieces and the
+      seconds follow your stars; a row or field left out keeps the shipped value; a `Memory_Seconds` below 1 is one config error and the shipped value applies.
 
 ---
 

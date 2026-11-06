@@ -132,8 +132,9 @@ public class PursuingBehavior implements CopBehavior {
 				}
 			}
 
-			// Ranged cops shoot while closing in
-			if (!searched && cop.isRangedAttacker() && !ceaseFire(cop) && cop.hasLineOfSight(player) && cop.canAttack()) {
+			// Ranged cops shoot while closing in, at a player they recognise (0.21.6, row 863)
+			if (!searched && cop.isRangedAttacker() && !ceaseFire(cop) && cop.hasLineOfSight(player) && cop.canAttack()
+			    && perception.allowsLockOn(cop, player)) {
 				cop.attack(player);
 			}
 		} else {

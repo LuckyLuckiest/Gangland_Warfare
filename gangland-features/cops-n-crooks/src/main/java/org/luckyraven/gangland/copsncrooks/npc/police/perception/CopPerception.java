@@ -12,8 +12,8 @@ import java.util.function.BiPredicate;
 /**
  * The one place cop sight is decided (0.20.0 seam): lanes register {@link SightFactor}s (darkness, crowds, disguise
  * range) and {@link #addLockOnFilter lock-on filters} (disguise, police outfit) at startup; the cop behaviours ask here.
- * With nothing registered every answer equals the pre-0.20 one. Filters never stop a cop firing at a target it already
- * engages: only acquisition and the pursuit sight range go through here.
+ * With nothing registered every answer equals the pre-0.20 one. A cop holds fire on a player the filters refuse;
+ * hitting a cop where any cop sees it gives the player away ({@code DisguiseTick.exposed}).
  */
 public class CopPerception {
 

@@ -1350,8 +1350,8 @@ also holds `Handoff`, `Post_Up`, `Most_Wanted` and (0.21.2 R2, T-571) `Officer_R
   needs the cop's own line of sight inside `Cuff_Radius`; since 0.21.5 the timer no longer lifts the disguise filter:
   `CopPerception.pursuitRange(cop, target, base)` takes no squad and is 0 for a player the lock-on filters reject, and the
   cuff gate reads `allowsLockOn` alone; `DisguiseFilter.allows` is true for a player `DisguiseTick` marked recognised
-  (`SuspectDescriptions.isRecognised`, set each AI tick when a group cop sees him and knows or was watching him), so the
-  squad timer only feeds the stuck rotation. Keystone takes the live goal from a member's own sight alone. None acts on a live
+  (`SuspectDescriptions.isRecognised`, held each AI tick for `Memory_Seconds` after a cop last had eyes on him, since
+  0.21.6: see "Disguise recognition (0.21.6)" below), so the squad timer only feeds the stuck rotation. Keystone takes the live goal from a member's own sight alone. None acts on a live
   position the cop did not see (R4). `isInContact()` was not used: it is never true under `Tactics.Enabled: false`.
 - **0.21.1 r6, the pointman freeze.** `CitizensNavigator.run()` stops a walk (`CancelReason.STUCK`) while its end is
   farther than `localParams.range()` (Citizens `default-range-blocks`, 100 on the test server), and Keystone 1.15.4
@@ -1368,6 +1368,38 @@ also holds `Handoff`, `Post_Up`, `Most_Wanted` and (0.21.2 R2, T-571) `Officer_R
   and `CopNpc.navigateTo` (stations, perches, posts, beats) set both navigator parameter sets' range to
   `distance + 56` (`WALK_RANGE_MARGIN`: past Keystone's 48-block `NpcSquad.SEARCH_MAX_RADIUS`, for a search round an unreachable goal; uncapped, so a far station walk raises the vanilla pathfinder's budget) and back to the server's own range for a near goal. The upstream fix (Keystone
   capping each walk and leg inside the range) would retire it.
+- **Disguise recognition (0.21.6).** `wanted/disguise/DisguiseTick`, one AI tick per hunted player (`CopManager` hook):
+  - `lastSeen` (a wall-clock map, `CopRadio.now()`) is stamped on every tick a cop has eyes on the player and they are
+    known. The flag `SuspectDescriptions.isRecognised` is held while `now - lastSeen < DisguiseFilter.memoryMillis(player)`;
+    a stale flag with no clock holds nobody. Pieces and memory both read `DisguiseFilter.difficulty`, the `Difficulty` of
+    `provider.getTierConfig(max(1, stars))` through `DisguiseSettings.byDifficulty` (`Extra_Changes`, `Memory_Seconds`),
+    so a stars change moves both at once. Tier-for-stars, not the seeing cop or the group's best: a blind tick has no
+    seer, squads mix tiers, and the chat count must be true for every cop.
+  - `witnessed(player)` (called by `SuspectListener` on a `COP` landing) starts the memory; `escaped(id)` ends it and
+    restarts `told`; `exposed(cop, attacker)` is the cop-attacked hook (`CopManager.addCopAttackedHook`): seen by the
+    victim or any cop, or with the victim within `Witness_Floor` whatever the ray, it blows a worn outfit and, if hunted,
+    stores the look and starts the memory. `reportLanded(player)` (`HeatLedger.setReportLanded`, run after
+    `commitReported` with the stars known) drops the memory of a report that raised no star; `DisguiseFilter.allows` only
+    trusts the flag while hunted. `learnedAt(id)` is stamped where a cop saw the look (a sighted tick, `exposed`), not by a
+    report: a held look keeps its value, and `SuspectListener` skips the landing's store when it moved. The not-hunted
+    branch clears the blow only with chase state to end, so a 0-star hit survives a squad walking home and the blow a
+    quit keeps waits for the next crime outside a chase.
+  - `DisguiseFilter.knows` is `blown || match`, so a blown outfit is known whatever else changed. `changeCanFool` gates
+    the Lost line (`Disguise.Lost`, said once on the tick the memory runs out unseen, also with no group);
+    `changesNeeded(Player)` fills `%changes%`.
+  - `DisguiseModuleConfig.eyesOf` decides "has eyes" over every `liveCops` and `beatCops` entry, never `RETURNING`. A cop
+    hunting the player counts to `Alert_Range` with `canSee` (the bare ray; Keystone `AbstractNpc.canSee` is distance plus
+    `hasLineOfSight`, an eye-to-eye ray that glass and iron bars stop) while recognised, or `seesThroughPanes`, a
+    quarter-block march from eye to eye that passes only passable blocks and materials named `GLASS`, `FENCE` or
+    `IRON_BARS` (docket 897, own commit). Any other cop uses `perception.sees` at `Patrol.Warning.Range` with the sight
+    factors on. A cop in `OVERWATCH` counts to the larger of
+    `Alert_Range` and `OverwatchSettings.sightRange`.
+  - Fire gate: `PursuingBehavior` and `CombatBehavior` fire at a player only when `allowsLockOn`; a refused lock-on keeps
+    the search walking at range 0. `CopPerception.pursuitRange` is 0 for a refused player. `BreachController` has no such
+    gate (docket 870). A beat cop has no search to walk: `PatrolManager.aiTick` sends a `COMBAT` cop the filters refuse back
+    to `PATROL`. `CopManager.addCopAttackerReleaseHook` (run by `removeCopAttacker` and a stars-cleared `onWantedEnd`,
+    not by an escape) reaches `PatrolManager.releaseAttacker`, since a beat cop is in no group.
+  - `CopRole.overlay` passes `tier.ignoreDarkness()` as the 18th `CopTierConfig` argument (it dropped it before).
 - `CopSpawnManager.fits(target)` gates every spawn path (`spawnUnit` and `spawnNearPlayer`): within
   `0.75 x Pursuit.Max_Distance` (3D) and not `inViewOf` (60 degree eye cone plus `isOutOfSight` false). The ring
   fallback takes no Keystone predicate, so a ring spot in view returns `null` (the caller retries next run). A biased unit

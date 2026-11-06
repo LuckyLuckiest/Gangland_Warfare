@@ -204,7 +204,7 @@ class Bundled020YamlTest {
 		                                 "Sight_Range", "Max_Failures", "Reach_Seconds", "Max_Seconds"));
 		yamlKeys.put("Scanner_Map", Set.of("Enable", "Blocks_Per_Pixel", "Refresh_Ticks", "Show_Hideouts", "Item"));
 		yamlKeys.put("Disguise", Set.of("Enable", "Mask_Items", "Mask_Wearables", "Police_Outfit", "Outfit_Max_Level",
-		                                "Changes_Needed"));
+		                                "Changes_Needed", "By_Difficulty"));
 
 		String     cops   = resource("copsncrooks/cops.yml");
 		ConfigReport report = new ConfigReport();
@@ -214,6 +214,9 @@ class Bundled020YamlTest {
 		for (Map.Entry<String, Set<String>> block : yamlKeys.entrySet()) {
 			assertEquals(block.getValue(), keysOf(root, "Cops", block.getKey()), "Cops." + block.getKey());
 		}
+		assertEquals(Set.of("Easy", "Normal", "Hard", "Deadly"), keysOf(root, "Cops", "Disguise", "By_Difficulty"));
+		assertEquals(Set.of("Extra_Changes", "Memory_Seconds"),
+		             keysOf(root, "Cops", "Disguise", "By_Difficulty", "Deadly"));
 		assertEquals(Set.of("Material", "Name", "Lore"), keysOf(root, "Cops", "Scanner", "Item"));
 		assertEquals(Set.of("Name", "Lore"), keysOf(root, "Cops", "Scanner_Map", "Item"));
 

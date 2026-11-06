@@ -2,9 +2,11 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -49,6 +51,19 @@ class Cnc020SettingsRecordsTest {
 		assertEquals(new DisguiseSettings(true, List.of("CARVED_PUMPKIN", "PLAYER_HEAD", "ZOMBIE_HEAD",
 		                                                "SKELETON_SKULL", "CREEPER_HEAD"), List.of(),
 		                                  List.of("police_helmet", "police_vest"), 2, 2), DisguiseSettings.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("0.21.6 disguise scale: the 6-arg form is the shipped scale, an empty row map falls back per row")
+	void disguiseScaleDefaults() {
+		assertEquals(DisguiseSettings.DEFAULT, new DisguiseSettings(true, DisguiseSettings.DEFAULT.maskItems(), List.of(),
+		                                                            List.of("police_helmet", "police_vest"), 2, 2));
+		assertEquals(4, DisguiseSettings.DEFAULT.changesNeeded(NpcDifficulty.DEADLY));
+		assertEquals(20000L, DisguiseSettings.DEFAULT.memoryMillis(NpcDifficulty.DEADLY));
+
+		DisguiseSettings empty = new DisguiseSettings(true, List.of(), List.of(), List.of(), 2, 2, Map.of());
+		assertEquals(3, empty.changesNeeded(NpcDifficulty.HARD));
+		assertEquals(3000L, empty.memoryMillis(NpcDifficulty.EASY));
 	}
 
 	@Test

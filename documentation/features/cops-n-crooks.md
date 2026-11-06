@@ -1019,7 +1019,7 @@ they are not dispatched as a squad and they fight back like any other cop (`Assa
   cops then only answer calls. There is no separate patrol switch for them; `Cops.Warning.Enable` and
   `Cops.Pull_Over.Enable` only turn each one off on its own.
 
-## Masks, outfits and disguises (0.20.0, reworked in 0.21.5)
+## Masks, outfits and disguises (0.20.0, reworked in 0.21.5, difficulty in 0.21.6)
 
 The cops know you by the description on the radio. Every reported crime stores a suspect description: your headwear, chest,
 legs, boots, the weapon in your hand, and whether you are on foot or in a car. The squad leader radios it
@@ -1033,49 +1033,104 @@ legs, boots, the weapon in your hand, and whether you are on foot or in a car. T
   Bartizan weapon by its clean name, or a held sword, axe, bow, crossbow or trident); a cobblestone in the hand is not.
 - **Masks.** A mask item in `Cops.Disguise.Mask_Items` (or a Bartizan wearable in `Mask_Wearables`) makes the line
   `masked in a <mask>`. A mask counts as one head change.
-- **Changing clothes.** Out of every cop's sight, change at least `Changes_Needed` (2) of: headwear, chest, legs, boots,
-  on foot / in a car. The cops then no longer know you: they do not acquire you, pursue you or cuff you, and perimeter
-  posts, the Marksman and standoff posts do not see you either. The weapon is described, so drawing one in view makes the
-  cops radio the new look (at most once per `Suspect_Description` cooldown, 1200 ticks), but it never counts as a change.
-- **Seen changing.** Recognition is live sight, not a timer. A cop of the chasing group who sees you now, and either
-  knows your look or has been watching you, recognises you. If a cop watches you change, he knows you anyway. A blind AI
-  tick (0.5 s) with no group cop seeing you drops recognition at once.
+- **The rule, as a player hears it.** The cops remember you. Your stars set how long: 3, 5, 10 or 20 seconds. No cop
+  hunting you may have a clear line to you for that long, and no other cop may have you within 12 blocks. If one sees you
+  before it runs out, they saw the change. When the chat says the cops lost you, it also says how many of head, chest,
+  legs, boots and on foot / in a car must differ. After that, a cop who sees you walks past. Fight a cop in sight of any
+  of them and you are known again.
+- **Changing clothes (0.21.6).** Out of every cop's sight for `Memory_Seconds`, change at least `Changes_Needed` +
+  `Extra_Changes` of: headwear, chest, legs, boots, on foot / in a car. Stripping counts as changing: an emptied slot is a
+  difference. The cops then no longer know you: they do not acquire you, pursue you, cuff you or **fire** on you, and
+  perimeter posts, the Marksman and standoff posts do not see you either. The weapon is described, so drawing one in view
+  makes the cops radio the new look (at most once per `Suspect_Description` cooldown, 1200 ticks), but it never counts as
+  a change. A total above 5 means clothes alone never fool the cops of that difficulty.
+- **How hard, by stars.** The row is the `Difficulty` of the tier for your current stars (`Cops.Tiers`), not of the cop who
+  sees you; a role's `Difficulty_Bonus` does not count. Memory and pieces both follow your stars as they change. The
+  shipped scale (`Cops.Disguise.By_Difficulty`, YAML only):
+
+  | Stars (shipped) | Difficulty | `Memory_Seconds` | Pieces (`Changes_Needed` 2 + `Extra_Changes`) |
+  |---|---|---|---|
+  | 1-2 | EASY | 3 | 2 |
+  | 3 | NORMAL | 5 | 2 |
+  | 4 | HARD | 10 | 3 |
+  | 5 | DEADLY | 20 | 4 |
+
+  The memory and piece numbers are reasoned tuning, not measured in a long play session. On foot, the top rows may only be
+  reachable by car: the tier `Speed` multiples put the cops at about 4.3 to 6.0 blocks per second against a 5.6 sprint,
+  and new cops spawn on a ring 10 to 50 blocks out. That is for the owner's playtest to settle (the DIS-ESCAPE-3/4/5
+  acceptance rows); the numbers change in YAML only.
+- **Who counts as the cops' eyes.** Evaluated each AI tick, for every live squad cop and every beat cop; a cop walking home
+  (`RETURNING`) never counts.
+  - A cop **hunting you** counts to `Alert_Range` (40). While the cops know you, the bare line is enough: darkness,
+    crowds and sneaking only stop a **first** pick-up, they no longer shake a cop with a clear line. While the cops
+    know you, such a cop also **looks through glass, iron bars and fences** to the same range: the plain line stops at
+    glass and bars (measured live), so a cop at a window would otherwise be blind. A wall, a closed door or leaves hide
+    you however close the cop stands. A first pick-up still needs the plain line. A Marksman on overwatch counts to the larger of `Alert_Range` and his `Sight_Range`.
+  - **Any other** live cop (a beat cop, another player's squad) counts as a patrol does: `Patrol.Warning.Range` (12) with
+    the sight factors on. A beat cop inside it already reports you to the squad, so the boss bar and the memory agree.
+  - There is no view cone, so a cop facing away counts.
+- **Fire gate (0.21.6).** A cop holds fire on a player the filters refuse, in `PURSUING` and in `COMBAT`, and keeps walking
+  the search. So "The cops don't recognise you" is true at 3 stars and up too. Vanilla entity targets are still fired on.
+  **Hitting a cop** in sight of that cop or any cop gives you away at once: a police outfit is blown (hunted or not, so a
+  0-star attacker in the outfit is fired back on), and if you are hunted you are known in what you wear, so a hit and a
+  duck behind a wall still pays. Within `Witness_Floor` (6) the cop you hit knows who did it with no line at all, so a shot
+  past a slab or a grenade over a wall from that close counts too. A hit from farther off, out of every cop's sight,
+  changes nothing by itself. A beat cop you have fooled walks past and goes back on its beat; one you hit also goes back
+  when the cops stop hunting you (the search gives up, the squad ends, your stars are cleared).
+- **A cop's own report starts the memory.** When a cop reports a crime, the memory starts at the landing, so a swap in front
+  of the reporting cop is seen. A report from a civilian or the 911 call does not start it: nobody with a badge saw the
+  change, so a swap during it still pays.
 - **The look from the crime.** A crime someone reports through the witness gate (a 911 call, a cop report) records the look
   you had at the moment of the crime, not when the report lands 3 or 8 seconds later. Pulling on a mask during the call
-  does not hide the crime, and taking it off before the report lands does not either.
+  does not hide the crime, and taking it off before the report lands does not either. A look a cop learned by seeing you
+  after the crime stands: the report does not rewind it.
 - **The police outfit.** Wearing `Police_Outfit` (`police_helmet` and `police_vest`) at `Outfit_Max_Level` (2) stars or
   fewer fools every cop, including posts, from the first tick (a freshly dispatched squad that never watched you put it
   on is fooled at once). It is blown for the rest of the chase, including the post-escape search, when you commit a crime
-  in it or a cop sees you put it on. Taking a piece off and on again does not reset it. It clears when nobody hunts you
-  any more (chase end or the search giving up), never at a quit. A crime committed while nobody hunts you clears a blow
-  left from before (a chase whose stars were cleared while you were offline, or a crime that started no chase), and
-  then blows it again only if that crime is committed in the outfit.
-- **Escape.** An escape keeps the description through the post-escape search, so searchers and posts walk past a
-  changed look instead of re-starring any outfit.
+  in it, hit a cop in it in sight, or a cop sees you put it on. **A blown outfit never fools**: it is known whatever else
+  changed. Taking a piece off and on again does not reset it. It clears when a chase ends (chase end or the search giving
+  up), never at a quit. A crime committed while nobody hunts you clears a blow left from before (a hit at 0 stars, a chase
+  whose stars were cleared while you were offline, or a crime that started no chase), and then blows it again only if
+  that crime is committed in the outfit.
+- **Escape.** An escape keeps the description through the post-escape search, so searchers and posts walk past a changed
+  look instead of re-starring any outfit. It ends the memory, and a search after it reads EASY whatever the chase's peak.
 - **Nobody hunts you.** At 0 stars with no search running, the description is neither re-learned nor re-radioed, and a
   stale one no longer filters you: beat cops warn for brandishing whatever you wear.
 - **Quitting.** A quit clears the description and any look held for a report that has not landed yet. A report deferred
-  to the next join records the look at the join.
+  to the next join records the look at the join. A relog is no escape: with no description the cops know you at first
+  sight.
 - **First 911 call.** The first 911 call of a chase names the real description, never "unknown suspect".
+- **Night pursuit (0.21.6).** Role cops (Marksman, SWAT and the other squads) keep their tier's `Ignore_Darkness` again at
+  4 and 5 stars. It was lost in 0.20.0 when the role overlay rebuilt the tier, so 0.21.6 makes night pursuit at 4 to 5
+  stars harder than 0.21.5 was, beyond disguises.
 
 ### What you are told
 
-A chat line is sent once per change, and only during a chase while a cop of the chasing group can see you. While you
-are recognised, a new look is told when the cops radio it, so the radio's cooldown paces it too. A line set to `''` in
-`wanted_messages.yml` (`Disguise.*`) turns off.
+A chat line is sent once per change, while a cop can see you; the Lost line is the one exception, said while no cop does.
+While you are recognised, a new look is told when the cops radio it, so the radio's cooldown paces it too. A line set to
+`''` in `wanted_messages.yml` (`Disguise.*`) turns off.
 
 | State | Chat |
 |---|---|
 | Recognised | `The cops recognise you: <description>` |
-| Not recognised (at least `Changes_Needed` pieces differ, nobody watched the change) | `The cops don't recognise you.` |
+| Lost (the memory just ran out unseen; said once) | `The cops lost you. They want: <description>. N of head, chest, legs, boots, on foot / in a car must differ.` |
+| Not recognised (the memory ran out and enough pieces differ) | `The cops don't recognise you.` |
 | Outfit holds (police outfit, 2 stars or fewer, not blown) | `In the police outfit, the cops take you for one of their own.` |
 | Outfit blown | the Recognised line, naming the outfit |
 
+The Lost line states what they want, so it holds even if you already changed; N is for your stars at that moment. It is
+skipped when no change can help: an outfit worn at its star cap, a blown outfit, or a count above the five compared
+pieces. It is not paced: hiding and showing repeatedly can say Lost and Recognised once per memory.
+
 The boss bar is unchanged: IN SIGHT while the cops see you, SEARCHING otherwise; stars drop on the evasion clock as usual.
+Known disagreements: at night a hunting cop at 20 blocks has lost you by the sight factors while its bare line keeps the
+memory (the bar reads SEARCHING), and a hunting cop behind glass keeps the memory while the bar reads SEARCHING. A breach (4 and more stars, indoors) acts on the squad's last-known spot with no lock-on gate, so an earned
+disguise indoors can still draw a stack-up whose flashbang blinds anyone with a line to the door.
 
 Debug line: `DISGUISE <player> state=<seen|outfit|blown|match|mismatch>` and `SUSPECT <player> desc=<text>`.
 
-Upgrading from 0.21.4: see [`migration-0.21.5.md`](../migration-0.21.5.md). `Match_Needed` is replaced by `Changes_Needed`.
+Upgrading from 0.21.5: see [`migration-0.21.6.md`](../migration-0.21.6.md). Earlier: [`migration-0.21.5.md`](../migration-0.21.5.md)
+(`Match_Needed` is replaced by `Changes_Needed`).
 
 ## Tracker tags (0.20.0)
 

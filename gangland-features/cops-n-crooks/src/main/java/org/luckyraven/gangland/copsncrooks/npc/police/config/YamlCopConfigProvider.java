@@ -1451,7 +1451,32 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                            maskWearables != null ? maskWearables : defaults.maskWearables(),
 		                            policeOutfit != null ? policeOutfit : defaults.policeOutfit(),
 		                            disguise.get("Outfit_Max_Level").asInt().min(0).orDefault(defaults.outfitMaxLevel()),
-		                            disguise.get("Changes_Needed").asInt().min(1).orDefault(defaults.changesNeeded()));
+		                            disguise.get("Changes_Needed").asInt().min(1).orDefault(defaults.changesNeeded()),
+		                            parseByDifficulty(disguise, report));
+	}
+
+	/** {@code Cops.Disguise.By_Difficulty}: a row or a field left out keeps the shipped scale. */
+	private Map<NpcDifficulty, DisguiseSettings.Recognition> parseByDifficulty(NodeReader disguise, ConfigReport report) {
+		MappingNode section = disguise.get("By_Difficulty").asMapping().orNull();
+		if (section == null) return DisguiseSettings.DEFAULT_BY_DIFFICULTY;
+
+		NodeReader rows = NodeReader.of(section, report);
+		Map<NpcDifficulty, DisguiseSettings.Recognition> result = new EnumMap<>(NpcDifficulty.class);
+		for (NpcDifficulty difficulty : NpcDifficulty.values()) {
+			DisguiseSettings.Recognition base = DisguiseSettings.DEFAULT_BY_DIFFICULTY.get(difficulty);
+			String key = difficulty.name().charAt(0) + difficulty.name().substring(1).toLowerCase(Locale.ROOT);
+			MappingNode node = rows.get(key).asMapping().orNull();
+			if (node == null) {
+				result.put(difficulty, base);
+				continue;
+			}
+
+			NodeReader row = NodeReader.of(node, report);
+			result.put(difficulty, new DisguiseSettings.Recognition(
+					row.get("Extra_Changes").asInt().min(0).orDefault(base.extraChanges()),
+					row.get("Memory_Seconds").asDouble().min(1).orDefault(base.memorySeconds())));
+		}
+		return result;
 	}
 
 	private boolean parseLookoutEnabled(@Nullable NodeReader cops, ConfigReport report) {

@@ -48,12 +48,12 @@ class WantedMessagesDisguiseKeysTest {
 	}
 
 	@Test
-	@DisplayName("850: the three Disguise keys have their path, a fallback, and the shipped file text; Recognised carries %suspect%")
+	@DisplayName("850, 865: the four Disguise keys have their path, a fallback, and the shipped file text; Recognised carries %suspect%, Lost both %suspect% and %changes%")
 	void disguiseKeysMatchTheShippedFile() throws IOException {
 		YamlConfiguration yaml = shipped();
 		List<WantedMessages.Key> keys = List.of(WantedMessages.Key.DISGUISE_RECOGNISED,
 		                                        WantedMessages.Key.DISGUISE_UNRECOGNISED,
-		                                        WantedMessages.Key.DISGUISE_OUTFIT);
+		                                        WantedMessages.Key.DISGUISE_OUTFIT, WantedMessages.Key.DISGUISE_LOST);
 
 		for (WantedMessages.Key key : keys) {
 			assertTrue(key.path.startsWith("Disguise."), key.path);
@@ -63,6 +63,10 @@ class WantedMessagesDisguiseKeysTest {
 		}
 		assertTrue(WantedMessages.Key.DISGUISE_RECOGNISED.fallback.contains("%suspect%"));
 		assertTrue(yaml.getString("Disguise.Recognised").contains("%suspect%"));
+		for (String slot : List.of("%suspect%", "%changes%")) {
+			assertTrue(WantedMessages.Key.DISGUISE_LOST.fallback.contains(slot), slot);
+			assertTrue(yaml.getString("Disguise.Lost").contains(slot), slot);
+		}
 	}
 
 	@Test
@@ -74,7 +78,8 @@ class WantedMessagesDisguiseKeysTest {
 		                                        WantedMessages.Key.SUSPECT_PLAIN, WantedMessages.Key.SUSPECT_ARMED,
 		                                        WantedMessages.Key.DISGUISE_RECOGNISED,
 		                                        WantedMessages.Key.DISGUISE_UNRECOGNISED,
-		                                        WantedMessages.Key.DISGUISE_OUTFIT, WantedMessages.Key.SUSPECT_UNKNOWN,
+		                                        WantedMessages.Key.DISGUISE_OUTFIT, WantedMessages.Key.DISGUISE_LOST,
+		                                        WantedMessages.Key.SUSPECT_UNKNOWN,
 		                                        WantedMessages.Key.SUSPECT_ON_FOOT, WantedMessages.Key.SUSPECT_IN_CAR);
 
 		for (WantedMessages.Key key : keys) {

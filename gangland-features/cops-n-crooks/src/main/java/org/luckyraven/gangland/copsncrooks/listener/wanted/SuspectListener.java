@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFilter;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.PoliceOutfit;
@@ -25,7 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Snapshots the suspect description on every crime and forgets it when the chase ends (0.20.0 lane disguise). A crime
  * the witness gate holds keeps the look it was done in, and the report that lands for it records that look (0.21.5); an
- * escape keeps the description for the post-escape search.
+ * escape keeps the description for the post-escape search. A cop's own report starts the recognition memory, and an
+ * escape ends it (0.21.6).
  */
 @CustomLog
 @ListenerHandler
@@ -73,26 +75,38 @@ public class SuspectListener implements Listener {
 		if (event.isCancelled()) {
 			// ponytail: one held look per crime id; two reports of one crime id pending at once share the newer look
 			held.computeIfAbsent(id, k -> new ConcurrentHashMap<>())
-			    .put(event.getCrimeId(), new Held(descriptions.describe(player), outfit.worn(player)));
+			    .put(event.getCrimeId(), new Held(descriptions.describe(player), outfit.worn(player), tick.learnedAt(id)));
 			return;
 		}
 
-		Map<String, Held> mine = held.get(id);
-		Held              look = mine == null ? null : mine.remove(event.getCrimeId());
-		if (look == null || !ledger.isReporting(id)) {
-			look = new Held(descriptions.describe(player), outfit.worn(player));
+		Map<String, Held> mine    = held.get(id);
+		Held              look    = mine == null ? null : mine.remove(event.getCrimeId());
+		boolean           landing = look != null && ledger.isReporting(id);
+		if (!landing) {
+			look = new Held(descriptions.describe(player), outfit.worn(player), null);
 		}
 
-		descriptions.store(id, look.description());
+		// a cop saw the player after this crime and learned what they wore then: the report must not rewind that look
+		Long learnedAt = landing ? tick.learnedAt(id) : null;
+		if (learnedAt == null || learnedAt.equals(look.learnedAt())) {
+			descriptions.store(id, look.description());
+		}
 		// a crime outside any chase: the blown flag belongs to a chase that ended unseen (a quit, stars cleared
 		// offline) or to a crime that started none; this crime's own blow follows
 		// ponytail: a chase started without a crime of his own (crew-share stars, admin-set stars) passes nothing
 		// through here, so it keeps a stale blow; a WantedStartEvent hook ordered against HeatListener is the upgrade
 		if (unhuntedAtCrime.remove(id)) {
 			outfit.clear(id);
+			// a flag left by a report under the first star is as stale as the blow
+			descriptions.setRecognised(id, false);
 		}
 		if (look.outfitWorn()) {
 			outfit.blow(id);
+		}
+		// a cop saw the crime and radioed it: the player stays known from here, so a swap during the report is seen if
+		// a cop still has eyes
+		if (landing && ledger.isCopReporting(id)) {
+			tick.witnessed(player);
 		}
 
 		log.debug("SUSPECT {} desc={}", player.getName(), descriptions.format(look.description()));
@@ -102,9 +116,11 @@ public class SuspectListener implements Listener {
 	public void onChaseEnd(WantedEndEvent event) {
 		// an escape keeps the look and the blown outfit for the post-escape search (0.21.5, row 844); the search giving
 		// up clears them in DisguiseTick
-		if (search.isEscape(event.getCause())) return;
-
 		Player player = event.getPlayer();
+		if (search.isEscape(event.getCause())) {
+			tick.escaped(player.getUniqueId());
+			return;
+		}
 
 		descriptions.clear(player.getUniqueId());
 		outfit.clear(player.getUniqueId());
@@ -123,5 +139,5 @@ public class SuspectListener implements Listener {
 	}
 
 	/** The look at a crime the witness gate held, per crime id: the report that lands for it records this look. */
-	private record Held(SuspectDescription description, boolean outfitWorn) {}
+	private record Held(SuspectDescription description, boolean outfitWorn, @Nullable Long learnedAt) {}
 }

@@ -1,0 +1,96 @@
+# 0.21.6 Changelog - Disguise difficulty
+
+[← Back to Documentation Index](../README.md)
+
+Read [migration-0.21.6.md](../migration-0.21.6.md) before you start the server. **No edit is needed:** every new key has a
+code default. Upgrade from 0.21.5. Config files are never rewritten: edit them by hand to tune.
+
+## Requires
+
+- **Keystone 1.15.5** (unchanged).
+- **gangland-api 2.7 and module `Host_Api` 2.7** (unchanged). Only the `cops-n-crooks` module changes.
+- **Bartizan:** the build floor is 0.6.0 (the pom); the live acceptance runs used 0.6.1.
+
+## Changed
+
+### The cops remember you, and the difficulty sets how long
+
+- **Recognition lasts `Memory_Seconds` after a cop last had eyes on you.** 3, 5, 10 or 20 seconds for 1-2, 3, 4 and 5
+  stars. A corner, a door or one missed 0.5 s sample no longer ends it, so changing clothes in front of the cops no longer
+  works; a change is learned at the next sighting. Killing the last watcher no longer opens a window either.
+- **How many pieces must differ follows the difficulty.** `Changes_Needed` (2) plus `Extra_Changes` per row: 2, 2, 3 and 4
+  of head, chest, legs, boots and on foot / in a car. Stripping counts as changing. New `Cops.Disguise.By_Difficulty`
+  (`Easy`, `Normal`, `Hard`, `Deadly`, each with `Extra_Changes` and `Memory_Seconds`); the row is the `Difficulty` of the tier
+  for your stars.
+- **A blown police outfit never fools,** whatever else changed.
+
+### Who counts as the cops' eyes
+
+- **A cop hunting you counts to `Alert_Range` with the bare line** while the cops know you: darkness, crowds and sneaking
+  only stop a first pick-up now.
+- **Any other cop counts as a patrol does,** within `Patrol.Warning.Range` (12): a beat cop watching a swap counts, and the
+  squad does not have to exist yet. A cop walking home never counts.
+- **Glass, iron bars and fences no longer hide you from a cop hunting you.** The plain sight line stops at glass and bars
+  (measured live), so while the cops know you, that cop also looks through glass, iron bars and fences, as far as
+  `Alert_Range`. A wall, a closed door or leaves still hide you, however close the cop stands. A first pick-up still needs
+  the plain line, and so does any other cop.
+- **A cop's own report starts the memory,** so a swap in front of the reporting cop is seen. An escape ends it.
+
+### The fire gate
+
+- **Cops hold fire on a player they do not recognise,** at every star level, and keep searching. "The cops don't recognise
+  you" is now true at 3 stars and up. This reverses the 0.20.0 rule that filters never stop firing.
+- **Hitting a cop in sight gives you away at once,** and blows a worn police outfit (a 0-star attacker in it is fired back
+  on). A hit and a duck behind a wall still pays. Within `Witness_Floor` (6) the cop you hit knows who did it with no line
+  at all, so a shot past a slab or a grenade over a wall from that close counts too.
+- **A beat cop does not stay on you.** One you have fooled walks past and goes back on the beat. One you hit also goes back
+  when the cops stop hunting you (the search gives up, the squad ends, your stars are cleared), so it never opens fire on
+  a 0-star player later.
+
+### The cops tell you
+
+- **New chat line `Disguise.Lost`,** said once when no cop has seen you for the memory: "The cops lost you. They want: ...
+  N of head, chest, legs, boots, on foot / in a car must differ." Set it to `''` to turn it off. Spanish file updated; a
+  deployed `wanted_messages_es.yml` needs the key added by hand (see the migration doc).
+
+### Night balance change
+
+- **Role cops (Marksman, SWAT and the other squads) see in the dark again at 4 and 5 stars.** `Ignore_Darkness` was dropped by
+  the role overlay in 0.20.0. Night pursuit at 4-5 stars is harder than in 0.21.5, whatever the disguise. Own commit, can be
+  reverted on its own.
+
+## Fixed
+
+- `CopRole.overlay` lost `Ignore_Darkness` (row 856).
+- A swap in front of the cop reporting a crime fooled that cop (row 869).
+- The last cop in range dying or an emptied group reset recognition (row 861).
+- A late report stored the old crime look over a look the cops learned after the crime, so a swap they saw could still fool
+  them (row 868).
+- A hit beat cop stayed in combat for the player's whole session: passive while the filter refused, and firing again once
+  the stars were gone (row 892).
+- A cop's report that raised no star left a recognition flag behind (row 893).
+- A hit in the police outfit at 0 stars was forgotten while an old squad walked home (row 894).
+- A hit on a nearby cop with a blocked sight line was free (row 895).
+- A Marksman on overwatch at 40-48 blocks did not count, so the chat said the cops lost you while he watched (row 896).
+
+## Docket
+
+Fixed: 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 868, 869, 871, 873, 892, 893, 894, 895, 896, 897. Open by design (P3): 866
+(an unrecognised suspect is not re-checked at arm's length), 867 (any vehicle or empty slot counts as a changed piece), 870
+(the breach acts on the last-known spot). Open: 898 (TNT and pets credit no player, so they do not re-identify one).
+
+## Decisions and open items
+
+- The memory and piece numbers are reasoned tuning, not measured over a long play session. **Open for the playtest:** can the
+  player get the memory on foot at 3, 4 and 5 stars? The top rows may only be reachable by car. Numbers change in YAML only.
+- The boss bar and the memory can disagree: a hunting cop at night past the sight factor range, or behind glass, keeps the
+  memory while the bar reads SEARCHING.
+- `Witness_Floor` is one key for two rules: tuning it for crime reports also moves the rule for a hit with no line.
+- A hit through glass from past `Witness_Floor` with no other cop watching still re-identifies nobody.
+- The Lost line reveals the exact moment the memory runs out. That is the point: it teaches the rule.
+
+## For developers
+
+- gangland-api, Keystone and Bartizan are unchanged. `DisguiseSettings` gains `byDifficulty` and the 6-argument
+  constructor stays; `DisguiseFilter` takes a difficulty function; `DisguiseModuleConfig.eyesOf` takes the descriptions, a
+  witness supplier and the `Witness_Floor`; `DisguiseTick` takes the `Witness_Floor`. See [developer/cops-n-crooks.md](../developer/cops-n-crooks.md).

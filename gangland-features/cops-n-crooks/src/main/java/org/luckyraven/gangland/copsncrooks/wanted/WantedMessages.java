@@ -121,10 +121,13 @@ public class WantedMessages extends LocalizedModuleYaml {
 		SUSPECT_WEARING("Suspect.Wearing", "wearing %items%"),
 		SUSPECT_PLAIN("Suspect.Plain", "in plain clothes"),
 		SUSPECT_ARMED("Suspect.Armed", "armed with %weapon%"),
-		// 0.21.5: said in chat when a cop of the chase sees you, once per change; %suspect% is the description the cops have
+		// 0.21.5: said in chat when a cop sees you, once per change; %suspect% is the description the cops have
 		DISGUISE_RECOGNISED("Disguise.Recognised", "&cThe cops recognise you: &7%suspect%"),
 		DISGUISE_UNRECOGNISED("Disguise.Unrecognised", "&aThe cops don't recognise you."),
 		DISGUISE_OUTFIT("Disguise.Outfit", "&9In the police outfit, the cops take you for one of their own."),
+		// 0.21.6: said once when no cop has seen you for the memory; %changes% is the count at your stars
+		DISGUISE_LOST("Disguise.Lost",
+		              "&eThe cops lost you. They want: &7%suspect%&e. %changes% of head, chest, legs, boots, on foot / in a car must differ."),
 		// 0.20.0 hot-cash bag and fence
 		BAG_HUD("Bag.Hud", "&6Bag: &a%money_symbol%%amount%"),
 		BAG_FULL("Bag.Full", "&cYour bag is full."),
