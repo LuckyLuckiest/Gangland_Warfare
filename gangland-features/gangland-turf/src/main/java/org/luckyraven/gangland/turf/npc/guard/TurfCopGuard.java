@@ -17,6 +17,7 @@ import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
+import org.luckyraven.keystone.npc.NpcSupport;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -259,10 +260,26 @@ public final class TurfCopGuard implements BeanLifecycle {
 	 * Removes {@code cop} from {@code npc}'s queue. Only an NPC that actually held the cop is touched, so one that was
 	 * never engaged keeps its state; an NPC left with no target at all goes back to IDLE.
 	 */
-	private static void detach(CivilianNpc npc, LivingEntity cop) {
-		if (!npc.removeEntityTarget(cop)) return;
+	private static boolean detach(CivilianNpc npc, LivingEntity cop) {
+		if (!npc.removeEntityTarget(cop)) return false;
 		if (npc.getTargetEntity() == null && npc.getTargetPlayerId() == null) {
 			npc.transitionTo(CivilianState.IDLE);
+		}
+		return true;
+	}
+
+	/**
+	 * Hold order: a cop's stray hit reaches an NPC through {@code CivilianDamageListener}, which knows no order, so the
+	 * owner's tick calls this to take the cop back off the queue. A mob or a player who hit the NPC stays fair game.
+	 *
+	 * <p>ponytail: any Citizens NPC counts as a cop, and the fight can last up to one 5-tick pass; ask the cops module
+	 * if a non-cop NPC ever starts fights on a turf.
+	 */
+	public static void dropCopTargets(CivilianNpc npc) {
+		LivingEntity target = npc.getTargetEntity();
+		while (target != null && NpcSupport.isNpc(target) && detach(npc, target)) {
+			log.debug("Hold: {} drops target {}", npc.getEntity(), target.getName());
+			target = npc.getTargetEntity();
 		}
 	}
 

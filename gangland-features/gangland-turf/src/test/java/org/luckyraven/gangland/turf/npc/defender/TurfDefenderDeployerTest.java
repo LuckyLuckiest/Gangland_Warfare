@@ -32,7 +32,9 @@ import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcPost;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 import org.bukkit.event.Event;
 
 import java.lang.reflect.Field;
@@ -63,6 +65,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
@@ -1386,6 +1389,88 @@ class TurfDefenderDeployerTest {
 		}
 	}
 
+	/** A stray cop hit as {@code CivilianDamageListener} takes it: the cop goes to the front of the queue, then COMBAT. */
+	private static LivingEntity strayCopHit(CivilianNpc guard, MockedStatic<NpcSupport> npcs) {
+		LivingEntity cop = mock(LivingEntity.class);
+		npcs.when(() -> NpcSupport.isNpc(cop)).thenReturn(true);
+		guard.setTargetEntity(cop);
+		guard.transitionTo(CivilianState.COMBAT);
+		return cop;
+	}
+
+	@Test
+	@DisplayName("T-910: under Hold in peace a guard a stray cop hit put in COMBAT drops the cop, goes IDLE and walks home, inside Hold_Radius too")
+	void hold_strayCopHit_dropsCop_walksHome() {
+		try (Rig rig = new Rig(5); MockedStatic<NpcSupport> npcs = mockStatic(NpcSupport.class)) {
+			rig.deployer.bindHolding(id -> true);
+			rig.ticks(2);
+			CivilianNpc guard = rig.spawned.get(0);
+			Location post = rig.spawnedAt.get(0);
+			rig.move(guard, post.getX() + 4.0, post.getZ());
+			strayCopHit(guard, npcs);
+			clearInvocations(guard);
+
+			rig.ticks(1);
+
+			assertNull(guard.getTargetEntity());
+			assertEquals(CivilianState.IDLE, guard.getCurrentState());
+			verify(guard).holdPost(any());
+		}
+	}
+
+	@Test
+	@DisplayName("T-910: under Hold a rival who hit the guard stays its target when the stray cop is dropped")
+	void hold_strayCopHit_keepsARivalWhoHitIt() {
+		try (Rig rig = new Rig(5); MockedStatic<NpcSupport> npcs = mockStatic(NpcSupport.class)) {
+			rig.deployer.bindHolding(id -> true);
+			rig.ticks(2);
+			CivilianNpc guard = rig.spawned.get(0);
+			UUID rival = UUID.randomUUID();
+			guard.setTargetPlayerId(rival);
+			strayCopHit(guard, npcs);
+
+			rig.ticks(1);
+
+			assertNull(guard.getTargetEntity());
+			assertEquals(rival, guard.getTargetPlayerId());
+			assertEquals(CivilianState.COMBAT, guard.getCurrentState());
+		}
+	}
+
+	@Test
+	@DisplayName("T-910: under Hold a mob that hit a guard stays a target, because a mob is no cop")
+	void hold_mobHit_keepsTheFight() {
+		try (Rig rig = new Rig(5); MockedStatic<NpcSupport> npcs = mockStatic(NpcSupport.class)) {
+			rig.deployer.bindHolding(id -> true);
+			rig.ticks(2);
+			CivilianNpc guard = rig.spawned.get(0);
+			LivingEntity zombie = mock(LivingEntity.class);
+			guard.setTargetEntity(zombie);
+			guard.transitionTo(CivilianState.COMBAT);
+
+			rig.ticks(1);
+
+			assertSame(zombie, guard.getTargetEntity());
+			assertEquals(CivilianState.COMBAT, guard.getCurrentState());
+		}
+	}
+
+	@Test
+	@DisplayName("T-910: a guard keeps answering a cop's stray hit during a contest, under Hold too: a death there costs stock")
+	void hold_strayCopHit_inAContest_keepsTheFight() {
+		try (Rig rig = new Rig(5); MockedStatic<NpcSupport> npcs = mockStatic(NpcSupport.class)) {
+			rig.deployer.bindHolding(id -> true);
+			rig.ticks(2);
+			rig.contest();
+			CivilianNpc guard = rig.spawned.get(0);
+			LivingEntity cop = strayCopHit(guard, npcs);
+
+			rig.ticks(1);
+
+			assertSame(cop, guard.getTargetEntity());
+		}
+	}
+
 	@Test
 	@DisplayName("a player id left on a guard that is no longer fighting is forgotten in peace, so he must hit again to be fought")
 	void peaceIdleGuard_forgetsARememberedPlayer() {
@@ -1675,6 +1760,13 @@ class TurfDefenderDeployerTest {
 			entity.set(call.getArgument(0));
 			return null;
 		}).when(npc).setTargetEntity(any());
+		when(npc.removeEntityTarget(any())).thenAnswer(call -> {
+			boolean held = call.getArgument(0) == entity.get();
+			if (held) {
+				entity.set(null);
+			}
+			return held;
+		});
 		return npc;
 	}
 

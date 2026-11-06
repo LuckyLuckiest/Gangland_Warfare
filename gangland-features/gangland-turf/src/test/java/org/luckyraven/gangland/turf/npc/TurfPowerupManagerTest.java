@@ -11,8 +11,10 @@ import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.MockedStatic;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -221,6 +224,32 @@ class TurfPowerupManagerTest {
 		manager.holdTick();
 
 		verify(task).cancel();
+	}
+
+	@Test
+	@DisplayName("T-910: under Hold a Quartermaster inside Hold_Radius drops a cop's stray hit; under Defend it keeps the fight")
+	void holdTick_heldQuartermasterDropsAStrayCop() throws Exception {
+		TurfPowerupManager manager = new TurfPowerupManager(mock(JavaPlugin.class), mock(IRepository.class),
+		                                                    () -> new TurfPowerupSettings("quartermaster", 32.0),
+		                                                    mock(CivilianSpawnManager.class));
+		World world = mock(World.class);
+		Location anchor = new Location(world, 0, 64, 0);
+		CivilianNpc held = qmAt(manager, 1, anchor, new Location(world, 4, 64, 0));
+		CivilianNpc free = qmAt(manager, 2, anchor, new Location(world, 4, 64, 0));
+		LivingEntity cop = mock(LivingEntity.class);
+		when(held.getTargetEntity()).thenReturn(cop, (LivingEntity) null);
+		when(held.removeEntityTarget(cop)).thenReturn(true);
+		when(free.getTargetEntity()).thenReturn(cop);
+		manager.bindHold(id -> id == 1, () -> 6.0);
+
+		try (MockedStatic<NpcSupport> npcs = mockStatic(NpcSupport.class)) {
+			npcs.when(() -> NpcSupport.isNpc(cop)).thenReturn(true);
+			manager.holdTick();
+		}
+
+		verify(held).removeEntityTarget(cop);
+		verify(held).transitionTo(CivilianState.IDLE);
+		verify(free, never()).removeEntityTarget(any());
 	}
 
 	@Test

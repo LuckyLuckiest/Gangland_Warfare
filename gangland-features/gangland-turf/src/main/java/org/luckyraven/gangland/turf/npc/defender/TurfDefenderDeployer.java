@@ -22,6 +22,7 @@ import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.events.TurfDefenderDownEvent;
 import org.luckyraven.gangland.turf.npc.defender.GarrisonPosts.Choice;
 import org.luckyraven.gangland.turf.npc.defender.GarrisonPosts.Post;
+import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
 import org.luckyraven.gangland.turf.powerups.GuardBuffs;
 import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.keystone.bean.BeanLifecycle;
@@ -357,6 +358,8 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			double radiusSquared = group.targetingRadius * group.targetingRadius;
 			boolean hold = garrison != null && holding.test(turfId);
 			for (TrackedDefender d : group.defenders) {
+				// in a contest a guard keeps answering a stray hit, because a death there costs stock
+				if (hold && !group.contested) TurfCopGuard.dropCopTargets(d.npc);
 				if (garrison != null && leash(d.npc, garrison)) continue;
 				if (hold && holdToPost(d.npc, garrison)) continue;
 				if (garrison != null && !group.contested) {
