@@ -632,6 +632,66 @@ class PatrolManagerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.6: the search gave up: a hit beat cop goes back on its beat and never attacks")
+	void releasedAttacker_hitBeatCopResumesBeat() {
+		Player attacker = fx.player(2, 2);
+		online.add(attacker);
+		manager.manage();
+		CopNpc beat = spawned.get(0);
+		beat.setTargetPlayerId(attacker.getUniqueId());
+		beat.setCombatForced(true);
+		beat.transitionTo(CopState.COMBAT);
+
+		manager.releaseAttacker(attacker.getUniqueId());
+		manager.aiTick();
+
+		assertEquals(CopState.PATROL, beat.getCurrentState());
+		assertFalse(beat.isCombatForced());
+		assertNull(beat.getTargetPlayerId());
+		verify(beat, never()).tick(attacker);
+	}
+
+	@Test
+	@DisplayName("0.21.6: guard - the release is per player and leaves a warning in progress alone")
+	void releasedAttacker_leavesOtherTargetsAndWarnings() {
+		Player attacker = fx.player(2, 2);
+		Player other    = fx.player(3, 3);
+		online.add(attacker);
+		manager.manage();
+		CopNpc fighting = spawned.get(0);
+		fighting.setTargetPlayerId(other.getUniqueId());
+		fighting.transitionTo(CopState.COMBAT);
+		CopNpc warning = spawned.get(1);
+		warning.setTargetPlayerId(attacker.getUniqueId());
+		warning.transitionTo(CopState.WARNING);
+
+		manager.releaseAttacker(attacker.getUniqueId());
+
+		assertEquals(other.getUniqueId(), fighting.getTargetPlayerId());
+		assertEquals(attacker.getUniqueId(), warning.getTargetPlayerId());
+	}
+
+	@Test
+	@DisplayName("0.21.6: a beat cop the filters refuse in COMBAT walks past: back to PATROL, no attack, off the player")
+	void refusedLockOn_hitBeatCopResumesBeat() {
+		Player attacker = fx.player(2, 2);
+		online.add(attacker);
+		manager.manage();
+		perception.addLockOnFilter((cop, player) -> false);
+		CopNpc beat = spawned.get(0);
+		beat.setTargetPlayerId(attacker.getUniqueId());
+		beat.setCombatForced(true);
+		beat.transitionTo(CopState.COMBAT);
+
+		manager.aiTick();
+
+		assertEquals(CopState.PATROL, beat.getCurrentState());
+		assertFalse(beat.isCombatForced());
+		assertNull(beat.getTargetPlayerId());
+		verify(beat, never()).tick(attacker);
+	}
+
+	@Test
 	@DisplayName("a hit beat cop whose attacker died returns to PATROL")
 	void hitBeatCop_targetDead_resumesBeat() {
 		Player attacker = fx.player(2, 2);

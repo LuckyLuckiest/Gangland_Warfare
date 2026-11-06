@@ -271,6 +271,8 @@ public class CopManager implements BeanLifecycle {
 		stopSpawnTask(playerId);
 		clearCombatAlert(playerId);
 		restoring.remove(playerId);
+		// the group's cops are cleared below; a beat cop the player hit is in no group
+		releaseAttacker(playerId);
 		if (group != null) {
 			group.clearCombatAlert();
 			group.clearPending();
@@ -547,6 +549,7 @@ public class CopManager implements BeanLifecycle {
 				cop.setCombatForced(false);
 			}
 		}
+		releaseAttacker(playerId);
 	}
 
 	/** Tells the hooks the cops stopped hunting {@code playerId}; a hook that throws is logged and skipped. */
