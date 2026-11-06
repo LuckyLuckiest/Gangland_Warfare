@@ -2,8 +2,6 @@ package org.luckyraven.gangland.copsncrooks.listener.turf;
 
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +20,7 @@ import static org.mockito.Mockito.*;
 /**
  * Red tests for the T-189 stray-round rule (0.16.1): a defender or Quartermaster firing at a cop must not hit a
  * protected player of the turf's owning or allied gang. Cops and other gangs are not protected and keep taking hits.
+ * The Bukkit damage half (owner hits and guard-on-guard) lives in the turf module's TurfGuardFriendlyFireListenerTest.
  */
 @DisplayName("TurfFriendlyFireListener — turf NPC stray rounds spare protected players (T-189)")
 class TurfFriendlyFireListenerTest {
@@ -122,76 +121,6 @@ class TurfFriendlyFireListenerTest {
 		when(event.getHitEntity()).thenReturn(rival);
 
 		listener.onNpcWeaponImpact(event);
-
-		verify(event, never()).setCancelled(true);
-	}
-
-	@Test
-	@DisplayName("defender arrow (melee-style damage event) hitting an owning-gang member is cancelled")
-	void defenderArrow_ownerMember_cancelled() {
-		Player member = playerInGang(OWNER_GANG);
-		Projectile arrow = mock(Projectile.class);
-		when(arrow.getShooter()).thenReturn(defender);
-
-		EntityDamageByEntityEvent event = mock(EntityDamageByEntityEvent.class);
-		when(event.getDamager()).thenReturn(arrow);
-		when(event.getEntity()).thenReturn(member);
-
-		listener.onNpcDamage(event);
-
-		verify(event).setCancelled(true);
-	}
-
-	// ---- T-287: guards must not kill each other ----
-
-	private Player guardOfTurf(int turfId, int ownerGang) {
-		// Citizens guards are PLAYER-type entities with no gang User.
-		Player guard = mock(Player.class);
-		when(defenders.findOwningTurfId(guard)).thenReturn(turfId);
-		Turf turf = mock(Turf.class);
-		when(turf.isUnclaimed()).thenReturn(false);
-		when(turf.getOwnerGangId()).thenReturn(ownerGang);
-		when(turfs.get(turfId)).thenReturn(turf);
-		return guard;
-	}
-
-	private EntityDamageByEntityEvent hit(org.bukkit.entity.Entity damager, org.bukkit.entity.Entity victim) {
-		EntityDamageByEntityEvent event = mock(EntityDamageByEntityEvent.class);
-		when(event.getDamager()).thenReturn(damager);
-		when(event.getEntity()).thenReturn(victim);
-		return event;
-	}
-
-	@Test
-	@DisplayName("guard hitting a guard of the same owner is cancelled")
-	void guardOnGuard_sameOwner_cancelled() {
-		Player victim = guardOfTurf(11, OWNER_GANG);
-		EntityDamageByEntityEvent event = hit(defender, victim);
-
-		listener.onNpcDamage(event);
-
-		verify(event).setCancelled(true);
-	}
-
-	@Test
-	@DisplayName("guard hitting a guard of an allied owner is cancelled")
-	void guardOnGuard_allied_cancelled() {
-		Player victim = guardOfTurf(12, ALLY_GANG);
-		when(membership.gangsAllied(OWNER_GANG, ALLY_GANG)).thenReturn(true);
-		EntityDamageByEntityEvent event = hit(defender, victim);
-
-		listener.onNpcDamage(event);
-
-		verify(event).setCancelled(true);
-	}
-
-	@Test
-	@DisplayName("guard hitting a guard of a hostile owner is not cancelled")
-	void guardOnGuard_hostile_notCancelled() {
-		Player victim = guardOfTurf(13, RIVAL_GANG);
-		EntityDamageByEntityEvent event = hit(defender, victim);
-
-		listener.onNpcDamage(event);
 
 		verify(event, never()).setCancelled(true);
 	}
