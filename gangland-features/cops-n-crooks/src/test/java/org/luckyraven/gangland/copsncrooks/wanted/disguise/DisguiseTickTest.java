@@ -1115,6 +1115,49 @@ class DisguiseTickTest {
 		assertFalse(descriptions.isRecognised(wearer.id));
 	}
 
+	/** A cop hit from {@code distance} blocks with no line to the player: a slab, a pane, a shot over a wall. */
+	private CopNpc hitCopBlockedAt(double distance) {
+		CopNpc cop = mock(CopNpc.class);
+		when(cop.distanceTo(wearer.player)).thenReturn(distance);
+		return cop;
+	}
+
+	@Test
+	@DisplayName("0.21.6: a cop hit from within Witness_Floor knows who hit them, ray or no ray: known in what they wear")
+	void aHitWithinTheFloorRecognisesWithNoRay() {
+		describedInPumpkinAndJacket();
+		swapPumpkinAndJacket();
+
+		tick.exposed(hitCopBlockedAt(3.0), wearer.player);
+
+		assertTrue(descriptions.isRecognised(wearer.id));
+		assertEquals("blue jacket", descriptions.latest(wearer.id).chest());
+	}
+
+	@Test
+	@DisplayName("0.21.6: a hit within Witness_Floor in the police outfit at 0 stars blows it: no passive cop")
+	void aHitWithinTheFloorBlowsTheOutfit() {
+		level = 0;
+		dressAsCop();
+		CopNpc cop = hitCopBlockedAt(3.0);
+
+		tick.exposed(cop, wearer.player);
+
+		assertTrue(filter.allows(cop, wearer.player));
+	}
+
+	@Test
+	@DisplayName("0.21.6: guard - just past Witness_Floor a hit with no ray and no eyes still changes nothing")
+	void aHitJustPastTheFloorNeedsARay() {
+		describedInPumpkinAndJacket();
+		swapPumpkinAndJacket();
+
+		tick.exposed(hitCopBlockedAt(6.5), wearer.player);
+
+		assertFalse(descriptions.isRecognised(wearer.id));
+		assertEquals("red jacket", descriptions.latest(wearer.id).chest());
+	}
+
 	@Test
 	@DisplayName("864: a hit no cop sees changes nothing by itself")
 	void hittingACopUnseenChangesNothing() {

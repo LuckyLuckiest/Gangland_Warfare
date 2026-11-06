@@ -10,6 +10,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.OverwatchSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.WarningSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
@@ -19,6 +20,8 @@ import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFilter;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseTick;
+import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
+import org.luckyraven.gangland.copsncrooks.wanted.config.WitnessSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.SuspectDescriptions;
 import org.luckyraven.gangland.core.user.User;
@@ -419,6 +422,58 @@ class DisguiseModuleConfigTest {
 
 		assertFalse(eyes.test(player));
 		verifyNoInteractions(factor);
+	}
+
+	@Test
+	@DisplayName("0.21.6 eyesOf: a Marksman on overwatch counts to his Sight_Range, past Alert_Range: no false Lost line")
+	void aMarksmanOnOverwatchCountsToHisSightRange() {
+		CopLoader loader = loaderWithRanges(40.0, 12.0);
+		when(loader.getLoadedProvider().getOverwatchSettings()).thenReturn(OverwatchSettings.DEFAULT);
+		Player player = playerWithId();
+		CopNpc marksman = cop(player, player.getUniqueId(), CopState.OVERWATCH, 45.0);
+		when(marksman.canSee(player, 48.0)).thenReturn(true);
+		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
+		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
+		var eyes = DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(marksman), () -> 6.0);
+
+		assertTrue(eyes.test(player));
+	}
+
+	@Test
+	@DisplayName("0.21.6 eyesOf: guard - overwatch takes the larger range, and only a cop on overwatch gets it")
+	void overwatchTakesTheLargerRangeOnlyOnOverwatch() {
+		CopLoader loader = loaderWithRanges(60.0, 12.0);
+		when(loader.getLoadedProvider().getOverwatchSettings()).thenReturn(OverwatchSettings.DEFAULT);
+		Player player = playerWithId();
+		CopNpc marksman = cop(player, player.getUniqueId(), CopState.OVERWATCH, 50.0);
+		when(marksman.canSee(player, 60.0)).thenReturn(true);
+		SuspectDescriptions descriptions = mock(SuspectDescriptions.class);
+		when(descriptions.isRecognised(player.getUniqueId())).thenReturn(true);
+		assertTrue(DisguiseModuleConfig.eyesOf(perception, loader, descriptions, () -> List.of(marksman), () -> 6.0)
+		                               .test(player), "Alert_Range 60 is the larger");
+
+		CopLoader shorter = loaderWithRanges(40.0, 12.0);
+		CopNpc pursuing = cop(player, player.getUniqueId(), CopState.PURSUING, 45.0);
+		when(pursuing.canSee(player, 48.0)).thenReturn(true);
+		assertFalse(DisguiseModuleConfig.eyesOf(perception, shorter, descriptions, () -> List.of(pursuing), () -> 6.0)
+		                                .test(player), "not on overwatch: Alert_Range");
+	}
+
+	@Test
+	@DisplayName("871: the Witness_Floor supplier reads the config on every call, so a reload takes effect")
+	void theWitnessFloorIsReadLive() {
+		ChaseConfigLoader chase = mock(ChaseConfigLoader.class);
+		when(chase.getWitnesses()).thenReturn(witnessesWithFloor(6.0));
+		java.util.function.DoubleSupplier floor = DisguiseModuleConfig.witnessFloorOf(chase);
+		assertEquals(6.0, floor.getAsDouble());
+
+		when(chase.getWitnesses()).thenReturn(witnessesWithFloor(8.0));
+
+		assertEquals(8.0, floor.getAsDouble());
+	}
+
+	private static WitnessSettings witnessesWithFloor(double floor) {
+		return new WitnessSettings(true, List.of(), 10, new WitnessSettings.Cops(3, 180.0, floor, List.of(), true));
 	}
 
 	@Test

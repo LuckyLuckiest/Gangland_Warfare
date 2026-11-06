@@ -100,7 +100,7 @@ public class DisguiseModuleConfig {
 				if (!cop.isValid() || cop.getCurrentState() == CopState.RETURNING) continue;
 
 				boolean hunting = id.equals(cop.getTargetPlayerId());
-				double  range   = hunting ? provider.getAlertRange() : provider.getWarningSettings().range();
+				double  range   = hunting ? huntingRange(provider, cop) : provider.getWarningSettings().range();
 				double  distance = cop.distanceTo(player);
 				if (distance > range) continue;
 				if (hunting && watching && distance <= witnessFloor.getAsDouble()) return true;
@@ -108,6 +108,14 @@ public class DisguiseModuleConfig {
 			}
 			return false;
 		};
+	}
+
+	/** How far a cop hunting the player counts: the alert range, or a Marksman's sight range while on overwatch. */
+	private static double huntingRange(CopConfigProvider provider, CopNpc cop) {
+		double alert = provider.getAlertRange();
+
+		return cop.getCurrentState() == CopState.OVERWATCH ? Math.max(alert, provider.getOverwatchSettings().sightRange())
+		                                                   : alert;
 	}
 
 	/** The cops that can witness a disguise change: every live squad cop and every beat cop. */

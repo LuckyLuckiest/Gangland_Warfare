@@ -158,11 +158,14 @@ public class DisguiseTick {
 	}
 
 	/**
-	 * A cop-attacked hook. Seen hitting a cop: the outfit is blown, and if the player is hunted they are known in what
-	 * they wear.
+	 * A cop-attacked hook. Seen hitting a cop, or hitting one within {@code Witness_Floor} (a slab, a pane or a wall
+	 * between them does not hide who did it from that close): the outfit is blown, and if the player is hunted they are
+	 * known in what they wear.
 	 */
 	public void exposed(CopNpc cop, Player attacker) {
-		if (!settings.get().enabled() || (!cop.hasLineOfSight(attacker) && !eyesOn.test(attacker))) {
+		boolean seen = cop.hasLineOfSight(attacker) || cop.distanceTo(attacker) <= witnessFloor.getAsDouble()
+		               || eyesOn.test(attacker);
+		if (!settings.get().enabled() || !seen) {
 			return;
 		}
 
