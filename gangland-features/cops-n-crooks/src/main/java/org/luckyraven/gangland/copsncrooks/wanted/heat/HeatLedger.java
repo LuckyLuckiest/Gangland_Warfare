@@ -50,6 +50,7 @@ public final class HeatLedger {
 	private final Map<UUID, Map<UUID, Long>>   assaults = new ConcurrentHashMap<>();
 
 	private volatile Consumer<Player> starTrigger;
+	private volatile @Nullable Consumer<Player> reportLanded;
 	/** The criminal whose late report is landing ({@link #commitReported}), and who reported it; main thread only. */
 	private @Nullable UUID            reporting;
 	private @Nullable ReportKind      reportingKind;
@@ -89,6 +90,11 @@ public final class HeatLedger {
 		this.starTrigger = trigger;
 	}
 
+	/** Told once a report has finished landing and every handler of its crime has run, stars included. */
+	public void setReportLanded(@Nullable Consumer<Player> hook) {
+		this.reportLanded = hook;
+	}
+
 	/**
 	 * Runs the commit of a report that landed late: the crime it records for {@code criminal} carries {@code kind}, so
 	 * the star card's chat line names who reported it (0.21.1 Q7, 0.21.2 S3). Nothing else does: a safe alarm, a store
@@ -103,6 +109,10 @@ public final class HeatLedger {
 			reporting     = null;
 			reportingKind = null;
 			reportingAt   = null;
+			Consumer<Player> landed = reportLanded;
+			if (landed != null) {
+				landed.accept(criminal);
+			}
 		}
 	}
 
@@ -120,6 +130,11 @@ public final class HeatLedger {
 	 */
 	public boolean isReporting(UUID playerId) {
 		return playerId.equals(reporting);
+	}
+
+	/** Whether the late report landing for {@code playerId} right now is a cop's own. */
+	public boolean isCopReporting(UUID playerId) {
+		return playerId.equals(reporting) && reportingKind == ReportKind.COP;
 	}
 
 	/** The cop the Assault_Cop or Kill_Cop being committed right now hit (the witness gate's victim), else null. */

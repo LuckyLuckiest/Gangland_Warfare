@@ -1169,6 +1169,34 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("0.21.6: a cop in no group hears when the cops stop hunting: search gave up, squad ended, stars cleared")
+	void attackerReleaseHook_toldWhenTheHuntStops() {
+		java.util.List<UUID> told = new java.util.ArrayList<>();
+		manager.addCopAttackerReleaseHook(told::add);
+
+		manager.searchGaveUp(playerId);
+		assertEquals(1, told.size(), "the search gave up");
+
+		manager.endSquad(playerId);
+		assertEquals(2, told.size(), "death, arrest or a quit");
+
+		manager.onWantedEnd(player, WantedCause.UNKNOWN);
+		assertEquals(3, told.size(), "stars cleared");
+		assertEquals(playerId, told.get(2));
+	}
+
+	@Test
+	@DisplayName("0.21.6: guard - an escape keeps the hunt on: a cop in no group is not released until the search gives up")
+	void attackerReleaseHook_notToldOnAnEscape() {
+		java.util.List<UUID> told = new java.util.ArrayList<>();
+		manager.addCopAttackerReleaseHook(told::add);
+
+		manager.onWantedEnd(player, WantedCause.EVASION);
+
+		assertTrue(told.isEmpty());
+	}
+
+	@Test
 	@DisplayName("shutdown ends field care before the cops are destroyed: the medic is freed, the patient stands up")
 	void shutdown_endsFieldCare_beforeDestroy() {
 		manager.onWantedStart(player, wanted);

@@ -5,11 +5,13 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
@@ -23,15 +25,18 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 	private final PoliceOutfit                outfit;
 	private final ToIntFunction<Player>       levelOf;
 	private final Predicate<Player>           hunted;
+	private final Function<Player, NpcDifficulty> difficulty;
 	private final Map<UUID, String>           lastState = new ConcurrentHashMap<>();
 
 	public DisguiseFilter(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, PoliceOutfit outfit,
-	                      ToIntFunction<Player> levelOf, Predicate<Player> hunted) {
+	                      ToIntFunction<Player> levelOf, Predicate<Player> hunted,
+	                      Function<Player, NpcDifficulty> difficulty) {
 		this.settings = settings;
 		this.descriptions = descriptions;
 		this.outfit = outfit;
 		this.levelOf = levelOf;
 		this.hunted = hunted;
+		this.difficulty = difficulty;
 	}
 
 	/** Whether the cops still hunt this player: stars above 0, or a post-escape search for them. */
@@ -39,12 +44,30 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		return hunted.test(player);
 	}
 
-	/** Disabled, or recognised on the last AI tick ({@code seen}), or else {@link #knows}. */
+	/** How many pieces must differ for the cops at his stars right now. */
+	public int changesNeeded(Player player) {
+		return settings.get().changesNeeded(difficulty.apply(player));
+	}
+
+	/** How long the cops remember him after the last sighting, at his stars right now. */
+	public long memoryMillis(Player player) {
+		return settings.get().memoryMillis(difficulty.apply(player));
+	}
+
+	/**
+	 * Whether clothes can fool the cops from here: no police outfit decides at his stars, and the count is reachable.
+	 */
+	public boolean changeCanFool(Player player) {
+		boolean outfitDecides = outfit.worn(player) && levelOf.applyAsInt(player) <= settings.get().outfitMaxLevel();
+		return !outfitDecides && changesNeeded(player) <= SuspectDescriptions.COMPARED_PIECES;
+	}
+
+	/** Disabled, or hunted and recognised ({@code seen}), or else {@link #knows}. */
 	public boolean allows(CopNpc cop, Player player) {
 		if (!settings.get().enabled()) {
 			return true;
 		}
-		if (descriptions.isRecognised(player.getUniqueId())) {
+		if (hunted.test(player) && descriptions.isRecognised(player.getUniqueId())) {
 			return report(player, "seen", true);
 		}
 		return knows(player);
@@ -67,8 +90,8 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		}
 
 		boolean blown = outfit.worn(player) && level <= settings.outfitMaxLevel();
-		boolean match = descriptions.matches(player, description, settings.changesNeeded());
-		return report(player, blown ? "blown" : match ? "match" : "mismatch", match);
+		boolean match = descriptions.matches(player, description, changesNeeded(player));
+		return report(player, blown ? "blown" : match ? "match" : "mismatch", blown || match);
 	}
 
 	/** The police outfit fools the cops at his wanted level right now. */

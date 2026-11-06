@@ -79,7 +79,10 @@ public class CombatBehavior implements CopBehavior {
 
 		if (distance <= attackRange && cop.canAttack() && cop.hasLineOfSight(target)) {
 			if (target instanceof Player player) {
-				cop.attack(player);
+				// a player the cops do not recognise is not shot (0.21.6, row 863)
+				if (perception.allowsLockOn(cop, player)) {
+					cop.attack(player);
+				}
 			} else {
 				cop.attackEntity(target);
 			}

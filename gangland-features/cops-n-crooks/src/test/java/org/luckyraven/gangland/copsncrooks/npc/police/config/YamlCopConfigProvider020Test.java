@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.persistence.config.ConfigDocument;
 import org.luckyraven.keystone.persistence.config.ConfigParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
@@ -172,6 +173,48 @@ class YamlCopConfigProvider020Test {
 		assertEquals(new DisguiseSettings(false, List.of("PLAYER_HEAD"), List.of("bandana"), List.of("police_helmet"), 1, 1),
 		             provider.getDisguiseSettings());
 		assertTrue(report.issues().isEmpty(), () -> "unexpected issues: " + report.issues());
+	}
+
+	@Test
+	@DisplayName("By_Difficulty reads row by row and field by field, the rest keeps the shipped scale")
+	void byDifficultyReadsRowsAndFallsBackPerField() {
+		ConfigReport report = new ConfigReport();
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Disguise:
+				      Changes_Needed: 2
+				      By_Difficulty:
+				         Hard:
+				            Memory_Seconds: 7.5
+				         Deadly:
+				            Extra_Changes: 5
+				""" + TIERS, report);
+		DisguiseSettings disguise = provider.getDisguiseSettings();
+
+		assertEquals(7500L, disguise.memoryMillis(NpcDifficulty.HARD));
+		assertEquals(3, disguise.changesNeeded(NpcDifficulty.HARD), "Extra_Changes falls back to 1");
+		assertEquals(7, disguise.changesNeeded(NpcDifficulty.DEADLY));
+		assertEquals(20000L, disguise.memoryMillis(NpcDifficulty.DEADLY), "Memory_Seconds falls back to 20");
+		assertEquals(3000L, disguise.memoryMillis(NpcDifficulty.EASY));
+		assertTrue(report.issues().isEmpty(), () -> "unexpected issues: " + report.issues());
+	}
+
+	@Test
+	@DisplayName("a Memory_Seconds below the floor of 1 is one error and the row default")
+	void memoryBelowTheFloorIsAnErrorAndTheDefault() {
+		ConfigReport report = new ConfigReport();
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Disguise:
+				      By_Difficulty:
+				         Easy:
+				            Memory_Seconds: 0.2
+				""" + TIERS, report);
+
+		assertEquals(3000L, provider.getDisguiseSettings().memoryMillis(NpcDifficulty.EASY));
+		assertEquals(1, report.issues().stream()
+		                      .filter(i -> i.path() != null && i.path().contains("Cops.Disguise.By_Difficulty.Easy.Memory_Seconds"))
+		                      .count(), () -> "expected one issue at Memory_Seconds, got " + report.issues());
 	}
 
 	@Test

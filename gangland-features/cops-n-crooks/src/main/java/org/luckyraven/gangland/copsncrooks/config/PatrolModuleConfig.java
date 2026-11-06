@@ -85,6 +85,7 @@ public class PatrolModuleConfig {
 		container.getInstance(CopSpawnManager.class).setPatrolServices(container.getInstance(PatrolServices.class));
 		copManager.addCopResolver(patrol::beatCopOf);
 		patrol.setGroupLookup(copManager::groupOf);
+		copManager.addCopAttackerReleaseHook(patrol::releaseAttacker);
 	}
 
 	/** Null-safe: the money symbol is unset until settings.yml loads, and {@code Map.of} rejects nulls. */

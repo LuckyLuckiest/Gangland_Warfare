@@ -69,6 +69,9 @@ public class SuspectDescriptions {
 		                              weaponText(inventory.getItemInMainHand()), player.getVehicle() != null, masked);
 	}
 
+	/** Head, chest, legs, feet and vehicle: the most pieces that can differ. */
+	public static final int COMPARED_PIECES = 5;
+
 	/**
 	 * Fewer than {@code changesNeeded} of head, chest, legs, feet and vehicle of {@code player} right now differ from
 	 * those of {@code description}; the weapon is described but never compared.
@@ -131,7 +134,7 @@ public class SuspectDescriptions {
 		recognised.remove(playerId);
 	}
 
-	/** A cop of the chase saw {@code playerId} on the last AI tick and knew him (0.21.5). */
+	/** A cop saw {@code playerId} and knew them within the memory for their stars (0.21.6). */
 	public boolean isRecognised(UUID playerId) {
 		return recognised.contains(playerId);
 	}

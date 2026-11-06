@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.DisguiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.wanted.disguise.DisguiseFixtures.Wearer;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ class DisguiseFilterTest {
 	private PoliceOutfit       outfit;
 	private int                level;
 	private boolean            hunted;
+	private NpcDifficulty      difficulty;
 	private DisguiseFilter     filter;
 	private CopNpc             cop;
 
@@ -37,7 +39,8 @@ class DisguiseFilterTest {
 		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
 		level        = 1;
 		hunted       = true;
-		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> hunted);
+		difficulty   = NpcDifficulty.EASY;
+		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> hunted, p -> difficulty);
 		cop          = mock(CopNpc.class);
 	}
 
@@ -78,6 +81,77 @@ class DisguiseFilterTest {
 	}
 
 	@Test
+	@DisplayName("EASY and NORMAL keep the base two changes: one piece is still him, two are not")
+	void easyAndNormalKeepTwoChanges() {
+		for (NpcDifficulty each : List.of(NpcDifficulty.EASY, NpcDifficulty.NORMAL)) {
+			difficulty = each;
+			wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+			crime();
+
+			wearer.helmet(null);
+			assertTrue(filter.allows(cop, wearer.player), each + ": one piece");
+
+			wearer.leatherChest(Color.fromRGB(20, 20, 250));
+			assertFalse(filter.allows(cop, wearer.player), each + ": two pieces");
+		}
+	}
+
+	@Test
+	@DisplayName("HARD needs three changes: two pieces still fool the filter into allowing, three do not")
+	void hardNeedsThreeChanges() {
+		difficulty = NpcDifficulty.HARD;
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		crime();
+
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250));
+		assertTrue(filter.allows(cop, wearer.player), "two pieces");
+
+		wearer.legs(Material.IRON_LEGGINGS);
+		assertFalse(filter.allows(cop, wearer.player), "three pieces");
+	}
+
+	@Test
+	@DisplayName("DEADLY needs four changes")
+	void deadlyNeedsFourChanges() {
+		difficulty = NpcDifficulty.DEADLY;
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		crime();
+
+		wearer.helmet(null).leatherChest(Color.fromRGB(20, 20, 250)).legs(Material.IRON_LEGGINGS);
+		assertTrue(filter.allows(cop, wearer.player), "three pieces");
+
+		wearer.boots(Material.IRON_BOOTS);
+		assertFalse(filter.allows(cop, wearer.player), "four pieces");
+	}
+
+	@Test
+	@DisplayName("a deployed Changes_Needed adds to the scale: base 1 at HARD is two")
+	void deployedChangesNeededAddsToTheScale() {
+		settings   = new DisguiseSettings(true, List.of("CARVED_PUMPKIN"), List.of(), List.of(), 2, 1);
+		difficulty = NpcDifficulty.HARD;
+		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
+		crime();
+
+		wearer.helmet(null);
+		assertTrue(filter.allows(cop, wearer.player), "one piece");
+
+		wearer.leatherChest(Color.fromRGB(20, 20, 250));
+		assertFalse(filter.allows(cop, wearer.player), "two pieces");
+	}
+
+	@Test
+	@DisplayName("862: a blown police outfit is known whatever else changed")
+	void blownOutfitNeverFools() {
+		dressAsCop();
+		crime();
+		wearer.naked();
+		descriptions.store(wearer.id, descriptions.describe(wearer.player));
+		dressAsCop();
+
+		assertTrue(filter.allows(cop, wearer.player), "blown: two pieces differ, still known");
+	}
+
+	@Test
 	@DisplayName("only one of three changed is still the suspect")
 	void oneChangeStillMatches() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
@@ -97,6 +171,17 @@ class DisguiseFilterTest {
 		descriptions.setRecognised(wearer.id, true);
 
 		assertTrue(filter.allows(cop, wearer.player));
+	}
+
+	@Test
+	@DisplayName("0.21.6: a flag left by a report under the first star counts for nothing while nobody hunts the player")
+	void aStaleFlagDoesNotOutliveTheHunt() {
+		dressAsCop();
+		descriptions.setRecognised(wearer.id, true);
+		hunted = false;
+		level  = 0;
+
+		assertFalse(filter.allows(cop, wearer.player), "the police outfit fools them");
 	}
 
 	@Test

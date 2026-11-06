@@ -179,6 +179,12 @@ class PatrolWiringTest {
 		when(patrol.beatCopOf(entity)).thenReturn(beat);
 		assertSame(beat, resolver.getValue().apply(entity));
 		verify(patrol).beatCopOf(any());
+		ArgumentCaptor<java.util.function.Consumer<java.util.UUID>> release =
+				ArgumentCaptor.forClass(java.util.function.Consumer.class);
+		verify(copManager).addCopAttackerReleaseHook(release.capture());
+		java.util.UUID player = java.util.UUID.randomUUID();
+		release.getValue().accept(player);
+		verify(patrol).releaseAttacker(player);
 	}
 
 	// ---- the lambdas that make the feature work (a "p -> false" bean must fail these) ----

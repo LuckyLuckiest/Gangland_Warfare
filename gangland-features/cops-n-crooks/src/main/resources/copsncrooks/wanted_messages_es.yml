@@ -30,3 +30,6 @@ Disguise:
    Unrecognised: "&aLa policía no te reconoce."
    # Te ve con el uniforme de policía y te toma por uno de los suyos
    Outfit: "&9Con el uniforme, la policía te toma por uno de los suyos."
+   # Se dice una vez cuando ningún policía te ha visto durante la memoria; %suspect% es lo que buscan, %changes% cuántas
+   # piezas deben ser distintas con tus estrellas
+   Lost: "&eLa policía te ha perdido. Busca a: &7%suspect%&e. Deben ser distintos %changes% de: cabeza, pecho, piernas, botas, a pie / en auto."
