@@ -23,11 +23,8 @@ public final class GarrisonPosts {
 	public record Choice(Post post, boolean hidden) {
 	}
 
-	/**
-	 * Four corners inset 2 blocks (less on a tiny region) plus the centre, each at {@code height(x, z) + 1} and the
-	 * middle of its block.
-	 */
-	public static List<Post> posts(CuboidRegion region, IntBinaryOperator height) {
+	/** The five {x, z} block columns: four corners inset 2 blocks (less on a tiny region) plus the centre. */
+	public static List<int[]> spots(CuboidRegion region) {
 		int ix = Math.min(INSET, (region.getMaxX() - region.getMinX()) / 2);
 		int iz = Math.min(INSET, (region.getMaxZ() - region.getMinZ()) / 2);
 		int x0 = region.getMinX() + ix;
@@ -36,13 +33,34 @@ public final class GarrisonPosts {
 		int z1 = region.getMaxZ() - iz;
 		int cx = (region.getMinX() + region.getMaxX()) / 2;
 		int cz = (region.getMinZ() + region.getMaxZ()) / 2;
+		return List.of(new int[]{x0, z0}, new int[]{x1, z0}, new int[]{x0, z1}, new int[]{x1, z1}, new int[]{cx, cz});
+	}
 
+	/** The five posts, each at {@code height(x, z) + 1} and the middle of its block. */
+	public static List<Post> posts(CuboidRegion region, IntBinaryOperator height) {
 		List<Post> posts = new ArrayList<>(5);
-		int[][]    spots = {{x0, z0}, {x1, z0}, {x0, z1}, {x1, z1}, {cx, cz}};
-		for (int[] spot : spots) {
-			posts.add(new Post(spot[0] + 0.5, height.applyAsInt(spot[0], spot[1]) + 1.0, spot[1] + 0.5));
+		for (int[] spot : spots(region)) {
+			posts.add(post(spot, height));
 		}
 		return posts;
+	}
+
+	/**
+	 * Five elements in {@link #spots} order: a post where the chunk is loaded, null where it is not. {@code
+	 * isChunkLoaded} takes chunk coordinates, and {@code height} is never called for an unloaded chunk, since a height
+	 * read there would load it.
+	 */
+	public static List<Post> loaded(CuboidRegion region, BiPredicate<Integer, Integer> isChunkLoaded,
+	                                IntBinaryOperator height) {
+		List<Post> loaded = new ArrayList<>(5);
+		for (int[] spot : spots(region)) {
+			loaded.add(isChunkLoaded.test(spot[0] >> 4, spot[1] >> 4) ? post(spot, height) : null);
+		}
+		return loaded;
+	}
+
+	private static Post post(int[] spot, IntBinaryOperator height) {
+		return new Post(spot[0] + 0.5, height.applyAsInt(spot[0], spot[1]) + 1.0, spot[1] + 0.5);
 	}
 
 	/** Whether a point is inside the region widened by {@code margin} blocks on every side. */

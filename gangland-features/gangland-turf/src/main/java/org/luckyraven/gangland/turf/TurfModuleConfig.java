@@ -298,7 +298,7 @@ public final class TurfModuleConfig {
 	// The per-turf Quartermaster (interactable powerup vendor + hostile-on-contest civilian) and the auto-deploy
 	// garrison defenders. Both spawn through the civilians module's civilian NPC infrastructure — no bespoke
 	// entity types — so model/health/equipment/AI live entirely in civilians.yml. Knobs specific to the turf
-	// system (which civilian type id, deploy radius, lifespan) live in turf/turf_npcs.yml, loaded by
+	// system (which civilian type id, deploy radius) live in turf/turf_npcs.yml, loaded by
 	// TurfNpcsConfigLoader. Now that both the NPC code and the civilian infrastructure it spawns through live
 	// outside cops-n-crooks, GarrisonDeployListener injects TurfDefenderDeployer/TurfPowerupManager directly — the
 	// TurfNpcContract cross-module bridge these beans used to feed has no remote implementor left (T-I4).

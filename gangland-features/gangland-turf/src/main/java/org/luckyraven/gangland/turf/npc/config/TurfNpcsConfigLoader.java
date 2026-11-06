@@ -23,10 +23,11 @@ import java.util.Objects;
  * cops-n-crooks in group I, T-I5). One file, one section per turf-NPC role:
  * <ul>
  *   <li>{@code Powerup_Npc} — the per-turf Quartermaster's display + protection settings</li>
- *   <li>{@code Garrison} — how the bought guards defend: wave size, most alive, wave cooldown, stand-down time,
- *       leash margin and the roles the guards take in spawn order ({@code Composition}) (they ride on {@link TurfDefenderConfig})</li>
- *   <li>{@code Defender} — deploy-side knobs only (civilian type id from {@code civilians.yml}, targeting radius,
- *       lifespan). Actual defender stats / model / equipment / AI tuning live in {@code civilians.yml} under the
+ *   <li>{@code Garrison} — how the bought guards stand and defend: standing cap, wave size, most alive, wave cooldown,
+ *       stand-down time, leash margin and the roles the guards take by number ({@code Composition}) (they ride on
+ *       {@link TurfDefenderConfig})</li>
+ *   <li>{@code Defender} — deploy-side knobs only (civilian type id from {@code civilians.yml}, targeting radius).
+ *       Actual defender stats / model / equipment / AI tuning live in {@code civilians.yml} under the
  *       referenced type id — defenders ARE civilians, just with their target hand-picked at deploy time.</li>
  * </ul>
  */
@@ -124,19 +125,23 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		                                                              log::warn)
 		                                  : GarrisonComposition.DEFAULT;
 
+		// the code default, because an existing install never gets the key (0 = guards appear only in a contest)
+		int standingCap = gr == null ? TurfDefenderConfig.DEFAULT_STANDING_CAP
+		                             : gr.get("Standing_Cap").asInt().min(0)
+		                                 .orDefault(TurfDefenderConfig.DEFAULT_STANDING_CAP);
+
 		MappingNode defNode = root.get("Defender").asMapping().required().orNull();
 		if (defNode != null) {
 			NodeReader dr = NodeReader.of(defNode, report);
 			defenderConfig = new TurfDefenderConfig(
 					dr.get("Type_Id").asString().orDefault("turf_defender"),
 					dr.get("Targeting_Radius").asDouble().min(1.0).orDefault(32.0),
-					dr.get("Lifespan_Seconds").asInt().min(1).orDefault(600),
 					waveSize, maxAlive, waveCooldown, standDown, leashMargin, composition, bountyShare,
-					recycleSeconds, holdRadius);
+					recycleSeconds, holdRadius, standingCap);
 		} else {
-			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, 600, waveSize, maxAlive, waveCooldown,
+			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, waveSize, maxAlive, waveCooldown,
 			                                        standDown, leashMargin, composition, bountyShare,
-			                                        recycleSeconds, holdRadius);
+			                                        recycleSeconds, holdRadius, standingCap);
 		}
 
 		MappingNode copNode = root.get("Cop_Response").asMapping().orNull();
