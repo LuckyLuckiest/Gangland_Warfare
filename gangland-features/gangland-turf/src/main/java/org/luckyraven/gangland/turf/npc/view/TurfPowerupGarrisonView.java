@@ -16,7 +16,6 @@ import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
-import org.luckyraven.keystone.inventory.component.FillComponent;
 import org.luckyraven.keystone.inventory.component.ItemComponent;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import org.luckyraven.keystone.inventory.flow.Panel;
@@ -45,11 +44,11 @@ import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.refusal;
 @RequiredArgsConstructor
 public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSession> {
 
-	private static final int ROWS       = 3;
-	private static final int SLOT_INFO  = 4;
-	private static final int SLOT_BUY   = 13;
-	private static final int SLOT_BACK  = 18;
-	private static final int SLOT_CLOSE = 26;
+	private static final int ROWS       = 5;
+	private static final int SLOT_INFO  = 20;
+	private static final int SLOT_BUY   = 24;
+	private static final int SLOT_BACK  = 36;
+	private static final int SLOT_CLOSE = 44;
 
 	private final GarrisonManager      garrisons;
 	private final PowerupRegistry      registry;
@@ -68,8 +67,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 
 	@Override
 	public String title(TurfPowerupFlowSession session) {
-		return messages.text("Quartermaster.Title_Garrison", "&8&l[&c&lGarrison &8— &6%npc%&8&l]",
-		                     "npc", session.getNpcDisplayName());
+		return messages.text("Quartermaster.Title_Garrison", "&5Garrison");
 	}
 
 	@Override
@@ -89,8 +87,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		// the ring comes with the menu pass (task M); until then only the fill is drawn
-		builder.fill(FillComponent.of(MenuStyle.material(style.get().fillItem(), Material.BLACK_STAINED_GLASS_PANE)).name(" "));
+		style.get().decorate(builder);
 	}
 
 	/**
@@ -137,7 +134,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	}
 
 	private ItemBuilder infoItem(Turf turf, Gang gang) {
-		return new ItemBuilder(Material.IRON_HELMET)
+		return new ItemBuilder(Material.ARMOR_STAND)
 				.setDisplayName(messages.text("Quartermaster.Garrison_Name", "&c&lGarrison"))
 				.setLore(infoLore(turf, gang));
 	}
@@ -149,7 +146,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		lore.add(messages.text("Quartermaster.Garrison_Buy_Cost", "&7Cost: &6%money%", "money", money(price)));
 		lore.add(" ");
 		lore.add(buyLine(session, canAfford));
-		return new ItemBuilder(Material.IRON_SWORD)
+		return new ItemBuilder(Material.EMERALD)
 				.setDisplayName(messages.text("Quartermaster.Garrison_Buy_Name", "&aBuy &f1 &aDefender"))
 				.setLore(lore);
 	}

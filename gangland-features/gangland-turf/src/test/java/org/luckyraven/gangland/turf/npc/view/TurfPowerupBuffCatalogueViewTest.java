@@ -317,7 +317,7 @@ class TurfPowerupBuffCatalogueViewTest {
 
 		List<String> lore = loreOf(boost("x", EffectType.INCOME_MULTIPLIER, 1.5), buffs);
 
-		assertTrue(lore.stream().anyMatch(line -> line.matches(".*Active: .*D(299|300).* left.*")), lore.toString());
+		assertTrue(lore.stream().anyMatch(line -> line.matches(".*Active: .*D(299|300).*left.*")), lore.toString());
 		assertTrue(lore.stream().anyMatch(line -> line.contains("Buying again stacks")), lore.toString());
 	}
 
