@@ -149,10 +149,14 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			// T-767: live tag, config, owner and price
 			group.garrison.adopt(garrison);
 			group.garrison.squads = new TurfGarrisonSquads(civilianService, garrison.turfId, garrison.tag);
+			// a rally only pulls guards holding the same instance
+			for (TrackedDefender d : group.defenders) d.npc.setFactionSquads(group.garrison.squads);
 		}
 		group.challengerMembers       = challengers;
 		group.contested               = true;
 		group.garrison.standingDown   = false;
+		// a contest that ended during the visibility wait must not skip this one's
+		group.garrison.delayedSince   = -1L;
 		// T-281, T-285: "half the guards" counts from here
 		group.deployed                = aliveCount(garrison.turfId);
 	}
@@ -430,10 +434,15 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		}
 	}
 
-	/** Removes guards past {@code target}, the highest numbers first, with no debit. Leaves the list at once. */
+	/**
+	 * Removes guards past {@code target}, and any numbered above it, the highest numbers first, with no debit. Leaves
+	 * the list at once. A number above the target shares a low number's post, so it gives way and the free low number
+	 * refills its own post (ruling 2).
+	 */
 	private void trim(Group group, int target) {
-		while (group.defenders.size() > target) {
+		while (!group.defenders.isEmpty()) {
 			TrackedDefender surplus = Collections.max(group.defenders, Comparator.comparingInt(d -> numberOf(d.npc)));
+			if (group.defenders.size() <= target && numberOf(surplus.npc) <= target) return;
 			surplus.npc.markForRemoval();
 			untrack(surplus);
 			group.defenders.remove(surplus);

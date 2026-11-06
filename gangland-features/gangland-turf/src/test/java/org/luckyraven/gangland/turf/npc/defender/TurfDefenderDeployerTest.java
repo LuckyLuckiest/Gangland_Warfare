@@ -16,6 +16,7 @@ import org.luckyraven.gangland.civilians.events.CivilianDeathEvent;
 import org.luckyraven.gangland.civilians.listener.civilian.CivilianDeathListener;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
+import org.luckyraven.gangland.civilians.npc.FactionSquads;
 import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianDropConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
@@ -51,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -869,6 +871,66 @@ class TurfDefenderDeployerTest {
 	}
 
 	@Test
+	@DisplayName("a guard numbered past the peace target gives up its place: contest 1-6, number 2 killed, then 1-5 stand one per post")
+	void standDown_highNumberRetires_freeLowNumberRefillsItsPost() {
+		try (Rig rig = new Rig(10)) {
+			rig.ticks(2);
+			rig.contest();
+			rig.ticks(1);
+			assertEquals(6, rig.spawned.size());
+
+			rig.deployer.markKilled(rig.spawned.get(1));
+			when(rig.spawned.get(1).isValid()).thenReturn(false);
+			rig.ticks(1);
+			assertEquals(9, rig.stock.get());
+
+			rig.deployer.standDown(1, true);
+			rig.garrison().standDownAt = 0L;
+			rig.garrison().lastLossAt -= 20_000L;
+			rig.ticks(2);
+
+			assertEquals(7, rig.spawned.size(), "number 2 comes back");
+			verify(rig.spawned.get(5)).markForRemoval();
+			assertEquals(5, rig.alive());
+			assertEquals(9, rig.stock.get());
+			assertEquals(rig.spawnedAt.get(1).getX(), rig.spawnedAt.get(6).getX());
+			assertEquals(rig.spawnedAt.get(1).getZ(), rig.spawnedAt.get(6).getZ());
+			Set<String> posts = new HashSet<>();
+			for (int i : List.of(0, 2, 3, 4, 6)) {
+				verify(rig.spawned.get(i), never()).markForRemoval();
+				posts.add(rig.spawnedAt.get(i).getX() + "," + rig.spawnedAt.get(i).getZ());
+			}
+			assertEquals(5, posts.size(), "one guard per post");
+		}
+	}
+
+	@Test
+	@DisplayName("a turf's guards share one squads provider across a contest start, so a standing guard and a top-up rally together")
+	void contest_standingAndTopUpShareOneSquadsProvider() {
+		try (Rig rig = new Rig(10)) {
+			rig.ticks(2);
+			rig.contest();
+			rig.ticks(1);
+			assertEquals(6, rig.spawned.size());
+
+			assertSame(lastSquads(rig.spawned.get(5)), lastSquads(rig.spawned.get(0)));
+		}
+	}
+
+	@Test
+	@DisplayName("a contest start forgets a visibility wait left by a contest that ended during it")
+	void contest_resetsDelayedSince() {
+		try (Rig rig = new Rig(10)) {
+			rig.ticks(1);
+			rig.garrison().delayedSince = 5L;
+
+			rig.contest();
+
+			assertEquals(-1L, rig.garrison().delayedSince);
+		}
+	}
+
+	@Test
 	@DisplayName("turf delete: at stock 0 the delay is skipped, the guards leave on the next tick and the group is dropped")
 	void standDown_stockZero_trimsAtOnce() {
 		try (Rig rig = new Rig(3)) {
@@ -1516,6 +1578,13 @@ class TurfDefenderDeployerTest {
 	}
 
 	/** A live guard with a body at {@code at}; its removal mark, state and targets follow their setters. */
+	/** The squads provider this guard was last given. */
+	private static FactionSquads lastSquads(CivilianNpc guard) {
+		ArgumentCaptor<FactionSquads> captor = ArgumentCaptor.forClass(FactionSquads.class);
+		verify(guard, atLeastOnce()).setFactionSquads(captor.capture());
+		return captor.getValue();
+	}
+
 	private static CivilianNpc guardAt(Location at) {
 		CivilianNpc  npc  = liveNpc();
 		LivingEntity body = mock(LivingEntity.class);

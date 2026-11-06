@@ -19,8 +19,8 @@
 #   - Powerup_Npc — the per-turf Quartermaster: staff place it with /glw turf powerupnpc set, the owning gang with /glw turf quartermaster
 #   - Defender    — deploy-side knobs only. Defender NPCs ARE civilian NPCs (defined in civilians.yml under
 #                   the type id below). Their model, health, equipment, damage, AI tuning, etc. all live there.
-#                   This section only controls how the deployer routes them: which type to spawn, how far they
-#                   chase attackers, and a safety lifespan in case the recall event misses them.
+#                   This section only controls how the deployer routes them: which type to spawn and how far they
+#                   chase attackers.
 #
 # These are NOT the powerup catalogue (which lives in turf_powerups.yml). They're hot-reloadable.
 Powerup_Npc:
