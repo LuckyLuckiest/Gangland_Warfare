@@ -52,7 +52,7 @@ class TurfPowerupMenuViewTest {
 		when(messages.text(anyString(), anyString(), any(Object[].class)))
 				.thenAnswer(invocation -> invocation.getArgument(0));
 		when(messages.text(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
-		view = new TurfPowerupMenuView(garrisons, buffs, aliveGuards, access, messages, "STONE", "&7");
+		view = new TurfPowerupMenuView(garrisons, buffs, aliveGuards, access, messages, () -> MenuStyle.DEFAULT);
 
 		turf = mock(Turf.class);
 		when(turf.getId()).thenReturn(TURF_ID);

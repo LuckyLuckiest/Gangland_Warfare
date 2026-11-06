@@ -2,6 +2,7 @@ package org.luckyraven.gangland.turf.config;
 
 import lombok.Getter;
 import org.luckyraven.gangland.file.configuration.MovedSetting;
+import org.luckyraven.gangland.turf.npc.view.MenuStyle;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileInitializer;
@@ -53,6 +54,7 @@ public final class TurfSettings implements FileInitializer {
 	@Getter private Tone          failedSound;
 	@Getter private Tone          tickSound;
 	@Getter private Tone          unclaimedSound;
+	private       MenuStyle       menuStyle = MenuStyle.DEFAULT;
 
 	/** Bean constructor: the file was registered by {@code TurfModuleFileConfig} in the KERNEL phase. */
 	public TurfSettings(FileManager fileManager) {
@@ -87,6 +89,11 @@ public final class TurfSettings implements FileInitializer {
 			return;
 		}
 		load();
+	}
+
+	/** The Quartermaster panels' ring and fill items. */
+	public MenuStyle menuStyle() {
+		return menuStyle;
 	}
 
 	private void load() {
@@ -128,6 +135,11 @@ public final class TurfSettings implements FileInitializer {
 		failedSound    = tone(moved, "Failed", "ENTITY_VILLAGER_NO", 1.0, 1.0);
 		tickSound      = tone(moved, "Tick", "BLOCK_NOTE_BLOCK_HAT", 0.3, 1.8);
 		unclaimedSound = tone(moved, "Unclaimed", "ENTITY_ENDER_DRAGON_GROWL", 0.5, 1.5);
+
+		menuStyle = new MenuStyle(fileHandler.getFileConfiguration().getString("Menu.Border_Item",
+		                                                                       MenuStyle.DEFAULT.borderItem()),
+		                          fileHandler.getFileConfiguration().getString("Menu.Fill_Item",
+		                                                                       MenuStyle.DEFAULT.fillItem()));
 
 	}
 

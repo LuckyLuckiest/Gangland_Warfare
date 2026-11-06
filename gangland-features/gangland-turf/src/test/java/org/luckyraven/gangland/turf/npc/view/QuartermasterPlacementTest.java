@@ -107,7 +107,7 @@ class QuartermasterPlacementTest {
 		                                                                       cost);
 		placement = new QuartermasterPlacement(mock(JavaPlugin.class), mock(InventoryService.class), turfs, gangs,
 		                                       users, access, npcs, messages, settings, () -> citizens,
-		                                       "STONE", "&7");
+		                                       () -> MenuStyle.DEFAULT);
 	}
 
 	@Test

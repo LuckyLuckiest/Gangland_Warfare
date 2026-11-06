@@ -95,7 +95,7 @@ class TurfPowerupGarrisonViewTest {
 		when(messages.text(anyString(), anyString(), any(Object[].class))).thenAnswer(invocation -> invocation.getArgument(0));
 		waves = new AtomicReference<>(new TurfDefenderConfig("turf_defender", 32.0, 600));
 		view = new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules,
-		                                   aliveGuards, waves::get, messages, "STONE", "&7");
+		                                   aliveGuards, turfId -> waves.get(), messages, () -> MenuStyle.DEFAULT);
 	}
 
 	@Test

@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.turf.npc.view;
 
-import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
@@ -20,6 +19,7 @@ import org.luckyraven.keystone.item.ItemBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntUnaryOperator;
+import java.util.function.Supplier;
 
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 
@@ -45,8 +45,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 	private final IntUnaryOperator  aliveGuards;
 	private final QuartermasterAccess access;
 	private final TurfMessages      messages;
-	private final String            fillItem;
-	private final String            fillName;
+	private final Supplier<MenuStyle> style;
 
 	@Override
 	public int rows(TurfPowerupFlowSession session) {
@@ -76,7 +75,8 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+		// the ring comes with the menu pass (task M); until then only the fill is drawn
+		builder.fill(FillComponent.of(MenuStyle.material(style.get().fillItem(), Material.BLACK_STAINED_GLASS_PANE)).name(" "));
 	}
 
 	private ItemBuilder infoItem(Turf turf, Gang ownerGang, Gang viewerGang) {
@@ -174,7 +174,4 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 				                       "count", garrisons.count(turf.getId())));
 	}
 
-	private static Material materialOf(String name) {
-		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
-	}
 }

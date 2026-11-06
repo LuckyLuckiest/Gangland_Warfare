@@ -103,3 +103,8 @@ Capture:
          Name: ENTITY_ENDER_DRAGON_GROWL
          Volume: 0.5
          Pitch: 1.5
+
+# Quartermaster panels: the outer ring and the empty slots inside it (XSeries material names).
+Menu:
+   Border_Item: BLACK_STAINED_GLASS_PANE
+   Fill_Item: GRAY_STAINED_GLASS_PANE
