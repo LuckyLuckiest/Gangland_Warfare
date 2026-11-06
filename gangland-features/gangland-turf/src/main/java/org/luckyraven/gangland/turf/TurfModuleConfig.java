@@ -14,7 +14,6 @@ import org.luckyraven.gangland.turf.database.TurfGarrisonRepository;
 import org.luckyraven.gangland.turf.database.TurfPowerupNpcRepository;
 import org.luckyraven.gangland.turf.database.TurfRepository;
 import org.luckyraven.gangland.turf.database.TurfSequenceRepository;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.GanglandTurfMessages;
 import org.luckyraven.gangland.turf.config.GanglandTurfSounds;
 import org.luckyraven.gangland.turf.config.TurfSettings;
@@ -68,7 +67,7 @@ import java.util.List;
 
 /**
  * Bean wiring for the gang-turf feature. The tuning numbers come from {@link TurfSettings} (the module's own
- * {@code turf/turf_settings.yml}); the shared inventory-filler look still comes from {@link Settings}.
+ * {@code turf/turf_settings.yml}), including the Quartermaster panel look.
  */
 @Configuration
 public final class TurfModuleConfig {

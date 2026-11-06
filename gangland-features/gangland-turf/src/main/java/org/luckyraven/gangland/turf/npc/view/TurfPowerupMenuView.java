@@ -173,5 +173,4 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 				         messages.text("Quartermaster.Menu_Garrison_Stock", "&7Current stock: &f%count%",
 				                       "count", garrisons.count(turf.getId())));
 	}
-
 }

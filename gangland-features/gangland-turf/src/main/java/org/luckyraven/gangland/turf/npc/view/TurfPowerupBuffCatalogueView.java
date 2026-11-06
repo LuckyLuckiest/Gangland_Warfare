@@ -202,5 +202,4 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 		return messages.text("Quartermaster.Cannot_Afford", "&cYour gang bank can't cover &f%money%&c.",
 		                     "money", money(def.cost()));
 	}
-
 }

@@ -230,5 +230,4 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		return messages.text("Quartermaster.Cannot_Afford", "&cYour gang bank can't cover &f%money%&c.",
 		                     "money", money(price));
 	}
-
 }

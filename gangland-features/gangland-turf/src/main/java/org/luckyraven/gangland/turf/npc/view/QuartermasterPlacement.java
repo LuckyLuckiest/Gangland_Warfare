@@ -251,5 +251,4 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 			default -> QuartermasterAccess.refusal(messages, key);
 		};
 	}
-
 }
