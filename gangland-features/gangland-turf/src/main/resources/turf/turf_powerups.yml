@@ -38,7 +38,7 @@
 # Buying the same boost twice stacks it, up to the Limits at the bottom of the file.
 #
 # Cost is paid out of the owning gang's bank when the buff is activated. The prices here are the shipped defaults.
-# The reserve cap on guards per turf is turf_rules.yml Garrison.Max_Reserve.
+# The cap on guards a turf owns is turf_rules.yml Garrison.Max_Reserve.
 # Duration_Seconds is wall-clock; the buff expires once that many seconds elapse, regardless of capture activity.
 Powerups:
    # Income boost, 1.25 times the payout for an hour.

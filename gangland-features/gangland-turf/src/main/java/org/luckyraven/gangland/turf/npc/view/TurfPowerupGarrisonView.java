@@ -33,7 +33,7 @@ import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.refusal;
 
 /**
- * Garrison sub-panel: the turf's guard stock and the price of one more guard, paid from the gang bank. The guard holds
+ * Garrison sub-panel: the guards the turf owns and the price of one more guard, paid from the gang bank. The guard holds
  * the capture bar and fights attackers. Every purchase runs {@link QuartermasterAccess#denyKey} first (TF-19, TF-45),
  * then affordability, then the owned-guards cap ({@code turf_rules.yml} Garrison.Max_Reserve), then withdraws from the owner gang. The price is
  * {@code turf_powerups.yml} Garrison.Cost_Per_Guard times any active garrison_discount (TF-17, TF-02).
@@ -103,7 +103,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		return price.max(BigDecimal.ONE);
 	}
 
-	/** The info lore in order: stock, guards on duty, reserve against the cap, next wave, price, bank (W7-H). */
+	/** The info lore in order: Owned, On duty, In reserve, Contest top-up, price, bank, then the where lines (W7-H). */
 	List<String> infoLore(Turf turf, Gang gang) {
 		int turfId = turf.getId();
 		int stock  = garrisons.count(turfId);
@@ -134,7 +134,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	 * minus those on duty (no cooldown).
 	 */
 	static int nextWave(int stock, int alive, TurfDefenderConfig config) {
-		return TurfGarrison.toSpawn(Math.max(0, stock - alive), alive, config.maxAlive(), config.waveSize(),
+		return TurfGarrison.toSpawn(stock - alive, alive, config.maxAlive(), config.waveSize(),
 		                            config.waveSize(), -1L, 0L, 0L);
 	}
 
@@ -156,7 +156,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 				.setLore(lore);
 	}
 
-	/** The buy item's action line: a full reserve says so for the owner (T-823); allies keep the look-only line. */
+	/** The buy item's action line: a turf at the owned cap says so for the owner (T-823); allies keep the look-only line. */
 	String buyLine(TurfPowerupFlowSession session, boolean canAfford) {
 		Turf turf = session.getTurf();
 		boolean full = garrisons.count(turf.getId()) >= rules.getMaxReserve();

@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -65,7 +66,7 @@ class QuartermasterYamlTest {
 			assertTrue(yaml.isSet("Quartermaster." + key), key);
 		}
 		for (String key : new String[]{"Garrison_Stock", "Garrison_Reserve", "Reserve_Full"}) {
-			assertTrue(!yaml.isSet("Quartermaster." + key), key);
+			assertFalse(yaml.isSet("Quartermaster." + key), key);
 		}
 	}
 

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.config.TurfRules;
@@ -16,6 +17,7 @@ import org.luckyraven.gangland.turf.powerups.EffectType;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 import org.luckyraven.keystone.economy.EconomyHandler;
+import org.luckyraven.gangland.turf.npc.defender.GarrisonComposition;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.support.TurfTextFixture;
@@ -36,6 +38,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -191,10 +195,9 @@ class TurfPowerupGarrisonViewTest {
 	}
 
 	@Test
-	@DisplayName("a buy is allowed while stock plus deployed guards is under Max_Reserve")
+	@DisplayName("a buy is allowed while the guards owned are under Max_Reserve")
 	void reserveCap_underCapStillBuys() {
 		when(garrisons.count(TURF_ID)).thenReturn(4);
-		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(7);
 
 		view.attemptBuy(flow, viewer, session);
 
@@ -295,6 +298,20 @@ class TurfPowerupGarrisonViewTest {
 		assertTrue(lore.contains("Quartermaster.Garrison_Where_Two"));
 		assertTrue(lore.stream().noneMatch(l -> l.equals("Quartermaster.Garrison_Stock")
 		                                         || l.equals("Quartermaster.Garrison_Reserve")));
+		int bank = lore.indexOf("Quartermaster.Garrison_Bank");
+		assertEquals("Quartermaster.Garrison_Where_One", lore.get(bank + 2));
+		assertEquals("Quartermaster.Garrison_Where_Two", lore.get(bank + 3));
+	}
+
+	@Test
+	@DisplayName("infoLore_reserveClampsAtZero: more standing than owned shows In reserve 0")
+	void infoLore_reserveClampsAtZero() {
+		when(garrisons.count(TURF_ID)).thenReturn(3);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(5);
+
+		view.infoLore(session.getTurf(), session.getOwnerGang());
+
+		verify(messages).text(eq("Quartermaster.Garrison_In_Reserve"), anyString(), eq("count"), eq(0));
 	}
 
 	@Test
@@ -302,14 +319,29 @@ class TurfPowerupGarrisonViewTest {
 	void bought_saysPostOrReserve() {
 		when(garrisons.count(TURF_ID)).thenReturn(5);
 		view.attemptBuy(flow, viewer, session);
-		org.mockito.InOrder order = org.mockito.Mockito.inOrder(viewer);
+		InOrder order = inOrder(viewer);
 		order.verify(viewer).sendMessage("Quartermaster.Bought_Guard");
 		order.verify(viewer).sendMessage("Quartermaster.Bought_Guard_Post");
+		verify(viewer, never()).sendMessage("Quartermaster.Bought_Guard_Reserve");
 
-		org.mockito.Mockito.clearInvocations(viewer);
+		clearInvocations(viewer);
 		when(garrisons.count(TURF_ID)).thenReturn(6);
 		view.attemptBuy(flow, viewer, session);
-		verify(viewer).sendMessage("Quartermaster.Bought_Guard");
+		order = inOrder(viewer);
+		order.verify(viewer).sendMessage("Quartermaster.Bought_Guard");
+		order.verify(viewer).sendMessage("Quartermaster.Bought_Guard_Reserve");
+		verify(viewer, never()).sendMessage("Quartermaster.Bought_Guard_Post");
+	}
+
+	@Test
+	@DisplayName("bought_readsConfiguredStandingCap: with Standing_Cap 2 the third guard waits in reserve")
+	void bought_readsConfiguredStandingCap() {
+		waves.set(new TurfDefenderConfig("turf_defender", 32.0, 3, 6, 20, 8, 16,
+				GarrisonComposition.NONE, 0.5, 12, 6.0, 2));
+		when(garrisons.count(TURF_ID)).thenReturn(3);
+
+		view.attemptBuy(flow, viewer, session);
+
 		verify(viewer).sendMessage("Quartermaster.Bought_Guard_Reserve");
 		verify(viewer, never()).sendMessage("Quartermaster.Bought_Guard_Post");
 	}
@@ -345,9 +377,21 @@ class TurfPowerupGarrisonViewTest {
 	@DisplayName("a reserve under the cap keeps the click line (T-823)")
 	void buyLine_underCap_ownerSeesClick() {
 		when(garrisons.count(TURF_ID)).thenReturn(3);
-		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(0);
 
 		assertEquals("Quartermaster.Garrison_Buy_Click", view.buyLine(session, true));
+	}
+
+	@Test
+	@DisplayName("buyLine counts guards owned only: 11 owned with 5 standing still clicks, 12 owned is full")
+	void buyLine_countsOwnedOnly() {
+		when(garrisons.count(TURF_ID)).thenReturn(11);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(5);
+
+		assertEquals("Quartermaster.Garrison_Buy_Click", view.buyLine(session, true));
+
+		when(garrisons.count(TURF_ID)).thenReturn(12);
+
+		assertEquals("Quartermaster.Garrison_Buy_Full", view.buyLine(session, true));
 	}
 
 	@Test
