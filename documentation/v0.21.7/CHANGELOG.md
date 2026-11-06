@@ -38,8 +38,7 @@ Upgrade from 0.21.5 or 0.21.6. Config files are never rewritten: edit them by ha
 
 ### Hitting an idle guard is still a crime
 
-- Hitting an idle rival guard still commits assault, and killing one that is not fighting still commits a killing. No code
-  change: the guards are idle most of the time now, so this decides who dares attack a turf.
+- Hitting an idle rival guard commits assault, and killing one that is not fighting commits a killing, even with a single blow. A killing blow used to count as a fair fight, so this needed a fix. The fix covers every hostile NPC, not only guards, and it also applies to a guard sniped during a contest before it has a target.
 
 ### Three guard powerups
 
@@ -84,7 +83,7 @@ Upgrade from 0.21.5 or 0.21.6. Config files are never rewritten: edit them by ha
 
 ## Docket
 
-Fixed: 880, 881, 882, 883, 884, 888, 889, 890. Open by decision: 885 (a rival's hit or an answer to a cop sets wanted on a
+Fixed: 880, 881, 882, 883, 884, 886, 888, 889, 890, 899, 902, 903, 904, 910. Open by decision: 885 (a rival's hit or an answer to a cop sets wanted on a
 standing guard; watch it on the Test Server), 886 (hitting or killing an idle guard is a crime, by owner ruling),
 887 (a discount of 0.5 or lower lets an alt account farm the bounty once the buff lapses), 891 (a wanted member can shelter
 on the turf, and each fight can pull more cops; watch it on the Test Server). Still open: 298 for contest batches sharing a
