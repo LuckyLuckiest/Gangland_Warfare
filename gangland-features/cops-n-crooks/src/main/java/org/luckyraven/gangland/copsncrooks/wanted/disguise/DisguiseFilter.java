@@ -62,12 +62,12 @@ public class DisguiseFilter implements BiPredicate<CopNpc, Player> {
 		return !outfitDecides && changesNeeded(player) <= SuspectDescriptions.COMPARED_PIECES;
 	}
 
-	/** Disabled, or recognised on the last AI tick ({@code seen}), or else {@link #knows}. */
+	/** Disabled, or hunted and recognised ({@code seen}), or else {@link #knows}. */
 	public boolean allows(CopNpc cop, Player player) {
 		if (!settings.get().enabled()) {
 			return true;
 		}
-		if (descriptions.isRecognised(player.getUniqueId())) {
+		if (hunted.test(player) && descriptions.isRecognised(player.getUniqueId())) {
 			return report(player, "seen", true);
 		}
 		return knows(player);

@@ -109,6 +109,10 @@ public final class HeatLedger {
 			reporting     = null;
 			reportingKind = null;
 			reportingAt   = null;
+			Consumer<Player> landed = reportLanded;
+			if (landed != null) {
+				landed.accept(criminal);
+			}
 		}
 	}
 

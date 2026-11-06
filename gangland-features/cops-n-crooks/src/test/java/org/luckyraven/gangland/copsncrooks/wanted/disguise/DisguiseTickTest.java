@@ -653,8 +653,8 @@ class DisguiseTickTest {
 	}
 
 	@Test
-	@DisplayName("D7: a blown outfit with no description (a quit wiped it) is cleared on a tick nobody hunts him")
-	void unhuntedTickClearsBlownWithNoDescription() {
+	@DisplayName("D7 (0.21.6): a blow with no chase state to end (a quit, a hit at 0 stars) waits for the next crime")
+	void unhuntedTickKeepsABlowWithNoChaseState() {
 		dressAsCop();
 		outfit.onCrime(wearer.player);
 		assertNull(descriptions.latest(wearer.id));
@@ -662,7 +662,72 @@ class DisguiseTickTest {
 		level = 0;
 		tick.tick(wearer.player, null);
 
-		assertTrue(outfit.hides(wearer.player, 2), "nobody hunts him: the outfit fools them again");
+		assertFalse(outfit.hides(wearer.player, 2), "the next crime outside a chase clears it (SuspectListener)");
+	}
+
+	@Test
+	@DisplayName("864 (scenario 24): a hit in the outfit at 0 stars while the old squad walks home survives its AI ticks")
+	void aHitAtZeroStarsSurvivesTheWalkHome() {
+		level = 0;
+		dressAsCop();
+		CopNpc cop = hitCop(true);
+
+		tick.exposed(cop, wearer.player);
+		tick.tick(wearer.player, group);
+
+		assertTrue(filter.allows(cop, wearer.player), "no free attack during the walk home");
+	}
+
+	@Test
+	@DisplayName("0.21.6: a cop's report that raised no star leaves no flag: no chase followed it")
+	void aReportUnderTheFirstStarLeavesNoFlag() {
+		level = 0;
+		describedInPumpkinAndJacket();
+
+		tick.witnessed(wearer.player);
+		tick.reportLanded(wearer.player);
+
+		assertFalse(descriptions.isRecognised(wearer.id));
+
+		level = 1;
+		blindAt(5000);
+		assertEquals(List.of(), told(), "a chase with no cop involved is not told the cops lost the player");
+	}
+
+	@Test
+	@DisplayName("0.21.6: guard - a report that started the chase keeps the memory")
+	void aReportThatRaisedAStarKeepsTheMemory() {
+		describedInPumpkinAndJacket();
+
+		tick.witnessed(wearer.player);
+		tick.reportLanded(wearer.player);
+
+		assertTrue(descriptions.isRecognised(wearer.id));
+	}
+
+	@Test
+	@DisplayName("0.21.6: guard - learnedAt moves on a sighting and a hit, not on a report; forget and an escape drop it")
+	void learnedAtFollowsTheLookTheCopsSaw() {
+		describedInPumpkinAndJacket();
+		assertNull(tick.learnedAt(wearer.id));
+
+		seenAt(100);
+		assertEquals(100L, tick.learnedAt(wearer.id));
+
+		now = 200;
+		tick.witnessed(wearer.player);
+		assertEquals(100L, tick.learnedAt(wearer.id), "a report teaches no look");
+
+		now = 300;
+		tick.exposed(hitCop(true), wearer.player);
+		assertEquals(300L, tick.learnedAt(wearer.id));
+
+		tick.escaped(wearer.id);
+		assertNull(tick.learnedAt(wearer.id));
+
+		seenAt(400);
+		tick.forget(wearer.id);
+		assertNull(tick.learnedAt(wearer.id));
 	}
 
 	@Test

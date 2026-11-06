@@ -275,6 +275,23 @@ class HeatLedgerTest {
 	}
 
 	@Test
+	@DisplayName("0.21.6: the landed hook runs after the commit, with the report over; a plain crime never runs it")
+	void reportLandedRunsAfterTheCommit() {
+		java.util.List<String> order = new java.util.ArrayList<>();
+		ledger.setReportLanded(p -> order.add("landed reporting=" + ledger.isReporting(playerId)));
+
+		ledger.record(new CrimeCommittedEvent(player, Crimes.ASSAULT_COP, location, false, 1));
+		assertEquals(java.util.List.of(), order);
+
+		ledger.commitReported(player, ReportKind.COP, () -> {
+			order.add("commit");
+			return true;
+		});
+
+		assertEquals(java.util.List.of("commit", "landed reporting=false"), order);
+	}
+
+	@Test
 	@DisplayName("0.21.6: isCopReporting holds only for the reported criminal, only inside a cop's own report")
 	void isCopReportingOnlyForACopsOwnReport() {
 		Player other = mock(Player.class);

@@ -37,6 +37,7 @@ public class DisguiseTick {
 	private final Map<UUID, String>             spoken      = new ConcurrentHashMap<>();
 	private final Map<UUID, WantedMessages.Key> told        = new ConcurrentHashMap<>();
 	private final Map<UUID, Long>               lastSeen    = new ConcurrentHashMap<>();
+	private final Map<UUID, Long>               learned     = new ConcurrentHashMap<>();
 	private final List<Consumer<UUID>>          forgetHooks = new CopyOnWriteArrayList<>();
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
@@ -56,10 +57,11 @@ public class DisguiseTick {
 
 		// before the group check: shutdown and an emptied group tick with no group (rows 411, 430)
 		if (!filter.hunted(player)) {
-			// the search giving up fires no WantedEndEvent, and a quit wiped the description but kept the blow;
-			// kept out of forget so a quit does not un-blow it
-			outfit.clear(id);
+			// the search giving up fires no WantedEndEvent. A blow with no chase state to end stays: a hit in the outfit
+			// at 0 stars while an old squad walks home must survive these ticks, and the blow a quit keeps waits for the
+			// next crime outside a chase (SuspectListener)
 			if (descriptions.latest(id) != null || spoken.containsKey(id)) {
+				outfit.clear(id);
 				descriptions.clear(id);
 				forget(id);
 			}
@@ -84,6 +86,7 @@ public class DisguiseTick {
 		// only a cop who sees the player learns anything
 		if (eyes && known) {
 			lastSeen.put(id, now);
+			learned.put(id, now);
 			descriptions.store(id, descriptions.describe(player));
 			// they see him in it: it no longer fools them
 			if (outfit.worn(player)) {
@@ -147,6 +150,7 @@ public class DisguiseTick {
 	public void escaped(UUID id) {
 		descriptions.setRecognised(id, false);
 		lastSeen.remove(id);
+		learned.remove(id);
 		told.remove(id);
 	}
 
@@ -169,16 +173,26 @@ public class DisguiseTick {
 		}
 
 		descriptions.store(id, descriptions.describe(attacker));
+		learned.put(id, radio.now());
 		witnessed(attacker);
 	}
 
-	/** A report finished landing and the stars are known: under the first star no chase followed. */
+	/**
+	 * A report finished landing and the stars are known: under the first star no chase followed, so the memory it
+	 * started has no hunt to belong to and no AI task would ever clear it.
+	 */
 	public void reportLanded(Player player) {
+		if (filter.hunted(player)) {
+			return;
+		}
+
+		descriptions.setRecognised(player.getUniqueId(), false);
+		lastSeen.remove(player.getUniqueId());
 	}
 
 	/** When a cop who saw the player last learned what they wear, or null: a later report must not rewind that look. */
 	public @Nullable Long learnedAt(UUID id) {
-		return null;
+		return learned.get(id);
 	}
 
 	/** Registers a hook run with the player id whenever a chase ends ({@link #forget}). */
@@ -191,6 +205,7 @@ public class DisguiseTick {
 		spoken.remove(playerId);
 		told.remove(playerId);
 		lastSeen.remove(playerId);
+		learned.remove(playerId);
 		forgetHooks.forEach(hook -> hook.accept(playerId));
 	}
 

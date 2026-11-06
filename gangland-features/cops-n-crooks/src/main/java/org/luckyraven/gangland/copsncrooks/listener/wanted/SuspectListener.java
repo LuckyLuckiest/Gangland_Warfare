@@ -86,7 +86,11 @@ public class SuspectListener implements Listener {
 			look = new Held(descriptions.describe(player), outfit.worn(player), null);
 		}
 
-		descriptions.store(id, look.description());
+		// a cop saw the player after this crime and learned what they wore then: the report must not rewind that look
+		Long learnedAt = landing ? tick.learnedAt(id) : null;
+		if (learnedAt == null || learnedAt.equals(look.learnedAt())) {
+			descriptions.store(id, look.description());
+		}
 		// a crime outside any chase: the blown flag belongs to a chase that ended unseen (a quit, stars cleared
 		// offline) or to a crime that started none; this crime's own blow follows
 		// ponytail: a chase started without a crime of his own (crew-share stars, admin-set stars) passes nothing

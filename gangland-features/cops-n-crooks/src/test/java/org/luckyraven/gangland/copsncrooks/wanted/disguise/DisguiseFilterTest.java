@@ -174,6 +174,17 @@ class DisguiseFilterTest {
 	}
 
 	@Test
+	@DisplayName("0.21.6: a flag left by a report under the first star counts for nothing while nobody hunts the player")
+	void aStaleFlagDoesNotOutliveTheHunt() {
+		dressAsCop();
+		descriptions.setRecognised(wearer.id, true);
+		hunted = false;
+		level  = 0;
+
+		assertFalse(filter.allows(cop, wearer.player), "the police outfit fools them");
+	}
+
+	@Test
 	@DisplayName("841: the squad timer alone no longer allows a mismatch (the filter no longer reads it)")
 	void timerAloneNoLongerAllows() {
 		wearer.helmet(Material.CARVED_PUMPKIN).leatherChest(Color.RED);
