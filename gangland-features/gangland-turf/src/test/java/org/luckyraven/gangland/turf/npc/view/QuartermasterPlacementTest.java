@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.turf.npc.view;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,10 +22,12 @@ import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 
 import java.math.BigDecimal;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -108,6 +111,27 @@ class QuartermasterPlacementTest {
 		placement = new QuartermasterPlacement(mock(JavaPlugin.class), mock(InventoryService.class), turfs, gangs,
 		                                       users, access, npcs, messages, settings, () -> citizens,
 		                                       () -> MenuStyle.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("render_setsBorderAndFill: 3 rows, border and fill drawn, Place on 13 and Close on 22")
+	void render_setsBorderAndFill() {
+		try (PanelProbe probe = new PanelProbe(placement, session)) {
+			assertEquals(3, probe.rows);
+			assertTrue(probe.border, "border");
+			assertTrue(probe.fill, "fill");
+			assertEquals(Set.of(13, 22), probe.items.keySet());
+			assertEquals(Material.EMERALD, probe.type(13));
+			assertEquals(Material.BARRIER, probe.type(22));
+		}
+	}
+
+	@Test
+	@DisplayName("render_noAttributeIcons")
+	void render_noAttributeIcons() {
+		try (PanelProbe probe = new PanelProbe(placement, session)) {
+			assertTrue(probe.noAttributeIcons(), probe.items.toString());
+		}
 	}
 
 	@Test

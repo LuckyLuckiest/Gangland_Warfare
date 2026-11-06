@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.turf.npc.view;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
@@ -25,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.IntUnaryOperator;
 
@@ -101,6 +103,29 @@ class TurfPowerupGarrisonViewTest {
 			                                       waveIds.add(turfId);
 			                                       return waves.get();
 		                                   }, messages, () -> MenuStyle.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("render_setsBorderAndFill: 5 rows, border and fill drawn, Info 20, Buy 24, Back 36, Close 44")
+	void render_setsBorderAndFill() {
+		try (PanelProbe probe = new PanelProbe(view, session)) {
+			assertEquals(5, probe.rows);
+			assertTrue(probe.border, "border");
+			assertTrue(probe.fill, "fill");
+			assertEquals(Set.of(20, 24, 36, 44), probe.items.keySet());
+			assertEquals(Material.ARMOR_STAND, probe.type(20));
+			assertEquals(Material.EMERALD, probe.type(24));
+			assertEquals(Material.ARROW, probe.type(36));
+			assertEquals(Material.BARRIER, probe.type(44));
+		}
+	}
+
+	@Test
+	@DisplayName("render_noAttributeIcons")
+	void render_noAttributeIcons() {
+		try (PanelProbe probe = new PanelProbe(view, session)) {
+			assertTrue(probe.noAttributeIcons(), probe.items.toString());
+		}
 	}
 
 	@Test
