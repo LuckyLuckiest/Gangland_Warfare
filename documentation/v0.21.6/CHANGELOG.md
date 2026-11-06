@@ -30,11 +30,10 @@ code default. Upgrade from 0.21.5. Config files are never rewritten: edit them b
   only stop a first pick-up now.
 - **Any other cop counts as a patrol does,** within `Patrol.Warning.Range` (12): a beat cop watching a swap counts, and the
   squad does not have to exist yet. A cop walking home never counts.
-- **Glass and iron bars no longer hide you from a cop up close.** They stop the sight line (measured live), so while the
-  cops know you a hunting cop within `Wanted.Witnesses.Cops.Witness_Floor` (6) counts with no line at all. That also
-  means a cop within 6 blocks sees through a wall; a first pick-up still needs the line. **Past 6 blocks glass and bars
-  still hide you:** a cop looking through a pane from 7 blocks has no line, and a swap behind it can fool them. A fence
-  does not stop the line.
+- **Glass, iron bars and fences no longer hide you from a cop hunting you.** The plain sight line stops at glass and bars
+  (measured live), so while the cops know you, that cop also looks through glass, iron bars and fences, as far as
+  `Alert_Range`. A wall, a closed door or leaves still hide you, however close the cop stands. A first pick-up still needs
+  the plain line, and so does any other cop.
 - **A cop's own report starts the memory,** so a swap in front of the reporting cop is seen. An escape ends it.
 
 ### The fire gate
@@ -76,20 +75,18 @@ code default. Upgrade from 0.21.5. Config files are never rewritten: edit them b
 
 ## Docket
 
-Fixed: 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 868, 869, 871, 892, 893, 894, 895, 896. Open by design (P3): 866
+Fixed: 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 868, 869, 871, 873, 892, 893, 894, 895, 896, 897. Open by design (P3): 866
 (an unrecognised suspect is not re-checked at arm's length), 867 (any vehicle or empty slot counts as a changed piece), 870
-(the breach acts on the last-known spot). Open: 897 (glass and bars past 6 blocks, an owner ruling on O12), 898 (TNT and pets
-credit no player, so they do not re-identify one).
+(the breach acts on the last-known spot). Open: 898 (TNT and pets credit no player, so they do not re-identify one).
 
 ## Decisions and open items
 
 - The memory and piece numbers are reasoned tuning, not measured over a long play session. **Open for the playtest:** can the
   player get the memory on foot at 3, 4 and 5 stars? The top rows may only be reachable by car. Numbers change in YAML only.
-- The boss bar and the memory can disagree: a hunting cop at night past the sight factor range, or behind glass inside
-  6 blocks, keeps the memory while the bar reads SEARCHING.
-- `Witness_Floor` is one key for three rules: tuning it for crime reports also moves the disguise memory and the hit rule.
-- **Open for the owner (O12):** past `Witness_Floor` glass and bars still hide you, and inside it a wall does not. A ray that
-  only stops on solid blocks would close both; it stays out until the owner rules (row 897).
+- The boss bar and the memory can disagree: a hunting cop at night past the sight factor range, or behind glass, keeps the
+  memory while the bar reads SEARCHING.
+- `Witness_Floor` is one key for two rules: tuning it for crime reports also moves the rule for a hit with no line.
+- A hit through glass from past `Witness_Floor` with no other cop watching still re-identifies nobody.
 - The Lost line reveals the exact moment the memory runs out. That is the point: it teaches the rule.
 
 ## For developers

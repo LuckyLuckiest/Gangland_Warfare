@@ -1062,12 +1062,10 @@ legs, boots, the weapon in your hand, and whether you are on foot or in a car. T
 - **Who counts as the cops' eyes.** Evaluated each AI tick, for every live squad cop and every beat cop; a cop walking home
   (`RETURNING`) never counts.
   - A cop **hunting you** counts to `Alert_Range` (40). While the cops know you, the bare line is enough: darkness,
-    crowds and sneaking only stop a **first** pick-up, they no longer shake a cop with a clear line. Within
-    `Wanted.Witnesses.Cops.Witness_Floor` (6, `wanted.yml`) such a cop counts with **no line at all** while the cops
-    know you: glass and iron bars stop the sight line (measured live), so a cop at a window would otherwise be blind. It
-    also means a cop within 6 blocks sees through a wall. A first pick-up still needs the line. **Past 6 blocks glass and
-    bars still hide you**: a cop looking through a pane from 7 blocks has no line, and a swap behind it can fool them. A
-    Marksman on overwatch counts to the larger of `Alert_Range` and his `Sight_Range`.
+    crowds and sneaking only stop a **first** pick-up, they no longer shake a cop with a clear line. While the cops
+    know you, such a cop also **looks through glass, iron bars and fences** to the same range: the plain line stops at
+    glass and bars (measured live), so a cop at a window would otherwise be blind. A wall, a closed door or leaves hide
+    you however close the cop stands. A first pick-up still needs the plain line. A Marksman on overwatch counts to the larger of `Alert_Range` and his `Sight_Range`.
   - **Any other** live cop (a beat cop, another player's squad) counts as a patrol does: `Patrol.Warning.Range` (12) with
     the sight factors on. A beat cop inside it already reports you to the squad, so the boss bar and the memory agree.
   - There is no view cone, so a cop facing away counts.
@@ -1126,8 +1124,7 @@ pieces. It is not paced: hiding and showing repeatedly can say Lost and Recognis
 
 The boss bar is unchanged: IN SIGHT while the cops see you, SEARCHING otherwise; stars drop on the evasion clock as usual.
 Known disagreements: at night a hunting cop at 20 blocks has lost you by the sight factors while its bare line keeps the
-memory (the bar reads SEARCHING), and a hunting cop within 6 blocks behind glass keeps the memory while the bar reads
-SEARCHING. A breach (4 and more stars, indoors) acts on the squad's last-known spot with no lock-on gate, so an earned
+memory (the bar reads SEARCHING), and a hunting cop behind glass keeps the memory while the bar reads SEARCHING. A breach (4 and more stars, indoors) acts on the squad's last-known spot with no lock-on gate, so an earned
 disguise indoors can still draw a stack-up whose flashbang blinds anyone with a line to the door.
 
 Debug line: `DISGUISE <player> state=<seen|outfit|blown|match|mismatch>` and `SUSPECT <player> desc=<text>`.

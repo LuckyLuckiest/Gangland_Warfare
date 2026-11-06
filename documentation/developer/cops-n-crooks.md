@@ -1389,11 +1389,10 @@ also holds `Handoff`, `Post_Up`, `Most_Wanted` and (0.21.2 R2, T-571) `Officer_R
     `changesNeeded(Player)` fills `%changes%`.
   - `DisguiseModuleConfig.eyesOf` decides "has eyes" over every `liveCops` and `beatCops` entry, never `RETURNING`. A cop
     hunting the player counts to `Alert_Range` with `canSee` (the bare ray; Keystone `AbstractNpc.canSee` is distance plus
-    `hasLineOfSight`, an eye-to-eye ray that glass and iron bars stop) while recognised, and within
-    `Wanted.Witnesses.Cops.Witness_Floor` with no ray at all (a `DoubleSupplier` the bean reads live from
-    `ChaseConfigLoader`; the same key `CopCrimeReports` uses for crime reports, so tuning it moves both). Any other cop
-    uses `perception.sees` at `Patrol.Warning.Range` with the sight factors on. The Witness_Floor rule is its own commit.
-    Past the floor glass and bars still stop the ray (docket 897, O12). A cop in `OVERWATCH` counts to the larger of
+    `hasLineOfSight`, an eye-to-eye ray that glass and iron bars stop) while recognised, or `seesThroughPanes`, a
+    quarter-block march from eye to eye that passes only passable blocks and materials named `GLASS`, `FENCE` or
+    `IRON_BARS` (docket 897, own commit). Any other cop uses `perception.sees` at `Patrol.Warning.Range` with the sight
+    factors on. A cop in `OVERWATCH` counts to the larger of
     `Alert_Range` and `OverwatchSettings.sightRange`.
   - Fire gate: `PursuingBehavior` and `CombatBehavior` fire at a player only when `allowsLockOn`; a refused lock-on keeps
     the search walking at range 0. `CopPerception.pursuitRange` is 0 for a refused player. `BreachController` has no such

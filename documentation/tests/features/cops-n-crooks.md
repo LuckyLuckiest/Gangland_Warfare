@@ -181,10 +181,10 @@ lines come from `wanted_messages.yml` `Disguise.*`; debug lines need `Cops.Debug
 - [ ] **Squad lost, a beat cop nearby.** Beat cop at 30 blocks → the bar goes to SEARCHING and the Lost line comes. Beat cop
       at 10 blocks with a clear line → he reports, the bar stays on IN SIGHT, no Lost line.
 - [ ] **Change in view.** A cop has an unbroken line, swap four pieces → still recognised, the new look radioed.
-- [ ] **Glass, bars and fence.** Recognised, a hunting cop within 6 blocks behind a window or iron bars, swap two pieces,
-      come out past the memory → recognised (the cop counts through it at that range); a fence changes nothing (the
-      line clears it). Live: DIS-WINDOW, DIS-BARS, DIS-FENCE. A wall of stone within 6 blocks counts the same. Past 6
-      blocks glass and bars still hide you (docket 897): REVIEW with the owner.
+- [ ] **Glass, bars and fence.** Recognised, a hunting cop 7 or more blocks off behind a window, iron bars or a fence, swap
+      two pieces, come out past the memory → recognised. Live: DIS-WINDOW, DIS-BARS, DIS-FENCE (runs `cop-dis-*--pr1`).
+- [ ] **A wall hides you up close.** Recognised, a hunting cop 4 blocks off behind a 4-high stone wall → the Lost line comes
+      after the memory (the control of the same runs).
 - [ ] **Hit from close, no line.** Disguised, a grenade over a wall or a shot past a slab hits a cop within 6 blocks →
       recognised in what you wear; the same from 10 blocks with no other cop in sight changes nothing.
 - [ ] **A fooled beat cop.** Disguised at 1+ stars, shoot a beat cop in view, then earn a new disguise → he walks past and

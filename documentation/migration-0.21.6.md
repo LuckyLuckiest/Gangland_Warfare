@@ -89,14 +89,12 @@ The shipped Spanish file already has it. `wanted.yml` only gains a comment on `W
   player, the bare line is enough: darkness, crowds and sneaking only stop a first pick-up. Any other live cop (a beat
   cop, another player's squad) counts as a patrol does, within `Patrol.Warning.Range` (12). A cop walking home never
   counts. The squad no longer has to exist: a beat cop alone can watch a swap.
-- **Within `Wanted.Witnesses.Cops.Witness_Floor` (6) a hunting cop counts with no line at all** while the cops know the
-  player, because glass and iron bars stop the sight line. It also means a cop within 6 blocks sees through a wall. Past
-  6 blocks glass and bars still hide the player (docket 897, an owner ruling on O12). `Witness_Floor` is one key for three
-  rules, so tuning it for crime reports also moves this one and the hit rule below. A Marksman on overwatch counts to the
-  larger of `Alert_Range` and his `Sight_Range`.
+- **A hunting cop looks through glass, iron bars and fences** while the cops know the player, as far as `Alert_Range`,
+  because the plain sight line stops at glass and bars. A wall, a closed door or leaves hide the player at any range. A
+  Marksman on overwatch counts to the larger of `Alert_Range` and his `Sight_Range`.
 - **No fire on an unrecognised player.** Cops hold fire at 3 stars and up as well, and keep searching. A vanilla entity
   target is still fired on. Hitting a cop in sight of any cop gives the player away at once and blows a police outfit
-  (a 0-star attacker in the outfit is fired back on). Within `Witness_Floor` the cop hit counts with no line at all. This
+  (a 0-star attacker in the outfit is fired back on). Within `Wanted.Witnesses.Cops.Witness_Floor` (6) the cop hit counts with no line at all; that key also moves crime reports. This
   reverses the 0.20.0 rule that filters never stop firing. A beat cop the filters refuse walks past and goes back on its
   beat, and a hit beat cop also goes back when the cops stop hunting the player.
 - **A cop's own report starts the memory.** A swap in front of the reporting cop is seen. A civilian's report or the 911
@@ -106,7 +104,7 @@ The shipped Spanish file already has it. `wanted.yml` only gains a comment on `W
 - **Night balance.** Role cops (Marksman, SWAT and the other squads) keep their tier's `Ignore_Darkness` at 4 and 5 stars
   again; it had been lost since 0.20.0. Night pursuit at 4-5 stars is harder than in 0.21.5, whatever the disguise.
 - **Known disagreements** (docket 866 to 871): the boss bar can read SEARCHING while the memory holds, for a hunting cop
-  at night past the sight factor range or behind glass inside 6 blocks. A breach (4 and more stars, indoors) acts on the
+  at night past the sight factor range or behind glass. A breach (4 and more stars, indoors) acts on the
   squad's last-known spot, so an earned disguise indoors can still draw a stack-up.
 - **Open for the playtest:** whether the player can get the memory on foot at 3, 4 and 5 stars (DIS-ESCAPE-3/4/5). If not,
   the top rows may only be reachable by car; tune in YAML.
