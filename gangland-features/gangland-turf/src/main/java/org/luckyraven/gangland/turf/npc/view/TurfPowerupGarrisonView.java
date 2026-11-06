@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.turf.npc.view;
 
-import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
@@ -17,7 +16,6 @@ import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
-import org.luckyraven.keystone.inventory.component.FillComponent;
 import org.luckyraven.keystone.inventory.component.ItemComponent;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import org.luckyraven.keystone.inventory.flow.Panel;
@@ -27,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 
@@ -34,22 +33,23 @@ import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.refusal;
 
 /**
- * Garrison sub-panel: the turf's guard stock and the price of one more guard, paid from the gang bank. The guard holds
+ * Garrison sub-panel: the guards the turf owns and the price of one more guard, paid from the gang bank. The guard holds
  * the capture bar and fights attackers. Every purchase runs {@link QuartermasterAccess#denyKey} first (TF-19, TF-45),
- * then affordability, then the reserve cap ({@code turf_rules.yml} Garrison.Max_Reserve), then withdraws from the owner gang. The price is
- * {@code turf_powerups.yml} Garrison.Cost_Per_Guard times any active garrison_discount (TF-17, TF-02).
- * The info item also shows guards on duty, the reserve against Garrison.Max_Reserve and the next wave size (W7-H); a
- * wave spends guards already paid for, never money.
+ * then affordability, then the owned-guards cap ({@code turf_rules.yml} Garrison.Max_Reserve), then withdraws from the
+ * owner gang. The price is {@code turf_powerups.yml} Garrison.Cost_Per_Guard times any active garrison_discount (TF-17,
+ * TF-02).
+ * The info item shows guards owned against Garrison.Max_Reserve, on duty, in reserve and the contest top-up size; a
+ * top-up spends guards already paid for, never money.
  */
 @CustomLog
 @RequiredArgsConstructor
 public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSession> {
 
-	private static final int ROWS       = 3;
-	private static final int SLOT_INFO  = 4;
-	private static final int SLOT_BUY   = 13;
-	private static final int SLOT_BACK  = 18;
-	private static final int SLOT_CLOSE = 26;
+	private static final int ROWS       = 5;
+	private static final int SLOT_INFO  = 20;
+	private static final int SLOT_BUY   = 24;
+	private static final int SLOT_BACK  = 36;
+	private static final int SLOT_CLOSE = 44;
 
 	private final GarrisonManager      garrisons;
 	private final PowerupRegistry      registry;
@@ -57,10 +57,9 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	private final QuartermasterAccess  access;
 	private final TurfRules            rules;
 	private final IntUnaryOperator     aliveGuards;
-	private final Supplier<TurfDefenderConfig> waves;
+	private final IntFunction<TurfDefenderConfig> waves;
 	private final TurfMessages         messages;
-	private final String               fillItem;
-	private final String               fillName;
+	private final Supplier<MenuStyle> style;
 
 	@Override
 	public int rows(TurfPowerupFlowSession session) {
@@ -69,8 +68,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 
 	@Override
 	public String title(TurfPowerupFlowSession session) {
-		return messages.text("Quartermaster.Title_Garrison", "&8&l[&c&lGarrison &8— &6%npc%&8&l]",
-		                     "npc", session.getNpcDisplayName());
+		return messages.text("Quartermaster.Title_Garrison", "&5Garrison", "npc", session.getNpcDisplayName());
 	}
 
 	@Override
@@ -90,7 +88,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+		style.get().decorate(builder);
 	}
 
 	/**
@@ -106,38 +104,43 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		return price.max(BigDecimal.ONE);
 	}
 
-	/** The info lore in order: stock, guards on duty, reserve against the cap, next wave, price, bank (W7-H). */
+	/** The info lore in order: Owned, On duty, In reserve, Contest top-up, price, bank, then the where lines (W7-H). */
 	List<String> infoLore(Turf turf, Gang gang) {
 		int turfId = turf.getId();
 		int stock  = garrisons.count(turfId);
 		int alive  = aliveGuards.applyAsInt(turfId);
 
 		List<String> lore = new ArrayList<>();
-		lore.add(messages.text("Quartermaster.Garrison_Stock", "&7Stock on &f%turf%&7: &f%count%",
-		                       "turf", turf.getDisplayName(), "count", stock));
+		lore.add(messages.text("Quartermaster.Garrison_Owned", "&7Owned: &f%count%&7/&f%max%",
+		                       "count", stock, "max", rules.getMaxReserve()));
 		lore.add(messages.text("Quartermaster.Garrison_On_Duty", "&7On duty: &f%count%", "count", alive));
-		lore.add(messages.text("Quartermaster.Garrison_Reserve", "&7Reserve: &f%count%&7/&f%max% &8(stock and on duty)",
-		                       "count", stock + alive, "max", rules.getMaxReserve()));
-		lore.add(messages.text("Quartermaster.Garrison_Next_Wave", "&7Next wave: up to &f%count% &7guards, no extra cost",
-		                       "count", nextWave(stock, alive, waves.get())));
+		lore.add(messages.text("Quartermaster.Garrison_In_Reserve", "&7In reserve: &f%count%",
+		                       "count", Math.max(0, stock - alive)));
+		lore.add(messages.text("Quartermaster.Garrison_Next_Wave",
+		                       "&7Contest top-up: &f+%count%&7, no extra cost",
+		                       "count", nextWave(stock, alive, waves.apply(turfId))));
 		lore.add(messages.text("Quartermaster.Garrison_Per_Guard", "&7Per defender: &6%money%",
 		                       "money", money(price(turfId))));
 		lore.add(" ");
 		lore.add(messages.text("Quartermaster.Garrison_Bank", "&7Gang bank: &a%money%",
 		                       "money", money(gang.getEconomy().getAmount())));
+		lore.add(" ");
+		lore.add(messages.text("Quartermaster.Garrison_Where_One", "&7Guards stand on the turf while the"));
+		lore.add(messages.text("Quartermaster.Garrison_Where_Two", "&7area is loaded. The rest wait in reserve."));
 		return lore;
 	}
 
 	/**
-	 * Guards the next wave sends: at most Wave_Size, the stock, and Max_Alive minus those on duty (W7-H read-out; no
-	 * cooldown).
+	 * Guards the next contest top-up sends: at most Wave_Size, the reserve (owned minus those standing) and Max_Alive
+	 * minus those on duty (no cooldown).
 	 */
 	static int nextWave(int stock, int alive, TurfDefenderConfig config) {
-		return TurfGarrison.toSpawn(stock, alive, config.maxAlive(), config.waveSize(), config.waveSize(), -1L, 0L, 0L);
+		return TurfGarrison.toSpawn(stock - alive, alive, config.maxAlive(), config.waveSize(),
+		                            config.waveSize(), -1L, 0L, 0L);
 	}
 
 	private ItemBuilder infoItem(Turf turf, Gang gang) {
-		return new ItemBuilder(Material.IRON_HELMET)
+		return new ItemBuilder(Material.ARMOR_STAND)
 				.setDisplayName(messages.text("Quartermaster.Garrison_Name", "&c&lGarrison"))
 				.setLore(infoLore(turf, gang));
 	}
@@ -149,17 +152,17 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		lore.add(messages.text("Quartermaster.Garrison_Buy_Cost", "&7Cost: &6%money%", "money", money(price)));
 		lore.add(" ");
 		lore.add(buyLine(session, canAfford));
-		return new ItemBuilder(Material.IRON_SWORD)
+		return new ItemBuilder(Material.EMERALD)
 				.setDisplayName(messages.text("Quartermaster.Garrison_Buy_Name", "&aBuy &f1 &aDefender"))
 				.setLore(lore);
 	}
 
-	/** The buy item's action line: a full reserve says so for the owner (T-823); allies keep the look-only line. */
+	/** The buy item's action line: a turf at the owned cap says so for the owner (T-823); allies keep the look-only line. */
 	String buyLine(TurfPowerupFlowSession session, boolean canAfford) {
 		Turf turf = session.getTurf();
-		boolean full = garrisons.count(turf.getId()) + aliveGuards.applyAsInt(turf.getId()) >= rules.getMaxReserve();
+		boolean full = garrisons.count(turf.getId()) >= rules.getMaxReserve();
 		if (full && !QuartermasterAccess.isAllyView(session)) {
-			return messages.text("Quartermaster.Garrison_Buy_Full", "&cReserve full: &f%max% &cguards.",
+			return messages.text("Quartermaster.Garrison_Buy_Full", "&cThis turf already owns &f%max% &cguards.",
 			                     "max", rules.getMaxReserve());
 		}
 		return clickLine(session, canAfford);
@@ -194,9 +197,9 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 			return;
 		}
 
-		// r2: guards still in the field count against the reserve, so a stock of 0 cannot be rebought past the cap.
-		if (garrisons.count(turfId) + aliveGuards.applyAsInt(turfId) >= rules.getMaxReserve()) {
-			viewer.sendMessage(messages.text("Quartermaster.Reserve_Full", "&cThis turf already has %max% guards (stock and on duty).",
+		// The count is guards owned, standing or in reserve; a body in the field is not a second guard.
+		if (garrisons.count(turfId) >= rules.getMaxReserve()) {
+			viewer.sendMessage(messages.text("Quartermaster.Owned_Full", "&cThis turf already has %max% guards.",
 			                                 "max", rules.getMaxReserve()));
 			flow.rerender();
 			return;
@@ -214,6 +217,14 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		         viewer.getName(), gang.getName(), "a guard", money(price), turfId, turf.getDisplayName());
 		viewer.sendMessage(messages.text("Quartermaster.Bought_Guard", "&aBought &f1 &adefender for &f%turf%&a.",
 		                                 "turf", turf.getDisplayName()));
+		boolean standing = garrisons.count(turfId) <= TurfGarrison.target(Integer.MAX_VALUE, false, waves.apply(turfId));
+		viewer.sendMessage(standing
+		                   ? messages.text("Quartermaster.Bought_Guard_Post",
+		                                   "&7It takes its post on &f%turf% &7shortly while the area is loaded.",
+		                                   "turf", turf.getDisplayName())
+		                   : messages.text("Quartermaster.Bought_Guard_Reserve",
+		                                   "&7It waits in the reserve and joins when &f%turf% &7is attacked.",
+		                                   "turf", turf.getDisplayName()));
 		flow.rerender();
 	}
 
@@ -229,9 +240,5 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	private String cannotAfford(BigDecimal price) {
 		return messages.text("Quartermaster.Cannot_Afford", "&cYour gang bank can't cover &f%money%&c.",
 		                     "money", money(price));
-	}
-
-	private static Material materialOf(String name) {
-		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 }

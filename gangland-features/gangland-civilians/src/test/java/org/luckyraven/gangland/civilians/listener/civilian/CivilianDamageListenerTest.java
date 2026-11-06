@@ -14,6 +14,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.civilians.events.CivilianCalledInEvent;
+import org.luckyraven.gangland.civilians.events.CivilianDeathEvent;
+import org.luckyraven.gangland.civilians.listener.npc.CivilianDeathRewardListener;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianDropConfig;
@@ -22,6 +24,8 @@ import org.luckyraven.gangland.civilians.npc.config.CivilianWearableConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.witness.WitnessService;
 import org.luckyraven.gangland.civilians.witness.WitnessTestKit;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.crime.Crimes;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcSupport;
@@ -178,7 +182,7 @@ class CivilianDamageListenerTest {
 	}
 
 	@Test
-	@DisplayName("T-549: a HOSTILE civilian is never a caller, so a lethal hit sends it to COMBAT and rallies its faction")
+	@DisplayName("T-549, T-886: a HOSTILE civilian is never a caller, so a lethal hit rallies its faction; it stays out of COMBAT for the death event")
 	void hostileLethalHitOnCallerStillAlertsFaction() {
 		CivilianNpc hostile = registered(kit.civilian(10, true), true, true);
 		when(hostile.getEntity().getHealth()).thenReturn(4.0);
@@ -187,11 +191,43 @@ class CivilianDamageListenerTest {
 		listener.onCivilianDamage(hit(kit.criminal, hostile));
 
 		verify(kit.civilians).alertFaction(hostile, kit.criminal, true);
-		assertEquals(CivilianState.COMBAT, hostile.getCurrentState());
+		assertEquals(CivilianState.IDLE, hostile.getCurrentState());
 		assertNull(hostile.getWitnessCall());
 	}
 
+	@Test
+	@DisplayName("T-886, ruling 6: one-shotting an idle hostile civilian commits Kill_Civilian, judged on its state before the blow")
+	void hostileLethalHitWhileIdleCommitsKillCivilian() {
+		CivilianNpc hostile = registered(kit.civilian(10, true), true, true);
+		when(hostile.getEntity().getHealth()).thenReturn(4.0);
+
+		listener.onCivilianDamage(hit(kit.criminal, hostile));
+		deathListener().onCivilianDeath(new CivilianDeathEvent(hostile, kit.criminal, 0));
+
+		verify(kit.crimes).commit(eq(kit.criminal), eq(Crimes.KILL_CIVILIAN), any(Location.class));
+	}
+
+	@Test
+	@DisplayName("T-886: killing a hostile civilian already in COMBAT stays exempt")
+	void hostileLethalHitInCombatStaysExempt() {
+		CivilianNpc hostile = registered(kit.civilian(10, true), true, true);
+		when(hostile.getEntity().getHealth()).thenReturn(4.0);
+		hostile.transitionTo(CivilianState.COMBAT);
+
+		listener.onCivilianDamage(hit(kit.criminal, hostile));
+		deathListener().onCivilianDeath(new CivilianDeathEvent(hostile, kit.criminal, 0));
+
+		verify(kit.crimes, never()).commit(eq(kit.criminal), eq(Crimes.KILL_CIVILIAN), any(Location.class));
+	}
+
 	// ── helpers ──────────────────────────────────────────────────────────────
+
+	@SuppressWarnings("unchecked")
+	private CivilianDeathRewardListener deathListener() {
+		UserManager<Player> users = mock(UserManager.class);
+		when(users.getUser(kit.criminal)).thenReturn(mock(User.class));
+		return new CivilianDeathRewardListener(users, kit.crimes);
+	}
 
 	private CivilianNpc registered(CivilianNpc npc, boolean hostile, boolean fleeEnabled) {
 		CivilianAIBehaviorConfig ai = new CivilianAIBehaviorConfig(false, 0, fleeEnabled, 16, hostile, 4.0, 12.0, 20,

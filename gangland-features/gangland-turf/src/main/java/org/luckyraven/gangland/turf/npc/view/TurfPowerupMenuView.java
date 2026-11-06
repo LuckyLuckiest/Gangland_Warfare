@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.turf.npc.view;
 
-import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
@@ -11,7 +10,6 @@ import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
-import org.luckyraven.keystone.inventory.component.FillComponent;
 import org.luckyraven.keystone.inventory.component.ItemComponent;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import org.luckyraven.keystone.inventory.flow.Panel;
@@ -20,33 +18,33 @@ import org.luckyraven.keystone.item.ItemBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntUnaryOperator;
+import java.util.function.Supplier;
 
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 
 /**
  * Root panel of the Quartermaster flow. Shows turf-state at a glance (owner, garrison stock, active buffs, gang bank
- * balance) and offers two navigation buttons that switch to the buff catalogue or garrison sub-panels. Empty slots are
- * padded with the configured global inventory-fill item (matches BankerMenuView style). Every line comes from the
+ * balance) and offers two navigation buttons that switch to the buff catalogue or garrison sub-panels. Empty slots take
+ * the border and fill of {@code turf_settings.yml Menu} through {@code MenuStyle}. Every line comes from the
  * turf module's {@code Quartermaster:} section (W2-Q).
  */
 @CustomLog
 @RequiredArgsConstructor
 public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> {
 
-	private static final int ROWS         = 3;
-	private static final int SLOT_INFO     = 4;
-	private static final int SLOT_BUFFS    = 11;
-	private static final int SLOT_GARRISON = 15;
-	private static final int SLOT_ORDERS   = 13;
-	private static final int SLOT_CLOSE    = 22;
+	private static final int ROWS         = 5;
+	private static final int SLOT_INFO     = 13;
+	private static final int SLOT_BUFFS    = 20;
+	private static final int SLOT_GARRISON = 24;
+	private static final int SLOT_ORDERS   = 22;
+	private static final int SLOT_CLOSE    = 40;
 
 	private final GarrisonManager   garrisons;
 	private final ActiveBuffManager buffs;
 	private final IntUnaryOperator  aliveGuards;
 	private final QuartermasterAccess access;
 	private final TurfMessages      messages;
-	private final String            fillItem;
-	private final String            fillName;
+	private final Supplier<MenuStyle> style;
 
 	@Override
 	public int rows(TurfPowerupFlowSession session) {
@@ -55,7 +53,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 
 	@Override
 	public String title(TurfPowerupFlowSession session) {
-		return messages.text("Quartermaster.Title_Menu", "&8&l[&6&l%npc%&8&l]", "npc", session.getNpcDisplayName());
+		return messages.text("Quartermaster.Title_Menu", "&5%npc%", "npc", session.getNpcDisplayName());
 	}
 
 	@Override
@@ -76,7 +74,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+		style.get().decorate(builder);
 	}
 
 	private ItemBuilder infoItem(Turf turf, Gang ownerGang, Gang viewerGang) {
@@ -124,7 +122,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 		               ? QuartermasterAccess.refusal(messages, QuartermasterAccess.ALLIES_LOOK)
 		               : messages.text("Quartermaster.Order_Click", "&aClick to switch to %order%&a.",
 		                               "order", orderWord(!hold));
-		return new ItemBuilder(hold ? Material.SHIELD : Material.IRON_SWORD)
+		return new ItemBuilder(hold ? Material.IRON_BARS : Material.TARGET)
 				.setDisplayName(messages.text("Quartermaster.Order_Name", "&e&lGuard Orders"))
 				.setLore(messages.text("Quartermaster.Order_Lore_Hold",
 				                       "&7Hold: guards stay by their posts and leave cops alone."),
@@ -156,7 +154,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 	}
 
 	private ItemBuilder buffsButton(Turf turf) {
-		return new ItemBuilder(Material.POTION)
+		return new ItemBuilder(Material.BREWING_STAND)
 				.setDisplayName(messages.text("Quartermaster.Menu_Buffs_Name", "&b&lTimed Buffs"))
 				.setLore(messages.text("Quartermaster.Menu_Buffs_Lore_1", "&7Browse the powerup catalogue and"),
 				         messages.text("Quartermaster.Menu_Buffs_Lore_2", "&7buy timed boosts on this turf."),
@@ -165,16 +163,12 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 	}
 
 	private ItemBuilder garrisonButton(Turf turf) {
-		return new ItemBuilder(Material.IRON_SWORD)
+		return new ItemBuilder(Material.ARMOR_STAND)
 				.setDisplayName(messages.text("Quartermaster.Menu_Garrison_Name", "&c&lGarrison"))
 				.setLore(messages.text("Quartermaster.Menu_Garrison_Lore_1", "&7View / buy defender stock."),
 				         messages.text("Quartermaster.Menu_Garrison_Lore_2", "&7Guards hold the capture bar"),
 				         messages.text("Quartermaster.Menu_Garrison_Lore_3", "&7and fight attackers on this turf."),
 				         messages.text("Quartermaster.Menu_Garrison_Stock", "&7Current stock: &f%count%",
 				                       "count", garrisons.count(turf.getId())));
-	}
-
-	private static Material materialOf(String name) {
-		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 }

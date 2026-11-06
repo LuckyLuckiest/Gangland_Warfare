@@ -10,8 +10,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * The roles a turf's guards take, in spawn order ({@code Garrison.Composition}: {@code Commander@1}, {@code Shield@2},
- * ...). Guard number {@code n} (1-based, per contest) takes the n-th slot; past the last slot a guard is plain.
+ * The roles a turf's guards take, by number ({@code Garrison.Composition}: {@code Commander@1}, {@code Shield@2},
+ * ...). Guard number {@code n} (1-based) takes the n-th slot; past the last slot a guard is plain.
  */
 public record GarrisonComposition(List<String> slots) {
 

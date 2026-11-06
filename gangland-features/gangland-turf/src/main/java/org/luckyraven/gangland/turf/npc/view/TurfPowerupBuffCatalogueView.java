@@ -1,19 +1,18 @@
 package org.luckyraven.gangland.turf.npc.view;
 
-import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.PowerupDefinition;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
-import org.luckyraven.keystone.inventory.component.FillComponent;
 import org.luckyraven.keystone.inventory.component.ItemComponent;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import org.luckyraven.keystone.inventory.flow.Panel;
@@ -22,12 +21,13 @@ import org.luckyraven.keystone.item.ItemBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.refusal;
 
 /**
- * Buff catalogue panel: one clickable potion per {@link PowerupDefinition}, nine to a page with previous and next arrows
+ * Buff catalogue panel: one clickable icon per {@link PowerupDefinition}, 21 to a page with previous and next arrows
  * when there is more than one page (TF-18). Click activates the buff after the shared re-check
  * ({@link QuartermasterAccess#denyKey}, TF-19) and debits the viewer's gang bank.
  */
@@ -35,23 +35,24 @@ import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.refusal;
 @RequiredArgsConstructor
 public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlowSession> {
 
-	/** Boosts per page: the nine slots of rows two and three. */
-	static final int PER_PAGE = 9;
+	/** Boosts per page: three rows of seven inside the ring. */
+	static final int PER_PAGE = 21;
 
-	private static final int ROWS       = 4;
-	private static final int BUFF_START = 9;
-	private static final int SLOT_PREV  = 29;
-	private static final int SLOT_INFO  = 31;
-	private static final int SLOT_NEXT  = 33;
-	private static final int SLOT_BACK  = 27;
-	private static final int SLOT_CLOSE = 35;
+	private static final int ROWS       = 5;
+	private static final int BUFF_START = 10;
+	private static final int BUFF_ROW   = 7;
+	private static final int SLOT_BACK  = 36;
+	private static final int SLOT_PREV  = 38;
+	private static final int SLOT_INFO  = 40;
+	private static final int SLOT_NEXT  = 42;
+	private static final int SLOT_CLOSE = 44;
 
 	private final PowerupRegistry     registry;
 	private final ActiveBuffManager   buffs;
 	private final QuartermasterAccess access;
 	private final TurfMessages        messages;
-	private final String              fillItem;
-	private final String              fillName;
+	private final TurfMessageContract durations;
+	private final Supplier<MenuStyle> style;
 
 	/** Number of pages for {@code count} boosts; an empty catalogue still has one page. */
 	static int pages(int count) {
@@ -83,8 +84,7 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 
 	@Override
 	public String title(TurfPowerupFlowSession session) {
-		return messages.text("Quartermaster.Title_Buffs", "&8&l[&b&lBuffs &8— &6%npc%&8&l]",
-		                     "npc", session.getNpcDisplayName());
+		return messages.text("Quartermaster.Title_Buffs", "&5Timed Buffs", "npc", session.getNpcDisplayName());
 	}
 
 	@Override
@@ -93,10 +93,12 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 		int  page   = Math.min(Math.max(0, session.getBuffPage()), count - 1);
 		session.setBuffPage(page);
 
-		int slot = BUFF_START;
+		int index = 0;
 		for (PowerupDefinition def : page(registry.all(), page)) {
 			final PowerupDefinition captured = def;
-			builder.slot(slot++, ItemComponent.of(buffItem(captured, session))
+			int slot = BUFF_START + index / BUFF_ROW * 9 + index % BUFF_ROW;
+			index++;
+			builder.slot(slot, ItemComponent.of(buffItem(captured, session))
 			                                  .onAnyClick(ctx -> attemptBuy(flow, ctx.player(), session, captured)));
 		}
 
@@ -131,22 +133,60 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 				.setDisplayName(messages.text("Quartermaster.Close", "&cClose"));
 		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+		style.get().decorate(builder);
 	}
 
 	private ItemBuilder buffItem(PowerupDefinition def, TurfPowerupFlowSession session) {
-		List<String> lore = new ArrayList<>();
-		lore.add(messages.text("Quartermaster.Buffs_Effect", "&7Effect: &f%effect% &7x&f%magnitude%",
-		                       "effect", def.effectType().name(), "magnitude", def.magnitude()));
-		lore.add(messages.text("Quartermaster.Buffs_Duration", "&7Duration: &b%seconds%s",
+		List<String> lore = new ArrayList<>(def.description());
+		if (!def.description().isEmpty()) {
+			lore.add(" ");
+		}
+		String effect = effectLine(def);
+		if (effect != null) {
+			lore.add(messages.text("Quartermaster.Buffs_Does", "&7Effect: %effect%", "effect", effect));
+		}
+		lore.add(messages.text("Quartermaster.Buffs_Duration", "&7Duration: &b%time%",
+		                       "time", durations.formatDuration(def.durationSeconds()),
 		                       "seconds", def.durationSeconds()));
 		lore.add(messages.text("Quartermaster.Buffs_Cost", "&7Cost: &6%money%", "money", money(def.cost())));
+		long now  = System.currentTimeMillis();
+		long left = buffs.active(session.getTurf().getId()).stream()
+		                 .filter(buff -> def.id().equals(buff.getPowerupId()))
+		                 .mapToLong(buff -> buff.remainingMillis(now)).max().orElse(0L);
+		if (left > 0) {
+			lore.add(messages.text("Quartermaster.Buffs_Active", "&aActive: &f%time% &aleft",
+			                       "time", durations.formatDuration(left / 1000)));
+			lore.add(messages.text("Quartermaster.Buffs_Stack", "&7Buying again stacks, up to a limit."));
+		}
 		lore.add(" ");
 		boolean canAfford = session.getOwnerGang().getEconomy().getAmount().compareTo(def.cost()) >= 0;
 		lore.add(clickLine(session, canAfford));
-		return new ItemBuilder(Material.POTION)
+		return new ItemBuilder(def.iconMaterial())
 				.setDisplayName(def.displayName())
 				.setLore(lore);
+	}
+
+	/** What the buff does in plain words; null for the retired capture bonus, which is never sold. */
+	private String effectLine(PowerupDefinition def) {
+		double magnitude = def.magnitude();
+		long   more      = Math.round((magnitude - 1) * 100);
+		long   less      = Math.round((1 - magnitude) * 100);
+		return switch (def.effectType()) {
+			case INCOME_MULTIPLIER -> messages.text("Quartermaster.Effect_Income", "&a+%percent%% &fturf income",
+			                                        "percent", more);
+			case GARRISON_DISCOUNT -> messages.text("Quartermaster.Effect_Discount", "&a%percent%% off &fnew guards",
+			                                        "percent", less);
+			case GUARD_TOUGHNESS -> messages.text("Quartermaster.Effect_Toughness",
+			                                      "&a+%percent%% &fhealth on your guards while it runs",
+			                                      "percent", more);
+			case BIGGER_GUARD_WAVES -> messages.text("Quartermaster.Effect_Waves",
+			                                         "&a+%percent%% &fguards fighting at once in a contest",
+			                                         "percent", more);
+			case FASTER_REINFORCEMENTS -> messages.text("Quartermaster.Effect_Reinforcements",
+			                                            "&fReplacements arrive &a%percent%% &fsooner",
+			                                            "percent", less);
+			case CAPTURE_DEFENSE_BONUS -> null;
+		};
 	}
 
 	/** The buy action line: allies get the look-only refusal, the owner gets click or insufficient. */
@@ -192,16 +232,12 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 		log.info("Quartermaster: {} ({}) bought {} for {} on turf {} ({})",
 		         viewer.getName(), gang.getName(), def.id(), money(def.cost()), turf.getId(), turf.getDisplayName());
 		viewer.sendMessage(messages.text("Quartermaster.Bought_Boost", "&aActivated &f%boost% &aon &f%turf%&a.",
-		                                 "boost", def.id(), "turf", turf.getDisplayName()));
+		                                 "boost", def.displayName(), "turf", turf.getDisplayName()));
 		flow.rerender();
 	}
 
 	private String cannotAfford(PowerupDefinition def) {
 		return messages.text("Quartermaster.Cannot_Afford", "&cYour gang bank can't cover &f%money%&c.",
 		                     "money", money(def.cost()));
-	}
-
-	private static Material materialOf(String name) {
-		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 }

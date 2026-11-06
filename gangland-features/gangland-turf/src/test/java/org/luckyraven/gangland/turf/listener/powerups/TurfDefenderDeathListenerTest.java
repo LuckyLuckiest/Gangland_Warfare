@@ -3,6 +3,7 @@ package org.luckyraven.gangland.turf.listener.powerups;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,16 +13,23 @@ import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.gang.GangMembershipView;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyDepositService;
+import org.luckyraven.gangland.turf.npc.defender.DeployerSeam;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer.GuardBounty;
+import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
+import org.luckyraven.keystone.npc.NpcSupport;
+import org.mockito.MockedStatic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,9 +45,11 @@ class TurfDefenderDeathListenerTest {
 	private CivilianNpc               npc;
 	private final List<Integer>       dropped = new ArrayList<>();
 	private TurfDefenderDeathListener listener;
+	private MockedStatic<NpcSupport>  npcs;
 
 	@BeforeEach
 	void setUp() {
+		npcs     = mockStatic(NpcSupport.class);
 		deployer = mock(TurfDefenderDeployer.class);
 		view     = mock(GangMembershipView.class);
 		npc      = mock(CivilianNpc.class);
@@ -54,6 +64,11 @@ class TurfDefenderDeathListenerTest {
 		listener = new TurfDefenderDeathListener(deployer, gangs, mock(MoneyAddon.class),
 		                                         mock(MoneyDepositService.class));
 		listener.setDropper((at, amount) -> dropped.add(amount));
+	}
+
+	@AfterEach
+	void tearDown() {
+		npcs.close();
 	}
 
 	private Player killerIn(int gangId) {
@@ -105,7 +120,7 @@ class TurfDefenderDeathListenerTest {
 	}
 
 	@Test
-	@DisplayName("noKiller_nothing: a fall, a cop or the lifespan pays no one")
+	@DisplayName("noKiller_nothing: a fall or a cop pays no one")
 	void noKiller_nothing() {
 		listener.onCivilianDeath(new CivilianDeathEvent(npc, null, 0.0));
 
@@ -123,5 +138,75 @@ class TurfDefenderDeathListenerTest {
 		listener.onCivilianDeath(new CivilianDeathEvent(npc, killerIn(RIVAL), 0.0));
 
 		assertTrue(dropped.isEmpty());
+	}
+
+	/** The same listener over a real deployer, so the debit is observed, not assumed. */
+	private TurfDefenderDeathListener realListener(TurfDefenderDeployer real) {
+		GangMembership gangs = new GangMembership();
+		gangs.install(view);
+		TurfDefenderDeathListener wired = new TurfDefenderDeathListener(real, gangs, mock(MoneyAddon.class),
+		                                                                mock(MoneyDepositService.class));
+		wired.setDropper((at, amount) -> dropped.add(amount));
+		return wired;
+	}
+
+	@Test
+	@DisplayName("ruling 1: a rival's kill with no contest running pays no bounty and costs no guard")
+	void peaceKill_noBounty() {
+		TurfDefenderDeployer real  = DeployerSeam.deployer();
+		AtomicInteger        stock = new AtomicInteger(10);
+		TurfGarrison         gar   = DeployerSeam.garrison(1, stock, OWNER, 1000);
+		DeployerSeam.standing(real, gar);
+		assertTrue(DeployerSeam.armed(real, 1), "a real peace group, not the seam's bare one");
+		DeployerSeam.track(real, 1, npc);
+
+		realListener(real).onCivilianDeath(new CivilianDeathEvent(npc, killerIn(RIVAL), 0.0));
+
+		assertTrue(dropped.isEmpty());
+		assertEquals(10, stock.get());
+	}
+
+	@Test
+	@DisplayName("a rival's kill in a contest pays the bounty and costs one guard")
+	void contestKill_paysAndDebits() {
+		TurfDefenderDeployer real  = DeployerSeam.deployer();
+		AtomicInteger        stock = new AtomicInteger(10);
+		real.startGarrison(DeployerSeam.garrison(1, stock, OWNER, 1000), Set::of);
+		DeployerSeam.track(real, 1, npc);
+
+		realListener(real).onCivilianDeath(new CivilianDeathEvent(npc, killerIn(RIVAL), 0.0));
+
+		assertEquals(List.of(500), dropped);
+		assertEquals(9, stock.get());
+	}
+
+	@Test
+	@DisplayName("a guard lost to a mob in a contest costs one guard and pays no one")
+	void contestMobDeath_debitsNoBounty() {
+		TurfDefenderDeployer real  = DeployerSeam.deployer();
+		AtomicInteger        stock = new AtomicInteger(10);
+		real.startGarrison(DeployerSeam.garrison(1, stock, OWNER, 1000), Set::of);
+		DeployerSeam.track(real, 1, npc);
+
+		realListener(real).onCivilianDeath(new CivilianDeathEvent(npc, null, 0.0));
+
+		assertTrue(dropped.isEmpty());
+		assertEquals(9, stock.get());
+	}
+
+	@Test
+	@DisplayName("a cop's killing blow in a contest costs one guard and pays no one")
+	void contestNpcKill_debitsNoBounty() {
+		TurfDefenderDeployer real  = DeployerSeam.deployer();
+		AtomicInteger        stock = new AtomicInteger(10);
+		real.startGarrison(DeployerSeam.garrison(1, stock, OWNER, 1000), Set::of);
+		DeployerSeam.track(real, 1, npc);
+		Player cop = killerIn(-1);
+
+		npcs.when(() -> NpcSupport.isNpc(cop)).thenReturn(true);
+		realListener(real).onCivilianDeath(new CivilianDeathEvent(npc, cop, 0.0));
+
+		assertTrue(dropped.isEmpty());
+		assertEquals(9, stock.get());
 	}
 }

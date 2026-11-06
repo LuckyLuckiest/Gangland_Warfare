@@ -22,6 +22,27 @@ public final class PowerupRegistry {
 	/** Price of one guard at the Quartermaster, from {@code Garrison.Cost_Per_Guard} (W2-Q, TF-17). */
 	private volatile BigDecimal garrisonCost = BigDecimal.valueOf(1000);
 
+	/**
+	 * The most a stack of guard boosts can do, from {@code Limits} in {@code turf_powerups.yml}.
+	 *
+	 * @param maxToughness most health multiplier, at least 1
+	 * @param maxWaves most multiplier on wave size and max alive, at least 1
+	 * @param minWait shortest wait as a share of the base cooldown, in (0, 1]
+	 */
+	public record GuardLimits(double maxToughness, double maxWaves, double minWait) {
+		public static final GuardLimits DEFAULT = new GuardLimits(3.0, 2.0, 0.25);
+	}
+
+	private volatile GuardLimits guardLimits = GuardLimits.DEFAULT;
+
+	public GuardLimits guardLimits() {
+		return guardLimits;
+	}
+
+	public void setGuardLimits(GuardLimits limits) {
+		this.guardLimits = limits;
+	}
+
 	public BigDecimal garrisonCost() {
 		return garrisonCost;
 	}

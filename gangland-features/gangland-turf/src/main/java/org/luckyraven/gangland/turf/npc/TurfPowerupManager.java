@@ -14,6 +14,7 @@ import org.luckyraven.gangland.turf.listener.powerups.TurfPowerupChunkLoadListen
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
+import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.npc.NpcPost;
 import org.luckyraven.keystone.npc.NpcSupport;
@@ -133,6 +134,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 				reviveIfDue(entry.getKey(), qm);
 				continue;
 			}
+			if (holding.test(entry.getKey())) TurfCopGuard.dropCopTargets(qm.getCivilian());
 			if (qm.isRecalled()) {
 				if (!holding.test(entry.getKey()) && qm.getCivilian().getCurrentState() == CivilianState.COMBAT) {
 					qm.cancelRecall();

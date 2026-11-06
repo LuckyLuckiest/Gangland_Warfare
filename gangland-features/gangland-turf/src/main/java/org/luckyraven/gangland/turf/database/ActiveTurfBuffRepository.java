@@ -50,7 +50,7 @@ public class ActiveTurfBuffRepository extends AbstractRepository<ActiveTurfBuff>
 			try {
 				effectType = EffectType.valueOf(effectName);
 			} catch (IllegalArgumentException exception) {
-				// Stored type no longer exists in code (catalogue refactor) — drop the row on next save.
+				// Stored type no longer exists in code (catalogue refactor) — skip the row on load; it stays until expiry pruning removes it.
 				continue;
 			}
 			buffs.add(new ActiveTurfBuff(id, turfId, powerupId, effectType, magnitude, expiresAt));

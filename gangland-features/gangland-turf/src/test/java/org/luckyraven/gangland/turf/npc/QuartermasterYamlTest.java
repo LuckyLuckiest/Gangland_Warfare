@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -56,11 +57,27 @@ class QuartermasterYamlTest {
 	}
 
 	@Test
-	@DisplayName("the shipped Reserve_Full line says the cap counts guards on duty too (T-268)")
-	void reserveFull_namesWhatIsCounted() throws IOException {
-		String line = load("/turf/turf_messages.yml").getString("Quartermaster.Reserve_Full");
+	@DisplayName("garrisonKeys_ownedNotStockOrReserve: the Owned keys ship, the stock and reserve keys are gone")
+	void garrisonKeys_ownedNotStockOrReserve() throws IOException {
+		YamlConfiguration yaml = load("/turf/turf_messages.yml");
 
-		assertTrue(line.contains("on duty"), line);
+		for (String key : new String[]{"Garrison_Owned", "Garrison_In_Reserve", "Garrison_Where_One", "Garrison_Where_Two",
+		                               "Bought_Guard_Post", "Bought_Guard_Reserve", "Owned_Full"}) {
+			assertTrue(yaml.isSet("Quartermaster." + key), key);
+		}
+		for (String key : new String[]{"Garrison_Stock", "Garrison_Reserve", "Reserve_Full"}) {
+			assertFalse(yaml.isSet("Quartermaster." + key), key);
+		}
+	}
+
+	@Test
+	@DisplayName("hoverGuards_saysOwned: the map hover counts guards owned, in the YAML and the code fallback")
+	void hoverGuards_saysOwned() throws IOException {
+		String line = "&7Your guards: &f%count% &7owned";
+
+		assertEquals(line, load("/turf/turf_messages.yml").getString("Map.Hover_Guards"));
+		assertTrue(Files.readString(Path.of("src/main/java/org/luckyraven/gangland/turf/map/TurfMapService.java"))
+		                 .contains("\"Map.Hover_Guards\", \"" + line + "\""), "code fallback");
 	}
 
 	@Test
@@ -110,6 +127,32 @@ class QuartermasterYamlTest {
 	}
 
 	@Test
+	@DisplayName("the menu pass keys and changed defaults of DESIGN 7 are shipped; Buffs_Effect is gone")
+	void menuPassKeys() throws IOException {
+		YamlConfiguration yaml = load("/turf/turf_messages.yml");
+		Map<String, String> expected = new java.util.LinkedHashMap<>();
+		expected.put("Buffs_Does", "&7Effect: %effect%");
+		expected.put("Effect_Income", "&a+%percent%% &fturf income");
+		expected.put("Effect_Discount", "&a%percent%% off &fnew guards");
+		expected.put("Effect_Toughness", "&a+%percent%% &fhealth on your guards while it runs");
+		expected.put("Effect_Waves", "&a+%percent%% &fguards fighting at once in a contest");
+		expected.put("Effect_Reinforcements", "&fReplacements arrive &a%percent%% &fsooner");
+		expected.put("Buffs_Active", "&aActive: &f%time% &aleft");
+		expected.put("Buffs_Stack", "&7Buying again stacks, up to a limit.");
+		expected.put("Title_Menu", "&5%npc%");
+		expected.put("Title_Buffs", "&5Timed Buffs");
+		expected.put("Title_Garrison", "&5Garrison");
+		expected.put("Place_Title", "&5Place the %npc%");
+		expected.put("Buffs_Duration", "&7Duration: &b%time%");
+
+		for (Map.Entry<String, String> entry : expected.entrySet()) {
+			assertEquals(entry.getValue(), yaml.getString("Quartermaster." + entry.getKey()), entry.getKey());
+		}
+		assertTrue(!yaml.isSet("Quartermaster.Buffs_Effect"), "Buffs_Effect is gone");
+		assertTrue(!yaml.isSet("Garrison.Returned"), "Garrison.Returned is gone");
+	}
+
+	@Test
 	@DisplayName("turf_npcs.yml names the Quartermaster (TF-38)")
 	void powerupNameKeyPresent() throws IOException {
 		assertTrue(load("/turf/turf_npcs.yml").isSet("Powerup_Npc.Display_Name"));
@@ -122,6 +165,9 @@ class QuartermasterYamlTest {
 
 		assertTrue(yaml.isSet("Garrison.Cost_Per_Guard"));
 		assertTrue(!yaml.isSet("Powerups.reinforced_defense"));
+		assertEquals(3.0, yaml.getDouble("Limits.Max_Guard_Toughness"));
+		assertEquals(2.0, yaml.getDouble("Limits.Max_Guard_Waves"));
+		assertEquals(0.25, yaml.getDouble("Limits.Min_Reinforcement_Wait"));
 	}
 
 	@Test

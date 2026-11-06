@@ -19,7 +19,7 @@ Vocabulary used in every message, hover and line of this page:
 | **Capture** (capturing) | Filling the capture bar to take a turf. |
 | **Under attack** | A rival is capturing an owned turf. Shown as *italic* on the map. |
 | **Shielded** | The turf cannot be attacked right now, and the reason is always shown (for example `shielded: just captured, attackable in 12m`). Shown as underlined on the map. |
-| **Guards** | The NPCs bought for a turf (the defender stock set by `/glw turf garrison`). |
+| **Guards** | The NPCs bought for a turf. The stock is the number owned, standing on the turf or in reserve (set by `/glw turf garrison`). |
 | **Quartermaster** | The turf's shop NPC (the powerup catalogue, `/glw turf buff`, `/glw turf powerupnpc`). |
 
 Turf is provided by the `gangland-turf` runtime module. Turf admin rights come from the `gangland.turf.admin` node.
@@ -63,7 +63,7 @@ what applies to it.
 | `Income.Idle_Hours` | `turf_rules.yml` | `24` | A turf pays only while one of its owners was online in the last this many hours. |
 | `Income.Max_Multiplier` | `turf_rules.yml` | `2.0` | Income boosts stack, but a turf never pays more than this many times its income. |
 | `Income.Gang_XP_Per_Payout` | `turf_rules.yml` | `1` | Gang XP per paying turf per payout. |
-| `Garrison.Max_Reserve` | `turf_rules.yml` | `12` | Most guards a turf can hold in reserve. |
+| `Garrison.Max_Reserve` | `turf_rules.yml` | `12` | Most guards a turf can own, standing or in reserve. |
 | `Garrison.Cost_Per_Guard` | `turf_powerups.yml` | `1000` | Price of one guard at the Quartermaster, from the gang bank. A `garrison_discount` boost multiplies it. |
 | `Powerup_Npc.Display_Name` | `turf_npcs.yml` | `Quartermaster` | The Quartermaster's name in panel titles and chat lines. The name over its head comes from `civilians.yml`. |
 | `Powerup_Npc.Placement_Cost` | `turf_npcs.yml` | `5000.0` | Price the owning gang pays to place or move its Quartermaster with `/glw turf quartermaster`. `0` = free. |
@@ -124,69 +124,81 @@ are `small_income_boost` (300), `large_income_boost` (1000) and `garrison_discou
   can open the panel and look, but cannot buy.
 - **Every click re-checks** membership, rank and ownership. A turf that changed hands closes the panel.
 - **Guards.** One guard costs `Garrison.Cost_Per_Guard` (1000) from the gang bank, multiplied by any active
-  `garrison_discount`. The price stays between 10 % and 100 % of `Garrison.Cost_Per_Guard` and never drops below 1. A turf holds at most `Garrison.Max_Reserve` (12) guards in reserve.
-- **Survivors.** Guards still alive when a contest fails return to the reserve, up to the `Garrison.Max_Reserve` cap.
-  Guards on the field count against that cap too, so a buy is refused while stock plus live guards reach it. How the
-  guards fight and stand down is in [Guards](#guards).
-- **Boost catalogue** pages nine boosts at a time.
+  `garrison_discount`. The price stays between 10 % and 100 % of `Garrison.Cost_Per_Guard` and never drops below 1. A turf owns at most `Garrison.Max_Reserve` (12) guards, standing or in reserve, and a buy is refused at that cap.
+- **Survivors.** Guards still alive after a contest stay at their posts, and no guard returns to a reserve. Guards past
+  `Garrison.Standing_Cap` leave after `Garrison.Stand_Down_Seconds`. How the guards fight and stand down is in
+  [Guards](#guards).
+- **Boost catalogue** pages 21 boosts at a time. The three guard boosts are in [Guard boosts](#guard-boosts).
 - **Owner placement.** The owning gang places its Quartermaster with `/glw turf quartermaster`, standing inside the turf.
   It costs `Powerup_Npc.Placement_Cost` from the gang bank (`0` is free). Staff use `/glw turf powerupnpc` instead, for free.
 - **Post.** He paces a few blocks around his post (`quartermaster` type, `AI.Wander` in `civilians.yml`) and walks back when he strays past `Garrison.Hold_Radius`: always under Hold orders, under Defend once the fight is over. He respawns after `Powerup_Npc.Respawn_Seconds`.
 - **Hub rows.** The hub shows the guards on duty and who may spend: the owning gang buys, allies only look.
 - **Gang tag.** A short tag of the owning gang is drawn on a line above the Quartermaster. It follows owner changes.
 - **Guard orders.** The hub's Guard Orders button (slot 13) switches the guards between Hold and Defend. The owning gang's rank with `gangland.turf.upgrade` may switch it; allies only look. See [Guards](#guards).
-- **Garrison read-out.** The Garrison panel shows guards on duty, the reserve against `Garrison.Max_Reserve` (`turf_rules.yml`), and the next wave, which comes from the reserve at no extra cost.
+- **Garrison read-out.** The Garrison panel shows `Owned` against `Garrison.Max_Reserve` (`turf_rules.yml`), the guards on duty, the guards in reserve, and the contest top-up, which comes from stock at no extra cost.
 
 ---
 
 ## Guards
 
-Guards are the NPCs a gang buys at its turf's Quartermaster. When a rival starts capturing the turf, they defend it.
-This section describes the code as shipped. The numbers are the defaults in `turf/turf_npcs.yml` (section `Garrison:`)
-and `Garrison.Max_Reserve` in `turf/turf_rules.yml`. Guards need Citizens: on a server without it nothing spawns and
-nothing is spent.
+Guards are the NPCs a gang buys at its turf's Quartermaster. They stand at posts on the turf while its area is loaded,
+and they fight when a rival starts capturing the turf. This section describes the code as shipped. The numbers are the
+defaults in `turf/turf_npcs.yml` (section `Garrison:`) and `Garrison.Max_Reserve` in `turf/turf_rules.yml`. Guards need
+Citizens: on a server without it nothing spawns and nothing is spent.
 
 ### Stock and waves
 
-- **Stock.** Buying a guard adds one to the turf's reserve. The reserve holds at most `Garrison.Max_Reserve` (12) guards,
-  counting guards on duty.
-- **Spending.** A capture does not take anything from the reserve. Each guard leaves the reserve only once it has
-  spawned, so a wave that never spawns costs nothing.
-- **First wave.** When a rival starts a capture, the first wave of `Garrison.Wave_Size` (3) guards spawns within a few
-  ticks at one of five posts: the four corners of the turf, inset 2 blocks, and the centre, each on the ground above
-  the surface.
-- **Hidden posts.** A post is hidden when no attacker can see it. A wave takes the hidden post farthest from the nearest
-  attacker. If every post is in sight of an attacker, the wave waits 3 seconds for a hidden one and then takes the
-  farthest post. With no attacker near the turf, the first corner is used.
-- **Top-ups.** Each guard that falls is owed a replacement. Replacements come in waves of up to `Wave_Size`, at most
-  `Garrison.Max_Alive` (6) guards stand at once, and a top-up waits `Garrison.Wave_Cooldown_Seconds` (20) after the last
-  fall. A top-up never takes more than the reserve holds.
-- **Owners are told** when a wave takes its posts: `N guards took their posts at <turf>` (`Garrison.Wave` in
-  `turf_messages.yml`).
+- **Stock.** Buying a guard adds one to the turf's stock. The stock is the number of guards the gang owns, standing on the
+  turf or in reserve. It holds at most `Garrison.Max_Reserve` (12).
+- **Standing guards.** While a turf's area is loaded, its guards stand at posts with no contest running. At the default
+  `Garrison.Standing_Cap` (5) one guard stands at each post: the four corners of the turf, inset 2 blocks, and the centre,
+  each on the ground above the surface. Above 5, guards share posts. Set `Standing_Cap` to `0` to bring back the old
+  behaviour, where guards appear only in a contest. Nothing is kept loaded for them: a turf whose area is unloaded has no
+  guards on the ground, and they stand again when the area loads.
+- **Only a contest kill costs stock.** A guard killed while a contest is running leaves the stock and pays its bounty. A
+  guard killed with no contest running is free and comes back after `Garrison.Wave_Cooldown_Seconds` (20). A guard lost to
+  a chunk unload, a `/glw reload` or a restart is free too: it comes back as soon as its area loads.
+- **Contest start.** When a rival starts a capture, the guards already standing keep their posts and fight. Nothing
+  respawns for the contest itself.
+- **Top-ups.** Each guard that falls in a contest is owed a replacement. Replacements come in waves of up to
+  `Garrison.Wave_Size` (3), at most `Garrison.Max_Alive` (6) guards stand at once during a contest, and a top-up waits
+  `Garrison.Wave_Cooldown_Seconds` (20) after the last fall. A top-up takes guards only from stock, and it never takes more
+  than the stock holds. A peace-time replacement uses the same cooldown.
+- **Hidden posts.** In a contest, a post is hidden when no attacker can see it. A top-up takes the hidden post farthest
+  from the nearest attacker. If every post is in sight of an attacker, the top-up waits 3 seconds for a hidden one and then
+  takes the farthest post. With no attacker near the turf, the first corner is used.
+- **Owners are told** when a contest top-up takes its posts: `Guards at <turf> reinforced: +N` (`Garrison.Wave` in
+  `turf_messages.yml`). Peace-time spawns and replacements are silent.
 
 ### Targets, leash and stand-down
 
-- **Targets.** A guard fights the closest attacker within `Defender.Targeting_Radius` (32) that stands inside the leash.
+- **Targets.** With no contest running, a guard attacks nobody. A rival who walks across the turf is left alone until a
+  capture starts or he hits a guard. During a contest, a guard fights the closest attacker within
+  `Defender.Targeting_Radius` (32) that stands inside the leash.
   The leash is the turf plus `Garrison.Leash_Margin` (16) blocks on every side. Attackers outside it are ignored, and
   they do not pick the posts either.
 - **Leash.** A guard that is past the leash drops its target and walks back to the nearest post.
-- **Stand-down.** When a capture ends, survivors stop fighting and walk to the nearest post. When the contest fails, they
-  shout `Shouts.Turf_Held` ("Turf's ours. Back to your posts."). When the turf is captured, they shout `Shouts.Turf_Lost`, but the
-  owner change recalls the guards in the same tick, so that line is often cut short. After
-  `Garrison.Stand_Down_Seconds` (8) the survivors leave.
-- **Return.** A failed contest sends the survivors back to the reserve, up to `Max_Reserve`, and the owners are told
-  `N guards back in the reserve at <turf>`. A completed capture returns nothing, because the turf changes hands and the
-  old owner's stock is reset. Guards still in the field when the server stops are not refunded.
-- **Recycling.** A guard that cannot reach anyone for `Garrison.Recycle_Seconds` (12), while no attacker can see it, is
-  replaced by a new guard at another post. The new guard keeps the number and the role of the old one and spends no
-  stock. Set `0` to turn this off.
+- **Stand-down.** When a capture ends, survivors stop fighting and walk to the nearest post, and their remembered targets
+  are cleared, so a guard does not go back for the old rival or cop. When the contest fails, they shout
+  `Shouts.Turf_Held` ("Turf's ours. Back to your posts."). When the turf is captured, they shout `Shouts.Turf_Lost`, but the
+  owner change recalls the guards in the same tick, so that line is often cut short. After `Garrison.Stand_Down_Seconds`
+  (8), guards past `Garrison.Standing_Cap` leave, highest numbers first. The rest stay at their posts. A surplus guard
+  leaves without costing stock.
+- **No return.** A guard that survives a contest is not given back to a reserve, and nothing is refunded, because the
+  stock already counts it. A completed capture changes the stock the same way: the turf changes hands and the old
+  owner's stock is reset. A server stop or a `/glw reload` costs nothing: the stock is unchanged and the guards stand
+  again when the area loads.
+- **Recycling.** During a contest, a guard that cannot reach anyone for `Garrison.Recycle_Seconds` (12), while no attacker
+  can see it, is replaced by a new guard at another post. The new guard keeps the number and the role of the old one and
+  spends no stock. Set `0` to turn this off.
 
 ### Callsigns and health bars
 
 Each guard shows a gold hologram line above its head: `[TAG] Guard n`. The tag is the first three letters or digits of
 the gang's name without colour codes. It is padded from the gang name when that is short, it is `GNG` when the name has
 none, and it is four characters long when three would spell `CIT`. The guard's Citizens nameplate is hidden. The number
-`n` counts from 1 in each contest; a replacement takes the next number, and a recycled guard keeps its number. With
+`n` counts from 1 for each guard: a replacement takes the lowest free number and the role that goes with it, and a recycled
+guard keeps its number. With
 `gangland-healthbars` installed, the guard's health bar sits directly under the callsign.
 
 ### Roles
@@ -215,8 +227,10 @@ The role names are the `AI.Combat.Roles` of the `turf_defender` type in `civilia
 
 ### Guard bounty
 
-A guard drops no civilian cash. Any player who is neither in the owning gang nor in a gang allied to it (a player with no
-gang included) who kills a guard finds cash at its feet worth `Garrison.Bounty_Share` (0.5) of the guard's price, rounded down. The price is the
+A guard drops no civilian cash. The bounty is paid only for a guard killed during a contest: a guard killed with no contest
+running drops nothing and costs no stock. A cop's killing blow pays no bounty, though it still takes the guard from stock
+during a contest. Any player who is neither in the owning gang nor in a gang allied to it (a player with no
+gang included) who kills a guard during a contest finds cash at its feet worth `Garrison.Bounty_Share` (0.5) of the guard's price, rounded down. The price is the
 guard price in force when the capture starts, discount included. It is the price the owner pays for a guard now, not a
 stored record of what it paid. Nothing is minted: the owner has paid for the guard already. The owning gang and its allies
 get nothing. Set `Bounty_Share` to `0` to turn the bounty off. If a server enables an NPC drop in `money.yml`, that drop
@@ -231,24 +245,44 @@ and only a warning is logged.
 stop again when the cop dies, when the victim leaves or stops being protected, or when the cop moves out of range. Set
 `Enabled` to `false` and defenders ignore cops entirely.
 
-**Guard orders.** Under Hold (Quartermaster hub, Guard Orders) the Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released. The order is saved per turf. The order resets to Defend whenever a turf changes hands (capture, admin, disband, inactivity): the garrison row is dropped with the old owner's stock (T-270). Deleting a turf drops it too.
+**Standing guards answer at all times.** Outside a contest, the standing guards answer a cop who hits a gang member on the
+turf, the same as during a contest, unless the order is Hold. They never attack a cop on their own, and they stop when the
+cop dies, when the victim leaves or stops being protected, or when the cop moves out of range. Because peace deaths are
+free, a wanted member can shelter on the turf, and each fight can pull in more cops. Watch this on a live server.
+
+**Guard orders.** Under Hold (Quartermaster hub, Guard Orders) the Quartermaster and the guards answer no cop, and a cop a guard was engaged with is released. A cop whose stray hit lands on one is dropped within a quarter second, a mob or a rival who hit it stays fair game, and during a contest a guard still answers such a hit, because a death there costs stock. The order is saved per turf. The order resets to Defend whenever a turf changes hands (capture, admin, disband, inactivity): the garrison row is dropped with the old owner's stock (T-270). Deleting a turf drops it too.
 
 **Owner alerts.** Online members of the owning gang (not allies or rivals) get a chat line and an action-bar line when a cop hits or cuffs one of them on the turf, a guard falls, an outsider hits the Quartermaster, or the Quartermaster is killed. Each kind is sent at most once per `Owner_Alerts.Cooldown_Seconds` (default 60) per turf; guard and Quartermaster deaths are told once per NPC. Cop-hit alerts need `Cop_Response.Enabled` to be `true`. Hold does not silence them.
+
+### Guard boosts
+
+Three powerups in `turf/turf_powerups.yml` change guards. Buying again stacks each one, up to the `Limits` section.
+
+| Powerup | Effect | Cost, duration |
+|---|---|---|
+| `guard_toughness` | Guards have 1.5 times the health while it runs, standing guards too. Current health keeps its share. When it ends, health falls back and no guard dies. Total health never passes 1024. | 2000, 30 minutes |
+| `bigger_guard_waves` | 1.5 times `Wave_Size` and `Max_Alive` during a contest. It spends only guards the turf already owns. | 3000, 30 minutes |
+| `faster_reinforcements` | Half the wait before replacements arrive, in a contest and outside one. | 1500, 30 minutes |
+
+`Limits` caps a stack: `Max_Guard_Toughness` (3.0), `Max_Guard_Waves` (2.0) and `Min_Reinforcement_Wait` (0.25, a share
+of `Wave_Cooldown_Seconds`). A value outside its range is skipped with a warning, and one above its limit is kept and
+clamped where it applies. A server whose `turf_powerups.yml` predates 0.21.7 has none of these until the entries are
+copied in (see the migration guide).
 
 ### Guard keys (`turf/turf_npcs.yml`)
 
 | Key | Default | Meaning |
 |---|---|---|
-| `Garrison.Wave_Size` | `3` | Guards per wave. |
-| `Garrison.Max_Alive` | `6` | Most guards standing at once on one turf. |
-| `Garrison.Wave_Cooldown_Seconds` | `20` | Seconds after a fall before the next top-up. |
-| `Garrison.Stand_Down_Seconds` | `8` | Seconds survivors stay after the fight before they leave. |
+| `Garrison.Standing_Cap` | `5` | Guards that stand at posts outside a contest, one per post. Above 5 they share posts. `0` = only in a contest. |
+| `Garrison.Wave_Size` | `3` | Guards per contest top-up pass. |
+| `Garrison.Max_Alive` | `6` | Most guards standing at once on one turf during a contest. The ceiling for `Standing_Cap`. |
+| `Garrison.Wave_Cooldown_Seconds` | `20` | Seconds after a fall before its replacement arrives, in a contest and outside one. |
+| `Garrison.Stand_Down_Seconds` | `8` | Seconds after a fight before guards past `Standing_Cap` leave. |
 | `Garrison.Leash_Margin` | `16` | Blocks past the turf edge a guard may chase. |
 | `Garrison.Composition` | the three roles above | Roles in spawn order. An empty list gives none. |
-| `Garrison.Bounty_Share` | `0.5` | Share of a guard's price paid to a rival who kills it. `0` turns it off. |
-| `Garrison.Recycle_Seconds` | `12` | Seconds a guard may be unreachable before it reappears at another post. `0` turns it off. |
+| `Garrison.Bounty_Share` | `0.5` | Share of a guard's price paid to a rival who kills it during a contest. `0` turns it off. |
+| `Garrison.Recycle_Seconds` | `12` | Seconds a guard in a contest may be unreachable before it reappears at another post. `0` turns it off. |
 | `Defender.Targeting_Radius` | `32.0` | How far a guard looks for an attacker. |
-| `Defender.Lifespan_Seconds` | `600` | Safety lifespan. A guard lives at least as long as the longest contest (`Max_Contest_Minutes` plus 60 seconds). |
 | `Cop_Response.Enabled` | `true` | Defenders answer cops hitting a protected player. |
 | `Cop_Response.Targeting_Radius` | `32.0` | Range within which defenders answer a cop. |
 | `Cop_Response.Include_Allies` | `true` | Also protect members of allied gangs. |
@@ -361,7 +395,7 @@ The `+` is your cell. Every row is 41 cells wide.
 
 - **Hover a letter:** the turf name, the owner (or `Unclaimed`), the state (`Quiet`, or `Under attack by Rats, 62 %`),
   the reason sentence, and what the turf pays per interval (or `dormant`, from W2). Your own gang's last-online time, and your
-  own turf's guards in reserve, show only for your gang. Other gangs' online times and guards never show.
+  own turf's guards owned, show only for your gang. Other gangs' online times and guards never show.
 - **Admins** also see `/glw turf tp <id>` in the hover text. It is text, not a click.
 - **Hover the `+` cell:** the turf under you, your coordinates and your facing.
 - **Click a letter:** runs `/glw turf info <id>`.

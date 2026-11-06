@@ -74,7 +74,7 @@ Income:
 
 # ---------------- Garrison: guards bought at the Quartermaster (0.17.0) ----------------
 Garrison:
-   # The most guards a turf can hold in reserve. Buying stops at this number.
+   # The most guards a turf can own, standing or in reserve.
    Max_Reserve: 12
 # end Garrison
 

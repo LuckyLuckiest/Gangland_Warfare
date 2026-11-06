@@ -14,7 +14,6 @@ import org.luckyraven.gangland.turf.database.TurfGarrisonRepository;
 import org.luckyraven.gangland.turf.database.TurfPowerupNpcRepository;
 import org.luckyraven.gangland.turf.database.TurfRepository;
 import org.luckyraven.gangland.turf.database.TurfSequenceRepository;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.GanglandTurfMessages;
 import org.luckyraven.gangland.turf.config.GanglandTurfSounds;
 import org.luckyraven.gangland.turf.config.TurfSettings;
@@ -43,6 +42,7 @@ import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupOpenContractImpl;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
+import org.luckyraven.gangland.turf.npc.defender.GarrisonRoster;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderMoneyDropSource;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
@@ -67,7 +67,7 @@ import java.util.List;
 
 /**
  * Bean wiring for the gang-turf feature. The tuning numbers come from {@link TurfSettings} (the module's own
- * {@code turf/turf_settings.yml}); the shared inventory-filler look still comes from {@link Settings}.
+ * {@code turf/turf_settings.yml}), including the Quartermaster panel look.
  */
 @Configuration
 public final class TurfModuleConfig {
@@ -298,7 +298,7 @@ public final class TurfModuleConfig {
 	// The per-turf Quartermaster (interactable powerup vendor + hostile-on-contest civilian) and the auto-deploy
 	// garrison defenders. Both spawn through the civilians module's civilian NPC infrastructure — no bespoke
 	// entity types — so model/health/equipment/AI live entirely in civilians.yml. Knobs specific to the turf
-	// system (which civilian type id, deploy radius, lifespan) live in turf/turf_npcs.yml, loaded by
+	// system (which civilian type id, deploy radius) live in turf/turf_npcs.yml, loaded by
 	// TurfNpcsConfigLoader. Now that both the NPC code and the civilian infrastructure it spawns through live
 	// outside cops-n-crooks, GarrisonDeployListener injects TurfDefenderDeployer/TurfPowerupManager directly — the
 	// TurfNpcContract cross-module bridge these beans used to feed has no remote implementor left (T-I4).
@@ -309,11 +309,20 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
+	public GarrisonRoster garrisonRoster(TurfManager turfs, GarrisonManager garrisons, TurfNpcsConfigLoader loader,
+	                                     GangLookupContract gangs, TurfMessages text, PowerupRegistry registry,
+	                                     ActiveBuffManager buffs) {
+		return new GarrisonRoster(turfs, garrisons, loader, gangs, text, registry, buffs);
+	}
+
+	@Bean
 	public TurfDefenderDeployer turfDefenderDeployer(JavaPlugin plugin, CivilianService civilianService,
-	                                                 CivilianSpawnManager spawnManager, GarrisonManager garrisons) {
+	                                                 CivilianSpawnManager spawnManager, GarrisonManager garrisons,
+	                                                 GarrisonRoster roster) {
 		TurfDefenderDeployer deployer = new TurfDefenderDeployer(plugin, civilianService, spawnManager);
 		// W7-F: per-turf Hold/Defend order (D26=A)
 		deployer.bindHolding(garrisons::holding);
+		deployer.bindRoster(roster);
 		deployer.start();
 		return deployer;
 	}
@@ -367,47 +376,45 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfPowerupMenuView turfPowerupMenuView(@SuppressWarnings("unused") Settings settings,
-	                                               GarrisonManager garrisons, ActiveBuffManager buffs,
+	public TurfPowerupMenuView turfPowerupMenuView(GarrisonManager garrisons, ActiveBuffManager buffs,
 	                                               TurfDefenderDeployer defenders, QuartermasterAccess access,
-	                                               TurfMessages messages) {
+	                                               TurfMessages messages, TurfSettings turfSettings) {
 		// W7-F: the access check also gates the Guard Orders click
 		return new TurfPowerupMenuView(garrisons, buffs, defenders::aliveCount, access, messages,
-		                               Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+		                               turfSettings::menuStyle);
 	}
 
 	@Bean
-	public QuartermasterPlacement quartermasterPlacement(@SuppressWarnings("unused") Settings settings,
-	                                                     JavaPlugin plugin, InventoryService inventoryService,
+	public QuartermasterPlacement quartermasterPlacement(JavaPlugin plugin, InventoryService inventoryService,
 	                                                     TurfManager turfs, GangLookupContract gangs,
 	                                                     UserLookupContract users, QuartermasterAccess access,
 	                                                     TurfPowerupManager npcs, TurfMessages messages,
-	                                                     TurfNpcsConfigLoader loader) {
+	                                                     TurfNpcsConfigLoader loader,
+	                                                     TurfSettings turfSettings) {
 		return new QuartermasterPlacement(plugin, inventoryService, turfs, gangs, users, access, npcs, messages,
 		                                  loader::getPowerupSettings, NpcSupport::available,
-		                                  Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+		                                  turfSettings::menuStyle);
 	}
 
 	@Bean
-	public TurfPowerupBuffCatalogueView turfPowerupBuffCatalogueView(@SuppressWarnings("unused") Settings settings,
-	                                                                 PowerupRegistry registry,
+	public TurfPowerupBuffCatalogueView turfPowerupBuffCatalogueView(PowerupRegistry registry,
 	                                                                 ActiveBuffManager buffs,
 	                                                                 QuartermasterAccess access,
-	                                                                 TurfMessages messages) {
-		return new TurfPowerupBuffCatalogueView(registry, buffs, access, messages,
-		                                        Settings.getInventoryFillItem(),
-		                                        Settings.getInventoryFillName());
+	                                                                 TurfMessages messages,
+	                                                                 TurfMessageContract durations,
+	                                                                 TurfSettings turfSettings) {
+		return new TurfPowerupBuffCatalogueView(registry, buffs, access, messages, durations,
+		                                        turfSettings::menuStyle);
 	}
 
 	@Bean
-	public TurfPowerupGarrisonView turfPowerupGarrisonView(@SuppressWarnings("unused") Settings settings,
-	                                                       GarrisonManager garrisons, PowerupRegistry registry,
+	public TurfPowerupGarrisonView turfPowerupGarrisonView(GarrisonManager garrisons, PowerupRegistry registry,
 	                                                       ActiveBuffManager buffs, QuartermasterAccess access,
 	                                                       TurfRules rules, TurfDefenderDeployer defenders,
-	                                                       TurfNpcsConfigLoader loader, TurfMessages messages) {
+	                                                       GarrisonRoster roster, TurfMessages messages,
+	                                                       TurfSettings turfSettings) {
 		return new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules, defenders::aliveCount,
-		                                   loader::getDefenderConfig, messages,
-		                                   Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+		                                   roster::configOf, messages, turfSettings::menuStyle);
 	}
 
 	@Bean

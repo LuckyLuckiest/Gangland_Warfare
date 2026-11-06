@@ -59,8 +59,8 @@ Map:
    Hover_Pays: "&7Pays &f%money_symbol%%amount% &7per %time%"
    # A turf with no income.
    Hover_Dormant: "&7Pays &fnothing &7(dormant)"
-   # Owning gang only: %count% = guards in reserve on the turf.
-   Hover_Guards: "&7Your guards: &f%count% &7in reserve"
+   # Owning gang only: %count% = guards owned, standing or in reserve.
+   Hover_Guards: "&7Your guards: &f%count% &7owned"
    # Admins only, plain text, never a click. %id% = the turf id.
    Hover_Admin_Tp: "&7Admin: &f/glw turf tp %id%"
    # Hover of the plus. %place% = the turf under you or Hover_You_No_Turf, %x% and %z% = your block, %facing% = compass.
@@ -247,9 +247,7 @@ Alerts:
 # ---------------- Garrison: lines to the owners while their guards defend (W3-B) ----------------
 Garrison:
    # To the owning gang's online members when a wave of guards takes its posts. %turf%, %count%.
-   Wave: "&7%count% guards took their posts at &f%turf%&7."
-   # To the owning gang's online members when guards go back to the reserve after the fight. %turf%, %count%.
-   Returned: "&7%count% guards back in the reserve at &f%turf%&7."
+   Wave: "&7Guards at &f%turf% &7reinforced: &f+%count%"
 # end Garrison
 
 # ---------------- Income: the payout line and the turf cap line (W2-N2) ----------------
@@ -282,11 +280,11 @@ Digest:
 # ---------------- Quartermaster: the turf shop panels (W2-Q) ----------------
 Quartermaster:
    # Panel titles. %npc% = the Quartermaster's name (turf_npcs.yml Powerup_Npc.Display_Name).
-   Title_Menu: "&8&l[&6&l%npc%&8&l]"
+   Title_Menu: "&5%npc%"
    # Buff catalogue title. %npc% = the Quartermaster's name.
-   Title_Buffs: "&8&l[&b&lBuffs &8— &6%npc%&8&l]"
+   Title_Buffs: "&5Timed Buffs"
    # Garrison title. %npc% = the Quartermaster's name.
-   Title_Garrison: "&8&l[&c&lGarrison &8— &6%npc%&8&l]"
+   Title_Garrison: "&5Garrison"
    # Back button on the buff catalogue and garrison panels.
    Back: "&7← Back"
    # Close button on every panel.
@@ -303,7 +301,7 @@ Quartermaster:
    Menu_Owner: "&7Owning gang: &e%gang%"
    # Menu line for an allied viewer. %gang% = the viewer's own gang name.
    Menu_Allied: "&7You: &b%gang% &8(allied)"
-   # Menu line: guards in reserve. %count% = guard count.
+   # Menu line: guards owned. %count% = guards owned.
    Menu_Stock: "&7Garrison stock: &f%count%"
    # Menu line: active buffs. %count% = buff count.
    Menu_Active: "&7Active buffs: &f%count%"
@@ -325,7 +323,7 @@ Quartermaster:
    Menu_Garrison_Lore_2: "&7Guards hold the capture bar"
    # Garrison button lore, line 3.
    Menu_Garrison_Lore_3: "&7and fight attackers on this turf."
-   # Garrison button lore, line 4. %count% = guards in reserve.
+   # Garrison button lore, line 4. %count% = guards owned.
    Menu_Garrison_Stock: "&7Current stock: &f%count%"
    # Menu line: this turf's guards alive in the field right now. %count% = guard count.
    Menu_On_Duty: "&7Guards on duty: &f%count%"
@@ -334,7 +332,7 @@ Quartermaster:
    # Menu line for an allied viewer. %gang% = owner gang name.
    Menu_Spend_Ally: "&7Only &e%gang% &7buys here; allies can look."
    # Placement menu title (/glw turf quartermaster). %npc% = turf_npcs.yml Powerup_Npc.Display_Name.
-   Place_Title: "&8&l[&6&lPlace %npc%&8&l]"
+   Place_Title: "&5Place the %npc%"
    # Placement button name when the turf has no Quartermaster yet. %npc% = the Quartermaster's name.
    Place_Name: "&a&lPlace the %npc% here"
    # Placement button name when the turf already has one (it moves). %npc% = the Quartermaster's name.
@@ -355,10 +353,20 @@ Quartermaster:
    Place_Outside: "&cStand inside %turf% to place its %npc%."
    # Chat when place() could not spawn the Quartermaster (bad Type_Id, Citizens spawn cancelled). Nothing is charged. %npc% = its name.
    Place_Failed: "&cThe %npc% could not be placed here. Your gang was not charged."
-   # Catalogue item lore: the effect. %effect% = Effect_Type, %magnitude% = Magnitude.
-   Buffs_Effect: "&7Effect: &f%effect% &7x&f%magnitude%"
-   # Catalogue item lore: the duration. %seconds% = Duration_Seconds.
-   Buffs_Duration: "&7Duration: &b%seconds%s"
+   # Catalogue item lore: the effect line. %effect% = the matching Effect_* line below.
+   Buffs_Does: "&7Effect: %effect%"
+   # Effect_* lines. %percent% = how far the powerup moves the number, rounded.
+   Effect_Income: "&a+%percent%% &fturf income"
+   Effect_Discount: "&a%percent%% off &fnew guards"
+   Effect_Toughness: "&a+%percent%% &fhealth on your guards while it runs"
+   Effect_Waves: "&a+%percent%% &fguards fighting at once in a contest"
+   Effect_Reinforcements: "&fReplacements arrive &a%percent%% &fsooner"
+   # Catalogue item lore: the duration. %time% = the length in words (3m 20s); %seconds% = Duration_Seconds, still passed for old files.
+   Buffs_Duration: "&7Duration: &b%time%"
+   # Catalogue item lore while the powerup runs on this turf. %time% = the longest time left among its running copies.
+   Buffs_Active: "&aActive: &f%time% &aleft"
+   # Catalogue item lore under Buffs_Active.
+   Buffs_Stack: "&7Buying again stacks, up to a limit."
    # Catalogue item lore: the cost. %money% = the price.
    Buffs_Cost: "&7Cost: &6%money%"
    # Catalogue item lore when the gang can pay.
@@ -367,8 +375,13 @@ Quartermaster:
    Buffs_Insufficient: "&cInsufficient gang funds."
    # Garrison item name.
    Garrison_Name: "&c&lGarrison"
-   # Garrison info lore. %turf% = turf name, %count% = guards in reserve.
-   Garrison_Stock: "&7Stock on &f%turf%&7: &f%count%"
+   # Garrison info lore: guards owned against the cap. %count% = guards owned, %max% = turf_rules.yml Garrison.Max_Reserve.
+   Garrison_Owned: "&7Owned: &f%count%&7/&f%max%"
+   # Garrison info lore: owned guards not standing on the turf. %count%.
+   Garrison_In_Reserve: "&7In reserve: &f%count%"
+   # Garrison info lore: where guards stand, two lines.
+   Garrison_Where_One: "&7Guards stand on the turf while the"
+   Garrison_Where_Two: "&7area is loaded. The rest wait in reserve."
    # Garrison info lore: the price of one guard after any discount. %money% = the price.
    Garrison_Per_Guard: "&7Per defender: &6%money%"
    # Garrison info lore: the viewer's gang bank. %money% = the balance.
@@ -383,12 +396,16 @@ Quartermaster:
    Garrison_Buy_Insufficient: "&cInsufficient gang funds."
    # Chat after a guard is bought. %turf% = turf name.
    Bought_Guard: "&aBought &f1 &adefender for &f%turf%&a."
-   # Chat after a boost is bought. %boost% = the boost id, %turf% = turf name.
+   # Chat after a boost is bought. %boost% = the boost's display name, %turf% = turf name.
    Bought_Boost: "&aActivated &f%boost% &aon &f%turf%&a."
    # Chat when the gang bank cannot cover a purchase. %money% = the price.
    Cannot_Afford: "&cYour gang bank can't cover &f%money%&c."
-   # %max% = turf_rules.yml Garrison.Max_Reserve. Guards already deployed in a contest count too.
-   Reserve_Full: "&cThis turf already has %max% guards (stock and on duty)."
+   # Chat after Bought_Guard when the guard fits a post. %turf% = turf name.
+   Bought_Guard_Post: "&7It takes its post on &f%turf% &7shortly while the area is loaded."
+   # Chat after Bought_Guard when every post is taken. %turf% = turf name.
+   Bought_Guard_Reserve: "&7It waits in the reserve and joins when &f%turf% &7is attacked."
+   # Chat when the turf owns the most guards it can. %max% = turf_rules.yml Garrison.Max_Reserve.
+   Owned_Full: "&cThis turf already has %max% guards."
    # Chat when the viewer's rank may not spend (needs gangland.turf.upgrade).
    No_Rank: "&cYour rank may not spend gang money here."
    # Chat for an allied viewer who tries to buy: they may only look.
@@ -431,12 +448,10 @@ Quartermaster:
    Order_Set: "&aGuards on &f%turf%&a now: %order%"
    # Garrison panel (W7-H): guards alive on the turf now. %count%.
    Garrison_On_Duty: "&7On duty: &f%count%"
-   # Stock plus guards on duty against the cap. %count%, %max% = turf_rules.yml Garrison.Max_Reserve.
-   Garrison_Reserve: "&7Reserve: &f%count%&7/&f%max% &8(stock and on duty)"
-   # Guards the next wave sends from the reserve (already paid for). %count%.
-   Garrison_Next_Wave: "&7Next wave: up to &f%count% &7guards, no extra cost"
-   # Buy button lore when stock plus guards on duty reach the cap. %max%.
-   Garrison_Buy_Full: "&cReserve full: &f%max% &cguards."
+   # Guards a contest top-up sends from the reserve (already paid for). %count%.
+   Garrison_Next_Wave: "&7Contest top-up: &f+%count%&7, no extra cost"
+   # Buy button lore when the turf owns the cap. %max%.
+   Garrison_Buy_Full: "&cThis turf already owns &f%max% &cguards."
 # end Quartermaster
 
 # ---------------- Rules: /glw turf rules (W2-E1) ----------------

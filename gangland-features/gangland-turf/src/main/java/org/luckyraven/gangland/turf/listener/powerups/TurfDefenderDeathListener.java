@@ -19,14 +19,16 @@ import org.luckyraven.gangland.item.money.MoneyItemFactory;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer.GuardBounty;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.npc.NpcSupport;
 
 import java.util.function.ObjIntConsumer;
 
 /**
- * Tells the deployer which guards died (T-251), and pays the guard bounty (T-700): a player who is neither the owning
- * gang nor allied to it and kills a guard finds cash worth {@code Garrison.Bounty_Share} of the guard's price at its
- * feet. The owner paid that price when it bought the guard, so nothing is minted; owners and allies get nothing, and
- * the guard drops no civilian cash (see {@code TurfDefenderMoneyDropSource}).
+ * Tells the deployer which guards died (T-251), which is the debit during a contest, and pays the guard bounty (T-700):
+ * a player who is neither the owning gang nor allied to it and kills a guard in a contest finds cash worth {@code
+ * Garrison.Bounty_Share} of the guard's price at its feet. The owner paid that price when it bought the guard, so
+ * nothing is minted; owners and allies get nothing, and the guard drops no civilian cash (see {@code
+ * TurfDefenderMoneyDropSource}). With no contest running a death is free and pays nothing (ruling 1).
  */
 @CustomLog
 @ListenerHandler
@@ -55,7 +57,8 @@ public final class TurfDefenderDeathListener implements Listener {
 		defenders.markKilled(npc);
 
 		Player killer = event.getKiller();
-		if (killer == null) return;
+		// a cop is a Citizens PLAYER entity, and no one collects a bounty for its kill
+		if (killer == null || NpcSupport.isNpc(killer)) return;
 		GuardBounty bounty = defenders.bountyOf(npc);
 		if (bounty == null || bounty.ownerGangId() < 0 || bounty.amount() <= 0) return;
 

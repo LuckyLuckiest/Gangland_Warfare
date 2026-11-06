@@ -13,7 +13,7 @@ import java.io.StringReader;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @DisplayName("Garrison YAML - the shipped keys load into TurfDefenderConfig")
 class GarrisonYamlTest {
@@ -38,6 +38,11 @@ class GarrisonYamlTest {
 		assertEquals("turf_defender", config.typeId());
 		assertEquals(6.0, config.holdRadius());
 		assertEquals(60, loader.getOwnerAlertCooldownSeconds());
+		assertEquals(5, config.standingCap());
+
+		YamlConfiguration yaml = YamlConfiguration.loadConfiguration(new StringReader(YamlFixture.shipped("/turf/turf_npcs.yml")));
+		assertEquals(5, yaml.getInt("Garrison.Standing_Cap"));
+		assertFalse(yaml.isSet("Defender.Lifespan_Seconds"), "nothing reads it any more");
 	}
 
 	@Test
@@ -51,6 +56,20 @@ class GarrisonYamlTest {
 		assertEquals(6, loader.getDefenderConfig().maxAlive());
 		assertEquals(16, loader.getDefenderConfig().leashMargin());
 		assertEquals(6.0, loader.getDefenderConfig().holdRadius());
+		assertEquals(5, loader.getDefenderConfig().standingCap());
+	}
+
+	@Test
+	@DisplayName("no Garrison section at all: Standing_Cap is 5; 0 is the reserve-only switch; a negative value keeps the default")
+	void standingCap_missingZeroNegative() throws IOException {
+		String head = "Powerup_Npc:\n   Type_Id: quartermaster\nDefender:\n   Type_Id: turf_defender\n";
+
+		assertEquals(5, new TurfNpcsConfigLoader(YamlFixture.fileManager(dir, "turf_npcs", head))
+				.getDefenderConfig().standingCap());
+		assertEquals(0, new TurfNpcsConfigLoader(YamlFixture.fileManager(dir, "turf_npcs",
+				head + "Garrison:\n   Standing_Cap: 0\n")).getDefenderConfig().standingCap());
+		assertEquals(5, new TurfNpcsConfigLoader(YamlFixture.fileManager(dir, "turf_npcs",
+				head + "Garrison:\n   Standing_Cap: -1\n")).getDefenderConfig().standingCap());
 	}
 
 	@Test
@@ -59,7 +78,7 @@ class GarrisonYamlTest {
 		YamlConfiguration yaml = YamlConfiguration.loadConfiguration(
 				new StringReader(YamlFixture.shipped("/turf/turf_messages.yml")));
 
-		assertTrue(yaml.isSet("Garrison.Wave"));
-		assertTrue(yaml.isSet("Garrison.Returned"));
+		assertEquals("&7Guards at &f%turf% &7reinforced: &f+%count%", yaml.getString("Garrison.Wave"));
+		assertFalse(yaml.isSet("Garrison.Returned"));
 	}
 }

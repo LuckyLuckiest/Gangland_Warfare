@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.turf.npc.view;
 
+import org.bukkit.Material;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,8 +14,10 @@ import org.bukkit.entity.Player;
 import org.luckyraven.keystone.economy.EconomyHandler;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.IntUnaryOperator;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,7 +55,7 @@ class TurfPowerupMenuViewTest {
 		when(messages.text(anyString(), anyString(), any(Object[].class)))
 				.thenAnswer(invocation -> invocation.getArgument(0));
 		when(messages.text(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
-		view = new TurfPowerupMenuView(garrisons, buffs, aliveGuards, access, messages, "STONE", "&7");
+		view = new TurfPowerupMenuView(garrisons, buffs, aliveGuards, access, messages, () -> MenuStyle.DEFAULT);
 
 		turf = mock(Turf.class);
 		when(turf.getId()).thenReturn(TURF_ID);
@@ -98,6 +101,44 @@ class TurfPowerupMenuViewTest {
 
 		assertTrue(lore.contains("Quartermaster.Menu_Order"));
 		verify(messages).text("Quartermaster.Order_Defend", "&cDefend");
+	}
+
+	private TurfPowerupFlowSession realSession() {
+		return new TurfPowerupFlowSession(turf, owner, owner, "Quartermaster");
+	}
+
+	@Test
+	@DisplayName("render_setsBorderAndFill: 5 rows, border and fill drawn, the buttons on the DESIGN 6.2 slots")
+	void render_setsBorderAndFill() {
+		try (PanelProbe probe = new PanelProbe(view, realSession())) {
+			assertEquals(5, probe.rows);
+			assertTrue(probe.border, "border");
+			assertTrue(probe.fill, "fill");
+			assertEquals(Set.of(13, 20, 22, 24, 40), probe.items.keySet());
+			assertEquals(Material.PAPER, probe.type(13));
+			assertEquals(Material.BREWING_STAND, probe.type(20));
+			assertEquals(Material.TARGET, probe.type(22));
+			assertEquals(Material.ARMOR_STAND, probe.type(24));
+			assertEquals(Material.BARRIER, probe.type(40));
+		}
+	}
+
+	@Test
+	@DisplayName("render_holdOrder_showsIronBars")
+	void render_holdOrder_showsIronBars() {
+		when(garrisons.holding(TURF_ID)).thenReturn(true);
+
+		try (PanelProbe probe = new PanelProbe(view, realSession())) {
+			assertEquals(Material.IRON_BARS, probe.type(22));
+		}
+	}
+
+	@Test
+	@DisplayName("render_noAttributeIcons: no sword, helmet or potion on any slot")
+	void render_noAttributeIcons() {
+		try (PanelProbe probe = new PanelProbe(view, realSession())) {
+			assertTrue(probe.noAttributeIcons(), probe.items.toString());
+		}
 	}
 
 	private TurfPowerupFlowSession session() {

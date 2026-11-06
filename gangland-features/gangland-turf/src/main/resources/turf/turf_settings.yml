@@ -19,7 +19,7 @@
 # under Turf: until 0.15.1; a value still tuned in settings.yml, or in the settings-old.yml backup the upgrade leaves,
 # keeps working for now (the server log says so once),
 # but copy the value here and delete it there. The turf-NPC knobs are in turf_npcs.yml and the powerup catalogue is
-# in turf_powerups.yml.
+# in turf_powerups.yml. The Menu block (Quartermaster panel items) is new here and never lived in settings.yml.
 
 # Interval (minutes) between income payouts to each turf's owning gang. Paid straight into
 # the gang vault; orphaned turfs (owning gang deleted) auto-release.
@@ -103,3 +103,8 @@ Capture:
          Name: ENTITY_ENDER_DRAGON_GROWL
          Volume: 0.5
          Pitch: 1.5
+
+# Quartermaster panels: the outer ring and the empty slots inside it (XSeries material names).
+Menu:
+   Border_Item: BLACK_STAINED_GLASS_PANE
+   Fill_Item: GRAY_STAINED_GLASS_PANE

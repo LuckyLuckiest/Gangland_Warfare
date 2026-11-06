@@ -22,41 +22,48 @@ import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.events.TurfDefenderDownEvent;
 import org.luckyraven.gangland.turf.npc.defender.GarrisonPosts.Choice;
 import org.luckyraven.gangland.turf.npc.defender.GarrisonPosts.Post;
+import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
+import org.luckyraven.gangland.turf.powerups.GuardBuffs;
 import org.luckyraven.gangland.npc.NpcRole;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.npc.NpcPost;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.util.ChatUtil;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
-import java.util.function.IntConsumer;
 import java.util.function.IntPredicate;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 /**
- * Spawns and ticks ephemeral turf defenders during a capture by reusing the existing civilian NPC infrastructure. No
- * bespoke entity types — every defender is a {@link CivilianNpc} of the configured type id from {@code civilians.yml},
- * transitioned into {@link CivilianState#COMBAT} with its target pointed at whichever online attacker is closest. The
- * civilian system already handles pathing, attack cadence, and entity cleanup; this deployer just owns the spawn /
- * target-rebind / recall lifecycle bound to a specific turf.
+ * Stands and ticks a turf's guards by reusing the existing civilian NPC infrastructure. No bespoke entity types: every
+ * guard is a {@link CivilianNpc} of the configured type id from {@code civilians.yml}. The civilian system handles
+ * pathing, attack cadence and entity cleanup; this deployer owns the spawn, target-rebind and recall lifecycle of a
+ * turf.
  *
- * <p>One {@link Group} per turf. A garrison group ({@link #startGarrison}) defends in waves: the 5-tick task spawns the
- * next wave at the hidden post farthest from the attackers, takes each guard out of the reserve only after it spawned,
- * keeps guards on a leash of the turf plus a margin, and on {@link #standDown} lets the survivors shout, walk to a post
- * and leave, handing their count back for the reserve. The targeting tick picks the closest live challenger gang member
- * within {@code targetingRadius} inside the leash, sets it as the civilian's combat target, and forces a transition
- * into COMBAT if not already there.
+ * <p>One {@link Group} per turf, and one loop: every 5 ticks it reconciles every stocked turf. {@code
+ * turf_garrison.count} means guards owned, a body exists only in a loaded chunk, and only a contest kill debits ({@link
+ * #markKilled}). A guard that vanishes (chunk unload, reload) costs nothing and its slot refills. Outside a contest
+ * guards stand one per post, up to {@code Standing_Cap}, and attack nobody unprovoked. {@link #startGarrison} turns the
+ * same bodies into a contest: they top up to {@code Max_Alive} in waves at the hidden post farthest from the attackers,
+ * keep to a leash of the turf plus a margin and target the closest live challenger. {@link #standDown} ends it: they
+ * shout and walk home, and guards past the peace target leave after {@code Stand_Down_Seconds}.
+ *
+ * <p>ponytail: no global NPC budget. Load is at most {@code Standing_Cap} per turf with a loaded spot; add one when
+ * many owned turfs are loaded at once and it shows. No per-group catch either, so a bug in one group's tick stays loud.
  */
 @CustomLog
 public final class TurfDefenderDeployer implements BeanLifecycle {
 
 	private static final long TICK_PERIOD = 5L;
+	/** The same wait as the Quartermaster's first spawn: worlds and Citizens are online by then. */
+	private static final long FIRST_TICK_DELAY = 60L;
 	/** How long a wave waits for a post no attacker can see before it uses the farthest one anyway. */
 	private static final long VISIBLE_DELAY_MS = 3_000L;
 	private static final double EYE_HEIGHT = 1.6;
 	private static final double AT_POST_SQUARED = 4.0;
 
+	private GarrisonRoster             roster;
 	private final JavaPlugin           plugin;
 	private final CivilianService      civilianService;
 	private final CivilianSpawnManager spawnManager;
@@ -88,7 +95,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 
 	public void start() {
 		if (tickTask != null) return;
-		tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, TICK_PERIOD, TICK_PERIOD);
+		tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, FIRST_TICK_DELAY, TICK_PERIOD);
 	}
 
 	@Override
@@ -110,6 +117,11 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		recycledAt.clear();
 	}
 
+	/** The source of every stocked turf's garrison, config and Toughness; the tick reads it live. */
+	public void bindRoster(GarrisonRoster roster) {
+		this.roster = roster;
+	}
+
 	/** W7-F: whether a turf's guards are on the Hold order; unbound, every turf defends. */
 	public void bindHolding(IntPredicate holding) {
 		this.holding = holding;
@@ -121,56 +133,61 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	}
 
 	/**
-	 * Arms a garrison on a contested turf. Nothing spawns here: the next targeting tick spawns the first wave, and each
-	 * guard is taken out of the reserve only once it spawned. Without Citizens nothing is armed and nothing is spent
-	 * (TF-46).
+	 * A contest starts on this turf. The guards already standing keep standing and nothing respawns; the tick tops them
+	 * up to {@code Max_Alive}. A restart during the stand-down window is this same path (T-751). Without Citizens
+	 * nothing is armed (TF-46).
 	 *
 	 * @param challengers the players the guards fight, re-read on every tick
-	 * @param lifespanSeconds safety lifespan of each guard, read on every tick (T-269)
 	 */
-	public void startGarrison(TurfGarrison garrison, Supplier<Set<UUID>> challengers, IntSupplier lifespanSeconds) {
+	public void startGarrison(TurfGarrison garrison, Supplier<Set<UUID>> challengers) {
 		if (!citizens.getAsBoolean()) return;
 
-		Group previous = byTurfId.get(garrison.turfId);
-		if (previous != null && previous.garrison != null) {
-			// T-751: a rival who stayed on the turf restarts the contest; the standing guards keep fighting
-			// instead of being finished and respawned, so the contest holds rather than flapping.
-			previous.garrison.standingDown = false;
-			previous.garrison.onReturn     = null;
-			previous.challengerMembers     = challengers;
-			previous.lifespan              = lifespanSeconds;
-			return;
+		Group group = byTurfId.get(garrison.turfId);
+		if (group == null || group.garrison == null) {
+			recall(garrison.turfId);
+			group = newGroup(garrison);
+		} else {
+			// T-767: live tag, config, owner and price
+			group.garrison.adopt(garrison);
+			group.garrison.squads = new TurfGarrisonSquads(civilianService, garrison.turfId, garrison.tag);
+			// a rally only pulls guards holding the same instance
+			for (TrackedDefender d : group.defenders) d.npc.setFactionSquads(group.garrison.squads);
 		}
-		if (previous != null) {
-			finish(garrison.turfId, previous);
-		}
+		group.challengerMembers       = challengers;
+		group.contested               = true;
+		group.garrison.standingDown   = false;
+		// a contest that ended during the visibility wait must not skip this one's
+		group.garrison.delayedSince   = -1L;
+		// T-281, T-285: "half the guards" counts from here
+		group.deployed                = aliveCount(garrison.turfId);
+	}
+
+	private Group newGroup(TurfGarrison garrison) {
 		garrison.squads = new TurfGarrisonSquads(civilianService, garrison.turfId, garrison.tag);
-		Group group = new Group(challengers, garrison.config.targetingRadius());
+		Group group = new Group(Set::of, garrison.config.targetingRadius());
 		group.garrison = garrison;
-		group.lifespan = lifespanSeconds;
 		byTurfId.put(garrison.turfId, group);
+		return group;
 	}
 
 	/**
-	 * The contest ended. The survivors shout {@code Turf_Held} or {@code Turf_Lost}, walk to the nearest post and, after
-	 * {@code Stand_Down_Seconds}, leave; {@code onReturn} then gets how many were still standing so the caller can put
-	 * them back in the reserve. A turf without a garrison group does nothing.
+	 * The contest ended. The guards shout {@code Turf_Held} or {@code Turf_Lost}, drop their targets and walk home;
+	 * after {@code Stand_Down_Seconds} those past the peace target leave. The stock does not change.
 	 */
-	public void standDown(int turfId, boolean held, IntConsumer onReturn) {
+	public void standDown(int turfId, boolean held) {
 		Group group = byTurfId.get(turfId);
 		if (group == null) return;
 		TurfGarrison garrison = group.garrison;
 		if (garrison == null) {
-			int alive = aliveCount(turfId);
 			recall(turfId);
-			onReturn.accept(alive);
 			return;
 		}
 		if (garrison.standingDown) return;
 
-		garrison.standingDown = true;
-		garrison.onReturn     = onReturn;
-		garrison.standDownAt  = System.currentTimeMillis() + garrison.config.standDownSeconds() * 1000L;
+		group.contested         = false;
+		group.challengerMembers = Set::of;
+		garrison.standingDown   = true;
+		garrison.standDownAt    = System.currentTimeMillis() + garrison.config.standDownSeconds() * 1000L;
 		String line = held ? "Turf_Held" : "Turf_Lost";
 		for (TrackedDefender d : group.defenders) {
 			if (!d.npc.isValid() || d.npc.isMarkedForRemoval()) continue;
@@ -180,8 +197,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	}
 
 	/**
-	 * Recall every defender deployed for {@code turfId}. Called on capture-complete and capture-failed so a finished
-	 * contest cleans up its garrison even if some defenders are still alive.
+	 * Recall every guard of {@code turfId}: an owner change or a delete. The stock is the caller's business.
 	 */
 	public void recall(int turfId) {
 		Group group = byTurfId.remove(turfId);
@@ -193,10 +209,17 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		}
 	}
 
-	/** T-251: records that this guard died (not merely vanished); a no-op for an NPC that is not a tracked guard. */
+	/**
+	 * T-251: records that this guard died (not merely vanished); a no-op for an NPC that is not a tracked guard. This
+	 * is the only debit, decided at the moment of death: a guard killed in a contest leaves the stock, whoever or
+	 * whatever killed it, and one killed with no contest running is free (ruling 1).
+	 */
 	public void markKilled(CivilianNpc npc) {
-		if (turfByNpc.containsKey(npc)) {
-			killed.add(npc);
+		Integer turfId = turfByNpc.get(npc);
+		if (turfId == null || !killed.add(npc)) return;
+		Group group = byTurfId.get(turfId);
+		if (group != null && group.contested && group.garrison != null) {
+			group.garrison.spend(1);
 		}
 	}
 
@@ -206,13 +229,15 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 
 	/**
 	 * What killing this guard pays a rival: {@code floor(price x Bounty_Share)} of what the owner paid for it, or
-	 * {@code null} for an NPC that is not a tracked guard. The owner funded it already, so nothing is minted.
+	 * {@code null} for an NPC that is not a tracked guard, or with no contest running. It reads the same flag as the
+	 * debit in the same event, so a bounty never pays without a debit. The owner funded it already, so nothing is
+	 * minted.
 	 */
 	@Nullable
 	public GuardBounty bountyOf(CivilianNpc npc) {
 		Integer turfId = turfByNpc.get(npc);
 		Group   group  = turfId == null ? null : byTurfId.get(turfId);
-		if (group == null || group.garrison == null) return null;
+		if (group == null || group.garrison == null || !group.contested) return null;
 		TurfGarrison garrison = group.garrison;
 		int amount = (int) Math.floor(garrison.guardPrice * Math.max(0.0, garrison.config.bountyShare()));
 		return new GuardBounty(garrison.ownerGangId, amount);
@@ -233,40 +258,37 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	}
 
 	/**
-	 * The defenders of {@code turfId} that are still alive and not yet expired; empty when the turf has no group.
+	 * The guards of {@code turfId} that are still alive; empty when the turf has no group.
 	 */
 	public List<CivilianNpc> liveDefenders(int turfId) {
 		Group group = byTurfId.get(turfId);
 		if (group == null) return List.of();
-		long now = System.currentTimeMillis();
 		List<CivilianNpc> live = new ArrayList<>(group.defenders.size());
 		for (TrackedDefender d : group.defenders) {
-			if (d.npc.isValid() && !d.npc.isMarkedForRemoval() && now < d.expiresAt()) live.add(d.npc);
+			if (d.npc.isValid() && !d.npc.isMarkedForRemoval()) live.add(d.npc);
 		}
 		return live;
 	}
 
-	/**
-	 * Bound to {@link CivilianService} via constructor injection so it stays referenced — used to acknowledge the
-	 * dependency chain even though deploys go through {@link CivilianSpawnManager}. Civilians spawned via the spawn
-	 * manager auto-register with the service's tick loop.
-	 */
-	@SuppressWarnings("unused")
-	public CivilianService getCivilianService() {
-		return civilianService;
-	}
-
-	/** How many guards of {@code turfId} are alive, valid and not expired right now (0 when none were deployed). */
+	/** How many guards of {@code turfId} are alive and valid right now (0 when none stand). */
 	public int aliveCount(int turfId) {
 		return liveDefenders(turfId).size();
 	}
 
-	/** Adds one guard to its turf's group and the lookup indexes; package-private for tests. */
-	void track(int turfId, CivilianNpc npc, long deployedAt, IntSupplier lifespanSeconds) {
+	/**
+	 * Adds one guard to its turf's group and the lookup indexes, and gives it the running Toughness. Every spawn path
+	 * comes here after {@code dressAs}, so the role has already set its health and that becomes the guard's base;
+	 * rescaling from the stored base means a stack and an expiry never drift. Package-private for tests.
+	 */
+	void track(int turfId, CivilianNpc npc) {
 		Group group = byTurfId.computeIfAbsent(turfId, k -> new Group(Set::of, 32.0));
 		LivingEntity entity = npc.getEntity();
 		UUID entityId = entity == null ? null : entity.getUniqueId();
-		group.defenders.add(new TrackedDefender(npc, deployedAt, lifespanSeconds, entityId));
+		double baseHealth = entity == null ? -1 : GuardBuffs.maxHealth(entity);
+		if (baseHealth > 0 && group.toughness != 1.0) {
+			GuardBuffs.applyHealth(entity, baseHealth, group.toughness);
+		}
+		group.defenders.add(new TrackedDefender(npc, entityId, baseHealth));
 		group.deployed++;
 		turfByNpc.put(npc, turfId);
 		if (entityId != null) {
@@ -287,130 +309,248 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	/** Package-private for tests (W2-K). */
 	void tick() {
 		long now = System.currentTimeMillis();
+		// before the iterator: building a group inside it throws a CME
+		reconcile();
 
 		for (Iterator<Map.Entry<Integer, Group>> entries = byTurfId.entrySet().iterator(); entries.hasNext(); ) {
-			Map.Entry<Integer, Group> entry   = entries.next();
-			Group                     group   = entry.getValue();
+			Map.Entry<Integer, Group> entry    = entries.next();
+			int                       turfId   = entry.getKey();
+			Group                     group    = entry.getValue();
 			TurfGarrison              garrison = group.garrison;
 
-			int down = 0;
-			int lost = 0;
-			// Reap dead / expired defenders first so targeting only runs over live ones.
-			for (Iterator<TrackedDefender> it = group.defenders.iterator(); it.hasNext(); ) {
-				TrackedDefender d = it.next();
-				if (!d.npc.isValid() || d.npc.isMarkedForRemoval() || now >= d.expiresAt()) {
-					boolean died = killed.contains(d.npc);
-					if (now < d.expiresAt()) {
-						lost++;
-						if (died) {
-							down++;
-						} else {
-							// T-251: unloaded or despawned, not killed - drop it without a defender-down alert
-							log.debug("Turf {}: guard left without dying (despawned or unloaded); not counted as down", entry.getKey());
-						}
-					}
-					if (d.npc.isValid()) d.npc.markForRemoval();
-					untrack(d);
-					it.remove();
-				}
+			if (garrison != null && roster != null) {
+				// live, so a reload and the buffs apply (T-767, TF-36)
+				garrison.config       = roster.configOf(turfId);
+				group.targetingRadius = garrison.config.targetingRadius();
+				applyToughness(group, roster.guardHealth(turfId));
 			}
-			if (down > 0) {
-				Bukkit.getPluginManager().callEvent(
-						new TurfDefenderDownEvent(entry.getKey(), group.defenders.size(), group.deployed));
+
+			reap(turfId, group, garrison, now);
+
+			// Nothing leaves during a contest, nor during the stand-down delay unless there is no stock left to stand
+			// on.
+			if (garrison != null && !group.contested && (!garrison.standingDown || garrison.owned() <= 0)) {
+				trim(group, TurfGarrison.target(garrison.owned(), false, garrison.config));
 			}
 
 			if (garrison != null && garrison.standingDown) {
-				if (now >= garrison.standDownAt) {
-					entries.remove();
-					release(group);
-				} else {
+				if (now < garrison.standDownAt && garrison.owned() > 0) {
 					for (TrackedDefender d : group.defenders) {
 						standDownOne(d.npc, garrison);
 					}
+					continue;
 				}
-				continue;
+				garrison.standingDown = false;
 			}
 
+			if (garrison != null && group.contested && citizens.getAsBoolean()) {
+				recycleStuck(turfId, group, garrison, now);
+			}
 			if (garrison != null && citizens.getAsBoolean()) {
-				recycleStuck(entry.getKey(), group, garrison, now);
+				waveTick(turfId, group, garrison, now);
 			}
-
-			if (garrison != null) {
-				garrison.owed += lost;
-				if (lost > 0) garrison.lastLossAt = now;
-				if (citizens.getAsBoolean()) {
-					waveTick(entry.getKey(), group, garrison, now);
-				}
-			}
-			if (group.defenders.isEmpty() && (garrison == null || garrison.reserve() <= 0)) {
+			if (group.defenders.isEmpty() && (garrison == null || garrison.owned() <= 0) && !group.contested) {
 				entries.remove();
 				continue;
 			}
 
 			Set<UUID> challengerIds = group.challengerMembers.get();
 			double radiusSquared = group.targetingRadius * group.targetingRadius;
-			boolean hold = garrison != null && holding.test(entry.getKey());
+			boolean hold = garrison != null && holding.test(turfId);
 			for (TrackedDefender d : group.defenders) {
+				// in a contest a guard keeps answering a stray hit, because a death there costs stock
+				if (hold && !group.contested) TurfCopGuard.dropCopTargets(d.npc);
 				if (garrison != null && leash(d.npc, garrison)) continue;
 				if (hold && holdToPost(d.npc, garrison)) continue;
+				if (garrison != null && !group.contested) {
+					goHome(d.npc, garrison);
+					continue;
+				}
 				if (challengerIds == null || challengerIds.isEmpty()) continue;
 				retarget(d.npc, challengerIds, radiusSquared, garrison, hold);
 			}
 		}
 	}
 
-	/** Spawns the next wave when one is due, at the hidden post farthest from the attackers. */
-	private void waveTick(int turfId, Group group, TurfGarrison garrison, long now) {
-		TurfDefenderConfig config = garrison.config;
-		int toSpawn = TurfGarrison.toSpawn(garrison.reserve(), group.defenders.size(), config.maxAlive(),
-		                                   config.waveSize(), garrison.owed, garrison.lastLossAt, now,
-		                                   config.waveCooldownSeconds() * 1000L);
-		if (toSpawn <= 0) return;
+	/** Builds a group for every stocked, owned turf that has none. Without Citizens nothing stands. */
+	private void reconcile() {
+		if (roster == null || !citizens.getAsBoolean()) return;
+		for (int turfId : roster.stockedTurfIds()) {
+			if (byTurfId.containsKey(turfId)) continue;
+			TurfGarrison garrison = roster.garrisonOf(turfId);
+			if (garrison != null) {
+				newGroup(garrison);
+			}
+		}
+	}
 
-		World world = Bukkit.getWorld(garrison.region.getWorld());
-		if (world == null) return;
-		if (garrison.posts == null) {
-			garrison.posts = GarrisonPosts.posts(garrison.region, world::getHighestBlockYAt);
-		}
-		Choice choice = GarrisonPosts.chooseSpawn(garrison.posts, attackerEyes(world, group, garrison), (post, eye) -> sees(world, post, eye));
-		if (!choice.hidden()) {
-			if (garrison.delayedSince < 0) {
-				garrison.delayedSince = now;
+	/** Ruling 5: a Toughness buff started, stacked or ended, so every live guard moves from its own base health. */
+	private void applyToughness(Group group, double multiplier) {
+		if (multiplier == group.toughness) return;
+		group.toughness = multiplier;
+		for (TrackedDefender d : group.defenders) {
+			LivingEntity body = d.npc.getEntity();
+			if (d.baseHealth > 0 && body != null && d.npc.isValid()) {
+				GuardBuffs.applyHealth(body, d.baseHealth, multiplier);
 			}
-			if (now - garrison.delayedSince < VISIBLE_DELAY_MS) return;
-		}
-		garrison.delayedSince = -1L;
-
-		Post     post     = choice.post();
-		Location location = new Location(world, post.x(), post.y(), post.z());
-		int      spawned  = 0;
-		for (int i = 0; i < toSpawn; i++) {
-			CivilianNpc npc = spawnManager.spawnCivilian(location, config.typeId());
-			if (npc == null) {
-				log.warn("Failed to spawn turf defender of type '{}' at {} (CivilianSpawnManager returned null)",
-				         config.typeId(), location);
-				// retry after the wave cooldown instead of every tick
-				garrison.lastLossAt = now;
-				break;
-			}
-			// TF-46: the reserve pays only for a guard that exists
-			if (garrison.spend(1) <= 0) {
-				npc.markForRemoval();
-				break;
-			}
-			garrison.owed = Math.max(0, garrison.owed - 1);
-			dress(npc, garrison);
-			track(turfId, npc, now, group.lifespan);
-			spawned++;
-		}
-		if (spawned > 0) {
-			garrison.waveNotice.accept(spawned);
 		}
 	}
 
 	/**
+	 * Drops the guards that are gone. Only one the death listener reported counts as down (T-251) and starts the
+	 * cooldown; one that vanished costs nothing (I5). T-882: {@code markForRemoval} is unconditional, because a chunk
+	 * reloading before {@code CivilianService} destroys an invalid guard would otherwise leave a valid, untracked body
+	 * beside its replacement.
+	 */
+	private void reap(int turfId, Group group, @Nullable TurfGarrison garrison, long now) {
+		int down = 0;
+		for (Iterator<TrackedDefender> it = group.defenders.iterator(); it.hasNext(); ) {
+			TrackedDefender d = it.next();
+			if (d.npc.isValid() && !d.npc.isMarkedForRemoval()) continue;
+			if (killed.contains(d.npc)) {
+				down++;
+			} else {
+				log.debug("Turf {}: guard left without dying (despawned or unloaded); not counted as down", turfId);
+			}
+			d.npc.markForRemoval();
+			untrack(d);
+			it.remove();
+		}
+		if (down <= 0) return;
+		if (garrison != null) {
+			garrison.lastLossAt = now;
+		}
+		// the half-guards alert belongs to a contest; owners hear of a peace kill through Alerts.Guard_Down
+		if (garrison == null || group.contested) {
+			Bukkit.getPluginManager().callEvent(
+					new TurfDefenderDownEvent(turfId, group.defenders.size(), group.deployed));
+		}
+	}
+
+	/**
+	 * Removes guards past {@code target}, and any numbered above it, the highest numbers first, with no debit. Leaves
+	 * the list at once. A number above the target shares a low number's post, so it gives way and the free low number
+	 * refills its own post (ruling 2).
+	 */
+	private void trim(Group group, int target) {
+		while (!group.defenders.isEmpty()) {
+			TrackedDefender surplus = Collections.max(group.defenders, Comparator.comparingInt(d -> numberOf(d.npc)));
+			if (group.defenders.size() <= target && numberOf(surplus.npc) <= target) return;
+			// ponytail: here, in recycleStuck and in recall the body lives until CivilianService's next tick (AI_Tick_Rate)
+			// but is untracked now, so a killing blow there drops civilian cash with no debit (T-901); hold the entity
+			// mapping until the body is gone if that matters
+			surplus.npc.markForRemoval();
+			untrack(surplus);
+			group.defenders.remove(surplus);
+		}
+	}
+
+	private int numberOf(CivilianNpc npc) {
+		return numberByNpc.getOrDefault(npc, 0);
+	}
+
+	/** The callsign numbers of the group's live guards. */
+	private Set<Integer> numbersOf(Group group) {
+		Set<Integer> numbers = new HashSet<>();
+		for (TrackedDefender d : group.defenders) {
+			numbers.add(numberOf(d.npc));
+		}
+		return numbers;
+	}
+
+	/**
+	 * Spawns toward the target when guards are due, with no debit: one per post outside a contest, at the hidden post
+	 * farthest from the attackers in one. The height is read only for a loaded chunk, so this loop never loads one.
+	 */
+	private void waveTick(int turfId, Group group, TurfGarrison garrison, long now) {
+		TurfDefenderConfig config = garrison.config;
+		int stock   = garrison.owned();
+		int alive   = group.defenders.size();
+		int target  = TurfGarrison.target(stock, group.contested, config);
+		int toSpawn = TurfGarrison.toSpawn(stock - alive, alive, target, config.waveSize(), target - alive,
+		                                   garrison.lastLossAt, now, config.waveCooldownSeconds() * 1000L);
+		if (toSpawn <= 0) return;
+
+		World world = Bukkit.getWorld(garrison.region.getWorld());
+		if (world == null) return;
+		List<Post> spots = GarrisonPosts.loaded(garrison.region, world::isChunkLoaded, world::getHighestBlockYAt);
+		garrison.remember(spots);
+
+		int spawned = group.contested
+		              ? spawnContest(turfId, group, garrison, world, spots, toSpawn, now)
+		              : spawnStanding(turfId, group, garrison, world, spots, target, toSpawn, now);
+		if (spawned > 0 && group.contested) {
+			garrison.waveNotice.accept(spawned);
+		}
+	}
+
+	/** Walks numbers 1 to {@code target}, skipping one a live guard holds or whose spot is not loaded (T-298). */
+	private int spawnStanding(int turfId, Group group, TurfGarrison garrison, World world, List<Post> spots, int target,
+	                          int toSpawn, long now) {
+		Set<Integer> taken   = numbersOf(group);
+		int          spawned = 0;
+		for (int number = 1; number <= target && spawned < toSpawn; number++) {
+			if (taken.contains(number)) continue;
+			// ponytail: a post over lava or in water can kill a guard repeatedly; free in peace, and the 60 s alert
+			// tells the owner. A number maps to a fixed spot, so on a turf wider than the loaded range a small stock can
+			// stand out of sight of an owner at another spot (T-907); let a free number take a loaded spot if that
+			// matters
+			Post post = spots.get((number - 1) % spots.size());
+			if (post == null) continue;
+			if (!spawnAt(turfId, group, garrison, world, post, number, now)) break;
+			spawned++;
+		}
+		return spawned;
+	}
+
+	/** Each guard takes the lowest free number. A batch may still share a post (T-298 stays open for this case). */
+	private int spawnContest(int turfId, Group group, TurfGarrison garrison, World world, List<Post> spots, int toSpawn,
+	                         long now) {
+		List<Post> posts = new ArrayList<>(spots.size());
+		for (Post post : spots) {
+			if (post != null) posts.add(post);
+		}
+		// chooseSpawn throws on an empty list, and that would stall every later turf in this tick
+		if (posts.isEmpty()) return 0;
+
+		Choice choice = GarrisonPosts.chooseSpawn(posts, attackerEyes(world, group, garrison),
+		                                          (post, eye) -> sees(world, post, eye));
+		if (!choice.hidden()) {
+			if (garrison.delayedSince < 0) {
+				garrison.delayedSince = now;
+			}
+			if (now - garrison.delayedSince < VISIBLE_DELAY_MS) return 0;
+		}
+		garrison.delayedSince = -1L;
+
+		int spawned = 0;
+		for (int i = 0; i < toSpawn; i++) {
+			int number = TurfGarrison.lowestFree(numbersOf(group));
+			if (!spawnAt(turfId, group, garrison, world, choice.post(), number, now)) break;
+			spawned++;
+		}
+		return spawned;
+	}
+
+	/** One guard at {@code post} with {@code number}. A failed spawn retries after the cooldown, not every tick. */
+	private boolean spawnAt(int turfId, Group group, TurfGarrison garrison, World world, Post post, int number,
+	                        long now) {
+		Location    location = new Location(world, post.x(), post.y(), post.z());
+		CivilianNpc npc      = spawnManager.spawnCivilian(location, garrison.config.typeId());
+		if (npc == null) {
+			log.warn("Failed to spawn turf defender of type '{}' at {} (CivilianSpawnManager returned null)",
+			         garrison.config.typeId(), location);
+			garrison.lastLossAt = now;
+			return false;
+		}
+		dressAs(npc, garrison, number);
+		track(turfId, npc);
+		return true;
+	}
+
+	/**
 	 * A guard that found no way to anyone for {@code Recycle_Seconds}, with no attacker looking at it, is replaced by a
-	 * fresh one at another post: same callsign number and role, same expiry, no stock spent. The replacement is spawned
+	 * fresh one at another post: same callsign number and role, no stock spent. The replacement is spawned
 	 * first, so a failed spawn leaves the old guard where it is until the next window.
 	 */
 	private void recycleStuck(int turfId, Group group, TurfGarrison garrison, long now) {
@@ -442,31 +582,32 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			long last = recycledAt.getOrDefault(d.npc, -1L);
 			if (!GuardRecycle.due(stuck, seconds, last, now, seen)) continue;
 
-			Post post = GuardRecycle.elsewhere(garrison.posts, at.getX(), at.getZ(), eyes,
-			                                   (p, eye) -> sees(guardWorld, p, eye));
+			// known posts include unloaded chunks, and a ray or a spawn there would load one (T-902)
+			Post post = GuardRecycle.elsewhere(
+					garrison.posts.stream()
+					              .filter(p -> guardWorld.isChunkLoaded((int) Math.floor(p.x()) >> 4,
+					                                                    (int) Math.floor(p.z()) >> 4))
+					              .toList(),
+					at.getX(), at.getZ(), eyes, (p, eye) -> sees(guardWorld, p, eye));
 			CivilianNpc fresh = post == null ? null : spawnManager.spawnCivilian(
 					new Location(guardWorld, post.x(), post.y(), post.z()), garrison.config.typeId());
 			if (fresh == null) {
 				recycledAt.put(d.npc, now);
 				continue;
 			}
-			int number = numberByNpc.getOrDefault(d.npc, 0);
+			int number = numberOf(d.npc);
 			d.npc.markForRemoval();
 			untrack(d);
 			group.defenders.remove(d);
 			group.deployed--;
 			dressAs(fresh, garrison, number);
-			track(turfId, fresh, d.deployedAt(), d.lifespanSeconds());
+			track(turfId, fresh);
 			recycledAt.put(fresh, now);
 			log.debug("Turf {}: stuck guard {} recycled at another post", turfId, number);
 		}
 	}
 
-	/** Gives a fresh guard its turf squad and its gang-tagged callsign. */
-	private void dress(CivilianNpc npc, TurfGarrison garrison) {
-		dressAs(npc, garrison, garrison.nextNumber++);
-	}
-
+	/** Gives a fresh guard its turf squad, its role and its gang-tagged callsign. */
 	private void dressAs(CivilianNpc npc, TurfGarrison garrison, int number) {
 		numberByNpc.put(npc, number);
 		npc.setFactionSquads(garrison.squads);
@@ -518,7 +659,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	}
 
 	/**
-	 * Walks a guard that strayed past the leash back to the nearest post. Returns true when the guard is outside the
+	 * Walks a guard that strayed past the leash back to its post. Returns true when the guard is outside the
 	 * leash (and so must not pick a new target this tick).
 	 */
 	private boolean leash(CivilianNpc npc, TurfGarrison garrison) {
@@ -537,14 +678,14 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	}
 
 	/**
-	 * Hold order (W7-F): a guard further than the hold radius from its nearest post drops its target and walks back.
+	 * Hold order (W7-F): a guard further than the hold radius from its own post drops its target and walks back.
 	 * Returns true when it did (the guard must not pick a new target this tick).
 	 */
 	private boolean holdToPost(CivilianNpc npc, TurfGarrison garrison) {
 		LivingEntity entity = npc.getEntity();
 		if (entity == null || garrison.posts == null) return false;
 		Location at   = entity.getLocation();
-		Post     post = GarrisonPosts.nearest(garrison.posts, at.getX(), at.getZ());
+		Post     post = homeOf(npc, garrison, at);
 		if (post == null || GarrisonPosts.withinHold(post, at.getX(), at.getZ(), garrison.config.holdRadius())) {
 			return false;
 		}
@@ -556,11 +697,16 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		return true;
 	}
 
-	/** A survivor of a finished contest: no target, back to the nearest post. */
+	/**
+	 * A survivor of a finished contest: no target, back to its post. Both targets go, because bodies stay after a
+	 * contest and {@code CivilianIdleBehavior} would re-engage a remembered player or entity. This runs on every tick
+	 * of the stand-down window, so guards answer a cop again only on his first hit after it.
+	 */
 	private void standDownOne(CivilianNpc npc, TurfGarrison garrison) {
 		LivingEntity entity = npc.getEntity();
 		if (entity == null) return;
 		npc.setTargetPlayerId(null);
+		npc.setTargetEntity(null);
 		if (npc.getCurrentState() == CivilianState.COMBAT) {
 			npc.transitionTo(CivilianState.IDLE);
 		}
@@ -568,8 +714,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	}
 
 	private void walkToPost(CivilianNpc npc, Location at, TurfGarrison garrison) {
-		if (garrison.posts == null) return;
-		Post post = GarrisonPosts.nearest(garrison.posts, at.getX(), at.getZ());
+		Post post = homeOf(npc, garrison, at);
 		if (post == null || at.getWorld() == null) return;
 		Location target = new Location(at.getWorld(), post.x(), post.y(), post.z());
 		if (at.distanceSquared(target) > AT_POST_SQUARED) {
@@ -577,34 +722,53 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		}
 	}
 
-	/** Ends a group outside the tick loop and hands its survivors back. */
-	private void finish(int turfId, Group group) {
-		byTurfId.remove(turfId);
-		release(group);
+	/** The spot of the guard's number, else the nearest known post (a guard with no number, the test seam). */
+	@Nullable
+	private Post homeOf(CivilianNpc npc, TurfGarrison garrison, Location at) {
+		Post home = garrison.homeOf(numberOf(npc));
+		if (home != null || garrison.posts == null) return home;
+		return GarrisonPosts.nearest(garrison.posts, at.getX(), at.getZ());
 	}
 
-	private void release(Group group) {
-		int survivors = 0;
-		for (TrackedDefender d : group.defenders) {
-			if (d.npc.isValid() && !d.npc.isMarkedForRemoval()) survivors++;
-			untrack(d);
+	/**
+	 * Idle behaviour outside a contest. A guard in COMBAT (it was hit, or it answers a cop) is left to the fight;
+	 * afterwards it walks back to its own post. The distance check comes first because {@code holdPost} always
+	 * navigates: without it a guard at home would hold, arrive and release every 5 ticks.
+	 *
+	 * <p>ponytail: a rival's hit or an answer to a cop sets {@code wantedByPolice} ({@code CivilianNpc}) and free cops
+	 * can come for the guard with no range limit in the same world. Under free peace deaths this costs no stock; watch
+	 * it on the Test Server (T-885, T-891). A post on an unreachable roof re-paths whenever the guard stops, bounded by
+	 * 5 guards per loaded turf.
+	 */
+	private void goHome(CivilianNpc npc, TurfGarrison garrison) {
+		if (npc.getCurrentState() == CivilianState.COMBAT) {
+			if (npc.getPost() != null) npc.releasePost();
+			return;
 		}
-		group.recallAll();
-		TurfGarrison garrison = group.garrison;
-		if (garrison != null && garrison.onReturn != null && survivors > 0) {
-			garrison.onReturn.accept(survivors);
+		// the fight is over: a rival who died keeps his id here, and idle would re-engage him on sight (ruling 4)
+		npc.setTargetPlayerId(null);
+		// an admin who points Type_Id at a wandering type; the shipped type has Wander off
+		if (npc.getCurrentState() == CivilianState.WANDERING) npc.transitionTo(CivilianState.IDLE);
+		LivingEntity body = npc.getEntity();
+		if (body == null) return;
+		Location at   = body.getLocation();
+		Post     home = homeOf(npc, garrison, at);
+		if (home == null) return;
+		if (npc.getPost() == null) {
+			double dx = home.x() - at.getX();
+			double dz = home.z() - at.getZ();
+			if (dx * dx + dz * dz <= AT_POST_SQUARED) return;
+			Location anchor = new Location(at.getWorld(), home.x(), home.y(), home.z());
+			npc.holdPost(new NpcPost(anchor, NpcPost.ARRIVE_RADIUS, null));
 		}
+		if (npc.tickPost()) npc.releasePost();
 	}
 
 	private void retarget(CivilianNpc npc, Set<UUID> challengerIds, double radiusSquared, TurfGarrison garrison,
 	                      boolean hold) {
 		if (npc.getEntity() == null) return;
 		// Hold: only attackers near this guard's own post are fair game
-		Post holdPost = null;
-		if (hold && garrison.posts != null) {
-			Location guardAt = npc.getEntity().getLocation();
-			holdPost = GarrisonPosts.nearest(garrison.posts, guardAt.getX(), guardAt.getZ());
-		}
+		Post holdPost = hold ? homeOf(npc, garrison, npc.getEntity().getLocation()) : null;
 		Player closest     = null;
 		double closestDist = radiusSquared;
 		for (Player player : npc.getEntity().getWorld().getPlayers()) {
@@ -639,9 +803,12 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		int deployed;
 		Supplier<Set<UUID>> challengerMembers;
 		double              targetingRadius;
-		/** Set for a garrison group; null for a group built by {@link #deploy}. */
+		/** Set for a garrison group; null only for a group the {@link #track} test seam built. */
 		TurfGarrison        garrison;
-		IntSupplier         lifespan = () -> 600;
+		/** A contest is running: the only state in which a death debits and a bounty pays. */
+		boolean             contested;
+		/** The Toughness multiplier the live guards were last scaled to. */
+		double              toughness = 1.0;
 
 		Group(Supplier<Set<UUID>> challengerMembers, double targetingRadius) {
 			this.challengerMembers = challengerMembers;
@@ -651,7 +818,8 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		void recallAll() {
 			for (TrackedDefender d : defenders) {
 				try {
-					if (d.npc.isValid()) d.npc.markForRemoval();
+					// T-882: unconditional, as in the reap
+					d.npc.markForRemoval();
 				} catch (Exception ignored) {
 				}
 			}
@@ -659,11 +827,8 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		}
 	}
 
-	private record TrackedDefender(CivilianNpc npc, long deployedAt, IntSupplier lifespanSeconds, UUID entityId) {
-
-		long expiresAt() {
-			return deployedAt + lifespanSeconds.getAsInt() * 1000L;
-		}
+	/** @param baseHealth the guard's role health, what Toughness scales from; -1 with no attribute (never rescaled) */
+	private record TrackedDefender(CivilianNpc npc, UUID entityId, double baseHealth) {
 	}
 
 	/**

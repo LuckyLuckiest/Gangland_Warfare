@@ -2,8 +2,10 @@ package org.luckyraven.gangland.turf.powerups;
 
 import lombok.CustomLog;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +30,17 @@ public final class GarrisonManager {
 		}
 		repository.setDataSupplier(this::snapshot);
 		log.debug("Loaded {} turf garrison row(s)", byTurf.size());
+	}
+
+	/** A copy of the ids of the rows with stock; the deployer stands guards on these. */
+	public List<Integer> stockedTurfIds() {
+		List<Integer> ids = new ArrayList<>();
+		for (Garrison g : byTurf.values()) {
+			if (g.getCount() > 0) {
+				ids.add(g.getTurfId());
+			}
+		}
+		return ids;
 	}
 
 	public int count(int turfId) {
@@ -85,23 +98,16 @@ public final class GarrisonManager {
 	}
 
 	/**
-	 * Puts surviving guards back in the reserve, never past {@code maxReserve}. Returns how many were added (0 when the
-	 * reserve is full or {@code survivors} is not positive).
-	 */
-	public int refund(int turfId, int survivors, int maxReserve) {
-		int added = Math.min(survivors, Math.max(0, maxReserve - count(turfId)));
-		if (added <= 0) return 0;
-		add(turfId, added);
-		return added;
-	}
-
-	/**
 	 * GI-34 (TF-03): drops this turf's garrison row entirely, in-memory and persisted. Called from the turf-delete
-	 * cascade so a fresh turf that later reuses the freed id (TF-05) does not inherit orphaned stock.
+	 * cascade so a fresh turf that later reuses the freed id (TF-05) does not inherit orphaned stock. T-881: a kill's
+	 * save runs asynchronously and can land after the delete, so the instance is zeroed first and such a save writes a
+	 * harmless row.
 	 */
 	public void remove(int turfId) {
 		Garrison g = byTurf.remove(turfId);
 		if (g != null) {
+			g.setCount(0);
+			g.setHold(false);
 			repository.delete(g);
 		}
 	}

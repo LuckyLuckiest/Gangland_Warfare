@@ -19,8 +19,8 @@
 #   - Powerup_Npc — the per-turf Quartermaster: staff place it with /glw turf powerupnpc set, the owning gang with /glw turf quartermaster
 #   - Defender    — deploy-side knobs only. Defender NPCs ARE civilian NPCs (defined in civilians.yml under
 #                   the type id below). Their model, health, equipment, damage, AI tuning, etc. all live there.
-#                   This section only controls how the deployer routes them: which type to spawn, how far they
-#                   chase attackers, and a safety lifespan in case the recall event misses them.
+#                   This section only controls how the deployer routes them: which type to spawn and how far they
+#                   chase attackers.
 #
 # These are NOT the powerup catalogue (which lives in turf_powerups.yml). They're hot-reloadable.
 Powerup_Npc:
@@ -65,23 +65,24 @@ Defender:
    # than the average turf radius so defenders inside the region don't lose targets who are also inside but on
    # the far edge.
    Targeting_Radius: 32.0
-   # Safety lifespan — TurfDefenderDeployer.recall() should fire on capture-end, this is the fallback.
-   Lifespan_Seconds: 600
-# Garrison: how the guards bought at the Quartermaster defend a turf under attack. They spawn at hidden posts in waves,
-# are taken out of the turf's reserve only once they have spawned, stay near the turf, and go back to the reserve when
-# the fight ends. Nothing is spent on a server without Citizens.
+# Garrison: guards stand at posts on the turf while the area is loaded. During a contest they top up in waves, and only a
+# guard killed during a contest leaves the stock. Nothing spawns on a server without Citizens.
 Garrison:
-   # Guards spawned per wave.
+   # Guards standing outside a contest, one per post (four corners and the centre). Above 5 they share posts. 0 means
+   # guards appear only in a contest and leave after it. Max_Alive is the ceiling. Minimum 0.
+   Standing_Cap: 5
+   # Most guards spawned per pass.
    Wave_Size: 3
-   # Most guards standing at once on one turf.
+   # Most guards standing during a contest, and the ceiling for Standing_Cap. A Bigger Guard Waves boost adds firepower
+   # only: guards past Capture.Guard_Weight_Cap in turf_rules.yml add nothing to the capture bar.
    Max_Alive: 6
-   # Seconds after a guard falls before the next top-up.
+   # Seconds after a guard falls before its replacement arrives, in a contest and outside one.
    Wave_Cooldown_Seconds: 20
-   # Seconds survivors stay after the fight before they leave (and return to the reserve).
+   # Seconds after a fight before guards past Standing_Cap leave.
    Stand_Down_Seconds: 8
    # Blocks past the turf edge a guard may chase before walking back to a post.
    Leash_Margin: 16
-   # Roles the guards of a turf take in spawn order (guard 1, 2, ...); the rest are plain guards. Names are the
+   # Roles the guards of a turf take by number (guard 1, 2, ...); the rest are plain guards. Names are the
    # AI.Combat.Roles of the Defender type in civilians.yml (Shield blocks half of a frontal hit, Marksman keeps its
    # distance, Commander: when it falls the others take cover for 5 s). "Name@2" gives two guards that role; an
    # unknown name is reported once and that guard is plain. An empty list means no roles.
@@ -89,9 +90,10 @@ Garrison:
       - "Commander@1"
       - "Shield@2"
       - "Marksman@2"
-   # Share of a guard's price paid to a rival who kills it, as cash at its feet (0 turns the bounty off). Funded by the
-   # owner's purchase (turf_powerups.yml Garrison.Cost_Per_Guard, discount included); nothing is minted. The owning
-   # gang and its allies get nothing, and a guard drops no civilian cash.
+   # Share of a guard's price paid to a rival who kills it during a contest, as cash at its feet (0 turns the bounty
+   # off); a kill with no contest running pays nothing. Funded by the owner's purchase (turf_powerups.yml
+   # Garrison.Cost_Per_Guard, discount included); nothing is minted. The owning gang and its allies get nothing, and a
+   # guard drops no civilian cash.
    Bounty_Share: 0.5
    # A guard that cannot reach anyone for this many seconds, with no attacker looking at it, reappears at another post
    # (0 turns it off). The garrison's stock is unchanged.

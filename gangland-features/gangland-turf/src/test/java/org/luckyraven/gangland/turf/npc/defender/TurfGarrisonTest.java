@@ -6,7 +6,9 @@ import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.npc.defender.GarrisonPosts.Choice;
 import org.luckyraven.gangland.turf.npc.defender.GarrisonPosts.Post;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -97,6 +99,88 @@ class TurfGarrisonTest {
 		Choice choice = GarrisonPosts.chooseSpawn(posts, List.of(), (post, a) -> true);
 		assertTrue(choice.hidden());
 		assertEquals(posts.get(0), choice.post());
+	}
+
+	private static TurfDefenderConfig config(int standingCap, int maxAlive) {
+		return new TurfDefenderConfig("turf_defender", 32.0, 3, maxAlive, 20, 8, 16, GarrisonComposition.NONE, 0.5, 12, 6.0,
+		                              standingCap);
+	}
+
+	private static TurfGarrison garrison() {
+		return new TurfGarrison(1, new CuboidRegion("w", 0, 0, 40, 40), config(5, 6), "VIP", () -> 0, n -> n, n -> {
+		});
+	}
+
+	@Test
+	@DisplayName("target: peace min(stock, cap, max), contest min(stock, max)")
+	void target_peaceAndContest() {
+		assertEquals(5, TurfGarrison.target(10, false, config(5, 6)));
+		assertEquals(6, TurfGarrison.target(10, true, config(5, 6)));
+		assertEquals(2, TurfGarrison.target(2, false, config(5, 6)));
+		assertEquals(2, TurfGarrison.target(2, true, config(5, 6)));
+		assertEquals(0, TurfGarrison.target(10, false, config(0, 6)));
+		assertEquals(6, TurfGarrison.target(10, false, config(8, 6)), "Max_Alive is the ceiling of the cap");
+	}
+
+	@Test
+	@DisplayName("lowestFree: the lowest number no live guard holds, from 1")
+	void lowestFree() {
+		assertEquals(2, TurfGarrison.lowestFree(Set.of(1, 3)));
+		assertEquals(1, TurfGarrison.lowestFree(Set.of()));
+		assertEquals(4, TurfGarrison.lowestFree(List.of(3, 1, 2)));
+	}
+
+	@Test
+	@DisplayName("remember: posts stays null-free for nearest, and a later pass keeps the spots it already knew")
+	void remember_keepsPostsNullFree() {
+		TurfGarrison garrison = garrison();
+		assertNull(garrison.posts, "null until the first spawn pass");
+		Post first = new Post(2.5, 65, 2.5);
+		Post third = new Post(2.5, 65, 38.5);
+
+		garrison.remember(Arrays.asList(first, null, null, null, null));
+		assertEquals(List.of(first), garrison.posts);
+
+		garrison.remember(Arrays.asList(null, null, third, null, null));
+		assertEquals(List.of(first, third), garrison.posts);
+		assertFalse(garrison.posts.contains(null));
+		assertEquals(first, GarrisonPosts.nearest(garrison.posts, 0, 0));
+
+		Post higher = new Post(2.5, 80, 2.5);
+		garrison.remember(Arrays.asList(higher, null, null, null, null));
+		assertEquals(List.of(higher, third), garrison.posts, "a fresh height replaces the old one");
+	}
+
+	@Test
+	@DisplayName("homeOf: a number's own spot, wrapping past five; null for no number or a spot never seen")
+	void homeOf_byNumber() {
+		TurfGarrison garrison = garrison();
+		Post first = new Post(2.5, 65, 2.5);
+		Post fifth = new Post(20.5, 65, 20.5);
+		garrison.remember(Arrays.asList(first, null, null, null, fifth));
+
+		assertEquals(first, garrison.homeOf(1));
+		assertEquals(fifth, garrison.homeOf(5));
+		assertEquals(first, garrison.homeOf(6));
+		assertNull(garrison.homeOf(2));
+		assertNull(garrison.homeOf(0));
+	}
+
+	@Test
+	@DisplayName("adopt copies the config, tag, owner and price of a fresh garrison")
+	void adopt_copiesLiveFields() {
+		TurfGarrison garrison = garrison();
+		TurfDefenderConfig config = config(2, 9);
+		TurfGarrison fresh = new TurfGarrison(1, new CuboidRegion("w", 0, 0, 40, 40), config, "NEW", () -> 0, n -> n, n -> {
+		});
+		fresh.funded(7, 3000);
+
+		garrison.adopt(fresh);
+
+		assertEquals(config, garrison.config);
+		assertEquals("NEW", garrison.tag);
+		assertEquals(7, garrison.ownerGangId);
+		assertEquals(3000, garrison.guardPrice);
 	}
 
 	@Test

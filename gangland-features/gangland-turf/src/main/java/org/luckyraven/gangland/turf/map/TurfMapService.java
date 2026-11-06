@@ -243,7 +243,7 @@ public final class TurfMapService {
 			          ? text.text("Map.Hover_Online_Now", "&7Members &aonline now")
 			          : text.text("Map.Hover_Online", "&7Last member online &f%time% &7ago",
 			                      "time", legacy.formatDuration(Math.max(1L, (now - last) / 1000L))));
-			lines.add(text.text("Map.Hover_Guards", "&7Your guards: &f%count% &7in reserve",
+			lines.add(text.text("Map.Hover_Guards", "&7Your guards: &f%count% &7owned",
 			                    "count", garrisons.count(turf.getId())));
 		}
 
