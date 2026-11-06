@@ -209,7 +209,7 @@ class SuspectListenerTest {
 		DisguiseFilter real = new DisguiseFilter(() -> DisguiseSettings.DEFAULT, descriptions, outfit, p -> 1, p -> true,
 		                                         p -> org.luckyraven.keystone.npc.NpcDifficulty.EASY);
 		built[0] = new DisguiseTick(() -> DisguiseSettings.DEFAULT, descriptions, real, outfit, p -> eyes[0], radio,
-		                            messages);
+		                            messages, () -> 6.0);
 		return new SuspectListener(descriptions, outfit, built[0], ledger, search, filter);
 	}
 

@@ -83,7 +83,7 @@ class DisguiseTickTest {
 		outfit       = new PoliceOutfit(() -> settings, wearer.keys());
 		filter       = new DisguiseFilter(() -> settings, descriptions, outfit, p -> level, p -> level > 0 || searching,
 		                          p -> difficulty);
-		tick         = new DisguiseTick(() -> settings, descriptions, filter, outfit, p -> eyes, radio, messages);
+		tick         = new DisguiseTick(() -> settings, descriptions, filter, outfit, p -> eyes, radio, messages, () -> 6.0);
 	}
 
 	@Test
@@ -1028,10 +1028,11 @@ class DisguiseTickTest {
 		assertTrue(lines.get(1).contains("blue jacket"), lines.get(1));
 	}
 
-	/** The cop the player hits; {@code ray} is whether that cop has a line to them. */
+	/** The cop the player hits from 20 blocks; {@code ray} is whether that cop has a line to them. */
 	private CopNpc hitCop(boolean ray) {
 		CopNpc cop = mock(CopNpc.class);
 		when(cop.hasLineOfSight(wearer.player)).thenReturn(ray);
+		when(cop.distanceTo(wearer.player)).thenReturn(20.0);
 		return cop;
 	}
 

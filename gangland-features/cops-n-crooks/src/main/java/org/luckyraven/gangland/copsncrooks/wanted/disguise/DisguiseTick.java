@@ -14,6 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -34,6 +35,7 @@ public class DisguiseTick {
 	private final Predicate<Player>            eyesOn;
 	private final CopRadio                      radio;
 	private final WantedMessages                messages;
+	private final DoubleSupplier                witnessFloor;
 	private final Map<UUID, String>             spoken      = new ConcurrentHashMap<>();
 	private final Map<UUID, WantedMessages.Key> told        = new ConcurrentHashMap<>();
 	private final Map<UUID, Long>               lastSeen    = new ConcurrentHashMap<>();
@@ -42,7 +44,7 @@ public class DisguiseTick {
 
 	public DisguiseTick(Supplier<DisguiseSettings> settings, SuspectDescriptions descriptions, DisguiseFilter filter,
 	                    PoliceOutfit outfit, Predicate<Player> eyesOn, CopRadio radio,
-	                    WantedMessages messages) {
+	                    WantedMessages messages, DoubleSupplier witnessFloor) {
 		this.settings     = settings;
 		this.descriptions = descriptions;
 		this.filter       = filter;
@@ -50,6 +52,7 @@ public class DisguiseTick {
 		this.eyesOn       = eyesOn;
 		this.radio        = radio;
 		this.messages     = messages;
+		this.witnessFloor = witnessFloor;
 	}
 
 	public void tick(Player player, @Nullable CopGroup group) {

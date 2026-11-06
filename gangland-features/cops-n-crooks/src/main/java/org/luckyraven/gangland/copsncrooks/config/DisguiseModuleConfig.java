@@ -119,6 +119,11 @@ public class DisguiseModuleConfig {
 		};
 	}
 
+	/** The live {@code Wanted.Witnesses.Cops.Witness_Floor}, read on every call so a reload takes effect. */
+	static DoubleSupplier witnessFloorOf(ChaseConfigLoader chaseConfig) {
+		return () -> chaseConfig.getWitnesses().cops().witnessFloor();
+	}
+
 	/** Whether the cops still hunt the player: stars above 0, or a post-escape search for them. */
 	static Predicate<Player> huntedOf(UserManager<Player> users, CopManager copManager) {
 		ToIntFunction<Player> level = levelOf(users);
@@ -155,11 +160,11 @@ public class DisguiseModuleConfig {
 	                                 PoliceOutfit outfit, CopPerception perception, CopRadio copRadio,
 	                                 WantedMessages messages, CopManager copManager, PatrolManager patrol,
 	                                 ChaseConfigLoader chaseConfig) {
-		DoubleSupplier witnessFloor = () -> chaseConfig.getWitnesses().cops().witnessFloor();
+		DoubleSupplier witnessFloor = witnessFloorOf(chaseConfig);
 
 		return new DisguiseTick(settingsOf(copLoader), descriptions, filter, outfit,
 		                        eyesOf(perception, copLoader, descriptions, witnessesOf(copManager, patrol), witnessFloor),
-		                        copRadio, messages);
+		                        copRadio, messages, witnessFloor);
 	}
 
 	/** Registers the lock-on filter, the AI tick and cop-attacked hooks and the {@code %suspect%} extras. */
