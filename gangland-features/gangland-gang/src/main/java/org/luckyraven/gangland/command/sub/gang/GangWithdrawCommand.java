@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.command.sub.gang;
 
-import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -9,7 +8,6 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.gangland.file.configuration.Messages;
@@ -25,7 +23,6 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.NavigableSet;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -98,11 +95,7 @@ class GangWithdrawCommand extends SubArgument {
 
 				Gang       gang      = gangManager.getGang(user.getGangId());
 
-				double rate   = GangSettings.getGangContributionRate();
-				int    length = String.valueOf((int) rate).length() - 1;
-				double round  = Math.pow(10, length);
-
-				double contribution = Math.round(argAmount.doubleValue() / rate * round) / round;
+				double contribution = GangMoney.contribution(argAmount);
 
 				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager::getUser);
 
@@ -139,14 +132,7 @@ class GangWithdrawCommand extends SubArgument {
 
 			if (balance <= 0D) return List.of("<amount>");
 
-			NavigableSet<Double> values = NumberUtil.getSetOfNumbers(balance);
-
-			return values.stream()
-					.map(value -> Double.parseDouble(value.toString()))
-					.map(value -> Math.round(value * 100.0) / 100.0)
-					.sorted()
-					.map(value -> value % 1 == 0 ? String.valueOf(value.longValue()) : String.format("%.2f", value))
-					.toList();
+			return GangMoney.amountSuggestions(balance);
 		});
 	}
 
