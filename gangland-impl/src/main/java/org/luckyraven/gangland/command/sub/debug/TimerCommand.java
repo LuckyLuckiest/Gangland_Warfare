@@ -66,10 +66,21 @@ public final class TimerCommand extends Command {
 	@Override
 	protected void help(CommandSender sender, int page) { }
 
+	/** Drops the sender's timer from both maps, stopping it first so a started one does not keep ticking unreachable. */
+	private SequenceTimer stopAndForget(CommandSender sender) {
+		SequenceTimer timer   = timerMap.remove(sender);
+		SequenceTimer started = startedTimers.remove(sender);
+
+		if (timer != null) timer.stop();
+		if (started != null) started.stop();
+		return timer;
+	}
+
 	private @NotNull Argument getCreate() {
 		return new Argument(getPlugin(), "create", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = new SequenceTimer(getPlugin(), 0L, 20L, SequenceTimer.Mode.CIRCULAR);
 
+			stopAndForget(sender);
 			timerMap.put(sender, timer);
 			sender.sendMessage("Added " + timer);
 		});
@@ -77,9 +88,8 @@ public final class TimerCommand extends Command {
 
 	private @NotNull Argument getDelete() {
 		return new Argument(getPlugin(), "delete", getArgumentTree(), (argument, sender, args) -> {
-			SequenceTimer timer = timerMap.remove(sender);
+			SequenceTimer timer = stopAndForget(sender);
 
-			startedTimers.remove(sender);
 			sender.sendMessage("Removed " + timer);
 		});
 	}
