@@ -117,6 +117,7 @@ public class RankManager implements BeanLifecycle {
 		for (int rankId : ranks.keySet()) {
 			List<String> children = ranksParent.stream()
 					.filter(rp -> rp.rankId() == rankId)
+					.filter(rp -> hasRank(rp.childId(), rankId))
 					.map(rp -> ranks.get(rp.childId()).getName())
 					.toList();
 
@@ -485,6 +486,14 @@ public class RankManager implements BeanLifecycle {
 	}
 
 	@Nullable
+	/** T-929: a rank_parent row can outlive its child rank (a failed purge, a pre-0.14.0 delete); skip it, never NPE. */
+	private boolean hasRank(int childId, int parentId) {
+		if (ranks.containsKey(childId)) return true;
+
+		log.warn("Ignoring the rank_parent link {} -> {}: rank {} no longer exists", parentId, childId, childId);
+		return false;
+	}
+
 	private Tree.Node<Rank> findChildNode(Map<Tree.Node<Rank>, List<String>> nodeMap, String child) {
 		return nodeMap.keySet()
 				.stream().filter(node -> node.getData().getName().equalsIgnoreCase(child)).findFirst().orElse(null);

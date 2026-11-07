@@ -281,6 +281,22 @@ class RankManagerTest {
 		}
 
 		@Test
+		@DisplayName("T-929: a link whose child rank was deleted is skipped; the rest of the tree still wires")
+		void initialize_linkToDeletedChild_isSkipped() {
+			Rank tail = new Rank("owner", 1);
+			Rank head = new Rank("member", 2);
+			when(rankRepo.loadAll()).thenReturn(List.of(tail, head));
+			when(rankParentRepo.loadAll()).thenReturn(Set.of(new RankParent(2, 1), new RankParent(2, 99)));
+
+			manager.initialize();
+
+			Tree<Rank> tree = manager.getRankTree();
+			assertEquals("member", tree.getRoot().getData().getName());
+			assertEquals(1, tree.getRoot().getChildren().size(), "only the link to the surviving child is wired");
+			assertEquals("owner", tree.getRoot().getChildren().get(0).getData().getName());
+		}
+
+		@Test
 		@DisplayName("a rank with no RankParent entries pointing at it builds a leaf with no children")
 		void initialize_rankWithNoParentLinks_isLeaf() {
 			Rank head = new Rank("member", 2);
