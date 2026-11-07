@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.fights.fight.FightManager;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
-import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.util.TriConsumer;
 
