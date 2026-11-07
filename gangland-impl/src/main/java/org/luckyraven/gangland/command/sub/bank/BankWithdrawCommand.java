@@ -135,27 +135,9 @@ class BankWithdrawCommand extends SubArgument {
 
 	private OptionalArgument bankWithdrawTarget() {
 		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			if (!sender.hasPermission(BankCommand.ADMIN_PERMISSION)) {
-				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
-				return;
-			}
-
-			String name         = args[3];
-			Player targetPlayer = Bukkit.getPlayer(name);
-
-			if (targetPlayer == null) {
-				sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", name));
-				return;
-			}
-
-			User<Player> target = userManager.getUser(targetPlayer);
+			User<Player> target = BankCommand.adminTarget(sender, args, 3, userManager);
 
 			if (target == null) return;
-
-			if (!target.hasBank()) {
-				sender.sendMessage(Messages.MUST_CREATE_BANK.toString());
-				return;
-			}
 
 			applyWithdrawTarget(sender, args[2], target, ganglandDatabase);
 		}, sender -> Bukkit.getOnlinePlayers()
