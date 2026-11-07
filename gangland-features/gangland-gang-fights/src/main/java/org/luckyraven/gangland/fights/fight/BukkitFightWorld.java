@@ -145,7 +145,7 @@ public final class BukkitFightWorld implements FightWorld {
 		org.bukkit.World world = Bukkit.getWorld(to.world());
 		if (world == null) return false;
 
-		org.bukkit.Location at = new org.bukkit.Location(world, to.x(), to.y(), to.z(), to.yaw(), to.pitch());
+		org.bukkit.Location at = to.toLocation(world);
 		// the containment guard lets the fight's own teleports through
 		return ExpectedTeleports.run(player, () -> target.teleport(at));
 	}

@@ -9,7 +9,6 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.World;
 
 /** {@code /glw arena tp <name>}: to the arena exit. */
@@ -39,7 +38,7 @@ public final class ArenaTpCommand extends SubArgument {
 			sender.sendMessage(deps.text().text("Arenas.Tp_World_Missing", "world", exit.world()));
 			return;
 		}
-		player.teleport(new Location(world, exit.x(), exit.y(), exit.z(), exit.yaw(), exit.pitch()));
+		player.teleport(exit.toLocation(world));
 		sender.sendMessage(deps.text().text("Arenas.Tp", "name", arena.name()));
 	}
 
