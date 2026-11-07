@@ -2,7 +2,10 @@ package org.luckyraven.gangland.listener.player;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +18,8 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+
+import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -68,7 +73,12 @@ class RemoveAccountListenerTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	@DisplayName("T-960 / WB-39: the quit handler stops the wanted and bounty timers once, and nothing else stops them off-thread")
-	void quit_stopsEachTimerOnce() {
+	void quit_stopsEachTimerOnce() throws Exception {
+		// the scheduler runs an async task inline, so a handler that stops the timers off-thread is counted too
+		when(bukkit.scheduler().runTaskAsynchronously(any(Plugin.class), any(Runnable.class))).thenAnswer(invocation -> {
+			invocation.<Runnable>getArgument(1).run();
+			return mock(BukkitTask.class);
+		});
 		UserManager<Player>        online  = mock(UserManager.class);
 		UserManager<OfflinePlayer> offline = mock(UserManager.class);
 
@@ -86,7 +96,12 @@ class RemoveAccountListenerTest {
 		RemoveAccountListener listener = new RemoveAccountListener(mock(Gangland.class), mock(GanglandDatabase.class),
 		                                                           online, offline);
 
-		listener.onPlayerLeave(event);
+		// fire every quit handler the listener declares, as Bukkit does
+		for (Method method : RemoveAccountListener.class.getDeclaredMethods()) {
+			if (method.isAnnotationPresent(EventHandler.class)) {
+				method.invoke(listener, event);
+			}
+		}
 
 		verify(wanted, times(1)).stopTimer();
 		verify(bounty, times(1)).stopTimer();
