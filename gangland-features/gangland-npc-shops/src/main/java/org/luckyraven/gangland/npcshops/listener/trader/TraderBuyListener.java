@@ -63,7 +63,7 @@ public class TraderBuyListener implements Listener {
 
 		BigDecimal     price   = event.getFinalPrice();
 		int            copies  = event.getQuantity();
-		PaymentHandler payment = adapt(user.getEconomy());
+		PaymentHandler payment = EconomyPaymentAdapter.adapt(user.getEconomy());
 		PurchaseResult result  = purchaseService.purchase(player, payment, event.getEntry(), price, copies);
 
 		switch (result.outcome()) {
@@ -98,33 +98,6 @@ public class TraderBuyListener implements Listener {
 				// Service drops leftovers naturally; kept for exhaustiveness.
 			}
 		}
-	}
-
-	private PaymentHandler adapt(EconomyHandler economy) {
-		return new PaymentHandler() {
-			@Override
-			public BigDecimal getBalance() {
-				return economy.getAmount();
-			}
-
-			@Override
-			public void withdraw(BigDecimal amount) throws PaymentException {
-				try {
-					economy.withdrawAmount(amount);
-				} catch (EconomyException e) {
-					throw new PaymentException(e.getMessage(), e);
-				}
-			}
-
-			@Override
-			public void deposit(BigDecimal amount) throws PaymentException {
-				try {
-					economy.depositAmount(amount);
-				} catch (EconomyException e) {
-					throw new PaymentException(e.getMessage(), e);
-				}
-			}
-		};
 	}
 
 }

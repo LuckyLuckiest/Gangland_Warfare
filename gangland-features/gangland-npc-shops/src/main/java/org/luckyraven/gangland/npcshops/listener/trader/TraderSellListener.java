@@ -62,7 +62,7 @@ public class TraderSellListener implements Listener {
 			return;
 		}
 
-		PaymentHandler payment = adapt(user.getEconomy());
+		PaymentHandler payment = EconomyPaymentAdapter.adapt(user.getEconomy());
 		SellResult     result  = sellService.sell(player, payment, event.getOfferedItems(), event.getFinalOffer());
 
 		switch (result.outcome()) {
@@ -87,33 +87,6 @@ public class TraderSellListener implements Listener {
 				log.warn("Economy error during sell for {}: {}", player.getName(), result.errorDetail());
 			}
 		}
-	}
-
-	private PaymentHandler adapt(EconomyHandler economy) {
-		return new PaymentHandler() {
-			@Override
-			public BigDecimal getBalance() {
-				return economy.getAmount();
-			}
-
-			@Override
-			public void withdraw(BigDecimal amount) throws PaymentException {
-				try {
-					economy.withdrawAmount(amount);
-				} catch (EconomyException e) {
-					throw new PaymentException(e.getMessage(), e);
-				}
-			}
-
-			@Override
-			public void deposit(BigDecimal amount) throws PaymentException {
-				try {
-					economy.depositAmount(amount);
-				} catch (EconomyException e) {
-					throw new PaymentException(e.getMessage(), e);
-				}
-			}
-		};
 	}
 
 }
