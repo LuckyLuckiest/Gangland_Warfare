@@ -5,6 +5,7 @@ import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -38,12 +39,18 @@ public class MembershipQueries {
 		if (gang == null) return Optional.empty();
 
 		String tail = org.luckyraven.gangland.gang.GangSettings.getGangRankTail();
-		for (Member member : gang.getMembers()) {
-			if (member.getRank() != null && member.getRank().getName().equalsIgnoreCase(tail)) {
-				return Optional.of(member.getUuid());
+		Member owner = firstWithRank(gang.getMembers(), tail);
+		return owner == null ? Optional.empty() : Optional.of(owner.getUuid());
+	}
+
+	/** The first member whose rank is set and named {@code rankName} (ignoring case), or {@code null}. */
+	public static Member firstWithRank(Collection<Member> members, String rankName) {
+		for (Member member : members) {
+			if (member.getRank() != null && member.getRank().getName().equalsIgnoreCase(rankName)) {
+				return member;
 			}
 		}
-		return Optional.empty();
+		return null;
 	}
 
 	public Set<Integer> gangIds() {

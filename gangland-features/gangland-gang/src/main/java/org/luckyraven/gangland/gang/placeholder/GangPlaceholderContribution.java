@@ -18,6 +18,7 @@ import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.safehouse.GangSafehouseService;
 import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.membership.MembershipQueries;
 import org.luckyraven.keystone.color.ColorUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 
@@ -212,13 +213,11 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
 
 	private String leader(Gang gang) {
 		String tail = GangSettings.getGangRankTail();
-		for (Member member : gang.getMembers()) {
-			if (member.getRank() != null && member.getRank().getName().equalsIgnoreCase(tail)) {
-				String name = Bukkit.getOfflinePlayer(member.getUuid()).getName();
-				return name == null ? defaultValue() : name;
-			}
-		}
-		return defaultValue();
+		Member leader = MembershipQueries.firstWithRank(gang.getMembers(), tail);
+		if (leader == null) return defaultValue();
+
+		String name = Bukkit.getOfflinePlayer(leader.getUuid()).getName();
+		return name == null ? defaultValue() : name;
 	}
 
 	private String names(List<UUID> uuids) {

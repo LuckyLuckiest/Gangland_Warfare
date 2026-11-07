@@ -13,6 +13,7 @@ import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
+import org.luckyraven.gangland.gang.membership.MembershipQueries;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.stats.GangStatsService;
 import org.luckyraven.gangland.gang.rank.Rank;
@@ -184,10 +185,8 @@ public final class GangMenuItemSourceContribution implements GangItemSourceContr
 		List<Map<String, String>>  entries = new ArrayList<>(gangs.size());
 
 		for (Gang gang : gangs) {
-			UUID leaderUuid = gang.getMembers()
-					.stream()
-					.filter(m -> m.getRank() != null && m.getRank().getName().equalsIgnoreCase(tail))
-					.findFirst().map(Member::getUuid).orElse(null);
+			Member leader     = MembershipQueries.firstWithRank(gang.getMembers(), tail);
+			UUID   leaderUuid = leader == null ? null : leader.getUuid();
 
 			String leaderName = "";
 			if (leaderUuid != null) {
