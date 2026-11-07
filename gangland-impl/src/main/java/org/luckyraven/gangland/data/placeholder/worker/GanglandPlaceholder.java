@@ -84,9 +84,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	}
 
 	private static String formatReadyIn(@Nullable Instant lastClaimAt, Duration window) {
-		if (lastClaimAt == null) return "available";
-		Instant readyAt = lastClaimAt.plus(window);
-		return formatUntil(readyAt);
+		return lastClaimAt == null ? "available" : formatUntil(lastClaimAt.plus(window));
 	}
 
 	private static String formatDuration(Duration duration) {
