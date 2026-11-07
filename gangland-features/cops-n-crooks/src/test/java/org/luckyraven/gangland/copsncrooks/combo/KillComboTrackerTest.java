@@ -1,14 +1,24 @@
 package org.luckyraven.gangland.copsncrooks.combo;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scheduler.BukkitTask;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -82,6 +92,34 @@ class KillComboTrackerTest {
 		}
 
 		assertEquals(5, tracker.getKillHistory().size());
+	}
+
+	@Test
+	@DisplayName("WB-07: the combo window is the configured number of seconds, not 20 times it")
+	void getRemainingTime_isConfiguredSecondsNotTicks() {
+		KillComboTracker tracker = tracker();
+
+		assertEquals(10, tracker.getRemainingTime(),
+		             "the countdown ticks once per second, so Reset_After seconds must be the initial time left");
+	}
+
+	@Test
+	@DisplayName("WB-07: restartTimer schedules on the main thread because the expiry callback mutates a HashMap")
+	void restartTimer_schedulesOnMainThread() {
+		BukkitScheduler scheduler = mock(BukkitScheduler.class);
+		BukkitTask      task      = mock(BukkitTask.class);
+		when(scheduler.runTaskTimer(eq(plugin), any(Runnable.class), anyLong(), anyLong())).thenReturn(task);
+		when(scheduler.runTaskTimerAsynchronously(eq(plugin), any(Runnable.class), anyLong(), anyLong())).thenReturn(task);
+
+		try (MockedStatic<Bukkit> bukkit = mockStatic(Bukkit.class)) {
+			bukkit.when(Bukkit::getScheduler).thenReturn(scheduler);
+
+			tracker().restartTimer();
+
+			verify(scheduler, never()).runTaskTimerAsynchronously(eq(plugin), any(Runnable.class), anyLong(),
+			                                                      anyLong());
+			verify(scheduler).runTaskTimer(eq(plugin), any(Runnable.class), anyLong(), anyLong());
+		}
 	}
 
 	private KillComboTracker tracker() {
