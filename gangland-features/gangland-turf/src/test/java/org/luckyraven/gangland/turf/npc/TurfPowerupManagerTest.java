@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -54,14 +55,7 @@ class TurfPowerupManagerTest {
 	@Test
 	@DisplayName("drains only the pending entries whose spawn chunk matches the loaded world and chunk")
 	void onChunkLoaded_drainsMatchingPendingEntries() throws Exception {
-		JavaPlugin plugin = mock(JavaPlugin.class);
-		@SuppressWarnings("unchecked")
-		IRepository<TurfPowerupData> repository = mock(IRepository.class);
-		TurfPowerupSettings          settings   = new TurfPowerupSettings("quartermaster", 32.0);
-		CivilianSpawnManager         spawnManager = mock(CivilianSpawnManager.class);
-		when(spawnManager.spawnCivilian(any(Location.class), anyString())).thenReturn(null);
-
-		TurfPowerupManager manager = new TurfPowerupManager(plugin, repository, () -> settings, spawnManager);
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0), respawnSpawnManager());
 
 		World loadedWorld = mock(World.class);
 		World otherWorld  = mock(World.class);
@@ -76,6 +70,28 @@ class TurfPowerupManagerTest {
 
 		assertEquals(List.of(2, 3), turfIds(readPending(manager)),
 				"the matching entry drains from the queue; the wrong-chunk and wrong-world entries stay queued");
+	}
+
+	@Test
+	@DisplayName("T-940: a spawn that returns null keeps the entry queued, so the next chunk load retries it")
+	void onChunkLoaded_failedSpawn_staysQueuedAndRetries() throws Exception {
+		CivilianNpc fresh = mock(CivilianNpc.class, RETURNS_DEEP_STUBS);
+		when(fresh.isValid()).thenReturn(true);
+		CivilianSpawnManager spawnManager = mock(CivilianSpawnManager.class);
+		when(spawnManager.spawnCivilian(any(Location.class), anyString())).thenReturn(null, fresh);
+		TurfPowerupManager manager = manager(new TurfPowerupSettings("quartermaster", 32.0), spawnManager);
+		World world = mock(World.class);
+		seedPending(manager, List.of(new TurfPowerupData(1, new Location(world, 20, 64, 20), null)));
+
+		manager.onChunkLoaded(world, 1, 1);
+
+		assertEquals(List.of(1), turfIds(readPending(manager)), "a failed spawn must not drop the queued Quartermaster");
+		assertNull(manager.get(1));
+
+		manager.onChunkLoaded(world, 1, 1);
+
+		assertEquals(List.of(), turfIds(readPending(manager)), "the retry spawned it, so it leaves the queue");
+		assertTrue(manager.get(1).isAlive());
 	}
 
 	@Test
