@@ -103,10 +103,7 @@ public class CopsItems {
 		}
 
 		ItemMeta meta = item.getItemMeta();
-		if (meta == null) {
-			return false;
-		}
-		return id.equals(meta.getPersistentDataContainer().get(key, PersistentDataType.STRING));
+		return meta != null && id.equals(meta.getPersistentDataContainer().get(key, PersistentDataType.STRING));
 	}
 
 	/** The configured material, or {@link Material#CLOCK} when the name is missing or unknown to this server. */
