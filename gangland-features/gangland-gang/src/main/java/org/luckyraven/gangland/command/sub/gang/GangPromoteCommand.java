@@ -155,7 +155,7 @@ class GangPromoteCommand extends SubArgument {
 		promoteTo(user, targetMember, targetStr, nextRanks.get(0));
 	}
 
-	private static Member findMember(Gang gang, String name) {
+	static Member findMember(Gang gang, String name) {
 		return gang.getMembers().stream().filter(member -> hasName(member, name)).findFirst().orElse(null);
 	}
 
