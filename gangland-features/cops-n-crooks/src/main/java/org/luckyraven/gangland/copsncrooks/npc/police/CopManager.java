@@ -950,13 +950,7 @@ public class CopManager implements BeanLifecycle {
 				                                              loc -> !group.isAvoided(loc, now), role);
 				if (newCop == null) break; // no valid location found - stop trying this interval
 
-				newCop.setTargetPlayerId(playerId);
-
-				// New spawns pursue immediately; combatForced flag causes them to enter COMBAT once in range
-				newCop.setCombatForced(hasCombatAlert(playerId) || group.isCombatAlert());
-				newCop.transitionTo(CopState.PURSUING);
-
-				group.add(newCop);
+				engage(newCop, playerId, group);
 				liveRoles.add(role);
 				currentCount++;
 			}
@@ -1048,6 +1042,14 @@ public class CopManager implements BeanLifecycle {
 		          reason, bias != null);
 	}
 
+	/** A new spawn pursues {@code playerId} at once; the combatForced flag makes it enter COMBAT once in range. */
+	private void engage(CopNpc cop, UUID playerId, CopGroup group) {
+		cop.setTargetPlayerId(playerId);
+		cop.setCombatForced(hasCombatAlert(playerId) || group.isCombatAlert());
+		cop.transitionTo(CopState.PURSUING);
+		group.add(cop);
+	}
+
 	/**
 	 * Spawns the queued units that are due. The first one that finds no spot stops the run (the 0.15 "stop trying this
 	 * interval" rule): the rest of the due units are requeued untried, ahead of it, so a suspect with no valid spot around him
@@ -1073,10 +1075,7 @@ public class CopManager implements BeanLifecycle {
 				return;
 			}
 
-			newCop.setTargetPlayerId(playerId);
-			newCop.setCombatForced(hasCombatAlert(playerId) || group.isCombatAlert());
-			newCop.transitionTo(CopState.PURSUING);
-			group.add(newCop);
+			engage(newCop, playerId, group);
 
 			if (group.takeBiasSeed(unit.bias())) {
 				// a tip, not a sighting (R4): no member saw him at the hand-off spot. The units head on along the heading
