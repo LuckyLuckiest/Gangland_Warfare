@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.npcshops.trader.view;
 
 import com.cryptomorin.xseries.XMaterial;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -299,7 +298,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 			}
 		}
 
-		state.baseOffer    = total;
 		state.offeredTotal = total;
 		state.breakdown    = breakdown;
 	}
@@ -389,8 +387,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		/** One component per dropzone slot, reused by every re-render (see {@link DropzoneSlotComponent}). */
 		final Map<Integer, DropzoneSlotComponent> dropzone = new HashMap<>();
 
-		@Getter
-		BigDecimal baseOffer = BigDecimal.ZERO;
 		BigDecimal   offeredTotal = BigDecimal.ZERO;
 		List<String> breakdown    = new ArrayList<>();
 
