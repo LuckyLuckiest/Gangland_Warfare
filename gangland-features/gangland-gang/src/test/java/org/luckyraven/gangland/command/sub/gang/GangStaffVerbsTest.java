@@ -47,6 +47,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -237,6 +238,30 @@ class GangStaffVerbsTest {
 
 		run(console, "bank", "Rats", "balance");
 		assertTrue(audit.isEmpty(), "reading the balance writes nothing");
+	}
+
+	@Test
+	@DisplayName("T-928: an uppercase verb with an I is matched under a Turkish default locale")
+	void verbs_ignoreTheDefaultLocale() {
+		Safehouse den = new Safehouse(7, "den", "world", 1, 2, 3, 0, 0);
+		when(safehouses.list(7)).thenReturn(List.of(den));
+		when(purge.preview(any(Instant.class))).thenReturn(List.of(new PurgeCandidate(7, "Rats", 0L)));
+
+		Locale before = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr"));
+		try {
+			run(console, "bank", "Rats", "GIVE", "50");
+			assertEquals(0, BigDecimal.valueOf(50).compareTo(rats.getEconomy().getAmount()), "bank GIVE");
+
+			sent.clear();
+			run(console, "safehouse", "Rats", "LIST");
+			assertTrue(sent.stream().anyMatch(line -> line.contains("den")), "safehouse LIST " + sent);
+
+			run(console, "purge", "PREVIEW");
+			verify(purge).preview(any(Instant.class));
+		} finally {
+			Locale.setDefault(before);
+		}
 	}
 
 	@Test

@@ -25,6 +25,7 @@ import org.luckyraven.keystone.color.ColorUtil;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -81,12 +82,12 @@ public final class GangMenuItemSourceContribution implements GangItemSourceContr
 
 	@Override
 	public boolean supports(String source) {
-		return source != null && (SOURCES.contains(source.toLowerCase()) || ranking(source) != null);
+		return source != null && (SOURCES.contains(source.toLowerCase(Locale.ROOT)) || ranking(source) != null);
 	}
 
 	/** The stat a {@code gang_ranking[_<stat>]} source ranks by, or {@code null} for any other source. */
 	private static String ranking(String source) {
-		String lower = source.toLowerCase();
+		String lower = source.toLowerCase(Locale.ROOT);
 		if (lower.equals(SOURCE_RANKING)) return "kills";
 		return lower.startsWith(SOURCE_RANKING + "_") ? lower.substring(SOURCE_RANKING.length() + 1) : null;
 	}
@@ -114,7 +115,7 @@ public final class GangMenuItemSourceContribution implements GangItemSourceContr
 		String stat = ranking(source);
 		if (stat != null) return getRanking(player, stat);
 
-		return switch (source.toLowerCase()) {
+		return switch (source.toLowerCase(Locale.ROOT)) {
 			case SOURCE_GANG_MEMBERS -> getGangMembers(player);
 			case SOURCE_GANG_ALLIES -> getGangAllies(player);
 			case SOURCE_GANGS -> getGangs(player);

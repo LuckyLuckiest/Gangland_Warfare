@@ -25,10 +25,12 @@ import org.mockito.MockedStatic;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.luckyraven.gangland.gang.support.StatsFixtures.gang;
 import static org.luckyraven.gangland.gang.support.StatsFixtures.member;
 import static org.mockito.Mockito.mock;
@@ -78,6 +80,24 @@ class GangMenuLeaderNameTest {
 		}
 		assertEquals(Map.of("1", "Boss", "2", "", "3", ""), byId);
 		assertEquals(3, entries.size());
+	}
+
+	@Test
+	@DisplayName("T-928: a source id with a capital I is matched under a Turkish default locale")
+	void sourceIds_ignoreTheDefaultLocale() {
+		GangMenuItemSourceContribution contribution = new GangMenuItemSourceContribution(
+				mock(UserManager.class), mock(GangManager.class), new FilterStore(new FilterRegistry()), new FilterApplier(),
+				new GangFilterAdapter(), new MemberFilterAdapter(), mock(GangStatsService.class));
+
+		Locale before = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr"));
+		try {
+			assertTrue(contribution.supports("GANG_ALLIES"), "GANG_ALLIES");
+			assertTrue(contribution.supports("GANG_RANKING"), "GANG_RANKING");
+			assertTrue(contribution.supports("GANG_RANKING_KILLS"), "GANG_RANKING_KILLS");
+		} finally {
+			Locale.setDefault(before);
+		}
 	}
 
 	private Gang gangOf(int id, String[] rankNames, String[] playerNames) {

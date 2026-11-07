@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -159,7 +160,7 @@ public final class GangStaffVerbs {
 		Gang gang = gangAt(sender, args, 3, BANK_USAGE);
 		if (gang == null) return;
 
-		String     operation = at(args, 4).toLowerCase();
+		String     operation = at(args, 4).toLowerCase(Locale.ROOT);
 		String     name      = GangNameRules.plain(gang.getName());
 		BigDecimal before    = gang.getEconomy().getAmount();
 
@@ -222,7 +223,7 @@ public final class GangStaffVerbs {
 		Gang gang = gangAt(sender, args, 3, SAFEHOUSE_USAGE);
 		if (gang == null) return;
 
-		String operation = at(args, 4).toLowerCase();
+		String operation = at(args, 4).toLowerCase(Locale.ROOT);
 		String name      = GangNameRules.plain(gang.getName());
 
 		switch (operation) {
@@ -314,7 +315,7 @@ public final class GangStaffVerbs {
 	}
 
 	private void purge(CommandSender sender, String[] args) {
-		String  operation = at(args, 3).toLowerCase();
+		String  operation = at(args, 3).toLowerCase(Locale.ROOT);
 		Instant now       = Instant.now();
 
 		switch (operation) {

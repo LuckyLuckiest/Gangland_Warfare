@@ -23,6 +23,7 @@ import org.luckyraven.keystone.color.ColorUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -207,7 +208,7 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
 	private String rankPosition(Member member) {
 		if (member.getRank() == null || rules == null) return defaultValue();
 
-		int index = rules.getRankPreset().indexOf(member.getRank().getName().toLowerCase());
+		int index = rules.getRankPreset().indexOf(member.getRank().getName().toLowerCase(Locale.ROOT));
 		return index < 0 ? defaultValue() : String.valueOf(rules.getRankPreset().size() - index);
 	}
 
@@ -266,9 +267,9 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
 		if (parameter.equals(GANG_PREFIX + "id")) return String.valueOf(gang.getId());
 		if (parameter.equals(GANG_PREFIX + "name")) return gang.getName();
 		if (parameter.equals(GANG_PREFIX + "display-name")) return gang.getDisplayNameString();
-		if (parameter.equals(GANG_PREFIX + "state")) return gang.getState().name().toLowerCase();
+		if (parameter.equals(GANG_PREFIX + "state")) return gang.getState().name().toLowerCase(Locale.ROOT);
 		if (parameter.equals(GANG_PREFIX + "color")) return gang.getColor();
-		if (parameter.equals(GANG_PREFIX + "color-name")) return gang.getColor().toLowerCase().replace("_", " ");
+		if (parameter.equals(GANG_PREFIX + "color-name")) return gang.getColor().toLowerCase(Locale.ROOT).replace("_", " ");
 		if (parameter.equals(GANG_PREFIX + "color-code")) return ColorUtil.getColorCode(gang.getColor());
 		if (parameter.equals(GANG_PREFIX + "description")) return gang.getDescription();
 		if (parameter.equals(GANG_PREFIX + "created")) return gang.getDateCreatedString();
