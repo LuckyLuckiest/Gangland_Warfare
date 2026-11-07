@@ -110,7 +110,7 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 	/** Puts the chance of every rarity the reader names (by its lower-cased constant name) into {@code target}. */
 	private void readRarities(NodeReader rarityReader, Map<LootItemReference.Rarity, Double> target) {
 		for (LootItemReference.Rarity rarity : LootItemReference.Rarity.values()) {
-			String key = rarity.name().toLowerCase();
+			String key = rarity.name().toLowerCase(Locale.ROOT);
 			if (rarityReader.has(key)) {
 				target.put(rarity, rarityReader.get(key).asDouble().orDefault(0.0));
 			}

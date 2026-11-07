@@ -17,6 +17,7 @@ import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -85,6 +86,23 @@ class LootChestLoaderRarityTest {
 		LootChestConfig config = load(yaml("Rarity:", "   Common: 0.9", "   epic: 0.1"), "");
 
 		assertEquals(Map.of(Rarity.EPIC, 0.1), config.getGlobalRarityChances());
+	}
+
+	@Test
+	@DisplayName("T-954: the rarity keys are lower-cased independent of the default locale (Turkish: EPIC is not 'epıc')")
+	void rarityKeys_ignoreTheDefaultLocale() throws IOException {
+		Locale previous = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+		try {
+			LootChestConfig config = load(yaml("Rarity:", "   epic: 0.1"),
+			                              yaml("Loot_Tables:", "   turkish:") + ONE_ITEM +
+			                              yaml("      Rarity_Overrides:", "         epic: 0.3"));
+
+			assertEquals(Map.of(Rarity.EPIC, 0.1), config.getGlobalRarityChances());
+			assertEquals(Map.of(Rarity.EPIC, 0.3), config.getLootTables().get("turkish").getRarityOverrides());
+		} finally {
+			Locale.setDefault(previous);
+		}
 	}
 
 	@Test
