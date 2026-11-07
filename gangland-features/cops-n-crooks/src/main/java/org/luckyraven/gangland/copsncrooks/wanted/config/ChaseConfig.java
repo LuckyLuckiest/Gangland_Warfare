@@ -82,6 +82,11 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		return mapping == null ? null : NodeReader.of(mapping, report);
 	}
 
+	/** The mapping at {@code parent.key} as a reader over the parent's own report, or null when it is absent. */
+	static @Nullable NodeReader block(NodeReader parent, String key) {
+		return parent.get(key).asMapping().reader();
+	}
+
 	private static HeatSettings heat(@Nullable NodeReader n) {
 		if (n == null) return HeatSettings.DEFAULT;
 

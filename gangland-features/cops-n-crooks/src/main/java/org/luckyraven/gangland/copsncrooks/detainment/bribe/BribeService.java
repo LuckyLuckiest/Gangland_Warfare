@@ -108,9 +108,7 @@ public class BribeService {
 
 	public double computeJailBribeCost(Player player) {
 		DetainedPlayer detained = detainmentRegistry.getDetainedPlayers().get(player.getUniqueId());
-		int wanted = detained == null || detained.getWantedAtArrest() == null ?
-		             0 :
-		             detained.getWantedAtArrest();
+		int wanted = DetainedPlayer.wantedAtArrestOf(detained);
 		return costs.computeJailBribeCost(wanted);
 	}
 

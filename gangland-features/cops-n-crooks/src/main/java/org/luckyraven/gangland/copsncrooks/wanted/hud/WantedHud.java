@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -318,7 +319,7 @@ public class WantedHud {
 
 	private static Particle resolveParticle(String name) {
 		try {
-			Particle resolved = XParticle.valueOf(name.toUpperCase()).get();
+			Particle resolved = XParticle.valueOf(name.toUpperCase(Locale.ROOT)).get();
 			if (resolved != null) return resolved;
 		} catch (IllegalArgumentException exception) {
 			// fall through to the default

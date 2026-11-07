@@ -4,7 +4,6 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.hover.content.Text;
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.GanglandApi;
@@ -46,7 +45,7 @@ class JailListCommand extends SubArgument {
 				int    id        = jail.getId();
 				String tpCommand = String.format("/%s jail teleport %d", GanglandApi.SHORT_PREFIX, id);
 				String hoverText = messages.format(CommandMessages.Key.JAIL_LIST_HOVER,
-				                                   location(jail.getLocation()));
+				                                   CommandMessages.location(jail.getLocation()));
 				String row       = messages.format(CommandMessages.Key.JAIL_LIST_ROW,
 				                                   Map.of("id", String.valueOf(id)));
 
@@ -58,14 +57,5 @@ class JailListCommand extends SubArgument {
 				sender.spigot().sendMessage(message);
 			});
 		};
-	}
-
-	private static Map<String, String> location(Location location) {
-		String world = location.getWorld() != null ? location.getWorld().getName() : "?";
-
-		return Map.of("world", world,
-		              "x", String.valueOf(location.getBlockX()),
-		              "y", String.valueOf(location.getBlockY()),
-		              "z", String.valueOf(location.getBlockZ()));
 	}
 }

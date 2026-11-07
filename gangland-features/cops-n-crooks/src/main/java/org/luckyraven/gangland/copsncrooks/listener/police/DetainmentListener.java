@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.listener.police;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -43,6 +44,14 @@ public class DetainmentListener implements Listener {
 		// When it's open, the clicked inventory is always the player's own — any external inventory (chest, trader)
 		// would be a different view type.
 		return event.getView().getType() == InventoryType.CRAFTING;
+	}
+
+	/** The plain restraint block: nothing for a free player, else the event is cancelled and the visuals tick. */
+	private void blockWhileRestrained(Player player, Cancellable event) {
+		if (!detainmentService.isRestrained(player)) return;
+
+		event.setCancelled(true);
+		detainmentService.tickVisuals(player);
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -167,10 +176,7 @@ public class DetainmentListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onCraft(CraftItemEvent event) {
 		if (!(event.getWhoClicked() instanceof Player player)) return;
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(player, event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -202,71 +208,38 @@ public class DetainmentListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onInteractEntity(PlayerInteractEntityEvent event) {
-		Player player = event.getPlayer();
-
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(event.getPlayer(), event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onInteractAtEntity(PlayerInteractAtEntityEvent event) {
-		Player player = event.getPlayer();
-
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(event.getPlayer(), event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
-		Player player = event.getPlayer();
-
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(event.getPlayer(), event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onDrop(PlayerDropItemEvent event) {
-		Player player = event.getPlayer();
-
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(event.getPlayer(), event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPickup(EntityPickupItemEvent event) {
 		if (!(event.getEntity() instanceof Player player)) return;
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(player, event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBreak(BlockBreakEvent event) {
-		Player player = event.getPlayer();
-
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(event.getPlayer(), event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlace(BlockPlaceEvent event) {
-		Player player = event.getPlayer();
-
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(event.getPlayer(), event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -306,27 +279,18 @@ public class DetainmentListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onVehicleEnter(VehicleEnterEvent event) {
 		if (!(event.getEntered() instanceof Player player)) return;
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(player, event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onVehicleExit(VehicleExitEvent event) {
 		if (!(event.getExited() instanceof Player player)) return;
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(player, event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onGlide(EntityToggleGlideEvent event) {
 		if (!(event.getEntity() instanceof Player player)) return;
-		if (!detainmentService.isRestrained(player)) return;
-
-		event.setCancelled(true);
-		detainmentService.tickVisuals(player);
+		blockWhileRestrained(player, event);
 	}
 }

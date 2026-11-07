@@ -59,14 +59,10 @@ public class ReleasePipeline {
 		transitService.cancel(player);
 
 		DetainmentState priorState = detainmentService.getState(player);
-		if (priorState == DetainmentState.JAILED) {
-			// Items are only ever seized after transit commits; only bother restoring in that case.
+		// Items are only ever seized after transit commits, so a JAILED player is restored without asking; the has()
+		// check is defensive: if someone ever seized while HANDCUFFED, still return them.
+		if (priorState == DetainmentState.JAILED || seizedInventoryService.has(player.getUniqueId())) {
 			seizedInventoryService.restore(player);
-		} else {
-			// Defensive: if someone ever seized while HANDCUFFED, still return them.
-			if (seizedInventoryService.has(player.getUniqueId())) {
-				seizedInventoryService.restore(player);
-			}
 		}
 
 		stripPaperwork(player);

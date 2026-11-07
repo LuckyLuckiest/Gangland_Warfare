@@ -169,28 +169,7 @@ public class CopListener implements Listener {
 		           && !NpcSupport.isNpc(player)) {
 			attacker = player;
 		} else {
-			// Friendly fire: cancel damage when a cop is hit by another cop's attack
-			boolean isCopFire = copManager.isCopNpc(damager) ||
-			                    (damager instanceof Projectile p && p.getShooter() instanceof Entity shooterEntity &&
-			                     copManager.isCopNpc(shooterEntity));
-			if (isCopFire) {
-				event.setCancelled(true);
-				return;
-			}
-
-			// Non-cop NPC attacker — queue it so this cop engages after finishing with the player
-			CopNpc attackedCop = copManager.findCopByEntity(victim);
-			if (attackedCop != null) {
-				LivingEntity entityAttacker = null;
-				if (damager instanceof LivingEntity le) {
-					entityAttacker = le;
-				} else if (damager instanceof Projectile proj && proj.getShooter() instanceof LivingEntity le) {
-					entityAttacker = le;
-				}
-				if (entityAttacker != null) {
-					attackedCop.addEntityAttacker(entityAttacker);
-				}
-			}
+			onNonPlayerHit(event, victim, damager);
 			return;
 		}
 
@@ -199,6 +178,32 @@ public class CopListener implements Listener {
 
 		// Alert system: put ALL cops for this player into combat mode
 		alert(cop, victim, attacker);
+	}
+
+	/** A cop was hit by something that is no player: friendly fire is cancelled, any other attacker is queued on the cop. */
+	private void onNonPlayerHit(EntityDamageByEntityEvent event, Entity victim, Entity damager) {
+		// Friendly fire: cancel damage when a cop is hit by another cop's attack
+		boolean isCopFire = copManager.isCopNpc(damager) ||
+		                    (damager instanceof Projectile p && p.getShooter() instanceof Entity shooterEntity &&
+		                     copManager.isCopNpc(shooterEntity));
+		if (isCopFire) {
+			event.setCancelled(true);
+			return;
+		}
+
+		// Non-cop NPC attacker — queue it so this cop engages after finishing with the player
+		CopNpc attackedCop = copManager.findCopByEntity(victim);
+		if (attackedCop != null) {
+			LivingEntity entityAttacker = null;
+			if (damager instanceof LivingEntity le) {
+				entityAttacker = le;
+			} else if (damager instanceof Projectile proj && proj.getShooter() instanceof LivingEntity le) {
+				entityAttacker = le;
+			}
+			if (entityAttacker != null) {
+				attackedCop.addEntityAttacker(entityAttacker);
+			}
+		}
 	}
 
 	/** A player hit {@code cop}: remembered for a killer-less death, then every cop of his group is alerted. */

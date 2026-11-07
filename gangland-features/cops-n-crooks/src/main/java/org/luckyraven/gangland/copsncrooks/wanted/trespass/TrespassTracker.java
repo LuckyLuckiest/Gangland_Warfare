@@ -39,9 +39,15 @@ public final class TrespassTracker {
 
 	/**
 	 * True, and records {@code nowMillis}, when the player has not been charged for {@code region} within the last
-	 * {@code repeatMillis}; false (nothing recorded) otherwise.
+	 * {@code repeatMillis}; false (nothing recorded) otherwise. Also forgets every player's charges older than that.
 	 */
 	public boolean claim(UUID player, String region, long nowMillis, long repeatMillis) {
+		// An entry older than the window can no longer refuse a claim, so drop it (and a player left with none)
+		charged.values().removeIf(times -> {
+			times.values().removeIf(last -> nowMillis - last >= repeatMillis);
+			return times.isEmpty();
+		});
+
 		Map<String, Long> times = charged.computeIfAbsent(player, k -> new HashMap<>());
 		Long last = times.get(region);
 

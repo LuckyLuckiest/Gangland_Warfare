@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.bag;
 
+import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages.Key;
@@ -34,6 +35,7 @@ public final class BagService implements HotCash, BagFunding, BeanLifecycle {
 	private final Map<UUID, Long>       lastFullLine = new ConcurrentHashMap<>();
 	private final Set<UUID>             settled      = ConcurrentHashMap.newKeySet();
 	private final Set<UUID>             quitSeized   = ConcurrentHashMap.newKeySet();
+	@Getter
 	private volatile boolean            shuttingDown;
 
 	public BagService(HotCashBags bags, Supplier<BagSettings> settings, WantedMessages messages, BagEnv env) {
@@ -242,10 +244,6 @@ public final class BagService implements HotCash, BagFunding, BeanLifecycle {
 	@Override
 	public void onInitialize(boolean firstLoad) {
 		shuttingDown = false;
-	}
-
-	public boolean isShuttingDown() {
-		return shuttingDown;
 	}
 
 	/** Sends the HUD to every online player holding a bag (the repeating task body). */

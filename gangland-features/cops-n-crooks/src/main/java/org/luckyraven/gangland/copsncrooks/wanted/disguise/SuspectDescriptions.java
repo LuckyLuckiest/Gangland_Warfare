@@ -215,11 +215,6 @@ public class SuspectDescriptions {
 	}
 
 	private static boolean containsIgnoreCase(List<String> names, String name) {
-		for (String candidate : names) {
-			if (candidate.equalsIgnoreCase(name)) {
-				return true;
-			}
-		}
-		return false;
+		return names.stream().anyMatch(candidate -> candidate.equalsIgnoreCase(name));
 	}
 }

@@ -3,6 +3,8 @@ package org.luckyraven.gangland.copsncrooks.wanted.trespass;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -98,5 +100,21 @@ class TrespassTrackerTest {
 
 		assertTrue(tracker.claim(alice, "b", 1L, REPEAT));
 		assertTrue(tracker.claim(bob, "a", 1L, REPEAT));
+	}
+
+	@Test
+	@DisplayName("T-921: throttle entries older than the repeat window are pruned, unexpired ones are kept")
+	void claim_prunesExpiredThrottleEntries() throws ReflectiveOperationException {
+		tracker.claim(alice, "a", 0L, REPEAT);
+		tracker.claim(bob, "a", 50_000L, REPEAT);
+
+		tracker.claim(bob, "b", 70_000L, REPEAT);
+
+		Field charged = TrespassTracker.class.getDeclaredField("charged");
+		charged.setAccessible(true);
+		Map<?, ?> byPlayer = (Map<?, ?>) charged.get(tracker);
+		assertFalse(byPlayer.containsKey(alice), "alice's only entry expired at 60000, nothing should remember her");
+		assertEquals(Set.of("a", "b"), ((Map<?, ?>) byPlayer.get(bob)).keySet(), "bob's entries are inside the window");
+		assertFalse(tracker.claim(bob, "a", 70_000L, REPEAT), "the unexpired throttle still holds");
 	}
 }

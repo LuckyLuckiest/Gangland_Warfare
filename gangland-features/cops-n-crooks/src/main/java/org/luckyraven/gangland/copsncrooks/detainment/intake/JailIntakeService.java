@@ -191,19 +191,13 @@ public class JailIntakeService {
 			}
 
 			// Prefer same-world jails; within same-world, pick the closest.
-			if (isSameWorld && !sameWorld) {
-				best         = jail;
-				bestDistance = player.getLocation().distanceSquared(jail.getLocation());
-				sameWorld    = true;
-				continue;
-			}
+			if (!isSameWorld) continue;
 
-			if (isSameWorld && sameWorld) {
-				double distance = player.getLocation().distanceSquared(jail.getLocation());
-				if (distance < bestDistance) {
-					best         = jail;
-					bestDistance = distance;
-				}
+			double distance = player.getLocation().distanceSquared(jail.getLocation());
+			if (!sameWorld || distance < bestDistance) {
+				best         = jail;
+				bestDistance = distance;
+				sameWorld    = true;
 			}
 		}
 

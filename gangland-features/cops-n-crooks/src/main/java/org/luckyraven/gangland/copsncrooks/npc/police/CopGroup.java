@@ -148,6 +148,7 @@ public class CopGroup {
 	private boolean backupHeld;
 	/** Radio-clock ms of the latest casualty; a regroup clears {@link #casualtyTimes} but not this. */
 	private long    lastCasualtyAt;
+	/** Radio-clock ms before which no dispatched unit arrives (post-wipe breather or rejoin grace); 0 when none. */
 	private long    breatherUntil;
 
 	public CopGroup(UUID targetPlayerId) {
@@ -298,11 +299,6 @@ public class CopGroup {
 	}
 
 	/** Holds fire on the target until {@link #escalate}. Not the Stand_Down radio line, not {@code CopManager.stoodDown}. */
-	public boolean isCeaseFire() {
-		return ceaseFire;
-	}
-
-	/** Holds fire on the target until {@link #escalate}. Not the Stand_Down radio line, not {@code CopManager.stoodDown}. */
 	public void setCeaseFire(boolean ceaseFire) {
 		this.ceaseFire = ceaseFire;
 	}
@@ -404,10 +400,6 @@ public class CopGroup {
 		fallBackUntil  = Math.max(fallBackUntil, now + r.fallBackMs());
 		regroupReadyAt = now + r.cooldownMs();
 		casualtyTimes.clear();
-	}
-
-	public boolean isRegrouping() {
-		return regrouping;
 	}
 
 	/** The regroup is over: the cops leave cover on their next AI tick. */
@@ -526,18 +518,9 @@ public class CopGroup {
 		this.backupHeld = held;
 	}
 
-	public boolean isBackupHeld() {
-		return backupHeld;
-	}
-
 	/** A cop of the group went down no more than {@code windowMs} before {@code now}. */
 	public boolean casualtyWithin(long now, long windowMs) {
 		return lastCasualtyAt > 0 && now - lastCasualtyAt <= windowMs;
-	}
-
-	/** Radio-clock ms before which no dispatched unit arrives (post-wipe breather or rejoin grace); 0 when none. */
-	public long getBreatherUntil() {
-		return breatherUntil;
 	}
 
 	public void setBreatherUntil(long until) {

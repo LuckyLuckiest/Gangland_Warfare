@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.OverwatchSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -131,7 +132,8 @@ public class OverwatchController {
 	}
 
 	private static boolean eligible(CopNpc cop, OverwatchSettings settings, UUID playerId) {
-		if (!cop.isValid() || !cop.getRole().name().equalsIgnoreCase(settings.role())) {
+		CopRole role = cop.getRole();
+		if (!cop.isValid() || role == null || !role.name().equalsIgnoreCase(settings.role())) {
 			return false;
 		}
 		CopState state = cop.getCurrentState();

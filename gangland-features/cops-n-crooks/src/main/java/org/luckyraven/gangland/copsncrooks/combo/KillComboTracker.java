@@ -62,7 +62,7 @@ public class KillComboTracker {
 		}
 
 		initializeTimer(wantedKillComboResetAfter);
-		timer.start(true);
+		timer.start(false);
 	}
 
 	public void stopTimer() {
@@ -79,8 +79,8 @@ public class KillComboTracker {
 	}
 
 	private void initializeTimer(int wantedKillComboResetAfter) {
-		long time = 20L * wantedKillComboResetAfter;
-		this.timer = new CountdownTimer(plugin, time, null, null, timer -> {
+		// CountdownTimer runs once per second and takes seconds, not ticks
+		this.timer = new CountdownTimer(plugin, wantedKillComboResetAfter, null, null, timer -> {
 			if (onReset == null) return;
 
 			onReset.accept(this);

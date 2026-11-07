@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Getter;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -79,82 +80,146 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final Map<Integer, CopTierConfig> tiers;
 	private final Map<Integer, Integer>       copsPerWantedLevel;
 
+	@Getter
 	private final int    maxCopsPerPlayer;
+	@Getter
 	private final int    aiTickRate;
+	@Getter
 	private final int    spawnCheckRate;
+	@Getter
 	private final double cuffRadius;
+	@Getter
 	private final int    maxCuffAttempts;
+	@Getter
 	private final int    cuffCooldownTicks;
+	@Getter
 	private final double alertRange;
+	@Getter
 	private final double combatRange;
+	@Getter
 	private final int    attackCooldownTicks;
 
 	// Spawn settings
+	@Getter
 	private final double minSpawnDistance;
+	@Getter
 	private final double maxSpawnDistance;
+	@Getter
 	private final double phase1MinDistance;
+	@Getter
 	private final double spawnRadiusShrinkStep;
+	@Getter
 	private final int    verticalSearchRange;
+	@Getter
 	private final int    spawnYOffset;
+	@Getter
 	private final double maxSpawnYDiff;
+	@Getter
 	private final double spawnerMaxYDiff;
+	@Getter
 	private final int    minOpenHorizontalSides;
+	@Getter
 	private final double spawnerPreferenceRadius;
+	@Getter
 	private final double visibilityCheckDistance;
+	@Getter
 	private final int    spawnPhase1Attempts;
+	@Getter
 	private final int    spawnPhase2Attempts;
 
 	// Navigation settings
+	@Getter
 	private final int    navigationRecalculationTicks;
+	@Getter
 	private final int    stuckCheckIntervalTicks;
+	@Getter
 	private final int    maxStuckChecks;
+	@Getter
 	private final int    maxHopelessStuckChecks;
+	@Getter
 	private final double hopelessCloseThreshold;
+	@Getter
 	private final double minProgressDistance;
+	@Getter
 	private final double rangedMinDistance;
+	@Getter
 	private final double rangedMaxDistance;
+	@Getter
 	private final int    minRepathAfterLossTicks;
 
 	// Pursuit leash settings
+	@Getter
 	private final double pursuitMaxDistance;
+	@Getter
 	private final int    pursuitMaxTicks;
 
 	// Return / despawn settings
+	@Getter
 	private final int    maxReturnTicks;
+	@Getter
 	private final int    returnWatchedCapSeconds;
+	@Getter
 	private final double stationArrivalDistance;
 
 	// Misc
+	@Getter
 	private final double guardRadius;
 
 	// Squad tactics / melee / radio / backup (phase H12)
+	@Getter
 	private final NpcMeleeProfile meleeProfile;
 	private final TacticsConfig   tacticsDefault;
+	@Getter
 	private final RadioSettings   radioSettings;
+	@Getter
 	private final BackupSettings  backupSettings;
+	@Getter
 	private final CheckInSettings checkInSettings;
+	@Getter
 	private final RegroupSettings regroupSettings;
+	@Getter
 	private final ShotNoiseSettings shotNoiseSettings;
+	@Getter
 	private final RetreatSettings retreatSettings;
+	@Getter
 	private final CopNames        names;
+	@Getter
 	private final StuckSettings   stuckSettings;
+	@Getter
 	private final FieldCareSettings fieldCareSettings;
+	@Getter
 	private final DispatchSettings  dispatchSettings;
+	@Getter
 	private final BreatherSettings  breatherSettings;
+	@Getter
 	private final HandoffSettings   handoffSettings;
+	@Getter
 	private final PerimeterSettings perimeterSettings;
+	@Getter
 	private final StandoffSettings  standoffSettings; // 0.21.0
+	@Getter
 	private final BreachSettings    breachSettings; // 0.21.0
+	@Getter
 	private final PatrolSettings    patrolSettings;
+	@Getter
 	private final WarningSettings   warningSettings;
+	@Getter
 	private final PullOverSettings  pullOverSettings;
+	@Getter
 	private final TrackerSettings   trackerSettings;
+	@Getter
 	private final SirenSettings     sirenSettings;
+	@Getter
 	private final ScannerSettings   scannerSettings;
+	@Getter
 	private final SightSettings     sightSettings;
+	@Getter
 	private final OverwatchSettings overwatchSettings;
+	@Getter
 	private final ScannerMapSettings scannerMapSettings;
+	@Getter
 	private final DisguiseSettings  disguiseSettings;
+	@Getter
 	private final boolean           lookoutEnabled;
 
 	// Roles (phase H13): the composition per wanted level; empty with roles off
@@ -243,13 +308,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.checkInSettings = parseCheckInSettings(cops, report);
 		this.regroupSettings = parseRegroupSettings(cops, report);
 		this.shotNoiseSettings = parseShotNoiseSettings(cops, report);
-		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
+		MappingNode retreatSection = sectionOf(cops, "Retreat");
 		this.retreatSettings = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report) : null,
 		                                            report, RetreatSettings.DEFAULT);
 		this.names = parseNames(cops, report);
-		MappingNode stuckSection = cops == null ? null : cops.get("Stuck").asMapping().orNull();
+		MappingNode stuckSection = sectionOf(cops, "Stuck");
 		this.stuckSettings = StuckSettings.read(stuckSection != null ? NodeReader.of(stuckSection, report) : null);
-		MappingNode careSection = cops == null ? null : cops.get("Field_Care").asMapping().orNull();
+		MappingNode careSection = sectionOf(cops, "Field_Care");
 		this.fieldCareSettings = FieldCareSettings.read(careSection != null ? NodeReader.of(careSection, report) : null,
 		                                                report, FieldCareSettings.DEFAULT);
 
@@ -292,326 +357,6 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public Map<Integer, Integer> getCopsPerWantedLevel() {
 		return Collections.unmodifiableMap(copsPerWantedLevel);
-	}
-
-	@Override
-	public int getMaxCopsPerPlayer() {
-		return maxCopsPerPlayer;
-	}
-
-	@Override
-	public int getAiTickRate() {
-		return aiTickRate;
-	}
-
-	@Override
-	public int getSpawnCheckRate() {
-		return spawnCheckRate;
-	}
-
-	@Override
-	public double getCuffRadius() {
-		return cuffRadius;
-	}
-
-	@Override
-	public int getMaxCuffAttempts() {
-		return maxCuffAttempts;
-	}
-
-	@Override
-	public int getCuffCooldownTicks() {
-		return cuffCooldownTicks;
-	}
-
-	@Override
-	public double getAlertRange() {
-		return alertRange;
-	}
-
-	@Override
-	public double getCombatRange() {
-		return combatRange;
-	}
-
-	@Override
-	public int getAttackCooldownTicks() {
-		return attackCooldownTicks;
-	}
-
-	@Override
-	public double getMinSpawnDistance() {
-		return minSpawnDistance;
-	}
-
-	@Override
-	public double getMaxSpawnDistance() {
-		return maxSpawnDistance;
-	}
-
-	@Override
-	public double getPhase1MinDistance() {
-		return phase1MinDistance;
-	}
-
-	@Override
-	public double getSpawnRadiusShrinkStep() {
-		return spawnRadiusShrinkStep;
-	}
-
-	@Override
-	public int getVerticalSearchRange() {
-		return verticalSearchRange;
-	}
-
-	@Override
-	public int getSpawnYOffset() {
-		return spawnYOffset;
-	}
-
-	@Override
-	public double getMaxSpawnYDiff() {
-		return maxSpawnYDiff;
-	}
-
-	@Override
-	public double getSpawnerMaxYDiff() {
-		return spawnerMaxYDiff;
-	}
-
-	@Override
-	public int getMinOpenHorizontalSides() {
-		return minOpenHorizontalSides;
-	}
-
-	@Override
-	public double getSpawnerPreferenceRadius() {
-		return spawnerPreferenceRadius;
-	}
-
-	@Override
-	public double getVisibilityCheckDistance() {
-		return visibilityCheckDistance;
-	}
-
-	@Override
-	public int getSpawnPhase1Attempts() {
-		return spawnPhase1Attempts;
-	}
-
-	@Override
-	public int getSpawnPhase2Attempts() {
-		return spawnPhase2Attempts;
-	}
-
-	@Override
-	public int getNavigationRecalculationTicks() {
-		return navigationRecalculationTicks;
-	}
-
-	@Override
-	public int getStuckCheckIntervalTicks() {
-		return stuckCheckIntervalTicks;
-	}
-
-	@Override
-	public int getMaxStuckChecks() {
-		return maxStuckChecks;
-	}
-
-	@Override
-	public int getMaxHopelessStuckChecks() {
-		return maxHopelessStuckChecks;
-	}
-
-	@Override
-	public double getHopelessCloseThreshold() {
-		return hopelessCloseThreshold;
-	}
-
-	@Override
-	public double getMinProgressDistance() {
-		return minProgressDistance;
-	}
-
-	@Override
-	public double getRangedMinDistance() {
-		return rangedMinDistance;
-	}
-
-	@Override
-	public double getRangedMaxDistance() {
-		return rangedMaxDistance;
-	}
-
-	@Override
-	public int getMinRepathAfterLossTicks() {
-		return minRepathAfterLossTicks;
-	}
-
-	@Override
-	public double getPursuitMaxDistance() {
-		return pursuitMaxDistance;
-	}
-
-	@Override
-	public int getPursuitMaxTicks() {
-		return pursuitMaxTicks;
-	}
-
-	@Override
-	public int getMaxReturnTicks() {
-		return maxReturnTicks;
-	}
-
-	@Override
-	public int getReturnWatchedCapSeconds() {
-		return returnWatchedCapSeconds;
-	}
-
-	@Override
-	public double getStationArrivalDistance() {
-		return stationArrivalDistance;
-	}
-
-	@Override
-	public double getGuardRadius() {
-		return guardRadius;
-	}
-
-	@Override
-	public NpcMeleeProfile getMeleeProfile() {
-		return meleeProfile;
-	}
-
-	@Override
-	public RadioSettings getRadioSettings() {
-		return radioSettings;
-	}
-
-	@Override
-	public BackupSettings getBackupSettings() {
-		return backupSettings;
-	}
-
-	@Override
-	public CheckInSettings getCheckInSettings() {
-		return checkInSettings;
-	}
-
-	@Override
-	public RegroupSettings getRegroupSettings() {
-		return regroupSettings;
-	}
-
-	@Override
-	public ShotNoiseSettings getShotNoiseSettings() {
-		return shotNoiseSettings;
-	}
-
-	@Override
-	public RetreatSettings getRetreatSettings() {
-		return retreatSettings;
-	}
-
-	@Override
-	public CopNames getNames() {
-		return names;
-	}
-
-	@Override
-	public StuckSettings getStuckSettings() {
-		return stuckSettings;
-	}
-
-	@Override
-	public FieldCareSettings getFieldCareSettings() {
-		return fieldCareSettings;
-	}
-
-	@Override
-	public DispatchSettings getDispatchSettings() {
-		return dispatchSettings;
-	}
-
-	@Override
-	public BreatherSettings getBreatherSettings() {
-		return breatherSettings;
-	}
-
-	@Override
-	public HandoffSettings getHandoffSettings() {
-		return handoffSettings;
-	}
-
-	@Override
-	public StandoffSettings getStandoffSettings() { // 0.21.0
-		return standoffSettings;
-	}
-
-	@Override
-	public BreachSettings getBreachSettings() { // 0.21.0
-		return breachSettings;
-	}
-
-	@Override
-	public PerimeterSettings getPerimeterSettings() {
-		return perimeterSettings;
-	}
-
-	@Override
-	public PatrolSettings getPatrolSettings() {
-		return patrolSettings;
-	}
-
-	@Override
-	public WarningSettings getWarningSettings() {
-		return warningSettings;
-	}
-
-	@Override
-	public PullOverSettings getPullOverSettings() {
-		return pullOverSettings;
-	}
-
-	@Override
-	public TrackerSettings getTrackerSettings() {
-		return trackerSettings;
-	}
-
-	@Override
-	public SirenSettings getSirenSettings() {
-		return sirenSettings;
-	}
-
-	@Override
-	public ScannerSettings getScannerSettings() {
-		return scannerSettings;
-	}
-
-	@Override
-	public SightSettings getSightSettings() {
-		return sightSettings;
-	}
-
-	@Override
-	public OverwatchSettings getOverwatchSettings() {
-		return overwatchSettings;
-	}
-
-	@Override
-	public ScannerMapSettings getScannerMapSettings() {
-		return scannerMapSettings;
-	}
-
-	@Override
-	public DisguiseSettings getDisguiseSettings() {
-		return disguiseSettings;
-	}
-
-	@Override
-	public boolean isLookoutEnabled() {
-		return lookoutEnabled;
 	}
 
 	@Override
@@ -1020,9 +765,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return access.node() != null ? access.node().location() : parent.mapping().location();
 	}
 
+	private static @Nullable MappingNode sectionOf(@Nullable NodeReader cops, String key) {
+		return cops == null ? null : cops.get(key).asMapping().orNull();
+	}
+
 	private NpcMeleeProfile parseMeleeProfile(@Nullable NodeReader cops, ConfigReport report) {
 		NpcMeleeProfile defaults = NpcMeleeProfile.DEFAULT;
-		MappingNode meleeSection = cops == null ? null : cops.get("Melee").asMapping().orNull();
+		MappingNode meleeSection = sectionOf(cops, "Melee");
 		if (meleeSection == null) {
 			return new NpcMeleeProfile(defaults.reach(), defaults.approach(), attackCooldownTicks,
 			                           defaults.damageSpread(), defaults.edgeDamage());
@@ -1038,13 +787,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	private TacticsConfig parseTacticsDefault(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode tacticsSection = cops == null ? null : cops.get("Tactics").asMapping().orNull();
+		MappingNode tacticsSection = sectionOf(cops, "Tactics");
 		NodeReader  tactics        = tacticsSection != null ? NodeReader.of(tacticsSection, report) : null;
 		return TacticsConfig.read(tactics, report, COP_TACTICS_DEFAULT);
 	}
 
 	private RadioSettings parseRadioSettings(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode radioSection = cops == null ? null : cops.get("Radio").asMapping().orNull();
+		MappingNode radioSection = sectionOf(cops, "Radio");
 		NodeReader  radio        = radioSection != null ? NodeReader.of(radioSection, report) : null;
 		RadioSettings read = RadioSettings.read(radio, report, COP_RADIO_DEFAULTS);
 
@@ -1059,7 +808,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	/** {@code Cops.Names}: an absent {@code First_Names} keeps the built-in pool, {@code []} means no first name. */
 	private CopNames parseNames(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode namesSection = cops == null ? null : cops.get("Names").asMapping().orNull();
+		MappingNode namesSection = sectionOf(cops, "Names");
 		if (namesSection == null) return CopNames.DEFAULT;
 
 		NodeReader   names  = NodeReader.of(namesSection, report);
@@ -1072,7 +821,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private BackupSettings parseBackupSettings(@Nullable NodeReader cops, ConfigReport report) {
 		BackupSettings defaults     = BackupSettings.DEFAULT;
-		MappingNode    backupSection = cops == null ? null : cops.get("Backup").asMapping().orNull();
+		MappingNode    backupSection = sectionOf(cops, "Backup");
 		if (backupSection == null) return defaults;
 
 		NodeReader backup = NodeReader.of(backupSection, report);
@@ -1088,7 +837,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private CheckInSettings parseCheckInSettings(@Nullable NodeReader cops, ConfigReport report) {
 		CheckInSettings defaults = CheckInSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Check_In").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Check_In");
 		if (section == null) return defaults;
 
 		NodeReader checkIn = NodeReader.of(section, report);
@@ -1105,7 +854,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private RegroupSettings parseRegroupSettings(@Nullable NodeReader cops, ConfigReport report) {
 		RegroupSettings defaults = RegroupSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Regroup").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Regroup");
 		if (section == null) return defaults;
 
 		NodeReader regroup = NodeReader.of(section, report);
@@ -1124,7 +873,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private DispatchSettings parseDispatchSettings(@Nullable NodeReader cops, ConfigReport report) {
 		DispatchSettings defaults = DispatchSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Dispatch").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Dispatch");
 		if (section == null) return defaults;
 
 		NodeReader dispatch = NodeReader.of(section, report);
@@ -1140,7 +889,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private BreatherSettings parseBreatherSettings(@Nullable NodeReader cops, ConfigReport report) {
 		BreatherSettings defaults = BreatherSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Breather").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Breather");
 		if (section == null) return defaults;
 
 		NodeReader    breather = NodeReader.of(section, report);
@@ -1172,7 +921,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private HandoffSettings parseHandoffSettings(@Nullable NodeReader cops, ConfigReport report) {
 		HandoffSettings defaults = HandoffSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Handoff").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Handoff");
 		if (section == null) return defaults;
 
 		NodeReader handoff = NodeReader.of(section, report);
@@ -1193,7 +942,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	 * {@code Station_Arrival_Distance} are read by {@link CopSettings}, so they are touched here to stay known keys.
 	 */
 	private static int parseReturnWatchedCap(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode section = cops == null ? null : cops.get("Return").asMapping().orNull();
+		MappingNode section = sectionOf(cops, "Return");
 		if (section == null) return DEFAULT_RETURN_WATCHED_CAP_SECONDS;
 		NodeReader ret = NodeReader.of(section, report);
 		ret.markAllKeysTouched();
@@ -1203,7 +952,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	// 0.21.0: clamped with Math.max (not NodeReader.min) so a too-small value clamps up rather than reverting to the default
 	private StandoffSettings parseStandoffSettings(@Nullable NodeReader cops, ConfigReport report) {
 		StandoffSettings defaults = StandoffSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Standoff").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Standoff");
 		if (section == null) return defaults;
 
 		NodeReader standoff = NodeReader.of(section, report);
@@ -1223,7 +972,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	// 0.21.0: clamped with Math.max, see parseStandoffSettings
 	private BreachSettings parseBreachSettings(@Nullable NodeReader cops, ConfigReport report) {
 		BreachSettings defaults = BreachSettings.DEFAULT;
-		MappingNode    section  = cops == null ? null : cops.get("Breach").asMapping().orNull();
+		MappingNode    section  = sectionOf(cops, "Breach");
 		if (section == null) return defaults;
 
 		NodeReader breach = NodeReader.of(section, report);
@@ -1247,7 +996,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private PerimeterSettings parsePerimeterSettings(@Nullable NodeReader cops, ConfigReport report) {
 		PerimeterSettings defaults = PerimeterSettings.DEFAULT;
-		MappingNode       section  = cops == null ? null : cops.get("Perimeter").asMapping().orNull();
+		MappingNode       section  = sectionOf(cops, "Perimeter");
 		if (section == null) return defaults;
 
 		NodeReader   perimeter = NodeReader.of(section, report);
@@ -1264,7 +1013,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private PatrolSettings parsePatrolSettings(@Nullable NodeReader cops, ConfigReport report) {
 		PatrolSettings defaults = PatrolSettings.DEFAULT;
-		MappingNode    section  = cops == null ? null : cops.get("Patrol").asMapping().orNull();
+		MappingNode    section  = sectionOf(cops, "Patrol");
 		if (section == null) return defaults;
 
 		NodeReader patrol = NodeReader.of(section, report);
@@ -1292,7 +1041,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private WarningSettings parseWarningSettings(@Nullable NodeReader cops, ConfigReport report) {
 		WarningSettings defaults = WarningSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Warning").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Warning");
 		if (section == null) return defaults;
 
 		NodeReader warning = NodeReader.of(section, report);
@@ -1304,7 +1053,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private PullOverSettings parsePullOverSettings(@Nullable NodeReader cops, ConfigReport report) {
 		PullOverSettings defaults = PullOverSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Pull_Over").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Pull_Over");
 		if (section == null) return defaults;
 
 		NodeReader pullOver = NodeReader.of(section, report);
@@ -1321,7 +1070,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private TrackerSettings parseTrackerSettings(@Nullable NodeReader cops, ConfigReport report) {
 		TrackerSettings defaults = TrackerSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Tracker").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Tracker");
 		if (section == null) return defaults;
 
 		NodeReader tracker = NodeReader.of(section, report);
@@ -1335,7 +1084,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private SirenSettings parseSirenSettings(@Nullable NodeReader cops, ConfigReport report) {
 		SirenSettings defaults = SirenSettings.DEFAULT;
-		MappingNode   section  = cops == null ? null : cops.get("Siren").asMapping().orNull();
+		MappingNode   section  = sectionOf(cops, "Siren");
 		if (section == null) return defaults;
 
 		NodeReader siren = NodeReader.of(section, report);
@@ -1349,7 +1098,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private ScannerSettings parseScannerSettings(@Nullable NodeReader cops, ConfigReport report) {
 		ScannerSettings defaults = ScannerSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Scanner").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Scanner");
 		if (section == null) return defaults;
 
 		NodeReader scanner = NodeReader.of(section, report);
@@ -1367,7 +1116,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private SightSettings parseSightSettings(@Nullable NodeReader cops, ConfigReport report) {
 		SightSettings defaults = SightSettings.DEFAULT;
-		MappingNode   section  = cops == null ? null : cops.get("Sight").asMapping().orNull();
+		MappingNode   section  = sectionOf(cops, "Sight");
 		if (section == null) return defaults;
 
 		NodeReader sight = NodeReader.of(section, report);
@@ -1389,7 +1138,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private OverwatchSettings parseOverwatchSettings(@Nullable NodeReader cops, ConfigReport report) {
 		OverwatchSettings defaults = OverwatchSettings.DEFAULT;
-		MappingNode       section  = cops == null ? null : cops.get("Overwatch").asMapping().orNull();
+		MappingNode       section  = sectionOf(cops, "Overwatch");
 		if (section == null) return defaults;
 
 		NodeReader overwatch = NodeReader.of(section, report);
@@ -1416,7 +1165,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private ScannerMapSettings parseScannerMapSettings(@Nullable NodeReader cops, ConfigReport report) {
 		ScannerMapSettings defaults = ScannerMapSettings.DEFAULT;
-		MappingNode        section  = cops == null ? null : cops.get("Scanner_Map").asMapping().orNull();
+		MappingNode        section  = sectionOf(cops, "Scanner_Map");
 		if (section == null) return defaults;
 
 		NodeReader scannerMap   = NodeReader.of(section, report);
@@ -1435,7 +1184,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private DisguiseSettings parseDisguiseSettings(@Nullable NodeReader cops, ConfigReport report) {
 		DisguiseSettings defaults = DisguiseSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Disguise").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Disguise");
 		if (section == null) return defaults;
 
 		NodeReader disguise = NodeReader.of(section, report);
@@ -1480,7 +1229,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	private boolean parseLookoutEnabled(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode section = cops == null ? null : cops.get("Lookout").asMapping().orNull();
+		MappingNode section = sectionOf(cops, "Lookout");
 		if (section == null) return true;
 
 		return NodeReader.of(section, report).get("Enable").asBool().orDefault(true);
@@ -1488,7 +1237,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private ShotNoiseSettings parseShotNoiseSettings(@Nullable NodeReader cops, ConfigReport report) {
 		ShotNoiseSettings defaults = ShotNoiseSettings.DEFAULT;
-		MappingNode       section  = cops == null ? null : cops.get("Shot_Noise").asMapping().orNull();
+		MappingNode       section  = sectionOf(cops, "Shot_Noise");
 		if (section == null) return defaults;
 
 		NodeReader noise   = NodeReader.of(section, report);
