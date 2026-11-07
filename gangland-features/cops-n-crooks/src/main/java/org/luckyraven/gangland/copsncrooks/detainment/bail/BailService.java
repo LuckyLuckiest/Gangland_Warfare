@@ -29,9 +29,7 @@ public class BailService {
 
 	public double computeCost(Player player) {
 		DetainedPlayer detained = detainmentRegistry.getDetainedPlayers().get(player.getUniqueId());
-		int wanted = detained == null || detained.getWantedAtArrest() == null ?
-		             0 :
-		             detained.getWantedAtArrest();
+		int wanted = DetainedPlayer.wantedAtArrestOf(detained);
 		// 0.21.0: no row -> CUFFED -> unscaled
 		ArrestOrigin origin = detained == null ? ArrestOrigin.CUFFED : detained.originOrDefault();
 		return costs.computeBailCost(wanted) * costs.getBailMultiplier(origin);

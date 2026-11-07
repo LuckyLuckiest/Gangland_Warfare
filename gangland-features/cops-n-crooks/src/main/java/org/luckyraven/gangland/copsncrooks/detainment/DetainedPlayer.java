@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.detainment;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -48,6 +49,13 @@ public class DetainedPlayer {
 		this.transitExpiresAt  = transitExpiresAt;
 		this.sentenceExpiresAt = sentenceExpiresAt;
 		this.wantedAtArrest    = wantedAtArrest;
+	}
+
+	/** The wanted level recorded at arrest; 0 for no row ({@code null}) or a row that recorded none. */
+	public static int wantedAtArrestOf(@Nullable DetainedPlayer detained) {
+		return detained == null || detained.getWantedAtArrest() == null ?
+		       0 :
+		       detained.getWantedAtArrest();
 	}
 
 	/** The origin, {@link ArrestOrigin#CUFFED} when none was recorded. */
