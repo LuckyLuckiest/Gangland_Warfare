@@ -735,15 +735,7 @@ public enum Messages {
 	}
 
 	private String convertFromList(List<String> data) {
-		StringBuilder builder = new StringBuilder();
-
-		for (int i = 0; i < data.size(); i++) {
-			builder.append(data.get(i));
-
-			if (i < data.size() - 1) builder.append("\n");
-		}
-
-		return builder.toString();
+		return String.join("\n", data);
 	}
 
 	public enum Type {
