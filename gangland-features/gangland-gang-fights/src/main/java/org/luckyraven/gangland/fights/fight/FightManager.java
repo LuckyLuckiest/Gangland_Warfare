@@ -128,14 +128,7 @@ public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle 
 			world.tell(actor, "Challenge.No_Gang");
 			return;
 		}
-		Fight fight = null;
-		for (Fight f : fights.values()) {
-			if (f.state() != FightState.PROPOSED || f.gangB() != own.get()) continue;
-			if (proposerGang != null && !proposerGang.isBlank()
-			    && !world.gangName(f.gangA()).equalsIgnoreCase(proposerGang)) continue;
-			fight = f;
-			break;
-		}
+		Fight fight = findProposal(own.get(), proposerGang);
 		if (fight == null) {
 			world.tell(actor, "Challenge.No_Proposal");
 			return;
@@ -197,14 +190,7 @@ public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle 
 		Optional<Integer> own = world.gangOf(actor);
 		Fight fight = null;
 		if (own.isPresent()) {
-			for (Fight f : fights.values()) {
-				if (f.state() == FightState.PROPOSED && f.gangB() == own.get()
-				    && (proposerGang == null || proposerGang.isBlank()
-				        || world.gangName(f.gangA()).equalsIgnoreCase(proposerGang))) {
-					fight = f;
-					break;
-				}
-			}
+			fight = findProposal(own.get(), proposerGang);
 		}
 		if (fight == null) {
 			world.tell(actor, "Challenge.No_Proposal");
@@ -506,6 +492,20 @@ public class FightManager implements org.luckyraven.keystone.bean.BeanLifecycle 
 	private @Nullable Fight fightOfGang(int gangId) {
 		for (Fight fight : fights.values()) {
 			if (fight.gangA() == gangId || fight.gangB() == gangId) return fight;
+		}
+		return null;
+	}
+
+	/**
+	 * The first PROPOSED fight aimed at {@code gangB} whose proposer's gang name matches {@code proposerGang} (any
+	 * proposer when the name is null or blank), or null.
+	 */
+	private @Nullable Fight findProposal(int gangB, @Nullable String proposerGang) {
+		for (Fight f : fights.values()) {
+			if (f.state() != FightState.PROPOSED || f.gangB() != gangB) continue;
+			if (proposerGang != null && !proposerGang.isBlank()
+			    && !world.gangName(f.gangA()).equalsIgnoreCase(proposerGang)) continue;
+			return f;
 		}
 		return null;
 	}
