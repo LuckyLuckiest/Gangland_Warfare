@@ -12,6 +12,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npcshops.NpcTargeting;
 import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.npc.NpcSupport;
@@ -184,7 +185,7 @@ public final class BankerManager implements BeanLifecycle {
 			Entity entity = banker.getNpc().getEntity();
 			if (entity == null) continue;
 
-			Player closest = findClosestPlayer(entity.getLocation(), radiusSquared);
+			Player closest = NpcTargeting.findClosestPlayer(entity.getLocation(), radiusSquared);
 			if (closest != null) banker.faceLocation(closest.getLocation());
 		}
 	}
@@ -203,21 +204,6 @@ public final class BankerManager implements BeanLifecycle {
 				log.warn("Failed to despawn banker {}: {}", banker.getData().getId(), e.getMessage());
 			}
 		}
-	}
-
-	@Nullable
-	private Player findClosestPlayer(Location location, double radiusSquared) {
-		Player closest     = null;
-		double closestDist = radiusSquared;
-
-		for (Player player : location.getWorld().getPlayers()) {
-			double dist = player.getLocation().distanceSquared(location);
-			if (dist < closestDist) {
-				closest     = player;
-				closestDist = dist;
-			}
-		}
-		return closest;
 	}
 
 }
