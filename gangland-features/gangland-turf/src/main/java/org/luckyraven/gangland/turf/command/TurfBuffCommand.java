@@ -20,6 +20,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * {@code /glw turf buff <powerup_id>} — admin activates a powerup catalogue entry on the active-selection turf. No
@@ -91,7 +92,7 @@ class TurfBuffCommand extends SubArgument {
 			}
 			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);
 			if (turf == null) return;
-			String            id  = args[2].toLowerCase();
+			String            id  = args[2].toLowerCase(Locale.ROOT);
 			PowerupDefinition def = registry.get(id);
 			if (def == null) {
 				sender.sendMessage(GanglandChatUtil.setArguments(

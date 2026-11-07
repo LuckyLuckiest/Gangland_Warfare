@@ -12,6 +12,7 @@ import org.luckyraven.gangland.turf.data.CuboidRegion;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Spawns a particle outline along every edge of a {@link CuboidRegion} so an admin can see the region they are about to
@@ -137,7 +138,7 @@ public final class TurfVisualization {
 
 	private static Particle resolveParticle(String name) {
 		try {
-			Particle resolved = XParticle.valueOf(name.toUpperCase()).get();
+			Particle resolved = XParticle.valueOf(name.toUpperCase(Locale.ROOT)).get();
 			if (resolved != null) {
 				return resolved;
 			}
