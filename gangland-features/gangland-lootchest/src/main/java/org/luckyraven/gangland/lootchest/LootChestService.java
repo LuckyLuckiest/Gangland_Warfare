@@ -541,13 +541,7 @@ public abstract class LootChestService {
 		// PERMISSION tiers never consume and never flip the flag — every player keeps re-checking.
 		if (tier != null && !chestData.isUnlocked()) {
 			switch (tier.unlockRequirement()) {
-				case LOCKPICK -> {
-					String itemId = unlockItemId(tier);
-					consumeRequiredItem(player, itemId);
-					chestData.setUnlocked(true);
-					cooldownManager.showAvailableHologram(chestData);
-				}
-				case KEY -> {
+				case LOCKPICK, KEY -> {
 					String itemId = unlockItemId(tier);
 					consumeRequiredItem(player, itemId);
 					chestData.setUnlocked(true);
