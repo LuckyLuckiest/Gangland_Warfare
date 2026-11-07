@@ -13,6 +13,7 @@ import org.luckyraven.gangland.turf.npc.defender.TurfGarrison;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.EffectType;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
+import org.luckyraven.gangland.turf.powerups.GuardBuffs;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
@@ -22,7 +23,6 @@ import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntFunction;
@@ -96,12 +96,8 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	 * 10 % and 100 % of Cost_Per_Guard and never below 1 (T-275).
 	 */
 	BigDecimal price(int turfId) {
-		double multiplier = buffs.effectiveMultiplier(turfId, EffectType.GARRISON_DISCOUNT);
-		// T-275: stacked or mis-set discounts stay between 10 % and 100 % of Cost_Per_Guard, and a guard never costs 0.
-		// ponytail: fixed 0.1 floor; make it a turf_powerups.yml knob if owners want cheaper guards.
-		multiplier = Double.isFinite(multiplier) ? Math.max(0.1, Math.min(1.0, multiplier)) : 1.0;
-		BigDecimal price = registry.garrisonCost().multiply(BigDecimal.valueOf(multiplier)).setScale(0, RoundingMode.HALF_UP);
-		return price.max(BigDecimal.ONE);
+		return GuardBuffs.guardPrice(buffs.effectiveMultiplier(turfId, EffectType.GARRISON_DISCOUNT),
+		                             registry.garrisonCost());
 	}
 
 	/** The info lore in order: Owned, On duty, In reserve, Contest top-up, price, bank, then the where lines (W7-H). */
