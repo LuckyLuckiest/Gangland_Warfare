@@ -4,6 +4,8 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.type.BountySign;
 
+import java.util.Arrays;
+
 public class BountySignValidator extends AbstractSignValidator {
 
 	public BountySignValidator(SignType signType) {
@@ -12,11 +14,7 @@ public class BountySignValidator extends AbstractSignValidator {
 
 	@Override
 	protected boolean isValidContent(String content) {
-		for (BountySign.BountyType type : BountySign.BountyType.values()) {
-			if (type.name().equalsIgnoreCase(content)) return true;
-		}
-
-		return false;
+		return Arrays.stream(BountySign.BountyType.values()).anyMatch(type -> type.name().equalsIgnoreCase(content));
 	}
 
 	@Override
