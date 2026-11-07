@@ -1,6 +1,8 @@
 # Bug docket — 2026-09-06 (branch 0.8.2, HEAD 66eeb647, Keystone 1.8.0)
 
-Published page: https://claude.ai/code/artifact/4102fb1f-20b0-44e9-b1b7-2893a559fa04
+Published page: the cross-project LuckyRaven Bug Docket, https://claude.ai/code/artifact/4a903fb6-cbdd-4810-90b8-88a863e9013c
+(the Gangland-only page was deleted on 2026-11-07 after its status database was merged into the cross docket's; this
+folder stays the source of the Gangland rows, which `../cross-docket-2026-09-10/build_docket.py` reads from `bugs.json`)
 
 Every observation from `../workflow-audit-2026-09-02/*.md` (461 rows) plus 139 `T-` bugs found by test suites and
 later reviews and 22 post-audit rows (TF-40..49, GR-38, CM-37 from the gang-turf planning wave, then GR-39..42, CM-38, US-43, LS-35, LS-36, CJ-43, WB-43 from its Gangs+ parity pass; all 2026-09-30), triaged into
@@ -25,5 +27,8 @@ which makes it a post-audit entry with id `<code>-<num>`), `observations.json` (
 tables + board risk), `bugs.json` (merged), `parse_obs.py` + `build_docket.py` (rebuild), `docket_template.html`
 (page with `/*__DATA__*/` placeholder), `gangland-bug-docket.html` (the published page).
 
-Rebuild: `python parse_obs.py && python build_docket.py`, then republish the HTML to the same artifact URL.
-Status/notes on the page are stored in the artifact's shared db (collection `bugs`, doc id = bug id).
+Rebuild: `python build_docket.py` here (`parse_obs.py` is stale: it points at a tool-results file from a deleted session,
+and `observations.json` is static, so new triage rows do not need it), then `python build_docket.py` in
+`../cross-docket-2026-09-10/` and republish its `cross-project-bug-docket.html`. `gangland-bug-docket.html` is still
+generated but no longer published anywhere.
+Status/notes live in the cross docket's shared db (collection `bugs`, doc id = bug id).
