@@ -31,6 +31,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -154,16 +155,13 @@ class GangPromoteCommand extends SubArgument {
 	}
 
 	private static Member findMember(Gang gang, String name) {
-		for (Member member : gang.getMembers()) {
-			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
-			String        offlineName   = offlinePlayer.getName();
+		return gang.getMembers().stream().filter(member -> hasName(member, name)).findFirst().orElse(null);
+	}
 
-			if (offlineName == null || offlineName.isEmpty() || !offlineName.equalsIgnoreCase(name)) continue;
+	private static boolean hasName(Member member, String name) {
+		String offlineName = Bukkit.getOfflinePlayer(member.getUuid()).getName();
 
-			return member;
-		}
-
-		return null;
+		return offlineName != null && !offlineName.isEmpty() && offlineName.equalsIgnoreCase(name);
 	}
 
 	private static void sendRankChoice(Player player, String targetStr, List<Rank> nextRanks) {
@@ -231,28 +229,14 @@ class GangPromoteCommand extends SubArgument {
 			return null;
 		}
 
-		// get the members in the gang
-		List<Member> members = userGang.getMembers();
-
-		// filter the members by rank
-		List<String> descendantRanks = new ArrayList<>();
-
-		for (Member member : members) {
-			Rank memberRank = member.getRank();
-
-			if (memberRank == null) continue;
-
-			Tree<Rank> rankTree = rankManager.getRankTree();
-
-			if (!rankTree.isDescendant(memberRank.getNode(), userRank.getNode())) continue;
-
-			OfflinePlayer offlinePlayer     = Bukkit.getOfflinePlayer(member.getUuid());
-			String        offlinePlayerName = offlinePlayer.getName();
-
-			if (offlinePlayerName == null) continue;
-
-			descendantRanks.add(offlinePlayer.getName());
-		}
+		// the names of the members this user outranks
+		List<String> descendantRanks = userGang.getMembers()
+		                                       .stream()
+		                                       .filter(member -> userOutranks(userRank, member))
+		                                       .map(member -> Bukkit.getOfflinePlayer(member.getUuid()))
+		                                       .filter(offlinePlayer -> offlinePlayer.getName() != null)
+		                                       .map(OfflinePlayer::getName)
+		                                       .collect(Collectors.toCollection(ArrayList::new));
 
 		// if no descendants found
 		if (descendantRanks.isEmpty()) {
@@ -261,6 +245,13 @@ class GangPromoteCommand extends SubArgument {
 
 		// return the rank names
 		return descendantRanks;
+	}
+
+	// The rank tree is head-rooted, so the user outranks a member whose rank node has the user's below it.
+	private boolean userOutranks(Rank userRank, Member member) {
+		Rank memberRank = member.getRank();
+
+		return memberRank != null && rankManager.getRankTree().isDescendant(memberRank.getNode(), userRank.getNode());
 	}
 
 }
