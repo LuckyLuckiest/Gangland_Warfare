@@ -42,14 +42,16 @@ class LevelRemoveCommand extends SubArgument {
 		};
 	}
 
+	private void removeFromTarget(Argument argument, CommandSender sender, String[] args) {
+		User<Player> target = LevelCommand.resolveTarget(sender, args, 3, userManager);
+
+		if (target == null) return;
+
+		applyRemove(sender, args[2], target);
+	}
+
 	private OptionalArgument levelAmount() {
-		OptionalArgument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			User<Player> target = LevelCommand.resolveTarget(sender, args, 3, userManager);
-
-			if (target == null) return;
-
-			applyRemove(sender, args[2], target);
-		}, sender -> List.of("<amount>"));
+		OptionalArgument amount = new OptionalArgument(gangland, tree, this::removeFromTarget, sender -> List.of("<amount>"));
 
 		amount.addSubArgument(targetPlayer());
 
@@ -57,13 +59,7 @@ class LevelRemoveCommand extends SubArgument {
 	}
 
 	private OptionalArgument targetPlayer() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			User<Player> target = LevelCommand.resolveTarget(sender, args, 3, userManager);
-
-			if (target == null) return;
-
-			applyRemove(sender, args[2], target);
-		}, sender -> Bukkit.getOnlinePlayers()
+		return new OptionalArgument(gangland, tree, this::removeFromTarget, sender -> Bukkit.getOnlinePlayers()
 				.stream().map(Player::getName).toList());
 	}
 
