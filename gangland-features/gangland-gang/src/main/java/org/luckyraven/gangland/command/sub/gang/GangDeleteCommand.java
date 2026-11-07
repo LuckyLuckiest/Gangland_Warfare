@@ -103,11 +103,7 @@ class GangDeleteCommand extends SubArgument {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 			if (gang == null) {
-				user.resetGang();
-				member.resetGang();
-				member.setContribution(0D);
-				memberManager.assignRank(member, null);
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				healMissingGang(user, member, memberManager);
 				return;
 			}
 
@@ -162,11 +158,7 @@ class GangDeleteCommand extends SubArgument {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 			if (gang == null) {
-				user.resetGang();
-				member.resetGang();
-				member.setContribution(0D);
-				memberManager.assignRank(member, null);
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				healMissingGang(user, member, memberManager);
 				return;
 			}
 
@@ -184,6 +176,15 @@ class GangDeleteCommand extends SubArgument {
 				deleteGangTimer.remove(sender);
 			}
 		});
+	}
+
+	/** The player's gang row is gone: drop the dangling gang, contribution and rank, and say they have no gang. */
+	static void healMissingGang(User<Player> user, Member member, MemberManager memberManager) {
+		user.resetGang();
+		member.resetGang();
+		member.setContribution(0D);
+		memberManager.assignRank(member, null);
+		user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 	}
 
 }
