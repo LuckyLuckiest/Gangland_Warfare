@@ -12,7 +12,6 @@ import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyDepositService;
-import org.luckyraven.gangland.item.money.MoneyItem;
 import org.luckyraven.gangland.item.money.MoneyItemUtil;
 
 /**
@@ -54,19 +53,7 @@ public class MoneyInteractListener implements Listener {
 		consumeOne(event.getPlayer(), heldItem);
 
 		depositService.deposit(event.getPlayer(), amount, variationId);
-		playPickupSound(event.getPlayer(), variationId);
-	}
-
-	private void playPickupSound(Player player, String variationId) {
-		if (variationId == null) return;
-
-		MoneyItem variation = moneyAddon.getVariation(variationId);
-		if (variation == null) return;
-
-		MoneyItem.PickupSound sound = variation.getPickupSound();
-		if (sound == null) return;
-
-		sound.soundConfig().playSound(player);
+		MoneyPickupSound.play(moneyAddon, event.getPlayer(), variationId);
 	}
 
 	private void consumeOne(Player player, ItemStack heldItem) {
