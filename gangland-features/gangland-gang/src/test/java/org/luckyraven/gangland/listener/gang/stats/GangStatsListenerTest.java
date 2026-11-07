@@ -16,9 +16,11 @@ import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -282,5 +284,31 @@ class GangStatsListenerTest {
 
 		assertEquals(2, killer.getKills());
 		assertEquals(2, victim.getDeaths());
+	}
+
+	@Test
+	@DisplayName("T-927: a pair's cooldown and day-count entries are dropped once they can no longer matter")
+	void expiredPairEntries_areForgotten() throws ReflectiveOperationException {
+		dies(victimPlayer);
+		assertEquals(1, killer.getKills());
+
+		// a day and a bit later a different pair scores; the first pair's bookkeeping is stale by then
+		now += 25 * HOUR;
+		Player otherKiller = player();
+		Player otherVictim = player();
+		Member otherKillerMember = enroll(otherKiller, 1, NOW - 100 * HOUR);
+		enroll(otherVictim, 2, NOW - 100 * HOUR);
+		ledger.last = otherKiller.getUniqueId();
+		dies(otherVictim);
+		assertEquals(1, otherKillerMember.getKills());
+
+		assertEquals(1, mapSize("lastKill"), "only the fresh pair is still inside its repeat cooldown window");
+		assertEquals(1, mapSize("dayKills"), "only the fresh pair still has a kill inside the last day");
+	}
+
+	private int mapSize(String field) throws ReflectiveOperationException {
+		Field f = GangStatsListener.class.getDeclaredField(field);
+		f.setAccessible(true);
+		return ((Map<?, ?>) f.get(listener)).size();
 	}
 }
