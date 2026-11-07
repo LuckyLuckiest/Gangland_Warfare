@@ -16,9 +16,11 @@ import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,12 +58,48 @@ class RemoveAccountListenerTest {
 		PlayerQuitEvent event = mock(PlayerQuitEvent.class);
 		when(event.getPlayer()).thenReturn(player);
 
-		new RemoveAccountListener(mock(Gangland.class), db, online, offline).onPlayerQuit(event);
 		new RemoveAccountListener(mock(Gangland.class), db, online, offline).onPlayerLeave(event);
 
 		verify(online).remove(user);
 		verify(registry, never()).getGenericRepository(any());
 		verify(offline, never()).add(any());
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	@DisplayName("T-960 / WB-39: the quit handler stops the wanted and bounty timers once, and nothing else stops them off-thread")
+	void quit_stopsEachTimerOnce() {
+		UserManager<Player>        online  = mock(UserManager.class);
+		UserManager<OfflinePlayer> offline = mock(UserManager.class);
+
+		Player       player = mock(Player.class);
+		User<Player> user   = mock(User.class);
+		Wanted       wanted = mock(Wanted.class);
+		Bounty       bounty = mock(Bounty.class);
+		when(online.getUser(player)).thenReturn(user);
+		when(user.isLoadPending()).thenReturn(true);
+		when(user.getBounty()).thenReturn(bounty);
+		when(user.getWanted()).thenReturn(wanted);
+		PlayerQuitEvent event = mock(PlayerQuitEvent.class);
+		when(event.getPlayer()).thenReturn(player);
+
+		RemoveAccountListener listener = new RemoveAccountListener(mock(Gangland.class), mock(GanglandDatabase.class),
+		                                                           online, offline);
+
+		listener.onPlayerLeave(event);
+
+		verify(wanted, times(1)).stopTimer();
+		verify(bounty, times(1)).stopTimer();
+	}
+
+	@Test
+	@DisplayName("T-960 / WB-39: the quit event has one handler, so the timers are not also stopped on an async task")
+	void quit_hasASingleHandler() {
+		long handlers = java.util.Arrays.stream(RemoveAccountListener.class.getDeclaredMethods())
+				.filter(method -> method.isAnnotationPresent(org.bukkit.event.EventHandler.class))
+				.count();
+
+		assertEquals(1, handlers);
 	}
 
 }
