@@ -178,7 +178,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	void attemptBuy(MenuFlow<TurfPowerupFlowSession> flow, Player viewer, TurfPowerupFlowSession session) {
 		String deny = access.denyKey(viewer, session);
 		if (deny != null) {
-			refuse(flow, viewer, deny);
+			QuartermasterAccess.refuse(flow, viewer, messages, deny);
 			return;
 		}
 
@@ -222,15 +222,6 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		                                   "&7It waits in the reserve and joins when &f%turf% &7is attacked.",
 		                                   "turf", turf.getDisplayName()));
 		flow.rerender();
-	}
-
-	private void refuse(MenuFlow<TurfPowerupFlowSession> flow, Player viewer, String key) {
-		viewer.sendMessage(refusal(messages, key));
-		if (QuartermasterAccess.closesPanel(key)) {
-			flow.end();
-		} else {
-			flow.rerender();
-		}
 	}
 
 	private String cannotAfford(BigDecimal price) {

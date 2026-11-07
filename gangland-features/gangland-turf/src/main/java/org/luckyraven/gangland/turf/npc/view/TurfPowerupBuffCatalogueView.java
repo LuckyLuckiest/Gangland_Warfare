@@ -204,12 +204,7 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 	                PowerupDefinition def) {
 		String deny = access.denyKey(viewer, session);
 		if (deny != null) {
-			viewer.sendMessage(refusal(messages, deny));
-			if (QuartermasterAccess.closesPanel(deny)) {
-				flow.end();
-			} else {
-				flow.rerender();
-			}
+			QuartermasterAccess.refuse(flow, viewer, messages, deny);
 			return;
 		}
 
