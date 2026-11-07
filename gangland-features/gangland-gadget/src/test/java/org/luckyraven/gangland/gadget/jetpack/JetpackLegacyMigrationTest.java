@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
+import org.luckyraven.gangland.gadget.grapple.GrappleService;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
 import org.luckyraven.gangland.item.fuel.FuelKey;
 import org.luckyraven.gangland.item.fuel.FuelService;
@@ -123,7 +124,7 @@ class JetpackLegacyMigrationTest {
 		JavaPlugin          plugin        = mock(JavaPlugin.class);
 		GadgetPhysicsConfig physicsConfig = mock(GadgetPhysicsConfig.class);
 
-		JetpackService service = new JetpackService(fuelService, plugin, physicsConfig, addon);
+		JetpackService service = new JetpackService(fuelService, plugin, physicsConfig, addon, mock(GrappleService.class));
 
 		PlayerInventory inventory = drive(service, legacyChestplate(1200));
 
@@ -144,7 +145,7 @@ class JetpackLegacyMigrationTest {
 		JavaPlugin          plugin        = mock(JavaPlugin.class);
 		GadgetPhysicsConfig physicsConfig = mock(GadgetPhysicsConfig.class);
 
-		JetpackService service = new JetpackService(fuelService, plugin, physicsConfig, addon);
+		JetpackService service = new JetpackService(fuelService, plugin, physicsConfig, addon, mock(GrappleService.class));
 
 		// A real Bartizan wearable key, but not a jetpack - carries no fuel tags at all.
 		ItemStack stack = new ItemStack(Material.IRON_CHESTPLATE);
@@ -163,7 +164,7 @@ class JetpackLegacyMigrationTest {
 		JavaPlugin          plugin        = mock(JavaPlugin.class);
 		GadgetPhysicsConfig physicsConfig = mock(GadgetPhysicsConfig.class);
 
-		JetpackService service = new JetpackService(fuelService, plugin, physicsConfig, addon);
+		JetpackService service = new JetpackService(fuelService, plugin, physicsConfig, addon, mock(GrappleService.class));
 
 		ItemStack stack = legacyChestplate(1200);
 		new ItemBuilder(stack).addTag(JetpackKey.JETPACK_ID.getKey(), LEGACY_ID);

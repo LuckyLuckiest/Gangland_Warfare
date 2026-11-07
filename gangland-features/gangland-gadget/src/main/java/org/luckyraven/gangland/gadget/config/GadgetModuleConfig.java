@@ -125,9 +125,9 @@ public class GadgetModuleConfig {
 	 */
 	@Bean
 	public JetpackService jetpackService(FuelService fuelService, GadgetPhysicsConfig gadgetPhysicsConfig,
-	                                     JetpackAddon jetpackAddon) {
+	                                     JetpackAddon jetpackAddon, GrappleService grappleService) {
 		fuelService.setFuelSinkPredicate(this::isJetpackFuelSink);
-		return new JetpackService(fuelService, plugin, gadgetPhysicsConfig, jetpackAddon);
+		return new JetpackService(fuelService, plugin, gadgetPhysicsConfig, jetpackAddon, grappleService);
 	}
 
 	@Bean

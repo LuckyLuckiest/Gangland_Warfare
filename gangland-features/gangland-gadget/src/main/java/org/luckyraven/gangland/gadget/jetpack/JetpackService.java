@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
+import org.luckyraven.gangland.gadget.grapple.GrappleService;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
 import org.luckyraven.gangland.item.fuel.FuelKey;
 import org.luckyraven.gangland.item.fuel.FuelService;
@@ -31,13 +32,15 @@ public class JetpackService implements BeanLifecycle {
 	private final JavaPlugin                plugin;
 	private final GadgetPhysicsConfig       physicsConfig;
 	private final JetpackAddon              jetpackAddon;
+	private final GrappleService            grappleService;
 
 	public JetpackService(FuelService fuelService, JavaPlugin plugin, GadgetPhysicsConfig physicsConfig,
-	                      JetpackAddon jetpackAddon) {
-		this.fuelService   = fuelService;
-		this.plugin        = plugin;
-		this.physicsConfig = physicsConfig;
-		this.jetpackAddon  = jetpackAddon;
+	                      JetpackAddon jetpackAddon, GrappleService grappleService) {
+		this.fuelService    = fuelService;
+		this.plugin         = plugin;
+		this.physicsConfig  = physicsConfig;
+		this.jetpackAddon   = jetpackAddon;
+		this.grappleService = grappleService;
 	}
 
 	/**
@@ -53,7 +56,9 @@ public class JetpackService implements BeanLifecycle {
 		if (!player.hasPermission(jetpack.getPermission())) return;
 
 		JetpackSession session = new JetpackSession(player, jetpack);
-		session.setPreviousAllowFlight(player.getAllowFlight());
+		// A taut grapple rope lends allow-flight and takes it back when it goes slack: that loan is not the player's own
+		// flight, so restoring it on deactivate would leave a survival player able to fly (T-950).
+		session.setPreviousAllowFlight(player.getAllowFlight() && !grappleService.holdsFlight(player));
 		JetpackTask task = new JetpackTask(session, this, fuelService, physicsConfig);
 		session.setTask(task);
 
