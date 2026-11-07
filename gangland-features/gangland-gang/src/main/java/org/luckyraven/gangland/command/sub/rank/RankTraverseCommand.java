@@ -7,10 +7,9 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.util.ChatUtil;
-import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 
-import java.util.List;
+import java.util.stream.Collectors;
 
 class RankTraverseCommand extends SubArgument {
 
@@ -25,17 +24,14 @@ class RankTraverseCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			StringBuilder builder = new StringBuilder();
+			String path = rankManager.getRankTree()
+			                         .getAllNodes()
+			                         .stream()
+			                         .map(Tree.Node::getData)
+			                         .map(rank -> "&e" + rank.getName())
+			                         .collect(Collectors.joining(" &b-> "));
 
-			List<Rank> ranks = rankManager.getRankTree().getAllNodes()
-					.stream().map(Tree.Node::getData).toList();
-
-			for (int i = 0; i < ranks.size(); i++) {
-				builder.append("&e").append(ranks.get(i).getName());
-				if (i < ranks.size() - 1) builder.append(" &b-> ");
-			}
-
-			sender.sendMessage(ChatUtil.color(builder.toString()));
+			sender.sendMessage(ChatUtil.color(path));
 		};
 	}
 }
