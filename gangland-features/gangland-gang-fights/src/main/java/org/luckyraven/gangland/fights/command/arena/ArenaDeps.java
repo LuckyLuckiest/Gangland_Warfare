@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.fights.FightRules;
+import org.luckyraven.gangland.fights.arena.Arena;
 import org.luckyraven.gangland.fights.arena.ArenaDrafts;
 import org.luckyraven.gangland.fights.arena.ArenaMessages;
 import org.luckyraven.gangland.fights.arena.ArenaPoint;
@@ -35,6 +36,23 @@ record ArenaDeps(ArenaRegistry registry, ArenaDrafts drafts, ArenaMessages text,
 	/** The standard Missing Arguments reply; {@code fullUsage} starts with {@code /glw} and uses short placeholders. */
 	static void usage(CommandSender sender, String fullUsage) {
 		sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), fullUsage));
+	}
+
+	/**
+	 * {@code /glw arena on|off <name>}: flips the enabled flag of the named arena and tells the sender how it went;
+	 * {@code doneKey} is the success text ({@code Arenas.Enabled} / {@code Arenas.Disabled}).
+	 */
+	void setEnabled(CommandSender sender, String name, boolean enabled, String doneKey) {
+		Arena arena = registry.byName(name).orElse(null);
+		if (arena == null) {
+			sender.sendMessage(text.text("Arenas.Not_Found", "name", name));
+			return;
+		}
+		if (!registry.setEnabled(arena.name(), enabled)) {
+			sender.sendMessage(text.text("Arenas.Save_Failed"));
+			return;
+		}
+		sender.sendMessage(text.text(doneKey, "name", arena.name()));
 	}
 
 	static ArenaPoint point(Location at) {
