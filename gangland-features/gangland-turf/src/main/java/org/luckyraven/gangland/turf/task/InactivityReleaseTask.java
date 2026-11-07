@@ -54,7 +54,8 @@ public final class InactivityReleaseTask implements Runnable {
 				released++;
 				continue;
 			}
-			if (owner.getLastMemberOnlineAt() > 0 && now - owner.getLastMemberOnlineAt() > thresholdMs) {
+			// T-916: days <= 0 means the inactivity release is off; a zero threshold would free every gang's turfs.
+			if (thresholdMs > 0 && owner.getLastMemberOnlineAt() > 0 && now - owner.getLastMemberOnlineAt() > thresholdMs) {
 				ownership.setOwner(turf, null, TurfOwnerChangedEvent.Cause.INACTIVITY);
 				released++;
 			}
