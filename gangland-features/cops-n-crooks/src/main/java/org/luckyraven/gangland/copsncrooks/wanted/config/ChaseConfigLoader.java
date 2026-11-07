@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.wanted.config;
 
 import lombok.CustomLog;
+import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.bag.BagSettings;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
@@ -31,14 +32,32 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 	private static final String FILE_NAME = "wanted";
 
 	private volatile ChaseConfig       loaded    = ChaseConfig.DEFAULT;
+	/** The current {@code Wanted.Kill_Combo}, never null. */
+	@Getter
 	private volatile KillComboSettings killCombo = KillComboSettings.DEFAULT;
+	/** The current {@code Wanted.Post_Escape} and {@code Wanted.Hud.Bounty}, never null. @since 0.16.1 */
+	@Getter
 	private volatile PostEscapeSettings postEscape = PostEscapeSettings.DEFAULT;
+	/** The current {@code Wanted.Crew_Heat}, never null. @since 0.21.0 */
+	@Getter
 	private volatile CrewHeatSettings      crewHeat      = CrewHeatSettings.DEFAULT;
+	/** The current {@code Wanted.Pursuit_Report}, never null. @since 0.21.0 */
+	@Getter
 	private volatile PursuitReportSettings pursuitReport = PursuitReportSettings.DEFAULT;
+	/** The current {@code Wanted.Getaway}, never null. @since 0.21.0 */
+	@Getter
 	private volatile GetawaySettings       getaway       = GetawaySettings.DEFAULT;
+	/** The current {@code Wanted.Most_Wanted}, never null. @since 0.21.0 */
+	@Getter
 	private volatile MostWantedSettings    mostWanted    = MostWantedSettings.DEFAULT;
+	/** The current {@code Wanted.Witnesses}, never null. @since 0.20.0 */
+	@Getter
 	private volatile WitnessSettings  witnesses  = WitnessSettings.DEFAULT;
+	/** The current {@code Wanted.Trespass}, never null. @since 0.20.0 */
+	@Getter
 	private volatile TrespassSettings  trespass   = TrespassSettings.DEFAULT;
+	/** The current {@code Wanted.Bag}, never null. @since 0.20.0 */
+	@Getter
 	private volatile BagSettings       bag        = BagSettings.DEFAULT;
 
 	public ChaseConfigLoader(JavaPlugin plugin, FileManager fileManager) {
@@ -48,51 +67,6 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 	/** The current config, never null. */
 	public ChaseConfig get() {
 		return loaded;
-	}
-
-	/** The current {@code Wanted.Kill_Combo}, never null. */
-	public KillComboSettings getKillCombo() {
-		return killCombo;
-	}
-
-	/** The current {@code Wanted.Post_Escape} and {@code Wanted.Hud.Bounty}, never null. @since 0.16.1 */
-	public PostEscapeSettings getPostEscape() {
-		return postEscape;
-	}
-
-	/** The current {@code Wanted.Crew_Heat}, never null. @since 0.21.0 */
-	public CrewHeatSettings getCrewHeat() {
-		return crewHeat;
-	}
-
-	/** The current {@code Wanted.Pursuit_Report}, never null. @since 0.21.0 */
-	public PursuitReportSettings getPursuitReport() {
-		return pursuitReport;
-	}
-
-	/** The current {@code Wanted.Getaway}, never null. @since 0.21.0 */
-	public GetawaySettings getGetaway() {
-		return getaway;
-	}
-
-	/** The current {@code Wanted.Most_Wanted}, never null. @since 0.21.0 */
-	public MostWantedSettings getMostWanted() {
-		return mostWanted;
-	}
-
-	/** The current {@code Wanted.Witnesses}, never null. @since 0.20.0 */
-	public WitnessSettings getWitnesses() {
-		return witnesses;
-	}
-
-	/** The current {@code Wanted.Trespass}, never null. @since 0.20.0 */
-	public TrespassSettings getTrespass() {
-		return trespass;
-	}
-
-	/** The current {@code Wanted.Bag}, never null. @since 0.20.0 */
-	public BagSettings getBag() {
-		return bag;
 	}
 
 	@Override
