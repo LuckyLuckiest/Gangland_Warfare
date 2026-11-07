@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permission;
 import org.jetbrains.annotations.NotNull;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
