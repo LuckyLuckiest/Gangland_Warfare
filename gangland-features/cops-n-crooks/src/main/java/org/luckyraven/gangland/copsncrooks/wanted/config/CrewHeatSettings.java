@@ -7,6 +7,8 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import static org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig.block;
+
 /**
  * {@code Wanted.Crew_Heat} of {@code copsncrooks/wanted.yml}.
  *
@@ -51,9 +53,5 @@ public record CrewHeatSettings(boolean enabled, double radius, Set<String> exclu
 				heat.get("Enable").asBool().orDefault(d.enabled()),
 				Math.max(0, heat.get("Radius").asDouble().orDefault(d.radius())),
 				excludes);
-	}
-
-	private static @Nullable NodeReader block(NodeReader parent, String key) {
-		return parent.get(key).asMapping().reader();
 	}
 }

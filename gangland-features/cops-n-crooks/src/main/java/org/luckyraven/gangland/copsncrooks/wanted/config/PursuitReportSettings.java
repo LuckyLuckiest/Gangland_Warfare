@@ -3,6 +3,8 @@ package org.luckyraven.gangland.copsncrooks.wanted.config;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.persistence.config.NodeReader;
 
+import static org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig.block;
+
 /**
  * {@code Wanted.Pursuit_Report} of {@code copsncrooks/wanted.yml}.
  *
@@ -42,9 +44,5 @@ public record PursuitReportSettings(boolean enabled, int minPeakStars, double pe
 				             : (int) Math.max(0, news.get("Min_Seconds").asDouble().orDefault(d.newsMinSeconds())),
 				news == null ? d.newsCooldownSeconds()
 				             : (int) Math.max(0, news.get("Cooldown_Seconds").asDouble().orDefault(d.newsCooldownSeconds())));
-	}
-
-	private static @Nullable NodeReader block(NodeReader parent, String key) {
-		return parent.get(key).asMapping().reader();
 	}
 }

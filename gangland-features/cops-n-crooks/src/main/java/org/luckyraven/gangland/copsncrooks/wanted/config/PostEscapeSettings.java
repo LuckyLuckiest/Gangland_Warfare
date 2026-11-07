@@ -3,6 +3,8 @@ package org.luckyraven.gangland.copsncrooks.wanted.config;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.persistence.config.NodeReader;
 
+import static org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig.block;
+
 /**
  * {@code Wanted.Post_Escape} and {@code Wanted.Hud.Bounty} of {@code copsncrooks/wanted.yml}: the search that goes on after
  * an evasion escape, and the bounty bar that shows it. Loaded beside {@link ChaseConfig} by {@link ChaseConfigLoader}.
@@ -36,9 +38,5 @@ public record PostEscapeSettings(boolean enabled, int searchSeconds, boolean bou
 				escape == null ? d.announce() : escape.get("Announce").asBool().orDefault(d.announce()),
 				escape == null ? d.spottedStars()
 				               : (int) escape.get("Spotted_Stars").asDouble().min(0).orDefault(d.spottedStars()));
-	}
-
-	private static @Nullable NodeReader block(NodeReader parent, String key) {
-		return parent.get(key).asMapping().reader();
 	}
 }

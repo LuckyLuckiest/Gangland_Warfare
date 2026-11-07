@@ -5,6 +5,8 @@ import org.luckyraven.keystone.persistence.config.NodeReader;
 
 import java.util.List;
 
+import static org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig.block;
+
 /**
  * {@code Wanted.Witnesses} of {@code copsncrooks/wanted.yml}: which crimes wait for a witness, and (0.21.2) how a cop
  * who saw one reports it.
@@ -81,9 +83,5 @@ public record WitnessSettings(boolean enabled, List<String> crimes, int deferMin
 		                           crimes == null ? DEFAULT.crimes() : crimes,
 		                           block.get("Defer_Minutes").asInt().min(0).orDefault(DEFAULT.deferMinutes()),
 		                           Cops.parse(block(block, "Cops")));
-	}
-
-	private static @Nullable NodeReader block(NodeReader parent, String key) {
-		return parent.get(key).asMapping().reader();
 	}
 }
