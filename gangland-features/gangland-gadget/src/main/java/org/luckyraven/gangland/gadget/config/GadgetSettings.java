@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gadget.config;
 
+import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.luckyraven.gangland.file.configuration.MovedSetting;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -16,20 +17,34 @@ public class GadgetSettings implements GadgetPhysicsConfig, FileInitializer {
 	private final FileHandler fileHandler;
 	private final FileManager fileManager;
 
+	@Getter
 	private int    jetpackThrustRampTicks = 20;
+	@Getter
 	private double jetpackDescentAccel    = 0.022;
+	@Getter
 	private double jetpackMaxDescentSpeed = -0.5;
+	@Getter
 	private double jetpackHorizInfluence  = 0.03;
+	@Getter
 	private double jetpackMaxHorizSpeed   = 0.25;
+	@Getter
 	private double carReverseSpeedRatio   = 0.5;
+	@Getter
 	private double carHardBrakeMultiplier = 3.0;
+	@Getter
 	private int    carFuelConsumePerTick  = 1;
 
+	@Getter
 	private int     carMoveIntervalTicks   = 4;
+	@Getter
 	private boolean hotwireEnabled         = true;
+	@Getter
 	private int     hotwireSeconds         = 6;
+	@Getter
 	private double  hotwireMaxDistance     = 3.0;
+	@Getter
 	private boolean hotwireConsumeLockpick = true;
+	@Getter
 	private String  hotwireLockpickItem    = "lockpick";
 
 	public GadgetSettings(FileHandler fileHandler, FileManager fileManager) {
@@ -72,76 +87,6 @@ public class GadgetSettings implements GadgetPhysicsConfig, FileInitializer {
 		hotwireMaxDistance     = module.getDouble("Hotwire.Max_Distance", 3.0);
 		hotwireConsumeLockpick = module.getBoolean("Hotwire.Consume_Lockpick", true);
 		hotwireLockpickItem    = module.getString("Hotwire.Lockpick_Item", "lockpick");
-	}
-
-	@Override
-	public int getJetpackThrustRampTicks() {
-		return jetpackThrustRampTicks;
-	}
-
-	@Override
-	public double getJetpackDescentAccel() {
-		return jetpackDescentAccel;
-	}
-
-	@Override
-	public double getJetpackMaxDescentSpeed() {
-		return jetpackMaxDescentSpeed;
-	}
-
-	@Override
-	public double getJetpackHorizInfluence() {
-		return jetpackHorizInfluence;
-	}
-
-	@Override
-	public double getJetpackMaxHorizSpeed() {
-		return jetpackMaxHorizSpeed;
-	}
-
-	@Override
-	public double getCarReverseSpeedRatio() {
-		return carReverseSpeedRatio;
-	}
-
-	@Override
-	public double getCarHardBrakeMultiplier() {
-		return carHardBrakeMultiplier;
-	}
-
-	@Override
-	public int getCarFuelConsumePerTick() {
-		return carFuelConsumePerTick;
-	}
-
-	@Override
-	public int getCarMoveIntervalTicks() {
-		return carMoveIntervalTicks;
-	}
-
-	@Override
-	public boolean isHotwireEnabled() {
-		return hotwireEnabled;
-	}
-
-	@Override
-	public int getHotwireSeconds() {
-		return hotwireSeconds;
-	}
-
-	@Override
-	public double getHotwireMaxDistance() {
-		return hotwireMaxDistance;
-	}
-
-	@Override
-	public boolean isHotwireConsumeLockpick() {
-		return hotwireConsumeLockpick;
-	}
-
-	@Override
-	public String getHotwireLockpickItem() {
-		return hotwireLockpickItem;
 	}
 
 }
