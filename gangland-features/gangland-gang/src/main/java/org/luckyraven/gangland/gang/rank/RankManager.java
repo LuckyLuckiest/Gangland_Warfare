@@ -231,8 +231,7 @@ public class RankManager implements BeanLifecycle {
 	private Tree.Node<Rank> rootNode() {
 		String head = GangSettings.getGangRankHead();
 
-		Rank named = ranks.values()
-				.stream().filter(rank -> rank.getName().equalsIgnoreCase(head)).findFirst().orElse(null);
+		Rank named = get(head);
 		if (named != null) return named.getNode();
 
 		Set<Integer> childIds = ranksParent.stream().map(RankParent::childId).collect(Collectors.toSet());
