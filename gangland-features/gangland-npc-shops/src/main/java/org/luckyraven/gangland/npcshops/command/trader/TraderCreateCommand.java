@@ -87,7 +87,12 @@ class TraderCreateCommand extends SubArgument {
 
 		Location   loc  = player.getLocation();
 		TraderData data = new TraderData(UUID.randomUUID(), shopKey, loc, display, traitId);
-		traderManager.create(data);
+		if (!traderManager.create(data)) {
+			player.sendMessage(GanglandChatUtil.commandMessage(
+					"&eTrader saved, but nothing spawned because Citizens is not available. "
+					+ "It will appear once Citizens is installed and the server restarts."));
+			return;
+		}
 
 		player.sendMessage(GanglandChatUtil.commandMessage(
 				"&aSpawned trader (&f" + (display != null ? display : "unnamed")

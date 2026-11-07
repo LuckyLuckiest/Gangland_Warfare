@@ -85,9 +85,10 @@ public final class BankerManager implements BeanLifecycle {
 		return npc;
 	}
 
-	public void create(BankerData data) {
+	/** Saves the banker, then spawns it; returns whether an NPC is standing (false when Citizens is absent). */
+	public boolean create(BankerData data) {
 		repository.save(data);
-		spawn(data);
+		return spawn(data) != null;
 	}
 
 	public void remove(UUID bankerId) {

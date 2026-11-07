@@ -107,9 +107,10 @@ public final class TraderManager implements BeanLifecycle {
 		return npc;
 	}
 
-	public void create(TraderData data) {
+	/** Saves the trader, then spawns it; returns whether an NPC is standing (false when Citizens is absent). */
+	public boolean create(TraderData data) {
 		repository.save(data);
-		spawn(data);
+		return spawn(data) != null;
 	}
 
 	public void remove(UUID traderId) {
