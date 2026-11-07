@@ -9,6 +9,9 @@ import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.selection.Selection;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Resolves the turf a /glw turf command should operate on without ever asking the admin for an id.
  * <p>
@@ -24,6 +27,35 @@ import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 public final class TurfSelectionResolver {
 
 	private TurfSelectionResolver() {
+	}
+
+	/**
+	 * The turf whose id is the word {@code raw} the admin typed. A word that is not a number and an id with no turf both
+	 * tell {@code sender} {@code TURF_NOT_FOUND} with the word as typed and return {@code null}.
+	 */
+	static @Nullable Turf byId(CommandSender sender, TurfManager turfs, TurfMessageContract messages, String raw) {
+		int id;
+		try {
+			id = Integer.parseInt(raw);
+		} catch (NumberFormatException exception) {
+			messages.send(sender, "TURF_NOT_FOUND", "turf", raw);
+			return null;
+		}
+		Turf turf = turfs.get(id);
+		if (turf == null) {
+			messages.send(sender, "TURF_NOT_FOUND", "turf", raw);
+			return null;
+		}
+		return turf;
+	}
+
+	/** Every turf id as a tab completion, in manager order, in a list the caller may change. */
+	static List<String> idCompletions(TurfManager turfs) {
+		List<String> ids = new ArrayList<>();
+		for (Turf turf : turfs.getAll()) {
+			ids.add(String.valueOf(turf.getId()));
+		}
+		return ids;
 	}
 
 	public static @Nullable Turf resolve(CommandSender sender,

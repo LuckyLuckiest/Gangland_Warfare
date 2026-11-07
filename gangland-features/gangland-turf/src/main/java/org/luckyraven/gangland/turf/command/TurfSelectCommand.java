@@ -15,9 +15,6 @@ import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.selection.Selection;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * {@code /glw turf select [id]} — marks a turf as the admin's active selection so follow-up
  * {@code /glw turf info|delete|setowner|status|show|tp} commands operate on it with no id argument.
@@ -79,26 +76,12 @@ class TurfSelectCommand extends SubArgument {
 				return;
 			}
 			// args = [turf, select, <id>]
-			int id;
-			try {
-				id = Integer.parseInt(args[2]);
-			} catch (NumberFormatException exception) {
-				messages.send(sender, "TURF_NOT_FOUND", "turf", args[2]);
-				return;
-			}
-			Turf turf = turfs.get(id);
+			Turf turf = TurfSelectionResolver.byId(sender, turfs, messages, args[2]);
 			if (turf == null) {
-				messages.send(sender, "TURF_NOT_FOUND", "turf", args[2]);
 				return;
 			}
 			select(player, turf);
-		}, sender -> {
-			List<String> ids = new ArrayList<>();
-			for (Turf turf : turfs.getAll()) {
-				ids.add(String.valueOf(turf.getId()));
-			}
-			return ids;
-		});
+		}, sender -> TurfSelectionResolver.idCompletions(turfs));
 	}
 
 	private void select(Player player, Turf turf) {
