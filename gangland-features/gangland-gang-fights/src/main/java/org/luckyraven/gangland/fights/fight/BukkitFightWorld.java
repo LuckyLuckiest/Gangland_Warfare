@@ -154,9 +154,7 @@ public final class BukkitFightWorld implements FightWorld {
 	public PlayerSnapshot snapshot(UUID player) {
 		Player online = Bukkit.getPlayer(player);
 		org.bukkit.Location at = online.getLocation();
-		String world = at.getWorld() == null ? "" : at.getWorld().getName();
-		return new PlayerSnapshot(player, new ArenaPoint(world, at.getX(), at.getY(), at.getZ(), at.getYaw(),
-		                                                 at.getPitch()), online.getHealth(), online.getFoodLevel());
+		return new PlayerSnapshot(player, ArenaPoint.of(at), online.getHealth(), online.getFoodLevel());
 	}
 
 	@Override

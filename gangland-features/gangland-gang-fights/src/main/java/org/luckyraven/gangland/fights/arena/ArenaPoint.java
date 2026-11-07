@@ -10,4 +10,10 @@ public record ArenaPoint(String world, double x, double y, double z, float yaw, 
 	public Location toLocation(World in) {
 		return new Location(in, x, y, z, yaw, pitch);
 	}
+
+	/** The point of a Bukkit location; a location with no world gets the empty world name. */
+	public static ArenaPoint of(Location at) {
+		return new ArenaPoint(at.getWorld() == null ? "" : at.getWorld().getName(), at.getX(), at.getY(), at.getZ(),
+		                      at.getYaw(), at.getPitch());
+	}
 }

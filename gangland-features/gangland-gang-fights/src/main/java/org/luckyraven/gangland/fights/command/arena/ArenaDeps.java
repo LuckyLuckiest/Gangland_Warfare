@@ -56,8 +56,7 @@ record ArenaDeps(ArenaRegistry registry, ArenaDrafts drafts, ArenaMessages text,
 	}
 
 	static ArenaPoint point(Location at) {
-		return new ArenaPoint(at.getWorld() == null ? "" : at.getWorld().getName(), at.getX(), at.getY(), at.getZ(),
-		                      at.getYaw(), at.getPitch());
+		return ArenaPoint.of(at);
 	}
 
 	/** One chained operand: {@code action} gets the operand text (args[2]) and the sender. */
