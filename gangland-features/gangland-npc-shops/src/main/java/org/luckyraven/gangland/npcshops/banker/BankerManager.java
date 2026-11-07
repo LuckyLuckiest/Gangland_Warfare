@@ -4,14 +4,12 @@ import lombok.CustomLog;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.RayTraceResult;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npcshops.NpcTargeting;
 import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.npc.NpcSupport;
@@ -84,9 +82,10 @@ public final class BankerManager implements BeanLifecycle {
 		return npc;
 	}
 
-	public void create(BankerData data) {
+	/** Saves the banker, then spawns it; returns whether an NPC is standing (false when Citizens is absent). */
+	public boolean create(BankerData data) {
 		repository.save(data);
-		spawn(data);
+		return spawn(data) != null;
 	}
 
 	public void remove(UUID bankerId) {
@@ -135,13 +134,9 @@ public final class BankerManager implements BeanLifecycle {
 
 	@Nullable
 	public BankerNpc findTargetedBanker(Player player, double maxDistance) {
-		Location eye       = player.getEyeLocation();
-		Vector   direction = eye.getDirection();
-
-		RayTraceResult result = player.getWorld().rayTraceEntities(eye, direction, maxDistance,
-		                                                           entity -> !entity.equals(player));
-		if (result == null || result.getHitEntity() == null) return null;
-		return getByEntity(result.getHitEntity());
+		Entity hit = NpcTargeting.rayTraceEntity(player, maxDistance);
+		if (hit == null) return null;
+		return getByEntity(hit);
 	}
 
 	public void forEach(Consumer<BankerNpc> consumer) {
@@ -184,7 +179,7 @@ public final class BankerManager implements BeanLifecycle {
 			Entity entity = banker.getNpc().getEntity();
 			if (entity == null) continue;
 
-			Player closest = findClosestPlayer(entity.getLocation(), radiusSquared);
+			Player closest = NpcTargeting.findClosestPlayer(entity.getLocation(), radiusSquared);
 			if (closest != null) banker.faceLocation(closest.getLocation());
 		}
 	}
@@ -203,21 +198,6 @@ public final class BankerManager implements BeanLifecycle {
 				log.warn("Failed to despawn banker {}: {}", banker.getData().getId(), e.getMessage());
 			}
 		}
-	}
-
-	@Nullable
-	private Player findClosestPlayer(Location location, double radiusSquared) {
-		Player closest     = null;
-		double closestDist = radiusSquared;
-
-		for (Player player : location.getWorld().getPlayers()) {
-			double dist = player.getLocation().distanceSquared(location);
-			if (dist < closestDist) {
-				closest     = player;
-				closestDist = dist;
-			}
-		}
-		return closest;
 	}
 
 }

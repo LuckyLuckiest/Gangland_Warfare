@@ -50,7 +50,12 @@ class BankerCreateCommand extends SubArgument {
 
 		Location   loc  = player.getLocation();
 		BankerData data = new BankerData(UUID.randomUUID(), loc, display);
-		bankerManager.create(data);
+		if (!bankerManager.create(data)) {
+			player.sendMessage(GanglandChatUtil.commandMessage(
+					"&eBanker saved, but nothing spawned because Citizens is not available. "
+					+ "It will appear once Citizens is installed and the server restarts."));
+			return;
+		}
 
 		player.sendMessage(GanglandChatUtil.commandMessage(
 				"&aSpawned banker (&f" + (display != null ? display : "unnamed") + "&a)."));

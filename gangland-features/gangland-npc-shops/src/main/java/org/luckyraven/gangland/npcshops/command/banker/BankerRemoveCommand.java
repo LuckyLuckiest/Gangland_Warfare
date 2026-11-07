@@ -1,12 +1,10 @@
 package org.luckyraven.gangland.npcshops.command.banker;
 
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.util.RayTraceResult;
-import org.bukkit.util.Vector;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.npcshops.NpcTargeting;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.npcshops.banker.BankerManager;
@@ -32,7 +30,7 @@ class BankerRemoveCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) return;
 
-			Entity targeted = rayTraceEntity(player);
+			Entity targeted = NpcTargeting.rayTraceEntity(player, MAX_TARGET_DISTANCE);
 			if (targeted == null) {
 				player.sendMessage(Messages.BANKER_LOOK_AT.toString()
 				                                          .replace("%range%",
@@ -49,15 +47,6 @@ class BankerRemoveCommand extends SubArgument {
 			bankerManager.remove(banker.getData().getId());
 			player.sendMessage(Messages.BANKER_REMOVED.toString());
 		};
-	}
-
-	private Entity rayTraceEntity(Player player) {
-		Location eye       = player.getEyeLocation();
-		Vector   direction = eye.getDirection();
-
-		RayTraceResult result = player.getWorld().rayTraceEntities(eye, direction, MAX_TARGET_DISTANCE,
-		                                                           entity -> !entity.equals(player));
-		return result != null ? result.getHitEntity() : null;
 	}
 
 }

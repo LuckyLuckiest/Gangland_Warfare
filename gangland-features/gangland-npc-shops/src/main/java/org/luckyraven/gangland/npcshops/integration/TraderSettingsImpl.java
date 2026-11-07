@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.npcshops.integration;
 
 import lombok.CustomLog;
+import lombok.Getter;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npcshops.trader.config.TraderSettings;
 import org.luckyraven.keystone.bean.BeanLifecycle;
@@ -28,11 +29,17 @@ public final class TraderSettingsImpl implements TraderSettings, BeanLifecycle {
 
 	private final FileHandler fileHandler;
 
+	@Getter
 	private volatile int        respawnCooldownSeconds;
+	@Getter
 	private volatile int        headTrackRadius;
+	@Getter
 	private volatile String     fallbackTraitId;
+	@Getter
 	private volatile int        sellMaxOfferSlots;
+	@Getter
 	private volatile double     moodPerSale;
+	@Getter
 	private volatile BigDecimal tipAmount = BigDecimal.valueOf(100);
 
 	public TraderSettingsImpl(FileManager fileManager) {
@@ -78,21 +85,6 @@ public final class TraderSettingsImpl implements TraderSettings, BeanLifecycle {
 	}
 
 	@Override
-	public int getRespawnCooldownSeconds() {
-		return respawnCooldownSeconds;
-	}
-
-	@Override
-	public int getHeadTrackRadius() {
-		return headTrackRadius;
-	}
-
-	@Override
-	public String getFallbackTraitId() {
-		return fallbackTraitId;
-	}
-
-	@Override
 	public int getMaxModeMultiplier() {
 		return Settings.getShopMaxModeMultiplier();
 	}
@@ -105,21 +97,6 @@ public final class TraderSettingsImpl implements TraderSettings, BeanLifecycle {
 	@Override
 	public String getInventoryFillItem() {
 		return Settings.getInventoryFillItem();
-	}
-
-	@Override
-	public int getSellMaxOfferSlots() {
-		return sellMaxOfferSlots;
-	}
-
-	@Override
-	public double getMoodPerSale() {
-		return moodPerSale;
-	}
-
-	@Override
-	public BigDecimal getTipAmount() {
-		return tipAmount;
 	}
 
 }

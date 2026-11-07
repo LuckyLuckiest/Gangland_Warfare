@@ -37,10 +37,6 @@ public final class TraderRespawnService implements BeanLifecycle {
 		}, delayTicks);
 	}
 
-	public boolean isPending(UUID traderId) {
-		return pending.contains(traderId);
-	}
-
 	public void cancelAll() {
 		pending.clear();
 	}

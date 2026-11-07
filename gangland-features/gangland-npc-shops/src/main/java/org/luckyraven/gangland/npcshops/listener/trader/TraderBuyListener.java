@@ -11,13 +11,10 @@ import org.luckyraven.gangland.npcshops.trader.mood.MoodService;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.keystone.economy.EconomyHandler;
-import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.shop.message.ShopDisplayResolver;
 import org.luckyraven.keystone.shop.message.ShopMessageContract;
-import org.luckyraven.keystone.shop.transaction.PaymentException;
 import org.luckyraven.keystone.shop.transaction.PaymentHandler;
 import org.luckyraven.keystone.shop.transaction.PurchaseResult;
 import org.luckyraven.keystone.shop.transaction.ShopPurchaseService;
@@ -63,7 +60,7 @@ public class TraderBuyListener implements Listener {
 
 		BigDecimal     price   = event.getFinalPrice();
 		int            copies  = event.getQuantity();
-		PaymentHandler payment = adapt(user.getEconomy());
+		PaymentHandler payment = EconomyPaymentAdapter.adapt(user.getEconomy());
 		PurchaseResult result  = purchaseService.purchase(player, payment, event.getEntry(), price, copies);
 
 		switch (result.outcome()) {
@@ -98,33 +95,6 @@ public class TraderBuyListener implements Listener {
 				// Service drops leftovers naturally; kept for exhaustiveness.
 			}
 		}
-	}
-
-	private PaymentHandler adapt(EconomyHandler economy) {
-		return new PaymentHandler() {
-			@Override
-			public BigDecimal getBalance() {
-				return economy.getAmount();
-			}
-
-			@Override
-			public void withdraw(BigDecimal amount) throws PaymentException {
-				try {
-					economy.withdrawAmount(amount);
-				} catch (EconomyException e) {
-					throw new PaymentException(e.getMessage(), e);
-				}
-			}
-
-			@Override
-			public void deposit(BigDecimal amount) throws PaymentException {
-				try {
-					economy.depositAmount(amount);
-				} catch (EconomyException e) {
-					throw new PaymentException(e.getMessage(), e);
-				}
-			}
-		};
 	}
 
 }

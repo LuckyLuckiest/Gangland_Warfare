@@ -4,14 +4,12 @@ import lombok.CustomLog;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.RayTraceResult;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npcshops.NpcTargeting;
 import org.luckyraven.gangland.npcshops.trader.config.TraderSettings;
 import org.luckyraven.gangland.npcshops.trader.mood.MoodService;
 import org.luckyraven.gangland.npcshops.trader.respawn.TraderRespawnService;
@@ -106,9 +104,10 @@ public final class TraderManager implements BeanLifecycle {
 		return npc;
 	}
 
-	public void create(TraderData data) {
+	/** Saves the trader, then spawns it; returns whether an NPC is standing (false when Citizens is absent). */
+	public boolean create(TraderData data) {
 		repository.save(data);
-		spawn(data);
+		return spawn(data) != null;
 	}
 
 	public void remove(UUID traderId) {
@@ -188,13 +187,9 @@ public final class TraderManager implements BeanLifecycle {
 
 	@Nullable
 	public TraderNpc findTargetedTrader(Player player, double maxDistance) {
-		Location eye       = player.getEyeLocation();
-		Vector   direction = eye.getDirection();
-
-		RayTraceResult result = player.getWorld().rayTraceEntities(eye, direction, maxDistance,
-		                                                           entity -> !entity.equals(player));
-		if (result == null || result.getHitEntity() == null) return null;
-		return getByEntity(result.getHitEntity());
+		Entity hit = NpcTargeting.rayTraceEntity(player, maxDistance);
+		if (hit == null) return null;
+		return getByEntity(hit);
 	}
 
 	@Nullable
@@ -252,7 +247,7 @@ public final class TraderManager implements BeanLifecycle {
 			Entity entity = trader.getNpc().getEntity();
 			if (entity == null) continue;
 
-			Player closest = findClosestPlayer(entity.getLocation(), radiusSquared);
+			Player closest = NpcTargeting.findClosestPlayer(entity.getLocation(), radiusSquared);
 			// Citizens' faceLocation uses the NPC's body (feet) as reference, not its eyes — adding any
 			// Y offset here makes the NPC angle upward. Target the player's feet so same-level
 			// interactions produce a level gaze.
@@ -274,21 +269,6 @@ public final class TraderManager implements BeanLifecycle {
 				log.warn("Failed to despawn trader {}: {}", trader.getData().getId(), e.getMessage());
 			}
 		}
-	}
-
-	@Nullable
-	private Player findClosestPlayer(Location location, double radiusSquared) {
-		Player closest     = null;
-		double closestDist = radiusSquared;
-
-		for (Player player : location.getWorld().getPlayers()) {
-			double dist = player.getLocation().distanceSquared(location);
-			if (dist < closestDist) {
-				closest     = player;
-				closestDist = dist;
-			}
-		}
-		return closest;
 	}
 
 }

@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.npcshops.trader.view;
 
 import com.cryptomorin.xseries.XMaterial;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -63,13 +62,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 	private static final int SLOT_CLEAR   = 51;
 	private static final int SLOT_CONFIRM = 52;
 
-	private static final int[] ALL_DROPZONE_SLOTS = {
-			10, 11, 12, 13, 14,
-			19, 20, 21, 22, 23,
-			28, 29, 30, 31, 32,
-			37, 38, 39, 40, 41
-	};
-
 	private static final SoundEffect SOUND_CONFIRM = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
 	private static final SoundEffect SOUND_CANCEL  = vanilla("ENTITY_VILLAGER_NO", 1.0f);
 
@@ -84,11 +76,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 
 	private static SoundEffect vanilla(String name, float pitch) {
 		return new SoundEffect(SoundEffect.SoundType.VANILLA, name, 0.6f, pitch);
-	}
-
-	private static boolean contains(int[] arr, int value) {
-		for (int v : arr) if (v == value) return true;
-		return false;
 	}
 
 	@Override
@@ -111,7 +98,7 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 			                                          session.trait.profile());
 			// Sell prices are inverse: friendly mood (< 1x on buy) should pay more on sell, so invert for sell usage.
 			double sellMood = 2.0 - mood;
-			int[]  slots    = dropzoneSlots(settings.getSellMaxOfferSlots());
+			int[]  slots    = DropzoneSupport.dropzoneSlots(settings.getSellMaxOfferSlots());
 			state = new SellState(session, slots, sellMood, viewer, flow);
 			active.put(viewer, state);
 		} else {
@@ -137,14 +124,14 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		if (state == null || top == null || top != inventory) return ClickOutcome.PASS;
 
 		if (clickedInventory == top) {
-			if (!contains(state.dropzoneSlots, slot)) return ClickOutcome.PASS;
+			if (!DropzoneSupport.contains(state.dropzoneSlots, slot)) return ClickOutcome.PASS;
 			scheduleRecompute(viewer, state);
 			return ClickOutcome.ALLOW;
 		}
 
 		if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
 			if (currentItem == null || currentItem.getType() == Material.AIR) return ClickOutcome.PASS;
-			int placed = tryPlaceInDropzone(state, top, currentItem.clone());
+			int placed = DropzoneSupport.tryPlaceInDropzone(state.dropzoneSlots, top, currentItem.clone());
 			if (placed > 0) {
 				ItemStack remaining = currentItem.clone();
 				remaining.setAmount(currentItem.getAmount() - placed);
@@ -164,7 +151,7 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 
 		int topSize = top.getSize();
 		for (int raw : rawSlots) {
-			if (raw < topSize && !contains(state.dropzoneSlots, raw)) return true;
+			if (raw < topSize && !DropzoneSupport.contains(state.dropzoneSlots, raw)) return true;
 		}
 		scheduleRecompute(viewer, state);
 		return false;
@@ -178,7 +165,7 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		for (Player viewer : viewers) {
 			SellState state = active.remove(viewer);
 			if (state == null) continue;
-			returnItemsToPlayer(viewer, state);
+			DropzoneSupport.returnItemsToPlayer(viewer, state.inventory(), state.dropzoneSlots);
 			try {
 				viewer.closeInventory();
 			} catch (Exception ignored) { }
@@ -299,7 +286,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 			}
 		}
 
-		state.baseOffer    = total;
 		state.offeredTotal = total;
 		state.breakdown    = breakdown;
 	}
@@ -307,14 +293,14 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 	// ── Click actions ────────────────────────────────────────────────────
 
 	private void onBack(Player viewer, SellState state) {
-		returnItemsToPlayer(viewer, state);
+		DropzoneSupport.returnItemsToPlayer(viewer, state.inventory(), state.dropzoneSlots);
 		active.remove(viewer);
 		state.flow.back();
 		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CANCEL.playSound(viewer));
 	}
 
 	private void onClear(Player viewer, SellState state) {
-		returnItemsToPlayer(viewer, state);
+		DropzoneSupport.returnItemsToPlayer(viewer, state.inventory(), state.dropzoneSlots);
 		state.flow.rerender();
 	}
 
@@ -349,34 +335,13 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		if (event.isCancelled()) return;
 
 		for (int slot : soldSlots) inv.setItem(slot, null);
-		returnItemsToPlayer(viewer, state);
+		DropzoneSupport.returnItemsToPlayer(viewer, state.inventory(), state.dropzoneSlots);
 		active.remove(viewer);
 		state.flow.back();
 		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CONFIRM.playSound(viewer));
 	}
 
 	// ── Helpers ──────────────────────────────────────────────────────────
-
-	private void returnItemsToPlayer(Player viewer, SellState state) {
-		Inventory inv = state.inventory();
-		if (inv == null) return;
-		for (int slot : state.dropzoneSlots) {
-			ItemStack stack = inv.getItem(slot);
-			if (stack == null || stack.getType() == Material.AIR) continue;
-			Map<Integer, ItemStack> leftover = viewer.getInventory().addItem(stack.clone());
-			for (ItemStack drop : leftover.values()) {
-				viewer.getWorld().dropItemNaturally(viewer.getLocation(), drop);
-			}
-			inv.setItem(slot, null);
-		}
-	}
-
-	private int[] dropzoneSlots(int cap) {
-		int   limit = Math.max(1, Math.min(cap, ALL_DROPZONE_SLOTS.length));
-		int[] out   = new int[limit];
-		System.arraycopy(ALL_DROPZONE_SLOTS, 0, out, 0, limit);
-		return out;
-	}
 
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
@@ -385,29 +350,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 
 	private static Material materialOf(String name) {
 		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
-	}
-
-	private int tryPlaceInDropzone(SellState state, Inventory inventory, ItemStack stack) {
-		int remaining  = stack.getAmount();
-		int maxPerSlot = stack.getMaxStackSize();
-
-		for (int slot : state.dropzoneSlots) {
-			if (remaining <= 0) break;
-			ItemStack current = inventory.getItem(slot);
-			if (current == null || current.getType() == Material.AIR) {
-				ItemStack placed = stack.clone();
-				int       amount = Math.min(remaining, maxPerSlot);
-				placed.setAmount(amount);
-				inventory.setItem(slot, placed);
-				remaining -= amount;
-			} else if (current.isSimilar(stack) && current.getAmount() < maxPerSlot) {
-				int space = maxPerSlot - current.getAmount();
-				int add   = Math.min(space, remaining);
-				current.setAmount(current.getAmount() + add);
-				remaining -= add;
-			}
-		}
-		return stack.getAmount() - remaining;
 	}
 
 	private void scheduleRecompute(Player viewer, SellState state) {
@@ -426,8 +368,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		/** One component per dropzone slot, reused by every re-render (see {@link DropzoneSlotComponent}). */
 		final Map<Integer, DropzoneSlotComponent> dropzone = new HashMap<>();
 
-		@Getter
-		BigDecimal baseOffer = BigDecimal.ZERO;
 		BigDecimal   offeredTotal = BigDecimal.ZERO;
 		List<String> breakdown    = new ArrayList<>();
 
