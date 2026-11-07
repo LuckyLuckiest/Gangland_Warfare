@@ -84,6 +84,7 @@ class GadgetItemRefreshersCharacterisationTest {
 
 		assertNull(refresher.refresh(source(Material.MINECART, CarKey.CAR_ID.getKey(), "ghost", 1), null));
 		assertNull(refresher.refresh(source(Material.MINECART, CarKey.CAR_ID.getKey(), "", 2), null));
+		assertNull(refresher.refresh(new ItemStack(Material.STICK), null));
 	}
 
 	@Test
@@ -108,12 +109,13 @@ class GadgetItemRefreshersCharacterisationTest {
 	}
 
 	@Test
-	@DisplayName("jetpack: an unknown id and an empty id give null")
+	@DisplayName("jetpack: an unknown id, an empty id and a non-jetpack stack all give null")
 	void jetpack_refresh_nullCases() {
 		JetpackAddon         jetpackAddon = mock(JetpackAddon.class);
 		JetpackItemRefresher refresher    = new JetpackItemRefresher(jetpackAddon);
 
 		assertNull(refresher.refresh(source(Material.IRON_CHESTPLATE, JetpackKey.JETPACK_ID.getKey(), "ghost", 1), null));
 		assertNull(refresher.refresh(source(Material.IRON_CHESTPLATE, JetpackKey.JETPACK_ID.getKey(), "", 2), null));
+		assertNull(refresher.refresh(new ItemStack(Material.STICK), null));
 	}
 }
