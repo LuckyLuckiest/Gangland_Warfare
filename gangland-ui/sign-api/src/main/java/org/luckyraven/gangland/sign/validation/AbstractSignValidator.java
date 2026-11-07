@@ -1,11 +1,13 @@
 package org.luckyraven.gangland.sign.validation;
 
+import lombok.Getter;
 import org.bukkit.ChatColor;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.sign.SignType;
 
 public abstract class AbstractSignValidator implements SignValidator {
 
+	@Getter
 	protected final SignType signType;
 	private final   String   moneySymbol;
 
@@ -35,11 +37,6 @@ public abstract class AbstractSignValidator implements SignValidator {
 		validateAmount(lines[3], 3);
 
 		performCustomValidation(lines);
-	}
-
-	@Override
-	public SignType getSignType() {
-		return signType;
 	}
 
 	protected void validateSignType(String line, int lineNumber) throws SignValidationException {
