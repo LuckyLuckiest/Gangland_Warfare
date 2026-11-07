@@ -110,6 +110,7 @@ public final class TeleportCommand extends Command {
 
 			CountdownTimer timer = new CountdownTimer(getPlugin(), 30, null, null, t -> {
 				reconfirm.remove(player);
+				reconfirmTimer.remove(player, t);
 			});
 			reconfirmTimer.put(player, timer);
 
