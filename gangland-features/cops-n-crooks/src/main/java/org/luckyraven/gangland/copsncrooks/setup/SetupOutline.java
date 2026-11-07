@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -184,7 +185,7 @@ public final class SetupOutline implements BeanLifecycle {
 
 	private static Particle resolveParticle(String name) {
 		try {
-			Particle resolved = XParticle.valueOf(name.toUpperCase()).get();
+			Particle resolved = XParticle.valueOf(name.toUpperCase(Locale.ROOT)).get();
 			if (resolved != null) return resolved;
 		} catch (IllegalArgumentException exception) {
 			// fall through to the default
