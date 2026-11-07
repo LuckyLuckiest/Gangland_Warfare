@@ -34,6 +34,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -66,6 +67,7 @@ class FuelRefuelListenerRefuelTest {
 		}
 	}
 
+	private PerStackNbtAccessor nbt;
 	private FuelContract       fuelContract;
 	private FuelRefuelListener listener;
 	private Player             player;
@@ -75,7 +77,8 @@ class FuelRefuelListenerRefuelTest {
 
 	@BeforeEach
 	void setUp() {
-		NbtBridge.install(new PerStackNbtAccessor());
+		nbt = new PerStackNbtAccessor();
+		NbtBridge.install(nbt);
 
 		fuelContract = mock(FuelContract.class);
 		Fuel gasoline = Fuel.builder()
@@ -363,6 +366,80 @@ class FuelRefuelListenerRefuelTest {
 			verify(inventory, never()).setItemInOffHand(any());
 			verify(event, never()).setCancelled(true);
 			verifyNoFeedback(bar);
+		}
+	}
+	// ---------------------------------------------------------------- stacks of fuel items (GD-09)
+
+	/** A stack of {@code amount} fuel items whose clones carry the tags too, as a real {@code ItemStack} clone does. */
+	private ItemStack fuelStack(int amount, int current, int max) {
+		ItemStack stack = new ItemStack(Material.STICK, amount) {
+			@Override
+			public ItemStack clone() {
+				ItemStack copy = super.clone();
+				for (FuelKey key : new FuelKey[]{FuelKey.FUEL_ID, FuelKey.FUEL_CURRENT, FuelKey.FUEL_MAX}) {
+					nbt.put(copy, key.getKey(), nbt.get(this, key.getKey()));
+				}
+				return copy;
+			}
+		};
+		ItemBuilder builder = new ItemBuilder(stack);
+		builder.addTag(FuelKey.FUEL_ID.getKey(), FUEL_KEY);
+		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), current);
+		builder.addTag(FuelKey.FUEL_MAX.getKey(), max);
+		return builder.build();
+	}
+
+
+
+	/** Fuel in the hand stack plus every stack handed back to the inventory, counted per can. */
+	private int totalFuel(ItemStack inSlot, ArgumentCaptor<ItemStack> added) {
+		int total = inSlot.getAmount() * Fuel.getCurrentFuel(inSlot);
+		for (ItemStack stack : added.getAllValues()) {
+			total += stack.getAmount() * Fuel.getCurrentFuel(stack);
+		}
+		return total;
+	}
+
+	@Test
+	@DisplayName("GD-09 click: one material refuels one can of a stack, the rest keep their level")
+	void click_stackOfFuelItems_refuelsOnlyOneCan() {
+		ItemStack coal  = new ItemStack(Material.COAL, 3);
+		ItemStack fuel  = fuelStack(2, 10, 100);
+		InventoryClickEvent event = clickEvent(coal, fuel);
+
+		try (MockedStatic<ActionBarManager> bar = mockStatic(ActionBarManager.class)) {
+			listener.onInventoryClick(event);
+
+			ArgumentCaptor<ItemStack> slot = ArgumentCaptor.forClass(ItemStack.class);
+			verify(event).setCurrentItem(slot.capture());
+			ArgumentCaptor<ItemStack> added = ArgumentCaptor.forClass(ItemStack.class);
+			verify(inventory, atLeast(0)).addItem(added.capture());
+
+			assertEquals(2 * 10 + FUEL_PER_ITEM, totalFuel(slot.getValue(), added),
+			             "one coal adds one coal's fuel across the whole stack");
+			assertEquals(1, slot.getValue().getAmount());
+			assertEquals(10, Fuel.getCurrentFuel(slot.getValue()));
+			assertEquals(10 + FUEL_PER_ITEM, Fuel.getCurrentFuel(added.getValue()));
+		}
+	}
+
+	@Test
+	@DisplayName("GD-09 interact: one material refuels one can of a stack in the hand, the rest keep their level")
+	void interact_stackOfFuelItems_refuelsOnlyOneCan() {
+		ItemStack coal  = new ItemStack(Material.COAL, 3);
+		ItemStack fuel  = fuelStack(2, 10, 100);
+		PlayerInteractEvent event = interactEvent(coal, fuel);
+
+		try (MockedStatic<ActionBarManager> bar = mockStatic(ActionBarManager.class)) {
+			listener.onInteract(event);
+
+			ArgumentCaptor<ItemStack> slot = ArgumentCaptor.forClass(ItemStack.class);
+			verify(inventory).setItemInOffHand(slot.capture());
+			ArgumentCaptor<ItemStack> added = ArgumentCaptor.forClass(ItemStack.class);
+			verify(inventory, atLeast(0)).addItem(added.capture());
+
+			assertEquals(2 * 10 + FUEL_PER_ITEM, totalFuel(slot.getValue(), added),
+			             "one coal adds one coal's fuel across the whole stack");
 		}
 	}
 

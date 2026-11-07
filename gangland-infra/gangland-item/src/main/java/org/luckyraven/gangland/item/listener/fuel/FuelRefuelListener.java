@@ -143,12 +143,22 @@ public class FuelRefuelListener implements Listener {
 
 		// Write fuel directly to the item
 		int       newFuel = Math.min(max, current + fuel.getFuelPerItem());
-		ItemStack updated = Fuel.setCurrentFuel(fuelItem, newFuel);
+		// One material refuels one can: split a single can off a stack, the rest keep their level and stay in the slot
+		int       stackSize = fuelItem.getAmount();
+		ItemStack single    = stackSize > 1 ? fuelItem.clone() : fuelItem;
+		single.setAmount(1);
+		ItemStack updated = Fuel.setCurrentFuel(single, newFuel);
 
 		// Play feedback
 		player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
 		ActionBarManager.send(player, FuelBar.render(newFuel, max));
-		return updated;
+
+		if (stackSize == 1) return updated;
+
+		fuelItem.setAmount(stackSize - 1);
+		player.getInventory().addItem(updated).values()
+		      .forEach(left -> player.getWorld().dropItemNaturally(player.getLocation(), left));
+		return fuelItem;
 	}
 
 	/**
