@@ -1,14 +1,13 @@
 package org.luckyraven.gangland.command.sub.economy;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.command.sub.level.LevelCommand;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 
@@ -44,24 +43,7 @@ public final class EconomyCommand extends Command {
 	 */
 	static User<Player> resolveTarget(CommandSender sender, String[] args, int targetIdx,
 	                                  UserManager<Player> userManager) {
-		if (args.length > targetIdx) {
-			String name   = args[targetIdx];
-			Player target = Bukkit.getPlayer(name);
-
-			if (target == null) {
-				sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", name));
-				return null;
-			}
-
-			return userManager.getUser(target);
-		}
-
-		if (!(sender instanceof Player player)) {
-			sender.sendMessage(Messages.NOT_PLAYER.toString());
-			return null;
-		}
-
-		return userManager.getUser(player);
+		return LevelCommand.resolveTarget(sender, args, targetIdx, userManager);
 	}
 
 	@Override

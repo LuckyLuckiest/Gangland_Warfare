@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.module;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
  * folder. Metadata lookup, download and checksum verification are blocking network work, so everything after the
  * argument parse runs off the server thread and only the replies hop back onto it.
  */
+@CustomLog
 class ModuleInstallCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -99,6 +101,13 @@ class ModuleInstallCommand extends SubArgument {
 		sender.sendMessage(Messages.MODULE_INSTALL_STARTED.toString().replace("%module%", requested.toString()));
 
 		resolver.supplyAsync(() -> install(moduleArgument, requested, loadedIds, enabledPlugins))
+				.exceptionally(throwable -> {
+					log.error("Installing module {} failed unexpectedly", requested, throwable);
+
+					return List.of(Messages.MODULE_INSTALL_FAILED.toString()
+							               .replace("%code%", "unexpected")
+							               .replace("%reason%", String.valueOf(throwable.getMessage())));
+				})
 				.thenAccept(lines -> Bukkit.getScheduler()
 						.runTask(gangland, () -> lines.forEach(sender::sendMessage)));
 	}

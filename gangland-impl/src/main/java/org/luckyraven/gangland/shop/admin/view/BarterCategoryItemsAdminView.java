@@ -203,20 +203,7 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 		ItemStack source = category.getItems().get(index).clone();
 
 		ItemBuilder builder = new ItemBuilder(source);
-		BigDecimal  currentPrice;
-		if (builder.hasNBTTag(CategorySellValuator.SELL_PRICE_NBT_KEY)) {
-			Object raw = builder.getTagData(CategorySellValuator.SELL_PRICE_NBT_KEY);
-			if (raw instanceof Number n) {
-				currentPrice = BigDecimal.valueOf(n.doubleValue());
-			} else if (raw != null) {
-				try { currentPrice = new BigDecimal(String.valueOf(raw).trim()); } catch (
-						NumberFormatException ignored) { currentPrice = category.getBasePrice(); }
-			} else {
-				currentPrice = category.getBasePrice();
-			}
-		} else {
-			currentPrice = category.getBasePrice();
-		}
+		BigDecimal  currentPrice = currentItemPrice(builder, category.getBasePrice());
 
 		ItemStack decorated = refresherRegistry.decorate(source, flow.viewer());
 		String    label     = displayResolver.cleanDisplayName(decorated);
@@ -233,6 +220,21 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 			category.getItems().set(index, tagged);
 		};
 		flow.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
+	}
+
+	/** The item's own {@code sell_price} tag when it holds a number, else {@code base}. */
+	private static BigDecimal currentItemPrice(ItemBuilder builder, BigDecimal base) {
+		if (!builder.hasNBTTag(CategorySellValuator.SELL_PRICE_NBT_KEY)) return base;
+
+		Object raw = builder.getTagData(CategorySellValuator.SELL_PRICE_NBT_KEY);
+		if (raw instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
+		if (raw == null) return base;
+
+		try {
+			return new BigDecimal(String.valueOf(raw).trim());
+		} catch (NumberFormatException ignored) {
+			return base;
+		}
 	}
 
 	private void openBasePriceEditor(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session) {

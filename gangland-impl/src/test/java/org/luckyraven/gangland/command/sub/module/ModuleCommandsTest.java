@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -96,6 +97,21 @@ class ModuleCommandsTest {
 
 		assertEquals(List.of("gangland-gadget-0.10.0.jar"), jars(),
 		             "the refused 0.9.1 jar must not stay beside the new one (module.duplicate every boot)");
+	}
+
+	@Test
+	@DisplayName("T-959: an unexpected exception in the off-thread install work is reported to the sender, not swallowed")
+	void install_unexpectedException_isReportedToTheSender() throws Exception {
+		ModuleRepoFixture.publish(repo, "org.luckyraven:gangland-gadget:0.10.0", "gadget", "1.0");
+		when(moduleLoader.modulesDirectory()).thenThrow(new IllegalStateException("boom"));
+		Messages.init(new FakeMessageProvider()
+				              .withString("Commands.Module.Install_Started", "started %module%")
+				              .withString("Commands.Module.Install_Failed", "failed %code% %reason%"));
+
+		new ModuleInstallCommand(plugin, new Tree<>(), mock(Argument.class), moduleLoader, updateService)
+				.start(sender, "gadget", "0.10.0");
+
+		verify(sender).sendMessage(contains("failed unexpected boom"));
 	}
 
 	@Test

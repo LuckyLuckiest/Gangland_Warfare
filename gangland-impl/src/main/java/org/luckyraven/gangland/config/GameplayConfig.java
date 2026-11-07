@@ -51,6 +51,8 @@ import org.luckyraven.gangland.sign.service.SignInformation;
 import org.luckyraven.gangland.sign.service.SignInteraction;
 import org.luckyraven.gangland.sign.service.SignInteractionService;
 
+import java.util.List;
+
 /**
  * CONFIG-phase wiring for the gameplay-side managers: signs, items, inventory, money. The hologram + loot chest
  * beans that used to live here moved to the {@code gangland-lootchest} module's own {@code LootChestModuleConfig}
@@ -183,18 +185,13 @@ public class GameplayConfig {
 	public InventoryLoader inventoryLoader(FileManager fileManager, InventoryRuntimeContext inventoryRuntimeContext) {
 		InventoryLoader loader = new InventoryLoader(gangland, fileManager, inventoryRuntimeContext);
 
-		loader.addExpectedFile(new FileHandler(gangland, "alliance_stat", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "gang_stat", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "gang_ranking", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "player_profile", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "phone_banking", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "phone_bounty", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "phone_contacts", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "phone_gang_search", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "user_stat", "inventory", ".yml"));
+		List<String> defaults = List.of("alliance_stat", "gang_info", "gang_stat", "gang_ranking", "player_profile", "phone",
+		                                "phone_banking", "phone_bounty", "phone_contacts", "phone_gang",
+		                                "phone_gang_search", "user_stat");
+
+		for (String name : defaults) {
+			loader.addExpectedFile(new FileHandler(gangland, name, "inventory", ".yml"));
+		}
 		return loader;
 	}
 

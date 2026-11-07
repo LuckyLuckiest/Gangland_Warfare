@@ -3,7 +3,6 @@ package org.luckyraven.gangland.command.sub;
 import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
 import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;

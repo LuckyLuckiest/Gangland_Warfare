@@ -29,6 +29,7 @@ import org.luckyraven.keystone.item.ItemSerializerRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.luckyraven.keystone.bean.Qualifier;
 /**
@@ -212,7 +213,7 @@ public class SignManager extends SignService {
 				         + "or 'item-sell') — skipping this legacy alias.", legacyHeader, rewritten.headerKey());
 				continue;
 			}
-			SignType legacyType = new SignType(signPrefix + legacyHeader, legacyHeader.toUpperCase());
+			SignType legacyType = new SignType(signPrefix + legacyHeader, legacyHeader.toUpperCase(Locale.ROOT));
 
 			LegacyAliasSignAdapter adapter = new LegacyAliasSignAdapter(legacyType, delegate.getSignType(),
 					rewritten.definitionPrefix(), delegate.getSignParser(), delegate.getSignValidator());

@@ -13,6 +13,8 @@ import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.sign.type.WantedSign;
 
+import java.util.Locale;
+
 @RequiredArgsConstructor
 public class WantedAspect implements SignAspect {
 
@@ -77,13 +79,12 @@ public class WantedAspect implements SignAspect {
 
 		if (wantedType == null) return false;
 
-		if (wantedType != WantedSign.WantedType.INCREASE) {
-			Wanted wanted = user.getWanted();
+		Wanted wanted = user.getWanted();
 
-			return wanted.getLevel() > 0 && refusal(player, sign, wantedType) == null;
-		}
+		// INCREASE at the maximum adds nothing, and the money aspect (it runs first) would still charge the price
+		if (wantedType == WantedSign.WantedType.INCREASE) return wanted.getLevel() < wanted.getMaxLevel();
 
-		return true;
+		return wanted.getLevel() > 0 && refusal(player, sign, wantedType) == null;
 	}
 
 	@Override
@@ -125,7 +126,7 @@ public class WantedAspect implements SignAspect {
 		if (content == null) return null;
 
 		try {
-			return WantedSign.WantedType.valueOf(content.toUpperCase());
+			return WantedSign.WantedType.valueOf(content.toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException exception) {
 			return null;
 		}

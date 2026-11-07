@@ -21,6 +21,7 @@ import org.luckyraven.gangland.sign.validation.SignValidator;
 import org.luckyraven.gangland.sign.validation.WantedSignValidator;
 
 import java.util.List;
+import java.util.Locale;
 
 @RequiredArgsConstructor
 public class WantedSign implements Sign {
@@ -59,7 +60,7 @@ public class WantedSign implements Sign {
 	@Override
 	public SignFormat createFormat() {
 		String generated = signType.generated();
-		var    builder   = SignFormat.builder().formatName(generated.toLowerCase()).signTypePrefix(signType.typed());
+		var    builder   = SignFormat.builder().formatName(generated.toLowerCase(Locale.ROOT)).signTypePrefix(signType.typed());
 
 		var line1 = SignLineFormat.builder()
 		                          .lineNumber(0)
@@ -100,7 +101,7 @@ public class WantedSign implements Sign {
 		                              .build();
 
 		// add line
-		String increase = WantedType.INCREASE.name().toLowerCase();
+		String increase = WantedType.INCREASE.name().toLowerCase(Locale.ROOT);
 		var conditionalAdd = SignFormat.ConditionalLineFormat.builder()
 		                                                     .triggerLineNumber(2)
 		                                                     .triggerValue(increase)
@@ -110,7 +111,7 @@ public class WantedSign implements Sign {
 		                                                     .build();
 
 		// remove line
-		String remove = WantedType.REMOVE.name().toLowerCase();
+		String remove = WantedType.REMOVE.name().toLowerCase(Locale.ROOT);
 		var conditionalRemove = SignFormat.ConditionalLineFormat.builder()
 		                                                        .triggerLineNumber(2)
 		                                                        .triggerValue(remove)

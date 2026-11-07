@@ -72,23 +72,15 @@ class FuelRefuelCommand extends SubArgument {
 				return;
 			}
 
-			int refuelAmount;
+			Integer parsed = FuelCommand.parsePositiveAmount(user, args[2]);
 
-			try {
-				refuelAmount = Integer.parseInt(args[2]);
-			} catch (NumberFormatException exception) {
-				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
-				return;
-			}
+			if (parsed == null) return;
 
-			if (refuelAmount <= 0) {
-				user.sendMessage(Messages.FUEL_AMOUNT_INVALID.toString());
-				return;
-			}
+			int refuelAmount = parsed;
 
 			int       current    = Fuel.readFuelCurrent(held);
 			int       maxFuel    = Fuel.readFuelMax(held);
-			int       newCurrent = Math.min(current + refuelAmount, maxFuel);
+			int       newCurrent = (int) Math.min((long) current + refuelAmount, maxFuel);
 			ItemStack updated    = Fuel.writeFuelCurrent(held, newCurrent);
 			player.getInventory().setItemInMainHand(updated);
 

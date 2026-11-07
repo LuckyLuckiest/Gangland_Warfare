@@ -18,7 +18,6 @@ import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
 import org.luckyraven.gangland.database.tables.waypoint.WaypointTable;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.persistence.database.DatabaseHelper;
 import org.luckyraven.keystone.persistence.database.component.Table;
@@ -26,7 +25,6 @@ import org.luckyraven.keystone.persistence.database.query.QueryBuilder;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -62,16 +60,14 @@ class WaypointDeleteCommand extends SubArgument {
 	}
 
 	private void waypointDelete() {
-		Map<CommandSender, AtomicReference<Integer>> deleteWaypointId    = new HashMap<>();
-		Map<CommandSender, CountdownTimer>           deleteWaypointTimer = new HashMap<>();
+		Map<CommandSender, Waypoint>       deleteWaypoint      = new HashMap<>();
+		Map<CommandSender, CountdownTimer> deleteWaypointTimer = new HashMap<>();
 
 		ConfirmArgument confirm = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
-			int id = deleteWaypointId.get(sender).get();
+			Waypoint waypoint = deleteWaypoint.get(sender);
 
-			Waypoint waypoint = waypointManager.get(id);
-
-			// check if the waypoint exists
-			if (waypoint == null) {
+			// ids are compacted after every confirmed delete, so the pending waypoint is checked by instance, not by id
+			if (waypointManager.get(waypoint.getUsedId()) != waypoint) {
 				sender.sendMessage(Messages.INVALID_WAYPOINT.toString());
 				return;
 			}
@@ -97,7 +93,7 @@ class WaypointDeleteCommand extends SubArgument {
 			permissionManager.removePermission(format, true);
 
 			waypointManager.remove(waypoint);
-			deleteWaypointId.remove(sender);
+			deleteWaypoint.remove(sender);
 
 			CountdownTimer timer = deleteWaypointTimer.get(sender);
 			if (timer != null) {
@@ -133,9 +129,7 @@ class WaypointDeleteCommand extends SubArgument {
 				return;
 			}
 
-			AtomicReference<Integer> verifiedId = new AtomicReference<>(id);
-
-			deleteWaypointId.put(sender, verifiedId);
+			deleteWaypoint.put(sender, waypoint);
 
 			// notify the player to confirm the waypoint
 			sender.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"waypoint", "delete"}));
@@ -143,82 +137,15 @@ class WaypointDeleteCommand extends SubArgument {
 			confirm.lock(sender, s -> {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, null, time -> {
 					confirm.unlock(s);
-					deleteWaypointId.remove(s);
+					deleteWaypoint.remove(s);
 					deleteWaypointTimer.remove(s);
 				});
 
 				timer.start(true);
 				deleteWaypointTimer.put(s, timer);
 			});
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return null;
-
-			List<String> waypoints = new ArrayList<>();
-
-			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
-			if (user.hasGang()) {
-				int gangId = user.getGangId();
-
-				List<String> list = allWaypoints.stream()
-						.filter(waypoint -> waypoint.getGangId() == gangId)
-						.map(Waypoint::getName)
-						.toList();
-
-				waypoints.addAll(list);
-			}
-
-			List<String> list = allWaypoints.stream()
-					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-					.map(Waypoint::getName)
-					.toList();
-
-			waypoints.addAll(list);
-
-			return waypoints;
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return null;
-
-			List<Waypoint> waypoints = new ArrayList<>();
-
-			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
-			if (user.hasGang()) {
-				int gangId = user.getGangId();
-
-				List<Waypoint> list = allWaypoints.stream().filter(waypoint -> waypoint.getGangId() == gangId).toList();
-
-				waypoints.addAll(list);
-			}
-
-			List<Waypoint> list = allWaypoints.stream()
-					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-					.toList();
-
-			waypoints.addAll(list);
-
-			// First pass: count how many times each name appears
-			Map<String, Integer> nameCount = new HashMap<>();
-			for (Waypoint waypoint : waypoints) {
-				String name = waypoint.getName();
-				nameCount.put(name, nameCount.getOrDefault(name, 0) + 1);
-			}
-
-			// Second pass: build the map with name:id for duplicates
-			Map<String, String> waypointMap = new HashMap<>();
-			for (Waypoint waypoint : waypoints) {
-				String name        = waypoint.getName();
-				String displayName = nameCount.get(name) > 1 ? name + ":" + waypoint.getUsedId() : name;
-
-				waypointMap.put(displayName, String.valueOf(waypoint.getUsedId()));
-			}
-
-			return waypointMap;
-		});
+		}, sender -> WaypointCompletion.names(userManager, waypointManager, sender),
+				sender -> WaypointCompletion.nameToIdMap(userManager, waypointManager, sender));
 
 		this.addSubArgument(optional);
 	}

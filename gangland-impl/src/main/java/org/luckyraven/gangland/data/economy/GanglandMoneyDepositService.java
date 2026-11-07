@@ -118,10 +118,7 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 
 	@Override
 	public double getBalance(Player player) {
-		if (player == null) return 0;
-		User<Player> user = userManager.getUser(player);
-		if (user == null) return 0;
-		return user.getEconomy().getAmount().doubleValue();
+		return getBalanceAsAmount(player).doubleValue();
 	}
 
 	@Override

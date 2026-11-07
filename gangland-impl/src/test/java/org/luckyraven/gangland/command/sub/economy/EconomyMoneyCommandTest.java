@@ -11,9 +11,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.luckyraven.gangland.support.SettingsFixture;
 import org.luckyraven.keystone.economy.EconomyHandler;
+import org.mockito.MockedStatic;
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
@@ -121,6 +123,19 @@ class EconomyMoneyCommandTest {
 		EconomyWithdrawCommand.applyWithdraw(player, "300", target);
 
 		verify(player, times(1)).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("a balance already above the cap is not lowered by a deposit, and nothing is reported as granted")
+	void applyDeposit_balanceAboveCap_isNotLowered() {
+		try (MockedStatic<Settings> settings = mockStatic(Settings.class, CALLS_REAL_METHODS)) {
+			settings.when(Settings::getUserMaxBalance).thenReturn(new BigDecimal("500"));
+
+			EconomyDepositCommand.applyDeposit(sender, "10", target);
+
+			verify(economy, never()).setAmount(argThat(value -> value.compareTo(new BigDecimal("1000")) < 0));
+			settings.verify(() -> Settings.formatAmount(argThat(value -> value.signum() < 0)), never());
+		}
 	}
 
 }

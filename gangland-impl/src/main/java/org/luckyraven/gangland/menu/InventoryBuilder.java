@@ -102,8 +102,8 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			if (result.draggable()) component.interactive(true);
 
 			ClickHandler leftClick = resolveClickHandler(result.clickAction(), result.rawClickAction(), plugin,
-			                                             placeholder, player, opener);
-			ClickHandler rightClick = resolveRightClickHandler(slot, result, plugin, placeholder, player, opener);
+			                                             placeholder, opener);
+			ClickHandler rightClick = resolveRightClickHandler(slot, result, plugin, placeholder, opener);
 
 			// The old InventoryClickHandler (listener/InventoryClickHandler.java:48-62) only branched on
 			// event.isRightClick() before falling through to the left action for every other click type (middle,
@@ -143,7 +143,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		boolean             hasStatic  = staticItems != null && !staticItems.isEmpty();
 
 		List<ItemSourceEntry> sourceEntries = itemSourceProvider.getEntries(player, inventoryData.getItemSource());
-		List<PagedRegion.Entry> entries = renderTemplateEntries(sourceEntries, placeholder, player, plugin, opener);
+		List<PagedRegion.Entry> entries = renderTemplateEntries(sourceEntries, placeholder, player);
 
 		int        rows       = computeRows(entries.size(), hasStatic ? staticItems.size() : 0, hasStatic);
 		int        firstCol   = hasStatic ? 2 : 1;
@@ -291,7 +291,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 	}
 
 	private List<PagedRegion.Entry> renderTemplateEntries(List<ItemSourceEntry> sourceEntries, Placeholder placeholder,
-	                                                      Player player, JavaPlugin plugin, MenuOpener opener) {
+	                                                      Player player) {
 		Slot   template        = inventoryData.getItemTemplate();
 		String commandTemplate = inventoryData.getItemTemplateCommand();
 		if (template == null || template.getItem() == null) return List.of();
@@ -374,8 +374,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 	@Nullable
 	private ClickHandler resolveClickHandler(@Nullable ClickHandler prebuilt,
 	                                         @Nullable ConditionalSlotData.ClickAction raw,
-	                                         JavaPlugin plugin, Placeholder placeholder, Player player,
-	                                         MenuOpener opener) {
+	                                         JavaPlugin plugin, Placeholder placeholder, MenuOpener opener) {
 		if (raw instanceof ConditionalSlotData.AnvilAction anvilAction) {
 			return ctx -> openAnvilInventory(plugin, placeholder, ctx.player(), anvilAction);
 		}
@@ -387,8 +386,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 
 	@Nullable
 	private ClickHandler resolveRightClickHandler(Slot slot, ConditionalSlotResult result,
-	                                              JavaPlugin plugin, Placeholder placeholder, Player player,
-	                                              MenuOpener opener) {
+	                                              JavaPlugin plugin, Placeholder placeholder, MenuOpener opener) {
 		if (result.rawRightClickAction() instanceof ConditionalSlotData.AnvilAction anvilAction) {
 			return ctx -> openAnvilInventory(plugin, placeholder, ctx.player(), anvilAction);
 		}

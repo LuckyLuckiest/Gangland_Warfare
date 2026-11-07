@@ -43,6 +43,7 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.TimeMessages;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -408,7 +409,7 @@ public class CustomPlayerDeathListener implements Listener {
 
 	private GameMode parseGameMode(String name) {
 		try {
-			return GameMode.valueOf(name.toUpperCase());
+			return GameMode.valueOf(name.toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException ignored) {
 			return GameMode.SURVIVAL;
 		}

@@ -2,7 +2,6 @@ package org.luckyraven.gangland.command.sub;
 
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.Command;

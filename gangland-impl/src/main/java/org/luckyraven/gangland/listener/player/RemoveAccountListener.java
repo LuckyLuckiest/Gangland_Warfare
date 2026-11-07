@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.listener.player;
 
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,24 +34,6 @@ public final class RemoveAccountListener implements Listener {
 		this.ganglandDatabase        = ganglandDatabase;
 		this.userManager             = userManager;
 		this.offlineUserManager      = offlineUserManager;
-	}
-
-	@EventHandler(priority = EventPriority.LOWEST)
-	public synchronized void onPlayerQuit(PlayerQuitEvent event) {
-		Player player = event.getPlayer();
-
-		User<Player> user = userManager.getUser(player);
-
-		if (user == null) return;
-
-		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-			// CUT gate: the legacy InventoryHandler/InventoryRegistry clear() call that used to run here is gone —
-			// every menu now opens through keystone-inventory's InventoryService, whose own MenuListener.onQuit
-			// already returns any held items and untracks the player automatically (docket-recorded fixed-by-WS2:
-			// the static InventoryRegistry registry leaked across reloads, this call site was its last consumer).
-			user.getWanted().stopTimer();
-			user.getBounty().stopTimer();
-		});
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)

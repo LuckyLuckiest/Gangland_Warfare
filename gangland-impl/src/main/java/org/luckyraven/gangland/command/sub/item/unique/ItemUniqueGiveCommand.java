@@ -106,6 +106,8 @@ class ItemUniqueGiveCommand extends SubArgument {
 
 		if (uniqueItem == null) return false;
 
+		if (amount <= 0) return true;
+
 		ItemStack       sampleItem   = uniqueItem.buildItem(player);
 		int             maxStackSize = sampleItem.getMaxStackSize();
 		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);

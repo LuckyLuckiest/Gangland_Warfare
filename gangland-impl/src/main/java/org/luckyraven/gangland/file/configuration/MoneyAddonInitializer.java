@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.file.configuration;
 
+import lombok.Getter;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.item.money.MoneyAddon;
@@ -18,6 +19,7 @@ import java.util.Objects;
  */
 public class MoneyAddonInitializer implements FileInitializer, BeanLifecycle {
 
+	@Getter
 	private final FileHandler fileHandler;
 	private final MoneyAddon  moneyAddon;
 
@@ -33,11 +35,6 @@ public class MoneyAddonInitializer implements FileInitializer, BeanLifecycle {
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
-	}
-
-	@Override
-	public FileHandler getFileHandler() {
-		return fileHandler;
 	}
 
 	@Override

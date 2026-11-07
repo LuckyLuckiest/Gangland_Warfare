@@ -11,8 +11,8 @@ import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyItem;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
-import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 class ItemMoneyListCommand extends SubArgument {
 
@@ -31,17 +31,12 @@ class ItemMoneyListCommand extends SubArgument {
 
 			sender.sendMessage(Messages.ITEM_MONEY_LIST_HEADER.toString());
 
-			Iterator<Map.Entry<String, MoneyItem>> iterator = variations.entrySet().iterator();
-			StringBuilder                          builder  = new StringBuilder();
+			String line = variations.values()
+					.stream()
+					.map(variation -> "&b" + variation.getId())
+					.collect(Collectors.joining("&7, "));
 
-			while (iterator.hasNext()) {
-				MoneyItem variation = iterator.next().getValue();
-
-				builder.append("&b").append(variation.getId());
-				if (iterator.hasNext()) builder.append("&7, ");
-			}
-
-			sender.sendMessage(GanglandChatUtil.color(builder.toString()));
+			sender.sendMessage(GanglandChatUtil.color(line));
 		};
 	}
 

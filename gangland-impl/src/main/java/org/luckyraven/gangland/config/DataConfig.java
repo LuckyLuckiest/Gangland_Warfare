@@ -36,7 +36,6 @@ import org.luckyraven.gangland.core.wanted.WantedSettings;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.data.region.PlaceNames;
-import org.luckyraven.gangland.item.money.MoneyDropClassifier;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.util.Set;

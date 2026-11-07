@@ -16,6 +16,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -59,7 +60,7 @@ class WaypointCooldownCommand extends SubArgument {
 				return;
 			}
 
-			String value = args[2].toUpperCase();
+			String value = args[2].toUpperCase(Locale.ROOT);
 
 			// verify if it was a number
 			int changedValue;

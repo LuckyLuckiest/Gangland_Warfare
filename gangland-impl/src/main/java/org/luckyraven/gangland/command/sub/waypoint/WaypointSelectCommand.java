@@ -54,75 +54,8 @@ class WaypointSelectCommand extends SubArgument {
 			String argId = optionalArgument.getActualValue(args[2], sender);
 
 			select(userManager, waypointManager, (Player) sender, argId);
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return null;
-
-			List<String> waypoints = new ArrayList<>();
-
-			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
-			if (user.hasGang()) {
-				int gangId = user.getGangId();
-
-				List<String> list = allWaypoints.stream()
-						.filter(waypoint -> waypoint.getGangId() == gangId)
-						.map(Waypoint::getName)
-						.toList();
-
-				waypoints.addAll(list);
-			}
-
-			List<String> list = allWaypoints.stream()
-					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-					.map(Waypoint::getName)
-					.toList();
-
-			waypoints.addAll(list);
-
-			return waypoints;
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return null;
-
-			List<Waypoint> waypoints = new ArrayList<>();
-
-			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
-			if (user.hasGang()) {
-				int gangId = user.getGangId();
-
-				List<Waypoint> list = allWaypoints.stream().filter(waypoint -> waypoint.getGangId() == gangId).toList();
-
-				waypoints.addAll(list);
-			}
-
-			List<Waypoint> list = allWaypoints.stream()
-					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-					.toList();
-
-			waypoints.addAll(list);
-
-			// First pass: count how many times each name appears
-			Map<String, Integer> nameCount = new HashMap<>();
-			for (Waypoint waypoint : waypoints) {
-				String name = waypoint.getName();
-				nameCount.put(name, nameCount.getOrDefault(name, 0) + 1);
-			}
-
-			// Second pass: build the map with name:id for duplicates
-			Map<String, String> waypointMap = new HashMap<>();
-			for (Waypoint waypoint : waypoints) {
-				String name        = waypoint.getName();
-				String displayName = nameCount.get(name) > 1 ? name + ":" + waypoint.getUsedId() : name;
-
-				waypointMap.put(displayName, String.valueOf(waypoint.getUsedId()));
-			}
-
-			return waypointMap;
-		});
+		}, sender -> WaypointCompletion.names(userManager, waypointManager, sender),
+				sender -> WaypointCompletion.nameToIdMap(userManager, waypointManager, sender));
 
 		this.addSubArgument(select);
 	}

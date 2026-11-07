@@ -2,6 +2,7 @@ package org.luckyraven.gangland.listener.player;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -749,6 +750,117 @@ class EntityDamageListenerTest {
 		kill(listener(new WantedKillTrackers()), alice, bob);
 
 		assertEquals(0, aliceUser.getBounty().getNotoriety().signum());
+	}
+
+	// ── the credit for an NPC (a Player with no User) or a mob: routed to the tracker, or the plain star path ──
+
+	/** A tracker that counts every victim; {@code routes} is whether it takes the kills itself. */
+	private static WantedKillTracker countingTracker(boolean routes) {
+		WantedKillTracker tracker = mock(WantedKillTracker.class);
+		when(tracker.countsForWanted(any())).thenReturn(true);
+		when(tracker.appliesComboSwitch()).thenReturn(routes);
+		return tracker;
+	}
+
+	private void killMob(EntityDamageListener listener, Player killer, LivingEntity victim) {
+		when(victim.getHealth()).thenReturn(1.0);
+		when(victim.getLocation()).thenReturn(new Location(null, 0, 0, 0));
+
+		EntityDamageByEntityEvent event = mock(EntityDamageByEntityEvent.class);
+		when(event.getDamager()).thenReturn(killer);
+		when(event.getEntity()).thenReturn(victim);
+		when(event.getFinalDamage()).thenReturn(20.0);
+
+		listener.onPlayerEntityDeath(event);
+	}
+
+	@Test
+	@DisplayName("killing an NPC the tracker counts hands the kill to a routing tracker and adds no star itself")
+	void npcKill_routedTracker_getsTheKill() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  tracker  = countingTracker(true);
+		trackers.install(tracker);
+		Player npc = player("Npc");
+
+		kill(listener(trackers), alice, npc);
+
+		verify(tracker).recordKill(eq(alice), eq(aliceUser.getWanted()), eq(npc), anyInt());
+		assertEquals(1, aliceUser.getMobKills());
+		assertEquals(0, aliceUser.getKills(), "an NPC is no player kill");
+		assertEquals(0, aliceUser.getWanted().getLevel(), "the tracker decides the stars, not the listener");
+	}
+
+	@Test
+	@DisplayName("killing an NPC the tracker counts, with no routing, raises one CRIME star")
+	void npcKill_unroutedTracker_raisesOneStar() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  tracker  = countingTracker(false);
+		trackers.install(tracker);
+
+		kill(listener(trackers), alice, player("Npc"));
+
+		verify(tracker, never()).recordKill(any(), any(), any(), anyInt());
+		assertEquals(1, aliceUser.getMobKills());
+		assertEquals(1, aliceUser.getWanted().getLevel());
+		assertEquals(WantedCause.CRIME, lastChange().getCause());
+	}
+
+	@Test
+	@DisplayName("killing an NPC the tracker does not count is a mob kill and nothing else")
+	void npcKill_uncounted_isOnlyAMobKill() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  tracker  = mock(WantedKillTracker.class);
+		trackers.install(tracker);
+
+		kill(listener(trackers), alice, player("Npc"));
+
+		verify(tracker, never()).recordKill(any(), any(), any(), anyInt());
+		assertEquals(1, aliceUser.getMobKills());
+		assertEquals(0, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("killing a mob the tracker counts hands the kill to a routing tracker and adds no star itself")
+	void mobKill_routedTracker_getsTheKill() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  tracker  = countingTracker(true);
+		trackers.install(tracker);
+		LivingEntity mob = mock(LivingEntity.class);
+
+		killMob(listener(trackers), alice, mob);
+
+		verify(tracker).recordKill(eq(alice), eq(aliceUser.getWanted()), eq(mob), anyInt());
+		assertEquals(1, aliceUser.getMobKills());
+		assertEquals(0, aliceUser.getWanted().getLevel(), "the tracker decides the stars, not the listener");
+	}
+
+	@Test
+	@DisplayName("killing a mob the tracker counts, with no routing, raises one CRIME star")
+	void mobKill_unroutedTracker_raisesOneStar() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  tracker  = countingTracker(false);
+		trackers.install(tracker);
+
+		killMob(listener(trackers), alice, mock(LivingEntity.class));
+
+		verify(tracker, never()).recordKill(any(), any(), any(), anyInt());
+		assertEquals(1, aliceUser.getMobKills());
+		assertEquals(1, aliceUser.getWanted().getLevel());
+		assertEquals(WantedCause.CRIME, lastChange().getCause());
+	}
+
+	@Test
+	@DisplayName("killing a mob the tracker does not count is a mob kill and nothing else")
+	void mobKill_uncounted_isOnlyAMobKill() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  tracker  = mock(WantedKillTracker.class);
+		trackers.install(tracker);
+
+		killMob(listener(trackers), alice, mock(LivingEntity.class));
+
+		verify(tracker, never()).recordKill(any(), any(), any(), anyInt());
+		assertEquals(1, aliceUser.getMobKills());
+		assertEquals(0, aliceUser.getWanted().getLevel());
 	}
 
 	private static BigDecimal killEach(User<Player> killer) {

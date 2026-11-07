@@ -31,6 +31,7 @@ import org.luckyraven.keystone.shop.message.ShopMessageContract;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.IntFunction;
 
 /**
  * Root admin panel of the shop-admin flow. Three tabs (BUY entries / SELL categories / BARTER categories) with
@@ -182,50 +183,44 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 
 	private void renderBuyList(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                           ShopAdminFlowSession session) {
-		int base = session.currentPage * ENTRIES_PER_PAGE;
-		for (int i = 0; i < ENTRIES_PER_PAGE; i++) {
-			int entryIndex = base + i;
-			int slot       = INTERIOR_SLOTS[i];
-			if (entryIndex >= session.buyEntries.size()) continue;
-
-			ShopItemEntry entry      = session.buyEntries.get(entryIndex);
-			final int     finalIndex = entryIndex;
-			builder.slot(slot, ItemComponent.of(buildBuyEntryDisplay(entry, entryIndex))
-			                                .onLeftClick(ctx -> onBuyLeftClick(flow, session, finalIndex))
-			                                .onRightClick(ctx -> onBuyRightClick(flow, session, finalIndex)));
-		}
+		renderPage(builder, session, session.buyEntries, index -> {
+			ShopItemEntry entry = session.buyEntries.get(index);
+			return ItemComponent.of(buildBuyEntryDisplay(entry, index))
+			                    .onLeftClick(ctx -> onBuyLeftClick(flow, session, index))
+			                    .onRightClick(ctx -> onBuyRightClick(flow, session, index));
+		});
 	}
 
 	private void renderSellList(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                            ShopAdminFlowSession session) {
-		int base = session.currentPage * ENTRIES_PER_PAGE;
-		for (int i = 0; i < ENTRIES_PER_PAGE; i++) {
-			int categoryIndex = base + i;
-			int slot          = INTERIOR_SLOTS[i];
-			if (categoryIndex >= session.sellCategories.size()) continue;
-
-			SellCategory category   = session.sellCategories.get(categoryIndex);
-			final int    finalIndex = categoryIndex;
-			builder.slot(slot, ItemComponent.of(buildCategoryDisplay(category))
-			                                .onLeftClick(ctx -> onSellCategoryLeftClick(flow, session, finalIndex))
-			                                .onRightClick(ctx -> onSellCategoryRightClick(flow, session, finalIndex)));
-		}
+		renderPage(builder, session, session.sellCategories, index -> {
+			SellCategory category = session.sellCategories.get(index);
+			return ItemComponent.of(buildCategoryDisplay(category))
+			                    .onLeftClick(ctx -> onSellCategoryLeftClick(flow, session, index))
+			                    .onRightClick(ctx -> onSellCategoryRightClick(flow, session, index));
+		});
 	}
 
 	private void renderBarterList(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                              ShopAdminFlowSession session) {
+		renderPage(builder, session, session.barterCategories, index -> {
+			BarterCategory category = session.barterCategories.get(index);
+			return ItemComponent.of(buildBarterCategoryDisplay(category))
+			                    .onLeftClick(ctx -> onBarterCategoryLeftClick(flow, session, index))
+			                    .onRightClick(ctx -> onBarterCategoryRightClick(flow, session, index));
+		});
+	}
+
+	/** Fills the interior slots of the current page; {@code componentAt} builds the slot of one list index. */
+	private void renderPage(ChestMenuBuilder builder, ShopAdminFlowSession session, List<?> list,
+	                        IntFunction<ItemComponent> componentAt) {
 		int base = session.currentPage * ENTRIES_PER_PAGE;
 		for (int i = 0; i < ENTRIES_PER_PAGE; i++) {
-			int categoryIndex = base + i;
-			int slot          = INTERIOR_SLOTS[i];
-			if (categoryIndex >= session.barterCategories.size()) continue;
+			int index = base + i;
+			int slot  = INTERIOR_SLOTS[i];
+			if (index >= list.size()) continue;
 
-			BarterCategory category   = session.barterCategories.get(categoryIndex);
-			final int      finalIndex = categoryIndex;
-			builder.slot(slot, ItemComponent.of(buildBarterCategoryDisplay(category))
-			                                .onLeftClick(ctx -> onBarterCategoryLeftClick(flow, session, finalIndex))
-			                                .onRightClick(
-					                                ctx -> onBarterCategoryRightClick(flow, session, finalIndex)));
+			builder.slot(slot, componentAt.apply(index));
 		}
 	}
 

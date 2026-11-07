@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.bank;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -104,6 +105,37 @@ public final class BankCommand extends Command {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Resolves the bank owner named at {@code args[nameIdx]} for the admin-only cross-player deposit and withdraw
+	 * forms. Messages the sender and returns {@code null} when the sender lacks {@link #ADMIN_PERMISSION}, the player
+	 * is not online or the player has no bank; returns {@code null} silently when the player has no user.
+	 */
+	static User<Player> adminTarget(CommandSender sender, String[] args, int nameIdx, UserManager<Player> userManager) {
+		if (!sender.hasPermission(ADMIN_PERMISSION)) {
+			sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			return null;
+		}
+
+		String name         = args[nameIdx];
+		Player targetPlayer = Bukkit.getPlayer(name);
+
+		if (targetPlayer == null) {
+			sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", name));
+			return null;
+		}
+
+		User<Player> target = userManager.getUser(targetPlayer);
+
+		if (target == null) return null;
+
+		if (!target.hasBank()) {
+			sender.sendMessage(Messages.MUST_CREATE_BANK.toString());
+			return null;
+		}
+
+		return target;
 	}
 
 	@Override

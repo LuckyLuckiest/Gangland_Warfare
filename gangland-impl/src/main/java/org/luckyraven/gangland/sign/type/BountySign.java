@@ -21,6 +21,7 @@ import org.luckyraven.gangland.sign.validation.BountySignValidator;
 import org.luckyraven.gangland.sign.validation.SignValidator;
 
 import java.util.List;
+import java.util.Locale;
 
 @RequiredArgsConstructor
 public class BountySign implements Sign {
@@ -59,7 +60,7 @@ public class BountySign implements Sign {
 	@Override
 	public SignFormat createFormat() {
 		String generated = signType.generated();
-		var    builder   = SignFormat.builder().formatName(generated.toLowerCase()).signTypePrefix(signType.typed());
+		var    builder   = SignFormat.builder().formatName(generated.toLowerCase(Locale.ROOT)).signTypePrefix(signType.typed());
 
 		var line1 = SignLineFormat.builder()
 		                          .lineNumber(0)

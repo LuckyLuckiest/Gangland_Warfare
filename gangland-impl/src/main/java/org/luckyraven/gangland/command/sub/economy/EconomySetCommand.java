@@ -46,14 +46,16 @@ class EconomySetCommand extends SubArgument {
 		};
 	}
 
+	private void setTargetAmount(Argument argument, CommandSender sender, String[] args) {
+		User<Player> target = EconomyCommand.resolveTarget(sender, args, 3, userManager);
+
+		if (target == null) return;
+
+		applySet(sender, args[2], target);
+	}
+
 	private OptionalArgument setAmount() {
-		OptionalArgument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			User<Player> target = EconomyCommand.resolveTarget(sender, args, 3, userManager);
-
-			if (target == null) return;
-
-			applySet(sender, args[2], target);
-		}, sender -> List.of("<amount>"));
+		OptionalArgument amount = new OptionalArgument(gangland, tree, this::setTargetAmount, sender -> List.of("<amount>"));
 
 		amount.addSubArgument(targetPlayer());
 
@@ -61,13 +63,7 @@ class EconomySetCommand extends SubArgument {
 	}
 
 	private OptionalArgument targetPlayer() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			User<Player> target = EconomyCommand.resolveTarget(sender, args, 3, userManager);
-
-			if (target == null) return;
-
-			applySet(sender, args[2], target);
-		}, sender -> Bukkit.getOnlinePlayers()
+		return new OptionalArgument(gangland, tree, this::setTargetAmount, sender -> Bukkit.getOnlinePlayers()
 				.stream().map(Player::getName).toList());
 	}
 

@@ -5,6 +5,8 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.type.WantedSign;
 
+import java.util.Locale;
+
 public class WantedSignValidator extends AbstractSignValidator {
 
 	public WantedSignValidator(SignType signType) {
@@ -13,9 +15,9 @@ public class WantedSignValidator extends AbstractSignValidator {
 
 	@Override
 	protected boolean isValidContent(String content) {
-		String increase = WantedSign.WantedType.INCREASE.name().toLowerCase();
-		String remove   = WantedSign.WantedType.REMOVE.name().toLowerCase();
-		String clear    = WantedSign.WantedType.CLEAR.name().toLowerCase();
+		String increase = WantedSign.WantedType.INCREASE.name().toLowerCase(Locale.ROOT);
+		String remove   = WantedSign.WantedType.REMOVE.name().toLowerCase(Locale.ROOT);
+		String clear    = WantedSign.WantedType.CLEAR.name().toLowerCase(Locale.ROOT);
 
 		return content.equalsIgnoreCase(increase) || content.equalsIgnoreCase(remove) ||
 		       content.equalsIgnoreCase(clear);
@@ -32,34 +34,49 @@ public class WantedSignValidator extends AbstractSignValidator {
 		}
 
 		// If operation is not "clear", line 3 must have a number (amount of stars)
-		if (content.equalsIgnoreCase(WantedSign.WantedType.CLEAR.name().toLowerCase())) return;
+		if (content.equalsIgnoreCase(WantedSign.WantedType.CLEAR.name().toLowerCase(Locale.ROOT))) return;
 
 		String starsLine = ChatUtil.replaceColorCodes(lines[2], "");
 		if (starsLine == null || starsLine.isEmpty()) {
 			throw new SignValidationException("Line 3 must specify number of stars", 3, starsLine);
 		}
 
-		try {
-			int stars = Integer.parseInt(starsLine);
-			if (stars <= 0) {
-				throw new SignValidationException("Star count must be positive", 3, starsLine);
-			}
-		} catch (NumberFormatException exception) {
-			throw new SignValidationException("Star count must be a valid number", 3, starsLine);
-		}
+		requirePositiveInt(starsLine, 3, "Star count must be positive", "Star count must be a valid number");
 
 		String priceLine = ChatUtil.replaceColorCodes(lines[3], "");
 		if (priceLine.isEmpty()) {
 			return;
 		}
 
+		requirePositivePrice(priceLine, 4);
+	}
+
+	/** Reads the price the way {@code WantedParser} does: trimmed, money symbol and thousands commas dropped, decimals allowed. */
+	private static void requirePositivePrice(String text, int lineNumber) throws SignValidationException {
+		double value;
 		try {
-			int price = Integer.parseInt(priceLine);
-			if (price <= 0) {
-				throw new SignValidationException("Price must be positive", 4, priceLine);
+			value = Double.parseDouble(text.trim().replace(Settings.getMoneySymbol(), "").replace(",", ""));
+		} catch (NumberFormatException exception) {
+			throw new SignValidationException("Price must be a valid number", lineNumber, text);
+		}
+
+		if (!Double.isFinite(value)) {
+			throw new SignValidationException("Price must be a valid number", lineNumber, text);
+		}
+		if (value <= 0) {
+			throw new SignValidationException("Price must be positive", lineNumber, text);
+		}
+	}
+
+	private static void requirePositiveInt(String text, int lineNumber, String positiveMessage, String numberMessage)
+			throws SignValidationException {
+		try {
+			int value = Integer.parseInt(text.trim());
+			if (value <= 0) {
+				throw new SignValidationException(positiveMessage, lineNumber, text);
 			}
 		} catch (NumberFormatException exception) {
-			throw new SignValidationException("Price must be a valid number", 4, priceLine);
+			throw new SignValidationException(numberMessage, lineNumber, text);
 		}
 	}
 

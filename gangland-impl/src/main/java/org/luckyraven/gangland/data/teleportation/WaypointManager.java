@@ -194,10 +194,6 @@ public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 		return waypoints.size();
 	}
 
-	public Map<Player, Waypoint> getSelectedWaypoints() {
-		return Collections.unmodifiableMap(selectedWaypoints);
-	}
-
 	@Override
 	public String toString() {
 		return String.format("waypoints=%s", waypoints);

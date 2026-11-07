@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permission;
 import org.jetbrains.annotations.NotNull;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
@@ -189,14 +188,10 @@ public final class DebugCommand extends Command {
 	private @NotNull Argument getWaypointData() {
 		return new Argument(getPlugin(), "waypoint-data", getArgumentTree(), (argument, sender, args) -> {
 			Collection<Waypoint> values = waypointManager.getWaypoints().values();
-			if (sender instanceof Player) {
-				for (Waypoint waypoint : values) {
-					sender.sendMessage(convertToJson(waypoint.toString()));
-				}
-			} else {
-				for (Waypoint waypoint : values) {
-					sender.sendMessage(waypoint.toString());
-				}
+			boolean              json   = sender instanceof Player;
+
+			for (Waypoint waypoint : values) {
+				sender.sendMessage(json ? convertToJson(waypoint.toString()) : waypoint.toString());
 			}
 		});
 	}

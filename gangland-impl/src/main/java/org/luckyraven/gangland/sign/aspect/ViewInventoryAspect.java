@@ -17,6 +17,7 @@ import org.luckyraven.keystone.item.ItemBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @RequiredArgsConstructor
 public class ViewInventoryAspect implements SignAspect {
@@ -51,7 +52,7 @@ public class ViewInventoryAspect implements SignAspect {
 		String title = "&6View: &e" + itemName;
 
 		// Try to create item from material name
-		Material material = Material.matchMaterial(itemName.toUpperCase().replace(" ", "_"));
+		Material material = Material.matchMaterial(itemName.toUpperCase(Locale.ROOT).replace(" ", "_"));
 		if (material == null) {
 			material = Material.BARRIER;
 		}
