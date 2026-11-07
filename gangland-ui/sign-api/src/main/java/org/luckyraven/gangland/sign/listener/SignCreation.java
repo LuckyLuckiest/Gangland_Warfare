@@ -12,6 +12,8 @@ import org.luckyraven.gangland.sign.service.SignInformation;
 import org.luckyraven.gangland.sign.service.SignInteractionService;
 import org.luckyraven.gangland.sign.validation.SignValidationException;
 
+import java.util.Locale;
+
 @ListenerHandler
 @RequiredArgsConstructor
 public class SignCreation implements Listener {
@@ -23,7 +25,7 @@ public class SignCreation implements Listener {
 	public void onSignCreate(SignChangeEvent event) {
 		String[] lines = event.getLines();
 
-		if (lines[0] == null || !lines[0].toLowerCase().startsWith(signService.getPrefix().toLowerCase())) {
+		if (lines[0] == null || !lines[0].toLowerCase(Locale.ROOT).startsWith(signService.getPrefix().toLowerCase(Locale.ROOT))) {
 			return;
 		}
 

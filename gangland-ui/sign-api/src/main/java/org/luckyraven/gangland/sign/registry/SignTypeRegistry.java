@@ -4,6 +4,7 @@ import org.bukkit.ChatColor;
 import org.luckyraven.gangland.sign.SignType;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -54,7 +55,7 @@ public class SignTypeRegistry {
 	}
 
 	private String normalize(String line) {
-		return ChatColor.stripColor(line).toLowerCase().replaceAll("[\\[\\]]", "").trim();
+		return ChatColor.stripColor(line).toLowerCase(Locale.ROOT).replaceAll("[\\[\\]]", "").trim();
 	}
 
 }

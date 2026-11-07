@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Singular;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Getter
@@ -29,13 +30,13 @@ public class SignFormat {
 	}
 
 	public boolean hasConditionalFormat(int lineNumber, String triggerValue) {
-		String key = lineNumber + ":" + triggerValue.toLowerCase();
+		String key = lineNumber + ":" + triggerValue.toLowerCase(Locale.ROOT);
 
 		return conditionalLines.containsKey(key);
 	}
 
 	public ConditionalLineFormat getConditionalFormat(int lineNumber, String triggerValue) {
-		String key = lineNumber + ":" + triggerValue.toLowerCase();
+		String key = lineNumber + ":" + triggerValue.toLowerCase(Locale.ROOT);
 
 		return conditionalLines.get(key);
 	}
