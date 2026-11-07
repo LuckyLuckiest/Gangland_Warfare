@@ -32,7 +32,7 @@ public class JetpackItemRefresher implements ItemRefresher {
 		Jetpack jetpack = jetpackAddon.getJetpack(jetpackId);
 		if (jetpack == null) return null;
 
-		ItemStack built = context != null ? jetpack.buildItem(context) : jetpack.buildItem();
+		ItemStack built = jetpack.buildItem(context);
 		if (built == null) return null;
 
 		built.setAmount(source.getAmount());
