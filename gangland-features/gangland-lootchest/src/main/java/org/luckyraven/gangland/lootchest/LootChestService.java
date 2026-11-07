@@ -410,14 +410,21 @@ public abstract class LootChestService {
 	}
 
 	/**
-	 * Cancels all active loot and cracking sessions.
+	 * Cancels all active loot and cracking sessions, forgets the per-chest session sets and shared inventories they
+	 * registered, and closes the inventory of every looting player (their session is gone, so nothing would guard it).
 	 */
 	protected void cancelSessions() {
+		List<Player> viewers = activeSessions.values().stream().map(LootChestSession::getPlayer).toList();
+
 		activeSessions.values().forEach(LootChestSession::cancel);
 		crackingSessions.values().forEach(CrackingSession::cancel);
 
 		activeSessions.clear();
 		crackingSessions.clear();
+		activeSessionsByChest.clear();
+		sharedChestInventories.clear();
+
+		viewers.forEach(Player::closeInventory);
 	}
 
 	/**
