@@ -109,6 +109,8 @@ public class CopNpcFactory {
 		if (!NpcSupport.available()) return null;
 
 		CopTierConfig baseTier   = configProvider.getTierConfig(tier);
+		// A broken Cops.Tiers section: bail out before an NPC is registered that nothing would spawn or destroy
+		if (baseTier == null) return null;
 		CopTierConfig tierConfig = role != null ? role.overlay(baseTier) : baseTier;
 
 		CopNames names = configProvider.getNames() != null ? configProvider.getNames() : CopNames.DEFAULT;
