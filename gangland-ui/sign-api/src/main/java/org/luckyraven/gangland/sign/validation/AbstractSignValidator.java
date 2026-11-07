@@ -75,6 +75,10 @@ public abstract class AbstractSignValidator implements SignValidator {
 		try {
 			double price = Double.parseDouble(cleaned);
 
+			if (Double.isNaN(price)) {
+				throw new SignValidationException("Price must be a valid number", lineNumber, line);
+			}
+
 			if (price < 0) {
 				throw new SignValidationException("Price cannot be negative", lineNumber, line);
 			}
