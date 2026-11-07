@@ -639,16 +639,19 @@ public abstract class LootChestService {
 
 	private boolean hasRequiredItem(Player player, String itemKey) {
 		for (ItemStack item : player.getInventory().getContents()) {
-			if (item == null) continue;
-
-			ItemBuilder builder = new ItemBuilder(item);
-
-			if (!(builder.hasNBTTag("loot_key") && itemKey.equals(builder.getStringTagData("loot_key")))) continue;
-
-			return true;
+			if (carriesKey(item, itemKey)) return true;
 		}
 
 		return false;
+	}
+
+	/** Whether the stack is non-null and its {@code loot_key} NBT tag equals {@code itemKey}. */
+	private static boolean carriesKey(ItemStack item, String itemKey) {
+		if (item == null) return false;
+
+		ItemBuilder builder = new ItemBuilder(item);
+
+		return builder.hasNBTTag("loot_key") && itemKey.equals(builder.getStringTagData("loot_key"));
 	}
 
 	/**
@@ -660,11 +663,7 @@ public abstract class LootChestService {
 
 		for (int slot = 0; slot < contents.length; slot++) {
 			ItemStack item = contents[slot];
-			if (item == null) continue;
-
-			ItemBuilder builder = new ItemBuilder(item);
-
-			if (!(builder.hasNBTTag("loot_key") && itemKey.equals(builder.getStringTagData("loot_key")))) continue;
+			if (!carriesKey(item, itemKey)) continue;
 
 			int amount = item.getAmount();
 			if (amount <= 1) {
