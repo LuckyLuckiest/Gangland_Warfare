@@ -102,14 +102,19 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 
 		NodeReader rarityReader = NodeReader.of(raritySection, tiersReader.report());
 
-		for (LootItemReference.Rarity rarity : LootItemReference.Rarity.values()) {
-			String key = rarity.name().toLowerCase();
-			if (rarityReader.has(key)) {
-				rarityChances.put(rarity, rarityReader.get(key).asDouble().orDefault(0.0));
-			}
-		}
+		readRarities(rarityReader, rarityChances);
 
 		return rarityChances;
+	}
+
+	/** Puts the chance of every rarity the reader names (by its lower-cased constant name) into {@code target}. */
+	private void readRarities(NodeReader rarityReader, Map<LootItemReference.Rarity, Double> target) {
+		for (LootItemReference.Rarity rarity : LootItemReference.Rarity.values()) {
+			String key = rarity.name().toLowerCase(Locale.ROOT);
+			if (rarityReader.has(key)) {
+				target.put(rarity, rarityReader.get(key).asDouble().orDefault(0.0));
+			}
+		}
 	}
 
 	private Map<String, LootTier> loadTiers(NodeReader tiersReader, ConfigReport report) {
@@ -214,12 +219,7 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 
 		NodeReader rarityReader = NodeReader.of(raritySection, tableReader.report());
 
-		for (LootItemReference.Rarity rarity : LootItemReference.Rarity.values()) {
-			String key = rarity.name().toLowerCase();
-			if (rarityReader.has(key)) {
-				overrides.put(rarity, rarityReader.get(key).asDouble().orDefault(0.0));
-			}
-		}
+		readRarities(rarityReader, overrides);
 
 		return overrides;
 	}

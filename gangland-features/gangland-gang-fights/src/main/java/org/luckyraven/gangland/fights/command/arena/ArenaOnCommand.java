@@ -1,9 +1,7 @@
 package org.luckyraven.gangland.fights.command.arena;
 
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.fights.arena.Arena;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.datastructure.Tree;
@@ -21,16 +19,7 @@ public final class ArenaOnCommand extends SubArgument {
 	}
 
 	private void run(CommandSender sender, String name) {
-		Arena arena = deps.registry().byName(name).orElse(null);
-		if (arena == null) {
-			sender.sendMessage(deps.text().text("Arenas.Not_Found", "name", name));
-			return;
-		}
-		if (!deps.registry().setEnabled(arena.name(), true)) {
-			sender.sendMessage(deps.text().text("Arenas.Save_Failed"));
-			return;
-		}
-		sender.sendMessage(deps.text().text("Arenas.Enabled", "name", arena.name()));
+		deps.setEnabled(sender, name, true, "Arenas.Enabled");
 	}
 
 	@Override

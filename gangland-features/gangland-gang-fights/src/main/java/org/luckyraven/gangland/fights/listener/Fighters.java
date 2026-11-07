@@ -53,7 +53,7 @@ final class Fighters {
 		World world = Bukkit.getWorld(to.world());
 		if (world == null) return false;
 
-		Location target = new Location(world, to.x(), to.y(), to.z(), to.yaw(), to.pitch());
+		Location target = to.toLocation(world);
 		return ExpectedTeleports.run(player.getUniqueId(), () -> player.teleport(target));
 	}
 

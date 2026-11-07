@@ -410,14 +410,21 @@ public abstract class LootChestService {
 	}
 
 	/**
-	 * Cancels all active loot and cracking sessions.
+	 * Cancels all active loot and cracking sessions, forgets the per-chest session sets and shared inventories they
+	 * registered, and closes the inventory of every looting player (their session is gone, so nothing would guard it).
 	 */
 	protected void cancelSessions() {
+		List<Player> viewers = activeSessions.values().stream().map(LootChestSession::getPlayer).toList();
+
 		activeSessions.values().forEach(LootChestSession::cancel);
 		crackingSessions.values().forEach(CrackingSession::cancel);
 
 		activeSessions.clear();
 		crackingSessions.clear();
+		activeSessionsByChest.clear();
+		sharedChestInventories.clear();
+
+		viewers.forEach(Player::closeInventory);
 	}
 
 	/**
@@ -541,14 +548,8 @@ public abstract class LootChestService {
 		// PERMISSION tiers never consume and never flip the flag — every player keeps re-checking.
 		if (tier != null && !chestData.isUnlocked()) {
 			switch (tier.unlockRequirement()) {
-				case LOCKPICK -> {
-					String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "lockpick";
-					consumeRequiredItem(player, itemId);
-					chestData.setUnlocked(true);
-					cooldownManager.showAvailableHologram(chestData);
-				}
-				case KEY -> {
-					String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "key_" + tier.id();
+				case LOCKPICK, KEY -> {
+					String itemId = unlockItemId(tier);
 					consumeRequiredItem(player, itemId);
 					chestData.setUnlocked(true);
 					cooldownManager.showAvailableHologram(chestData);
@@ -616,12 +617,12 @@ public abstract class LootChestService {
 		return switch (tier.unlockRequirement()) {
 			case NONE -> OpenResult.SUCCESS;
 			case LOCKPICK -> {
-				String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "lockpick";
+				String itemId = unlockItemId(tier);
 
 				yield hasRequiredItem(player, itemId) ? OpenResult.SUCCESS : OpenResult.REQUIRES_LOCKPICK;
 			}
 			case KEY -> {
-				String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "key_" + tier.id();
+				String itemId = unlockItemId(tier);
 
 				yield hasRequiredItem(player, itemId) ? OpenResult.SUCCESS : OpenResult.REQUIRES_KEY;
 			}
@@ -633,18 +634,31 @@ public abstract class LootChestService {
 		};
 	}
 
+	/**
+	 * The {@code loot_key} NBT value a LOCKPICK / KEY tier asks for: its own {@code unlockItemId}, else {@code lockpick}
+	 * for LOCKPICK and {@code key_<tier id>} for KEY. Only meaningful for those two requirements.
+	 */
+	private static String unlockItemId(LootTier tier) {
+		if (tier.unlockItemId() != null) return tier.unlockItemId();
+
+		return tier.unlockRequirement() == LootTier.UnlockRequirement.LOCKPICK ? "lockpick" : "key_" + tier.id();
+	}
+
 	private boolean hasRequiredItem(Player player, String itemKey) {
 		for (ItemStack item : player.getInventory().getContents()) {
-			if (item == null) continue;
-
-			ItemBuilder builder = new ItemBuilder(item);
-
-			if (!(builder.hasNBTTag("loot_key") && itemKey.equals(builder.getStringTagData("loot_key")))) continue;
-
-			return true;
+			if (carriesKey(item, itemKey)) return true;
 		}
 
 		return false;
+	}
+
+	/** Whether the stack is non-null and its {@code loot_key} NBT tag equals {@code itemKey}. */
+	private static boolean carriesKey(ItemStack item, String itemKey) {
+		if (item == null) return false;
+
+		ItemBuilder builder = new ItemBuilder(item);
+
+		return builder.hasNBTTag("loot_key") && itemKey.equals(builder.getStringTagData("loot_key"));
 	}
 
 	/**
@@ -656,11 +670,7 @@ public abstract class LootChestService {
 
 		for (int slot = 0; slot < contents.length; slot++) {
 			ItemStack item = contents[slot];
-			if (item == null) continue;
-
-			ItemBuilder builder = new ItemBuilder(item);
-
-			if (!(builder.hasNBTTag("loot_key") && itemKey.equals(builder.getStringTagData("loot_key")))) continue;
+			if (!carriesKey(item, itemKey)) continue;
 
 			int amount = item.getAmount();
 			if (amount <= 1) {

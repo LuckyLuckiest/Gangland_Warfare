@@ -107,6 +107,6 @@ public final class FightSessionListener implements Listener {
 
 	private static @Nullable Location location(ArenaPoint point) {
 		World world = Bukkit.getWorld(point.world());
-		return world == null ? null : new Location(world, point.x(), point.y(), point.z(), point.yaw(), point.pitch());
+		return world == null ? null : point.toLocation(world);
 	}
 }

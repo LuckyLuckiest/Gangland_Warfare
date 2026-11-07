@@ -13,6 +13,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.BeforeAll;
@@ -147,9 +148,10 @@ class LootChestListenerTest {
 	}
 
 	@Test
-	@DisplayName("HOTBAR_SWAP onto a top slot is cancelled (deposit into the chest)")
-	void hotbarSwap_ontoTopSlot_isCancelled() {
+	@DisplayName("HOTBAR_SWAP onto a top slot while the hotbar slot holds an item is cancelled (deposit into the chest)")
+	void hotbarSwap_withAnItemInTheHotbarSlot_isCancelled() {
 		InventoryClickEvent event = clickEvent(InventoryAction.HOTBAR_SWAP, topInventory, 2);
+		hotbarSlot(event, 4, itemStackOf(Material.STONE));
 
 		listener.onInventoryClick(event);
 
@@ -157,13 +159,42 @@ class LootChestListenerTest {
 	}
 
 	@Test
-	@DisplayName("HOTBAR_MOVE_AND_READD onto a top slot is cancelled (deposit into the chest)")
-	void hotbarMoveAndReadd_ontoTopSlot_isCancelled() {
+	@DisplayName("HOTBAR_MOVE_AND_READD onto a top slot while the hotbar slot holds an item is cancelled (deposit into the chest)")
+	void hotbarMoveAndReadd_withAnItemInTheHotbarSlot_isCancelled() {
 		InventoryClickEvent event = clickEvent(InventoryAction.HOTBAR_MOVE_AND_READD, topInventory, 8);
+		hotbarSlot(event, 0, itemStackOf(Material.STONE));
 
 		listener.onInventoryClick(event);
 
 		verify(event).setCancelled(true);
+	}
+
+	@Test
+	@DisplayName("T-953: HOTBAR_SWAP out of a top slot into an empty hotbar slot is a take, not cancelled")
+	void hotbarSwap_intoAnEmptyHotbarSlot_isATake() {
+		InventoryClickEvent event = clickEvent(InventoryAction.HOTBAR_SWAP, topInventory, 2);
+		ItemStack taken = itemStackOf(Material.DIAMOND);
+		when(event.getCurrentItem()).thenReturn(taken);
+		hotbarSlot(event, 4, null);
+
+		listener.onInventoryClick(event);
+
+		verify(event, never()).setCancelled(true);
+		verify(session).markItemTaken();
+	}
+
+	@Test
+	@DisplayName("a hotbar swap whose hotbar slot holds air is a take, not cancelled")
+	void hotbarSwap_intoAnAirHotbarSlot_isATake() {
+		InventoryClickEvent event = clickEvent(InventoryAction.HOTBAR_SWAP, topInventory, 2);
+		ItemStack taken = itemStackOf(Material.DIAMOND);
+		ItemStack air   = itemStackOf(Material.AIR);
+		when(event.getCurrentItem()).thenReturn(taken);
+		hotbarSlot(event, 4, air);
+
+		listener.onInventoryClick(event);
+
+		verify(event, never()).setCancelled(true);
 	}
 
 	@Test
@@ -283,6 +314,14 @@ class LootChestListenerTest {
 		Block block = mock(Block.class);
 		when(block.getLocation()).thenReturn(location);
 		return block;
+	}
+
+	/** Makes the number-key press of {@code event} target hotbar {@code button}, whose slot holds {@code item}. */
+	private void hotbarSlot(InventoryClickEvent event, int button, ItemStack item) {
+		PlayerInventory inventory = mock(PlayerInventory.class);
+		when(player.getInventory()).thenReturn(inventory);
+		when(inventory.getItem(button)).thenReturn(item);
+		when(event.getHotbarButton()).thenReturn(button);
 	}
 
 	private static ItemStack itemStackOf(Material material) {

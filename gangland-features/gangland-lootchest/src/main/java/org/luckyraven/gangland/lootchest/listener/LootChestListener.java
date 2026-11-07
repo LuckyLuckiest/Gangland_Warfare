@@ -19,6 +19,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
@@ -139,12 +140,25 @@ public class LootChestListener implements Listener {
 
 		if (event.getClickedInventory() == top) {
 			return switch (action) {
-				case PLACE_ALL, PLACE_ONE, PLACE_SOME, SWAP_WITH_CURSOR, HOTBAR_SWAP, HOTBAR_MOVE_AND_READD -> true;
+				case PLACE_ALL, PLACE_ONE, PLACE_SOME, SWAP_WITH_CURSOR -> true;
+				case HOTBAR_SWAP, HOTBAR_MOVE_AND_READD -> hotbarSlotHoldsAnItem(event);
 				default -> false;
 			};
 		}
 
 		return action == InventoryAction.MOVE_TO_OTHER_INVENTORY && event.getClickedInventory() != top;
+	}
+
+	/**
+	 * A number-key press swaps the clicked slot with a hotbar slot, so it deposits only when that hotbar slot holds an
+	 * item; with an empty one it is a pure take. An unknown hotbar slot counts as holding an item (cancel).
+	 */
+	private boolean hotbarSlotHoldsAnItem(InventoryClickEvent event) {
+		int button = event.getHotbarButton();
+		if (button < 0) return true;
+
+		ItemStack item = event.getWhoClicked().getInventory().getItem(button);
+		return item != null && !item.getType().isAir();
 	}
 
 	@EventHandler

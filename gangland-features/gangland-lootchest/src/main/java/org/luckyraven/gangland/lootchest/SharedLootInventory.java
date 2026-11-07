@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.lootchest;
 
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -18,6 +19,7 @@ import org.luckyraven.keystone.util.ChatUtil;
  */
 public class SharedLootInventory implements InventoryHolder {
 
+	@Getter
 	private final int       size;
 	private final Inventory inventory;
 
@@ -26,10 +28,6 @@ public class SharedLootInventory implements InventoryHolder {
 		// data (LootChestWand), so normalize defensively rather than let a bad value throw at open time.
 		this.size      = Math.min((int) Math.ceil(size / 9.0) * 9, 54);
 		this.inventory = Bukkit.createInventory(this, this.size, ChatUtil.color(title));
-	}
-
-	public int getSize() {
-		return size;
 	}
 
 	@Override
