@@ -736,14 +736,6 @@ public class CarService implements BeanLifecycle {
 	}
 
 	/**
-	 * Wraps an already-existing world entity in a {@link MinecartVehicle} adapter.
-	 */
-	@Nullable
-	private VehicleEntity wrapExistingEntity(Entity entity, Car car) {
-		return entity instanceof Minecart m ? new MinecartVehicle(car, m) : null;
-	}
-
-	/**
 	 * Builds a {@link ParkedCar} DB record from a {@link ParkedVehicle} using the provided location. Reuses the
 	 * existing {@code dbId} from {@link #parkedCarRecords} if one exists for this entity, otherwise generates a new
 	 * UUID.

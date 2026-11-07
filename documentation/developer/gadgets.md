@@ -26,16 +26,6 @@ gangland-gadget
     depends on ──> plugin-persistence (IRepository for ParkedCar)
 ```
 
-### Gadget Types
-
-```java
-public enum GadgetType {
-	CAR,
-	WEARABLE,
-	JETPACK
-}
-```
-
 ---
 
 ## Car System (15 classes)

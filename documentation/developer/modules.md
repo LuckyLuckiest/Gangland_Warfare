@@ -995,13 +995,7 @@ Custom weapon events (10 total).
 
 **Purpose:** Vehicle system (cars), jetpacks, fuel management, and wearable equipment mechanics.
 
-**Java Files:** 47 | **Package:** `org.luckyraven.gangland.gadget.*`
-
-### Root Class
-
-| Class             | Description                                  |
-|-------------------|----------------------------------------------|
-| `GadgetType.java` | Enum of gadget categories: `CAR`, `JETPACK`. |
+**Java Files:** 46 | **Package:** `org.luckyraven.gangland.gadget.*`
 
 ### Subpackage: `car/`
 

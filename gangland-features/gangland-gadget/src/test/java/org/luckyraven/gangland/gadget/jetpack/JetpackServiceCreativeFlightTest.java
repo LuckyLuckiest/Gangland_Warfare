@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
+import org.luckyraven.gangland.gadget.grapple.GrappleService;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
 import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -44,7 +45,7 @@ class JetpackServiceCreativeFlightTest {
 				.thenReturn(mock(BukkitTask.class));
 
 		return new JetpackService(mock(FuelService.class), mock(JavaPlugin.class), mock(GadgetPhysicsConfig.class),
-		                          mock(JetpackAddon.class));
+		                          mock(JetpackAddon.class), mock(GrappleService.class));
 	}
 
 	private Player creativePlayer(Jetpack jetpack) {

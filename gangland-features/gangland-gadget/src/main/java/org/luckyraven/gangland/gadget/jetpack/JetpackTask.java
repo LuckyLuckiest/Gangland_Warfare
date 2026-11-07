@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.gadget.jetpack;
 
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
@@ -76,12 +75,7 @@ public class JetpackTask extends BukkitRunnable {
 	}
 
 	private boolean checkGuards(Player player, Jetpack jetpack) {
-		if (!player.isOnline()) {
-			jetpackService.deactivate(player);
-			cancel();
-			return true;
-		}
-		if (!isWearingJetpack(player, jetpack)) {
+		if (!player.isOnline() || !isWearingJetpack(player, jetpack)) {
 			jetpackService.deactivate(player);
 			cancel();
 			return true;

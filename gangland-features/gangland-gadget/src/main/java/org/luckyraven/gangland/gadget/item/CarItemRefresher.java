@@ -33,7 +33,7 @@ public class CarItemRefresher implements ItemRefresher {
 		Car car = carAddon.getCar(carId);
 		if (car == null) return null;
 
-		ItemStack built = context != null ? car.buildItem(context) : car.buildItem();
+		ItemStack built = car.buildItem(context);
 		if (built == null) return null;
 
 		built.setAmount(source.getAmount());

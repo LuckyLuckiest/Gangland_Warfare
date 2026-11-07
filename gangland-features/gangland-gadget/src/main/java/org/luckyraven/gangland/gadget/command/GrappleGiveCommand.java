@@ -1,10 +1,7 @@
 package org.luckyraven.gangland.gadget.command;
 
-import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
@@ -18,7 +15,6 @@ import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * {@code /glw grapple give <id> [amount]}. Self-give, mirrors {@link JetpackGiveCommand} exactly (itself mirroring
@@ -104,36 +100,7 @@ class GrappleGiveCommand extends SubArgument {
 
 		if (grapple == null) return false;
 
-		ItemStack       sampleItem   = grapple.buildItem(player);
-		int             maxStackSize = sampleItem.getMaxStackSize();
-		// Defensive floor/cap (mirrors JetpackGiveCommand/WS7 G4 review I2): the command layer already rejects
-		// amount <= 0 before calling this method, but clamping here too means a non-positive amount can never
-		// produce a negative array size regardless of caller.
-		int             cappedAmount = Math.max(0, Math.min(amount, 36 * maxStackSize));
-		int             slots        = (int) Math.ceil(cappedAmount / (double) maxStackSize);
-		int             amountLeft   = cappedAmount;
-		PlayerInventory inventory    = player.getInventory();
-		ItemStack[]     items        = new ItemStack[slots];
-
-		for (int i = 0; i < items.length; ++i) {
-			int amountGive = Math.min(amountLeft, maxStackSize);
-
-			if (amountGive <= 0) break;
-
-			ItemStack item = grapple.buildItem(player);
-			item.setAmount(amountGive);
-			items[i] = item;
-			amountLeft -= amountGive;
-		}
-
-		Map<Integer, ItemStack> left = inventory.addItem(items);
-
-		World world = player.getWorld();
-		if (world != null) {
-			for (ItemStack item : left.values()) {
-				world.dropItemNaturally(player.getLocation(), item);
-			}
-		}
+		GiveItems.give(player, () -> grapple.buildItem(player), amount);
 
 		return true;
 	}

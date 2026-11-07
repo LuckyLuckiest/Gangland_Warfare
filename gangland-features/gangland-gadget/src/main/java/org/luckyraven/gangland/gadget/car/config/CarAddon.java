@@ -74,7 +74,7 @@ public class CarAddon extends CarManager implements FileInitializer {
 				continue;
 			}
 
-			Material material = XMaterial.matchXMaterial(materialString).orElse(XMaterial.MINECART).get();
+			Material material = XMaterial.matchXMaterial(materialString).map(XMaterial::get).orElse(null);
 
 			if (material == null) {
 				log.warn("Car '{}' has invalid Material '{}' - skipped.", key, materialString);

@@ -5,6 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
+import org.luckyraven.gangland.gadget.grapple.GrappleService;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
 import org.luckyraven.gangland.item.fuel.FuelService;
 
@@ -37,7 +38,7 @@ class JetpackServiceActivatePermissionTest {
 		GadgetPhysicsConfig physicsConfig = mock(GadgetPhysicsConfig.class);
 		JetpackAddon        jetpackAddon  = mock(JetpackAddon.class);
 
-		JetpackService service = new JetpackService(fuelService, plugin, physicsConfig, jetpackAddon);
+		JetpackService service = new JetpackService(fuelService, plugin, physicsConfig, jetpackAddon, mock(GrappleService.class));
 
 		Jetpack jetpack = Jetpack.builder().jetpackId("locked").build();
 		Player  player  = mock(Player.class);
