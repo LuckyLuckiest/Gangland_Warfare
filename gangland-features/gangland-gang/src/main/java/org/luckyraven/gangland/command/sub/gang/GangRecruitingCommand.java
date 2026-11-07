@@ -49,7 +49,7 @@ final class GangRecruitingCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			Gang gang = senderGang(sender);
+			Gang gang = GangChatCommand.senderGang(sender, userManager, gangManager);
 			if (gang == null) {
 				return;
 			}
@@ -76,7 +76,7 @@ final class GangRecruitingCommand extends SubArgument {
 			return;
 		}
 
-		Gang gang = senderGang(sender);
+		Gang gang = GangChatCommand.senderGang(sender, userManager, gangManager);
 		if (gang == null) {
 			return;
 		}
@@ -101,21 +101,6 @@ final class GangRecruitingCommand extends SubArgument {
 
 	private static String stateWord(Gang gang) {
 		return gang.getState() == Gang.State.OPEN ? "open" : "invite only";
-	}
-
-	/** The sender's gang, or {@code null} after telling a sender with no gang (or the console) so. */
-	private Gang senderGang(CommandSender sender) {
-		if (!(sender instanceof Player player)) {
-			sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
-			return null;
-		}
-
-		User<Player> user = userManager.getUser(player);
-		Gang gang = user == null || !user.hasGang() ? null : gangManager.getGang(user.getGangId());
-		if (gang == null) {
-			sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
-		}
-		return gang;
 	}
 
 }
