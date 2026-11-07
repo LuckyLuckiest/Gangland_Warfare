@@ -13,7 +13,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyDepositService;
-import org.luckyraven.gangland.item.money.MoneyItem;
 import org.luckyraven.gangland.item.money.MoneyItemUtil;
 
 import java.util.HashSet;
@@ -114,19 +113,7 @@ public class MoneyProximityPickupTask extends BukkitRunnable {
 			if (!depositService.depositPickup(player, total, variationId)) continue;
 
 			item.remove();
-			playPickupSound(player, variationId);
+			MoneyPickupSound.play(moneyAddon, player, variationId);
 		}
-	}
-
-	private void playPickupSound(Player player, String variationId) {
-		if (variationId == null) return;
-
-		MoneyItem variation = moneyAddon.getVariation(variationId);
-		if (variation == null) return;
-
-		MoneyItem.PickupSound sound = variation.getPickupSound();
-		if (sound == null) return;
-
-		sound.soundConfig().playSound(player);
 	}
 }

@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * The {@link PlaceholderContribution} beans {@code GanglandPlaceholder} can draw on, looked up once from the root
@@ -27,21 +28,13 @@ public final class PlaceholderContributions {
 	/** The first non-null playerless answer from any contribution, or {@code null} if none owns it. */
 	@Nullable
 	public String resolveSetting(String parameter) {
-		for (PlaceholderContribution contribution : contributions) {
-			String value = contribution.resolveSetting(parameter);
-			if (value != null) return value;
-		}
-		return null;
+		return firstNonNull(contribution -> contribution.resolveSetting(parameter));
 	}
 
 	/** The first non-null playerless, non-setting answer ({@code resolveGlobal}), or {@code null}. Since api 2.6. */
 	@Nullable
 	public String resolveGlobal(String token) {
-		for (PlaceholderContribution contribution : contributions) {
-			String value = contribution.resolveGlobal(token);
-			if (value != null) return value;
-		}
-		return null;
+		return firstNonNull(contribution -> contribution.resolveGlobal(token));
 	}
 
 	public static PlaceholderContributions none() {
@@ -51,8 +44,13 @@ public final class PlaceholderContributions {
 	/** The first non-null answer from any contribution, in registration order, or {@code null} if none owns it. */
 	@Nullable
 	public String resolve(OfflinePlayer player, String parameter) {
+		return firstNonNull(contribution -> contribution.resolve(player, parameter));
+	}
+
+	@Nullable
+	private String firstNonNull(Function<PlaceholderContribution, String> ask) {
 		for (PlaceholderContribution contribution : contributions) {
-			String value = contribution.resolve(player, parameter);
+			String value = ask.apply(contribution);
 			if (value != null) return value;
 		}
 		return null;

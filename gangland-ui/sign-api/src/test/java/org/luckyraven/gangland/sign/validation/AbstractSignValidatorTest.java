@@ -86,6 +86,14 @@ class AbstractSignValidatorTest {
 	}
 
 	@Test
+	@DisplayName("T-956: price NaN is rejected, since it passes both the negative and the max comparison")
+	void validatePrice_nan_rejected() {
+		TestSignValidator validator = validator();
+
+		assertThrows(SignValidationException.class, () -> validator.validatePrice("NaN", 2, "$"));
+	}
+
+	@Test
 	@DisplayName("price text longer than 8 characters is rejected even when the numeric value is within range")
 	void validatePrice_tooLongText_rejected() {
 		TestSignValidator validator = validator();

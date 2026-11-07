@@ -29,9 +29,13 @@ public class MoneyAddon {
 	private final Map<String, MoneyItem>            variations  = new HashMap<>();
 	private final Map<MoneyDropContext, DropSource> dropSources = new EnumMap<>(MoneyDropContext.class);
 
-	private String defaultVariationId = "small";
-	private String pickupChatMessage  = "&a+ %gangland_money_symbol%%amount% &7added to your purse.";
-	private String pickupActionBar    = "&a+ %gangland_money_symbol%%amount%";
+	private static final String DEFAULT_VARIATION_ID      = "small";
+	private static final String DEFAULT_PICKUP_CHAT       = "&a+ %gangland_money_symbol%%amount% &7added to your purse.";
+	private static final String DEFAULT_PICKUP_ACTION_BAR = "&a+ %gangland_money_symbol%%amount%";
+
+	private String defaultVariationId = DEFAULT_VARIATION_ID;
+	private String pickupChatMessage  = DEFAULT_PICKUP_CHAT;
+	private String pickupActionBar    = DEFAULT_PICKUP_ACTION_BAR;
 
 	/**
 	 * Master switch driven by {@code Money_Drop.Enabled} in {@code settings.yml}. The impl side calls
@@ -82,6 +86,10 @@ public class MoneyAddon {
 	public void clear() {
 		variations.clear();
 		dropSources.clear();
+		// the text keys are re-read with these as getString defaults, so a deleted key must not keep its old value
+		defaultVariationId = DEFAULT_VARIATION_ID;
+		pickupChatMessage  = DEFAULT_PICKUP_CHAT;
+		pickupActionBar    = DEFAULT_PICKUP_ACTION_BAR;
 	}
 
 	@Nullable

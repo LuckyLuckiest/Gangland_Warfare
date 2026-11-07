@@ -20,11 +20,19 @@ public abstract class AbstractSignParser implements SignParser {
 	protected double parsePrice(String line, String moneySymbol) throws SignValidationException {
 		String cleaned = cleanLine(line).replace(moneySymbol, "").replace(",", "");
 
+		double price;
+
 		try {
-			return Double.parseDouble(cleaned);
+			price = Double.parseDouble(cleaned);
 		} catch (NumberFormatException exception) {
 			throw new SignValidationException("Invalid parsed price: '" + cleaned + "'");
 		}
+
+		if (!Double.isFinite(price)) {
+			throw new SignValidationException("Invalid parsed price: '" + cleaned + "'");
+		}
+
+		return price;
 	}
 
 	protected int parseAmount(String line) throws SignValidationException {

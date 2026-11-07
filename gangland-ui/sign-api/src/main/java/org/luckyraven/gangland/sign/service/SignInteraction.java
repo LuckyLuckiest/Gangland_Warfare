@@ -12,20 +12,18 @@ import java.util.Optional;
 
 public class SignInteraction extends SignInteractionService {
 
-	private final SignTypeRegistry registry;
 	private final SignInformation  information;
 
 	public SignInteraction(String prefix, SignTypeRegistry registry, SignFormatterService formatterService,
 	                       SignInformation information) {
 		super(prefix, registry, formatterService);
 
-		this.registry    = registry;
 		this.information = information;
 	}
 
 	@Override
 	public boolean handlerInteraction(Player player, ParsedSign sign) {
-		Optional<SignTypeDefinition> definition = registry.getDefinition(sign.getSignType());
+		Optional<SignTypeDefinition> definition = getRegistry().getDefinition(sign.getSignType());
 
 		if (definition.isEmpty()) {
 			information.sendError(player, "Invalid sign type!");

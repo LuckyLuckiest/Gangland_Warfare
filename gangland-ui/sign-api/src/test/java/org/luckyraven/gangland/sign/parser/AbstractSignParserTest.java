@@ -60,6 +60,12 @@ class AbstractSignParserTest {
 	}
 
 	@Test
+	@DisplayName("T-956: parsePrice on NaN throws, so a NaN sign already in the world cannot reach Currency.of")
+	void parsePrice_nan_throws() {
+		assertThrows(SignValidationException.class, () -> parser.parsePrice("NaN", "$"));
+	}
+
+	@Test
 	@DisplayName("parseAmount strips thousands separators")
 	void parseAmount_stripsCommas() throws SignValidationException {
 		assertEquals(1234, parser.parseAmount("1,234"));

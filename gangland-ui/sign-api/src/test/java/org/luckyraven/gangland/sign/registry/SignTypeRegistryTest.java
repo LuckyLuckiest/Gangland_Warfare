@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.sign.SignType;
 
+import java.util.Locale;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,6 +40,25 @@ class SignTypeRegistryTest {
 		           "a real translated color code (§a) must be stripped");
 		assertTrue(registry.findByLine("[BUY]").isPresent(), "square brackets are stripped");
 		assertTrue(registry.findByLine("GLW-BUY").isPresent(), "lookup is case-insensitive");
+	}
+
+	@Test
+	@DisplayName("T-958: lookup is case-insensitive on a Turkish JVM, where an upper-case I must still lower to i")
+	void findByLine_upperCaseI_underTurkishDefaultLocale() {
+		Locale previous = Locale.getDefault();
+
+		try {
+			Locale.setDefault(new Locale("tr", "TR"));
+
+			SignTypeRegistry registry = new SignTypeRegistry();
+			SignTypeDefinition view = definition(new SignType("glw-view", "view"));
+			registry.register(view);
+
+			assertSame(view, registry.findByLine("[GLW-VIEW]").orElseThrow(), "typed title with an upper-case I");
+			assertSame(view, registry.findByLine("VIEW").orElseThrow(), "generated title with an upper-case I");
+		} finally {
+			Locale.setDefault(previous);
+		}
 	}
 
 	@Test

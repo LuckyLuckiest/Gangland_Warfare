@@ -4,6 +4,7 @@ import org.luckyraven.gangland.sign.model.SignFormat;
 import org.luckyraven.gangland.sign.validation.SignValidationException;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,7 +21,7 @@ public class SignFormatRegistry {
 			throw new SignValidationException("Attempted to register null or invalid format");
 		}
 
-		formats.put(format.getFormatName().toLowerCase(), format);
+		formats.put(format.getFormatName().toLowerCase(Locale.ROOT), format);
 	}
 
 	public Optional<SignFormat> getFormat(String formatName) {
@@ -28,7 +29,7 @@ public class SignFormatRegistry {
 			return Optional.empty();
 		}
 
-		return Optional.ofNullable(formats.get(formatName.toLowerCase()));
+		return Optional.ofNullable(formats.get(formatName.toLowerCase(Locale.ROOT)));
 	}
 
 	public Optional<SignFormat> getFormatByPrefix(String prefix) {
@@ -36,18 +37,18 @@ public class SignFormatRegistry {
 			return Optional.empty();
 		}
 
-		String normalized = prefix.toLowerCase();
+		String normalized = prefix.toLowerCase(Locale.ROOT);
 
 		return formats.values()
 				.stream().filter(format -> format.getSignTypePrefix().equalsIgnoreCase(normalized)).findFirst();
 	}
 
 	public boolean hasFormat(String formatName) {
-		return formats.containsKey(formatName.toLowerCase());
+		return formats.containsKey(formatName.toLowerCase(Locale.ROOT));
 	}
 
 	public void unregister(String formatName) {
-		formats.remove(formatName.toLowerCase());
+		formats.remove(formatName.toLowerCase(Locale.ROOT));
 	}
 
 	public void clear() {

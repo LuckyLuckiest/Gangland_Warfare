@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.core.bounty;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,8 @@ import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.timer.Timer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -77,6 +80,32 @@ class BountyExecutorTest {
 		assertEquals(Currency.of(1000), bounty.getAmount());
 	}
 
+	@Test
+	@DisplayName("WB-11: after one cancelled tick, the next uncancelled tick still grows the notoriety")
+	void cancelledTick_thenUncancelledTick_grows() {
+		bounty.addNotoriety(Currency.of(100));
+		BountyEvent shared = new BountyEvent(false, bounty) {
+			@Override
+			public HandlerList getHandlers() {
+				return new HandlerList();
+			}
+		};
+
+		boolean[] cancelNext = {true};
+		doAnswer(inv -> {
+			if (cancelNext[0]) ((BountyEvent) inv.getArgument(0)).setCancelled(true);
+			return null;
+		}).when(bukkit.pluginManager()).callEvent(any());
+
+		BountyExecutor executor = executor(20_000, shared);
+		executor.execute(timer);
+		assertEquals(Currency.of(100), bounty.getNotoriety(), "the cancelled tick grows nothing");
+
+		cancelNext[0] = false;
+		executor.execute(timer);
+		assertEquals(Currency.of(200), bounty.getNotoriety(), "the next tick is not cancelled by the stale flag");
+	}
+
 	private void post(int amount) {
 		CommandSender poster = mock(CommandSender.class);
 		when(poster.getName()).thenReturn("poster");
@@ -84,6 +113,10 @@ class BountyExecutorTest {
 	}
 
 	private BountyExecutor executor(double max) {
+		return executor(max, event);
+	}
+
+	private BountyExecutor executor(double max, BountyEvent withEvent) {
 		BountySettings settings = mock(BountySettings.class);
 		when(settings.getTimerMultiple()).thenReturn(2.0);
 		when(settings.getTimerMax()).thenReturn(max);
@@ -91,7 +124,7 @@ class BountyExecutorTest {
 		when(context.getBounty()).thenReturn(bounty);
 		when(context.getUserLevel()).thenReturn(0);
 
-		return new BountyExecutor(mock(JavaPlugin.class), event, context, settings);
+		return new BountyExecutor(mock(JavaPlugin.class), withEvent, context, settings);
 	}
 
 }
