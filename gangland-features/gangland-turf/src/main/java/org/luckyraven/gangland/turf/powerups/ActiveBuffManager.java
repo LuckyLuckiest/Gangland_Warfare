@@ -116,10 +116,10 @@ public final class ActiveBuffManager implements BeanLifecycle {
 		if (list == null || list.isEmpty()) {
 			return type == EffectType.CAPTURE_DEFENSE_BONUS ? 0.0 : 1.0;
 		}
-		double now    = System.currentTimeMillis();
+		long   now    = System.currentTimeMillis();
 		double result = type == EffectType.CAPTURE_DEFENSE_BONUS ? 0.0 : 1.0;
 		for (ActiveTurfBuff buff : list) {
-			if (buff.getEffectType() != type || buff.isExpired((long) now)) continue;
+			if (buff.getEffectType() != type || buff.isExpired(now)) continue;
 			if (type == EffectType.CAPTURE_DEFENSE_BONUS) {
 				result += buff.getMagnitude();
 			} else {
