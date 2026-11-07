@@ -129,11 +129,7 @@ class GangCreateCommand extends SubArgument {
 				user.sendMessage(GangNameRules.refusal(gangMessages, refusal.get(), stagedName));
 				createGangName.remove(user);
 
-				CountdownTimer timer = createGangTimer.get(sender);
-				if (timer != null) {
-					timer.stop();
-					createGangTimer.remove(sender);
-				}
+				stopTimer(createGangTimer, sender);
 				return;
 			}
 
@@ -147,22 +143,14 @@ class GangCreateCommand extends SubArgument {
 
 				createGangName.remove(user);
 
-				CountdownTimer timer = createGangTimer.get(sender);
-				if (timer != null) {
-					timer.stop();
-					createGangTimer.remove(sender);
-				}
+				stopTimer(createGangTimer, sender);
 				return;
 			}
 
 			try {
 				user.getEconomy().withdrawAmount(GangSettings.getGangCreateFee());
 			} catch (EconomyException exception) {
-				CountdownTimer timer = createGangTimer.get(sender);
-				if (timer != null) {
-					timer.stop();
-					createGangTimer.remove(sender);
-				}
+				stopTimer(createGangTimer, sender);
 
 				user.sendMessage(Messages.CANNOT_CREATE_GANG.toString());
 				return;
@@ -202,11 +190,7 @@ class GangCreateCommand extends SubArgument {
 
 			createGangName.remove(user);
 
-			CountdownTimer timer = createGangTimer.get(sender);
-			if (timer != null) {
-				timer.stop();
-				createGangTimer.remove(sender);
-			}
+			stopTimer(createGangTimer, sender);
 		});
 
 		this.addSubArgument(confirmCreate);
@@ -264,6 +248,15 @@ class GangCreateCommand extends SubArgument {
 		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(createName);
+	}
+
+	/** Stops and forgets the staged countdown of {@code sender}, if there is one. */
+	private static void stopTimer(Map<CommandSender, CountdownTimer> timers, CommandSender sender) {
+		CountdownTimer timer = timers.get(sender);
+		if (timer != null) {
+			timer.stop();
+			timers.remove(sender);
+		}
 	}
 
 }
