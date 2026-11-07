@@ -21,7 +21,6 @@ import org.luckyraven.gangland.core.user.Level;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
-import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.unique.UniqueItem;
@@ -219,8 +218,6 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	@Nullable
 	private String getUser(OfflinePlayer player, String parameter) {
-		String userStr = "user_";
-
 		// The member-touching user_* placeholders (has-gang, gang-id, gang-join-date, contribution,
 		// contributed-amount, has-rank, rank) are gang-module-owned — GangPlaceholderContribution answers them;
 		// this method only ever sees the pure-User family below.
@@ -229,28 +226,25 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		if (user == null) return null;
 
-		// economy
-		if (parameter.equals(userStr + "balance")) return NumberUtil.valueFormat(user.getEconomy().getAmount());
-		if (parameter.equals(userStr + "has-bank")) return String.valueOf(user.hasBank());
-
-		// bounty
-		if (parameter.equals(userStr + "bounty")) return NumberUtil.valueFormat(user.getBounty().getAmount());
-		if (parameter.equals(userStr + "has-bounty")) return String.valueOf(user.getBounty().hasBounty());
-
-		if (parameter.equals(userStr + "kd")) return Settings.formatDouble(user.getKillDeathRatio());
-		if (parameter.equals(userStr + "mob-kills")) return String.valueOf(user.getMobKills());
-		if (parameter.equals(userStr + "kills")) return String.valueOf(user.getKills());
-		if (parameter.equals(userStr + "deaths")) return String.valueOf(user.getDeaths());
-
-		// wanted
-		Wanted wanted = user.getWanted();
-		if (parameter.equals(userStr + "wanted")) return wanted.getLevelStars();
-		if (parameter.equals(userStr + "wanted-level")) return String.valueOf(wanted.getLevel());
-		if (parameter.equals(userStr + "wanted-max-level")) return String.valueOf(wanted.getMaxLevel());
-		if (parameter.equals(userStr + "is-wanted")) return String.valueOf(wanted.isWanted());
-
-		// level
-		return getLevelPlaceholder(parameter, userStr, user.getLevel());
+		return switch (parameter) {
+			// economy
+			case "user_balance" -> NumberUtil.valueFormat(user.getEconomy().getAmount());
+			case "user_has-bank" -> String.valueOf(user.hasBank());
+			// bounty
+			case "user_bounty" -> NumberUtil.valueFormat(user.getBounty().getAmount());
+			case "user_has-bounty" -> String.valueOf(user.getBounty().hasBounty());
+			case "user_kd" -> Settings.formatDouble(user.getKillDeathRatio());
+			case "user_mob-kills" -> String.valueOf(user.getMobKills());
+			case "user_kills" -> String.valueOf(user.getKills());
+			case "user_deaths" -> String.valueOf(user.getDeaths());
+			// wanted
+			case "user_wanted" -> user.getWanted().getLevelStars();
+			case "user_wanted-level" -> String.valueOf(user.getWanted().getLevel());
+			case "user_wanted-max-level" -> String.valueOf(user.getWanted().getMaxLevel());
+			case "user_is-wanted" -> String.valueOf(user.getWanted().isWanted());
+			// level
+			default -> getLevelPlaceholder(parameter, user.getLevel());
+		};
 	}
 
 	/** The cached user of an online player, or {@code null} when the player is offline or has no cached user. */
@@ -268,83 +262,74 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		if (user == null) return null;
 
-		Bank   bank    = user.getBank();
-		String bankStr = "bank_";
+		Bank bank = user.getBank();
 
 		if (bank == null) return null;
 
-		if (parameter.equals(bankStr + "name")) return bank.getName();
-		if (parameter.equals(bankStr + "balance")) return NumberUtil.valueFormat(bank.getEconomy().getAmount());
+		if (parameter.equals("bank_name")) return bank.getName();
+		if (parameter.equals("bank_balance")) return NumberUtil.valueFormat(bank.getEconomy().getAmount());
 
+		// resolved for every other bank_ token, as before: tierFor runs a module-installed lookup
 		BankTierView tier = bankTiers.tierFor(bank);
 
-		if (parameter.equals(bankStr + "tier")) return tier == null ? "" : tier.id();
-		if (parameter.equals(bankStr + "tier_display")) return tier == null ? "" : tier.displayName();
-		if (parameter.equals(bankStr + "tier_cap")) {
-			return NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.maxBalance());
-		}
-		if (parameter.equals(bankStr + "daily_deposit_limit")) {
-			return NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.dailyDepositLimit());
-		}
-		if (parameter.equals(bankStr + "deposited_today")) {
-			return NumberUtil.valueFormat(Currency.of(bank.getDepositedToday()));
-		}
-		if (parameter.equals(bankStr + "remaining_deposit")) {
-			BigDecimal limit = tier == null ? Currency.ZERO : tier.dailyDepositLimit();
-			if (limit.signum() <= 0) return "∞";
-			BigDecimal remaining = limit.subtract(Currency.of(bank.getDepositedToday()));
-			if (remaining.signum() < 0) remaining = Currency.ZERO;
-			return NumberUtil.valueFormat(remaining);
-		}
-		if (parameter.equals(bankStr + "next_reset")) {
-			return formatUntil(bank.getCapResetAt());
-		}
-		if (parameter.equals(bankStr + "interest_rate")) {
-			double rate = tier == null ? 0D : tier.interestRate();
-			return formatPercent(rate * 100D);
-		}
-		if (parameter.equals(bankStr + "weekly_amount")) {
-			return NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.weeklyLoanAmount());
-		}
-		if (parameter.equals(bankStr + "monthly_amount")) {
-			return NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.monthlyLoanAmount());
-		}
-		if (parameter.equals(bankStr + "weekly_ready_in")) {
-			return formatReadyIn(bank.getLastWeeklyLoanAt(), Duration.ofDays(7));
-		}
-		if (parameter.equals(bankStr + "monthly_ready_in")) {
-			return formatReadyIn(bank.getLastMonthlyLoanAt(), Duration.ofDays(30));
-		}
-
-		return null;
+		return switch (parameter) {
+			case "bank_tier" -> tier == null ? "" : tier.id();
+			case "bank_tier_display" -> tier == null ? "" : tier.displayName();
+			case "bank_tier_cap" -> NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.maxBalance());
+			case "bank_daily_deposit_limit" ->
+					NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.dailyDepositLimit());
+			case "bank_deposited_today" -> NumberUtil.valueFormat(Currency.of(bank.getDepositedToday()));
+			case "bank_remaining_deposit" -> {
+				BigDecimal limit = tier == null ? Currency.ZERO : tier.dailyDepositLimit();
+				if (limit.signum() <= 0) yield "∞";
+				BigDecimal remaining = limit.subtract(Currency.of(bank.getDepositedToday()));
+				if (remaining.signum() < 0) remaining = Currency.ZERO;
+				yield NumberUtil.valueFormat(remaining);
+			}
+			case "bank_next_reset" -> formatUntil(bank.getCapResetAt());
+			case "bank_interest_rate" -> {
+				double rate = tier == null ? 0D : tier.interestRate();
+				yield formatPercent(rate * 100D);
+			}
+			case "bank_weekly_amount" ->
+					NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.weeklyLoanAmount());
+			case "bank_monthly_amount" ->
+					NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.monthlyLoanAmount());
+			case "bank_weekly_ready_in" -> formatReadyIn(bank.getLastWeeklyLoanAt(), Duration.ofDays(7));
+			case "bank_monthly_ready_in" -> formatReadyIn(bank.getLastMonthlyLoanAt(), Duration.ofDays(30));
+			default -> null;
+		};
 	}
 
 	@Nullable
-	private String getLevelPlaceholder(String parameter, String type, Level level) {
-		if (parameter.equals(type + "level")) return String.valueOf(level.getLevelValue());
-		if (parameter.equals(type + "level-max")) return String.valueOf(level.getMaxLevel());
-		if (parameter.equals(type + "level-next")) return String.valueOf(level.nextLevel());
-		if (parameter.equals(type + "level-previous")) return String.valueOf(level.previousLevel());
-		if (parameter.equals(type + "experience")) return NumberUtil.valueFormat(level.getExperience());
-		if (parameter.equals(type + "experience-percentage")) return NumberUtil.valueFormat(level.getPercentage());
-		if (parameter.equals(type + "experience-next-level"))
-			return NumberUtil.valueFormat(level.experienceCalculation(level.nextLevel()));
-		if (parameter.equals(type + "experience-previous-level"))
-			return NumberUtil.valueFormat(level.experienceCalculation(level.previousLevel()));
-		if (parameter.equals(type + "experience-current-level"))
-			return NumberUtil.valueFormat(level.experienceCalculation(level.getLevelValue()));
-		if (parameter.startsWith(type + "experience-level-")) {
-			String param = parameter.substring(parameter.lastIndexOf('-') + 1);
-			int    value;
-			try {
-				value = Integer.parseInt(param);
-			} catch (NumberFormatException exception) {
-				return null;
-			}
-			return NumberUtil.valueFormat(level.experienceCalculation(value));
-		}
+	private String getLevelPlaceholder(String parameter, Level level) {
+		return switch (parameter) {
+			case "user_level" -> String.valueOf(level.getLevelValue());
+			case "user_level-max" -> String.valueOf(level.getMaxLevel());
+			case "user_level-next" -> String.valueOf(level.nextLevel());
+			case "user_level-previous" -> String.valueOf(level.previousLevel());
+			case "user_experience" -> NumberUtil.valueFormat(level.getExperience());
+			case "user_experience-percentage" -> NumberUtil.valueFormat(level.getPercentage());
+			case "user_experience-next-level" -> NumberUtil.valueFormat(level.experienceCalculation(level.nextLevel()));
+			case "user_experience-previous-level" ->
+					NumberUtil.valueFormat(level.experienceCalculation(level.previousLevel()));
+			case "user_experience-current-level" ->
+					NumberUtil.valueFormat(level.experienceCalculation(level.getLevelValue()));
+			default -> parameter.startsWith("user_experience-level-") ? getExperienceAtLevel(parameter, level) : null;
+		};
+	}
 
-		return null;
+	/** {@code user_experience-level-<n>}: the experience needed for level n, or {@code null} when n is not a number. */
+	@Nullable
+	private String getExperienceAtLevel(String parameter, Level level) {
+		String param = parameter.substring(parameter.lastIndexOf('-') + 1);
+		int    value;
+		try {
+			value = Integer.parseInt(param);
+		} catch (NumberFormatException exception) {
+			return null;
+		}
+		return NumberUtil.valueFormat(level.experienceCalculation(value));
 	}
 
 	@Nullable
