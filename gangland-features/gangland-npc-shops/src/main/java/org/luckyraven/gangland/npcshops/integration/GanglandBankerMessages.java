@@ -9,19 +9,19 @@ import java.math.BigDecimal;
 
 public final class GanglandBankerMessages implements BankerMessageContract {
 
-	private static String fillAmount(String template, BigDecimal amount) {
+	private static String fillAmount(String template, String token, BigDecimal amount) {
 		return template.replace("%money_symbol%", Settings.getMoneySymbol())
-		               .replace("%amount%", Settings.formatAmount(amount));
+		               .replace(token, Settings.formatAmount(amount));
 	}
 
 	@Override
 	public String depositSuccess(BigDecimal amount) {
-		return fillAmount(Messages.BANKER_DEPOSIT_SUCCESS.toString(), amount);
+		return fillAmount(Messages.BANKER_DEPOSIT_SUCCESS.toString(), "%amount%", amount);
 	}
 
 	@Override
 	public String withdrawSuccess(BigDecimal amount) {
-		return fillAmount(Messages.BANKER_WITHDRAW_SUCCESS.toString(), amount);
+		return fillAmount(Messages.BANKER_WITHDRAW_SUCCESS.toString(), "%amount%", amount);
 	}
 
 	@Override
@@ -31,26 +31,22 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 
 	@Override
 	public String insufficientCash(BigDecimal amount) {
-		return fillAmount(Messages.BANKER_INSUFFICIENT_CASH.toString(), amount);
+		return fillAmount(Messages.BANKER_INSUFFICIENT_CASH.toString(), "%amount%", amount);
 	}
 
 	@Override
 	public String insufficientBankFunds(BigDecimal amount) {
-		return fillAmount(Messages.BANKER_INSUFFICIENT_BANK_FUNDS.toString(), amount);
+		return fillAmount(Messages.BANKER_INSUFFICIENT_BANK_FUNDS.toString(), "%amount%", amount);
 	}
 
 	@Override
 	public String dailyDepositReached(BigDecimal limit) {
-		return Messages.BANKER_DAILY_DEPOSIT_REACHED.toString()
-		                                            .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                            .replace("%limit%", Settings.formatAmount(limit));
+		return fillAmount(Messages.BANKER_DAILY_DEPOSIT_REACHED.toString(), "%limit%", limit);
 	}
 
 	@Override
 	public String capExceeded(BigDecimal cap) {
-		return Messages.BANKER_CAP_EXCEEDED.toString()
-		                                   .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                   .replace("%cap%", Settings.formatAmount(cap));
+		return fillAmount(Messages.BANKER_CAP_EXCEEDED.toString(), "%cap%", cap);
 	}
 
 	@Override
@@ -65,9 +61,7 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 
 	@Override
 	public String upgradeInsufficientFunds(BigDecimal cost) {
-		return Messages.BANKER_UPGRADE_INSUFFICIENT_FUNDS.toString()
-		                                                 .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                                 .replace("%cost%", Settings.formatAmount(cost));
+		return fillAmount(Messages.BANKER_UPGRADE_INSUFFICIENT_FUNDS.toString(), "%cost%", cost);
 	}
 
 	@Override
@@ -87,9 +81,7 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 
 	@Override
 	public String createCannotAfford(BigDecimal fee) {
-		return Messages.BANKER_CREATE_CANNOT_AFFORD.toString()
-		                                           .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                           .replace("%fee%", Settings.formatAmount(fee));
+		return fillAmount(Messages.BANKER_CREATE_CANNOT_AFFORD.toString(), "%fee%", fee);
 	}
 
 	@Override
@@ -106,9 +98,7 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 
 	@Override
 	public String renameCannotAfford(BigDecimal fee) {
-		return Messages.BANKER_RENAME_CANNOT_AFFORD.toString()
-		                                           .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                           .replace("%fee%", Settings.formatAmount(fee));
+		return fillAmount(Messages.BANKER_RENAME_CANNOT_AFFORD.toString(), "%fee%", fee);
 	}
 
 	@Override
@@ -123,12 +113,12 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 
 	@Override
 	public String weeklyLoanSuccess(BigDecimal amount) {
-		return fillAmount(Messages.BANKER_LOAN_WEEKLY_SUCCESS.toString(), amount);
+		return fillAmount(Messages.BANKER_LOAN_WEEKLY_SUCCESS.toString(), "%amount%", amount);
 	}
 
 	@Override
 	public String monthlyLoanSuccess(BigDecimal amount) {
-		return fillAmount(Messages.BANKER_LOAN_MONTHLY_SUCCESS.toString(), amount);
+		return fillAmount(Messages.BANKER_LOAN_MONTHLY_SUCCESS.toString(), "%amount%", amount);
 	}
 
 	@Override
@@ -143,7 +133,7 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 
 	@Override
 	public String loanCapFull(BigDecimal amount) {
-		return fillAmount(Messages.BANKER_LOAN_CAP_FULL.toString(), amount);
+		return fillAmount(Messages.BANKER_LOAN_CAP_FULL.toString(), "%amount%", amount);
 	}
 
 }
