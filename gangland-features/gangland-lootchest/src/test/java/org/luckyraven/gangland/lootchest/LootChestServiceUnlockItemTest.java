@@ -235,6 +235,45 @@ class LootChestServiceUnlockItemTest {
 		verify(holograms, never()).createHologram(any(Location.class), any(String[].class));
 	}
 
+	@Test
+	@DisplayName("the unlock item is searched past empty and untagged slots, one ItemBuilder per non-empty slot, and only the first match is burned")
+	void tryOpenChest_unlockItemSearch_skipsEmptyAndUntaggedSlots_burnsTheFirstMatchOnly() {
+		registerLootTable();
+		ItemStack untagged = mock(ItemStack.class);
+		ItemStack first    = tagged("key_vault", 2);
+		ItemStack second   = tagged("key_vault", 4);
+		holdItems(new ItemStack[]{null, untagged, first, second});
+
+		OpenResult result = service.tryOpenChest(player, chest(new LootTier("vault", "Tier", 1,
+		                                                                    LootTier.UnlockRequirement.KEY)));
+
+		assertEquals(OpenResult.SUCCESS, result);
+		verify(first).setAmount(1);
+		verify(second, never()).setAmount(anyInt());
+		verify(untagged, never()).setAmount(anyInt());
+		verify(playerInventory, never()).setItem(anyInt(), any());
+		// pre-check: untagged, first (match stops it); burn: untagged, first (match stops it); the second is never wrapped
+		assertEquals(4, builders.constructed().size());
+	}
+
+	@Test
+	@DisplayName("a player holding only empty, untagged or differently tagged slots is turned away and nothing is burned")
+	void tryOpenChest_unlockItemSearch_noMatch_burnsNothing() {
+		registerLootTable();
+		ItemStack untagged = mock(ItemStack.class);
+		ItemStack other    = tagged("decoy", 3);
+		holdItems(new ItemStack[]{null, untagged, other, null});
+
+		OpenResult result = service.tryOpenChest(player, chest(new LootTier("vault", "Tier", 1,
+		                                                                    LootTier.UnlockRequirement.KEY)));
+
+		assertEquals(OpenResult.REQUIRES_KEY, result);
+		verify(untagged, never()).setAmount(anyInt());
+		verify(other, never()).setAmount(anyInt());
+		verify(playerInventory, never()).setItem(anyInt(), any());
+		assertEquals(2, builders.constructed().size());
+	}
+
 	private void registerLootTable() {
 		service.registerLootTable(new LootTable("common", "Common", List.of(), 1, 1, List.of(), Map.of()));
 	}
