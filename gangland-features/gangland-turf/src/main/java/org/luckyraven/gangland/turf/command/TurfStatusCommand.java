@@ -58,11 +58,7 @@ class TurfStatusCommand extends SubArgument {
 				return;
 			}
 			TurfRuntimeState state     = turfs.getRuntimeState(turf.getId());
-			String           ownerName = "Unclaimed";
-			if (turf.getOwnerGangId() != null) {
-				Gang owner = gangs.findById(turf.getOwnerGangId());
-				ownerName = GangDisplayNameResolver.resolve(owner);
-			}
+			String           ownerName = TurfInfoCommand.ownerLabel(gangs, turf);
 
 			if (state == null) {
 				messages.send(sender, "TURF_STATUS_IDLE",
