@@ -147,11 +147,7 @@ public class EntityDamageListener implements Listener {
 
 			// Only increase wanted if this NPC counts towards wanted (cops should, civilians may, etc.)
 			if (wantedKills.countsForWanted(deadPlayer)) {
-				if (wantedKills.routesKills()) {
-					wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer);
-				} else {
-					handleWanted(damagerUser);
-				}
+				creditWanted(damagerUser, deadPlayer);
 			}
 			return;
 		}
@@ -205,9 +201,14 @@ public class EntityDamageListener implements Listener {
 		if (!paid) handleBounty(damagerUser);
 
 		// increase the wanted level for killing another player
+		creditWanted(damagerUser, deadPlayer);
+	}
+
+	/** Hands the kill to a routing tracker, else raises the wanted level the plain way. */
+	private void creditWanted(User<Player> killerUser, Entity victim) {
 		if (wantedKills.routesKills()) {
-			wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer);
-		} else handleWanted(damagerUser);
+			wantedKills.recordKill(killerUser.getUser(), killerUser.getWanted(), victim);
+		} else handleWanted(killerUser);
 	}
 
 	private static String pair(UUID a, UUID b) {
@@ -350,9 +351,7 @@ public class EntityDamageListener implements Listener {
 		if (!wantedKills.countsForWanted(victim)) return false;
 
 		// Record kill in combo system if enabled
-		if (wantedKills.routesKills()) {
-			wantedKills.recordKill(attacker.getUser(), attacker.getWanted(), victim);
-		} else handleWanted(attacker);
+		creditWanted(attacker, victim);
 
 		return false;
 	}
