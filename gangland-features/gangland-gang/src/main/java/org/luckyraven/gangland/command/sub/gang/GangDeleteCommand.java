@@ -26,7 +26,6 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.util.TimeMessages;
 
 import java.util.HashMap;
-import java.util.UUID;
 
 import org.luckyraven.keystone.bean.Qualifier;
 import lombok.CustomLog;

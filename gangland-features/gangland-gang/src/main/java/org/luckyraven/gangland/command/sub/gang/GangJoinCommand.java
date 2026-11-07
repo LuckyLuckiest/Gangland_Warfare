@@ -3,21 +3,16 @@ package org.luckyraven.gangland.command.sub.gang;
 import org.luckyraven.gangland.gang.membership.GangMembershipService;
 import org.luckyraven.gangland.gang.membership.GangMembershipService.Result;
 import lombok.CustomLog;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
-import org.luckyraven.gangland.events.gang.GangJoinEvent;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.file.GangMessages;
-import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.command.argument.Argument;
@@ -27,7 +22,6 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
-import java.time.Instant;
 import java.util.Objects;
 
 /**
