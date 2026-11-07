@@ -75,12 +75,7 @@ public class JetpackTask extends BukkitRunnable {
 	}
 
 	private boolean checkGuards(Player player, Jetpack jetpack) {
-		if (!player.isOnline()) {
-			jetpackService.deactivate(player);
-			cancel();
-			return true;
-		}
-		if (!isWearingJetpack(player, jetpack)) {
+		if (!player.isOnline() || !isWearingJetpack(player, jetpack)) {
 			jetpackService.deactivate(player);
 			cancel();
 			return true;
