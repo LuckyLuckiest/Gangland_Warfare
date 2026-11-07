@@ -79,6 +79,14 @@ public class JetpackService implements BeanLifecycle {
 		JetpackSession session = activeSessions.remove(player.getUniqueId());
 		if (session == null) return;
 
+		release(session, player);
+	}
+
+	/**
+	 * Cancels the session's task and, for an online player, clears flying, restores the pre-activation allowFlight and
+	 * removes the input interceptor.
+	 */
+	private void release(JetpackSession session, Player player) {
 		if (session.getTask() != null && !session.getTask().isCancelled()) {
 			session.getTask().cancel();
 		}
@@ -184,19 +192,7 @@ public class JetpackService implements BeanLifecycle {
 	 */
 	public void deactivateAll() {
 		for (JetpackSession session : activeSessions.values()) {
-			if (session.getTask() != null && !session.getTask().isCancelled()) {
-				session.getTask().cancel();
-			}
-			Player player = session.getPlayer();
-			if (player.isOnline()) {
-				player.setFlying(false);
-				player.setAllowFlight(session.isPreviousAllowFlight());
-
-				Channel channel = PlayerInputInterceptor.getChannel(player);
-				if (channel != null && channel.pipeline().get(JetpackInputInterceptor.HANDLER_NAME) != null) {
-					channel.pipeline().remove(JetpackInputInterceptor.HANDLER_NAME);
-				}
-			}
+			release(session, session.getPlayer());
 		}
 		activeSessions.clear();
 	}
