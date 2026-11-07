@@ -48,13 +48,30 @@ public class WantedSignValidator extends AbstractSignValidator {
 			return;
 		}
 
-		requirePositiveInt(priceLine, 4, "Price must be positive", "Price must be a valid number");
+		requirePositivePrice(priceLine, 4);
+	}
+
+	/** Reads the price the way {@code WantedParser} does: trimmed, money symbol and thousands commas dropped, decimals allowed. */
+	private static void requirePositivePrice(String text, int lineNumber) throws SignValidationException {
+		double value;
+		try {
+			value = Double.parseDouble(text.trim().replace(Settings.getMoneySymbol(), "").replace(",", ""));
+		} catch (NumberFormatException exception) {
+			throw new SignValidationException("Price must be a valid number", lineNumber, text);
+		}
+
+		if (!Double.isFinite(value)) {
+			throw new SignValidationException("Price must be a valid number", lineNumber, text);
+		}
+		if (value <= 0) {
+			throw new SignValidationException("Price must be positive", lineNumber, text);
+		}
 	}
 
 	private static void requirePositiveInt(String text, int lineNumber, String positiveMessage, String numberMessage)
 			throws SignValidationException {
 		try {
-			int value = Integer.parseInt(text);
+			int value = Integer.parseInt(text.trim());
 			if (value <= 0) {
 				throw new SignValidationException(positiveMessage, lineNumber, text);
 			}

@@ -88,6 +88,22 @@ class WantedSignValidatorTest {
 	}
 
 	@Test
+	@DisplayName("T-938: a padded star count passes, as the parser trims it")
+	void paddedStarsPass() {
+		passes("increase", " 3", "");
+		passes("remove", "3 ", "");
+	}
+
+	@Test
+	@DisplayName("T-938: a decimal, padded or comma-grouped price passes, as the parser and every other price sign read it")
+	void decimalPricesPass() {
+		passes("increase", "2", "5.50");
+		passes("increase", "2", " 5");
+		passes("increase", "2", "1,000");
+		passes("increase", "2", "0.25");
+	}
+
+	@Test
 	@DisplayName("an empty star line is refused")
 	void emptyStars() {
 		assertEquals("Line 3 must specify number of stars (Line 4: '')", failure("increase", "", ""));
@@ -101,11 +117,10 @@ class WantedSignValidatorTest {
 	}
 
 	@Test
-	@DisplayName("a star count that is no whole number (decimal, padded, text) is refused as not a number")
+	@DisplayName("a star count that is no whole number (decimal, text) is refused as not a number")
 	void nonNumericStars() {
 		assertEquals("Star count must be a valid number (Line 4: 'x')", failure("increase", "x", ""));
 		assertEquals("Star count must be a valid number (Line 4: '2.5')", failure("increase", "2.5", ""));
-		assertEquals("Star count must be a valid number (Line 4: ' 3')", failure("increase", " 3", ""));
 	}
 
 	@Test
@@ -117,10 +132,11 @@ class WantedSignValidatorTest {
 	}
 
 	@Test
-	@DisplayName("a price that is no whole number is refused as not a number")
+	@DisplayName("a price that is no number is refused as not a number")
 	void nonNumericPrice() {
 		assertEquals("Price must be a valid number (Line 5: 'abc')", failure("increase", "3", "abc"));
-		assertEquals("Price must be a valid number (Line 5: '1.5')", failure("increase", "3", "1.5"));
+		assertEquals("Price must be a valid number (Line 5: 'NaN')", failure("increase", "3", "NaN"));
+		assertEquals("Price must be a valid number (Line 5: 'Infinity')", failure("increase", "3", "Infinity"));
 	}
 
 	@Test
