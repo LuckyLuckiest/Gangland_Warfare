@@ -31,6 +31,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -76,172 +77,181 @@ class GangPromoteCommand extends SubArgument {
 	}
 
 	private OptionalArgument gangPromote() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
+		return new OptionalArgument(gangland, tree, this::promote, this::promotableMembers);
+	}
 
-			if (user == null) return;
+	private void promote(Argument argument, CommandSender sender, String[] args) {
+		Player       player = (Player) sender;
+		User<Player> user   = userManager.getUser(player);
 
-			Member userMember = memberManager.getMember(player.getUniqueId());
+		if (user == null) return;
 
-			boolean force = player.hasPermission(GangPermissions.FORCE_RANK);
+		Member userMember = memberManager.getMember(player.getUniqueId());
 
-			// GR-01: a player with no cached Member would NPE further down this command.
-			if (userMember == null || !user.hasGang()) {
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
-				return;
-			}
+		boolean force = player.hasPermission(GangPermissions.FORCE_RANK);
 
-			// PLAN 15.4: the rank gate (node, Ranks.Minimum or leader) comes before the rank-position checks below.
-			if (!force && !GangPermissions.allows(userMember, player, GangPermissions.PROMOTE)) {
-				String denial = GangPermissions.denial(GangPermissions.PROMOTE);
-				user.sendMessage(denial != null ? denial : Messages.COMMAND_NO_PERM.toString());
-				return;
-			}
+		// GR-01: a player with no cached Member would NPE further down this command.
+		if (userMember == null || !user.hasGang()) {
+			user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+			return;
+		}
 
-			Gang gang = gangManager.getGang(user.getGangId());
+		// PLAN 15.4: the rank gate (node, Ranks.Minimum or leader) comes before the rank-position checks below.
+		if (!force && !GangPermissions.allows(userMember, player, GangPermissions.PROMOTE)) {
+			String denial = GangPermissions.denial(GangPermissions.PROMOTE);
+			user.sendMessage(denial != null ? denial : Messages.COMMAND_NO_PERM.toString());
+			return;
+		}
 
-			String targetStr    = args[2];
-			Member targetMember = null;
-			for (Member member : gang.getMembers()) {
-				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
-				String        offlineName   = offlinePlayer.getName();
+		Gang gang = gangManager.getGang(user.getGangId());
 
-				if (offlineName == null || offlineName.isEmpty() || !offlineName.equalsIgnoreCase(targetStr)) continue;
+		String targetStr    = args[2];
+		Member targetMember = findMember(gang, targetStr);
 
-				targetMember = member;
-				break;
-			}
+		if (targetMember == null) {
+			user.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+			return;
+		}
 
-			if (targetMember == null) {
-				user.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
-				return;
-			}
+		// Self-action is a domain rule, never a permission decision — applied before the force/rank gate.
+		if (targetMember.getUuid().equals(player.getUniqueId())) {
+			user.sendMessage(Messages.GANG_CANNOT_ACT_SELF.toString());
+			return;
+		}
 
-			// Self-action is a domain rule, never a permission decision — applied before the force/rank gate.
-			if (targetMember.getUuid().equals(player.getUniqueId())) {
-				user.sendMessage(Messages.GANG_CANNOT_ACT_SELF.toString());
-				return;
-			}
+		if (targetMember.getRank() == null) {
+			user.sendMessage(Messages.INVALID_RANK.toString());
+			return;
+		}
 
-			if (targetMember.getRank() == null) {
-				user.sendMessage(Messages.INVALID_RANK.toString());
-				return;
-			}
+		// change the user rank by proceeding to the next node
+		Tree<Rank> rankTree    = rankManager.getRankTree();
+		Rank       currentRank = Objects.requireNonNull(rankTree.find(targetMember.getRank()));
+		Rank       tail        = rankManager.get(GangSettings.getGangRankTail());
 
-			// change the user rank by proceeding to the next node
-			Tree<Rank> rankTree    = rankManager.getRankTree();
-			Rank       currentRank = Objects.requireNonNull(rankTree.find(targetMember.getRank()));
-			Rank       tail        = rankManager.get(GangSettings.getGangRankTail());
+		// Only the next ranks this caller may hand out: strictly below their own, never the owner (Tail) rank.
+		List<Rank>                    nextRanks = new ArrayList<>();
+		RankAssignmentPolicy.Decision refusal   = null;
+		for (Tree.Node<Rank> child : currentRank.getNode().getChildren()) {
+			RankAssignmentPolicy.Decision decision = RankAssignmentPolicy.evaluate(
+					rankTree, userMember.getRank(), currentRank, child.getData(), force, false, tail);
 
-			// Only the next ranks this caller may hand out: strictly below their own, never the owner (Tail) rank.
-			List<Rank>                    nextRanks = new ArrayList<>();
-			RankAssignmentPolicy.Decision refusal   = null;
-			for (Tree.Node<Rank> child : currentRank.getNode().getChildren()) {
-				RankAssignmentPolicy.Decision decision = RankAssignmentPolicy.evaluate(
-						rankTree, userMember.getRank(), currentRank, child.getData(), force, false, tail);
+			if (decision == RankAssignmentPolicy.Decision.ALLOWED) nextRanks.add(child.getData());
+			else if (refusal == null) refusal = decision;
+		}
 
-				if (decision == RankAssignmentPolicy.Decision.ALLOWED) nextRanks.add(child.getData());
-				else if (refusal == null) refusal = decision;
-			}
+		if (nextRanks.isEmpty()) {
+			user.sendMessage(refusal == null ? Messages.GANG_PROMOTE_END.toString()
+			                                 : RankAssignmentPolicy.message(refusal));
+			return;
+		}
 
-			if (nextRanks.isEmpty()) {
-				user.sendMessage(refusal == null ? Messages.GANG_PROMOTE_END.toString()
-				                                 : RankAssignmentPolicy.message(refusal));
-				return;
-			}
+		if (nextRanks.size() > 1) {
+			sendRankChoice(player, targetStr, nextRanks);
+			return;
+		}
 
-			if (nextRanks.size() > 1) {
-				ComponentBuilder ranks = new ComponentBuilder();
+		promoteTo(user, targetMember, targetStr, nextRanks.get(0));
+	}
 
-				for (int i = 0; i < nextRanks.size(); i++) {
-					String rank = nextRanks.get(i).getName();
+	private static Member findMember(Gang gang, String name) {
+		return gang.getMembers().stream().filter(member -> hasName(member, name)).findFirst().orElse(null);
+	}
 
-					var value = String.format("/%s option gang rank %s %s", GanglandApi.SHORT_PREFIX, targetStr, rank);
-					var sep   = new ComponentBuilder(rank).event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, value));
+	private static boolean hasName(Member member, String name) {
+		String offlineName = Bukkit.getOfflinePlayer(member.getUuid()).getName();
 
-					ranks.append(sep.create());
+		return offlineName != null && !offlineName.isEmpty() && offlineName.equalsIgnoreCase(name);
+	}
 
-					if (i < nextRanks.size() - 1) ranks.append("  ");
-				}
+	private static void sendRankChoice(Player player, String targetStr, List<Rank> nextRanks) {
+		ComponentBuilder ranks = new ComponentBuilder();
 
-				player.spigot().sendMessage(ranks.create());
-			} else {
-				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-				String        offlineName   = offlinePlayer.getName();
+		for (int i = 0; i < nextRanks.size(); i++) {
+			String rank = nextRanks.get(i).getName();
 
-				Rank first = nextRanks.get(0);
-				if (offlineName != null && !offlineName.isEmpty() && offlinePlayer.isOnline()) {
-					Player onlinePlayer = offlinePlayer.getPlayer();
-					String message = Messages.GANG_PROMOTE_TARGET_SUCCESS.toString()
-					                                                     .replace("%rank%", first.getName());
-					// remove the previous rank attachments
-					User<Player> onlineUser = userManager.getUser(onlinePlayer);
+			var value = String.format("/%s option gang rank %s %s", GanglandApi.SHORT_PREFIX, targetStr, rank);
+			var sep   = new ComponentBuilder(rank).event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, value));
 
-					if (onlineUser != null) {
-						RankPermissionApplier.flush(onlineUser, first);
-					}
+			ranks.append(sep.create());
 
-					Objects.requireNonNull(onlinePlayer).sendMessage(message);
-				}
+			if (i < nextRanks.size() - 1) ranks.append("  ");
+		}
 
-				String string  = Messages.GANG_PROMOTE_PLAYER_SUCCESS.toString();
-				String replace = string.replace("%player%", targetStr).replace("%rank%", first.getName());
-				user.sendMessage(replace);
+		player.spigot().sendMessage(ranks.create());
+	}
 
-				memberManager.assignRank(targetMember, first);
-			}
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
+	private void promoteTo(User<Player> user, Member targetMember, String targetStr, Rank rank) {
+		notifyPromotedTarget(targetMember, rank);
 
-			if (user == null) return null;
+		user.sendMessage(Messages.GANG_PROMOTE_PLAYER_SUCCESS.toString()
+		                                                     .replace("%player%", targetStr)
+		                                                     .replace("%rank%", rank.getName()));
 
-			Member userMember = memberManager.getMember(player.getUniqueId());
+		memberManager.assignRank(targetMember, rank);
+	}
 
-			// GR-01: a player with no cached Member would NPE further down this command.
-			if (userMember == null || !user.hasGang()) {
-				return null;
-			}
+	private void notifyPromotedTarget(Member targetMember, Rank rank) {
+		OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
+		String        offlineName   = offlinePlayer.getName();
 
-			Gang userGang = gangManager.getGang(user.getGangId());
-			Rank userRank = userMember.getRank();
+		if (offlineName == null || offlineName.isEmpty() || !offlinePlayer.isOnline()) return;
 
-			if (userRank == null) {
-				return null;
-			}
+		Player onlinePlayer = offlinePlayer.getPlayer();
+		String message      = Messages.GANG_PROMOTE_TARGET_SUCCESS.toString().replace("%rank%", rank.getName());
+		// remove the previous rank attachments
+		User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
-			// get the members in the gang
-			List<Member> members = userGang.getMembers();
+		if (onlineUser != null) {
+			RankPermissionApplier.flush(onlineUser, rank);
+		}
 
-			// filter the members by rank
-			List<String> descendantRanks = new ArrayList<>();
+		Objects.requireNonNull(onlinePlayer).sendMessage(message);
+	}
 
-			for (Member member : members) {
-				Rank memberRank = member.getRank();
+	private List<String> promotableMembers(CommandSender sender) {
+		Player       player = (Player) sender;
+		User<Player> user   = userManager.getUser(player);
 
-				if (memberRank == null) continue;
+		if (user == null) return null;
 
-				Tree<Rank> rankTree = rankManager.getRankTree();
+		Member userMember = memberManager.getMember(player.getUniqueId());
 
-				if (!rankTree.isDescendant(memberRank.getNode(), userRank.getNode())) continue;
+		// GR-01: a player with no cached Member would NPE further down this command.
+		if (userMember == null || !user.hasGang()) {
+			return null;
+		}
 
-				OfflinePlayer offlinePlayer     = Bukkit.getOfflinePlayer(member.getUuid());
-				String        offlinePlayerName = offlinePlayer.getName();
+		Gang userGang = gangManager.getGang(user.getGangId());
+		Rank userRank = userMember.getRank();
 
-				if (offlinePlayerName == null) continue;
+		if (userRank == null) {
+			return null;
+		}
 
-				descendantRanks.add(offlinePlayer.getName());
-			}
+		// the names of the members this user outranks
+		List<String> descendantRanks = userGang.getMembers()
+		                                       .stream()
+		                                       .filter(member -> userOutranks(userRank, member))
+		                                       .map(member -> Bukkit.getOfflinePlayer(member.getUuid()))
+		                                       .filter(offlinePlayer -> offlinePlayer.getName() != null)
+		                                       .map(OfflinePlayer::getName)
+		                                       .collect(Collectors.toCollection(ArrayList::new));
 
-			// if no descendants found
-			if (descendantRanks.isEmpty()) {
-				descendantRanks.add("");
-			}
+		// if no descendants found
+		if (descendantRanks.isEmpty()) {
+			descendantRanks.add("");
+		}
 
-			// return the rank names
-			return descendantRanks;
-		});
+		// return the rank names
+		return descendantRanks;
+	}
+
+	// The rank tree is head-rooted, so the user outranks a member whose rank node has the user's below it.
+	private boolean userOutranks(Rank userRank, Member member) {
+		Rank memberRank = member.getRank();
+
+		return memberRank != null && rankManager.getRankTree().isDescendant(memberRank.getNode(), userRank.getNode());
 	}
 
 }
