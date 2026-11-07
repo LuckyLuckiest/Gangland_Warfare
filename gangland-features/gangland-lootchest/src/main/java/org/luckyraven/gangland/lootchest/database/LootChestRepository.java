@@ -82,6 +82,7 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 			var lootChestData = LootChestData.builder()
 			                                 .id(id)
 			                                 .location(location)
+			                                 .worldName(worldName)
 			                                 .lootTableId(lootTableId)
 			                                 .tier(tier)
 			                                 .respawnTime(respawnTime)

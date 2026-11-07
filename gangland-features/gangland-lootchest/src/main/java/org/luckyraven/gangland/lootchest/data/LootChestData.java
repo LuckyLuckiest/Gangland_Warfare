@@ -18,6 +18,8 @@ public class LootChestData {
 
 	private final UUID     id;
 	private final Location location;
+	// The world name the row was read with, kept for a chest whose world is not loaded (location has a null world)
+	private final String   worldName;
 	private final String   lootTableId;
 	private final LootTier tier;
 	private final long     respawnTime;

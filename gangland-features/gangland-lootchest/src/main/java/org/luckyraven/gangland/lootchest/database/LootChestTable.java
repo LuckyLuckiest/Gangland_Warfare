@@ -50,12 +50,18 @@ public class LootChestTable extends Table<LootChestData> {
 
 	@Override
 	public Object[] getData(LootChestData data) {
-		return new Object[]{data.getId().toString(),
-		                    data.getLocation().getWorld() != null ? data.getLocation().getWorld().getName() : "world",
+		return new Object[]{data.getId().toString(), worldName(data),
 		                    data.getLocation().getX(), data.getLocation().getY(), data.getLocation().getZ(),
 		                    data.getLootTableId(), data.getTier() != null ? data.getTier().id() : null,
 		                    data.getRespawnTime(), data.getInventorySize(), data.getDisplayName(), data.getLastOpened(),
 		                    data.isLooted(), data.getCooldownEndTime()};
+	}
+
+	/** The loaded world's name; for a chest whose world is not loaded, the name its row was read with. */
+	private static String worldName(LootChestData data) {
+		if (data.getLocation().getWorld() != null) return data.getLocation().getWorld().getName();
+
+		return data.getWorldName() != null ? data.getWorldName() : "world";
 	}
 
 	@Override
