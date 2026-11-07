@@ -76,35 +76,7 @@ public final class TeleportCommand extends Command {
 			Waypoint waypoint = waypointManager.get(location);
 
 			teleportCost(user, waypoint);
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return null;
-
-			List<String> waypoints = new ArrayList<>();
-
-			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
-			if (user.hasGang()) {
-				int gangId = user.getGangId();
-
-				List<String> list = allWaypoints.stream()
-						.filter(waypoint -> waypoint.getGangId() == gangId)
-						.map(Waypoint::getName)
-						.toList();
-
-				waypoints.addAll(list);
-			}
-
-			List<String> list = allWaypoints.stream()
-					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-					.map(Waypoint::getName)
-					.toList();
-
-			waypoints.addAll(list);
-
-			return waypoints;
-		});
+		}, sender -> WaypointCompletion.names(userManager, waypointManager, sender));
 
 		getArgument().addPermission(getPermission() + ".cooldown_bypass");
 
