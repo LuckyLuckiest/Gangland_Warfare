@@ -94,7 +94,7 @@ final class GangJoinCommand extends SubArgument {
 			return;
 		}
 
-		Gang gang = find(key);
+		Gang gang = GangNameRules.findByPlainName(gangManager.getAll(), key);
 		if (gang == null) {
 			sender.sendMessage(messages.text("Social.Unknown", "&cNo gang named %gang%.", "gang",
 			                                 GangNameRules.plain(key)));
@@ -114,17 +114,6 @@ final class GangJoinCommand extends SubArgument {
 
 		sender.sendMessage(messages.text("Social.Joined", "&aYou joined %gang%.",
 		                                 "gang", gang.getDisplayNameString()));
-	}
-
-	/** A gang whose plain name matches {@code key} ignoring case; names only, never ids. */
-	private Gang find(String key) {
-		String plain = GangNameRules.plain(key);
-		for (Gang gang : gangManager.getAll()) {
-			if (gang.getName() != null && GangNameRules.plain(gang.getName()).equalsIgnoreCase(plain)) {
-				return gang;
-			}
-		}
-		return null;
 	}
 
 }

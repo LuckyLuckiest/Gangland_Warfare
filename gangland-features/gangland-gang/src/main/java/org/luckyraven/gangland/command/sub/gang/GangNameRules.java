@@ -32,6 +32,17 @@ public final class GangNameRules {
 		return ChatColor.stripColor(ChatUtil.color(raw));
 	}
 
+	/** The first of {@code gangs}, in iteration order, whose plain name matches {@code key} ignoring case. */
+	static @Nullable Gang findByPlainName(Collection<Gang> gangs, String key) {
+		String plain = plain(key);
+		for (Gang gang : gangs) {
+			if (gang.getName() != null && plain(gang.getName()).equalsIgnoreCase(plain)) {
+				return gang;
+			}
+		}
+		return null;
+	}
+
 	/** The player-facing refusal for a key returned by {@link #check}, from gang_messages.yml. */
 	public static String refusal(GangMessages messages, String key, String name) {
 		switch (key) {

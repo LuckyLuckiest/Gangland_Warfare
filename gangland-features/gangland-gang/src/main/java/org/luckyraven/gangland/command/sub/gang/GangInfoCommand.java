@@ -99,10 +99,8 @@ class GangInfoCommand extends SubArgument {
 
 	/** By gang name first (ignoring case and colour codes), then numeric id, then a member's player name. */
 	private Gang find(String key) {
-		String plain = GangNameRules.plain(key);
-		for (Gang gang : gangManager.getAll()) {
-			if (gang.getName() != null && GangNameRules.plain(gang.getName()).equalsIgnoreCase(plain)) return gang;
-		}
+		Gang byName = GangNameRules.findByPlainName(gangManager.getAll(), key);
+		if (byName != null) return byName;
 
 		try {
 			Gang byId = gangManager.getGang(Integer.parseInt(key));
