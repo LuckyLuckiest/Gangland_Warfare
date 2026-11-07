@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.turf.database;
 
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.luckyraven.gangland.turf.npc.TurfPowerupData;
 import org.luckyraven.keystone.persistence.database.component.Attribute;
 import org.luckyraven.keystone.persistence.database.component.Table;
@@ -37,14 +39,16 @@ public class TurfPowerupNpcTable extends Table<TurfPowerupData> {
 
 	@Override
 	public Object[] getData(TurfPowerupData data) {
+		Location location = data.getSpawnLocation();
+		World    world    = location.getWorld();
 		return new Object[]{
 				data.getTurfId(),
-				data.getSpawnLocation().getWorld() != null ? data.getSpawnLocation().getWorld().getName() : "world",
-				data.getSpawnLocation().getX(),
-				data.getSpawnLocation().getY(),
-				data.getSpawnLocation().getZ(),
-				(double) data.getSpawnLocation().getYaw(),
-				(double) data.getSpawnLocation().getPitch(),
+				world != null ? world.getName() : "world",
+				location.getX(),
+				location.getY(),
+				location.getZ(),
+				(double) location.getYaw(),
+				(double) location.getPitch(),
 				data.getDisplayName()
 		};
 	}
