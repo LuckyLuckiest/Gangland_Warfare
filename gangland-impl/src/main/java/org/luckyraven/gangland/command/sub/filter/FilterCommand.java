@@ -14,6 +14,7 @@ import org.luckyraven.gangland.menu.filter.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -132,8 +133,8 @@ public final class FilterCommand extends Command {
 	 * that action still needs, or null / an unknown action asks for the action.
 	 */
 	private void usage(CommandSender sender, String action) {
-		String operands = action == null ? null : OPERANDS.get(action.toLowerCase());
-		String tail     = operands == null ? "<action>" : action.toLowerCase() + " " + operands;
+		String operands = action == null ? null : OPERANDS.get(action.toLowerCase(Locale.ROOT));
+		String tail     = operands == null ? "<action>" : action.toLowerCase(Locale.ROOT) + " " + operands;
 
 		sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
 		                                                 "/glw filter <binding> " + tail));
@@ -147,7 +148,7 @@ public final class FilterCommand extends Command {
 		FilterBinding binding   = registry.get(bindingId);
 		if (binding == null) return;
 
-		switch (action.toLowerCase()) {
+		switch (action.toLowerCase(Locale.ROOT)) {
 			case ACTION_SORT -> {
 				SearchFilter current = store.get(bindingId, player);
 				store.set(bindingId, player, current.withSort(binding.nextSort(current.sort())));
@@ -170,7 +171,7 @@ public final class FilterCommand extends Command {
 		FilterBinding binding   = registry.get(bindingId);
 		if (binding == null || value.isEmpty()) return;
 
-		switch (action.toLowerCase()) {
+		switch (action.toLowerCase(Locale.ROOT)) {
 			case ACTION_SEARCH -> applyText(player, bindingId, binding, "NAME", joinFrom(args, 3));
 			case ACTION_CYCLE -> applyCycle(player, bindingId, binding, value);
 			default -> usage(sender, action);

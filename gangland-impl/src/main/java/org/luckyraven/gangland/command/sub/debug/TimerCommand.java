@@ -101,7 +101,7 @@ public final class TimerCommand extends Command {
 
 			SequenceTimer.Mode md;
 			try {
-				md = SequenceTimer.Mode.valueOf(value.toUpperCase());
+				md = SequenceTimer.Mode.valueOf(value.toUpperCase(Locale.ROOT));
 			} catch (IllegalArgumentException exception) {
 				md = SequenceTimer.Mode.NORMAL;
 			}

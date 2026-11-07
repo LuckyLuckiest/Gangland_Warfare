@@ -6,6 +6,7 @@ import org.luckyraven.gangland.sign.model.SignLineFormat;
 import org.luckyraven.keystone.color.Color;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The four-line sign format shared by the buy and sell signs.
@@ -17,7 +18,7 @@ final class TradeSignFormat {
 
 	static SignFormat create(SignType signType) {
 		String generated = signType.generated();
-		var    builder   = SignFormat.builder().formatName(generated.toLowerCase()).signTypePrefix(signType.typed());
+		var    builder   = SignFormat.builder().formatName(generated.toLowerCase(Locale.ROOT)).signTypePrefix(signType.typed());
 
 		var line1 = SignLineFormat.builder()
 		                          .lineNumber(0)

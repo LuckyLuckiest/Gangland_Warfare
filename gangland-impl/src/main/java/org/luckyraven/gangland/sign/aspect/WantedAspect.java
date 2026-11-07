@@ -13,6 +13,8 @@ import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.sign.type.WantedSign;
 
+import java.util.Locale;
+
 @RequiredArgsConstructor
 public class WantedAspect implements SignAspect {
 
@@ -125,7 +127,7 @@ public class WantedAspect implements SignAspect {
 		if (content == null) return null;
 
 		try {
-			return WantedSign.WantedType.valueOf(content.toUpperCase());
+			return WantedSign.WantedType.valueOf(content.toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException exception) {
 			return null;
 		}

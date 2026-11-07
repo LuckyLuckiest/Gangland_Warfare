@@ -13,6 +13,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 class ShopCreateCommand extends SubArgument {
 
@@ -38,7 +39,7 @@ class ShopCreateCommand extends SubArgument {
 
 	private void registerKeyArgument() {
 		Argument key = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			String raw = args[2].toLowerCase();
+			String raw = args[2].toLowerCase(Locale.ROOT);
 
 			if (!raw.matches("[a-z0-9_]+")) {
 				sender.sendMessage(Messages.SHOP_KEY_INVALID.toString());

@@ -19,6 +19,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 class ShopTitleCommand extends SubArgument {
 
@@ -49,7 +50,7 @@ class ShopTitleCommand extends SubArgument {
 				return;
 			}
 
-			String         raw = args[2].toLowerCase();
+			String         raw = args[2].toLowerCase(Locale.ROOT);
 			ShopDefinition def = shopRegistry.get(raw);
 			if (def == null) {
 				player.sendMessage(Messages.SHOP_NOT_DEFINED.toString().replace("%shop%", raw));

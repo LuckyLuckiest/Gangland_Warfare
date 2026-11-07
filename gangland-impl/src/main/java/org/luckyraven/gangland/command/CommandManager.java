@@ -53,7 +53,7 @@ public final class CommandManager extends org.luckyraven.keystone.command.Comman
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command,
 	                         @NotNull String label, @NotNull String[] args) {
 		try {
-			String mainCommandPermission = String.format("%s.command.main", fullPrefix.toLowerCase());
+			String mainCommandPermission = String.format("%s.command.main", fullPrefix.toLowerCase(Locale.ROOT));
 
 			if (!sender.hasPermission(mainCommandPermission)) {
 				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
@@ -69,7 +69,7 @@ public final class CommandManager extends org.luckyraven.keystone.command.Comman
 
 			for (Map.Entry<String, org.luckyraven.keystone.command.Command> entry : commandView().entrySet()) {
 				if (!(entry.getKey().equalsIgnoreCase(args[0]) ||
-				      entry.getValue().getAlias().contains(args[0].toLowerCase()))) continue;
+				      entry.getValue().getAlias().contains(args[0].toLowerCase(Locale.ROOT)))) continue;
 
 				if (Arrays.stream(args).anyMatch("help"::equalsIgnoreCase)) onSubHelp(entry.getValue(), sender, args);
 				else entry.getValue().runExecute(shortPrefix, sender, args);

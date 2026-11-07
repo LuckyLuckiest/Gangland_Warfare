@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 @CustomLog
@@ -70,7 +71,7 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 			// R35: a type this version does not know (a row written by a newer one) skips the row, not the whole load
 			Waypoint.WaypointType waypointType;
 			try {
-				waypointType = Waypoint.WaypointType.valueOf(type.toUpperCase());
+				waypointType = Waypoint.WaypointType.valueOf(type.toUpperCase(Locale.ROOT));
 			} catch (IllegalArgumentException e) {
 				log.warn("Skipping waypoint '{}' (id {}): unknown type '{}'.", name, id, type);
 				continue;

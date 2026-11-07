@@ -31,6 +31,7 @@ import org.luckyraven.keystone.persistence.config.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 
 import org.luckyraven.keystone.bean.Qualifier;
@@ -93,7 +94,7 @@ public class InventoryRuntimeContext {
 
 	public void registerInventory(FileHandler fileHandler) {
 		FileConfiguration config   = fileHandler.getFileConfiguration();
-		String            fileName = fileHandler.getName().toLowerCase();
+		String            fileName = fileHandler.getName().toLowerCase(Locale.ROOT);
 
 		log.debug("Registering inventory file '{}'", fileName);
 

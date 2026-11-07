@@ -13,6 +13,7 @@ import org.luckyraven.gangland.item.NbtTagCatalog;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 @CommandHandler
@@ -30,7 +31,7 @@ public final class ReadNBTCommand extends Command {
 		Player player = (Player) commandSender;
 
 		ItemStack itemHeld = player.getInventory().getItemInMainHand();
-		if (itemHeld.getType().name().toUpperCase().contains("AIR")) return;
+		if (itemHeld.getType().name().toUpperCase(Locale.ROOT).contains("AIR")) return;
 
 		ItemBuilder   itemBuilder   = new ItemBuilder(itemHeld);
 		String        allNbt        = itemBuilder.toString();
@@ -45,7 +46,7 @@ public final class ReadNBTCommand extends Command {
 			Player    player   = (Player) sender;
 			ItemStack itemHeld = player.getInventory().getItemInMainHand();
 
-			if (itemHeld.getType().name().toUpperCase().contains("AIR")) return;
+			if (itemHeld.getType().name().toUpperCase(Locale.ROOT).contains("AIR")) return;
 
 			ItemBuilder itemBuilder = new ItemBuilder(itemHeld);
 

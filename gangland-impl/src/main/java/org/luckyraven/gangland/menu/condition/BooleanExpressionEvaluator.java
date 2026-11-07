@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.luckyraven.keystone.util.Placeholder;
 
+import java.util.Locale;
+
 @RequiredArgsConstructor
 public class BooleanExpressionEvaluator implements ConditionEvaluator {
 
@@ -22,14 +24,14 @@ public class BooleanExpressionEvaluator implements ConditionEvaluator {
 		String converted = placeholder.convert(player, expression);
 
 		// Normalize the string
-		converted = converted.trim().toLowerCase();
+		converted = converted.trim().toLowerCase(Locale.ROOT);
 
 		// Parse as boolean
 		return parseBoolean(converted);
 	}
 
 	private boolean parseBoolean(String value) {
-		return switch (value.toLowerCase()) {
+		return switch (value.toLowerCase(Locale.ROOT)) {
 			case "true", "yes", "1" -> true;
 			case "false", "no", "0", "na" -> false;
 			default -> {

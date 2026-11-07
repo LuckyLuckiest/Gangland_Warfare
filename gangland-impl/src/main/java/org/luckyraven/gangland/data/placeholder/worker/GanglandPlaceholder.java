@@ -28,6 +28,7 @@ import org.luckyraven.gangland.item.unique.UniqueItem;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Map;
 
 import org.luckyraven.keystone.bean.Qualifier;
@@ -105,7 +106,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	@Override
 	public @Nullable String onRequest(OfflinePlayer player, @NotNull String parameter) {
-		String param = parameter.toLowerCase();
+		String param = parameter.toLowerCase(Locale.ROOT);
 
 		if (player == null) {
 			// a module-owned setting (gang_create_fee, ...) first, so the deprecated core field never answers it
@@ -147,7 +148,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private String resolveInnerPlaceholder(OfflinePlayer player, @NotNull String parameter) {
 		if (player == null) return null;
 
-		String param = parameter.toLowerCase();
+		String param = parameter.toLowerCase(Locale.ROOT);
 
 		String value = null;
 

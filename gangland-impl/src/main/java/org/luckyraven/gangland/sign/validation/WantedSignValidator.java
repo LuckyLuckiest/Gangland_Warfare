@@ -5,6 +5,8 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.type.WantedSign;
 
+import java.util.Locale;
+
 public class WantedSignValidator extends AbstractSignValidator {
 
 	public WantedSignValidator(SignType signType) {
@@ -13,9 +15,9 @@ public class WantedSignValidator extends AbstractSignValidator {
 
 	@Override
 	protected boolean isValidContent(String content) {
-		String increase = WantedSign.WantedType.INCREASE.name().toLowerCase();
-		String remove   = WantedSign.WantedType.REMOVE.name().toLowerCase();
-		String clear    = WantedSign.WantedType.CLEAR.name().toLowerCase();
+		String increase = WantedSign.WantedType.INCREASE.name().toLowerCase(Locale.ROOT);
+		String remove   = WantedSign.WantedType.REMOVE.name().toLowerCase(Locale.ROOT);
+		String clear    = WantedSign.WantedType.CLEAR.name().toLowerCase(Locale.ROOT);
 
 		return content.equalsIgnoreCase(increase) || content.equalsIgnoreCase(remove) ||
 		       content.equalsIgnoreCase(clear);
@@ -32,7 +34,7 @@ public class WantedSignValidator extends AbstractSignValidator {
 		}
 
 		// If operation is not "clear", line 3 must have a number (amount of stars)
-		if (content.equalsIgnoreCase(WantedSign.WantedType.CLEAR.name().toLowerCase())) return;
+		if (content.equalsIgnoreCase(WantedSign.WantedType.CLEAR.name().toLowerCase(Locale.ROOT))) return;
 
 		String starsLine = ChatUtil.replaceColorCodes(lines[2], "");
 		if (starsLine == null || starsLine.isEmpty()) {

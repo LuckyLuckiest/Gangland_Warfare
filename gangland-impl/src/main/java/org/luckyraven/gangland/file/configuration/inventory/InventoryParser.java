@@ -18,6 +18,7 @@ import org.luckyraven.gangland.menu.part.Slot;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -44,7 +45,7 @@ final class InventoryParser {
 			String itemName = section.getString("Name");
 			// Auto-generate a name only for raw materials. For prefixed items (e.g. weapon:awp) leave it null so
 			// SlotItemFactory keeps the parser-supplied display name.
-			if (itemName == null && !item.contains(":")) itemName = item.toLowerCase().replace('_', ' ');
+			if (itemName == null && !item.contains(":")) itemName = item.toLowerCase(Locale.ROOT).replace('_', ' ');
 			List<String> lore            = section.getStringList("Lore");
 			boolean      enchanted       = section.getBoolean("Enchanted");
 			boolean      draggable       = section.getBoolean("Draggable");
@@ -90,7 +91,7 @@ final class InventoryParser {
 				if (item == null) continue;
 
 				String itemName = section.getString("Name");
-				if (itemName == null && !item.contains(":")) itemName = item.toLowerCase().replace('_', ' ');
+				if (itemName == null && !item.contains(":")) itemName = item.toLowerCase(Locale.ROOT).replace('_', ' ');
 				List<String> lore            = section.getStringList("Lore");
 				boolean      enchanted       = section.getBoolean("Enchanted");
 				boolean      draggable       = section.getBoolean("Draggable");
@@ -154,7 +155,7 @@ final class InventoryParser {
 		if (item == null) return;
 
 		String itemName = templateSection.getString("Name");
-		if (itemName == null && !item.contains(":")) itemName = item.toLowerCase().replace('_', ' ');
+		if (itemName == null && !item.contains(":")) itemName = item.toLowerCase(Locale.ROOT).replace('_', ' ');
 		List<String> lore            = templateSection.getStringList("Lore");
 		boolean      enchanted       = templateSection.getBoolean("Enchanted");
 		int          customModelData = templateSection.getInt("Custom_Model_Data", 0);
@@ -222,7 +223,7 @@ final class InventoryParser {
 
 	private static void parseAction(String value, List<Action> into) {
 		try {
-			into.add(Action.valueOf(value.toUpperCase()));
+			into.add(Action.valueOf(value.toUpperCase(Locale.ROOT)));
 		} catch (IllegalArgumentException ignored) { }
 	}
 }

@@ -15,6 +15,7 @@ import org.luckyraven.gangland.shop.admin.view.ShopAdminFlow;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 class ShopEditCommand extends SubArgument {
 
@@ -45,7 +46,7 @@ class ShopEditCommand extends SubArgument {
 		Argument key = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) return;
 
-			String         raw = args[2].toLowerCase();
+			String         raw = args[2].toLowerCase(Locale.ROOT);
 			ShopDefinition def = shopRegistry.get(raw);
 			if (def == null) {
 				player.sendMessage(Messages.SHOP_NOT_DEFINED.toString().replace("%shop%", raw));

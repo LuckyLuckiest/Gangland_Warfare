@@ -10,6 +10,7 @@ import org.luckyraven.gangland.menu.handler.SlotItemFactory;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -63,7 +64,7 @@ final class ConditionalSlotParser {
 
 		String name = branchSection.getString("Name", defaultName);
 		// Auto-generate a fallback name only for raw materials. Prefixed items keep the parser-supplied name.
-		if (name == null && !item.contains(":")) name = item.toLowerCase().replace('_', ' ');
+		if (name == null && !item.contains(":")) name = item.toLowerCase(Locale.ROOT).replace('_', ' ');
 		List<String> lore = branchSection.getStringList("Lore");
 		if (lore.isEmpty()) lore = defaultLore;
 

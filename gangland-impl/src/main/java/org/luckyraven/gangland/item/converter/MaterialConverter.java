@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.gangland.item.ItemAttributes;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,13 +15,13 @@ public class MaterialConverter extends ItemAttributes {
 	public ItemStack convert(String type, String modifier, Map<String, String> attributes) {
 		try {
 			String              lookup    = (modifier != null && !modifier.isBlank()) ? modifier : type;
-			Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(lookup.toUpperCase());
+			Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(lookup.toUpperCase(Locale.ROOT));
 
 			Material material;
 			if (xMaterial.isPresent()) {
 				material = xMaterial.get().get();
 			} else {
-				material = Material.valueOf(lookup.toUpperCase());
+				material = Material.valueOf(lookup.toUpperCase(Locale.ROOT));
 			}
 
 			if (material == null) return null;
