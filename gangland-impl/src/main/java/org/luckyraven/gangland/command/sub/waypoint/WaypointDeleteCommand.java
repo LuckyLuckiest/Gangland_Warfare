@@ -18,7 +18,6 @@ import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
 import org.luckyraven.gangland.database.tables.waypoint.WaypointTable;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.persistence.database.DatabaseHelper;
 import org.luckyraven.keystone.persistence.database.component.Table;

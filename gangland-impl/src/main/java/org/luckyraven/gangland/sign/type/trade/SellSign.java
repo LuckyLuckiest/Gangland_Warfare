@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.sign.type.trade;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.sign.SignType;
@@ -15,7 +14,6 @@ import org.luckyraven.gangland.sign.handler.AspectBasedSignHandler;
 import org.luckyraven.gangland.sign.handler.SignHandler;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.sign.model.SignFormat;
-import org.luckyraven.gangland.sign.model.SignLineFormat;
 import org.luckyraven.gangland.sign.parser.SignParser;
 import org.luckyraven.gangland.sign.parser.TradeSignParser;
 import org.luckyraven.gangland.sign.registry.SignTypeDefinition;
