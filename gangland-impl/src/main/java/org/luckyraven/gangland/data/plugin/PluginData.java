@@ -5,7 +5,6 @@ import lombok.Setter;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 
 @Getter
 public final class PluginData {
@@ -50,10 +49,6 @@ public final class PluginData {
 
 	private static int getNewId() {
 		return ID++;
-	}
-
-	public Date getEquivalentDate(long epochSecond) {
-		return new Date(epochSecond);
 	}
 
 	/**

@@ -260,10 +260,6 @@ public class InventoryRuntimeContext {
 		}
 	}
 
-	Gangland gangland() {
-		return gangland;
-	}
-
 	private void registerUniqueItemHandler(String inventoryName, ConfigurationSection informationSection,
 	                                       @Nullable String openPermission) {
 		ConfigurationSection eventSection = informationSection.getConfigurationSection("Open.Event");
