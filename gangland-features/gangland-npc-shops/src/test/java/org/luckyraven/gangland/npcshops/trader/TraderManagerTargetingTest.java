@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.npcshops.trader.config.TraderSettings;
 import org.luckyraven.gangland.npcshops.trader.mood.MoodService;
 import org.luckyraven.gangland.npcshops.trader.respawn.TraderRespawnService;
+import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitRegistry;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.persistence.repository.IRepository;
@@ -51,20 +52,23 @@ import static org.mockito.Mockito.when;
 
 /**
  * Characterises {@link TraderManager#findTargetedTrader} (the ray trace) and the head-tracking tick (the closest
- * player lookup) before those two helpers are shared with {@code TraderManager}.
+ * player lookup) before those two helpers are shared with {@code BankerManager}, and pins what
+ * {@link TraderManager#create} returns (T-957).
  */
-@DisplayName("TraderManager - targeting and head tracking")
+@DisplayName("TraderManager - targeting, head tracking and create")
 class TraderManagerTargetingTest {
 
+	@SuppressWarnings("unchecked")
+	private final IRepository<TraderData> repository = mock(IRepository.class);
+	private final TraderTraitRegistry traitRegistry = mock(TraderTraitRegistry.class);
 	private final JavaPlugin     plugin   = mock(JavaPlugin.class);
 	private final TraderSettings settings = mock(TraderSettings.class);
 	private final World          world    = mock(World.class);
 	private final NPCRegistry    registry = mock(NPCRegistry.class);
 	private final TraderManager  manager;
 
-	@SuppressWarnings("unchecked")
 	TraderManagerTargetingTest() {
-		manager = new TraderManager(plugin, mock(IRepository.class), settings, mock(TraderTraitRegistry.class),
+		manager = new TraderManager(plugin, repository, settings, traitRegistry,
 		                            mock(MoodService.class), mock(TraderRespawnService.class));
 	}
 
@@ -227,6 +231,33 @@ class TraderManagerTargetingTest {
 			headTrackTick(scheduler).run();
 
 			verify(s.npc(), never()).faceLocation(any());
+		});
+	}
+
+	@Test
+	@DisplayName("create saves the row and returns false when Citizens is absent, so nothing is reported as spawned (T-957)")
+	void create_savesAndReturnsFalseWithoutCitizens() {
+		try (MockedStatic<NpcSupport> support = mockStatic(NpcSupport.class)) {
+			support.when(NpcSupport::available).thenReturn(false);
+			TraderData data = new TraderData(UUID.randomUUID(), "shop", new Location(world, 0, 64, 0), null, "trait");
+
+			assertFalse(manager.create(data));
+
+			verify(repository).save(data);
+			assertNull(manager.get(data.getId()));
+		}
+	}
+
+	@Test
+	@DisplayName("create saves the row and returns true when an NPC is standing for it (T-957)")
+	void create_savesAndReturnsTrueWhenNpcStands() throws Exception {
+		withCitizens(scheduler -> {
+			Spawned s = spawnTrader(0);
+			when(traitRegistry.get("trait")).thenReturn(new TraderTraitDefinition("trait", "Trait", null));
+
+			assertTrue(manager.create(s.data()));
+
+			verify(repository).save(s.data());
 		});
 	}
 }

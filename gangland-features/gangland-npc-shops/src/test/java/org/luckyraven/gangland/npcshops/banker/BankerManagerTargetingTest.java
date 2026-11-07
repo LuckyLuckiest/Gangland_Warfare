@@ -48,20 +48,22 @@ import static org.mockito.Mockito.when;
 
 /**
  * Characterises {@link BankerManager#findTargetedBanker} (the ray trace) and the head-tracking tick (the closest
- * player lookup) before those two helpers are shared with {@code TraderManager}.
+ * player lookup) before those two helpers are shared with {@code TraderManager}, and pins what
+ * {@link BankerManager#create} returns (T-957).
  */
-@DisplayName("BankerManager - targeting and head tracking")
+@DisplayName("BankerManager - targeting, head tracking and create")
 class BankerManagerTargetingTest {
 
+	@SuppressWarnings("unchecked")
+	private final IRepository<BankerData> repository = mock(IRepository.class);
 	private final JavaPlugin     plugin   = mock(JavaPlugin.class);
 	private final BankerSettings settings = mock(BankerSettings.class);
 	private final World          world    = mock(World.class);
 	private final NPCRegistry    registry = mock(NPCRegistry.class);
 	private final BankerManager  manager;
 
-	@SuppressWarnings("unchecked")
 	BankerManagerTargetingTest() {
-		manager = new BankerManager(plugin, mock(IRepository.class), settings);
+		manager = new BankerManager(plugin, repository, settings);
 	}
 
 	private record Spawned(BankerData data, NPC npc, Entity entity) { }
@@ -223,6 +225,32 @@ class BankerManagerTargetingTest {
 			headTrackTick(scheduler).run();
 
 			verify(s.npc(), never()).faceLocation(any());
+		});
+	}
+
+	@Test
+	@DisplayName("create saves the row and returns false when Citizens is absent, so nothing is reported as spawned (T-957)")
+	void create_savesAndReturnsFalseWithoutCitizens() {
+		try (MockedStatic<NpcSupport> support = mockStatic(NpcSupport.class)) {
+			support.when(NpcSupport::available).thenReturn(false);
+			BankerData data = new BankerData(UUID.randomUUID(), new Location(world, 0, 64, 0), null);
+
+			assertFalse(manager.create(data));
+
+			verify(repository).save(data);
+			assertNull(manager.get(data.getId()));
+		}
+	}
+
+	@Test
+	@DisplayName("create saves the row and returns true when an NPC is standing for it (T-957)")
+	void create_savesAndReturnsTrueWhenNpcStands() throws Exception {
+		withCitizens(scheduler -> {
+			Spawned s = spawnBanker(0);
+
+			assertTrue(manager.create(s.data()));
+
+			verify(repository).save(s.data());
 		});
 	}
 }
