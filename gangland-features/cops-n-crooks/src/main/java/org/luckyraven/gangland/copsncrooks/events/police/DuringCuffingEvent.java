@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.events.police;
 
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -9,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 
 @Getter
-@Setter
 public class DuringCuffingEvent extends Event {
 
 	private static final HandlerList handler = new HandlerList();
