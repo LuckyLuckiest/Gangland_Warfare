@@ -15,10 +15,8 @@ public class BountyParser extends AbstractSignParser {
 	@Override
 	public ParsedSign parse(String[] lines, Location location) throws SignValidationException {
 		String content = parseContent(lines[1]);
-		double price   = 0D;
-		int    amount  = 0;
 
-		return new BountyParsedSign(signType, content, price, amount, location, lines);
+		return new BountyParsedSign(signType, content, 0D, 0, location, lines);
 	}
 
 }
