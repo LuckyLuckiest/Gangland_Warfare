@@ -237,22 +237,7 @@ public final class TerritoryRaster {
 
 	/** The first free candidate: letters of the display name, letters of the ASCII name, then A-Z, 2-9, 9. */
 	private static char pick(String display, String name, Set<Character> used) {
-		for (char c : letters(display).toCharArray()) {
-			if (!used.contains(c)) {
-				return c;
-			}
-		}
-		for (char c : letters(name).toCharArray()) {
-			if (!used.contains(c)) {
-				return c;
-			}
-		}
-		for (char c : ALPHABET.toCharArray()) {
-			if (!used.contains(c)) {
-				return c;
-			}
-		}
-		for (char c : DIGITS.toCharArray()) {
+		for (char c : (letters(display) + letters(name) + ALPHABET + DIGITS).toCharArray()) {
 			if (!used.contains(c)) {
 				return c;
 			}
