@@ -1,11 +1,8 @@
 package org.luckyraven.gangland.npcshops.command.banker;
 
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.util.RayTraceResult;
-import org.bukkit.util.Vector;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.npcshops.NpcTargeting;
 import org.luckyraven.keystone.command.argument.Argument;

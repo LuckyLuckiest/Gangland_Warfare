@@ -62,13 +62,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 	private static final int SLOT_CLEAR   = 51;
 	private static final int SLOT_CONFIRM = 52;
 
-	private static final int[] ALL_DROPZONE_SLOTS = {
-			10, 11, 12, 13, 14,
-			19, 20, 21, 22, 23,
-			28, 29, 30, 31, 32,
-			37, 38, 39, 40, 41
-	};
-
 	private static final SoundEffect SOUND_CONFIRM = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
 	private static final SoundEffect SOUND_CANCEL  = vanilla("ENTITY_VILLAGER_NO", 1.0f);
 
@@ -83,11 +76,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 
 	private static SoundEffect vanilla(String name, float pitch) {
 		return new SoundEffect(SoundEffect.SoundType.VANILLA, name, 0.6f, pitch);
-	}
-
-	private static boolean contains(int[] arr, int value) {
-		for (int v : arr) if (v == value) return true;
-		return false;
 	}
 
 	@Override
@@ -354,13 +342,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 	}
 
 	// ── Helpers ──────────────────────────────────────────────────────────
-
-	private int[] dropzoneSlots(int cap) {
-		int   limit = Math.max(1, Math.min(cap, ALL_DROPZONE_SLOTS.length));
-		int[] out   = new int[limit];
-		System.arraycopy(ALL_DROPZONE_SLOTS, 0, out, 0, limit);
-		return out;
-	}
 
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
