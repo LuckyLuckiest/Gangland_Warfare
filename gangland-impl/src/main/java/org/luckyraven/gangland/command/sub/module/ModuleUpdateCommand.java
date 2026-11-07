@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.module;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +28,7 @@ import java.util.List;
  * {@code /glw module update [module]} — check every loaded module (or one) against the repository and download what
  * is newer. The replaced jar is retired by {@link ModuleUpdateService}; the new version loads on the next start.
  */
+@CustomLog
 class ModuleUpdateCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -88,6 +90,11 @@ class ModuleUpdateCommand extends SubArgument {
 		}
 
 		resolver.supplyAsync(() -> update(targets, name))
+				.exceptionally(throwable -> {
+					log.error("Updating modules failed unexpectedly", throwable);
+
+					return List.of();
+				})
 				.thenAccept(lines -> Bukkit.getScheduler()
 						.runTask(gangland, () -> lines.forEach(sender::sendMessage)));
 	}
