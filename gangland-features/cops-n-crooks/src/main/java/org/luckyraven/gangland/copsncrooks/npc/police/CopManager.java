@@ -286,6 +286,11 @@ public class CopManager implements BeanLifecycle {
 		}
 
 		// Clear targeting only for cops still pointing at the now-unwanted player. Do not despawn: they walk home.
+		clearTargetOf(group, playerId);
+	}
+
+	/** Stops every cop of {@code group} that still points at {@code playerId}; the others keep their target. */
+	private static void clearTargetOf(CopGroup group, UUID playerId) {
 		for (CopNpc cop : group.getCops()) {
 			if (!playerId.equals(cop.getTargetPlayerId())) continue;
 
@@ -542,12 +547,7 @@ public class CopManager implements BeanLifecycle {
 		copAttackers.remove(playerId);
 
 		for (CopGroup group : groups.values()) {
-			for (CopNpc cop : group.getCops()) {
-				if (!playerId.equals(cop.getTargetPlayerId())) continue;
-
-				cop.setTargetPlayerId(null);
-				cop.setCombatForced(false);
-			}
+			clearTargetOf(group, playerId);
 		}
 		releaseAttacker(playerId);
 	}
