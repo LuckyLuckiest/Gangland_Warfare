@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.fights.command.arena;
 
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.fights.arena.Arena;
 import org.luckyraven.keystone.command.argument.Argument;
