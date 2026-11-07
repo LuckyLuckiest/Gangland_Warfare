@@ -200,7 +200,8 @@ public class WaypointTeleport implements Listener {
 			                                                   time -> teleportCooldown.remove(player));
 			teleportCooldown.put(player, countdownTimer);
 
-			countdownTimer.start(true);
+			// sync: the callback mutates the plain HashMap the main thread reads (T-917)
+			countdownTimer.start(false);
 		}
 
 		// create a shield timer - in memory only, never the entity Invulnerable flag (docket LS-28)
