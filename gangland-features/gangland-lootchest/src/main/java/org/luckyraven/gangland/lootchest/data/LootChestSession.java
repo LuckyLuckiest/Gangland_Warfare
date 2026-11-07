@@ -32,8 +32,6 @@ public class LootChestSession {
 	private boolean crackingRequired;
 	@Setter
 	private boolean crackingCompleted;
-	@Setter
-	private long    crackingStartTime;
 
 	public LootChestSession(Player player, LootChestData chestData, SharedLootInventory inventory,
 	                        List<ItemStack> generatedLoot, boolean usingSharedInventory) {
