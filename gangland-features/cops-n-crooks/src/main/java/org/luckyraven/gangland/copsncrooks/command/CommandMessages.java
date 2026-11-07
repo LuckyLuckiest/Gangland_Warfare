@@ -1,6 +1,8 @@
 package org.luckyraven.gangland.copsncrooks.command;
 
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.file.configuration.LocalizedModuleYaml;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -110,6 +112,19 @@ public class CommandMessages extends LocalizedModuleYaml {
 	public String usage(String fullUsage) {
 		return GanglandChatUtil.setArguments(command(Key.ARGUMENTS_MISSING.path, Key.ARGUMENTS_MISSING.fallback),
 		                                     fullUsage);
+	}
+
+	/**
+	 * {@code raw} as an id, or {@code null} after answering {@code sender} with {@link Key#BAD_ID}: the caller returns.
+	 * Static so a command holding a mocked {@code messages} still parses.
+	 */
+	public static @Nullable Integer parseId(CommandMessages messages, CommandSender sender, String raw) {
+		try {
+			return Integer.parseInt(raw);
+		} catch (NumberFormatException e) {
+			sender.sendMessage(messages.format(Key.BAD_ID, Map.of("value", raw)));
+			return null;
+		}
 	}
 
 	/** The {@code %world%}, {@code %x%}, {@code %y%}, {@code %z%} values of {@code location}: the world's name or {@code ?}. */

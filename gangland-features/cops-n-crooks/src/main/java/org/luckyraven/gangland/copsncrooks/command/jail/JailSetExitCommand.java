@@ -70,12 +70,9 @@ class JailSetExitCommand extends SubArgument {
 			}
 
 			String rawId = args[2];
-			int    jailId;
-			try {
-				jailId = Integer.parseInt(rawId);
-			} catch (NumberFormatException e) {
-				// a non-numeric id is a bad operand, not an unknown jail
-				sender.sendMessage(commandMessages.format(CommandMessages.Key.BAD_ID, Map.of("value", rawId)));
+			// a non-numeric id is a bad operand, not an unknown jail
+			Integer jailId = CommandMessages.parseId(commandMessages, sender, rawId);
+			if (jailId == null) {
 				return;
 			}
 

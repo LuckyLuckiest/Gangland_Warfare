@@ -45,11 +45,8 @@ class CopSpawnerInfoCommand extends SubArgument {
 	private void idArgument() {
 		Argument idArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			String idStr = args[3];
-			int    id;
-			try {
-				id = Integer.parseInt(idStr);
-			} catch (NumberFormatException e) {
-				sender.sendMessage(messages.format(CommandMessages.Key.BAD_ID, Map.of("value", idStr)));
+			Integer id = CommandMessages.parseId(messages, sender, idStr);
+			if (id == null) {
 				return;
 			}
 

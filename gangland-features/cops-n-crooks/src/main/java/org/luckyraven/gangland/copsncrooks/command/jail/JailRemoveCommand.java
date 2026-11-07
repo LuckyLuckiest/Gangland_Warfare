@@ -44,11 +44,8 @@ class JailRemoveCommand extends SubArgument {
 	private void idArgument() {
 		Argument idArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			String idStr = args[2];
-			int    id;
-			try {
-				id = Integer.parseInt(idStr);
-			} catch (NumberFormatException e) {
-				sender.sendMessage(commandMessages.format(CommandMessages.Key.BAD_ID, Map.of("value", idStr)));
+			Integer id = CommandMessages.parseId(commandMessages, sender, idStr);
+			if (id == null) {
 				return;
 			}
 
