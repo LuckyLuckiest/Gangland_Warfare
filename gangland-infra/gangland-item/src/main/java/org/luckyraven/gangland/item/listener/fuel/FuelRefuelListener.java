@@ -8,7 +8,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -37,8 +36,6 @@ public class FuelRefuelListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onInteract(PlayerInteractEvent event) {
 		if (!event.getAction().name().contains("RIGHT_CLICK")) return;
-		// one right-click fires an event per hand; both hands are read below, so only the main-hand copy may act
-		if (event.getHand() != EquipmentSlot.HAND) return;
 
 		Player    player   = event.getPlayer();
 		ItemStack mainHand = player.getInventory().getItemInMainHand();

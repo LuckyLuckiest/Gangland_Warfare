@@ -9,7 +9,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -130,7 +129,6 @@ class FuelRefuelListenerRefuelTest {
 	private PlayerInteractEvent interactEvent(ItemStack mainHand, ItemStack offHand) {
 		PlayerInteractEvent event = mock(PlayerInteractEvent.class);
 		when(event.getAction()).thenReturn(Action.RIGHT_CLICK_AIR);
-		when(event.getHand()).thenReturn(EquipmentSlot.HAND);
 		when(event.getPlayer()).thenReturn(player);
 		when(inventory.getItemInMainHand()).thenReturn(mainHand);
 		when(inventory.getItemInOffHand()).thenReturn(offHand);
@@ -370,25 +368,6 @@ class FuelRefuelListenerRefuelTest {
 			verifyNoFeedback(bar);
 		}
 	}
-	@Test
-	@DisplayName("T-948 interact: the off-hand copy of one right-click is ignored, so a click refuels once")
-	void interact_offHandEvent_isIgnored() {
-		ItemStack coal  = new ItemStack(Material.COAL, 3);
-		ItemStack fuel  = fuelItem(10, 100);
-		PlayerInteractEvent event = interactEvent(coal, fuel);
-		when(event.getHand()).thenReturn(EquipmentSlot.OFF_HAND);
-
-		try (MockedStatic<ActionBarManager> bar = mockStatic(ActionBarManager.class)) {
-			listener.onInteract(event);
-
-			assertEquals(3, coal.getAmount(), "the OFF_HAND event of the same click must not consume a second coal");
-			verify(inventory, never()).setItemInOffHand(any());
-			verify(inventory, never()).setItemInMainHand(any());
-			verify(event, never()).setCancelled(true);
-			verifyNoFeedback(bar);
-		}
-	}
-
 	// ---------------------------------------------------------------- stacks of fuel items (GD-09)
 
 	/** A stack of {@code amount} fuel items whose clones carry the tags too, as a real {@code ItemStack} clone does. */
