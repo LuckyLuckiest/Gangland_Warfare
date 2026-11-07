@@ -93,15 +93,20 @@ public class TransitService {
 	}
 
 	private void scheduleTask(UUID playerId, long delayTicks) {
-		cancelInternal(playerId);
+		// only the task: the expiry schedule()/resumeOnJoin() just set must stay for the next save
+		cancelTask(playerId);
 		BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> fireById(playerId), delayTicks);
 		pending.put(playerId, task);
 	}
 
-	private void cancelInternal(UUID playerId) {
-		if (playerId == null) return;
+	private void cancelTask(UUID playerId) {
 		BukkitTask task = pending.remove(playerId);
 		if (task != null) task.cancel();
+	}
+
+	private void cancelInternal(UUID playerId) {
+		if (playerId == null) return;
+		cancelTask(playerId);
 
 		DetainedPlayer detained = detainmentRegistry.getDetainedPlayers().get(playerId);
 		if (detained != null && detained.getTransitExpiresAt() != null) {
