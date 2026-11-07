@@ -542,13 +542,13 @@ public abstract class LootChestService {
 		if (tier != null && !chestData.isUnlocked()) {
 			switch (tier.unlockRequirement()) {
 				case LOCKPICK -> {
-					String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "lockpick";
+					String itemId = unlockItemId(tier);
 					consumeRequiredItem(player, itemId);
 					chestData.setUnlocked(true);
 					cooldownManager.showAvailableHologram(chestData);
 				}
 				case KEY -> {
-					String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "key_" + tier.id();
+					String itemId = unlockItemId(tier);
 					consumeRequiredItem(player, itemId);
 					chestData.setUnlocked(true);
 					cooldownManager.showAvailableHologram(chestData);
@@ -616,12 +616,12 @@ public abstract class LootChestService {
 		return switch (tier.unlockRequirement()) {
 			case NONE -> OpenResult.SUCCESS;
 			case LOCKPICK -> {
-				String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "lockpick";
+				String itemId = unlockItemId(tier);
 
 				yield hasRequiredItem(player, itemId) ? OpenResult.SUCCESS : OpenResult.REQUIRES_LOCKPICK;
 			}
 			case KEY -> {
-				String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "key_" + tier.id();
+				String itemId = unlockItemId(tier);
 
 				yield hasRequiredItem(player, itemId) ? OpenResult.SUCCESS : OpenResult.REQUIRES_KEY;
 			}
@@ -631,6 +631,16 @@ public abstract class LootChestService {
 				yield player.hasPermission(permission) ? OpenResult.SUCCESS : OpenResult.NO_PERMISSION;
 			}
 		};
+	}
+
+	/**
+	 * The {@code loot_key} NBT value a LOCKPICK / KEY tier asks for: its own {@code unlockItemId}, else {@code lockpick}
+	 * for LOCKPICK and {@code key_<tier id>} for KEY. Only meaningful for those two requirements.
+	 */
+	private static String unlockItemId(LootTier tier) {
+		if (tier.unlockItemId() != null) return tier.unlockItemId();
+
+		return tier.unlockRequirement() == LootTier.UnlockRequirement.LOCKPICK ? "lockpick" : "key_" + tier.id();
 	}
 
 	private boolean hasRequiredItem(Player player, String itemKey) {
