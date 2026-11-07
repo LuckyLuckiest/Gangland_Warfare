@@ -55,19 +55,11 @@ class FuelAddCommand extends SubArgument {
 				return;
 			}
 
-			int increase;
+			Integer parsed = FuelCommand.parsePositiveAmount(user, args[2]);
 
-			try {
-				increase = Integer.parseInt(args[2]);
-			} catch (NumberFormatException exception) {
-				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
-				return;
-			}
+			if (parsed == null) return;
 
-			if (increase <= 0) {
-				user.sendMessage(Messages.FUEL_AMOUNT_INVALID.toString());
-				return;
-			}
+			int increase = parsed;
 
 			int       currentMax = Fuel.readFuelMax(held);
 			int       newMax     = currentMax + increase;

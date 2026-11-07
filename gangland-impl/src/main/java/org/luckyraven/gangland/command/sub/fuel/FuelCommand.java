@@ -7,7 +7,9 @@ import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.command.CommandHandler;
+import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.file.configuration.Messages;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +62,28 @@ public final class FuelCommand extends Command {
 	@Override
 	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Fuel");
+	}
+
+	/**
+	 * Parses the amount argument of the fuel add, remove, refuel and defuel commands. Messages the user and returns
+	 * {@code null} when the token is not an integer or is not above zero.
+	 */
+	static Integer parsePositiveAmount(User<Player> user, String raw) {
+		int amount;
+
+		try {
+			amount = Integer.parseInt(raw);
+		} catch (NumberFormatException exception) {
+			user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", raw));
+			return null;
+		}
+
+		if (amount <= 0) {
+			user.sendMessage(Messages.FUEL_AMOUNT_INVALID.toString());
+			return null;
+		}
+
+		return amount;
 	}
 
 }
