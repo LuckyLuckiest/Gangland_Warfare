@@ -13,6 +13,7 @@ import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.MailMessages;
 import org.luckyraven.gangland.mail.MailType;
+import org.luckyraven.gangland.mail.command.GangPickerMap;
 import org.luckyraven.gangland.mail.command.OnlineGangMembers;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -95,14 +96,7 @@ class GangInviteDeclineCommand extends SubArgument {
 		}
 
 		// Same-named gangs get name:id so each stays selectable (mirrors accept).
-		Map<String, Integer> nameCount = new HashMap<>();
-		for (Gang gang : senders) nameCount.merge(gang.getName(), 1, Integer::sum);
-
-		for (Gang gang : senders) {
-			String displayName = nameCount.get(gang.getName()) > 1 ? gang.getName() + ":" + gang.getId() : gang.getName();
-			map.put(displayName, String.valueOf(gang.getId()));
-		}
-		return map;
+		return GangPickerMap.byDisplayName(senders);
 	}
 
 	private OptionalArgument senderGangArgument() {
@@ -125,13 +119,11 @@ class GangInviteDeclineCommand extends SubArgument {
 				return;
 			}
 
-			MailItem match = null;
-			for (MailItem mail : mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)) {
-				if (mail.getSenderGangId() == senderId) {
-					match = mail;
-					break;
-				}
-			}
+			MailItem match = mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)
+			                                  .stream()
+			                                  .filter(mail -> mail.getSenderGangId() == senderId)
+			                                  .findFirst()
+			                                  .orElse(null);
 
 			if (match == null) {
 				user.sendMessage(messages.inviteDeclineNone());

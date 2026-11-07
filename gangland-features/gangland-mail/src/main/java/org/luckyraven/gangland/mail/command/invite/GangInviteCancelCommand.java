@@ -165,7 +165,6 @@ class GangInviteCancelCommand extends SubArgument {
 		for (User<Player> u : userManager.getUsers().values()) {
 			Player p = u.getUser();
 			if (p != null && uuid.equals(p.getUniqueId())) {
-				p.getName();
 				return p.getName();
 			}
 		}

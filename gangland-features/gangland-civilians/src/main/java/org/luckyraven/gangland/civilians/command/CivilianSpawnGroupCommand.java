@@ -55,7 +55,10 @@ class CivilianSpawnGroupCommand extends SubArgument {
 				return;
 			}
 
-			civilianService.spawnGroup(player.getLocation(), groupId);
+			if (civilianService.spawnGroup(player.getLocation(), groupId) == null) {
+				sender.sendMessage(civilianMessages.spawnFailed(groupId));
+				return;
+			}
 
 			sender.sendMessage(civilianMessages.groupSpawned(groupId));
 		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().groups().keySet()));

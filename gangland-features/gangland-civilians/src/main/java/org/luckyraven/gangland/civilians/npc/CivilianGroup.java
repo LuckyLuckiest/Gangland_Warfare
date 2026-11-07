@@ -60,11 +60,13 @@ public class CivilianGroup {
 	public Location getGroupCenter() {
 		if (members.isEmpty()) return null;
 
-		double x     = 0, y = 0, z = 0;
-		int    count = 0;
+		double      x          = 0, y = 0, z = 0;
+		int         count      = 0;
+		CivilianNpc firstValid = null;
 
 		for (CivilianNpc member : members) {
 			if (!member.isValid()) continue;
+			if (firstValid == null) firstValid = member;
 			Location loc = member.getEntity().getLocation();
 			x += loc.getX();
 			y += loc.getY();
@@ -73,15 +75,6 @@ public class CivilianGroup {
 		}
 
 		if (count == 0) return null;
-
-		CivilianNpc firstValid = null;
-		for (CivilianNpc member : members) {
-			if (member.isValid()) {
-				firstValid = member;
-				break;
-			}
-		}
-		if (firstValid == null) return null;
 
 		Location center = firstValid.getEntity().getLocation().clone();
 		center.setX(x / count);

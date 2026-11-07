@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.civilians.integration;
 
+import lombok.Getter;
 import org.luckyraven.gangland.civilians.npc.config.CivilianSettings;
 import org.luckyraven.gangland.file.configuration.MovedSetting;
 import org.luckyraven.keystone.exception.PluginException;
@@ -21,7 +22,9 @@ public class GanglandCivilianSettings implements CivilianSettings, FileInitializ
 	private final FileHandler fileHandler;
 	private final FileManager fileManager;
 
+	@Getter
 	private boolean civilianAiEnabled;
+	@Getter
 	private int civilianAiTickRate;
 	private int npcNavRecalculationTicks;
 	private int npcNavStuckCheckInterval;
@@ -32,12 +35,19 @@ public class GanglandCivilianSettings implements CivilianSettings, FileInitializ
 	private double npcNavRangedMinDistance;
 	private double npcNavRangedMaxDistance;
 	private int npcNavMinRepathAfterLossTicks;
+	@Getter
 	private double civilianSpawnerActivationRadius;
+	@Getter
 	private double civilianSpawnerDespawnRadius;
+	@Getter
 	private int civilianSpawnerMaxNpcs;
+	@Getter
 	private double civilianSpawnerSoftLeashRadius;
+	@Getter
 	private double civilianSpawnerHardLeashRadius;
+	@Getter
 	private int civilianSpawnerCheckInterval;
+	@Getter
 	private String civilianSpawnerDefaultTypeId;
 
 	public GanglandCivilianSettings(FileManager fileManager) {
@@ -76,16 +86,6 @@ public class GanglandCivilianSettings implements CivilianSettings, FileInitializ
 		civilianSpawnerHardLeashRadius = moved.getDouble("Spawner_Proximity.Npc_Hard_Leash_Radius", "Civilians.Spawner_Proximity.Npc_Hard_Leash_Radius", 50.0);
 		civilianSpawnerCheckInterval = moved.getInt("Spawner_Proximity.Check_Interval", "Civilians.Spawner_Proximity.Check_Interval", 100);
 		civilianSpawnerDefaultTypeId = moved.getString("Spawner_Proximity.Default_Type_Id", "Civilians.Spawner_Proximity.Default_Type_Id", "");
-	}
-
-	@Override
-	public boolean isCivilianAiEnabled() {
-		return civilianAiEnabled;
-	}
-
-	@Override
-	public int getCivilianAiTickRate() {
-		return civilianAiTickRate;
 	}
 
 	// ── NpcNavigationConfig ───────────────────────────────────────────────────
@@ -138,42 +138,5 @@ public class GanglandCivilianSettings implements CivilianSettings, FileInitializ
 	@Override
 	public int getMinRepathAfterLossTicks() {
 		return npcNavMinRepathAfterLossTicks;
-	}
-
-	// ── Spawner proximity ─────────────────────────────────────────────────────
-
-	@Override
-	public double getCivilianSpawnerActivationRadius() {
-		return civilianSpawnerActivationRadius;
-	}
-
-	@Override
-	public double getCivilianSpawnerDespawnRadius() {
-		return civilianSpawnerDespawnRadius;
-	}
-
-	@Override
-	public int getCivilianSpawnerMaxNpcs() {
-		return civilianSpawnerMaxNpcs;
-	}
-
-	@Override
-	public double getCivilianSpawnerSoftLeashRadius() {
-		return civilianSpawnerSoftLeashRadius;
-	}
-
-	@Override
-	public double getCivilianSpawnerHardLeashRadius() {
-		return civilianSpawnerHardLeashRadius;
-	}
-
-	@Override
-	public int getCivilianSpawnerCheckInterval() {
-		return civilianSpawnerCheckInterval;
-	}
-
-	@Override
-	public String getCivilianSpawnerDefaultTypeId() {
-		return civilianSpawnerDefaultTypeId;
 	}
 }

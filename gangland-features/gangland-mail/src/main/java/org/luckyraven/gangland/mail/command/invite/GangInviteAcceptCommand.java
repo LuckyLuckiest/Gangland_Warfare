@@ -13,9 +13,7 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -23,8 +21,8 @@ import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.MailMessages;
 import org.luckyraven.gangland.mail.MailType;
+import org.luckyraven.gangland.mail.command.GangPickerMap;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -117,16 +115,7 @@ class GangInviteAcceptCommand extends SubArgument {
 			if (gang != null) senders.add(gang);
 		}
 
-		Map<String, Integer> nameCount = new HashMap<>();
-		for (Gang g : senders) nameCount.merge(g.getName(), 1, Integer::sum);
-
-		Map<String, String> map = new HashMap<>();
-		for (Gang g : senders) {
-			String name        = g.getName();
-			String displayName = nameCount.get(name) > 1 ? name + ":" + g.getId() : name;
-			map.put(displayName, String.valueOf(g.getId()));
-		}
-		return map;
+		return GangPickerMap.byDisplayName(senders);
 	}
 
 	private OptionalArgument senderGangArgument() {
@@ -154,13 +143,11 @@ class GangInviteAcceptCommand extends SubArgument {
 				return;
 			}
 
-			MailItem match = null;
-			for (MailItem mail : mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)) {
-				if (mail.getSenderGangId() == senderId) {
-					match = mail;
-					break;
-				}
-			}
+			MailItem match = mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)
+			                                  .stream()
+			                                  .filter(mail -> mail.getSenderGangId() == senderId)
+			                                  .findFirst()
+			                                  .orElse(null);
 
 			Gang gang = gangManager.getGang(senderId);
 			if (match == null || gang == null) {

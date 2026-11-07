@@ -1,12 +1,15 @@
 package org.luckyraven.gangland.civilians.npc.entity;
 
+import lombok.CustomLog;
 import org.bukkit.entity.EntityType;
 import org.luckyraven.gangland.civilians.npc.config.CiviliansConfig;
 import org.luckyraven.gangland.civilians.npc.config.CiviliansLoader;
 import org.luckyraven.keystone.npc.spi.NpcMarkDefaults;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -16,6 +19,7 @@ import java.util.Map;
  * a later {@code put} for the same {@link EntityType} wins, so a type explicitly listed as police always beats a
  * civilian-list or hardcoded default for that same type, exactly as the original "police checked first" order did.
  */
+@CustomLog
 public class GanglandMarkDefaults implements NpcMarkDefaults {
 
 	private final CiviliansLoader civiliansLoader;
@@ -46,7 +50,17 @@ public class GanglandMarkDefaults implements NpcMarkDefaults {
 	}
 
 	private List<EntityType> processEntityTypes(List<String> entityTypes) {
-		return entityTypes.stream().map(String::toUpperCase).map(EntityType::valueOf).toList();
+		List<EntityType> types = new ArrayList<>();
+
+		for (String name : entityTypes) {
+			try {
+				types.add(EntityType.valueOf(name.toUpperCase(Locale.ROOT)));
+			} catch (IllegalArgumentException e) {
+				log.warn("civilians.yml Default_Entities names unknown entity type '{}' - skipping it.", name);
+			}
+		}
+
+		return types;
 	}
 
 }

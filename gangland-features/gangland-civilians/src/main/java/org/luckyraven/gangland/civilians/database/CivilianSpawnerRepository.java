@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.civilians.database;
 
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -26,17 +27,15 @@ public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawne
 	}
 
 	private final CivilianSpawnerTable copSpawnerTable;
+
+	/** The highest id of every row the last load saw, rows of unloaded worlds included (docket T-180). */
+	@Getter
 	private       int                  highestStoredId;
 
 	public CivilianSpawnerRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
 		super(plugin, databaseHandler, backend);
 
 		this.copSpawnerTable = new CivilianSpawnerTable();
-	}
-
-	/** The highest id of every row the last load saw, rows of unloaded worlds included (docket T-180). */
-	public int getHighestStoredId() {
-		return highestStoredId;
 	}
 
 	@Override

@@ -22,11 +22,13 @@ import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.MailStatus;
 import org.luckyraven.gangland.mail.MailType;
+import org.luckyraven.gangland.mail.command.GangPickerMap;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.luckyraven.keystone.bean.Qualifier;
@@ -92,22 +94,13 @@ public class GangAllyRequestCommand extends SubArgument {
 
 		Collection<Gang> all = gangManager.getGangs().values();
 
-		Map<String, Integer> nameCount = new HashMap<>();
+		List<Gang> candidates = new ArrayList<>();
 		for (Gang candidate : all) {
 			if (candidate == senderGang) continue;
 			if (candidate.isAlly(senderGang)) continue;
-			nameCount.merge(candidate.getName(), 1, Integer::sum);
+			candidates.add(candidate);
 		}
-
-		Map<String, String> map = new HashMap<>();
-		for (Gang candidate : all) {
-			if (candidate == senderGang) continue;
-			if (candidate.isAlly(senderGang)) continue;
-			String name        = candidate.getName();
-			String displayName = nameCount.get(name) > 1 ? name + ":" + candidate.getId() : name;
-			map.put(displayName, String.valueOf(candidate.getId()));
-		}
-		return map;
+		return GangPickerMap.byDisplayName(candidates);
 	}
 
 	private OptionalArgument buildAllyId() {
