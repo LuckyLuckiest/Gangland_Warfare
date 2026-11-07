@@ -18,6 +18,8 @@ import org.luckyraven.gangland.item.event.PlayerItemInitEvent;
 import org.luckyraven.gangland.item.unique.UniqueItem;
 import org.luckyraven.gangland.item.unique.UniqueItemUtil;
 
+import java.util.function.Predicate;
+
 @ListenerHandler(priority = ListenerPriority.LOW)
 @AutowireTarget({UniqueItemRegistry.class, JavaPlugin.class})
 public class LoadUniqueItem implements Listener {
@@ -36,23 +38,12 @@ public class LoadUniqueItem implements Listener {
 
 		// PlayerItemInitEvent is fired async (bridged from the async UserDataInitEvent), so inventory
 		// modifications must be hopped back to the main thread.
-		Runnable giveItems = () -> {
-			var uniqueItems = uniqueItemAddon.getUniqueItems();
-
-			for (var uniqueItem : uniqueItems.values()) {
-				if (!uniqueItem.isAddOnJoin()) continue;
-				if (!uniqueItem.isAddToInventory()) continue;
-
-				if (UniqueItemUtil.hasUniqueItem(player, uniqueItem) && !uniqueItem.isAllowDuplicates()) continue;
-
-				uniqueItem.addItemToInventory(player);
-			}
-		};
+		Runnable grantJoinItems = () -> giveItems(player, UniqueItem::isAddOnJoin);
 
 		if (event.isAsynchronous()) {
-			Bukkit.getScheduler().runTask(plugin, giveItems);
+			Bukkit.getScheduler().runTask(plugin, grantJoinItems);
 		} else {
-			giveItems.run();
+			grantJoinItems.run();
 		}
 	}
 
@@ -71,19 +62,19 @@ public class LoadUniqueItem implements Listener {
 
 	@EventHandler
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
-		giveRespawnItems(event.getPlayer());
+		giveItems(event.getPlayer(), UniqueItem::isAddOnRespawn);
 	}
 
 	@EventHandler
 	public void onPlayerUndowned(PlayerUndownedEvent event) {
-		giveRespawnItems(event.getPlayer());
+		giveItems(event.getPlayer(), UniqueItem::isAddOnRespawn);
 	}
 
-	private void giveRespawnItems(Player player) {
+	private void giveItems(Player player, Predicate<UniqueItem> gate) {
 		var uniqueItems = uniqueItemAddon.getUniqueItems();
 
 		for (var uniqueItem : uniqueItems.values()) {
-			if (!uniqueItem.isAddOnRespawn()) continue;
+			if (!gate.test(uniqueItem)) continue;
 			if (!uniqueItem.isAddToInventory()) continue;
 
 			if (UniqueItemUtil.hasUniqueItem(player, uniqueItem) && !uniqueItem.isAllowDuplicates()) continue;
