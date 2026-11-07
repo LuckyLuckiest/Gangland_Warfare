@@ -49,6 +49,11 @@ class JailRemoveCommand extends SubArgument {
 				return;
 			}
 
+			if (jailRegistry.getJail(id) == null) {
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_UNKNOWN, Map.of("id", idStr)));
+				return;
+			}
+
 			jailService.removeJail(id);
 
 			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_REMOVED,

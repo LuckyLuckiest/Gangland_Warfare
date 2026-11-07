@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
+import org.luckyraven.gangland.copsncrooks.jail.Jail;
 import org.luckyraven.gangland.copsncrooks.jail.JailExitService;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -100,14 +102,26 @@ class JailIdOperandTest {
 			run(command, player, "+5");
 		}
 
-		// info, setexit: getJail(5); teleport: getJailLocation(5); each unknown jail answers JAIL_UNKNOWN with the raw text
-		verify(registry, times(2)).getJail(5);
+		// info, setexit, remove: getJail(5); teleport: getJailLocation(5); each unknown jail answers JAIL_UNKNOWN with the raw text
+		verify(registry, times(3)).getJail(5);
 		verify(registry).getJailLocation(5);
-		verify(messages, times(3)).format(CommandMessages.Key.JAIL_UNKNOWN, Map.of("id", "+5"));
-		// remove: no lookup, the service is asked straight away and the parsed id is echoed
+		verify(messages, times(4)).format(CommandMessages.Key.JAIL_UNKNOWN, Map.of("id", "+5"));
+		// T-924: remove of an unknown jail removes nothing and says so
+		verify(jailService, never()).removeJail(anyInt());
+		verify(messages, never()).format(eq(CommandMessages.Key.JAIL_REMOVED), anyMap());
+		verify(messages, never()).format(any(), eq(Map.of("value", "+5")));
+	}
+
+	@Test
+	@DisplayName("remove of an existing jail asks the service and echoes the parsed id")
+	void remove_existingJail_removesAndConfirms() {
+		when(registry.getJail(5)).thenReturn(mock(Jail.class));
+
+		run(commands().get(1), player, "+5");
+
 		verify(jailService).removeJail(5);
 		verify(messages).format(CommandMessages.Key.JAIL_REMOVED, Map.of("id", "5"));
-		verify(messages, never()).format(any(), eq(Map.of("value", "+5")));
+		verify(messages, never()).format(eq(CommandMessages.Key.JAIL_UNKNOWN), anyMap());
 	}
 
 	@Test
