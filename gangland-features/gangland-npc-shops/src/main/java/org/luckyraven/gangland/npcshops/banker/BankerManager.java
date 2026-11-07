@@ -136,13 +136,9 @@ public final class BankerManager implements BeanLifecycle {
 
 	@Nullable
 	public BankerNpc findTargetedBanker(Player player, double maxDistance) {
-		Location eye       = player.getEyeLocation();
-		Vector   direction = eye.getDirection();
-
-		RayTraceResult result = player.getWorld().rayTraceEntities(eye, direction, maxDistance,
-		                                                           entity -> !entity.equals(player));
-		if (result == null || result.getHitEntity() == null) return null;
-		return getByEntity(result.getHitEntity());
+		Entity hit = NpcTargeting.rayTraceEntity(player, maxDistance);
+		if (hit == null) return null;
+		return getByEntity(hit);
 	}
 
 	public void forEach(Consumer<BankerNpc> consumer) {
