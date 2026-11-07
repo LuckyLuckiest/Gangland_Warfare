@@ -21,6 +21,7 @@ import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.MailMessages;
 import org.luckyraven.gangland.mail.MailType;
+import org.luckyraven.gangland.mail.command.GangPickerMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -114,16 +115,7 @@ class GangInviteAcceptCommand extends SubArgument {
 			if (gang != null) senders.add(gang);
 		}
 
-		Map<String, Integer> nameCount = new HashMap<>();
-		for (Gang g : senders) nameCount.merge(g.getName(), 1, Integer::sum);
-
-		Map<String, String> map = new HashMap<>();
-		for (Gang g : senders) {
-			String name        = g.getName();
-			String displayName = nameCount.get(name) > 1 ? name + ":" + g.getId() : name;
-			map.put(displayName, String.valueOf(g.getId()));
-		}
-		return map;
+		return GangPickerMap.byDisplayName(senders);
 	}
 
 	private OptionalArgument senderGangArgument() {

@@ -20,6 +20,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.MailType;
+import org.luckyraven.gangland.mail.command.GangPickerMap;
 
 import org.luckyraven.keystone.bean.Qualifier;
 import java.util.*;
@@ -112,16 +113,7 @@ public class GangAllyRejectCommand extends SubArgument {
 			if (sending != null) senders.add(sending);
 		}
 
-		Map<String, Integer> nameCount = new HashMap<>();
-		for (Gang s : senders) nameCount.merge(s.getName(), 1, Integer::sum);
-
-		Map<String, String> map = new HashMap<>();
-		for (Gang s : senders) {
-			String name        = s.getName();
-			String displayName = nameCount.get(name) > 1 ? name + ":" + s.getId() : name;
-			map.put(displayName, String.valueOf(s.getId()));
-		}
-		return map;
+		return GangPickerMap.byDisplayName(senders);
 	}
 
 	private OptionalArgument senderGangArgument() {

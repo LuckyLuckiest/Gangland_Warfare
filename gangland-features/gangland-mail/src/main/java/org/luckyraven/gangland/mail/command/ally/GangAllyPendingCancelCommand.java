@@ -19,6 +19,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.MailType;
+import org.luckyraven.gangland.mail.command.GangPickerMap;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import org.luckyraven.keystone.bean.Qualifier;
@@ -82,16 +83,7 @@ public class GangAllyPendingCancelCommand extends SubArgument {
 			if (target != null) targets.add(target);
 		}
 
-		Map<String, Integer> nameCount = new HashMap<>();
-		for (Gang target : targets) nameCount.merge(target.getName(), 1, Integer::sum);
-
-		Map<String, String> map = new HashMap<>();
-		for (Gang target : targets) {
-			String name        = target.getName();
-			String displayName = nameCount.get(name) > 1 ? name + ":" + target.getId() : name;
-			map.put(displayName, String.valueOf(target.getId()));
-		}
-		return map;
+		return GangPickerMap.byDisplayName(targets);
 	}
 
 	private OptionalArgument targetGangArgument() {
