@@ -558,7 +558,12 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	 * Destroys all active civilian NPCs and clears all registries.
 	 */
 	public void shutdown() {
-		for (CivilianNpc npc : registry.getActiveNpcs()) {
+		// A group's members are registered one tick after spawnGroup (the group at once), so a member of a group
+		// spawned in the same tick is not in getActiveNpcs() yet: take the group members too, or they escape.
+		Set<CivilianNpc> doomed = new LinkedHashSet<>(registry.getActiveNpcs());
+		registry.getActiveGroups().forEach(group -> doomed.addAll(group.getMembers()));
+
+		for (CivilianNpc npc : doomed) {
 			try {
 				npc.destroy(markManager::removeMark);
 			} catch (Exception e) {
