@@ -15,6 +15,7 @@ import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.item.contract.UniqueItemRegistry;
+import org.luckyraven.gangland.item.unique.UniqueItem;
 import org.luckyraven.gangland.item.unique.UniqueItemUtil;
 
 @ListenerHandler
@@ -46,9 +47,7 @@ public class UniqueItemInventoryRestrict implements Listener {
 		// Check if it's a unique item
 		if (!UniqueItemUtil.isUniqueItem(clickedItem)) return;
 
-		var itemBuilder   = new ItemBuilder(clickedItem);
-		var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
-		var uniqueItem    = uniqueItemAddon.getUniqueItem(uniqueItemKey);
+		var uniqueItem = registered(clickedItem);
 
 		if (uniqueItem == null) return;
 		if (uniqueItem.isMovable()) return;
@@ -66,9 +65,7 @@ public class UniqueItemInventoryRestrict implements Listener {
 		event.getDrops().removeIf(item -> {
 			if (!UniqueItemUtil.isUniqueItem(item)) return false;
 
-			var itemBuilder   = new ItemBuilder(item);
-			var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
-			var uniqueItem    = uniqueItemAddon.getUniqueItem(uniqueItemKey);
+			var uniqueItem = registered(item);
 
 			return uniqueItem != null && !uniqueItem.isDropOnDeath();
 		});
@@ -81,14 +78,18 @@ public class UniqueItemInventoryRestrict implements Listener {
 		// Check if it's a unique item
 		if (!UniqueItemUtil.isUniqueItem(droppedItem)) return;
 
-		var itemBuilder   = new ItemBuilder(droppedItem);
-		var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
-		var uniqueItem    = uniqueItemAddon.getUniqueItem(uniqueItemKey);
+		var uniqueItem = registered(droppedItem);
 
 		if (uniqueItem == null) return;
 		if (uniqueItem.isDroppable()) return;
 
 		event.setCancelled(true);
+	}
+
+	private UniqueItem registered(ItemStack stack) {
+		var itemBuilder   = new ItemBuilder(stack);
+		var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
+		return uniqueItemAddon.getUniqueItem(uniqueItemKey);
 	}
 
 }
