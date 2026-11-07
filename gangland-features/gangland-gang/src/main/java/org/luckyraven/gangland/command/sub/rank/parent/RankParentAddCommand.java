@@ -8,12 +8,11 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.command.sub.rank.RankCommand;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
-import java.util.Collection;
-import java.util.List;
 
 class RankParentAddCommand extends SubArgument {
 
@@ -48,13 +47,7 @@ class RankParentAddCommand extends SubArgument {
 			}
 
 			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<parent>"));
-		}, sender -> {
-			Collection<Rank> values = rankManager.getRanks().values();
-
-			if (values.isEmpty()) return List.of("<name>");
-
-			return values.stream().map(Rank::getName).toList();
-		});
+		}, sender -> RankCommand.rankNameCompletions(rankManager));
 
 		Argument parentArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[3]);
@@ -92,13 +85,7 @@ class RankParentAddCommand extends SubArgument {
 			String replace = string.replace("%parent%", childRank.getName()).replace("%rank%", rank.getName());
 
 			sender.sendMessage(replace);
-		}, sender -> {
-			Collection<Rank> values = rankManager.getRanks().values();
-
-			if (values.isEmpty()) return List.of("<name>");
-
-			return values.stream().map(Rank::getName).toList();
-		});
+		}, sender -> RankCommand.rankNameCompletions(rankManager));
 
 		rankArg.addSubArgument(parentArg);
 		this.addSubArgument(rankArg);

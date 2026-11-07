@@ -14,9 +14,11 @@ import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -86,6 +88,15 @@ public final class RankCommand extends Command {
 	@Override
 	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Rank");
+	}
+
+	/** The rank names for a tab completion, or the {@code <name>} placeholder when no rank exists. */
+	public static List<String> rankNameCompletions(RankManager rankManager) {
+		Collection<Rank> values = rankManager.getRanks().values();
+
+		if (values.isEmpty()) return List.of("<name>");
+
+		return values.stream().map(Rank::getName).toList();
 	}
 
 }

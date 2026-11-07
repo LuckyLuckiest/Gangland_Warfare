@@ -13,7 +13,6 @@ import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
-import java.util.Collection;
 import java.util.List;
 
 class RankInfoCommand extends SubArgument {
@@ -77,13 +76,7 @@ class RankInfoCommand extends SubArgument {
 			String replace1 = string1.replace("%permissions%", permBuilder.toString());
 
 			sender.sendMessage(replace1);
-		}, sender -> {
-			Collection<Rank> values = rankManager.getRanks().values();
-
-			if (values.isEmpty()) return List.of("<name>");
-
-			return values.stream().map(Rank::getName).toList();
-		});
+		}, sender -> RankCommand.rankNameCompletions(rankManager));
 
 		this.addSubArgument(infoName);
 	}
