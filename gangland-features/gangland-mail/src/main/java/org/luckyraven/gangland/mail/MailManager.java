@@ -6,6 +6,7 @@ import org.luckyraven.gangland.mail.contract.MailRepositoryContract;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * Central registry for {@link MailItem}s. Holds an in-memory cache keyed by id, exposes lookup methods that pending /
@@ -71,15 +72,12 @@ public final class MailManager {
 	 */
 	public List<MailItem> findPendingForRecipient(UUID recipientUuid, MailType type) {
 		if (recipientUuid == null) return Collections.emptyList();
-		List<MailItem> out = new ArrayList<>();
-		for (MailItem mail : mailById.values()) {
-			if (mail.getStatus() != MailStatus.PENDING) continue;
-			if (mail.isExpired()) continue;
-			if (!recipientUuid.equals(mail.getRecipientUuid())) continue;
-			if (type != null && mail.getType() != type) continue;
-			out.add(mail);
-		}
-		return out;
+		return mailById.values()
+		               .stream()
+		               .filter(MailManager::isLivePending)
+		               .filter(mail -> recipientUuid.equals(mail.getRecipientUuid()))
+		               .filter(mail -> type == null || mail.getType() == type)
+		               .collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	/**
@@ -87,15 +85,12 @@ public final class MailManager {
 	 */
 	public List<MailItem> findPendingForRecipientGang(int recipientGangId, MailType type) {
 		if (recipientGangId == MailItem.NO_GANG) return Collections.emptyList();
-		List<MailItem> out = new ArrayList<>();
-		for (MailItem mail : mailById.values()) {
-			if (mail.getStatus() != MailStatus.PENDING) continue;
-			if (mail.isExpired()) continue;
-			if (mail.getRecipientGangId() != recipientGangId) continue;
-			if (type != null && mail.getType() != type) continue;
-			out.add(mail);
-		}
-		return out;
+		return mailById.values()
+		               .stream()
+		               .filter(MailManager::isLivePending)
+		               .filter(mail -> mail.getRecipientGangId() == recipientGangId)
+		               .filter(mail -> type == null || mail.getType() == type)
+		               .collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	/**
@@ -103,15 +98,12 @@ public final class MailManager {
 	 */
 	public List<MailItem> findPendingFromSenderGang(int senderGangId, MailType type) {
 		if (senderGangId == MailItem.NO_GANG) return Collections.emptyList();
-		List<MailItem> out = new ArrayList<>();
-		for (MailItem mail : mailById.values()) {
-			if (mail.getStatus() != MailStatus.PENDING) continue;
-			if (mail.isExpired()) continue;
-			if (mail.getSenderGangId() != senderGangId) continue;
-			if (type != null && mail.getType() != type) continue;
-			out.add(mail);
-		}
-		return out;
+		return mailById.values()
+		               .stream()
+		               .filter(MailManager::isLivePending)
+		               .filter(mail -> mail.getSenderGangId() == senderGangId)
+		               .filter(mail -> type == null || mail.getType() == type)
+		               .collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	/**
@@ -119,15 +111,13 @@ public final class MailManager {
 	 * before sending another, and to find the row that {@code /glw gang invite cancel <player>} should remove.
 	 */
 	public Optional<MailItem> findPendingByGangAndRecipient(int senderGangId, UUID recipientUuid, MailType type) {
-		for (MailItem mail : mailById.values()) {
-			if (mail.getStatus() != MailStatus.PENDING) continue;
-			if (mail.isExpired()) continue;
-			if (mail.getSenderGangId() != senderGangId) continue;
-			if (!recipientUuid.equals(mail.getRecipientUuid())) continue;
-			if (mail.getType() != type) continue;
-			return Optional.of(mail);
-		}
-		return Optional.empty();
+		return mailById.values()
+		               .stream()
+		               .filter(MailManager::isLivePending)
+		               .filter(mail -> mail.getSenderGangId() == senderGangId)
+		               .filter(mail -> recipientUuid.equals(mail.getRecipientUuid()))
+		               .filter(mail -> mail.getType() == type)
+		               .findFirst();
 	}
 
 	/**
@@ -135,15 +125,18 @@ public final class MailManager {
 	 * detect duplicate ally requests.
 	 */
 	public Optional<MailItem> findPendingBetweenGangs(int senderGangId, int recipientGangId, MailType type) {
-		for (MailItem mail : mailById.values()) {
-			if (mail.getStatus() != MailStatus.PENDING) continue;
-			if (mail.isExpired()) continue;
-			if (mail.getSenderGangId() != senderGangId) continue;
-			if (mail.getRecipientGangId() != recipientGangId) continue;
-			if (mail.getType() != type) continue;
-			return Optional.of(mail);
-		}
-		return Optional.empty();
+		return mailById.values()
+		               .stream()
+		               .filter(MailManager::isLivePending)
+		               .filter(mail -> mail.getSenderGangId() == senderGangId)
+		               .filter(mail -> mail.getRecipientGangId() == recipientGangId)
+		               .filter(mail -> mail.getType() == type)
+		               .findFirst();
+	}
+
+	/** A mail the finders may return: still PENDING and not past its deadline. */
+	private static boolean isLivePending(MailItem mail) {
+		return mail.getStatus() == MailStatus.PENDING && !mail.isExpired();
 	}
 
 	/**
