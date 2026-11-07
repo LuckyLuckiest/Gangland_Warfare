@@ -6,6 +6,7 @@ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The {@link SignTypeContribution} and {@link SignViewProvider} beans a sign catalogue can draw on, looked up once
@@ -35,20 +36,13 @@ public final class SignContributions {
 
 	/** Build the sign types every contribution provides, in registration order. */
 	public List<Sign> createSigns(String signPrefix) {
-		List<Sign> signs = new ArrayList<>();
-		for (SignTypeContribution contribution : typeContributions) {
-			signs.addAll(contribution.signs(signPrefix));
-		}
-		return signs;
+		return typeContributions.stream()
+		                        .flatMap(contribution -> contribution.signs(signPrefix).stream())
+		                        .collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	/** Opens {@code content} with the first provider that claims it; {@code false} when none do. */
 	public boolean openView(Player player, String content) {
-		for (SignViewProvider provider : viewProviders) {
-			if (provider.open(player, content)) {
-				return true;
-			}
-		}
-		return false;
+		return viewProviders.stream().anyMatch(provider -> provider.open(player, content));
 	}
 }
