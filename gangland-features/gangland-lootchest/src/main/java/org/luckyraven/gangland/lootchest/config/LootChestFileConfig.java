@@ -32,16 +32,16 @@ public class LootChestFileConfig {
 
 	@Bean
 	public LootChestFiles lootChestFiles(FileManager fileManager, ModuleLoader moduleLoader) {
-		fileManager.addFile(new FileHandler(plugin, "loot_chests", "lootchests", ".yml", moduleLoader.classLoader()),
-		                    true);
-		fileManager.addFile(new FileHandler(plugin, "tiers", "lootchests", ".yml", moduleLoader.classLoader()), true);
-		fileManager.addFile(new FileHandler(plugin, "lootchest_messages", "lootchests", ".yml",
-		                                    moduleLoader.classLoader()), true);
-		fileManager.addFile(new FileHandler(plugin, "lootchest_messages_es", "lootchests", ".yml",
-		                                    moduleLoader.classLoader()), true);
-		fileManager.addFile(new FileHandler(plugin, "loot_chest_settings", "lootchests", ".yml",
-		                                    moduleLoader.classLoader()), true);
+		add(fileManager, moduleLoader, "loot_chests");
+		add(fileManager, moduleLoader, "tiers");
+		add(fileManager, moduleLoader, "lootchest_messages");
+		add(fileManager, moduleLoader, "lootchest_messages_es");
+		add(fileManager, moduleLoader, "loot_chest_settings");
 		return new LootChestFiles();
+	}
+
+	private void add(FileManager fileManager, ModuleLoader moduleLoader, String name) {
+		fileManager.addFile(new FileHandler(plugin, name, "lootchests", ".yml", moduleLoader.classLoader()), true);
 	}
 
 	/** Marker so the registration above is an ordinary @Bean in the phased pipeline. */
