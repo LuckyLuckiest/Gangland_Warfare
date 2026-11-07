@@ -126,7 +126,7 @@ final class DynmapTurfLayer implements TurfWebLayer {
 		double[] x = {region.getMinX(), region.getMaxX() + 1};
 		double[] z = {region.getMinZ(), region.getMaxZ() + 1};
 		if (marker == null) {
-			marker = set.createAreaMarker(id, turf.getDisplayName(), false, region.getWorld(), x, z, false);
+			marker = set.createAreaMarker(id, plain(turf.getDisplayName()), false, region.getWorld(), x, z, false);
 			if (marker == null) {
 				return; // dynmap does not know this world
 			}
