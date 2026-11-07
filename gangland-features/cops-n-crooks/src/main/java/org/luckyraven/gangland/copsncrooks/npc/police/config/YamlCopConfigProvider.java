@@ -243,13 +243,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.checkInSettings = parseCheckInSettings(cops, report);
 		this.regroupSettings = parseRegroupSettings(cops, report);
 		this.shotNoiseSettings = parseShotNoiseSettings(cops, report);
-		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
+		MappingNode retreatSection = sectionOf(cops, "Retreat");
 		this.retreatSettings = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report) : null,
 		                                            report, RetreatSettings.DEFAULT);
 		this.names = parseNames(cops, report);
-		MappingNode stuckSection = cops == null ? null : cops.get("Stuck").asMapping().orNull();
+		MappingNode stuckSection = sectionOf(cops, "Stuck");
 		this.stuckSettings = StuckSettings.read(stuckSection != null ? NodeReader.of(stuckSection, report) : null);
-		MappingNode careSection = cops == null ? null : cops.get("Field_Care").asMapping().orNull();
+		MappingNode careSection = sectionOf(cops, "Field_Care");
 		this.fieldCareSettings = FieldCareSettings.read(careSection != null ? NodeReader.of(careSection, report) : null,
 		                                                report, FieldCareSettings.DEFAULT);
 
@@ -1020,9 +1020,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return access.node() != null ? access.node().location() : parent.mapping().location();
 	}
 
+	private static @Nullable MappingNode sectionOf(@Nullable NodeReader cops, String key) {
+		return cops == null ? null : cops.get(key).asMapping().orNull();
+	}
+
 	private NpcMeleeProfile parseMeleeProfile(@Nullable NodeReader cops, ConfigReport report) {
 		NpcMeleeProfile defaults = NpcMeleeProfile.DEFAULT;
-		MappingNode meleeSection = cops == null ? null : cops.get("Melee").asMapping().orNull();
+		MappingNode meleeSection = sectionOf(cops, "Melee");
 		if (meleeSection == null) {
 			return new NpcMeleeProfile(defaults.reach(), defaults.approach(), attackCooldownTicks,
 			                           defaults.damageSpread(), defaults.edgeDamage());
@@ -1038,13 +1042,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	private TacticsConfig parseTacticsDefault(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode tacticsSection = cops == null ? null : cops.get("Tactics").asMapping().orNull();
+		MappingNode tacticsSection = sectionOf(cops, "Tactics");
 		NodeReader  tactics        = tacticsSection != null ? NodeReader.of(tacticsSection, report) : null;
 		return TacticsConfig.read(tactics, report, COP_TACTICS_DEFAULT);
 	}
 
 	private RadioSettings parseRadioSettings(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode radioSection = cops == null ? null : cops.get("Radio").asMapping().orNull();
+		MappingNode radioSection = sectionOf(cops, "Radio");
 		NodeReader  radio        = radioSection != null ? NodeReader.of(radioSection, report) : null;
 		RadioSettings read = RadioSettings.read(radio, report, COP_RADIO_DEFAULTS);
 
@@ -1059,7 +1063,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	/** {@code Cops.Names}: an absent {@code First_Names} keeps the built-in pool, {@code []} means no first name. */
 	private CopNames parseNames(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode namesSection = cops == null ? null : cops.get("Names").asMapping().orNull();
+		MappingNode namesSection = sectionOf(cops, "Names");
 		if (namesSection == null) return CopNames.DEFAULT;
 
 		NodeReader   names  = NodeReader.of(namesSection, report);
@@ -1072,7 +1076,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private BackupSettings parseBackupSettings(@Nullable NodeReader cops, ConfigReport report) {
 		BackupSettings defaults     = BackupSettings.DEFAULT;
-		MappingNode    backupSection = cops == null ? null : cops.get("Backup").asMapping().orNull();
+		MappingNode    backupSection = sectionOf(cops, "Backup");
 		if (backupSection == null) return defaults;
 
 		NodeReader backup = NodeReader.of(backupSection, report);
@@ -1088,7 +1092,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private CheckInSettings parseCheckInSettings(@Nullable NodeReader cops, ConfigReport report) {
 		CheckInSettings defaults = CheckInSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Check_In").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Check_In");
 		if (section == null) return defaults;
 
 		NodeReader checkIn = NodeReader.of(section, report);
@@ -1105,7 +1109,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private RegroupSettings parseRegroupSettings(@Nullable NodeReader cops, ConfigReport report) {
 		RegroupSettings defaults = RegroupSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Regroup").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Regroup");
 		if (section == null) return defaults;
 
 		NodeReader regroup = NodeReader.of(section, report);
@@ -1124,7 +1128,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private DispatchSettings parseDispatchSettings(@Nullable NodeReader cops, ConfigReport report) {
 		DispatchSettings defaults = DispatchSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Dispatch").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Dispatch");
 		if (section == null) return defaults;
 
 		NodeReader dispatch = NodeReader.of(section, report);
@@ -1140,7 +1144,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private BreatherSettings parseBreatherSettings(@Nullable NodeReader cops, ConfigReport report) {
 		BreatherSettings defaults = BreatherSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Breather").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Breather");
 		if (section == null) return defaults;
 
 		NodeReader    breather = NodeReader.of(section, report);
@@ -1172,7 +1176,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private HandoffSettings parseHandoffSettings(@Nullable NodeReader cops, ConfigReport report) {
 		HandoffSettings defaults = HandoffSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Handoff").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Handoff");
 		if (section == null) return defaults;
 
 		NodeReader handoff = NodeReader.of(section, report);
@@ -1193,7 +1197,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	 * {@code Station_Arrival_Distance} are read by {@link CopSettings}, so they are touched here to stay known keys.
 	 */
 	private static int parseReturnWatchedCap(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode section = cops == null ? null : cops.get("Return").asMapping().orNull();
+		MappingNode section = sectionOf(cops, "Return");
 		if (section == null) return DEFAULT_RETURN_WATCHED_CAP_SECONDS;
 		NodeReader ret = NodeReader.of(section, report);
 		ret.markAllKeysTouched();
@@ -1203,7 +1207,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	// 0.21.0: clamped with Math.max (not NodeReader.min) so a too-small value clamps up rather than reverting to the default
 	private StandoffSettings parseStandoffSettings(@Nullable NodeReader cops, ConfigReport report) {
 		StandoffSettings defaults = StandoffSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Standoff").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Standoff");
 		if (section == null) return defaults;
 
 		NodeReader standoff = NodeReader.of(section, report);
@@ -1223,7 +1227,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	// 0.21.0: clamped with Math.max, see parseStandoffSettings
 	private BreachSettings parseBreachSettings(@Nullable NodeReader cops, ConfigReport report) {
 		BreachSettings defaults = BreachSettings.DEFAULT;
-		MappingNode    section  = cops == null ? null : cops.get("Breach").asMapping().orNull();
+		MappingNode    section  = sectionOf(cops, "Breach");
 		if (section == null) return defaults;
 
 		NodeReader breach = NodeReader.of(section, report);
@@ -1247,7 +1251,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private PerimeterSettings parsePerimeterSettings(@Nullable NodeReader cops, ConfigReport report) {
 		PerimeterSettings defaults = PerimeterSettings.DEFAULT;
-		MappingNode       section  = cops == null ? null : cops.get("Perimeter").asMapping().orNull();
+		MappingNode       section  = sectionOf(cops, "Perimeter");
 		if (section == null) return defaults;
 
 		NodeReader   perimeter = NodeReader.of(section, report);
@@ -1264,7 +1268,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private PatrolSettings parsePatrolSettings(@Nullable NodeReader cops, ConfigReport report) {
 		PatrolSettings defaults = PatrolSettings.DEFAULT;
-		MappingNode    section  = cops == null ? null : cops.get("Patrol").asMapping().orNull();
+		MappingNode    section  = sectionOf(cops, "Patrol");
 		if (section == null) return defaults;
 
 		NodeReader patrol = NodeReader.of(section, report);
@@ -1292,7 +1296,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private WarningSettings parseWarningSettings(@Nullable NodeReader cops, ConfigReport report) {
 		WarningSettings defaults = WarningSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Warning").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Warning");
 		if (section == null) return defaults;
 
 		NodeReader warning = NodeReader.of(section, report);
@@ -1304,7 +1308,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private PullOverSettings parsePullOverSettings(@Nullable NodeReader cops, ConfigReport report) {
 		PullOverSettings defaults = PullOverSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Pull_Over").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Pull_Over");
 		if (section == null) return defaults;
 
 		NodeReader pullOver = NodeReader.of(section, report);
@@ -1321,7 +1325,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private TrackerSettings parseTrackerSettings(@Nullable NodeReader cops, ConfigReport report) {
 		TrackerSettings defaults = TrackerSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Tracker").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Tracker");
 		if (section == null) return defaults;
 
 		NodeReader tracker = NodeReader.of(section, report);
@@ -1335,7 +1339,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private SirenSettings parseSirenSettings(@Nullable NodeReader cops, ConfigReport report) {
 		SirenSettings defaults = SirenSettings.DEFAULT;
-		MappingNode   section  = cops == null ? null : cops.get("Siren").asMapping().orNull();
+		MappingNode   section  = sectionOf(cops, "Siren");
 		if (section == null) return defaults;
 
 		NodeReader siren = NodeReader.of(section, report);
@@ -1349,7 +1353,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private ScannerSettings parseScannerSettings(@Nullable NodeReader cops, ConfigReport report) {
 		ScannerSettings defaults = ScannerSettings.DEFAULT;
-		MappingNode     section  = cops == null ? null : cops.get("Scanner").asMapping().orNull();
+		MappingNode     section  = sectionOf(cops, "Scanner");
 		if (section == null) return defaults;
 
 		NodeReader scanner = NodeReader.of(section, report);
@@ -1367,7 +1371,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private SightSettings parseSightSettings(@Nullable NodeReader cops, ConfigReport report) {
 		SightSettings defaults = SightSettings.DEFAULT;
-		MappingNode   section  = cops == null ? null : cops.get("Sight").asMapping().orNull();
+		MappingNode   section  = sectionOf(cops, "Sight");
 		if (section == null) return defaults;
 
 		NodeReader sight = NodeReader.of(section, report);
@@ -1389,7 +1393,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private OverwatchSettings parseOverwatchSettings(@Nullable NodeReader cops, ConfigReport report) {
 		OverwatchSettings defaults = OverwatchSettings.DEFAULT;
-		MappingNode       section  = cops == null ? null : cops.get("Overwatch").asMapping().orNull();
+		MappingNode       section  = sectionOf(cops, "Overwatch");
 		if (section == null) return defaults;
 
 		NodeReader overwatch = NodeReader.of(section, report);
@@ -1416,7 +1420,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private ScannerMapSettings parseScannerMapSettings(@Nullable NodeReader cops, ConfigReport report) {
 		ScannerMapSettings defaults = ScannerMapSettings.DEFAULT;
-		MappingNode        section  = cops == null ? null : cops.get("Scanner_Map").asMapping().orNull();
+		MappingNode        section  = sectionOf(cops, "Scanner_Map");
 		if (section == null) return defaults;
 
 		NodeReader scannerMap   = NodeReader.of(section, report);
@@ -1435,7 +1439,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private DisguiseSettings parseDisguiseSettings(@Nullable NodeReader cops, ConfigReport report) {
 		DisguiseSettings defaults = DisguiseSettings.DEFAULT;
-		MappingNode      section  = cops == null ? null : cops.get("Disguise").asMapping().orNull();
+		MappingNode      section  = sectionOf(cops, "Disguise");
 		if (section == null) return defaults;
 
 		NodeReader disguise = NodeReader.of(section, report);
@@ -1480,7 +1484,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	private boolean parseLookoutEnabled(@Nullable NodeReader cops, ConfigReport report) {
-		MappingNode section = cops == null ? null : cops.get("Lookout").asMapping().orNull();
+		MappingNode section = sectionOf(cops, "Lookout");
 		if (section == null) return true;
 
 		return NodeReader.of(section, report).get("Enable").asBool().orDefault(true);
@@ -1488,7 +1492,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private ShotNoiseSettings parseShotNoiseSettings(@Nullable NodeReader cops, ConfigReport report) {
 		ShotNoiseSettings defaults = ShotNoiseSettings.DEFAULT;
-		MappingNode       section  = cops == null ? null : cops.get("Shot_Noise").asMapping().orNull();
+		MappingNode       section  = sectionOf(cops, "Shot_Noise");
 		if (section == null) return defaults;
 
 		NodeReader noise   = NodeReader.of(section, report);
