@@ -13,7 +13,6 @@ import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.keystone.economy.Currency;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
