@@ -39,27 +39,25 @@ public class WantedSignValidator extends AbstractSignValidator {
 			throw new SignValidationException("Line 3 must specify number of stars", 3, starsLine);
 		}
 
-		try {
-			int stars = Integer.parseInt(starsLine);
-			if (stars <= 0) {
-				throw new SignValidationException("Star count must be positive", 3, starsLine);
-			}
-		} catch (NumberFormatException exception) {
-			throw new SignValidationException("Star count must be a valid number", 3, starsLine);
-		}
+		requirePositiveInt(starsLine, 3, "Star count must be positive", "Star count must be a valid number");
 
 		String priceLine = ChatUtil.replaceColorCodes(lines[3], "");
 		if (priceLine.isEmpty()) {
 			return;
 		}
 
+		requirePositiveInt(priceLine, 4, "Price must be positive", "Price must be a valid number");
+	}
+
+	private static void requirePositiveInt(String text, int lineNumber, String positiveMessage, String numberMessage)
+			throws SignValidationException {
 		try {
-			int price = Integer.parseInt(priceLine);
-			if (price <= 0) {
-				throw new SignValidationException("Price must be positive", 4, priceLine);
+			int value = Integer.parseInt(text);
+			if (value <= 0) {
+				throw new SignValidationException(positiveMessage, lineNumber, text);
 			}
 		} catch (NumberFormatException exception) {
-			throw new SignValidationException("Price must be a valid number", 4, priceLine);
+			throw new SignValidationException(numberMessage, lineNumber, text);
 		}
 	}
 
