@@ -132,7 +132,7 @@ public class RankManager implements BeanLifecycle {
 			Tree.Node<Rank> parent   = entry.getKey();
 			List<String>    children = entry.getValue();
 
-			if (!children.isEmpty()) for (String child : children) {
+			for (String child : children) {
 				Tree.Node<Rank> childNode = findChildNode(nodeMap, child);
 				if (childNode != null) parent.add(childNode);
 			}
@@ -144,9 +144,6 @@ public class RankManager implements BeanLifecycle {
 		if (seeded) {
 			applyPresetPermissions();
 			RankSeed.markComplete(migrations);
-		}
-
-		if (seeded) {
 			migrations.markDone(TURF_UPGRADE_MIGRATION);   // the fresh-install preset already grants the node
 		} else if (loadFailed) {
 			// T-283: a failed rank_permission read looks like "no grants"; marking now would skip the grant for good
