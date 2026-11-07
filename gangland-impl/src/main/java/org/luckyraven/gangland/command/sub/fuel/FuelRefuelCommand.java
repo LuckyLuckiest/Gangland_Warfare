@@ -80,7 +80,7 @@ class FuelRefuelCommand extends SubArgument {
 
 			int       current    = Fuel.readFuelCurrent(held);
 			int       maxFuel    = Fuel.readFuelMax(held);
-			int       newCurrent = Math.min(current + refuelAmount, maxFuel);
+			int       newCurrent = (int) Math.min((long) current + refuelAmount, maxFuel);
 			ItemStack updated    = Fuel.writeFuelCurrent(held, newCurrent);
 			player.getInventory().setItemInMainHand(updated);
 

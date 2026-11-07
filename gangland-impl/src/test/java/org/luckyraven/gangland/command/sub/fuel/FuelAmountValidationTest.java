@@ -225,6 +225,34 @@ class FuelAmountValidationTest {
 	}
 
 	@Test
+	@DisplayName("add: an amount that overflows int saturates the maximum instead of wrapping to zero")
+	void add_hugeAmount_saturates() {
+		Fixture f = new Fixture(FuelAddCommand::new);
+
+		try (MockedStatic<Fuel> fuel = fuel(true)) {
+			f.run("add", "2147483647");
+
+			fuel.verify(() -> Fuel.setMaxFuel(f.held, Integer.MAX_VALUE));
+		}
+
+		verify(f.user).sendMessage(contains("ADD 2147483647 2147483647"));
+	}
+
+	@Test
+	@DisplayName("refuel: an amount that overflows int fills the tank instead of emptying it")
+	void refuel_hugeAmount_fillsTheTank() {
+		Fixture f = new Fixture(FuelRefuelCommand::new);
+
+		try (MockedStatic<Fuel> fuel = fuel(true)) {
+			f.run("refuel", "2147483647");
+
+			fuel.verify(() -> Fuel.writeFuelCurrent(f.held, 10));
+		}
+
+		verify(f.user).sendMessage(contains("REFUEL 7 10 10"));
+	}
+
+	@Test
 	@DisplayName("defuel: a valid amount lowers the current fuel, floored at 0")
 	void defuel_validAmount() {
 		Fixture f = new Fixture(FuelDefuelCommand::new);

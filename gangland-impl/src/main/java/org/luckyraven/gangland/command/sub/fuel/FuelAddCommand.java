@@ -62,7 +62,7 @@ class FuelAddCommand extends SubArgument {
 			int increase = parsed;
 
 			int       currentMax = Fuel.readFuelMax(held);
-			int       newMax     = currentMax + increase;
+			int       newMax     = (int) Math.min((long) currentMax + increase, Integer.MAX_VALUE);
 			ItemStack updated    = Fuel.setMaxFuel(held, newMax);
 			player.getInventory().setItemInMainHand(updated);
 
