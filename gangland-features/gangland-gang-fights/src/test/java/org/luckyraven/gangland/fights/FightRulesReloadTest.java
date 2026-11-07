@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** GP-38: a key edited on disk is visible after {@link FightRules#reload()} (what /glw reload runs). */
@@ -65,6 +66,44 @@ class FightRulesReloadTest {
 		assertTrue(rules.getAllowedCommands().contains("msg"));
 		assertFalse(rules.isAllowVehicles());
 		assertEquals(64, rules.getMinArenaVolume());
+	}
+
+	@Test
+	@DisplayName("a missing Allowed_Commands gives the whole default list, unmodifiable")
+	void missingAllowedCommands_giveTheWholeDefaultList() throws IOException {
+		FightRules rules = load("Other: 1\n");
+
+		assertEquals(List.of("glw gang fight", "gangland gang fight", "msg", "r", "tell"), rules.getAllowedCommands());
+		assertThrows(UnsupportedOperationException.class, () -> rules.getAllowedCommands().add("home"));
+	}
+
+	@Test
+	@DisplayName("an Allowed_Commands in the file replaces the default list, in file order, unmodifiable")
+	void presentAllowedCommands_replaceTheDefaultList() throws IOException {
+		FightRules rules = load("Guards:\n   Allowed_Commands:\n      - home\n      - msg\n");
+
+		assertEquals(List.of("home", "msg"), rules.getAllowedCommands());
+		assertThrows(UnsupportedOperationException.class, () -> rules.getAllowedCommands().add("tell"));
+	}
+
+	@Test
+	@DisplayName("an emptied Allowed_Commands is an empty list, not the default")
+	void emptyAllowedCommands_areNotTheDefault() throws IOException {
+		FightRules rules = load("Guards:\n   Allowed_Commands: []\n");
+
+		assertEquals(List.of(), rules.getAllowedCommands());
+	}
+
+	@Test
+	@DisplayName("removing Allowed_Commands from the file and reloading brings the default list back")
+	void removedAllowedCommands_reloadToTheDefaultList() throws IOException {
+		FightRules rules = load("Guards:\n   Allowed_Commands:\n      - home\n");
+		assertEquals(List.of("home"), rules.getAllowedCommands());
+
+		Files.writeString(tempDir.resolve("fight_rules.yml"), "Other: 1\n", StandardCharsets.UTF_8);
+		rules.reload();
+
+		assertEquals(List.of("glw gang fight", "gangland gang fight", "msg", "r", "tell"), rules.getAllowedCommands());
 	}
 
 	@Test
