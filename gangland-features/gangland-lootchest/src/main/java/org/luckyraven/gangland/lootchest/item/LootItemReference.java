@@ -62,13 +62,6 @@ public class LootItemReference {
 		public double calculateEffectiveWeight(double baseWeight) {
 			return baseWeight * spawnMultiplier;
 		}
-
-		/**
-		 * Determines if this rarity should spawn based on random roll
-		 */
-		public boolean shouldSpawn() {
-			return Math.random() <= spawnMultiplier;
-		}
 	}
 
 }
