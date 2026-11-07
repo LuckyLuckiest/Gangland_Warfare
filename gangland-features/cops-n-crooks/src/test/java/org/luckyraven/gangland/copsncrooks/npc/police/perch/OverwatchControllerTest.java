@@ -163,6 +163,19 @@ class OverwatchControllerTest {
 	}
 
 	@Test
+	@DisplayName("T-919: a cop with no role (Roles_Enabled false) is never eligible and does not abort the search")
+	void roleLessCopIsSkipped() {
+		CopNpc roleLess = cop("Assault", CopState.IDLE, null);
+		when(roleLess.getRole()).thenReturn(null);
+		CopNpc marksman = marksman();
+
+		controller.start(player, lastSeen, 4);
+
+		assertEquals(CopState.IDLE, stateOf(roleLess));
+		assertEquals(CopState.OVERWATCH, stateOf(marksman));
+	}
+
+	@Test
 	@DisplayName("an idle Marksman of the squad is eligible too")
 	void idleMarksmanIsEligible() {
 		CopNpc marksman = cop("Marksman", CopState.IDLE, null);
