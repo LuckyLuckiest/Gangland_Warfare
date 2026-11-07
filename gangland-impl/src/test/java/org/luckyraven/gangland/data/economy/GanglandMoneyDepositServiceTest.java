@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -104,6 +105,37 @@ class GanglandMoneyDepositServiceTest {
 		assertEquals(0, Currency.of(500D).compareTo(economy.getAmount()), "no request may add money");
 	}
 
+	@Test
+	@DisplayName("getBalance reads the cached user's balance as a double, asking the user manager once")
+	void getBalance_cachedUser_returnsTheBalance() {
+		cacheUserWith(12.34D);
+
+		assertEquals(12.34D, service.getBalance(player), 1e-9);
+		verify(userManager, times(1)).getUser(player);
+	}
+
+	@Test
+	@DisplayName("getBalance is 0.0 for a null player without asking the user manager, and for an uncached one")
+	void getBalance_nullOrUncachedPlayer_isZero() {
+		when(userManager.getUser(player)).thenReturn(null);
+
+		assertEquals(0D, service.getBalance(null), 0D);
+		verify(userManager, never()).getUser((Player) null);
+		assertEquals(0D, service.getBalance(player), 0D);
+		verify(userManager, times(1)).getUser(player);
+	}
+
+	@Test
+	@DisplayName("getBalanceAsAmount mirrors it: the exact amount, or Currency.ZERO for a null or uncached player")
+	void getBalanceAsAmount_matchesGetBalance() {
+		cacheUserWith(40D);
+
+		assertEquals(0, Currency.of(40D).compareTo(service.getBalanceAsAmount(player)));
+		assertEquals(Currency.ZERO, service.getBalanceAsAmount(null));
+
+		when(userManager.getUser(player)).thenReturn(null);
+		assertEquals(Currency.ZERO, service.getBalanceAsAmount(player));
+	}
 
 	private MoneyAddon chatAddon() {
 		MoneyAddon addon = mock(MoneyAddon.class);
