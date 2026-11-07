@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.integration.config;
 
+import lombok.Getter;
 import net.objecthunter.exp4j.ExpressionBuilder;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopSettings;
@@ -38,6 +39,7 @@ public class GanglandCopSettings implements CopSettings, FileInitializer {
 	private static final String NAV       = "Cops.Navigation.";
 	private static final String NAV_OLD   = "NPC_Navigation.";
 
+	@Getter
 	private final FileHandler fileHandler;
 	private final FileManager fileManager;
 
@@ -48,44 +50,80 @@ public class GanglandCopSettings implements CopSettings, FileInitializer {
 	private int     countPerLevel       = 1;
 	private int     countMax            = 8;
 
+	@Getter
 	private int    maxCopsPerPlayer    = 8;
+	@Getter
 	private int    aiTickRate          = 10;
+	@Getter
 	private int    spawnCheckRate      = 40;
+	@Getter
 	private double cuffRadius          = 3.0;
+	@Getter
 	private int    maxCuffAttempts     = 3;
+	@Getter
 	private int    cuffCooldownTicks   = 100;
+	@Getter
 	private double alertRange          = 40.0;
+	@Getter
 	private double combatRange         = 4.0;
+	@Getter
 	private int    attackCooldownTicks = 20;
+	@Getter
 	private double guardRadius         = 5.0;
 
+	@Getter
 	private double minSpawnDistance        = 10.0;
+	@Getter
 	private double maxSpawnDistance        = 50.0;
+	@Getter
 	private double phase1MinDistance       = 30.0;
+	@Getter
 	private double spawnRadiusShrinkStep   = 5.0;
+	@Getter
 	private int    verticalSearchRange     = 10;
+	@Getter
 	private int    spawnYOffset            = 0;
+	@Getter
 	private int    minOpenHorizontalSides  = 2;
+	@Getter
 	private double spawnerPreferenceRadius = 80.0;
+	@Getter
 	private double visibilityCheckDistance = 48.0;
+	@Getter
 	private int    spawnPhase1Attempts     = 20;
+	@Getter
 	private int    spawnPhase2Attempts     = 15;
+	@Getter
 	private double maxSpawnYDiff           = 4.0;
+	@Getter
 	private double spawnerMaxYDiff         = 16.0;
 
+	@Getter
 	private double pursuitMaxDistance     = 80.0;
+	@Getter
 	private int    pursuitMaxTicks        = 120;
+	@Getter
 	private int    maxReturnTicks         = 600;
+	@Getter
 	private double stationArrivalDistance = 3.0;
 
+	@Getter
 	private int    navigationRecalculationTicks = 10;
+	@Getter
 	private int    minRepathAfterLossTicks      = 2;
+	@Getter
 	private int    stuckCheckIntervalTicks = 5;
+	@Getter
 	private int    maxStuckChecks          = 3;
+	@Getter
 	private int    maxHopelessStuckChecks  = 6;
+	@Getter
 	private double hopelessCloseThreshold  = 8.0;
+	@Getter
 	private double minProgressDistance     = 0.75;
+	@Getter
 	private double rangedMinDistance       = 7.0;
+	@Getter
 	private double rangedMaxDistance       = 12.0;
 
 	public GanglandCopSettings(FileManager fileManager) {
@@ -97,11 +135,6 @@ public class GanglandCopSettings implements CopSettings, FileInitializer {
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
-	}
-
-	@Override
-	public FileHandler getFileHandler() {
-		return fileHandler;
 	}
 
 	@Override
@@ -175,186 +208,6 @@ public class GanglandCopSettings implements CopSettings, FileInitializer {
 	@Override
 	public int getMaxWantedLevel() {
 		return Settings.getWantedMaximumLevel();
-	}
-
-	@Override
-	public int getMaxCopsPerPlayer() {
-		return maxCopsPerPlayer;
-	}
-
-	@Override
-	public int getAiTickRate() {
-		return aiTickRate;
-	}
-
-	@Override
-	public int getSpawnCheckRate() {
-		return spawnCheckRate;
-	}
-
-	@Override
-	public double getCuffRadius() {
-		return cuffRadius;
-	}
-
-	@Override
-	public int getMaxCuffAttempts() {
-		return maxCuffAttempts;
-	}
-
-	@Override
-	public int getCuffCooldownTicks() {
-		return cuffCooldownTicks;
-	}
-
-	@Override
-	public double getAlertRange() {
-		return alertRange;
-	}
-
-	@Override
-	public double getCombatRange() {
-		return combatRange;
-	}
-
-	@Override
-	public int getAttackCooldownTicks() {
-		return attackCooldownTicks;
-	}
-
-	@Override
-	public double getMinSpawnDistance() {
-		return minSpawnDistance;
-	}
-
-	@Override
-	public double getMaxSpawnDistance() {
-		return maxSpawnDistance;
-	}
-
-	@Override
-	public double getPhase1MinDistance() {
-		return phase1MinDistance;
-	}
-
-	@Override
-	public double getSpawnRadiusShrinkStep() {
-		return spawnRadiusShrinkStep;
-	}
-
-	@Override
-	public int getVerticalSearchRange() {
-		return verticalSearchRange;
-	}
-
-	@Override
-	public int getSpawnYOffset() {
-		return spawnYOffset;
-	}
-
-	@Override
-	public double getMaxSpawnYDiff() {
-		return maxSpawnYDiff;
-	}
-
-	@Override
-	public double getSpawnerMaxYDiff() {
-		return spawnerMaxYDiff;
-	}
-
-	@Override
-	public int getMinOpenHorizontalSides() {
-		return minOpenHorizontalSides;
-	}
-
-	@Override
-	public double getSpawnerPreferenceRadius() {
-		return spawnerPreferenceRadius;
-	}
-
-	@Override
-	public double getVisibilityCheckDistance() {
-		return visibilityCheckDistance;
-	}
-
-	@Override
-	public int getSpawnPhase1Attempts() {
-		return spawnPhase1Attempts;
-	}
-
-	@Override
-	public int getSpawnPhase2Attempts() {
-		return spawnPhase2Attempts;
-	}
-
-	@Override
-	public int getNavigationRecalculationTicks() {
-		return navigationRecalculationTicks;
-	}
-
-	@Override
-	public int getStuckCheckIntervalTicks() {
-		return stuckCheckIntervalTicks;
-	}
-
-	@Override
-	public int getMaxStuckChecks() {
-		return maxStuckChecks;
-	}
-
-	@Override
-	public int getMaxHopelessStuckChecks() {
-		return maxHopelessStuckChecks;
-	}
-
-	@Override
-	public double getHopelessCloseThreshold() {
-		return hopelessCloseThreshold;
-	}
-
-	@Override
-	public double getMinProgressDistance() {
-		return minProgressDistance;
-	}
-
-	@Override
-	public double getRangedMinDistance() {
-		return rangedMinDistance;
-	}
-
-	@Override
-	public double getRangedMaxDistance() {
-		return rangedMaxDistance;
-	}
-
-	@Override
-	public int getMinRepathAfterLossTicks() {
-		return minRepathAfterLossTicks;
-	}
-
-	@Override
-	public double getPursuitMaxDistance() {
-		return pursuitMaxDistance;
-	}
-
-	@Override
-	public int getPursuitMaxTicks() {
-		return pursuitMaxTicks;
-	}
-
-	@Override
-	public int getMaxReturnTicks() {
-		return maxReturnTicks;
-	}
-
-	@Override
-	public double getStationArrivalDistance() {
-		return stationArrivalDistance;
-	}
-
-	@Override
-	public double getGuardRadius() {
-		return guardRadius;
 	}
 
 	private Integer formulaCalculation(int level, String formula, int base, int perLevel, int max) {
