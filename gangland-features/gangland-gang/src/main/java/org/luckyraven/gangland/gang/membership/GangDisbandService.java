@@ -219,12 +219,8 @@ public class GangDisbandService {
 
 	private static UUID ownerOf(List<Member> members) {
 		String tail = GangSettings.getGangRankTail();
-		for (Member member : members) {
-			if (member.getRank() != null && member.getRank().getName().equalsIgnoreCase(tail)) {
-				return member.getUuid();
-			}
-		}
-		return null;
+		Member owner = MembershipQueries.firstWithRank(members, tail);
+		return owner == null ? null : owner.getUuid();
 	}
 
 	/**

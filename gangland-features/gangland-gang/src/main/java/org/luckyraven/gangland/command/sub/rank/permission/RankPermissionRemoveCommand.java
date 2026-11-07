@@ -10,11 +10,11 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.command.sub.rank.RankCommand;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -56,13 +56,7 @@ class RankPermissionRemoveCommand extends SubArgument {
 			}
 
 			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<permission>"));
-		}, sender -> {
-			Collection<Rank> values = rankManager.getRanks().values();
-
-			if (values.isEmpty()) return List.of("<name>");
-
-			return values.stream().map(Rank::getName).toList();
-		});
+		}, sender -> RankCommand.rankNameCompletions(rankManager));
 
 		Argument permArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[3]);

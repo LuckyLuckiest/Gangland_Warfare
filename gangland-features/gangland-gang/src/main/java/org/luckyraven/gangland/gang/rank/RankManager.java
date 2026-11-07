@@ -117,6 +117,7 @@ public class RankManager implements BeanLifecycle {
 		for (int rankId : ranks.keySet()) {
 			List<String> children = ranksParent.stream()
 					.filter(rp -> rp.rankId() == rankId)
+					.filter(rp -> hasRank(rp.childId(), rankId))
 					.map(rp -> ranks.get(rp.childId()).getName())
 					.toList();
 
@@ -132,7 +133,7 @@ public class RankManager implements BeanLifecycle {
 			Tree.Node<Rank> parent   = entry.getKey();
 			List<String>    children = entry.getValue();
 
-			if (!children.isEmpty()) for (String child : children) {
+			for (String child : children) {
 				Tree.Node<Rank> childNode = findChildNode(nodeMap, child);
 				if (childNode != null) parent.add(childNode);
 			}
@@ -144,9 +145,6 @@ public class RankManager implements BeanLifecycle {
 		if (seeded) {
 			applyPresetPermissions();
 			RankSeed.markComplete(migrations);
-		}
-
-		if (seeded) {
 			migrations.markDone(TURF_UPGRADE_MIGRATION);   // the fresh-install preset already grants the node
 		} else if (loadFailed) {
 			// T-283: a failed rank_permission read looks like "no grants"; marking now would skip the grant for good
@@ -234,8 +232,7 @@ public class RankManager implements BeanLifecycle {
 	private Tree.Node<Rank> rootNode() {
 		String head = GangSettings.getGangRankHead();
 
-		Rank named = ranks.values()
-				.stream().filter(rank -> rank.getName().equalsIgnoreCase(head)).findFirst().orElse(null);
+		Rank named = get(head);
 		if (named != null) return named.getNode();
 
 		Set<Integer> childIds = ranksParent.stream().map(RankParent::childId).collect(Collectors.toSet());
@@ -486,6 +483,14 @@ public class RankManager implements BeanLifecycle {
 	@Override
 	public String toString() {
 		return String.format("ranks=%s", ranks);
+	}
+
+	/** T-929: a rank_parent row can outlive its child rank (a failed purge, a pre-0.14.0 delete); skip it, never NPE. */
+	private boolean hasRank(int childId, int parentId) {
+		if (ranks.containsKey(childId)) return true;
+
+		log.warn("Ignoring the rank_parent link {} -> {}: rank {} no longer exists", parentId, childId, childId);
+		return false;
 	}
 
 	@Nullable

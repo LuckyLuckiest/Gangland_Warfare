@@ -119,9 +119,19 @@ public final class GangStatsListener implements Listener {
 		long minAge = rules.getStatsMinVictimMemberAgeHours() * 60L * 60 * 1000;
 		if (now - dead.getGangJoinDateLong() < minAge) return false;
 
+		// an entry past its window can no longer block a kill; without this every pair that ever scored stays forever
+		long cooldownMs = rules.getStatsRepeatKillCooldownSeconds() * 1000L;
+		lastKill.values().removeIf(at -> now - at >= cooldownMs);
+		dayKills.values().removeIf(kills -> {
+			while (!kills.isEmpty() && now - kills.peekFirst() > DAY_MS) {
+				kills.pollFirst();
+			}
+			return kills.isEmpty();
+		});
+
 		String pair = killerId + ">" + victimId;
 		Long   again = lastKill.get(pair);
-		if (again != null && now - again < rules.getStatsRepeatKillCooldownSeconds() * 1000L) return false;
+		if (again != null && now - again < cooldownMs) return false;
 
 		Deque<Long> today = dayKills.computeIfAbsent(pair, key -> new ArrayDeque<>());
 		while (!today.isEmpty() && now - today.peekFirst() > DAY_MS) {

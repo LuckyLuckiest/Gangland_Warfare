@@ -26,8 +26,6 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.util.TimeMessages;
 
 import java.util.HashMap;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.luckyraven.keystone.bean.Qualifier;
 import lombok.CustomLog;
@@ -42,7 +40,6 @@ class GangDeleteCommand extends SubArgument {
 	private final GangManager                gangManager;
 	private final RankManager                rankManager;
 
-	private final HashMap<User<Player>, AtomicReference<String>> deleteGangName;
 	private final HashMap<CommandSender, CountdownTimer>         deleteGangTimer;
 
 	private final ConfirmArgument confirmDelete;
@@ -65,7 +62,6 @@ class GangDeleteCommand extends SubArgument {
 		this.gangManager        = gangManager;
 		this.rankManager        = rankManager;
 
-		this.deleteGangName  = new HashMap<>();
 		this.deleteGangTimer = new HashMap<>();
 
 		this.confirmDelete = gangDeleteConfirm();
@@ -103,16 +99,11 @@ class GangDeleteCommand extends SubArgument {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 			if (gang == null) {
-				user.resetGang();
-				member.resetGang();
-				member.setContribution(0D);
-				memberManager.assignRank(member, null);
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				healMissingGang(user, member, memberManager);
 				return;
 			}
 
 			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"gang", "delete"}));
-			deleteGangName.put(user, new AtomicReference<>(gang.getName()));
 
 			confirmDelete.lock(sender, s -> {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
@@ -124,7 +115,6 @@ class GangDeleteCommand extends SubArgument {
 					s.sendMessage(replace);
 				}, time -> {
 					confirmDelete.unlock(s);
-					deleteGangName.remove(user);
 					deleteGangTimer.remove(s);
 				});
 
@@ -162,11 +152,7 @@ class GangDeleteCommand extends SubArgument {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 			if (gang == null) {
-				user.resetGang();
-				member.resetGang();
-				member.setContribution(0D);
-				memberManager.assignRank(member, null);
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				healMissingGang(user, member, memberManager);
 				return;
 			}
 
@@ -176,14 +162,21 @@ class GangDeleteCommand extends SubArgument {
 				return;
 			}
 
-			deleteGangName.remove(user);
-
 			CountdownTimer timer = deleteGangTimer.get(sender);
 			if (timer != null) {
 				if (!timer.isCancelled()) timer.cancel();
 				deleteGangTimer.remove(sender);
 			}
 		});
+	}
+
+	/** The player's gang row is gone: drop the dangling gang, contribution and rank, and say they have no gang. */
+	static void healMissingGang(User<Player> user, Member member, MemberManager memberManager) {
+		user.resetGang();
+		member.resetGang();
+		member.setContribution(0D);
+		memberManager.assignRank(member, null);
+		user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 	}
 
 }

@@ -86,7 +86,7 @@ final class GangBountyCommand extends SubArgument {
 			return;
 		}
 
-		Gang target = find(args[2]);
+		Gang target = GangNameRules.findByPlainName(gangManager.getAll(), args[2]);
 		if (target == null) {
 			player.sendMessage(messages.text("Bounty.Unknown", "&cNo gang named %gang%.", "gang",
 			                                 GangNameRules.plain(args[2])));
@@ -172,17 +172,6 @@ final class GangBountyCommand extends SubArgument {
 			return null;
 		}
 		return gangManager.getGang(user.getGangId());
-	}
-
-	/** The same plain-name match GangInfoCommand uses; ids are not accepted here. */
-	private @Nullable Gang find(String key) {
-		String plain = GangNameRules.plain(key);
-		for (Gang gang : gangManager.getAll()) {
-			if (gang.getName() != null && GangNameRules.plain(gang.getName()).equalsIgnoreCase(plain)) {
-				return gang;
-			}
-		}
-		return null;
 	}
 
 }

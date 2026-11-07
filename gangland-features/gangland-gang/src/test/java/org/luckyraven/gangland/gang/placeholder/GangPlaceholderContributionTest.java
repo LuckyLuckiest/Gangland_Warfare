@@ -21,6 +21,7 @@ import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
 import org.mockito.MockedStatic;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -41,13 +42,14 @@ class GangPlaceholderContributionTest {
 	private GangPlaceholderContribution contribution;
 	private OfflinePlayer               inGang;
 	private OfflinePlayer               loner;
+	private Rank                        leaderRank;
 
 	@BeforeEach
 	void setUp() {
 		GangSettings.bind(new FakeGangSettingsContract());
 		bukkit = mockStatic(Bukkit.class);
 
-		Rank leaderRank = mock(Rank.class);
+		leaderRank = mock(Rank.class);
 		when(leaderRank.getName()).thenReturn("owner");
 		Member leader = member(1, 20, 5, 4);
 		leader.setRank(leaderRank);
@@ -183,5 +185,21 @@ class GangPlaceholderContributionTest {
 		when(allowed.getPlayer()).thenReturn(allowed);
 		when(allowed.hasPermission(org.luckyraven.gangland.gang.permission.GangPermissions.RANKING_WEALTH)).thenReturn(true);
 		assertEquals("900", contribution.resolve(allowed, "gang_board_balance_1_value"));
+	}
+
+	@Test
+	@DisplayName("T-928: state, colour name and rank position do not depend on the JVM default locale")
+	void lowercasing_ignoresTheDefaultLocale() {
+		Locale before = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr"));
+		try {
+			when(leaderRank.getName()).thenReturn("OFFICER");
+
+			assertEquals("invite", contribution.resolve(inGang, "gang_state"));
+			assertEquals("light blue", contribution.resolve(inGang, "gang_color-name"));
+			assertEquals("2", contribution.resolve(inGang, "user_rank-position"));
+		} finally {
+			Locale.setDefault(before);
+		}
 	}
 }

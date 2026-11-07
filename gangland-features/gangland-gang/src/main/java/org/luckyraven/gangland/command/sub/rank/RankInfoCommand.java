@@ -13,8 +13,7 @@ import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.stream.Collectors;
 
 class RankInfoCommand extends SubArgument {
 
@@ -49,18 +48,16 @@ class RankInfoCommand extends SubArgument {
 				return;
 			}
 
-			StringBuilder    permBuilder = new StringBuilder();
-			List<Permission> permissions = rank.getPermissions();
-			for (int i = 0; i < permissions.size(); i++) {
-				permBuilder.append(permissions.get(i).getPermission());
-				if (i < permissions.size() - 1) permBuilder.append(", ");
-			}
+			String permissions = rank.getPermissions()
+			                         .stream()
+			                         .map(Permission::getPermission)
+			                         .collect(Collectors.joining(", "));
 
-			StringBuilder parentBuilder = new StringBuilder();
-			for (int i = 0; i < rank.getNode().getChildren().size(); i++) {
-				parentBuilder.append(rank.getNode().getChildren().get(i).getData().getName());
-				if (i < rank.getNode().getChildren().size() - 1) parentBuilder.append(", ");
-			}
+			String parents = rank.getNode()
+			                     .getChildren()
+			                     .stream()
+			                     .map(child -> child.getData().getName())
+			                     .collect(Collectors.joining(", "));
 
 			String vaultGroup = rank.getVaultGroup();
 			if (vaultGroup == null || vaultGroup.isEmpty()) vaultGroup = "None";
@@ -68,22 +65,16 @@ class RankInfoCommand extends SubArgument {
 			String string = Messages.RANK_INFO_PRIMARY.toString();
 			String replace = string.replace("%rank%", rank.getName())
 			                       .replace("%id%", String.valueOf(rank.getUsedId()))
-			                       .replace("%parent%", parentBuilder.toString())
+			                       .replace("%parent%", parents)
 			                       .replace("%vault_group%", vaultGroup);
 
 			sender.sendMessage(replace);
 
 			String string1  = Messages.RANK_INFO_SECONDARY.toString();
-			String replace1 = string1.replace("%permissions%", permBuilder.toString());
+			String replace1 = string1.replace("%permissions%", permissions);
 
 			sender.sendMessage(replace1);
-		}, sender -> {
-			Collection<Rank> values = rankManager.getRanks().values();
-
-			if (values.isEmpty()) return List.of("<name>");
-
-			return values.stream().map(Rank::getName).toList();
-		});
+		}, sender -> RankCommand.rankNameCompletions(rankManager));
 
 		this.addSubArgument(infoName);
 	}

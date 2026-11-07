@@ -24,9 +24,7 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.util.TimeMessages;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 @CustomLog
@@ -139,13 +137,7 @@ class RankDeleteCommand extends SubArgument {
 				timer.start(false);
 				deleteRankTimer.put(s, timer);
 			});
-		}, sender -> {
-			Collection<Rank> values = rankManager.getRanks().values();
-
-			if (values.isEmpty()) return List.of("<name>");
-
-			return values.stream().map(Rank::getName).toList();
-		});
+		}, sender -> RankCommand.rankNameCompletions(rankManager));
 
 		this.addSubArgument(deleteName);
 	}

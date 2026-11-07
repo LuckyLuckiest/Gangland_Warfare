@@ -1,10 +1,14 @@
 package org.luckyraven.gangland.listener.gang;
 
 import org.junit.jupiter.api.DisplayName;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.events.gang.GangLevelUpEvent;
 import org.luckyraven.gangland.core.user.Level;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * GangManager fires GangLevelUpEvent after the level went up, so the listener must read the new level: a gang that
@@ -35,5 +39,14 @@ class GangLevelMessageListenerTest {
 		assertEquals("1/2 of 4", text);
 	}
 
-}
+	@Test
+	@DisplayName("T-926: the message runs at MONITOR and skips a cancelled level-up, like the reward listener")
+	void levelUpMessage_isNotSentForACancelledLevelUp() throws NoSuchMethodException {
+		EventHandler handler = GangLevelMessageListener.class.getMethod("onGangLevelUp", GangLevelUpEvent.class)
+		                                                     .getAnnotation(EventHandler.class);
 
+		assertEquals(EventPriority.MONITOR, handler.priority(), "must see the cancel decided at every earlier priority");
+		assertTrue(handler.ignoreCancelled(), "a cancelled level-up must not announce a level the gang never reached");
+	}
+
+}

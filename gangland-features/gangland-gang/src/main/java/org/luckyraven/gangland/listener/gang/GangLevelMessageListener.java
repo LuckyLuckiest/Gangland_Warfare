@@ -2,6 +2,7 @@ package org.luckyraven.gangland.listener.gang;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.luckyraven.gangland.core.user.Level;
 import org.luckyraven.gangland.core.user.User;
@@ -27,7 +28,7 @@ public class GangLevelMessageListener implements Listener {
 		this.userManager = userManager;
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onGangLevelUp(GangLevelUpEvent event) {
 		Gang  gang  = event.getGang();
 		Level level = event.getLevel();

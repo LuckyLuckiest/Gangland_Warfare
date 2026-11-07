@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.gang;
 
+import lombok.Getter;
+
 import java.util.Objects;
 
 /**
@@ -13,6 +15,7 @@ public final class GangAlliance {
 	private final long since;
 
 	/** Whether this side lets the ally hurt it ({@code /glw gang ally pvp}); both sides must say yes. */
+	@Getter
 	private volatile boolean friendlyFire;
 
 	public GangAlliance(Gang gang, Gang ally, long since) {
@@ -36,10 +39,6 @@ public final class GangAlliance {
 
 	public long since() {
 		return since;
-	}
-
-	public boolean isFriendlyFire() {
-		return friendlyFire;
 	}
 
 	public void setFriendlyFire(boolean friendlyFire) {

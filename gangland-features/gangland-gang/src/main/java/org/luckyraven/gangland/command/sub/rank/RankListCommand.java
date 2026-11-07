@@ -10,7 +10,7 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 
-import java.util.List;
+import java.util.stream.Collectors;
 
 class RankListCommand extends SubArgument {
 
@@ -27,17 +27,10 @@ class RankListCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			sender.sendMessage(Messages.RANK_LIST_PRIMARY.toString());
 
-			StringBuilder builder = new StringBuilder();
-			List<Rank> ranks = rankManager.getRanks().values()
-					.stream().toList();
-
-			for (int i = 0; i < ranks.size(); i++) {
-				builder.append(ranks.get(i).getName());
-				if (i < ranks.size() - 1) builder.append(", ");
-			}
+			String ranks = rankManager.getRanks().values().stream().map(Rank::getName).collect(Collectors.joining(", "));
 
 			String string  = Messages.RANK_LIST_SECONDARY.toString();
-			String replace = string.replace("%ranks%", builder.toString());
+			String replace = string.replace("%ranks%", ranks);
 
 			sender.sendMessage(replace);
 		};

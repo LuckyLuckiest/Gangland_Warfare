@@ -25,7 +25,6 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -151,16 +150,7 @@ class GangKickCommand extends SubArgument {
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			String targetStr    = args[2];
-			Member targetMember = null;
-			for (Member member : gang.getMembers()) {
-				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
-				String        offlineName   = offlinePlayer.getName();
-
-				if (offlineName == null || offlineName.isEmpty() || !offlineName.equalsIgnoreCase(targetStr)) continue;
-
-				targetMember = member;
-				break;
-			}
+			Member targetMember = GangPromoteCommand.findMember(gang, targetStr);
 
 			if (targetMember == null) {
 				user.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));

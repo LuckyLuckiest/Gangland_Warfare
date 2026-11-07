@@ -55,7 +55,7 @@ final class GangChatCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			Gang gang = senderGang(sender);
+			Gang gang = senderGang(sender, userManager, gangManager);
 			if (gang == null) {
 				return;
 			}
@@ -73,7 +73,7 @@ final class GangChatCommand extends SubArgument {
 
 	private Argument messageArgument(JavaPlugin gangland, Tree<Argument> tree) {
 		OptionalArgument message = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Gang gang = senderGang(sender);
+			Gang gang = senderGang(sender, userManager, gangManager);
 			if (gang == null) {
 				return;
 			}
@@ -87,7 +87,7 @@ final class GangChatCommand extends SubArgument {
 	}
 
 	/** The sender's gang, or {@code null} after telling a sender with no gang (or the console) so. */
-	private Gang senderGang(CommandSender sender) {
+	static Gang senderGang(CommandSender sender, UserManager<Player> userManager, GangManager gangManager) {
 		if (!(sender instanceof Player player)) {
 			sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
 			return null;
@@ -119,7 +119,7 @@ final class GangChatCommand extends SubArgument {
 			super(gangland, "allies", tree, parent);
 
 			OptionalArgument message = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-				Gang gang = senderGang(sender);
+				Gang gang = senderGang(sender, userManager, gangManager);
 				if (gang == null) {
 					return;
 				}
@@ -134,7 +134,7 @@ final class GangChatCommand extends SubArgument {
 		@Override
 		protected TriConsumer<Argument, CommandSender, String[]> action() {
 			return (argument, sender, args) -> {
-				if (senderGang(sender) == null) {
+				if (senderGang(sender, userManager, gangManager) == null) {
 					return;
 				}
 

@@ -5,10 +5,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.user.Level;
-import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.events.gang.GangLevelUpEvent;
-import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
@@ -67,7 +65,7 @@ final class GangUpgradeCommand extends SubArgument {
 	}
 
 	private void preview(CommandSender sender) {
-		Gang gang = senderGang(sender);
+		Gang gang = GangChatCommand.senderGang(sender, userManager, gangManager);
 		if (gang == null) return;
 
 		Level level = gang.getLevel();
@@ -82,7 +80,7 @@ final class GangUpgradeCommand extends SubArgument {
 	}
 
 	private void claim(CommandSender sender) {
-		Gang gang = senderGang(sender);
+		Gang gang = GangChatCommand.senderGang(sender, userManager, gangManager);
 		if (gang == null) return;
 
 		Level level = gang.getLevel();
@@ -151,20 +149,5 @@ final class GangUpgradeCommand extends SubArgument {
 
 	private static boolean atTop(Level level) {
 		return level.getLevelValue() >= level.getMaxLevel();
-	}
-
-	/** The sender's gang, or {@code null} after telling a sender with no gang (or the console) so. */
-	private Gang senderGang(CommandSender sender) {
-		if (!(sender instanceof Player player)) {
-			sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
-			return null;
-		}
-
-		User<Player> user = userManager.getUser(player);
-		Gang         gang = user == null || !user.hasGang() ? null : gangManager.getGang(user.getGangId());
-		if (gang == null) {
-			sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
-		}
-		return gang;
 	}
 }

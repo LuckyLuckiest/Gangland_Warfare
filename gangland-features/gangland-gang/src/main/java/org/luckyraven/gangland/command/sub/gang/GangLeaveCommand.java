@@ -107,11 +107,7 @@ class GangLeaveCommand extends SubArgument {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 			if (gang == null) {
-				user.resetGang();
-				member.resetGang();
-				member.setContribution(0D);
-				memberManager.assignRank(member, null);
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				GangDeleteCommand.healMissingGang(user, member, memberManager);
 				return;
 			}
 
