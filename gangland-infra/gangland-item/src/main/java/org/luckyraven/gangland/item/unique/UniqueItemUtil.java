@@ -27,7 +27,6 @@ public final class UniqueItemUtil {
 		for (ItemStack item : contents) {
 			if (item == null) continue;
 			if (item.getType() != uniqueItem.getMaterial()) continue;
-			if (!isUniqueItem(item)) continue;
 			if (!uniqueItem.matches(item)) continue;
 
 			return true;
