@@ -119,13 +119,11 @@ class GangInviteDeclineCommand extends SubArgument {
 				return;
 			}
 
-			MailItem match = null;
-			for (MailItem mail : mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)) {
-				if (mail.getSenderGangId() == senderId) {
-					match = mail;
-					break;
-				}
-			}
+			MailItem match = mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)
+			                                  .stream()
+			                                  .filter(mail -> mail.getSenderGangId() == senderId)
+			                                  .findFirst()
+			                                  .orElse(null);
 
 			if (match == null) {
 				user.sendMessage(messages.inviteDeclineNone());

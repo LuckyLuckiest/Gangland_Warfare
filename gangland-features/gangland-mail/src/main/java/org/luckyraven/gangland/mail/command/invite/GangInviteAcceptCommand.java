@@ -143,13 +143,11 @@ class GangInviteAcceptCommand extends SubArgument {
 				return;
 			}
 
-			MailItem match = null;
-			for (MailItem mail : mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)) {
-				if (mail.getSenderGangId() == senderId) {
-					match = mail;
-					break;
-				}
-			}
+			MailItem match = mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)
+			                                  .stream()
+			                                  .filter(mail -> mail.getSenderGangId() == senderId)
+			                                  .findFirst()
+			                                  .orElse(null);
 
 			Gang gang = gangManager.getGang(senderId);
 			if (match == null || gang == null) {
