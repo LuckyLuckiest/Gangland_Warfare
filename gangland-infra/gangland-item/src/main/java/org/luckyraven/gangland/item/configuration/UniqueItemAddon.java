@@ -2,6 +2,7 @@ package org.luckyraven.gangland.item.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Getter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +26,7 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 
 	private final Map<String, UniqueItem> uniqueItems;
 	private final PermissionManager       permissionManager;
+	@Getter
 	private final FileHandler             fileHandler;
 	private final FuelService             fuelService;
 
@@ -51,11 +53,6 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
-	}
-
-	@Override
-	public FileHandler getFileHandler() {
-		return fileHandler;
 	}
 
 	@Override
