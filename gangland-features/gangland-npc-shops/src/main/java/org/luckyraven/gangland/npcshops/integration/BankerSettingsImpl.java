@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.npcshops.integration;
 
 import lombok.CustomLog;
+import lombok.Getter;
 import org.luckyraven.gangland.file.configuration.MovedSetting;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
@@ -27,10 +28,15 @@ public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 	private final FileHandler fileHandler;
 	private final FileManager fileManager;
 
+	@Getter
 	private volatile int        headTrackRadius;
+	@Getter
 	private volatile double     maxHealth;
+	@Getter
 	private volatile boolean    invulnerable;
+	@Getter
 	private volatile String     fallbackTierId;
+	@Getter
 	private volatile BigDecimal renameFee;
 
 	public BankerSettingsImpl(FileManager fileManager) {
@@ -69,26 +75,6 @@ public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 	}
 
 	@Override
-	public int getHeadTrackRadius() {
-		return headTrackRadius;
-	}
-
-	@Override
-	public double getMaxHealth() {
-		return maxHealth;
-	}
-
-	@Override
-	public boolean isInvulnerable() {
-		return invulnerable;
-	}
-
-	@Override
-	public String getFallbackTierId() {
-		return fallbackTierId;
-	}
-
-	@Override
 	public long getResetPeriodSeconds() {
 		return Settings.getBankResetPeriodSeconds();
 	}
@@ -101,11 +87,6 @@ public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 	@Override
 	public BigDecimal getInitialBalance() {
 		return Settings.getBankInitialBalance();
-	}
-
-	@Override
-	public BigDecimal getRenameFee() {
-		return renameFee;
 	}
 
 	@Override
