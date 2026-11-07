@@ -11,8 +11,8 @@ import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.unique.UniqueItem;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
-import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 class ItemUniqueListCommand extends SubArgument {
 
@@ -31,17 +31,12 @@ class ItemUniqueListCommand extends SubArgument {
 
 			sender.sendMessage(Messages.ITEM_UNIQUE_LIST_HEADER.toString());
 
-			Iterator<Map.Entry<String, UniqueItem>> iterator = uniqueItems.entrySet().iterator();
-			StringBuilder                           builder  = new StringBuilder();
+			String line = uniqueItems.values()
+					.stream()
+					.map(uniqueItem -> "&b" + uniqueItem.getName())
+					.collect(Collectors.joining("&7, "));
 
-			while (iterator.hasNext()) {
-				UniqueItem uniqueItem = iterator.next().getValue();
-
-				builder.append("&b").append(uniqueItem.getName());
-				if (iterator.hasNext()) builder.append("&7, ");
-			}
-
-			sender.sendMessage(GanglandChatUtil.color(builder.toString()));
+			sender.sendMessage(GanglandChatUtil.color(line));
 		};
 	}
 
