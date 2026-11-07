@@ -80,7 +80,7 @@ class EconomyDepositCommand extends SubArgument {
 		BigDecimal     current   = economy.getAmount();
 		BigDecimal     maxAmount = Settings.getUserMaxBalance();
 		BigDecimal     projected = current.add(argAmount);
-		BigDecimal     newValue  = projected.min(maxAmount);
+		BigDecimal     newValue  = projected.min(maxAmount).max(current);
 		BigDecimal     granted   = projected.compareTo(maxAmount) <= 0 ? argAmount : newValue.subtract(current);
 
 		economy.setAmount(newValue);
