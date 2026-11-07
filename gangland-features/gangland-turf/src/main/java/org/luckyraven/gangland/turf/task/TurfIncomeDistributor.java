@@ -119,20 +119,15 @@ public final class TurfIncomeDistributor implements BeanLifecycle {
 		stop();
 	}
 
-	/** True when at least one turf has an owner. */
-	private boolean hasOwnedTurf() {
-		for (Turf turf : turfs.getAll()) {
-			if (!turf.isUnclaimed()) {
-				return true;
-			}
-		}
-		return false;
+	/** True when at least one turf has an owner; the T-196 guard of this task and of {@link InactivityReleaseTask}. */
+	static boolean hasOwnedTurf(TurfManager turfs) {
+		return turfs.getAll().stream().anyMatch(turf -> !turf.isUnclaimed());
 	}
 
 	/** Package-private for tests (W2-K). */
 	void distribute() {
 		// T-196: an empty gang cache with owned turfs means the gang table did not load; releasing now would free every turf.
-		if (gangs.getAll().isEmpty() && hasOwnedTurf()) {
+		if (gangs.getAll().isEmpty() && hasOwnedTurf(turfs)) {
 			log.warn("No gangs are loaded but turfs are owned - skipping this {} (is the gang table readable?)",
 			         "income payout");
 			return;

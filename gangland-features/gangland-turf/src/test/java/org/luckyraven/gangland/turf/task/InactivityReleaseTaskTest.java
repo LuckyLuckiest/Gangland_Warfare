@@ -102,4 +102,20 @@ class InactivityReleaseTaskTest {
 			verify(bukkit.pluginManager(), never()).callEvent(any(Event.class));
 		}
 	}
+
+	@Test
+	@DisplayName("T-916: Inactivity_Auto_Release_Days of 0 or below means off, so no gang loses a turf")
+	void zeroOrNegativeDays_releasesNothing() {
+		Turf turf = turf(4, 4);
+		gang(4, System.currentTimeMillis() - 60_000L); // heartbeat stamp up to a minute old
+		for (int days : new int[] {0, -3}) {
+			InactivityReleaseTask off = new InactivityReleaseTask(turfs, gangs, new TurfOwnership(turfs), days);
+			try (BukkitStatics bukkit = BukkitStatics.install()) {
+				off.run();
+
+				assertEquals(4, turf.getOwnerGangId(), "days=" + days + " must not release a gang that was just online");
+				verify(bukkit.pluginManager(), never()).callEvent(any(Event.class));
+			}
+		}
+	}
 }

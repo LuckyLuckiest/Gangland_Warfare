@@ -17,8 +17,6 @@ import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.powerups.GuardBuffs;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 
 /**
@@ -90,11 +88,8 @@ public final class GarrisonRoster {
 
 	/** The price of one guard on {@code turfId} right now; the same clamp as the Quartermaster panel's (T-275). */
 	private int guardPrice(int turfId) {
-		double multiplier = buffs.effectiveMultiplier(turfId, EffectType.GARRISON_DISCOUNT);
-		multiplier = Double.isFinite(multiplier) ? Math.max(0.1, Math.min(1.0, multiplier)) : 1.0;
-		BigDecimal price = registry.garrisonCost().multiply(BigDecimal.valueOf(multiplier))
-		                           .setScale(0, RoundingMode.HALF_UP);
-		return price.max(BigDecimal.ONE).intValue();
+		return GuardBuffs.guardPrice(buffs.effectiveMultiplier(turfId, EffectType.GARRISON_DISCOUNT),
+		                             registry.garrisonCost()).intValue();
 	}
 
 	/** Tells the owner's online members that a wave took its posts. */

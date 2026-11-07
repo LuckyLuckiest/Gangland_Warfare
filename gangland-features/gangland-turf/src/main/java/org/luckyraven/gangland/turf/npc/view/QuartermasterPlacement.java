@@ -12,6 +12,7 @@ import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupData;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
@@ -193,12 +194,18 @@ public final class QuartermasterPlacement implements Panel<TurfPowerupFlowSessio
 			}
 		}
 
+		// T-939: place() destroys the standing Quartermaster before it spawns the new one; keep its data to put it back.
+		TurfPowerupData previous = npcs.snapshotData().stream().filter(data -> data.getTurfId() == turf.getId())
+		                               .findFirst().orElse(null);
 		TurfPowerupNpc placed = npcs.place(turf.getId(), player.getLocation(), null);
 		if (placed == null) {
 			// place() returns null when the spawn fails (bad Type_Id, Citizens spawn cancelled); refund, never announce.
 			// T-804: place() saved the anchor before the failed spawn; drop it so a later chunk load or restart cannot
 			// spawn a Quartermaster the gang was refunded for.
 			npcs.remove(turf.getId());
+			if (previous != null) {
+				npcs.place(turf.getId(), previous.getSpawnLocation(), previous.getDisplayName());
+			}
 			if (price.signum() > 0) {
 				gang.getEconomy().depositAmount(price);
 			}

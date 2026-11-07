@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.turf.task;
 
 import lombok.CustomLog;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,6 +37,7 @@ public final class GangPresenceTracker implements BeanLifecycle {
 	private final JavaPlugin         plugin;
 	private final GangLookupContract gangs;
 	private final GangMembership     membership;
+	@Getter
 	private final int                inactivityAutoReleaseDays;
 	private final Runnable           turfReleaseFn;
 	private final Supplier<CaptureRules> rules;
@@ -101,10 +103,6 @@ public final class GangPresenceTracker implements BeanLifecycle {
 	@Override
 	public void onShutdown() {
 		stop();
-	}
-
-	public int getInactivityAutoReleaseDays() {
-		return inactivityAutoReleaseDays;
 	}
 
 	/** The rules in force now (the join listener reads the minimum member age and the wake-up shield). */

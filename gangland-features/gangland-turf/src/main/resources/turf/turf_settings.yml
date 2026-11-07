@@ -60,8 +60,8 @@ Capture:
    # a turf stays attackable this long after its last owner leaves, then is shielded until an owner returns. With
    # OWNERS_OFFLINE it is the other way round: shielded this long, then attackable.
    Post_Logoff_Protection_Minutes: 10
-   # Days without any owner online before every turf the gang owns is released. Servers that already have this file
-   # keep their own value.
+   # Days without any owner online before every turf the gang owns is released. 0 (or below) turns the release
+   # off. Servers that already have this file keep their own value.
    Inactivity_Auto_Release_Days: 4
    # Play the capture start / complete / failed sounds (see Sounds below) to players inside
    # the turf. Disable to keep captures silent.

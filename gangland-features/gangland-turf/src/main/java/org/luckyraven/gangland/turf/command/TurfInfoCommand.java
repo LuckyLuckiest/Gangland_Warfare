@@ -9,7 +9,6 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.turf.capture.CaptureEligibility;
 import org.luckyraven.gangland.turf.config.TurfMessages;
@@ -61,14 +60,18 @@ class TurfInfoCommand extends SubArgument {
 		this.addSubArgument(idArgument());
 	}
 
+	/** The owner shown for a turf: "Unclaimed" with no owner, else the owning gang's display name. */
+	static String ownerLabel(GangLookupContract gangs, Turf turf) {
+		if (turf.getOwnerGangId() == null) {
+			return "Unclaimed";
+		}
+		return GangDisplayNameResolver.resolve(gangs.findById(turf.getOwnerGangId()));
+	}
+
 	static void renderInfo(CommandSender sender, GangLookupContract gangs, TurfManager turfs,
 	                       TurfMessageContract messages, TurfSettings settings, Turf turf,
 	                       CaptureEligibility eligibility, TurfMessages text) {
-		String gangName = "Unclaimed";
-		if (turf.getOwnerGangId() != null) {
-			Gang owner = gangs.findById(turf.getOwnerGangId());
-			gangName = GangDisplayNameResolver.resolve(owner);
-		}
+		String gangName = ownerLabel(gangs, turf);
 		TurfRuntimeState state    = turfs.getRuntimeState(turf.getId());
 		String           stateStr = state == null ? "IDLE" : state.getState().name();
 

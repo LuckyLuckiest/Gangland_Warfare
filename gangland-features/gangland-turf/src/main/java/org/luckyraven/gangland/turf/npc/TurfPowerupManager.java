@@ -279,7 +279,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	/**
 	 * Called by {@link TurfPowerupChunkLoadListener} when Bukkit loads a chunk. Scans the pending-spawn queue for any
 	 * Quartermaster whose anchor sits in that chunk and spawns it now. Once spawned, the entry leaves the pending
-	 * queue.
+	 * queue; a spawn that fails keeps it queued for the next load of that chunk.
 	 */
 	public void onChunkLoaded(org.bukkit.World world, int chunkX, int chunkZ) {
 		if (pending.isEmpty()) return;
@@ -288,9 +288,10 @@ public final class TurfPowerupManager implements BeanLifecycle {
 			Location        loc  = data.getSpawnLocation();
 			if (loc.getWorld() == null || !loc.getWorld().equals(world)) continue;
 			if (loc.getBlockX() >> 4 != chunkX || loc.getBlockZ() >> 4 != chunkZ) continue;
-			it.remove();
 			TurfPowerupNpc npc = TurfPowerupNpc.spawn(plugin, data, settings.get(), civilianSpawnManager);
+			// T-940: a failed spawn leaves the entry queued, so the next chunk load retries it.
 			if (npc != null) {
+				it.remove();
 				byTurfId.put(data.getTurfId(), npc);
 				afterSpawn(npc);
 			}

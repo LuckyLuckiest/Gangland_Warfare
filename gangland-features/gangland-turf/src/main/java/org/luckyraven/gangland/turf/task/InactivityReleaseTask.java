@@ -33,20 +33,10 @@ public final class InactivityReleaseTask implements Runnable {
 		this.inactivityAutoReleaseDays = inactivityAutoReleaseDays;
 	}
 
-	/** True when at least one turf has an owner. */
-	private boolean hasOwnedTurf() {
-		for (Turf turf : turfs.getAll()) {
-			if (!turf.isUnclaimed()) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public void run() {
 		// T-196: an empty gang cache with owned turfs means the gang table did not load; releasing now would free every turf.
-		if (gangs.getAll().isEmpty() && hasOwnedTurf()) {
+		if (gangs.getAll().isEmpty() && TurfIncomeDistributor.hasOwnedTurf(turfs)) {
 			log.warn("No gangs are loaded but turfs are owned - skipping this {} (is the gang table readable?)",
 			         "inactivity release");
 			return;
@@ -64,7 +54,8 @@ public final class InactivityReleaseTask implements Runnable {
 				released++;
 				continue;
 			}
-			if (owner.getLastMemberOnlineAt() > 0 && now - owner.getLastMemberOnlineAt() > thresholdMs) {
+			// T-916: days <= 0 means the inactivity release is off; a zero threshold would free every gang's turfs.
+			if (thresholdMs > 0 && owner.getLastMemberOnlineAt() > 0 && now - owner.getLastMemberOnlineAt() > thresholdMs) {
 				ownership.setOwner(turf, null, TurfOwnerChangedEvent.Cause.INACTIVITY);
 				released++;
 			}

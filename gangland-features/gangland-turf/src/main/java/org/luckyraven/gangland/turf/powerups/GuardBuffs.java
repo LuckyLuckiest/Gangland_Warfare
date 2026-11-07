@@ -5,6 +5,9 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.LivingEntity;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  * The pure rules behind the three guard powerups, kept apart so each is tested alone. A buff magnitude is read from
  * YAML and from the stacked product of running buffs, so {@code up} and {@code wait} treat a non-finite or out-of-range
@@ -36,6 +39,18 @@ public final class GuardBuffs {
 
 	public static int scale(int base, double m) {
 		return Math.max(1, (int) Math.min(Integer.MAX_VALUE, Math.round(base * m)));
+	}
+
+	/**
+	 * The price of one guard: {@code baseCost} times the garrison_discount {@code multiplier}, kept between 10 % and 100 %
+	 * of {@code baseCost} (a non-finite multiplier counts as 1.0), rounded half up and never below 1 (T-275).
+	 */
+	public static BigDecimal guardPrice(double multiplier, BigDecimal baseCost) {
+		// T-275: stacked or mis-set discounts stay between 10 % and 100 % of Cost_Per_Guard, and a guard never costs 0.
+		// ponytail: fixed 0.1 floor; make it a turf_powerups.yml knob if owners want cheaper guards.
+		multiplier = Double.isFinite(multiplier) ? Math.max(0.1, Math.min(1.0, multiplier)) : 1.0;
+		BigDecimal price = baseCost.multiply(BigDecimal.valueOf(multiplier)).setScale(0, RoundingMode.HALF_UP);
+		return price.max(BigDecimal.ONE);
 	}
 
 	/** The MAX_HEALTH base value, or -1 with no attribute. */

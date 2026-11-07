@@ -18,9 +18,6 @@ import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * {@code /glw turf tp [id]} — teleports the admin to the centre of a turf, standing on the highest block at that
  * column.
@@ -82,26 +79,12 @@ class TurfTpCommand extends SubArgument {
 				return;
 			}
 			// args = [turf, tp, <id>]
-			int id;
-			try {
-				id = Integer.parseInt(args[2]);
-			} catch (NumberFormatException exception) {
-				messages.send(sender, "TURF_NOT_FOUND", "turf", args[2]);
-				return;
-			}
-			Turf turf = turfs.get(id);
+			Turf turf = TurfSelectionResolver.byId(sender, turfs, messages, args[2]);
 			if (turf == null) {
-				messages.send(sender, "TURF_NOT_FOUND", "turf", args[2]);
 				return;
 			}
 			teleport(player, turf);
-		}, sender -> {
-			List<String> ids = new ArrayList<>();
-			for (Turf turf : turfs.getAll()) {
-				ids.add(String.valueOf(turf.getId()));
-			}
-			return ids;
-		});
+		}, sender -> TurfSelectionResolver.idCompletions(turfs));
 	}
 
 	private void teleport(Player player, Turf turf) {

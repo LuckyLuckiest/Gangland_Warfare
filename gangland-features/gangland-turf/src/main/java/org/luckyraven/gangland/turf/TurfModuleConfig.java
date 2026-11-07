@@ -63,8 +63,6 @@ import org.bukkit.Bukkit;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.gangland.turf.task.TurfLocationTracker;
 
-import java.util.List;
-
 /**
  * Bean wiring for the gang-turf feature. The tuning numbers come from {@link TurfSettings} (the module's own
  * {@code turf/turf_settings.yml}), including the Quartermaster panel look.
@@ -158,11 +156,7 @@ public final class TurfModuleConfig {
 
 	@Bean
 	public CaptureSettings captureSettings(TurfSettings turf) {
-		List<Integer> milestones = turf.getCaptureProgressMilestones();
-		int[]         asArray    = new int[milestones.size()];
-		for (int i = 0; i < milestones.size(); i++) {
-			asArray[i] = milestones.get(i);
-		}
+		int[] asArray = turf.getCaptureProgressMilestones().stream().mapToInt(Integer::intValue).toArray();
 		return new CaptureSettings(
 				turf.getCaptureDurationSeconds(),
 				turf.getCaptureCooldownMinutes(),

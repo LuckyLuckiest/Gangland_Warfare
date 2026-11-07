@@ -114,6 +114,25 @@ class GarrisonRosterTest {
 	}
 
 	@Test
+	@DisplayName("garrisonOf prices a guard at full cost for a non-finite or above-1 discount and rounds half up (T-275)")
+	void garrisonOf_fundedPrice_nonFiniteAndCapAndRounding() {
+		ownedTurf();
+
+		buff(EffectType.GARRISON_DISCOUNT, Double.NaN);
+		assertEquals(1000, roster.garrisonOf(1).guardPrice, "NaN means no discount");
+		buff(EffectType.GARRISON_DISCOUNT, Double.POSITIVE_INFINITY);
+		assertEquals(1000, roster.garrisonOf(1).guardPrice, "infinity means no discount");
+		buff(EffectType.GARRISON_DISCOUNT, Double.NEGATIVE_INFINITY);
+		assertEquals(1000, roster.garrisonOf(1).guardPrice, "negative infinity means no discount");
+		buff(EffectType.GARRISON_DISCOUNT, 5.0);
+		assertEquals(1000, roster.garrisonOf(1).guardPrice, "a multiplier above 1 never raises the price");
+		buff(EffectType.GARRISON_DISCOUNT, 0.1234);
+		assertEquals(123, roster.garrisonOf(1).guardPrice, "123.4 rounds down");
+		buff(EffectType.GARRISON_DISCOUNT, 0.1235);
+		assertEquals(124, roster.garrisonOf(1).guardPrice, "123.5 rounds half up");
+	}
+
+	@Test
 	@DisplayName("garrisonOf reads the live row: owned follows the count and spend consumes it")
 	void garrisonOf_ownedIsTheRow() {
 		ownedTurf();

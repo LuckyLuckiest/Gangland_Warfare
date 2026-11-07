@@ -8,6 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
+import org.luckyraven.gangland.turf.capture.CaptureSettings;
+import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.guard.CopGuardConfig;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -27,7 +29,10 @@ import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -71,6 +76,46 @@ class TurfModuleConfigTest {
 			manager.initialize();
 			verify(scheduler, times(1)).runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong());
 		}
+	}
+
+	private TurfSettings captureTurfSettings(List<Integer> milestones) {
+		TurfSettings turf = mock(TurfSettings.class);
+		when(turf.getCaptureProgressMilestones()).thenReturn(milestones);
+		when(turf.getCaptureDurationSeconds()).thenReturn(180);
+		when(turf.getCaptureCooldownMinutes()).thenReturn(15);
+		when(turf.getCaptureAbandonGraceSeconds()).thenReturn(16);
+		when(turf.getCapturePostLogoffProtectionMinutes()).thenReturn(10);
+		when(turf.getCaptureInactivityAutoReleaseDays()).thenReturn(4);
+		when(turf.isCaptureBroadcastGlobally()).thenReturn(true);
+		when(turf.getCaptureUnclaimedPhase1Seconds()).thenReturn(91);
+		when(turf.getCaptureUnclaimedPhase2Seconds()).thenReturn(92);
+		return turf;
+	}
+
+	@Test
+	@DisplayName("captureSettings copies the milestone list into an int array in order, and every other knob across")
+	void captureSettings_copiesMilestonesInOrder() {
+		CaptureSettings capture = new TurfModuleConfig().captureSettings(captureTurfSettings(List.of(75, 25, 50, 25)));
+
+		assertArrayEquals(new int[]{75, 25, 50, 25}, capture.getProgressMilestones());
+		assertEquals(180, capture.getCaptureDurationSeconds());
+		assertEquals(15, capture.getCooldownMinutes());
+		assertEquals(16, capture.getAbandonGraceSeconds());
+		assertEquals(10, capture.getPostLogoffProtectionMinutes());
+		assertEquals(4, capture.getInactivityAutoReleaseDays());
+		assertTrue(capture.isBroadcastCaptureGlobally());
+		assertEquals(91, capture.getUnclaimedPhase1Seconds());
+		assertEquals(92, capture.getUnclaimedPhase2Seconds());
+	}
+
+	@Test
+	@DisplayName("captureSettings with no milestones gives an empty array; a null milestone is a NullPointerException")
+	void captureSettings_emptyAndNullMilestones() {
+		TurfModuleConfig config = new TurfModuleConfig();
+
+		assertArrayEquals(new int[0], config.captureSettings(captureTurfSettings(List.of())).getProgressMilestones());
+		assertThrows(NullPointerException.class,
+		             () -> config.captureSettings(captureTurfSettings(java.util.Arrays.asList(25, null, 75))));
 	}
 
 	// ── T-189 (0.16.1): turf_npcs.yml Cop_Response + Powerup_Npc.Targeting_Radius ────────────────────────────

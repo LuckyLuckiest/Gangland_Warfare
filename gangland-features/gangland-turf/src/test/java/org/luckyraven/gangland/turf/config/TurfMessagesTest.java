@@ -26,6 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -85,6 +88,32 @@ class TurfMessagesTest {
 		String text = messages.reason(new CaptureEligibility.Verdict(Reason.COOLDOWN, NOW + 90_000L), "", NOW);
 
 		assertTrue(text.contains("attackable in 1m 30s"), text);
+	}
+
+	@Test
+	@DisplayName("a cooldown or waking-up shield counts whole seconds rounded up, never below one second")
+	void reasonSecondsRoundUpAndFloorAtOne() throws IOException {
+		TurfMessageContract legacy = mock(TurfMessageContract.class);
+		when(legacy.formatDuration(1L)).thenReturn("ONE");
+		when(legacy.formatDuration(2L)).thenReturn("TWO");
+		when(legacy.formatDuration(91L)).thenReturn("NINETY-ONE");
+		TurfMessages messages = shipped(legacy);
+
+		String exactSecond = messages.reason(new CaptureEligibility.Verdict(Reason.COOLDOWN, NOW + 1_000L), "", NOW);
+		String justOver    = messages.reason(new CaptureEligibility.Verdict(Reason.COOLDOWN, NOW + 1_001L), "", NOW);
+		String expired     = messages.reason(new CaptureEligibility.Verdict(Reason.COOLDOWN, NOW - 5_000L), "", NOW);
+		String wakingOver  = messages.reason(new CaptureEligibility.Verdict(Reason.WAKING_UP, NOW + 90_001L), "Rats", NOW);
+		String wakingLate  = messages.reason(new CaptureEligibility.Verdict(Reason.WAKING_UP, NOW - 5_000L), "Rats", NOW);
+
+		assertTrue(exactSecond.contains("attackable in ONE"), exactSecond);
+		assertTrue(justOver.contains("attackable in TWO"), justOver);
+		assertTrue(expired.contains("attackable in ONE"), expired);
+		assertTrue(wakingOver.contains("Rats waking up, attackable in NINETY-ONE"), wakingOver);
+		assertTrue(wakingLate.contains("Rats waking up, attackable in ONE"), wakingLate);
+		verify(legacy, times(3)).formatDuration(1L);
+		verify(legacy, times(1)).formatDuration(2L);
+		verify(legacy, times(1)).formatDuration(91L);
+		verifyNoMoreInteractions(legacy);
 	}
 
 	@Test

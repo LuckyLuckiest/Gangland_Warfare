@@ -15,7 +15,6 @@ import org.luckyraven.keystone.persistence.config.MappingNode;
 import org.luckyraven.keystone.persistence.config.NodeReader;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -130,19 +129,17 @@ public final class TurfNpcsConfigLoader implements BeanLifecycle {
 		                             : gr.get("Standing_Cap").asInt().min(0)
 		                                 .orDefault(TurfDefenderConfig.DEFAULT_STANDING_CAP);
 
-		MappingNode defNode = root.get("Defender").asMapping().required().orNull();
+		MappingNode defNode         = root.get("Defender").asMapping().required().orNull();
+		String      typeId          = "turf_defender";
+		double      targetingRadius = 32.0;
 		if (defNode != null) {
 			NodeReader dr = NodeReader.of(defNode, report);
-			defenderConfig = new TurfDefenderConfig(
-					dr.get("Type_Id").asString().orDefault("turf_defender"),
-					dr.get("Targeting_Radius").asDouble().min(1.0).orDefault(32.0),
-					waveSize, maxAlive, waveCooldown, standDown, leashMargin, composition, bountyShare,
-					recycleSeconds, holdRadius, standingCap);
-		} else {
-			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, waveSize, maxAlive, waveCooldown,
-			                                        standDown, leashMargin, composition, bountyShare,
-			                                        recycleSeconds, holdRadius, standingCap);
+			typeId          = dr.get("Type_Id").asString().orDefault("turf_defender");
+			targetingRadius = dr.get("Targeting_Radius").asDouble().min(1.0).orDefault(32.0);
 		}
+		defenderConfig = new TurfDefenderConfig(typeId, targetingRadius, waveSize, maxAlive, waveCooldown,
+		                                        standDown, leashMargin, composition, bountyShare,
+		                                        recycleSeconds, holdRadius, standingCap);
 
 		MappingNode copNode = root.get("Cop_Response").asMapping().orNull();
 		if (copNode != null) {

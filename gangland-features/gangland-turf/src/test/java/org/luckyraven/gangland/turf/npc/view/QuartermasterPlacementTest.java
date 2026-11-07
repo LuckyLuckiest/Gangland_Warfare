@@ -14,14 +14,17 @@ import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupData;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.mockito.InOrder;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -32,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -207,6 +211,22 @@ class QuartermasterPlacementTest {
 		verify(player, never()).sendMessage("Quartermaster.Placed");
 		verify(npcs).remove(TURF_ID);
 		verify(flow).end();
+	}
+
+	@Test
+	@DisplayName("T-939: a failed move puts the previous Quartermaster back instead of leaving the turf with none")
+	void confirm_moveFails_restoresPreviousQuartermaster() {
+		Location oldAnchor = mock(Location.class);
+		when(npcs.snapshotData()).thenReturn(List.of(new TurfPowerupData(TURF_ID, oldAnchor, "Old Boss")));
+		when(npcs.place(TURF_ID, location, null)).thenReturn(null);
+
+		placement.confirm(flow, player, session);
+
+		InOrder order = inOrder(npcs);
+		order.verify(npcs).place(TURF_ID, location, null);
+		order.verify(npcs).remove(TURF_ID);
+		order.verify(npcs).place(TURF_ID, oldAnchor, "Old Boss");
+		verify(player).sendMessage("Quartermaster.Place_Failed");
 	}
 
 	@Test

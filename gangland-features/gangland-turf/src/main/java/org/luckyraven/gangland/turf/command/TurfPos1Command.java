@@ -27,34 +27,41 @@ class TurfPos1Command extends SubArgument {
 		this.text       = text;
 	}
 
+	/**
+	 * Sets one corner of the admin's selection at their block and tells them where; {@code first} picks corner one,
+	 * {@code corner} is its name in the reply. Shared by {@code pos1} and {@code pos2}.
+	 */
+	static void setCorner(CommandSender sender, WandSelectionManager selections, TurfMessages text, boolean first,
+	                      String corner) {
+		// GI-35: see TurfWandCommand — pos1/pos2 chat commands must not bypass the admin gate the physical
+		// wand click already enforces (WandListener).
+		if (!TurfPermissions.requireAdmin(sender, text)) {
+			return;
+		}
+		if (!(sender instanceof Player player)) {
+			return;
+		}
+		Location  location  = player.getLocation();
+		Selection selection = selections.get(player);
+		if (!selection.set(location, first)) {
+			player.sendMessage(text.text("Turf.Selection_Other_World", Selection.OTHER_WORLD_FALLBACK));
+			return;
+		}
+
+		String reply = Messages.TURF_POS_SET.toString()
+		                                    .replace("%corner%", corner)
+		                                    .replace("%x%", Integer.toString(location.getBlockX()))
+		                                    .replace("%y%", Integer.toString(location.getBlockY()))
+		                                    .replace("%z%", Integer.toString(location.getBlockZ()))
+		                                    .replace("%world%",
+		                                             location.getWorld() == null
+		                                             ? "unknown"
+		                                             : location.getWorld().getName());
+		player.sendMessage(reply);
+	}
+
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		return (argument, sender, args) -> {
-			// GI-35: see TurfWandCommand — pos1/pos2 chat commands must not bypass the admin gate the physical
-			// wand click already enforces (WandListener).
-			if (!TurfPermissions.requireAdmin(sender, text)) {
-				return;
-			}
-			if (!(sender instanceof Player player)) {
-				return;
-			}
-			Location  location  = player.getLocation();
-			Selection selection = selections.get(player);
-			if (!selection.set(location, true)) {
-				player.sendMessage(text.text("Turf.Selection_Other_World", Selection.OTHER_WORLD_FALLBACK));
-				return;
-			}
-
-			String reply = Messages.TURF_POS_SET.toString()
-			                                    .replace("%corner%", "pos1")
-			                                    .replace("%x%", Integer.toString(location.getBlockX()))
-			                                    .replace("%y%", Integer.toString(location.getBlockY()))
-			                                    .replace("%z%", Integer.toString(location.getBlockZ()))
-			                                    .replace("%world%",
-			                                             location.getWorld() == null
-			                                             ? "unknown"
-			                                             : location.getWorld().getName());
-			player.sendMessage(reply);
-		};
+		return (argument, sender, args) -> setCorner(sender, selections, text, true, "pos1");
 	}
 }

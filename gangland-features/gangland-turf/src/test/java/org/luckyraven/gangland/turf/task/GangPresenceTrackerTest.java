@@ -13,6 +13,7 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.turf.capture.CaptureRules;
+import org.luckyraven.gangland.turf.capture.CaptureSettings;
 import org.luckyraven.gangland.turf.support.CaptureFixtures;
 import org.luckyraven.gangland.turf.support.FakeGangLookup;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -65,6 +66,21 @@ class GangPresenceTrackerTest {
 
 			verify(bukkit.scheduler()).runTaskTimer(plugin, release, FIRST_RELEASE_TICKS, RELEASE_PERIOD_TICKS);
 		}
+	}
+
+	@Test
+	@DisplayName("getInactivityAutoReleaseDays: hands back the days the tracker was built with")
+	void getInactivityAutoReleaseDays_returnsConstructorValue() {
+		CaptureSettings capture = CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90);
+		GangPresenceTracker ten = new GangPresenceTracker(mock(JavaPlugin.class), mock(GangLookupContract.class),
+		                                                  new GangMembership(), 10, mock(Runnable.class),
+		                                                  () -> CaptureRules.LEGACY, capture);
+		GangPresenceTracker four = new GangPresenceTracker(mock(JavaPlugin.class), mock(GangLookupContract.class),
+		                                                   new GangMembership(), 4, mock(Runnable.class),
+		                                                   () -> CaptureRules.LEGACY, capture);
+
+		assertEquals(10, ten.getInactivityAutoReleaseDays());
+		assertEquals(4, four.getInactivityAutoReleaseDays());
 	}
 
 	@Test

@@ -116,6 +116,35 @@ class TurfPowerupBuffCatalogueViewTest {
 		verify(buffs, never()).activate(org.mockito.ArgumentMatchers.anyInt(), any());
 	}
 
+	@Test
+	@DisplayName("a boost purchase refused for a reason that keeps the panel open shows the line, then re-renders")
+	void purchase_noRank_refusedThenRerendered() {
+		ActiveBuffManager buffs  = mock(ActiveBuffManager.class);
+		QuartermasterAccess access = mock(QuartermasterAccess.class);
+		EconomyHandler bank = new EconomyHandler(null);
+		bank.setAmount(BigDecimal.valueOf(50_000));
+		Gang gang = mock(Gang.class);
+		when(gang.getEconomy()).thenReturn(bank);
+		TurfPowerupFlowSession session = new TurfPowerupFlowSession(mock(Turf.class), gang, gang, "Quartermaster");
+		Player viewer = mock(Player.class);
+		@SuppressWarnings("unchecked")
+		MenuFlow<TurfPowerupFlowSession> flow = mock(MenuFlow.class);
+		TurfMessages messages = mock(TurfMessages.class);
+		when(messages.text(eq(QuartermasterAccess.NO_RANK), anyString())).thenReturn("no rank line");
+		when(access.denyKey(viewer, session)).thenReturn(QuartermasterAccess.NO_RANK);
+
+		TurfPowerupBuffCatalogueView view = new TurfPowerupBuffCatalogueView(new PowerupRegistry(), buffs, access,
+		                                                                     messages, null, () -> MenuStyle.DEFAULT);
+		view.attemptBuy(flow, viewer, session, boosts(25).get(0));
+
+		org.mockito.InOrder order = org.mockito.Mockito.inOrder(viewer, flow);
+		order.verify(viewer).sendMessage("no rank line");
+		order.verify(flow).rerender();
+		verify(flow, never()).end();
+		assertEquals(0, new BigDecimal("50000").compareTo(bank.getAmount()));
+		verify(buffs, never()).activate(org.mockito.ArgumentMatchers.anyInt(), any());
+	}
+
 	// ---- menu pass (task M) -------------------------------------------------------------------------------
 
 	private static final int TURF_ID = 3;

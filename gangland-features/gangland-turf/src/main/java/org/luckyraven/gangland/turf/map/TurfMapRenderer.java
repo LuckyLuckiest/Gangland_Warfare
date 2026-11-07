@@ -120,13 +120,7 @@ public final class TurfMapRenderer {
 		if (cell.relation() == null) {
 			return ChatColor.DARK_GRAY;
 		}
-		return switch (cell.relation()) {
-			case OWN -> ChatColor.GREEN;
-			case ALLY -> ChatColor.AQUA;
-			case RIVAL -> ChatColor.RED;
-			case GANGLESS -> ChatColor.YELLOW;
-			case UNCLAIMED -> ChatColor.GRAY;
-		};
+		return relationColour(cell.relation());
 	}
 
 	private static ChatColor relationColour(TurfRelation relation) {

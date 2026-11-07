@@ -12,6 +12,7 @@ import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
 
 import java.math.BigDecimal;
 
@@ -88,6 +89,16 @@ public final class QuartermasterAccess {
 	/** The refusal line {@code key} in the turf module's YAML, or its shipped fallback. */
 	public static String refusal(TurfMessages messages, String key) {
 		return messages.text(key, fallback(key));
+	}
+
+	/** Sends the refusal line {@code key} to {@code viewer}, then closes the panel when that refusal ends it, else redraws. */
+	static void refuse(MenuFlow<TurfPowerupFlowSession> flow, Player viewer, TurfMessages messages, String key) {
+		viewer.sendMessage(refusal(messages, key));
+		if (closesPanel(key)) {
+			flow.end();
+		} else {
+			flow.rerender();
+		}
 	}
 
 	/** Whether a refusal ends the panel (the turf is gone, changed hands, or the viewer left or lost the alliance). */

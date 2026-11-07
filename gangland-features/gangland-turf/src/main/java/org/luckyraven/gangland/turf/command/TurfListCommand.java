@@ -17,7 +17,6 @@ import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfGeometry;
-import org.luckyraven.gangland.turf.listener.GangDisplayNameResolver;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
@@ -154,11 +153,7 @@ class TurfListCommand extends SubArgument {
 		sender.sendMessage(text.text("Turf.List_Header", "&7Turfs - page %page%/%pages%",
 		                             "page", String.valueOf(page), "pages", String.valueOf(pages)));
 		for (Turf turf : pageSlice(ordered, page)) {
-			String gangName = "Unclaimed";
-			if (turf.getOwnerGangId() != null) {
-				gangName = GangDisplayNameResolver.resolve(gangs.findById(turf.getOwnerGangId()));
-			}
-			sendRow(sender, text, turf, gangName, from);
+			sendRow(sender, text, turf, TurfInfoCommand.ownerLabel(gangs, turf), from);
 		}
 		if (page < pages) {
 			sender.spigot().sendMessage(new ComponentBuilder(text.text("Turf.List_Next",

@@ -109,6 +109,18 @@ class DynmapTurfLayerTest {
 	}
 
 	@Test
+	@DisplayName("T-943: a new marker is created with the colour codes stripped from the turf name, like the update branch")
+	void rebuild_newMarker_labelHasNoColourCodes() {
+		turf(1, "&cDocks", null);
+		marker("gangland_turf_1");
+
+		layer.rebuild();
+
+		verify(set).createAreaMarker(eq("gangland_turf_1"), eq("Docks"), eq(false), eq("world"),
+		                             any(double[].class), any(double[].class), eq(false));
+	}
+
+	@Test
 	@DisplayName("an owner change recolours the existing marker and rewrites the description")
 	void ownerChange_recolours() {
 		gang(1, "RED", "Reds");

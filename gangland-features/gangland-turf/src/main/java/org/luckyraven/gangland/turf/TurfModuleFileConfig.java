@@ -32,27 +32,19 @@ public final class TurfModuleFileConfig {
 
 	@Bean
 	public TurfModuleFiles turfModuleFiles(FileManager fileManager, ModuleLoader moduleLoader) {
-		FileHandler powerups = new FileHandler(plugin, "turf_powerups", "turf", ".yml",
-		                                      moduleLoader.classLoader());
-		fileManager.addFile(powerups, true);
-
-		FileHandler npcs = new FileHandler(plugin, "turf_npcs", "turf", ".yml",
-		                                  moduleLoader.classLoader());
-		fileManager.addFile(npcs, true);
-
-		FileHandler settings = new FileHandler(plugin, "turf_settings", "turf", ".yml",
-		                                      moduleLoader.classLoader());
-		fileManager.addFile(settings, true);
-
-		FileHandler rules = new FileHandler(plugin, "turf_rules", "turf", ".yml", moduleLoader.classLoader());
-		fileManager.addFile(rules, true);
-
-		FileHandler map = new FileHandler(plugin, "turf_map", "turf", ".yml", moduleLoader.classLoader());
-		fileManager.addFile(map, true);
-
-		FileHandler messages = new FileHandler(plugin, "turf_messages", "turf", ".yml", moduleLoader.classLoader());
-		fileManager.addFile(messages, true);
+		FileHandler powerups = register(fileManager, moduleLoader, "turf_powerups");
+		FileHandler npcs     = register(fileManager, moduleLoader, "turf_npcs");
+		FileHandler settings = register(fileManager, moduleLoader, "turf_settings");
+		FileHandler rules    = register(fileManager, moduleLoader, "turf_rules");
+		FileHandler map      = register(fileManager, moduleLoader, "turf_map");
+		FileHandler messages = register(fileManager, moduleLoader, "turf_messages");
 
 		return new TurfModuleFiles(powerups, npcs, settings, rules, map, messages);
+	}
+
+	private FileHandler register(FileManager fileManager, ModuleLoader moduleLoader, String name) {
+		FileHandler handler = new FileHandler(plugin, name, "turf", ".yml", moduleLoader.classLoader());
+		fileManager.addFile(handler, true);
+		return handler;
 	}
 }

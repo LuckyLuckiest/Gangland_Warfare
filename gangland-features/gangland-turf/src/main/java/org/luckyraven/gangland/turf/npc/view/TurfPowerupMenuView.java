@@ -135,12 +135,7 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 	void toggleOrder(MenuFlow<TurfPowerupFlowSession> flow, Player viewer, TurfPowerupFlowSession session) {
 		String deny = access.denyKey(viewer, session);
 		if (deny != null) {
-			viewer.sendMessage(QuartermasterAccess.refusal(messages, deny));
-			if (QuartermasterAccess.closesPanel(deny)) {
-				flow.end();
-			} else {
-				flow.rerender();
-			}
+			QuartermasterAccess.refuse(flow, viewer, messages, deny);
 			return;
 		}
 		Turf    turf = session.getTurf();
