@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Getter;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -79,82 +80,146 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final Map<Integer, CopTierConfig> tiers;
 	private final Map<Integer, Integer>       copsPerWantedLevel;
 
+	@Getter
 	private final int    maxCopsPerPlayer;
+	@Getter
 	private final int    aiTickRate;
+	@Getter
 	private final int    spawnCheckRate;
+	@Getter
 	private final double cuffRadius;
+	@Getter
 	private final int    maxCuffAttempts;
+	@Getter
 	private final int    cuffCooldownTicks;
+	@Getter
 	private final double alertRange;
+	@Getter
 	private final double combatRange;
+	@Getter
 	private final int    attackCooldownTicks;
 
 	// Spawn settings
+	@Getter
 	private final double minSpawnDistance;
+	@Getter
 	private final double maxSpawnDistance;
+	@Getter
 	private final double phase1MinDistance;
+	@Getter
 	private final double spawnRadiusShrinkStep;
+	@Getter
 	private final int    verticalSearchRange;
+	@Getter
 	private final int    spawnYOffset;
+	@Getter
 	private final double maxSpawnYDiff;
+	@Getter
 	private final double spawnerMaxYDiff;
+	@Getter
 	private final int    minOpenHorizontalSides;
+	@Getter
 	private final double spawnerPreferenceRadius;
+	@Getter
 	private final double visibilityCheckDistance;
+	@Getter
 	private final int    spawnPhase1Attempts;
+	@Getter
 	private final int    spawnPhase2Attempts;
 
 	// Navigation settings
+	@Getter
 	private final int    navigationRecalculationTicks;
+	@Getter
 	private final int    stuckCheckIntervalTicks;
+	@Getter
 	private final int    maxStuckChecks;
+	@Getter
 	private final int    maxHopelessStuckChecks;
+	@Getter
 	private final double hopelessCloseThreshold;
+	@Getter
 	private final double minProgressDistance;
+	@Getter
 	private final double rangedMinDistance;
+	@Getter
 	private final double rangedMaxDistance;
+	@Getter
 	private final int    minRepathAfterLossTicks;
 
 	// Pursuit leash settings
+	@Getter
 	private final double pursuitMaxDistance;
+	@Getter
 	private final int    pursuitMaxTicks;
 
 	// Return / despawn settings
+	@Getter
 	private final int    maxReturnTicks;
+	@Getter
 	private final int    returnWatchedCapSeconds;
+	@Getter
 	private final double stationArrivalDistance;
 
 	// Misc
+	@Getter
 	private final double guardRadius;
 
 	// Squad tactics / melee / radio / backup (phase H12)
+	@Getter
 	private final NpcMeleeProfile meleeProfile;
 	private final TacticsConfig   tacticsDefault;
+	@Getter
 	private final RadioSettings   radioSettings;
+	@Getter
 	private final BackupSettings  backupSettings;
+	@Getter
 	private final CheckInSettings checkInSettings;
+	@Getter
 	private final RegroupSettings regroupSettings;
+	@Getter
 	private final ShotNoiseSettings shotNoiseSettings;
+	@Getter
 	private final RetreatSettings retreatSettings;
+	@Getter
 	private final CopNames        names;
+	@Getter
 	private final StuckSettings   stuckSettings;
+	@Getter
 	private final FieldCareSettings fieldCareSettings;
+	@Getter
 	private final DispatchSettings  dispatchSettings;
+	@Getter
 	private final BreatherSettings  breatherSettings;
+	@Getter
 	private final HandoffSettings   handoffSettings;
+	@Getter
 	private final PerimeterSettings perimeterSettings;
+	@Getter
 	private final StandoffSettings  standoffSettings; // 0.21.0
+	@Getter
 	private final BreachSettings    breachSettings; // 0.21.0
+	@Getter
 	private final PatrolSettings    patrolSettings;
+	@Getter
 	private final WarningSettings   warningSettings;
+	@Getter
 	private final PullOverSettings  pullOverSettings;
+	@Getter
 	private final TrackerSettings   trackerSettings;
+	@Getter
 	private final SirenSettings     sirenSettings;
+	@Getter
 	private final ScannerSettings   scannerSettings;
+	@Getter
 	private final SightSettings     sightSettings;
+	@Getter
 	private final OverwatchSettings overwatchSettings;
+	@Getter
 	private final ScannerMapSettings scannerMapSettings;
+	@Getter
 	private final DisguiseSettings  disguiseSettings;
+	@Getter
 	private final boolean           lookoutEnabled;
 
 	// Roles (phase H13): the composition per wanted level; empty with roles off
@@ -292,326 +357,6 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public Map<Integer, Integer> getCopsPerWantedLevel() {
 		return Collections.unmodifiableMap(copsPerWantedLevel);
-	}
-
-	@Override
-	public int getMaxCopsPerPlayer() {
-		return maxCopsPerPlayer;
-	}
-
-	@Override
-	public int getAiTickRate() {
-		return aiTickRate;
-	}
-
-	@Override
-	public int getSpawnCheckRate() {
-		return spawnCheckRate;
-	}
-
-	@Override
-	public double getCuffRadius() {
-		return cuffRadius;
-	}
-
-	@Override
-	public int getMaxCuffAttempts() {
-		return maxCuffAttempts;
-	}
-
-	@Override
-	public int getCuffCooldownTicks() {
-		return cuffCooldownTicks;
-	}
-
-	@Override
-	public double getAlertRange() {
-		return alertRange;
-	}
-
-	@Override
-	public double getCombatRange() {
-		return combatRange;
-	}
-
-	@Override
-	public int getAttackCooldownTicks() {
-		return attackCooldownTicks;
-	}
-
-	@Override
-	public double getMinSpawnDistance() {
-		return minSpawnDistance;
-	}
-
-	@Override
-	public double getMaxSpawnDistance() {
-		return maxSpawnDistance;
-	}
-
-	@Override
-	public double getPhase1MinDistance() {
-		return phase1MinDistance;
-	}
-
-	@Override
-	public double getSpawnRadiusShrinkStep() {
-		return spawnRadiusShrinkStep;
-	}
-
-	@Override
-	public int getVerticalSearchRange() {
-		return verticalSearchRange;
-	}
-
-	@Override
-	public int getSpawnYOffset() {
-		return spawnYOffset;
-	}
-
-	@Override
-	public double getMaxSpawnYDiff() {
-		return maxSpawnYDiff;
-	}
-
-	@Override
-	public double getSpawnerMaxYDiff() {
-		return spawnerMaxYDiff;
-	}
-
-	@Override
-	public int getMinOpenHorizontalSides() {
-		return minOpenHorizontalSides;
-	}
-
-	@Override
-	public double getSpawnerPreferenceRadius() {
-		return spawnerPreferenceRadius;
-	}
-
-	@Override
-	public double getVisibilityCheckDistance() {
-		return visibilityCheckDistance;
-	}
-
-	@Override
-	public int getSpawnPhase1Attempts() {
-		return spawnPhase1Attempts;
-	}
-
-	@Override
-	public int getSpawnPhase2Attempts() {
-		return spawnPhase2Attempts;
-	}
-
-	@Override
-	public int getNavigationRecalculationTicks() {
-		return navigationRecalculationTicks;
-	}
-
-	@Override
-	public int getStuckCheckIntervalTicks() {
-		return stuckCheckIntervalTicks;
-	}
-
-	@Override
-	public int getMaxStuckChecks() {
-		return maxStuckChecks;
-	}
-
-	@Override
-	public int getMaxHopelessStuckChecks() {
-		return maxHopelessStuckChecks;
-	}
-
-	@Override
-	public double getHopelessCloseThreshold() {
-		return hopelessCloseThreshold;
-	}
-
-	@Override
-	public double getMinProgressDistance() {
-		return minProgressDistance;
-	}
-
-	@Override
-	public double getRangedMinDistance() {
-		return rangedMinDistance;
-	}
-
-	@Override
-	public double getRangedMaxDistance() {
-		return rangedMaxDistance;
-	}
-
-	@Override
-	public int getMinRepathAfterLossTicks() {
-		return minRepathAfterLossTicks;
-	}
-
-	@Override
-	public double getPursuitMaxDistance() {
-		return pursuitMaxDistance;
-	}
-
-	@Override
-	public int getPursuitMaxTicks() {
-		return pursuitMaxTicks;
-	}
-
-	@Override
-	public int getMaxReturnTicks() {
-		return maxReturnTicks;
-	}
-
-	@Override
-	public int getReturnWatchedCapSeconds() {
-		return returnWatchedCapSeconds;
-	}
-
-	@Override
-	public double getStationArrivalDistance() {
-		return stationArrivalDistance;
-	}
-
-	@Override
-	public double getGuardRadius() {
-		return guardRadius;
-	}
-
-	@Override
-	public NpcMeleeProfile getMeleeProfile() {
-		return meleeProfile;
-	}
-
-	@Override
-	public RadioSettings getRadioSettings() {
-		return radioSettings;
-	}
-
-	@Override
-	public BackupSettings getBackupSettings() {
-		return backupSettings;
-	}
-
-	@Override
-	public CheckInSettings getCheckInSettings() {
-		return checkInSettings;
-	}
-
-	@Override
-	public RegroupSettings getRegroupSettings() {
-		return regroupSettings;
-	}
-
-	@Override
-	public ShotNoiseSettings getShotNoiseSettings() {
-		return shotNoiseSettings;
-	}
-
-	@Override
-	public RetreatSettings getRetreatSettings() {
-		return retreatSettings;
-	}
-
-	@Override
-	public CopNames getNames() {
-		return names;
-	}
-
-	@Override
-	public StuckSettings getStuckSettings() {
-		return stuckSettings;
-	}
-
-	@Override
-	public FieldCareSettings getFieldCareSettings() {
-		return fieldCareSettings;
-	}
-
-	@Override
-	public DispatchSettings getDispatchSettings() {
-		return dispatchSettings;
-	}
-
-	@Override
-	public BreatherSettings getBreatherSettings() {
-		return breatherSettings;
-	}
-
-	@Override
-	public HandoffSettings getHandoffSettings() {
-		return handoffSettings;
-	}
-
-	@Override
-	public StandoffSettings getStandoffSettings() { // 0.21.0
-		return standoffSettings;
-	}
-
-	@Override
-	public BreachSettings getBreachSettings() { // 0.21.0
-		return breachSettings;
-	}
-
-	@Override
-	public PerimeterSettings getPerimeterSettings() {
-		return perimeterSettings;
-	}
-
-	@Override
-	public PatrolSettings getPatrolSettings() {
-		return patrolSettings;
-	}
-
-	@Override
-	public WarningSettings getWarningSettings() {
-		return warningSettings;
-	}
-
-	@Override
-	public PullOverSettings getPullOverSettings() {
-		return pullOverSettings;
-	}
-
-	@Override
-	public TrackerSettings getTrackerSettings() {
-		return trackerSettings;
-	}
-
-	@Override
-	public SirenSettings getSirenSettings() {
-		return sirenSettings;
-	}
-
-	@Override
-	public ScannerSettings getScannerSettings() {
-		return scannerSettings;
-	}
-
-	@Override
-	public SightSettings getSightSettings() {
-		return sightSettings;
-	}
-
-	@Override
-	public OverwatchSettings getOverwatchSettings() {
-		return overwatchSettings;
-	}
-
-	@Override
-	public ScannerMapSettings getScannerMapSettings() {
-		return scannerMapSettings;
-	}
-
-	@Override
-	public DisguiseSettings getDisguiseSettings() {
-		return disguiseSettings;
-	}
-
-	@Override
-	public boolean isLookoutEnabled() {
-		return lookoutEnabled;
 	}
 
 	@Override
