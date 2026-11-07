@@ -10,6 +10,7 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.luckyraven.gangland.npcshops.ShopNpcs;
 import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 
 public final class BankerNpc {
@@ -55,31 +56,19 @@ public final class BankerNpc {
 	}
 
 	public void faceLocation(Location target) {
-		if (!npc.isSpawned()) return;
-		npc.faceLocation(target);
+		ShopNpcs.faceLocation(npc, target);
 	}
 
 	public void resetPosition() {
-		if (!npc.isSpawned()) return;
-		Entity entity = npc.getEntity();
-		if (entity == null) return;
-
-		Location spawn   = data.getSpawnLocation();
-		Location current = entity.getLocation();
-		if (current.distanceSquared(spawn) > 0.25) {
-			entity.teleport(spawn);
-		}
+		ShopNpcs.resetPosition(npc, data.getSpawnLocation());
 	}
 
 	public boolean isAlive() {
-		if (!npc.isSpawned()) return false;
-		Entity entity = npc.getEntity();
-		return entity != null && !entity.isDead();
+		return ShopNpcs.isAlive(npc);
 	}
 
 	public void destroy() {
-		if (npc.isSpawned()) npc.despawn();
-		npc.destroy();
+		ShopNpcs.destroy(npc);
 	}
 
 }
