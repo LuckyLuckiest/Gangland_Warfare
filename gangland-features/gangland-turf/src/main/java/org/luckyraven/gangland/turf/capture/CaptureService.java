@@ -107,11 +107,6 @@ public final class CaptureService {
 		this.guardsAlive = guardsAlive;
 	}
 
-	/** The capture verdict every surface reads (map, HUD, info card, boss bar). */
-	public CaptureEligibility eligibility() {
-		return eligibility;
-	}
-
 	private static double clamp(double value, double min, double max) {
 		if (value < min) {
 			return min;
