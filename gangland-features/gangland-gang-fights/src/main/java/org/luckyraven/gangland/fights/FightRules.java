@@ -19,6 +19,9 @@ public class FightRules implements FileInitializer {
 
 	private static final String FILE_NAME = "fight_rules";
 
+	private static final List<String> DEFAULT_ALLOWED_COMMANDS = List.of("glw gang fight", "gangland gang fight", "msg",
+	                                                                     "r", "tell");
+
 	private final FileHandler fileHandler;
 
 	// Challenge
@@ -85,7 +88,7 @@ public class FightRules implements FileInitializer {
 	@Getter
 	private String commandBlockMode = "ALLOWLIST";
 	@Getter
-	private List<String> allowedCommands = List.of("glw gang fight", "gangland gang fight", "msg", "r", "tell");
+	private List<String> allowedCommands = DEFAULT_ALLOWED_COMMANDS;
 	@Getter
 	private List<String> blockedCommands = List.of();
 	@Getter
@@ -134,7 +137,7 @@ public class FightRules implements FileInitializer {
 		allowVehicles = config.getBoolean("Guards.Allow_Vehicles", false);
 		respectTotems = config.getBoolean("Guards.Respect_Totems", false);
 		commandBlockMode = config.getString("Guards.Command_Block_Mode", "ALLOWLIST");
-		allowedCommands = config.isSet("Guards.Allowed_Commands") ? List.copyOf(config.getStringList("Guards.Allowed_Commands")) : List.of("glw gang fight", "gangland gang fight", "msg", "r", "tell");
+		allowedCommands = config.isSet("Guards.Allowed_Commands") ? List.copyOf(config.getStringList("Guards.Allowed_Commands")) : DEFAULT_ALLOWED_COMMANDS;
 		blockedCommands = config.isSet("Guards.Blocked_Commands") ? List.copyOf(config.getStringList("Guards.Blocked_Commands")) : List.of();
 		blockSameAddress = config.getBoolean("Guards.Block_Same_Address", false);
 		minArenaVolume = config.getInt("Arenas.Min_Arena_Volume", 64);
