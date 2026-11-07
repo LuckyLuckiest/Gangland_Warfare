@@ -203,11 +203,7 @@ public class BreachController {
 
 	/** Releases whoever is still posted to the chase and starts the cooldown. */
 	private void abort(UUID id, Breach breach, BreachSettings settings) {
-		for (CopNpc cop : breach.stack) {
-			if (cop.getCurrentState() != CopState.POSTED) continue;
-			cop.releasePost();
-			cop.transitionTo(CopState.PURSUING);
-		}
+		releaseStack(breach);
 		active.remove(id);
 		cooldownUntil.put(id, clock.getAsLong() + settings.cooldownSeconds() * 1000L);
 	}
@@ -306,13 +302,18 @@ public class BreachController {
 	/** Releases every stack (reload, disable); no cooldown. */
 	public void endAll() {
 		for (Breach breach : active.values()) {
-			for (CopNpc cop : breach.stack) {
-				if (cop.getCurrentState() != CopState.POSTED) continue;
-				cop.releasePost();
-				cop.transitionTo(CopState.PURSUING);
-			}
+			releaseStack(breach);
 		}
 		active.clear();
+	}
+
+	/** Sends every cop of {@code breach} still posted back to the chase; the others are left as they are. */
+	private static void releaseStack(Breach breach) {
+		for (CopNpc cop : breach.stack) {
+			if (cop.getCurrentState() != CopState.POSTED) continue;
+			cop.releasePost();
+			cop.transitionTo(CopState.PURSUING);
+		}
 	}
 
 	/** Blindness and Slowness for {@code ticks} through XPotion. */
