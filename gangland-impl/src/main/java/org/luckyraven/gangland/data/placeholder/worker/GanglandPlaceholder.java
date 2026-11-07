@@ -225,11 +225,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		// contributed-amount, has-rank, rank) are gang-module-owned — GangPlaceholderContribution answers them;
 		// this method only ever sees the pure-User family below.
 
-		// for user
-		Player onlinePlayer = player.getPlayer();
-		if (!player.isOnline() || onlinePlayer == null) return null;
-
-		User<Player> user = userManager.getUser(onlinePlayer);
+		User<Player> user = onlineUser(player);
 
 		if (user == null) return null;
 
@@ -257,13 +253,18 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		return getLevelPlaceholder(parameter, userStr, user.getLevel());
 	}
 
+	/** The cached user of an online player, or {@code null} when the player is offline or has no cached user. */
 	@Nullable
-	private String getBank(OfflinePlayer player, String parameter) {
-		// for bank
+	private User<Player> onlineUser(OfflinePlayer player) {
 		Player onlinePlayer = player.getPlayer();
 		if (!player.isOnline() || onlinePlayer == null) return null;
 
-		User<Player> user = userManager.getUser(onlinePlayer);
+		return userManager.getUser(onlinePlayer);
+	}
+
+	@Nullable
+	private String getBank(OfflinePlayer player, String parameter) {
+		User<Player> user = onlineUser(player);
 
 		if (user == null) return null;
 
