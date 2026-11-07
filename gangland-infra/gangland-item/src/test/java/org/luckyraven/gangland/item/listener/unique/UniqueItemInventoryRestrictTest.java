@@ -6,9 +6,11 @@ import org.bukkit.World;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.junit.jupiter.api.AfterEach;
@@ -155,6 +157,58 @@ class UniqueItemInventoryRestrictTest {
 		listener.onUniqueItemInventoryClick(event);
 
 		verify(event).setCancelled(true);
+	}
+
+	/** A number-key or off-hand swap pressed over a slot of an open container: the stack that moves is in the player's own inventory. */
+	private InventoryClickEvent swapIntoChest(ClickType click, int hotbarButton) {
+		InventoryClickEvent event = click(null, null);
+		when(event.getClickedInventory()).thenReturn(mock(Inventory.class));
+		when(event.getClick()).thenReturn(click);
+		when(event.getHotbarButton()).thenReturn(hotbarButton);
+		return event;
+	}
+
+	@Test
+	@DisplayName("IT-07 click: a number key over a container slot cancels when the hotbar item is non-movable")
+	void click_hotbarSwapOfNonMovable_cancels() {
+		register(builder("phone").movable(false).build());
+		InventoryClickEvent event = swapIntoChest(ClickType.NUMBER_KEY, 3);
+		ItemStack phone = tagged("phone");
+		when(ownInventory.getItem(3)).thenReturn(phone);
+
+		listener.onUniqueItemInventoryClick(event);
+
+		verify(event).setCancelled(true);
+	}
+
+	@Test
+	@DisplayName("IT-07 click: the off-hand swap key over a container slot cancels when the off-hand item is non-movable")
+	void click_offhandSwapOfNonMovable_cancels() {
+		register(builder("phone").movable(false).build());
+		InventoryClickEvent event = swapIntoChest(ClickType.SWAP_OFFHAND, 0);
+		ItemStack phone = tagged("phone");
+		when(ownInventory.getItemInOffHand()).thenReturn(phone);
+
+		listener.onUniqueItemInventoryClick(event);
+
+		verify(event).setCancelled(true);
+	}
+
+	@Test
+	@DisplayName("IT-07 click: a number key with a movable or plain hotbar item is left alone")
+	void click_hotbarSwapOfMovableOrPlain_isAllowed() {
+		register(builder("phone").movable(true).build());
+		InventoryClickEvent movable = swapIntoChest(ClickType.NUMBER_KEY, 3);
+		ItemStack phone = tagged("phone");
+		when(ownInventory.getItem(3)).thenReturn(phone);
+		listener.onUniqueItemInventoryClick(movable);
+		verify(movable, never()).setCancelled(true);
+
+		InventoryClickEvent plain = swapIntoChest(ClickType.NUMBER_KEY, 4);
+		ItemStack dirt = plain();
+		when(ownInventory.getItem(4)).thenReturn(dirt);
+		listener.onUniqueItemInventoryClick(plain);
+		verify(plain, never()).setCancelled(true);
 	}
 
 	// ---------------------------------------------------------------- PlayerDeathEvent
