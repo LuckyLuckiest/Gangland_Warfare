@@ -79,13 +79,12 @@ public class WantedAspect implements SignAspect {
 
 		if (wantedType == null) return false;
 
-		if (wantedType != WantedSign.WantedType.INCREASE) {
-			Wanted wanted = user.getWanted();
+		Wanted wanted = user.getWanted();
 
-			return wanted.getLevel() > 0 && refusal(player, sign, wantedType) == null;
-		}
+		// INCREASE at the maximum adds nothing, and the money aspect (it runs first) would still charge the price
+		if (wantedType == WantedSign.WantedType.INCREASE) return wanted.getLevel() < wanted.getMaxLevel();
 
-		return true;
+		return wanted.getLevel() > 0 && refusal(player, sign, wantedType) == null;
 	}
 
 	@Override

@@ -157,6 +157,23 @@ class WantedAspectTest {
 	}
 
 	@Test
+	@DisplayName("T-936: INCREASE at the maximum level is refused before the money aspect can charge for it")
+	void increase_atTheMaximum_isRefused() {
+		wanted.setLevel(wanted.getMaxLevel());
+
+		assertFalse(aspect.canExecute(player, sign("increase", 1, 500)),
+		            "the money aspect runs before this one, so a priced sign must be refused up front");
+	}
+
+	@Test
+	@DisplayName("INCREASE one star below the maximum is still allowed")
+	void increase_belowTheMaximum_isAllowed() {
+		wanted.setLevel(wanted.getMaxLevel() - 1);
+
+		assertTrue(aspect.canExecute(player, sign("increase", 1, 500)));
+	}
+
+	@Test
 	@DisplayName("REMOVE while a cop sees the player is refused with the contact-seen text")
 	void remove_whileSeen_refusesWithReason() {
 		wanted.setLevel(3);
