@@ -73,19 +73,10 @@ class CopSpawnerInfoCommand extends SubArgument {
 
 			sender.spigot().sendMessage(message);
 
-			sender.sendMessage(messages.format(CommandMessages.Key.SPAWNER_INFO_LINE, location(location)));
+			sender.sendMessage(messages.format(CommandMessages.Key.SPAWNER_INFO_LINE, CommandMessages.location(location)));
 		}, sender -> copSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 
 		this.addSubArgument(idArg);
-	}
-
-	private static Map<String, String> location(Location location) {
-		String world = location.getWorld() != null ? location.getWorld().getName() : "?";
-
-		return Map.of("world", world,
-		              "x", String.valueOf(location.getBlockX()),
-		              "y", String.valueOf(location.getBlockY()),
-		              "z", String.valueOf(location.getBlockZ()));
 	}
 }

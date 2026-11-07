@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.command;
 
+import org.bukkit.Location;
 import org.luckyraven.gangland.file.configuration.LocalizedModuleYaml;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -109,6 +110,16 @@ public class CommandMessages extends LocalizedModuleYaml {
 	public String usage(String fullUsage) {
 		return GanglandChatUtil.setArguments(command(Key.ARGUMENTS_MISSING.path, Key.ARGUMENTS_MISSING.fallback),
 		                                     fullUsage);
+	}
+
+	/** The {@code %world%}, {@code %x%}, {@code %y%}, {@code %z%} values of {@code location}: the world's name or {@code ?}. */
+	public static Map<String, String> location(Location location) {
+		String world = location.getWorld() != null ? location.getWorld().getName() : "?";
+
+		return Map.of("world", world,
+		              "x", String.valueOf(location.getBlockX()),
+		              "y", String.valueOf(location.getBlockY()),
+		              "z", String.valueOf(location.getBlockZ()));
 	}
 
 	private String render(Key key) {
